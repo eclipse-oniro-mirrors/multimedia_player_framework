@@ -36,6 +36,13 @@ enum MessageType : int32_t {
     MSG_COMPLETED,
     MSG_FAILED,
     MSG_PROGRESS,
+    MSG_CANCEL,
+    MSG_TASK_COMPLETED,     // 供内部任务调度使用
+    MSG_TASK_FAILED,
+    MSG_TASK_NET_CHANGE,
+    MSG_TASK_CANCELED,
+    MSG_RELEASE_DOWNLOADER,     // 释放downloader
+    MSG_PROCESS_NEXT_TASK,      // 处理下个downloader
 };
 
 struct Message {
@@ -46,6 +53,7 @@ struct Message {
     int32_t errorCode;
     std::string errorMsg;
     int64_t downloadedSize;
+    std::shared_ptr<Downloader> downloader;
 };
 
 class MessageQueue : public NoCopyable {

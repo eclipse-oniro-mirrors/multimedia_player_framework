@@ -46,7 +46,8 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "NetDownloaderDownloadTask"};
 constexpr int32_t SPEED_CALCULATION_INTERVAL_MS = 1000;
 constexpr int64_t PERCENT_MAX = 100;
-constexpr int64_t CANCEL_TIMEOUT_SECONDS = 3;
+constexpr int64_t CANCEL_TIMEOUT_SECONDS = 1;
+constexpr int64_t PAUSE_TIMEOUT_SECONDS = 1;
 }
 
 DownloadTask::DownloadTask(const DownloadTaskInfo &info, const DownloadConfig &config,
@@ -56,14 +57,10 @@ DownloadTask::DownloadTask(const DownloadTaskInfo &info, const DownloadConfig &c
       outputPath_(info.outputPath),
       header_(info.header),
       config_(config),
-      state_(DOWNLOAD_PREPARING),
+      state_(DOWNLOAD_IDLE),
       downloadedSize_(0),
       totalSize_(-1),
       downloadSpeed_(0),
-      running_(false),
-      paused_(false),
-      canceled_(false),
-      downloadTerminated_(false),
       callback_(callback)
 {
     MEDIA_LOGI("DownloadTask created, taskId=%{public}" PRIu64, taskId_);
@@ -80,20 +77,21 @@ DownloadTask::~DownloadTask()
 
 int32_t DownloadTask::Start()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(stateMutex_);
 
-    if (running_.load()) {
-        MEDIA_LOGE("Start failed: already running");
+    DownloadState currentState = state_.load();
+    if (currentState != DOWNLOAD_IDLE) {
+        MEDIA_LOGE("Start failed: not idle, currentState=%{public}s", DownloadStateLog(currentState));
         return DOWNLOAD_ERROR_ALREADY_RUNNING;
     }
 
-    running_.store(true);
-    paused_.store(false);
-    canceled_.store(false);
-    downloadTerminated_.store(false);
     downloadedSize_.store(0);
     totalSize_.store(-1);
     downloadSpeed_.store(0);
+    lastErrorType_.store(DOWNLOAD_ERROR_NONE);
+    lastErrorCode_.store(0);
+    resumePos_.store(0);
+
     state_.store(DOWNLOAD_PREPARING);
 
     workerThread_ = std::thread(&DownloadTask::Run, this);
@@ -104,52 +102,52 @@ int32_t DownloadTask::Start()
 
 int32_t DownloadTask::Pause()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> stateLock(stateMutex_);
 
-    if (!running_.load() || paused_.load()) {
-        MEDIA_LOGE("Pause failed: not running or already paused");
+    DownloadState currentState = state_.load();
+    if (currentState != DOWNLOAD_RUNNING) {
+        MEDIA_LOGE("Pause failed: not running, currentState=%{public}s", DownloadStateLog(currentState));
         return DOWNLOAD_ERROR_INVALID_OPERATION;
     }
 
-    paused_.store(true);
-    state_.store(DOWNLOAD_PAUSED);
+    state_.store(DOWNLOAD_PAUSING);
 
     auto client = GetClient();
     if (client != nullptr) {
         client->PauseDownload();
     }
 
-    auto cb = callback_.lock();
-    if (cb) {
-        cb->OnStateChanged(DOWNLOAD_PAUSED);
+    bool finished = finishCv_.wait_for(stateLock, std::chrono::seconds(PAUSE_TIMEOUT_SECONDS), [this] {
+        DownloadState s = state_.load();
+        return s == DOWNLOAD_PAUSED || s == DOWNLOAD_COMPLETED ||
+               s == DOWNLOAD_CANCELED || s == DOWNLOAD_FAILED;
+    });
+
+    if (!finished) {
+        MEDIA_LOGW("Pause: timeout waiting for state transition");
     }
 
-    MEDIA_LOGI("Pause success");
-    return DOWNLOAD_RET_OK;
+    DownloadState s = state_.load();
+    MEDIA_LOGI("Pause done: currentState=%{public}s", DownloadStateLog(s));
+    return s == DOWNLOAD_PAUSED ? DOWNLOAD_RET_OK : DOWNLOAD_ERROR_INVALID_OPERATION;
 }
 
 int32_t DownloadTask::Resume()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(stateMutex_);
 
-    if (!paused_.load()) {
-        MEDIA_LOGE("Resume failed: not paused");
+    DownloadState currentState = state_.load();
+    if (currentState != DOWNLOAD_PAUSED && currentState != DOWNLOAD_FAILED) {
+        MEDIA_LOGE("Resume failed: not paused, currentState=%{public}s", DownloadStateLog(currentState));
         return DOWNLOAD_ERROR_INVALID_OPERATION;
     }
 
-    paused_.store(false);
-    canceled_.store(false);
-    state_.store(DOWNLOAD_RUNNING);
+    state_.store(DOWNLOAD_RESUMING);
 
-    auto client = GetClient();
-    if (client != nullptr) {
-        client->ResumeDownload();
+    if (workerThread_.joinable()) {
+        workerThread_.detach();
     }
-
-    auto cb = callback_.lock();
-    if (cb) {
-        cb->OnStateChanged(DOWNLOAD_RUNNING);
-    }
+    workerThread_ = std::thread(&DownloadTask::Run, this);
 
     MEDIA_LOGI("Resume success");
     return DOWNLOAD_RET_OK;
@@ -157,27 +155,38 @@ int32_t DownloadTask::Resume()
 
 int32_t DownloadTask::Cancel()
 {
-    std::unique_lock<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> stateLock(stateMutex_);
 
-    canceled_.store(true);
-    paused_.store(false);
-    downloadTerminated_.store(true);
+    DownloadState currentState = state_.load();
+    if (currentState != DOWNLOAD_RUNNING && currentState != DOWNLOAD_PAUSED && currentState != DOWNLOAD_RESUMING &&
+        currentState != DOWNLOAD_PREPARING) {
+        MEDIA_LOGE("Cancel failed: invalid state, currentState=%{public}s", DownloadStateLog(currentState));
+        return DOWNLOAD_ERROR_INVALID_OPERATION;
+    }
 
-    // notify client cb thread
+    state_.store(DOWNLOAD_CANCELING);
+    if (currentState != DOWNLOAD_RUNNING) {
+        MEDIA_LOGI("Cancel done: pre state=%{public}s", DownloadStateLog(currentState));
+        return DOWNLOAD_RET_OK;
+    }
+
     auto client = GetClient();
     if (client != nullptr) {
         client->Cancel();
     }
 
-    bool finished = finishCv_.wait_for(lock, std::chrono::seconds(CANCEL_TIMEOUT_SECONDS), [this] {
-        return !running_.load();
+    bool finished = finishCv_.wait_for(stateLock, std::chrono::seconds(CANCEL_TIMEOUT_SECONDS), [this] {
+        DownloadState s = state_.load();
+        return s == DOWNLOAD_CANCELED || s == DOWNLOAD_COMPLETED || s == DOWNLOAD_FAILED;
     });
+
     if (!finished) {
-        MEDIA_LOGW("Cancel: timeout waiting for Run()");
+        MEDIA_LOGW("Cancel: timeout waiting for state transition");
     }
 
-    MEDIA_LOGI("Cancel success");
-    return DOWNLOAD_RET_OK;
+    DownloadState s = state_.load();
+    MEDIA_LOGI("Cancel done: currentState=%{public}s", DownloadStateLog(s));
+    return s == DOWNLOAD_CANCELED ? DOWNLOAD_RET_OK : DOWNLOAD_ERROR_INVALID_OPERATION;
 }
 
 DownloadState DownloadTask::GetState()
@@ -193,7 +202,7 @@ DownloadProgress DownloadTask::GetProgress()
     progress.downloadSpeed = downloadSpeed_.load();
 
     if (progress.totalSize > 0) {
-        int64_t percent = progress.downloadedSize * PERCENT_MAX / progress.totalSize;
+        int64_t percent = progress.downloadedSize * 100 / progress.totalSize;
         progress.progressPercent = static_cast<int32_t>(std::min(PERCENT_MAX, percent));
     } else {
         progress.progressPercent = 0;
@@ -202,58 +211,205 @@ DownloadProgress DownloadTask::GetProgress()
     return progress;
 }
 
-void DownloadTask::Run()
+bool DownloadTask::EnterRunningState()
 {
-    MEDIA_LOGI("DownloadTask thread started, taskId=%{public}" PRIu64, taskId_);
-
-    state_.store(DOWNLOAD_RUNNING);
     auto cb = callback_.lock();
+    std::lock_guard<std::mutex> lock(stateMutex_);
+    if (state_.load() != DOWNLOAD_PREPARING && state_.load() != DOWNLOAD_RESUMING) {
+        MEDIA_LOGW("Run: invalid entry state %{public}d", state_.load());
+        return false;
+    }
+    state_.store(DOWNLOAD_RUNNING);
     if (cb) {
         cb->OnStateChanged(DOWNLOAD_RUNNING);
     }
+    return true;
+}
 
-    StartProgressThread();
+void DownloadTask::StartProgressThread(std::thread& progressThread, std::atomic<bool>& progressRunning,
+    std::mutex& progressMutex, std::condition_variable& progressCv)
+{
+    progressRunning.store(true);
+    progressThread = std::thread(&DownloadTask::RunProgressThread, this, std::ref(progressRunning),
+        std::ref(progressMutex), std::ref(progressCv));
+}
 
-    DoPrepare();
+void DownloadTask::StopProgressThread(std::thread& progressThread, std::atomic<bool>& progressRunning,
+    std::condition_variable& progressCv)
+{
+    progressRunning.store(false);
+    progressCv.notify_one();
+    if (progressThread.joinable()) {
+        progressThread.join();
+    }
+}
 
-    StopProgressThread();
+void DownloadTask::CheckDownloadResult(bool success)
+{
+    if (HandleDownloadCompleted(success)) {
+        return;
+    }
+    if (HandleDownloadPaused()) {
+        return;
+    }
+    if (HandleDownloadCanceled()) {
+        return;
+    }
+    HandleDownloadFailed();
+}
 
-    auto client = GetClient();
-    if (client != nullptr && client->IsRequestSuccess()) {
+bool DownloadTask::HandleDownloadCompleted(bool success)
+{
+    if (!success) {
+        return false;
+    }
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
         state_.store(DOWNLOAD_COMPLETED);
-        running_.store(false);
-        downloadTerminated_.store(true);
-        if (cb) {
-            DownloadProgress progress = GetProgress();
-            progress.downloadSpeed = CalculateSpeed();
-            cb->OnProgress(progress);
-            cb->OnStateChanged(DOWNLOAD_COMPLETED);
-            cb->OnCompleted(downloadedSize_.load());
+    }
+    MEDIA_LOGI("Download completed");
+    auto cb = callback_.lock();
+    if (cb) {
+        DownloadProgress progress = GetProgress();
+        progress.downloadSpeed = CalculateSpeed();
+        cb->OnProgress(progress);
+        cb->OnStateChanged(DOWNLOAD_COMPLETED);
+        cb->OnCompleted(downloadedSize_.load());
+    }
+    return true;
+}
+
+bool DownloadTask::HandleDownloadPaused()
+{
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        if (state_.load() != DOWNLOAD_PAUSING) {
+            return false;
         }
+        MEDIA_LOGI("Run: detected PAUSING after DoPrepare");
+        resumePos_.store(downloadedSize_.load());
+        state_.store(DOWNLOAD_PAUSED);
+    }
+    auto cb = callback_.lock();
+    if (cb) {
+        cb->OnStateChanged(DOWNLOAD_PAUSED);
+    }
+    return true;
+}
+
+bool DownloadTask::HandleDownloadCanceled()
+{
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        if (state_.load() != DOWNLOAD_CANCELING) {
+            return false;
+        }
+        MEDIA_LOGI("Run: detected CANCELING after DoPrepare");
+        state_.store(DOWNLOAD_CANCELED);
+    }
+    auto cb = callback_.lock();
+    if (cb) {
+        cb->OnStateChanged(DOWNLOAD_CANCELED);
+    }
+    return true;
+}
+
+void DownloadTask::HandleDownloadFailed()
+{
+    MEDIA_LOGI("Download failed, errorType=%{public}d", lastErrorType_.load());
+    HandleError(lastErrorType_.load(), lastErrorCode_.load(), "Download failed");
+}
+
+void DownloadTask::NotifyFinish()
+{
+    finishCv_.notify_all();
+    MEDIA_LOGI("DownloadTask thread ended, taskId=%{public}" PRIu64, taskId_);
+}
+
+void DownloadTask::InitClient()
+{
+    auto preClient = GetClient();
+    if (preClient != nullptr) {
+        SetClient(nullptr);
+    }
+    SetClient(std::make_unique<NetworkClient>(url_, header_, config_.timeoutMs, config_.retryCount));
+}
+
+void DownloadTask::ExecuteDownload()
+{
+    MEDIA_LOGI("ExecuteDownload start");
+
+    int64_t startPos = 0;
+    if (resumePos_.load() > 0) {
+        startPos = resumePos_.load();
+        MEDIA_LOGI("DoPrepare: resuming from %{public}" PRId64, startPos);
     } else {
-        if (canceled_.load()) {
-            MEDIA_LOGI("Download canceled by user");
-            state_.store(DOWNLOAD_CANCELED);
-            running_.store(false);
-            downloadTerminated_.store(true);
-            if (cb) {
-                cb->OnStateChanged(DOWNLOAD_CANCELED);
-            }
-        } else if (lastErrorType_.load() == DOWNLOAD_ERROR_DISK_SPACE) {
-            HandleError(lastErrorType_.load(), lastErrorCode_.load(), "Disk space insufficient during download");
-        } else if (lastErrorType_.load() == DOWNLOAD_ERROR_FILE_IO) {
-            HandleError(lastErrorType_.load(), lastErrorCode_.load(), "File write error during download");
-        } else {
-            HandleError(DOWNLOAD_ERROR_NETWORK, -1, "Request failed");
-        }
+        startPos = GetFileSize(outputPath_);
+        MEDIA_LOGI("DoPrepare: starting fresh, file size=%{public}" PRId64, startPos);
     }
 
-    DoCleanup();
+    auto client = GetClient();
+    int32_t setPathRet = client->SetOutputPath(outputPath_, startPos);
+    if (setPathRet != DOWNLOAD_RET_OK) {
+        lastErrorType_.store(DOWNLOAD_ERROR_FILE_IO);
+        lastErrorCode_.store(setPathRet);
+        return;
+    }
 
-    running_.store(false);
-    finishCv_.notify_all();
+    client->SetProgressCallback([this](int64_t downloadedSize, int64_t totalSize) {
+        downloadedSize_.store(downloadedSize);
+        if (totalSize > 0) {
+            totalSize_.store(totalSize);
+        }
+    });
 
-    MEDIA_LOGI("DownloadTask thread ended, taskId=%{public}" PRIu64, taskId_);
+    client->SetErrorCallback([this](DownloadErrorType errorType, int32_t errorCode) {
+        MEDIA_LOGE("download error, type: %{public}d, code: %{puiblic}d", static_cast<int32_t>(errorType), errorCode);
+        lastErrorType_.store(errorType);
+        lastErrorCode_.store(errorCode);
+    });
+
+    lastSpeedUpdateTime_ = std::chrono::steady_clock::now();
+    lastDownloadedSize_ = 0;
+    lastProgressTime_ = std::chrono::steady_clock::now();
+
+    int32_t connectRet = client->Download(startPos);
+
+    if (connectRet != DOWNLOAD_RET_OK) {
+        if (lastErrorType_.load() == DOWNLOAD_ERROR_NONE) {
+            lastErrorType_.store(DOWNLOAD_ERROR_NETWORK);
+            lastErrorCode_.store(connectRet);
+        }
+        return;
+    }
+
+    MEDIA_LOGI("DoPrepare success");
+}
+
+void DownloadTask::Run()
+{
+    MEDIA_LOGI("DownloadTask thread started, taskId=%{public}" PRIu64, taskId_);
+    if (!EnterRunningState()) {
+        return;
+    }
+
+    std::atomic<bool> progressRunning{false};
+    std::thread progressThread;
+    std::mutex progressMutex;
+    std::condition_variable progressCv;
+    StartProgressThread(progressThread, progressRunning, progressMutex, progressCv);
+
+    InitClient();
+    ExecuteDownload();
+
+    StopProgressThread(progressThread, progressRunning, progressCv);
+
+    auto client = GetClient();
+    bool success = (client != nullptr && client->IsRequestSuccess());
+    CheckDownloadResult(success);
+
+    ReleaseClient();
+    NotifyFinish();
 }
 
 int64_t DownloadTask::GetFileSize(const std::string &path)
@@ -265,69 +421,16 @@ int64_t DownloadTask::GetFileSize(const std::string &path)
     return 0;
 }
 
-void DownloadTask::DoPrepare()
+void DownloadTask::ReleaseClient()
 {
-    MEDIA_LOGI("DoPrepare start");
-
-    auto preClient = GetClient();
-    if (preClient != nullptr) {
-        preClient->Disconnect();
-        SetClient(nullptr);
-    }
-
-    int64_t existingSize = GetFileSize(outputPath_);
-    MEDIA_LOGI("DoPrepare: existing file size=%{public}" PRId64, existingSize);
-
-    SetClient(std::make_unique<NetworkClient>(url_, header_, config_.timeoutMs, config_.retryCount));
-
-    auto client = GetClient();
-    int32_t setPathRet = client->SetOutputPath(outputPath_);
-    if (setPathRet != DOWNLOAD_RET_OK) {
-        HandleError(DOWNLOAD_ERROR_FILE_IO, setPathRet, "Failed to set output path");
-        return;
-    }
-
-    client->SetDataCallback([this](const char* data, size_t len, int64_t totalSize) {
-        if (canceled_.load()) {
-            MEDIA_LOGI("DataCallback: canceled, return false to abort");
-            return false;
-        }
-        return OnDataReceived(data, len, totalSize);
-    });
-
-    outputFd_ = client->GetOutputFd();
-
-    lastSpeedUpdateTime_ = std::chrono::steady_clock::now();
-    lastDownloadedSize_ = 0;
-    lastProgressTime_ = std::chrono::steady_clock::now();
-
-    int32_t connectRet = client->Connect(existingSize);
-    if (connectRet != DOWNLOAD_RET_OK) {
-        if (lastErrorType_.load() == DOWNLOAD_ERROR_DISK_SPACE) {
-            HandleError(lastErrorType_.load(), lastErrorCode_.load(), "Disk space insufficient during download");
-        } else if (lastErrorType_.load() == DOWNLOAD_ERROR_FILE_IO) {
-            HandleError(lastErrorType_.load(), lastErrorCode_.load(), "File write error during download");
-        } else {
-            HandleError(DOWNLOAD_ERROR_NETWORK, connectRet, "Failed to connect to server");
-        }
-        return;
-    }
-
-    totalSize_.store(client->GetTotalSize());
-    MEDIA_LOGI("DoPrepare success, totalSize=%{public}" PRId64, totalSize_.load());
-}
-
-void DownloadTask::DoCleanup()
-{
-    MEDIA_LOGI("DoCleanup start");
+    MEDIA_LOGI("ReleaseClient start");
 
     auto client = GetClient();
     if (client != nullptr) {
-        client->Disconnect();
         SetClient(nullptr);
     }
 
-    MEDIA_LOGI("DoCleanup done");
+    MEDIA_LOGI("ReleaseClient done");
 }
 
 void DownloadTask::HandleError(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg)
@@ -335,17 +438,17 @@ void DownloadTask::HandleError(DownloadErrorType errorType, int32_t errorCode, c
     MEDIA_LOGE("Download error: type=%{public}d, code=%{public}d, msg=%{public}s",
                errorType, errorCode, errorMsg.c_str());
 
-    state_.store(DOWNLOAD_FAILED);
-    running_.store(false);
-    downloadTerminated_.store(true);
+    {
+        std::lock_guard<std::mutex> lock(stateMutex_);
+        state_.store(DOWNLOAD_FAILED);
+        resumePos_.store(downloadedSize_.load());
+    }
 
     auto cb = callback_.lock();
     if (cb) {
         cb->OnStateChanged(DOWNLOAD_FAILED);
         cb->OnFailed(errorType, errorCode, errorMsg);
     }
-
-    DoCleanup();
 }
 
 int64_t DownloadTask::CalculateSpeed()
@@ -356,7 +459,6 @@ int64_t DownloadTask::CalculateSpeed()
     if (elapsed.count() >= SPEED_CALCULATION_INTERVAL_MS) {
         int64_t currentDownloaded = downloadedSize_.load();
         int64_t downloadedDelta = currentDownloaded - lastDownloadedSize_;
-
         int64_t speed = downloadedDelta * 1000 / elapsed.count();
         downloadSpeed_.store(speed);
 
@@ -389,56 +491,17 @@ void DownloadTask::UpdateProgress()
     CalculateSpeed();
 }
 
-bool DownloadTask::OnDataReceived(const char* data, size_t len, int64_t totalSize)
-{
-    if (state_.load() != DOWNLOAD_RUNNING) {
-        return true;
-    }
-
-    if (totalSize > 0 && totalSize_.load() <= 0) {
-        totalSize_.store(totalSize);
-    }
-
-    if (outputFd_ >= 0) {
-        ssize_t writeLen = write(outputFd_, data, len);
-        if (writeLen == len) {
-            downloadedSize_.fetch_add(writeLen);
-            return true;
-        }
-        MEDIA_LOGE("OnDataReceived: write failed, errno=%{public}d", errno);
-        if (errno == ENOSPC) {
-            lastErrorType_.store(DOWNLOAD_ERROR_DISK_SPACE);
-        } else {
-            lastErrorType_.store(DOWNLOAD_ERROR_FILE_IO);
-        }
-        lastErrorCode_.store(errno);
-        return false;
-    }
-    return true;
-}
-
-void DownloadTask::StartProgressThread()
-{
-    progressThreadRunning_.store(true);
-    progressThread_ = std::thread(&DownloadTask::ProgressReporterThread, this);
-}
-
-void DownloadTask::StopProgressThread()
-{
-    progressThreadRunning_.store(false);
-    if (progressThread_.joinable()) {
-        progressThread_.join();
-    }
-}
-
-void DownloadTask::ProgressReporterThread()
+void DownloadTask::RunProgressThread(std::atomic<bool>& progressRunning,
+    std::mutex& progressMutex, std::condition_variable& progressCv)
 {
     bool hasReportedTotalSize = false;
+    std::unique_lock<std::mutex> lock(progressMutex);
 
-    while (progressThreadRunning_.load()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(config_.progressCallbackIntervalMs));
+    while (progressRunning.load()) {
+        progressCv.wait_for(lock, std::chrono::milliseconds(config_.progressCallbackIntervalMs),
+            [&progressRunning] { return !progressRunning.load(); });
 
-        if (!progressThreadRunning_.load()) {
+        if (!progressRunning.load()) {
             break;
         }
 

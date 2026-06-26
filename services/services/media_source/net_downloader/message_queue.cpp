@@ -107,7 +107,7 @@ void MessageQueue::PostMessage(const Message &msg)
     queue_.push(msg);
     cv_.notify_one();
 
-    MEDIA_LOGD("PostMessage: type=%{public}d", msg.type);
+    MEDIA_LOGI("PostMessage: type=%{public}d", msg.type);
 }
 
 void MessageQueue::Run()
@@ -133,6 +133,7 @@ void MessageQueue::Run()
         }
 
         if (handler_ != nullptr) {
+            MEDIA_LOGI("MessageQueue handle type=%{public}d", msg.type);
             handler_(msg);
         }
     }
@@ -154,6 +155,7 @@ void MessageQueue::ProcessMessages()
         }
 
         if (handler_ != nullptr) {
+            MEDIA_LOGI("MessageQueue ProcessMessages type=%{public}d", msg.type);
             handler_(msg);
         }
     }

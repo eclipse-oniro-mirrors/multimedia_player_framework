@@ -34,12 +34,13 @@ public:
     static std::shared_ptr<Plugins::HttpPlugin::NetworkClient> NewInstance(
         Plugins::HttpPlugin::RxHeader headCallback,
         Plugins::HttpPlugin::RxBody bodyCallback,
-        void *userParam);
+        void *userParam,
+        std::optional<uint32_t> connectTimeoutMs);
 
 private:
     static void *handler_;
     static Plugins::HttpPlugin::NetworkClient* (*createFunc_)(Plugins::HttpPlugin::RxHeader,
-        Plugins::HttpPlugin::RxBody, void *);
+        Plugins::HttpPlugin::RxBody, void *, std::optional<uint32_t>);
     static std::mutex loadMutex_;
 
     static void DestroyInner();

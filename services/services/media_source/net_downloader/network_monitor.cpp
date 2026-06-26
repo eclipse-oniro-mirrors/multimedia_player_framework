@@ -104,6 +104,7 @@ void NetworkMonitor::OnNetworkStateChanged()
     std::lock_guard<std::mutex> lock(mutex_);
     NetworkType oldType = currentNetworkType_;
     currentNetworkType_ = DetectNetworkType();
+
     if (oldType != currentNetworkType_ && networkChangeCallback_ != nullptr) {
         MEDIA_LOGI("Network changed: %{public}d -> %{public}d", oldType, currentNetworkType_);
         networkChangeCallback_(currentNetworkType_);
