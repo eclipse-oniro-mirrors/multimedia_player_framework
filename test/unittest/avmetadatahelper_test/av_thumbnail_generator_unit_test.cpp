@@ -58,6 +58,75 @@ void AVThumbnailGeneratorUnitTest::TearDown(void)
     avthumbnailGenerator = nullptr;
 }
 
+/** 
+ * @tc.name: OnInputBufferAvailable 
+ * @tc.desc: OnInputBufferAvailable 
+ * @tc.type: FUNC 
+ */ 
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnInputBufferAvailable, TestSize.Level1) 
+{ 
+    uint32_t index = 0; 
+    std::shared_ptr<AVBuffer> buffer = nullptr; 
+    avthumbnailGenerator->OnInputBufferAvailable(index, buffer); 
+    avthumbnailGenerator->stopProcessing_ = true; 
+    avthumbnailGenerator->OnInputBufferAvailable(index, buffer); 
+    avthumbnailGenerator->hasFetchedFrame_ = true; 
+    avthumbnailGenerator->OnInputBufferAvailable(index, buffer); 
+    EXPECT_EQ(avthumbnailGenerator->seekTime_, 0); 
+} 
+
+/** 
+ * @tc.name: OnOutputBufferAvailable 
+ * @tc.desc: OnOutputBufferAvailable 
+ * @tc.type: FUNC 
+ */ 
+HWTEST_F(AVThumbnailGeneratorUnitTest, OnOutputBufferAvailable, TestSize.Level1) 
+{ 
+    uint32_t index = 0; 
+    std::string trackMime_ = "test"; 
+    uint8_t data[100]; 
+    std::shared_ptr<AVBuffer> buffer = AVBuffer::CreateAVBuffer(data, sizeof(data), sizeof(data)); 
+    avthumbnailGenerator->videoDecoder_ = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_); 
+    avthumbnailGenerator->OnOutputBufferAvailable(index, buffer); 
+    avthumbnailGenerator->hasFetchedFrame_ = true; 
+    avthumbnailGenerator->OnOutputBufferAvailable(index, buffer); 
+    avthumbnailGenerator->hasFetchedFrame_ = false; 
+    buffer->pts_ = -1; 
+    avthumbnailGenerator->OnOutputBufferAvailable(index, buffer); 
+    EXPECT_EQ(avthumbnailGenerator->trackIndex_, 0); 
+} 
+
+/** 
+ * @tc.name: GenerateAlignmentAvBuffer 
+ * @tc.desc: GenerateAlignmentAvBuffer 
+ * @tc.type: FUNC 
+ */ 
+HWTEST_F(AVThumbnailGeneratorUnitTest, GenerateAlignmentAvBuffer, TestSize.Level1) 
+{ 
+    uint8_t data[100]; 
+    avthumbnailGenerator->avBuffer_ = AVBuffer::CreateAVBuffer(data, sizeof(data), sizeof(data)); 
+    avthumbnailGenerator->GenerateAlignmentAvBuffer(); 
+    avthumbnailGenerator->avBuffer_ = nullptr; 
+    avthumbnailGenerator->GenerateAlignmentAvBuffer(); 
+    EXPECT_EQ(avthumbnailGenerator->trackIndex_, 0); 
+} 
+
+/** 
+ * @tc.name: Reset 
+ * @tc.desc: Reset 
+ * @tc.type: FUNC 
+ */ 
+HWTEST_F(AVThumbnailGeneratorUnitTest, Reset, TestSize.Level1) 
+{ 
+    std::string trackMime_ = "test"; 
+    avthumbnailGenerator->Reset(); 
+    avthumbnailGenerator->mediaDemuxer_ = std::make_shared<MediaDemuxer>(); 
+    avthumbnailGenerator->Reset(); 
+    avthumbnailGenerator->videoDecoder_ = MediaAVCodec::VideoDecoderFactory::CreateByMime(trackMime_); 
+    avthumbnailGenerator->Reset(); 
+    EXPECT_EQ(avthumbnailGenerator->trackIndex_, 0); 
+}
+
 /**
  * @tc.name: CopySurfaceBufferInfo
  * @tc.desc: CopySurfaceBufferInfo
