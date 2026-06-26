@@ -105,15 +105,15 @@ HWTEST_F(NativeImageGeneratorUnitTest, OH_AVImageGenerator_FetchFrameByTime_0100
     ASSERT_EQ(AV_ERR_OK, res);
 }
 
-/** 
-    * @tc.number    : AVImageGenerator_Release_0100 
-    * @tc.name      : SetSource AVImageGenerator_Release 
-    * @tc.desc      : AVImageGenerator release 
- */ 
-HWTEST_F(NativeImageGeneratorUnitTest, OH_AVImageGenerator_Release_0100, Level2) 
-{ 
-    auto imagegenerator  = OH_AVImageGenerator_Create(); 
-    ASSERT_NE(nullptr, imagegenerator); 
-    auto result = OH_AVImageGenerator_Release(imagegenerator); 
-    ASSERT_EQ(AV_ERR_OK, result); 
+/**
+    * @tc.number    : AVImageGenerator_Release_0100
+    * @tc.name      : SetSource AVImageGenerator_Release
+    * @tc.desc      : AVImageGenerator release
+ */
+HWTEST_F(NativeImageGeneratorUnitTest, OH_AVImageGenerator_Release_0100, Level2)
+{
+    auto imagegenerator  = OH_AVImageGenerator_Create();
+    ASSERT_NE(nullptr, imagegenerator);
+    auto result = OH_AVImageGenerator_Release(imagegenerator);
+    ASSERT_EQ(AV_ERR_OK, result);
 }
