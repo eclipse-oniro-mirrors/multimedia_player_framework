@@ -36,17 +36,17 @@ void NativeImageGeneratorUnitTest::SetUp(void) {}
 
 void NativeImageGeneratorUnitTest::TearDown(void) {}
 
-/** 
-    * @tc.number    : AVImageGenerator_Create_0100 
-    * @tc.name      : SetSource AVImageGenerator_Create 
-    * @tc.desc      : Verify the functionality of creating AVImageGenerator object. 
- */ 
-HWTEST_F(NativeImageGeneratorUnitTest, OH_AVImageGenerator_Create_0100, Level2) 
-{ 
-    auto imagegenerator = OH_AVImageGenerator_Create(); 
-    ASSERT_NE(nullptr, imagegenerator); 
+/**
+    * @tc.number    : AVImageGenerator_Create_0100
+    * @tc.name      : SetSource AVImageGenerator_Create
+    * @tc.desc      : Verify the functionality of creating AVImageGenerator object.
+ */
+HWTEST_F(NativeImageGeneratorUnitTest, OH_AVImageGenerator_Create_0100, Level2)
+{
+    auto imagegenerator = OH_AVImageGenerator_Create();
+    ASSERT_NE(nullptr, imagegenerator);
 
-    OH_AVImageGenerator_Release(imagegenerator); 
+    OH_AVImageGenerator_Release(imagegenerator);
 }
 
 /**
