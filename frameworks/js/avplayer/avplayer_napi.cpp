@@ -2120,7 +2120,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetMediaMutedTask(MediaType 
             }
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The current state is "+ state + 
+                "The current state is " + state + 
                     "SetMediaMuted only supports stopped or initialized state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
@@ -2142,7 +2142,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetPlaybackStrategyTask(AVPl
             }
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The current state is "+ state + 
+                "The current state is " + state + 
                     ",SetPlaybackStrategy only supports initialized or stopped state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
@@ -2235,7 +2235,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetSuperResolutionTask(bool 
         } else {
             auto state = this->GetCurrentState();
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The current state is " + state +
+                "The current state is " + state + 
                     "SetSuperResolution only supports initialized/prepared/playing/paused/completed/stopped state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
@@ -2262,7 +2262,7 @@ napi_value AVPlayerNapi::JsSetVideoWindowSize(napi_env env, napi_callback_info i
     auto state = jsPlayer->GetCurrentState();
     if (!jsPlayer->CanSetSuperResolution()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "The current state is "+ state + 
+            "The current state is " + state + 
                 "SetVideoWindowSize only supports initialized/prepared/playing/paused/completed/stopped state.");
     } else if (argCount < ARRAY_ARG_COUNTS_TWO ||
                 napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number ||
@@ -2308,7 +2308,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetVideoWindowSizeTask(int32
             }
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The current state is "+ state + 
+                "The current state is " + state + 
                     "SetVideoWindowSize only supports initialized/prepared/playing/paused/completed/stopped state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
@@ -2373,7 +2373,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::EnableCameraPostprocessingTa
         } else {
             auto state = GetCurrentState();
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The current state is "+ state + 
+                "The current state is " + state + 
                     "cameraPostProcessor only supports initialized state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
@@ -2528,7 +2528,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         return result;
     }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
-    if (jsPlayer->GetJsApiVersion() < API_VERSION_17)
+    if (jsPlayer->GetJsApiVersion() < API_VERSION_17)    
         strategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT;
     jsPlayer->EnqueueMediaSourceTask(jsPlayer, mediaSource, strategy);
     return result;
@@ -2818,7 +2818,7 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
     auto state = jsPlayer->GetCurrentState();
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "The current state is "+ state + 
+            "The current state is " + state + 
                 ",sest loop operation only supports prepared/playing/paused/completed state.");
         return result;
     }

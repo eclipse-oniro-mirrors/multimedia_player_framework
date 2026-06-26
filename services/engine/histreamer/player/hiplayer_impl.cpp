@@ -738,8 +738,8 @@ int32_t HiPlayerImpl::PrepareAsync()
         demuxer_->SetMediaMuted(OHOS::Media::MediaType::MEDIA_TYPE_VID, true);
     }
     if (ret != Status::OK && !isInterruptNeeded_.load()) {
-        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE, ""});
-        return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: DoSetSource error");
+        OnEvent({"engine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_CONTAINER_TYPE, mimeType_});
+        return HandleErrorRet(Status::ERROR_UNSUPPORTED_FORMAT, "PrepareAsync error: DoSetSource error" + mimeType_);
     }
     FALSE_RETURN_V(!BreakIfInterruptted(), TransStatus(Status::OK));
     NotifyBufferingUpdate(PlayerKeys::PLAYER_BUFFERING_START, 0);
