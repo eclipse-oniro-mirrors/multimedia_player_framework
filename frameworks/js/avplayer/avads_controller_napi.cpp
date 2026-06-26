@@ -73,8 +73,14 @@ napi_value AVAdsControllerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("skipCurrentAdsMediaSource", JsSkipCurrentAdsMediaSource),
         DECLARE_NAPI_FUNCTION("disableAllAdsMediaSource", JsDisableAllAdsMediaSource),
         DECLARE_NAPI_FUNCTION("release", JsRelease),
-        DECLARE_NAPI_FUNCTION("onAdsChange", JsOnAdsChange),
-        DECLARE_NAPI_FUNCTION("offAdsChange", JsOffAdsChange),
+        DECLARE_NAPI_FUNCTION("onAdsEventListenerLoadingError", JsOnAdsEventListenerLoadingError),
+        DECLARE_NAPI_FUNCTION("offAdsEventListenerLoadingError", JsOffAdsEventListenerLoadingError),
+        DECLARE_NAPI_FUNCTION("onAdsListenerAdsStarted", JsOnAdsListenerAdsStarted),
+        DECLARE_NAPI_FUNCTION("offAdsListenerAdsStarted", JsOffAdsListenerAdsStarted),
+        DECLARE_NAPI_FUNCTION("onAdsListenerAdsSkipped", JsOnAdsListenerAdsSkipped),
+        DECLARE_NAPI_FUNCTION("offAdsListenerAdsSkipped", JsOffAdsListenerAdsSkipped),
+        DECLARE_NAPI_FUNCTION("onAdsListenerAdsCompleted", JsOnAdsListenerAdsCompleted),
+        DECLARE_NAPI_FUNCTION("offAdsListenerAdsCompleted", JsOffAdsListenerAdsCompleted),
     };
 
     napi_value constructor = nullptr;
@@ -456,7 +462,10 @@ napi_value AVAdsControllerNapi::JsRelease(napi_env env, napi_callback_info info)
     AVPlayerNapi *player = controller->GetPlayer();
     if (player != nullptr && player->GetPlayerInstance() != nullptr) {
         player->GetPlayerInstance()->DisableAllAdsMediaSource();
-        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_CHANGE);
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
     }
 
     {
@@ -467,9 +476,9 @@ napi_value AVAdsControllerNapi::JsRelease(napi_env env, napi_callback_info info)
     return result;
 }
 
-napi_value AVAdsControllerNapi::JsOnAdsChange(napi_env env, napi_callback_info info)
+napi_value AVAdsControllerNapi::JsOnAdsEventListenerLoadingError(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGI("JsOnAdsChange enter");
+    MEDIA_LOGI("JsOnAdsEventListenerLoadingError enter");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -500,15 +509,15 @@ napi_value AVAdsControllerNapi::JsOnAdsChange(napi_env env, napi_callback_info i
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     AVPlayerNapi *player = controller->GetPlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-    player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_CHANGE, autoRef);
+    player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR, autoRef);
 
-    MEDIA_LOGI("JsOnAdsChange registered successfully");
+    MEDIA_LOGI("JsOnAdsEventListenerLoadingError registered successfully");
     return result;
 }
 
-napi_value AVAdsControllerNapi::JsOffAdsChange(napi_env env, napi_callback_info info)
+napi_value AVAdsControllerNapi::JsOffAdsEventListenerLoadingError(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGI("JsOffAdsChange enter");
+    MEDIA_LOGI("JsOffAdsEventListenerLoadingError enter");
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
 
@@ -523,9 +532,195 @@ napi_value AVAdsControllerNapi::JsOffAdsChange(napi_env env, napi_callback_info 
 
     AVPlayerNapi *player = controller->GetPlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_CHANGE);
+    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
 
-    MEDIA_LOGI("JsOffAdsChange success");
+    MEDIA_LOGI("JsOffAdsEventListenerLoadingError success");
+    return result;
+}
+
+napi_value AVAdsControllerNapi::JsOnAdsListenerAdsStarted(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsOnAdsListenerAdsStarted enter");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argc = 1;
+    napi_value argv[1] = {nullptr};
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get callback info");
+
+    AVAdsControllerNapi *controller = nullptr;
+    status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
+
+    if (argc < 1) {
+        napi_throw_error(env, nullptr, "Invalid arguments, expected 1");
+        return result;
+    }
+
+    napi_valuetype type;
+    napi_typeof(env, argv[0], &type);
+    CHECK_AND_RETURN_RET_LOG(type == napi_function, result, "Argument must be function");
+
+    napi_ref ref = nullptr;
+    status = napi_create_reference(env, argv[0], 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+    AVPlayerNapi *player = controller->GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED, autoRef);
+
+    MEDIA_LOGI("JsOnAdsListenerAdsStarted registered successfully");
+    return result;
+}
+
+napi_value AVAdsControllerNapi::JsOffAdsListenerAdsStarted(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsOffAdsListenerAdsStarted enter");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    napi_status status = napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get callback info");
+
+    AVAdsControllerNapi *controller = nullptr;
+    status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
+
+    AVPlayerNapi *player = controller->GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
+
+    MEDIA_LOGI("JsOffAdsListenerAdsStarted success");
+    return result;
+}
+
+napi_value AVAdsControllerNapi::JsOnAdsListenerAdsSkipped(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsOnAdsListenerAdsSkipped enter");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argc = 1;
+    napi_value argv[1] = {nullptr};
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get callback info");
+
+    AVAdsControllerNapi *controller = nullptr;
+    status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
+
+    if (argc < 1) {
+        napi_throw_error(env, nullptr, "Invalid arguments, expected 1");
+        return result;
+    }
+
+    napi_valuetype type;
+    napi_typeof(env, argv[0], &type);
+    CHECK_AND_RETURN_RET_LOG(type == napi_function, result, "Argument must be function");
+
+    napi_ref ref = nullptr;
+    status = napi_create_reference(env, argv[0], 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+    AVPlayerNapi *player = controller->GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED, autoRef);
+
+    MEDIA_LOGI("JsOnAdsListenerAdsSkipped registered successfully");
+    return result;
+}
+
+napi_value AVAdsControllerNapi::JsOffAdsListenerAdsSkipped(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsOffAdsListenerAdsSkipped enter");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    napi_status status = napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get callback info");
+
+    AVAdsControllerNapi *controller = nullptr;
+    status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
+
+    AVPlayerNapi *player = controller->GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
+
+    MEDIA_LOGI("JsOffAdsListenerAdsSkipped success");
+    return result;
+}
+
+napi_value AVAdsControllerNapi::JsOnAdsListenerAdsCompleted(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsOnAdsListenerAdsCompleted enter");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argc = 1;
+    napi_value argv[1] = {nullptr};
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisArg, &data);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get callback info");
+
+    AVAdsControllerNapi *controller = nullptr;
+    status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
+
+    if (argc < 1) {
+        napi_throw_error(env, nullptr, "Invalid arguments, expected 1");
+        return result;
+    }
+
+    napi_valuetype type;
+    napi_typeof(env, argv[0], &type);
+    CHECK_AND_RETURN_RET_LOG(type == napi_function, result, "Argument must be function");
+
+    napi_ref ref = nullptr;
+    status = napi_create_reference(env, argv[0], 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+    AVPlayerNapi *player = controller->GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED, autoRef);
+
+    MEDIA_LOGI("JsOnAdsListenerAdsCompleted registered successfully");
+    return result;
+}
+
+napi_value AVAdsControllerNapi::JsOffAdsListenerAdsCompleted(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsOffAdsListenerAdsCompleted enter");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    napi_value thisArg = nullptr;
+    void *data = nullptr;
+    napi_status status = napi_get_cb_info(env, info, nullptr, nullptr, &thisArg, &data);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "Failed to get callback info");
+
+    AVAdsControllerNapi *controller = nullptr;
+    status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
+
+    AVPlayerNapi *player = controller->GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
+
+    MEDIA_LOGI("JsOffAdsListenerAdsCompleted success");
     return result;
 }
 

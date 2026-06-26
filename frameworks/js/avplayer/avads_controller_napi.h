@@ -71,8 +71,14 @@ private:
     static napi_value JsSkipCurrentAdsMediaSource(napi_env env, napi_callback_info info);
     static napi_value JsDisableAllAdsMediaSource(napi_env env, napi_callback_info info);
     static napi_value JsRelease(napi_env env, napi_callback_info info);
-    static napi_value JsOnAdsChange(napi_env env, napi_callback_info info);
-    static napi_value JsOffAdsChange(napi_env env, napi_callback_info info);
+    static napi_value JsOnAdsEventListenerLoadingError(napi_env env, napi_callback_info info);
+    static napi_value JsOffAdsEventListenerLoadingError(napi_env env, napi_callback_info info);
+    static napi_value JsOnAdsListenerAdsStarted(napi_env env, napi_callback_info info);
+    static napi_value JsOffAdsListenerAdsStarted(napi_env env, napi_callback_info info);
+    static napi_value JsOnAdsListenerAdsSkipped(napi_env env, napi_callback_info info);
+    static napi_value JsOffAdsListenerAdsSkipped(napi_env env, napi_callback_info info);
+    static napi_value JsOnAdsListenerAdsCompleted(napi_env env, napi_callback_info info);
+    static napi_value JsOffAdsListenerAdsCompleted(napi_env env, napi_callback_info info);
 
     static void ExecuteAdsTask(napi_env env, void *data);
     static void CompleteAdsTask(napi_env env, napi_status status, void *data);

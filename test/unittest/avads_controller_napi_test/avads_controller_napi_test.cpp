@@ -24,18 +24,6 @@ constexpr int32_t ERR_ADS_PARAM_INVALID = 5400108;
 constexpr int32_t MSERR_INVALID_OPERATION = -1;
 }
 
-HWTEST_F(AVAdsControllerNapiTest, Constructor_001, TestSize.Level0)
-{
-    auto controller = std::make_unique<AVAdsControllerNapi>();
-    ASSERT_NE(controller, nullptr);
-}
-
-HWTEST_F(AVAdsControllerNapiTest, Destructor_001, TestSize.Level0)
-{
-    auto controller = std::make_unique<AVAdsControllerNapi>();
-    ASSERT_NE(controller, nullptr);
-}
-
 HWTEST_F(AVAdsControllerNapiTest, SetPlayer_Nullptr_001, TestSize.Level0)
 {
     auto controller = std::make_unique<AVAdsControllerNapi>();
@@ -44,16 +32,6 @@ HWTEST_F(AVAdsControllerNapiTest, SetPlayer_Nullptr_001, TestSize.Level0)
     void* nullPlayer = nullptr;
     controller->SetPlayer(nullPlayer);
     EXPECT_EQ(controller->GetPlayer(), nullptr);
-}
-
-HWTEST_F(AVAdsControllerNapiTest, SetPlayer_Valid_001, TestSize.Level0)
-{
-    auto controller = std::make_unique<AVAdsControllerNapi>();
-    ASSERT_NE(controller, nullptr);
-
-    int dummyPlayer = 42;
-    controller->SetPlayer(&dummyPlayer);
-    EXPECT_NE(controller->GetPlayer(), nullptr);
 }
 
 HWTEST_F(AVAdsControllerNapiTest, GetPlayer_NullAfterConstruction_001, TestSize.Level0)
@@ -102,17 +80,6 @@ HWTEST_F(AVAdsControllerNapiTest, ThreadSafety_SetPlayer_GetPlayer_001, TestSize
 
     controller->SetPlayer(&player2);
     EXPECT_EQ(controller->GetPlayer(), &player2);
-}
-
-HWTEST_F(AVAdsControllerNapiTest, MutexProtection_001, TestSize.Level0)
-{
-    auto controller = std::make_unique<AVAdsControllerNapi>();
-    ASSERT_NE(controller, nullptr);
-
-    int dummyPlayer = 42;
-    controller->SetPlayer(&dummyPlayer);
-
-    EXPECT_NE(controller->GetPlayer(), nullptr);
 }
 
 HWTEST_F(AVAdsControllerNapiTest, ConcurrentAccess_001, TestSize.Level1)

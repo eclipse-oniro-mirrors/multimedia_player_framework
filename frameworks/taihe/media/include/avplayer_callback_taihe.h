@@ -94,6 +94,10 @@ public:
     void FillContentDiscontinuityEvent(const Format &infoBody);
     void OnTimedMetaDataCb(const int32_t extra, const Format &infoBody);
     void OnAdsChangeCb(const int32_t extra, const Format &infoBody);
+    void HandleAdsStartedEvent(const std::string &eventId, int64_t durationMs);
+    void HandleAdsLoadingErrorEvent(const std::string &eventId, int32_t errorCode, const std::string &errorMessage);
+    void HandleAdsSkippedEvent(const std::string &eventId);
+    void HandleAdsCompletedEvent(const std::string &eventId);
     void OnPlaybackContentChangedCb(const int32_t extra, const Format &infoBody);
     int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);
