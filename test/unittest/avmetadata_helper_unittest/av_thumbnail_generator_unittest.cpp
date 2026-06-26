@@ -61,10 +61,10 @@ void AVThumbnailGeneratorUnitTest::TearDown(void)
 }
 
 /** 
-  * @tc.name: StopTask 
-  * @tc.desc: Test readTask_ != nullptr 
-  * @tc.type: FUNC 
-  */ 
+ * @tc.name: StopTask 
+ * @tc.desc: Test readTask_ != nullptr 
+ * @tc.type: FUNC 
+ */ 
 HWTEST_F(AVThumbnailGeneratorUnitTest, StopTask, TestSize.Level1) 
 { 
     avThumbnailGenerator_->readTask_ = nullptr; 
