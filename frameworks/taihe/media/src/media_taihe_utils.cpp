@@ -27,6 +27,7 @@ namespace {
 
 namespace ANI {
 namespace Media {
+ani_ref MediaTaiheUtils::globalRef = nullptr;
 
 static const std::map<OHOS::AudioStandard::InterruptMode, int32_t> TAIHE_INTERRUPTMODE_INDEX_MAP = {
     {OHOS::AudioStandard::InterruptMode::SHARE_MODE, 0},
@@ -161,15 +162,14 @@ bool MediaTaiheUtils::GetEnumKeyByValue<::ohos::multimedia::audio::AudioPrivacyT
 ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const std::string &message)
 {
     ani_object err {};
-    ani_class cls {};
-    CHECK_AND_RETURN_RET_LOG(env->FindClass(CLASS_NAME_BUSINESSERROR, &cls) == ANI_OK, err,
-        "find class %{public}s failed", CLASS_NAME_BUSINESSERROR);
     ani_method ctor {};
-    CHECK_AND_RETURN_RET_LOG(env->Class_FindMethod(cls, "<ctor>", ":", &ctor) == ANI_OK, err,
+    ani_status errCode = env->Class_FindMethod(static_cast<ani_class>(MediaTaiheUtils::globalRef),
+        "<ctor>", ":(I)", &ctor);
+    CHECK_AND_RETURN_RET_LOG(errCode == ANI_OK, err,
         "find method BusinessError constructor failed");
     ani_object error {};
-    CHECK_AND_RETURN_RET_LOG(env->Object_New(cls, ctor, &error) == ANI_OK, err,
-        "new object %{public}s failed", CLASS_NAME_BUSINESSERROR);
+    CHECK_AND_RETURN_RET_LOG(env->Object_New(static_cast<ani_class>(MediaTaiheUtils::globalRef),
+        ctor, &error) == ANI_OK, err, "new object %{public}s failed", CLASS_NAME_BUSINESSERROR);
     CHECK_AND_RETURN_RET_LOG(
         env->Object_SetPropertyByName_Int(error, "code", static_cast<ani_int>(code)) == ANI_OK, err,
         "set property BusinessError.code failed");

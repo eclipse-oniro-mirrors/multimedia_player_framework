@@ -127,7 +127,8 @@ void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *j
             break;
     };
 
-    ani_env *env = taihe::get_env();
+    taihe::env_guard guard;
+    ani_env *env = guard.get_env();
     ::ohos::multimedia::media::FrameInfo frameInfo = {
         jsCb->requestedTimeUs,
         taihe::optional<int64_t>(std::in_place_t{}, jsCb->actualTimeUs),
@@ -135,6 +136,7 @@ void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *j
         Image::PixelMapImpl::CreatePixelMap(jsCb->pixel_)),
         result
     };
+    env->ResetError();
 
     taihe::optional<uintptr_t> err = std::nullopt;
     if (jsCb->errorCode != 0) {
