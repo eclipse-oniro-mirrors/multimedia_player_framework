@@ -155,6 +155,8 @@ ohos_unittest("screen_capture_native_unit_test") {
     "i18n:intl_util",
     "resource_management:global_resmgr",
     "window_manager:libdm",
+    "egl:libEGL",
+    "opengles:libGLES",
   ]
 
   resource_config_file = "../resources/ohos_test.xml"

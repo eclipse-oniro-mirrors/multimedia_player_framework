@@ -114,6 +114,8 @@ ohos_unittest("hitranscode_impl_unittest") {
     "graphic_2d:libnative_image",
     "graphic_2d:GLESv3",
     "graphic_2d:color_manager",
+    "egl:libEGL",
+    "opengles:libGLES",
   ]
 
   if (player_framework_support_drm) {

@@ -134,7 +134,9 @@
           "drivers_interface_lpplayer",
           "runtime_core",
           "json",
-          "histreamer_ext"
+          "histreamer_ext",
+          "egl",
+          "opengles"
         ],
         "third_party": [
           "bounds_checking_function"
