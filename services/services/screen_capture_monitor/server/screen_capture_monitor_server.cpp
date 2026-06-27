@@ -211,7 +211,7 @@ void ScreenCaptureMonitorSubscriber::OnReceiveEvent(const EventFwk::CommonEventD
     MEDIA_LOGI("ScreenCaptureMonitorServer::OnReceiveEvent action: %{public}s", action.c_str());
     CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     MEDIA_LOGI("ScreenCaptureMonitorServer::HandleDataShareReadyEvent");
-    int32_t ret = DeleteSettingsByKey(SHOW_TOUCH_HINT_KEY);
+    int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
     MEDIA_LOGI("ScreenCaptureMonitorServer::HandleDataShareReadyEvent update result: %{public}d", ret);
 }
 } // namespace Media

@@ -4970,7 +4970,7 @@ void ScreenCaptureServer::ReleaseInner()
                 FAKE_POINTER(this), sessionId_);
         }
         if (GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_) {
-            DeleteSettingsByKey(SHOW_TOUCH_HINT_KEY);
+            UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
         }
     }
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");

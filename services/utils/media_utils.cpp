@@ -459,7 +459,7 @@ std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper()
     return DataShare::DataShareHelper::Creator(remoteObj, SETTINGS_DATA_BASE_URI, SETTINGS_DATA_EXT_URI);
 }
 
-int32_t __attribute__((visibility("default"))) DeleteSettingsByKey(const std::string &key)
+int32_t __attribute__((visibility("default"))) UpdateSettingsValue(const std::string &key, const std::string &value)
 {
     MEDIA_LOG_I("DeleteSettingsByKey start key: %{public}s", key.c_str());
     auto dataShareHelper = CreateDataShareHelper();
@@ -469,7 +469,7 @@ int32_t __attribute__((visibility("default"))) DeleteSettingsByKey(const std::st
     predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, key);
     DataShare::DataShareValuesBucket bucket;
     DataShare::DataShareValueObject keyObj(key);
-    DataShare::DataShareValueObject valueObj("");
+    DataShare::DataShareValueObject valueObj(value);
     bucket.Put(SETTINGS_DATA_FIELD_KEYWORD, keyObj);
     bucket.Put(SETTINGS_DATA_FIELD_VALUE, valueObj);
     int32_t updateResult = dataShareHelper->Update(uri, predicates, bucket);

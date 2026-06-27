@@ -50,7 +50,8 @@ namespace Media {
     bool __attribute__((visibility("default"))) GetPackageName(const char *key, std::string &value);
     std::unordered_map<std::string, std::string>& __attribute__((visibility("default"))) GetScreenCaptureSystemParam();
     int32_t __attribute__((visibility("default"))) GetAPIVersion();
-    int32_t __attribute__((visibility("default"))) DeleteSettingsByKey(const std::string &key);
+    int32_t __attribute__((visibility("default"))) UpdateSettingsValue(const std::string &key,
+        const std::string &value);
 }  // namespace Media
 }  // namespace OHOS
 
