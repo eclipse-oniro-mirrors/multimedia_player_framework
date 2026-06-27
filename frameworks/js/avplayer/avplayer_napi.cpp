@@ -633,7 +633,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "The current state is " + GetCurrentState() + 
+                "The current state is " + GetCurrentState() +
                     ". Stop operation only supports prepared/playing/paused/completed.");
         }
 
@@ -911,15 +911,11 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         bool isExitSeekContinuous = time == -1 && mode == SEEK_CONTINUOUS_TS_ENUM_NUM;
         if (isNegativeTime && !isExitSeekContinuous) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-            "invalid parameters, please check seek time:" + std::to_string(isNegativeTime));
+                "invalid parameters, please check seek time:" + std::to_string(isNegativeTime));
             return result;
         }
     }
-    auto state = jsPlayer->GetCurrentState();
-    if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "The current state is " + state +
-                ", seek operation only support prepared/playing/paused/completed state.");
+    if (!CheckControllableState(jsPlayer, "seek")) {
         return result;
     }
     SeekEnqueueTask(jsPlayer, time, mode);
@@ -2532,7 +2528,7 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         return result;
     }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
-    if (jsPlayer->GetJsApiVersion() < API_VERSION_17)    
+    if (jsPlayer->GetJsApiVersion() < API_VERSION_17)
         strategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT;
     jsPlayer->EnqueueMediaSourceTask(jsPlayer, mediaSource, strategy);
     return result;
@@ -3940,6 +3936,18 @@ bool AVPlayerNapi::IsControllable()
     } else {
         return false;
     }
+}
+
+bool AVPlayerNapi::CheckControllableState(AVPlayerNapi *jsPlayer, const std::string &operationName)
+{
+    auto state = jsPlayer->GetCurrentState();
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "The current state is " + state +
+                ", " + operationName + " operation only support prepared/playing/paused/completed state.");
+        return false;
+    }
+    return true;
 }
 
 bool AVPlayerNapi::CanGetPlaybackStatisticMetrics()

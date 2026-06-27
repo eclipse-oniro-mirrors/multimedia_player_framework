@@ -411,6 +411,7 @@ private:
 
     std::string GetCurrentState();
     bool IsControllable();
+    bool CheckControllableState(AVPlayerNapi *jsPlayer, const std::string &operationName);
     bool CanGetPlaybackStatisticMetrics();
     bool CanSetPlayRange();
     bool CanSetLoudnessGain();
