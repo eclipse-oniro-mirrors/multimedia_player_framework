@@ -226,7 +226,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     if (ret != MSERR_OK) {
         MEDIA_LOG_E("SetInputFile error: demuxerFilter_->SetDataSource error");
         CollectionErrorInfo(ret, "SetInputFile error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_SOURCE});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_UNSUPPORT_SOURCE)});
         return ret;
     }
     int64_t duration = 0;
@@ -278,7 +278,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
     }
     if (!isExistVideoTrack_ && !isExistAudioTrack_) {
         MEDIA_LOG_E("No video track found.");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_VID_SRC_TYPE});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_UNSUPPORT_VID_SRC_TYPE)});
     }
 }
 
@@ -383,7 +383,7 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
         MEDIA_LOG_E("No track found in the source");
         CollectionErrorInfo(TransTranscoderStatus(Status::ERROR_NO_TRACK),
             "ConfigureVideoAudioMetaData error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_UNSUPPORT_VID_SRC_TYPE});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_UNSUPPORT_VID_SRC_TYPE)});
         return Status::ERROR_NO_TRACK;
     }
     ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
@@ -582,7 +582,8 @@ Status HiTransCoderImpl::ConfigureAudioParam(const TransCoderParam &transCoderPa
             AudioBitRate audioBitrate = static_cast<const AudioBitRate&>(transCoderParam);
             if (audioBitrate.bitRate <= 0) {
                 MEDIA_LOG_E("Invalid audioBitrate.bitRate %{public}d", audioBitrate.bitRate);
-                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
+                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
+                    static_cast<int32_t>(MSERR_PARAMETER_VERIFICATION_FAILED)});
                 return Status::ERROR_INVALID_PARAMETER;
             }
             int64_t bitrate = -1;
@@ -622,13 +623,14 @@ int32_t HiTransCoderImpl::Prepare()
         } else {
             MEDIA_LOG_E("Output video width or height not set");
             CollectionErrorInfo(MSERR_INVALID_VAL, "Prepare error");
-            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_INVALID_VAL});
+            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_INVALID_VAL)});
             return MSERR_INVALID_VAL;
         }
         if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
             MEDIA_LOG_E("Output video width or height is invalid");
             CollectionErrorInfo(MSERR_PARAMETER_VERIFICATION_FAILED, "Prepare error");
-            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, MSERR_PARAMETER_VERIFICATION_FAILED});
+            OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
+                static_cast<int32_t>(MSERR_PARAMETER_VERIFICATION_FAILED)});
             return MSERR_PARAMETER_VERIFICATION_FAILED;
         }
         skipProcessFilterFlag_.isSameVideoResolution = (width == inputVideoWidth_) && (height == inputVideoHeight_);
@@ -639,7 +641,7 @@ int32_t HiTransCoderImpl::Prepare()
     Status ret = pipeline_->Prepare();
     if (ret != Status::OK) {
         MEDIA_LOG_E("Prepare failed with error " PUBLIC_LOG_D32, ret);
-        auto errCode = TransTranscoderStatus(ret);
+        int32_t errCode = TransTranscoderStatus(ret);
         CollectionErrorInfo(errCode, "Prepare error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, errCode});
         return errCode;
