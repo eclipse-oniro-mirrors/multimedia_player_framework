@@ -18,6 +18,7 @@ import("./../../../multimedia_player_framework_aafwk.gni")
 ohos_shared_library("video_editor") {
   version_script = "video_editor.versionscript"
   stack_protector_ret = true
+  branch_protector_ret = true
   sanitize = {
     integer_overflow = true
     ubsan = true
