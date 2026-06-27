@@ -69,6 +69,8 @@ napi_value SystemToneOptionsNapi::Init(napi_env env, napi_value exports)
         status = napi_set_named_property(env, exports, SYSTEM_TONE_OPTIONS_NAPI_CLASS_NAME.c_str(), constructor);
         if (status == napi_ok) {
             return exports;
+        } else {
+            napi_delete_reference(env, sConstructor_);
         }
     }
     MEDIA_LOGE("Failure in SystemToneOptionsNapi::Init()");

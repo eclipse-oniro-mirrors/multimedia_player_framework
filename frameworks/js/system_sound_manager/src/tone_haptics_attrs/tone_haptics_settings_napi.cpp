@@ -56,6 +56,8 @@ napi_value ToneHapticsSettingsNapi::Init(napi_env env, napi_value exports)
         status = napi_set_named_property(env, exports, TONE_HAPTICS_SETTINGS_NAPI_CLASS_NAME.c_str(), constructor);
         if (status == napi_ok) {
             return exports;
+        } else {
+            napi_delete_reference(env, sConstructor_);
         }
     }
 

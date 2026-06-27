@@ -68,6 +68,8 @@ napi_value AudioRendererInfoNapi::Init(napi_env env, napi_value exports)
                                          constructor);
         if (status == napi_ok) {
             return exports;
+        } else {
+            napi_delete_reference(env, sConstructor_);
         }
     }
     MEDIA_LOGE("Failure in AudioRendererInfoNapi::Init()");
