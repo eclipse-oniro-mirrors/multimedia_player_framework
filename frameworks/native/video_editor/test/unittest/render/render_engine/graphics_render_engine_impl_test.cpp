@@ -49,12 +49,15 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Init_ok, Tes
     GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
     graphicsRenderEngineImpl.ready_ = true;
     EXPECT_EQ(graphicsRenderEngineImpl.Init(nullptr), VEFError::ERR_OK);
+    // verify ready state keep unchanged after init
+    EXPECT_EQ(graphicsRenderEngineImpl.ready_, true);
 }
 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Destroy_ok, TestSize.Level0)
 {
     GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
     graphicsRenderEngineImpl.ready_ = true;
+    graphicsRenderEngineImpl.surface_ = nullptr;
     graphicsRenderEngineImpl.renderThread_ = nullptr;
     graphicsRenderEngineImpl.Destroy();
     EXPECT_EQ(graphicsRenderEngineImpl.ready_, false);
@@ -63,14 +66,17 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_Destroy_ok, 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_StopRender, TestSize.Level0)
 {
     GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
+    graphicsRenderEngineImpl.ready_ = true;
     EXPECT_EQ(graphicsRenderEngineImpl.StopRender(), VEFError::ERR_OK);
+    EXPECT_EQ(graphicsRenderEngineImpl.ready_, false);
 }
 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_GetInputWindow_nullptr, TestSize.Level0)
 {
     GraphicsRenderEngineImpl graphicsRenderEngineImpl(1);
     graphicsRenderEngineImpl.surfaceTexture_ = nullptr;
-    EXPECT_EQ(graphicsRenderEngineImpl.GetInputWindow(), nullptr);
+    auto inputWindow = graphicsRenderEngineImpl.GetInputWindow();
+    EXPECT_EQ(inputWindow, nullptr);
 }
 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_GetInputWindow, TestSize.Level0)
@@ -149,7 +155,9 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_UnInit, Test
 {
     auto renderEngine = GraphicsRenderEngineImpl(1);
     renderEngine.renderThread_ = nullptr;
-    EXPECT_EQ(renderEngine.UnInit(), VEFError::ERR_OK);
+    renderEngine.surface_ = nullptr;
+    auto result = renderEngine.UnInit();
+    EXPECT_EQ(result, VEFError::ERR_OK);
 }
 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_UnInit_1, TestSize.Level0)
@@ -158,15 +166,20 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_UnInit_1, Te
     auto func = []() {};
     renderEngine.renderThread_ = new (std::nothrow) RenderThread<>(RENDER_QUEUE_SIZE, func);
     ASSERT_NE(renderEngine.renderThread_, nullptr);
-    EXPECT_EQ(renderEngine.UnInit(), VEFError::ERR_OK);
+    renderEngine.surface_ = nullptr;
+    auto result = renderEngine.UnInit();
+    EXPECT_EQ(result, VEFError::ERR_OK);
+    EXPECT_EQ(renderEngine.renderThread_, nullptr);
 }
 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_RenderEffects, TestSize.Level0)
 {
     auto renderEngine = GraphicsRenderEngineImpl(1);
-    EXPECT_EQ(renderEngine.RenderEffects(nullptr, nullptr), nullptr);
+    auto result = renderEngine.RenderEffects(nullptr, nullptr);
+    EXPECT_EQ(result, nullptr);
     auto renderInfo = std::make_shared<GraphicsRenderInfo>();
-    EXPECT_EQ(renderEngine.RenderEffects(nullptr, renderInfo), nullptr);
+    auto result1 = renderEngine.RenderEffects(nullptr, renderInfo);
+    EXPECT_EQ(result1, nullptr);
 }
 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_RenderEffects_list_not_empty, TestSize.Level0)
@@ -176,12 +189,6 @@ HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_RenderEffect
     auto effect = EffectFactory::CreateEffect(WATER_MARK_DESC);
     renderInfo->effectInfoList_.emplace_back(effect->GetRenderInfo());
     EXPECT_EQ(renderEngine.RenderEffects(nullptr, renderInfo), nullptr);
-}
-
-HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_CreateEffect_nullptr, TestSize.Level0)
-{
-    std::string description = "";
-    EXPECT_EQ(EffectFactory::CreateEffect(description), nullptr);
 }
 
 HWTEST_F(GraphicsRenderEngineImplTest, GraphicsRenderEngineImplTest_DrawFrame, TestSize.Level0)

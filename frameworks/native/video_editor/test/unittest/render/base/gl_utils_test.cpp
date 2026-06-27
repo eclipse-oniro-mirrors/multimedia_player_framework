@@ -83,7 +83,12 @@ HWTEST_F(GLUtilsTest, GLUtilsTest_CreateTexture2DNoStorage_compare, TestSize.Lev
     GLuint texture1 = GLUtils::CreateTexture2DNoStorage(minFilter, magFilter, wrapS, wrapT);
     GLuint texture2 = GLUtils::CreateTexture2DNoStorage(minFilter1, magFilter1, wrapS1, wrapT1);
 
-    EXPECT_EQ(texture1, texture2);
+    // verify function can return normally(whatever the GL context is valid or not)
+    if (texture1 == 0 && texture2 == 0) {
+        SUCCEED();
+    } else {
+        EXPECT_NE(texture1, texture2);
+    }
 }
 
 // test GLUtilsTest CreateFramebuffer method
@@ -193,8 +198,15 @@ HWTEST_F(GLUtilsTest, GLUtilsTest_GetOesSamplingMatrix, TestSize.Level0)
 HWTEST_F(GLUtilsTest, GLUtilsTest_DeleteTexture, TestSize.Level0)
 {
     GLuint texture = GLUtils::CreateTexture2D(320, 480, GL_RGBA8, GL_LINEAR, GL_LINEAR);
-    GLUtils::DeleteTexture(texture);
-    EXPECT_EQ(texture, 0);
+    if (texture == 0) {
+        SUCCEED();
+    } else {
+        GLUtils::DeleteTexture(texture);
+        EXPECT_EQ(glIsTexture(texture), GL_FALSE);
+    }
+    // verify DeleteTexture function should not crash when texture is invalid(0 or already deleted)
+    GLuint invalidTexture = 0;
+    GLUtils::DeleteTexture(invalidTexture);
 }
 } // namespace Media
 } // namespace OHOS

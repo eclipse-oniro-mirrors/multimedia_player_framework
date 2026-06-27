@@ -60,8 +60,10 @@ HWTEST_F(TaskManagerTest, TaskManager_SubmitH_ShouldSubmitH_WhenFunctionIsValid,
     std::function<void()> func = []() {
         // some function logic
     };
+    uint32_t countBefore = taskManager->GetTaskCount();
     TaskHandle handle = taskManager->SubmitH(func, "testFunction");
     EXPECT_NE(handle, nullptr);
+    EXPECT_EQ(taskManager->GetTaskCount(), countBefore + 1);
 }
 
 /**

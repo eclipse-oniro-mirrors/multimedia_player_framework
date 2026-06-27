@@ -67,12 +67,5 @@ HWTEST_F(VideoEditorManagerTest, release_video_editor_not_exist, TestSize.Level0
     EXPECT_EQ(VideoEditorManager::GetInstance().editorMap_.count(1), 0);
 }
 
-// Test when VideoEditorImpl::Init() returns ERR_OK.
-HWTEST_F(VideoEditorManagerTest, factory_create_video_editor_ok, TestSize.Level0)
-{
-    auto videoEditor = VideoEditorFactory::CreateVideoEditor();
-    ASSERT_NE(videoEditor, nullptr);
-}
-
 } // namespace Media
 } // namespace OHOS

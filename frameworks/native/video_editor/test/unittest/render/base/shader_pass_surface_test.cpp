@@ -49,6 +49,7 @@ HWTEST_F(ShaderPassSurfaceTest, ShaderPassSurfaceTest_PreDraw_shade_nullptr, Tes
     auto shaderPassSurface = std::make_shared<ShaderPassSurface>(context_);
     ASSERT_NE(shaderPassSurface, nullptr);
     shaderPassSurface->PreDraw();
+    ASSERT_EQ(shaderPassSurface->shader_, nullptr);
 }
 
 HWTEST_F(ShaderPassSurfaceTest, ShaderPassSurfaceTest_PreDraw_shade_not_nullptr, TestSize.Level0)
@@ -58,6 +59,8 @@ HWTEST_F(ShaderPassSurfaceTest, ShaderPassSurfaceTest_PreDraw_shade_not_nullptr,
     shaderPassSurface->shader_ = std::make_shared<ShaderPassProgram>(context_, SURFACE_VERTEX_SHADER_CODE,
         SURFACE_ROTATE_FRAGMENT_SHADER_CODE);
     ASSERT_NE(shaderPassSurface->shader_, nullptr);
+    auto surfaceData = shaderPassSurface->GetRenderEffectData();
+    ASSERT_NE(surfaceData, nullptr);
     shaderPassSurface->PreDraw();
 }
 
@@ -66,6 +69,7 @@ HWTEST_F(ShaderPassSurfaceTest, ShaderPassSurfaceTest_PostDraw_shade_nullptr, Te
     auto shaderPassSurface = std::make_shared<ShaderPassSurface>(context_);
     ASSERT_NE(shaderPassSurface, nullptr);
     shaderPassSurface->PostDraw();
+    ASSERT_EQ(shaderPassSurface->shader_, nullptr);
 }
 } // namespace Media
 } // namespace OHOS
