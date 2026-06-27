@@ -379,6 +379,7 @@ private:
     static bool IsSystemApp();
     static bool IsListMode(AVPlayerNapi *jsPlayer);
     static bool IsAllowAdvanceToMediaSource(AVPlayerNapi *jsPlayer);
+    static bool CheckControllableState(AVPlayerNapi *jsPlayer, const std::string &operationName);
     AVPlayerNapi();
     ~AVPlayerNapi() override;
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
@@ -411,7 +412,6 @@ private:
 
     std::string GetCurrentState();
     bool IsControllable();
-    bool CheckControllableState(AVPlayerNapi *jsPlayer, const std::string &operationName);
     bool CanGetPlaybackStatisticMetrics();
     bool CanSetPlayRange();
     bool CanSetLoudnessGain();
