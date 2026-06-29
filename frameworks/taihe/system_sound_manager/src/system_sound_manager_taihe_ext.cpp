@@ -33,6 +33,7 @@ const int OPERATION_ERROR = -4;
 const int IO_ERROR = -3;
 const int ERROR = -1;
 const int INVALID_TONE_HAPTICS_TYPE = -1;
+constexpr int32_t MAX_URI_LENGTH = 1024;
 
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemTonePlayerTaihe"};
 constexpr char ENUM_SYSTEM_SOUND_ERROR[] = "@ohos.multimedia.systemSoundManager.systemSoundManager.SystemSoundError";
@@ -380,6 +381,24 @@ static ani_status GetAniIndexByValue(ani_env *env, OHOS::Media::SystemSoundError
     return ANI_OK;
 }
 
+static bool ValidateAndConvertUriList(::taihe::array_view<::taihe::string> uriList, std::vector<std::string> &uriVec)
+{
+    if (uriList.size() > MAX_URI_LENGTH) {
+        MEDIA_LOGE("uriList size %{public}zu exceeds limit %{public}d", uriList.size(), MAX_URI_LENGTH);
+        CommonTaihe::ThrowError(OHOS::Media::SystemSoundError::ERROR_INVALID_PARAM, TAIHE_ERR_URILIST_OVER_LIMIT_INFO);
+        return false;
+    }
+    for (const auto &uri : uriList) {
+        uriVec.emplace_back(std::string(uri));
+    }
+    if (uriVec.empty()) {
+        MEDIA_LOGE("uriList is empty");
+        CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
+        return false;
+    }
+    return true;
+}
+
 ::taihe::array<uintptr_t>  SystemSoundManagerImpl::RemoveCustomizedToneListSync(
     ::taihe::array_view<::taihe::string> uriList)
 {
@@ -403,11 +422,7 @@ static ani_status GetAniIndexByValue(ani_env *env, OHOS::Media::SystemSoundError
     }
 
     std::vector<std::string> uriVec;
-    for (const auto &uri : uriList) {
-        uriVec.emplace_back(std::string(uri));
-    }
-    if (uriVec.empty()) {
-        CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
+    if (!ValidateAndConvertUriList(uriList, uriVec)) {
         return ::taihe::array<uintptr_t>(results);
     }
 
@@ -458,12 +473,7 @@ static ani_status GetAniIndexByValue(ani_env *env, OHOS::Media::SystemSoundError
     }
 
     std::vector<std::string> uriVec;
-    for (const auto &uri : uriList) {
-        uriVec.emplace_back(std::string(uri));
-    }
-    if (uriVec.empty()) {
-        MEDIA_LOGE("uriList is empty");
-        CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
+    if (!ValidateAndConvertUriList(uriList, uriVec)) {
         return ::taihe::array<uintptr_t>(results);
     }
 
