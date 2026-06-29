@@ -394,7 +394,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PrepareTask()
             MEDIA_LOGI("current state is prepared, invalid operation");
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not stopped or initialized, unsupport prepare operation");
+                "The current state is " + state +
+                    ". Prepare operation only supports stopped/initialized.");
         }
 
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Prepare Task Out", FAKE_POINTER(this));
@@ -426,7 +427,8 @@ napi_value AVPlayerNapi::JsPrepare(napi_env env, napi_callback_info info)
         state != AVPlayerState::STATE_STOPPED &&
         state != AVPlayerState::STATE_PREPARED) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not stopped or initialized, unsupport prepare operation");
+            "The current state is " + state +
+                ". Prepare operation only supports stopped/initialized.");
     } else if (IsListMode(jsPlayer) && usage != STREAM_USAGE_MUSIC && usage != STREAM_USAGE_MOVIE &&
         usage != STREAM_USAGE_GAME && usage != STREAM_USAGE_AUDIOBOOK) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
@@ -485,7 +487,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PlayTask()
             MEDIA_LOGI("current state is playing, invalid operation");
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not prepared/paused/completed, unsupport play operation");
+                "The current state is " + state +
+                    ". Play operation only supports prepared/paused/completed.");
         }
 
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Play Task Out", FAKE_POINTER(this));
@@ -516,7 +519,8 @@ napi_value AVPlayerNapi::JsPlay(napi_env env, napi_callback_info info)
         state != AVPlayerState::STATE_COMPLETED &&
         state != AVPlayerState::STATE_PLAYING) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/paused/completed, unsupport play operation");
+            "The current state is " + state +
+                ". Play operation only supports prepared/paused/completed.");
     } else if (state == AVPlayerState::STATE_COMPLETED && jsPlayer->IsLiveSource()) {
         promiseCtx->SignError(MSERR_EXT_API9_UNSUPPORT_CAPABILITY,
             "In live mode, replay not be allowed.");
@@ -563,7 +567,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::PauseTask()
             MEDIA_LOGI("current state is paused, invalid operation");
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not playing, unsupport pause operation");
+                "The current state is " + state +
+                    ". Pause operation only supports playing.");
         }
 
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Pause Task Out", FAKE_POINTER(this));
@@ -592,7 +597,8 @@ napi_value AVPlayerNapi::JsPause(napi_env env, napi_callback_info info)
     if (state != AVPlayerState::STATE_PLAYING &&
         state != AVPlayerState::STATE_PAUSED) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not playing, unsupport pause operation");
+            "The current state is " + state +
+                ". Pause operation only supports playing.");
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " JsPause EnqueueTask In", FAKE_POINTER(jsPlayer));
         promiseCtx->asyncTask = jsPlayer->PauseTask();
@@ -633,7 +639,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::StopTask()
             MEDIA_LOGI("current state is stopped, invalid operation");
         }  else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not prepared/playing/paused/completed, unsupport stop operation");
+                "The current state is " + GetCurrentState() +
+                    ". Stop operation only supports prepared/playing/paused/completed.");
         }
 
         MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop Task Out", FAKE_POINTER(this));
@@ -664,7 +671,8 @@ napi_value AVPlayerNapi::JsStop(napi_env env, napi_callback_info info)
         state == AVPlayerState::STATE_RELEASED ||
         state == AVPlayerState::STATE_ERROR) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport stop operation");
+            "The current state is " + state +
+                ". Stop operation only supports prepared/playing/paused/completed.");
     } else {
         MEDIA_LOGI("0x%{public}06" PRIXPTR " JsStop EnqueueTask In", FAKE_POINTER(jsPlayer));
         promiseCtx->asyncTask = jsPlayer->StopTask();
@@ -699,7 +707,7 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::ResetTask()
             std::unique_lock<std::mutex> lock(taskMutex_);
             if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
                 return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                    "current state is not playing, unsupport pause operation");
+                    "current state is released, unsupport reset operation");
             } else if (GetCurrentState() == AVPlayerState::STATE_IDLE) {
                 MEDIA_LOGI("current state is idle, invalid operation");
             } else {
@@ -891,7 +899,8 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
     int64_t time = -1;
     napi_status status = napi_get_value_int64(env, args[0], &time);
     if (status != napi_ok || (time < 0 && argCount == 1)) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek time");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check seek time:" + std::to_string(time));
         return result;
     }
     int32_t mode = SEEK_PREVIOUS_SYNC;
@@ -908,13 +917,12 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         bool isNegativeTime = time < 0;
         bool isExitSeekContinuous = time == -1 && mode == SEEK_CONTINUOUS_TS_ENUM_NUM;
         if (isNegativeTime && !isExitSeekContinuous) {
-            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check seek time");
+            jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
+                "invalid parameters, please check seek time:" + std::to_string(isNegativeTime));
             return result;
         }
     }
-    if (!jsPlayer->IsControllable()) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport seek operation");
+    if (!CheckControllableState(jsPlayer, "seek")) {
         return result;
     }
     SeekEnqueueTask(jsPlayer, time, mode);
@@ -1426,7 +1434,8 @@ void AVPlayerNapi::EnqueueNetworkTask(const std::string url)
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state != AVPlayerState::STATE_IDLE) {
-            QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
+            QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " +
+                state + ",current state is not idle, unsupport set url");
             return;
         }
         if (player_ != nullptr) {
@@ -1453,7 +1462,8 @@ void AVPlayerNapi::EnqueueFdTask(const int32_t fd)
         std::unique_lock<std::mutex> lock(taskMutex_);
         auto state = GetCurrentState();
         if (state != AVPlayerState::STATE_IDLE) {
-            QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
+            QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " +
+                state + ",current state is not idle, unsupport set source fd");
             return;
         }
         if (player_ != nullptr) {
@@ -1898,19 +1908,17 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
     MEDIA_LOGI("JsSetPlaybackStrategy");
-
     size_t paramCountSingle = PARAM_COUNT_SINGLE;
     napi_value args[PARAM_COUNT_SINGLE] = { nullptr };
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, paramCountSingle, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstance");
-
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
     std::string currentState = jsPlayer->GetCurrentState();
     napi_valuetype valueType = napi_undefined;
     if (currentState != AVPlayerState::STATE_INITIALIZED && currentState != AVPlayerState::STATE_STOPPED) {
-        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not initialized / stopped, unsupport set playback strategy");
+        promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " + currentState +
+                ",SetPlaybackStrategy only supports initialized / stopped state.");
     } else if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
         promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check input parameter");
     } else {
@@ -1923,8 +1931,7 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
             promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
                                   "playing duration is above buffer duration or below zero");
         } else if (!jsPlayer->IsLivingMaxDelayTimeValid(strategyTmp)) {
-            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
-                                  "thresholdForAutoQuickPlay is invalid");
+            promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "thresholdForAutoQuickPlay is invalid");
         } else {
             AVPlayStrategy strategy;
             jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
@@ -2088,7 +2095,8 @@ napi_value AVPlayerNapi::JsSetMediaMuted(napi_env env, napi_callback_info info)
                       curState == AVPlayerState::STATE_PAUSED || curState == AVPlayerState::STATE_COMPLETED;
     if (!canSetMute) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not initialized / stopped, unsupport set playback strategy operation");
+            "The current state is "+ curState +
+                ",SetMediaMuted operation only supports initialized / stopped state.");
     } else {
         promiseCtx->asyncTask = jsPlayer->SetMediaMutedTask(static_cast<MediaType>(mediaType), isMuted);
     }
@@ -2119,7 +2127,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetMediaMutedTask(MediaType 
             }
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not stopped or initialized, unsupport prepare operation");
+                "The current state is " + state +
+                    "SetMediaMuted only supports stopped or initialized state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
@@ -2140,7 +2149,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetPlaybackStrategyTask(AVPl
             }
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not initialized or stopped, unsupport set playback strategy operation");
+                "The current state is " + state +
+                    ",SetPlaybackStrategy only supports initialized or stopped state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
@@ -2186,10 +2196,11 @@ napi_value AVPlayerNapi::JsSetSuperResolution(napi_env env, napi_callback_info i
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
     napi_valuetype valueType = napi_undefined;
 
+    auto state = jsPlayer->GetCurrentState();
     if (!jsPlayer->CanSetSuperResolution()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not initialized/prepared/playing/paused/completed/stopped, "
-            "unsupport set super resolution operation");
+            "The current state is " + state +
+                "SetSuperResolution only supports initialized/prepared/playing/paused/completed/stopped state.");
     } else if (argCount < PARAM_COUNT_SINGLE
         || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_boolean) {
         promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, please check the input");
@@ -2229,9 +2240,10 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetSuperResolutionTask(bool 
                 return TaskRet(errCode, "failed to set super resolution");
             }
         } else {
+            auto state = this->GetCurrentState();
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not initialized/prepared/playing/paused/completed/stopped, "
-                "unsupport set super resolution operation");
+                "The current state is " + state +
+                    "SetSuperResolution only supports initialized/prepared/playing/paused/completed/stopped state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
@@ -2254,11 +2266,11 @@ napi_value AVPlayerNapi::JsSetVideoWindowSize(napi_env env, napi_callback_info i
     auto promiseCtx = std::make_unique<AVPlayerContext>(env);
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
     napi_valuetype valueType = napi_undefined;
-
+    auto state = jsPlayer->GetCurrentState();
     if (!jsPlayer->CanSetSuperResolution()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not initialized/prepared/playing/paused/completed/stopped, "
-            "unsupport set video window size");
+            "The current state is " + state +
+                "SetVideoWindowSize only supports initialized/prepared/playing/paused/completed/stopped state.");
     } else if (argCount < ARRAY_ARG_COUNTS_TWO ||
                 napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number ||
                 napi_typeof(env, args[1], &valueType) != napi_ok || valueType != napi_number) {
@@ -2303,8 +2315,8 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::SetVideoWindowSizeTask(int32
             }
         } else {
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not initialized/prepared/playing/paused/completed/stopped, "
-                "unsupport set super resolution operation");
+                "The current state is " + state +
+                    "SetVideoWindowSize only supports initialized/prepared/playing/paused/completed/stopped state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
@@ -2328,12 +2340,15 @@ napi_value AVPlayerNapi::JsEnableCameraPostprocessing(napi_env env, napi_callbac
     CHECK_AND_RETURN_RET_LOG(promiseCtx != nullptr, result, "promiseCtx is null");
     promiseCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
  
+    auto state = jsPlayer->GetCurrentState();
+
     if (!IsSystemApp()) {
         promiseCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "systemapi permission denied");
     }
     if (!jsPlayer->CanCameraPostprocessing()) {
         promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not initialized, unsupport enable cameraPostProcessor");
+            "The current state is " + state +
+                "cameraPostProcessor only supports initialized state.");
     } else {
         promiseCtx->asyncTask = jsPlayer->EnableCameraPostprocessingTask();
     }
@@ -2363,8 +2378,10 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerNapi::EnableCameraPostprocessingTa
                 return TaskRet(errCode, "failed to enable cameraPostProcessor");
             }
         } else {
+            auto state = GetCurrentState();
             return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                "current state is not initialized, unsupport enable cameraPostProcessor");
+                "The current state is " + state +
+                    "cameraPostProcessor only supports initialized state.");
         }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
@@ -2406,8 +2423,10 @@ napi_value AVPlayerNapi::JsSetAVFileDescriptor(napi_env env, napi_callback_info 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    auto state = jsPlayer->GetCurrentState();
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set fd");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " +
+            state + ",set fd operation only supprots idle state.");
         return result;
     } else if (IsListMode(jsPlayer)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "set fdSrc is not supported in list playback mode");
@@ -2479,9 +2498,10 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     size_t argCount = 2;
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
-
+    auto state = jsPlayer->GetCurrentState();
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set mediaSource");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The current state is " +
+            state + ",set mediaSource only supports idle state.");
         return result;
     } else if (IsListMode(jsPlayer)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "setMediaSource is not supported in list playback mode");
@@ -2499,11 +2519,9 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
     }
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
     CHECK_AND_RETURN_RET_LOG(srcTmp != nullptr, result, "get GetMediaSource argument failed!");
-
     std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(env, args[0], srcTmp);
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, result, "create mediaSource failed!");
     jsPlayer->AddMediaStreamToAVMediaSource(srcTmp, mediaSource);
-
     struct AVPlayStrategyTmp strategyTmp;
     struct AVPlayStrategy strategy;
     if (!CommonNapi::GetPlayStrategy(env, args[1], strategyTmp)) {
@@ -2517,9 +2535,8 @@ napi_value AVPlayerNapi::JsSetMediaSource(napi_env env, napi_callback_info info)
         return result;
     }
     jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
-    if (jsPlayer->GetJsApiVersion() < API_VERSION_17) {
+    if (jsPlayer->GetJsApiVersion() < API_VERSION_17)
         strategy.mutedMediaType = MediaType::MEDIA_TYPE_MAX_COUNT;
-    }
     jsPlayer->EnqueueMediaSourceTask(jsPlayer, mediaSource, strategy);
     return result;
 }
@@ -2585,8 +2602,10 @@ napi_value AVPlayerNapi::JsSetDataSrc(napi_env env, napi_callback_info info)
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
+    auto state = jsPlayer->GetCurrentState();
     if (jsPlayer->GetCurrentState() != AVPlayerState::STATE_IDLE) {
-        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set dataSrc");
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,  "The current state is " +
+            state + ",set dataSrc only supports idle state.");
         return result;
     } else if (IsListMode(jsPlayer)) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "set dataSrc is not supported in list playback mode");
@@ -2803,10 +2822,11 @@ napi_value AVPlayerNapi::JsSetLoop(napi_env env, napi_callback_info info)
         jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support loop");
         return result;
     }
-
+    auto state = jsPlayer->GetCurrentState();
     if (!jsPlayer->IsControllable()) {
         jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport loop operation");
+            "The current state is " + state +
+                ",sest loop operation only supports prepared/playing/paused/completed state.");
         return result;
     }
 
@@ -3923,6 +3943,18 @@ bool AVPlayerNapi::IsControllable()
     } else {
         return false;
     }
+}
+
+bool AVPlayerNapi::CheckControllableState(AVPlayerNapi *jsPlayer, const std::string &operationName)
+{
+    auto state = jsPlayer->GetCurrentState();
+    if (!jsPlayer->IsControllable()) {
+        jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+            "The current state is " + state +
+                ", " + operationName + " operation only support prepared/playing/paused/completed state.");
+        return false;
+    }
+    return true;
 }
 
 bool AVPlayerNapi::CanGetPlaybackStatisticMetrics()
