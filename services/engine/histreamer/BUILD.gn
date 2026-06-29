@@ -19,6 +19,7 @@ group("media_engine_histreamer_package") {
 }
 
 ohos_shared_library("media_engine_histreamer") {
+  branch_protector_ret = "pac_ret"
   stack_protector_ret = true
   sanitize = {
     integer_overflow = true

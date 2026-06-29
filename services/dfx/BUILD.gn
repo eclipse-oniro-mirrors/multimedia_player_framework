@@ -20,6 +20,7 @@ config("media_service_log_dfx_public_config") {
 }
 
 ohos_shared_library("media_service_log_dfx") {
+  branch_protector_ret = "pac_ret"
   stack_protector_ret = true
   install_enable = true
 
@@ -69,6 +70,7 @@ ohos_shared_library("media_service_log_dfx") {
 }
 
 ohos_shared_library("media_service_dfx") {
+  branch_protector_ret = "pac_ret"
   stack_protector_ret = true
   install_enable = true
 
