@@ -50,6 +50,7 @@ config("media_engine_histreamer_factory_config") {
 }
 
 ohos_static_library("media_engine_histreamer_factory") {
+  branch_protector_ret = "pac_ret"
   stack_protector_ret = true
   sanitize = {
     integer_overflow = true

@@ -41,6 +41,7 @@ ohos_copy("media_declaration") {
 }
 
 ohos_shared_library("media") {
+  branch_protector_ret = "pac_ret"
   stack_protector_ret = true
   sanitize = {
     integer_overflow = true

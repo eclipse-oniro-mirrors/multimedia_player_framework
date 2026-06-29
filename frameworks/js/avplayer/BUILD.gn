@@ -17,6 +17,7 @@ import("//foundation/multimedia/player_framework/config.gni")
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
 
 ohos_shared_library("media_avplayer") {
+  branch_protector_ret = "pac_ret"
   stack_protector_ret = true
   sanitize = {
     integer_overflow = true
