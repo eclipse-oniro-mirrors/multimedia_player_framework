@@ -83,7 +83,10 @@ void CJAVRecorderCallback::UnRegister(const int32_t type)
 
 void CJAVRecorderCallback::ExecuteStateCallback(CStateChangeHandler &handler)
 {
-    currentState_ = handler.state;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        currentState_ = handler.state;
+    }
     if (!onStateChange) {
         MEDIA_LOGE("onStateChange is null");
         return;
