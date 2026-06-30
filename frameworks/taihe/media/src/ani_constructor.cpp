@@ -15,6 +15,8 @@
 
 #include "ohos.multimedia.media.ani.hpp"
 #include "media_log.h"
+#include "media_taihe_utils.h"
+
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "MediaTaihe"};
@@ -29,6 +31,14 @@ ANI_EXPORT ani_status ANI_Constructor(ani_vm *vm, uint32_t *result)
     if (ohos::multimedia::media::ANIRegister(env) != ANI_OK) {
         MEDIA_LOGE("Error from ohos::multimedia::media::ANIRegister");
         return ANI_ERROR;
+    }
+    ani_class errorClass;
+    if (env->FindClass(ANI::Media::CLASS_NAME_BUSINESSERROR, &errorClass) != ANI_OK) {
+        MEDIA_LOGE("Error in find class %{public}s failed", ANI::Media::CLASS_NAME_BUSINESSERROR);
+        return ANI_ERROR;
+    }
+    if (env->GlobalReference_Create(errorClass, &ANI::Media::MediaTaiheUtils::globalRef) != ANI_OK) {
+        MEDIA_LOGE("Failed to create global reference");
     }
     *result = ANI_VERSION_1;
     return ANI_OK;

@@ -55,6 +55,7 @@ public:
     static int32_t MapExtensionNameToOutputFormat(const std::string &extension, OHOS::Media::OutputFormatType &type);
     static int32_t MapMimeToAudioCodecFormat(const std::string &mime, OHOS::Media::AudioCodecFormat &codecFormat);
     static int32_t MapMimeToVideoCodecFormat(const std::string &mime, OHOS::Media::VideoCodecFormat &codecFormat);
+    static ani_ref globalRef;
 };
 }
 }
