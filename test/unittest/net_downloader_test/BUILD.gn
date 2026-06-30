@@ -69,6 +69,7 @@ ohos_unittest("net_downloader_test") {
         "common/net_downloader_test_common.h",
         "common/http_server_demo.cpp",
         "downloader_test.cpp",
+        "download_task_test.cpp",
     ]
 
     resource_config_file = "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
