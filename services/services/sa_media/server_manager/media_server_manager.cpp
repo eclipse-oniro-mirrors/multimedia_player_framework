@@ -290,7 +290,7 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 
     auto res = CreateStubObjectByType(type);
 
-    std::future<void> future = std::async(std::launch::async, [this](){
+    std::future<void> future = std::async(std::launch::async, [this]() {
         SetCritical(true);
     });
 
