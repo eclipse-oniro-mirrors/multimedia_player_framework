@@ -153,8 +153,12 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetLocation_001, TestSize.Level2)
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetLocation_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     recorderServer_->SetLocation(1, 1);
-    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    Location location;
+    EXPECT_EQ(MSERR_OK, recorderServer_->GetLocation(location));
+    EXPECT_EQ(location.latitude, 1);
+    EXPECT_EQ(location.longitude, 1);
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -213,7 +217,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetFileSplitDuration_001, TestSize.Lev
 
     EXPECT_EQ(MSERR_OK, recorderServer_->Start());
     EXPECT_EQ(MSERR_OK, recorderServer_->Pause());
-    recorderServer_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000);
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000));
     EXPECT_EQ(MSERR_OK, recorderServer_->Resume());
     EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
     recorderServer_->StopBuffer(PURE_VIDEO);
@@ -315,6 +319,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_GetSurface_Error_001, TestSize.Level2)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     OHOS::sptr<OHOS::Surface> surface = recorderServer_->GetSurface(2);
+    EXPECT_EQ(surface, nullptr);
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1503,30 +1508,11 @@ HWTEST_F(RecorderServerUnitTest, recorder_video_SetMaxFileSize_001, TestSize.Lev
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetMaxFileSize_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    recorderServer_->SetCaptureRate(0, 30);
-    recorderServer_->SetMaxFileSize(-1);
-    recorderServer_->SetMaxFileSize(5000);
-    recorderServer_->SetNextOutputFile(g_videoRecorderConfig.outputFd);
-    recorderServer_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000);
-    close(g_videoRecorderConfig.outputFd);
-}
-
-/**
- * @tc.name: recorder_video_SetMaxFileSize_002
- * @tc.desc: record video ,SetMaxFileSize
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, recorder_video_SetMaxFileSize_002, TestSize.Level0)
-{
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetMaxFileSize_002.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    recorderServer_->SetMaxFileSize(-1);
-    recorderServer_->SetNextOutputFile(g_videoRecorderConfig.outputFd);
-    recorderServer_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000);
+    EXPECT_NE(MSERR_OK, recorderServer_->SetCaptureRate(0, 30));
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetMaxFileSize(-1));
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetMaxFileSize(5000));
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
+    EXPECT_NE(MSERR_OK, recorderServer_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1543,6 +1529,8 @@ HWTEST_F(RecorderServerUnitTest, recorder_video_SetParameter_001, TestSize.Level
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetParameter_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    Format format;
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetParameter(1, format));
     close(g_videoRecorderConfig.outputFd);
 }
 

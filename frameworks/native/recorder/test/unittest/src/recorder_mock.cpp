@@ -220,6 +220,12 @@ void RecorderMock::SetLocation(float latitude, float longitude)
     return recorder_->SetLocation(latitude, longitude);
 }
 
+int32_t RecorderMock::GetLocation(Location &location)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->GetLocation(location);
+}
+
 void RecorderMock::SetOrientationHint(int32_t rotation)
 {
     UNITTEST_CHECK_AND_RETURN_LOG(recorder_ != nullptr, "recorder_ == nullptr");
