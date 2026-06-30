@@ -230,6 +230,16 @@ public:
         return id_;
     }
 
+    // 离线缓存路径读写方法
+    void SetDirectoryPath(const std::string& directoryPath)
+    {
+        directoryPath_ = directoryPath;
+    }
+
+    std::string GetDirectoryPath() const
+    {
+        return directoryPath_;
+    }
     std::string url {};
     std::string mimeType_ {};
     bool enable_ {false};
@@ -237,6 +247,7 @@ public:
     std::shared_ptr<LoaderCallback> mediaSourceLoaderCb_ {nullptr};
     std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};
     std::string id_ {};
+    std::string directoryPath_ {}; // 离线缓存路径
 private:
     std::vector<AVPlayMediaStream> mediaStreamVec_;
     FileDescriptor fileDescriptor_ {};

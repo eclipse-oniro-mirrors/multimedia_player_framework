@@ -79,6 +79,25 @@ void PlayHiplayerImplUnitTest::TearDown(void)
     hiplayer_ = nullptr;
 }
 
+/**
+ * @tc.name  : Test AVMediaSource directoryPath API
+ * @tc.number: AVMediaSource_directoryPath_001
+ * @tc.desc  : Test AVMediaSource directoryPath interface
+ */
+HWTEST_F(PlayHiplayerImplUnitTest, AVMediaSource_DirectoryPath_001, TestSize.Level0)
+{
+    std::map<std::string, std::string> header = {
+        {"key1", "value1"},
+        {"key2", "value2"},
+    };
+    auto mediaSource = std::make_shared<AVMediaSource>("file:///data/test/H264_AAC.mp4", header);
+    auto path = mediaSource->GetDirectoryPath();
+    EXPECT_EQ(path, "");
+    mediaSource->SetDirectoryPath("0123456");
+    path = mediaSource->GetDirectoryPath();
+    EXPECT_EQ(path, "0123456");
+}
+
 // @tc.name     Test SetDefaultAudioRenderInfo API
 // @tc.number   PHIUT_SetDefaultAudioRenderInfo_001
 // @tc.desc     Test SetDefaultAudioRenderInfo interface, 1.
