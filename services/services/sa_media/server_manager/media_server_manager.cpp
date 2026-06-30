@@ -290,7 +290,10 @@ sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 
     auto res = CreateStubObjectByType(type);
 
-    SetCritical(true);
+    std::future<void> future = std::async(std::launch::async, [this](){
+        SetCritical(true);
+    });
+
     return res;
 }
 
@@ -1201,8 +1204,6 @@ void MediaServerManager::ReportAppMemoryUsage()
 
 void MediaServerManager::SetCritical(bool critical)
 {
-    CHECK_AND_RETURN_LOG(GetClientBundleName(IPCSkeleton::GetCallingUid()) != "bootanimation",
-        "MediaServerManager::SetCritical do not SetCritical");
     auto ret = Memory::MemMgrClient::GetInstance().SetCritical(getpid(), critical, PLAYER_DISTRIBUTED_SERVICE_ID);
     CHECK_AND_RETURN_LOG(ret == 0, "MediaServerManager::SetCritical set critical to %{public}d fail.", critical);
     MEDIA_LOGI("MediaServerManager::SetCritical set critical to %{public}d success.", critical);
