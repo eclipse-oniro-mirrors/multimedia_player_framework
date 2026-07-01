@@ -1380,6 +1380,43 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_SeekToDefaultPosition_009, TestSize.Lev
     EXPECT_EQ(ret, errcode);
 }
 
+// @tc.name     Test InnerSelectTrack API
+// @tc.number   PHIUT_InnerSelectTrack_003
+// @tc.desc     Test InnerSelectTrack with audio mime, SelectTrack fails and returns early
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InnerSelectTrack_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    hiplayer_->demuxer_ = mockDemuxer;
+    std::string mime = "audio/aac";
+    int32_t trackId = 2;
+    PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH;
+    auto ret = hiplayer_->InnerSelectTrack(mime, trackId, mode);
+    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->currentAudioTrackId_, -1);
+}
+
+// @tc.name     Test InnerSelectTrack API
+// @tc.number   PHIUT_InnerSelectTrack_004
+// @tc.desc     Test InnerSelectTrack with audio mime in EOS state, SelectTrack fails and returns early
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_InnerSelectTrack_004, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    std::string name = "testname";
+    FilterType type = FilterType::VIDEO_CAPTURE;
+    auto mockDemuxer = std::make_shared<MockDemuxerFilter>(name, type);
+    hiplayer_->demuxer_ = mockDemuxer;
+    hiplayer_->curState_ = PlayerStateId::EOS;
+    std::string mime = "audio/aac";
+    int32_t trackId = 2;
+    PlayerSwitchMode mode = PlayerSwitchMode::SWITCH_SMOOTH;
+    auto ret = hiplayer_->InnerSelectTrack(mime, trackId, mode);
+    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->currentAudioTrackId_, -1);
+}
+
 // @tc.name     Test GetSeekableRanges API
 // @tc.number   PHIUT_GetSeekableRanges_001
 // @tc.desc     Test demuxer_ != nullptr.
