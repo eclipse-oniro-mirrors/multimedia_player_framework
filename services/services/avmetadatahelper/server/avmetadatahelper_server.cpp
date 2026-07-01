@@ -14,6 +14,8 @@
  */
 
 #include "avmetadatahelper_server.h"
+
+#include "accesstoken_kit.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
