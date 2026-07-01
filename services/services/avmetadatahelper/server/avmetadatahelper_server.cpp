@@ -19,6 +19,7 @@
 #include "engine_factory_repo.h"
 #include "uri_helper.h"
 #include "media_dfx.h"
+#include "media_permission.h"
 #include "media_utils.h"
 #include "ipc_skeleton.h"
 
