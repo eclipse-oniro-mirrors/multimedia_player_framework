@@ -42,11 +42,6 @@ const int32_t ARGS_FOUR = 4;
 const int32_t ARGS_FIVE = 5;
 const int32_t SIZE = 1024;
 
-/* Constants for tone type */
-const int32_t CARD_0 = 0;
-const int32_t CARD_1 = 1;
-const int32_t SYSTEM_NOTIFICATION = 32;
-
 const int TYPEERROR = -2;
 const int ERROR = -1;
 const int SUCCESS = 0;
@@ -62,20 +57,28 @@ const std::map<std::string, RingtoneType> ringtoneTypeMap = {
     {"RINGTONE_TYPE_DEFAULT", RINGTONE_TYPE_SIM_CARD_0}, // deprecated
     {"RINGTONE_TYPE_MULTISIM", RINGTONE_TYPE_SIM_CARD_1}, // deprecated
     {"RINGTONE_TYPE_SIM_CARD_0", RINGTONE_TYPE_SIM_CARD_0},
-    {"RINGTONE_TYPE_SIM_CARD_1", RINGTONE_TYPE_SIM_CARD_1}
+    {"RINGTONE_TYPE_SIM_CARD_1", RINGTONE_TYPE_SIM_CARD_1},
+    {"RINGTONE_TYPE_ESIM_CARD_0", RINGTONE_TYPE_ESIM_CARD_0},
+    {"RINGTONE_TYPE_ESIM_CARD_1", RINGTONE_TYPE_ESIM_CARD_1}
 };
 
 const std::map<std::string, SystemToneType> systemToneTypeMap = {
     {"SYSTEM_TONE_TYPE_SIM_CARD_0", SYSTEM_TONE_TYPE_SIM_CARD_0},
     {"SYSTEM_TONE_TYPE_SIM_CARD_1", SYSTEM_TONE_TYPE_SIM_CARD_1},
+    {"SYSTEM_TONE_TYPE_ESIM_CARD_0", SYSTEM_TONE_TYPE_ESIM_CARD_0},
+    {"SYSTEM_TONE_TYPE_ESIM_CARD_1", SYSTEM_TONE_TYPE_ESIM_CARD_1},
     {"SYSTEM_TONE_TYPE_NOTIFICATION", SYSTEM_TONE_TYPE_NOTIFICATION}
 };
 
 const std::map<std::string, ToneHapticsType> toneHapticsTypeMap = {
     {"CALL_SIM_CARD_0", CALL_SIM_CARD_0},
     {"CALL_SIM_CARD_1", CALL_SIM_CARD_1},
+    {"CALL_ESIM_CARD_0", CALL_ESIM_CARD_0},
+    {"CALL_ESIM_CARD_1", CALL_ESIM_CARD_1},
     {"TEXT_MESSAGE_SIM_CARD_0", TEXT_MESSAGE_SIM_CARD_0},
     {"TEXT_MESSAGE_SIM_CARD_1", TEXT_MESSAGE_SIM_CARD_1},
+    {"TEXT_MESSAGE_ESIM_CARD_0", TEXT_MESSAGE_ESIM_CARD_0},
+    {"TEXT_MESSAGE_ESIM_CARD_1", TEXT_MESSAGE_ESIM_CARD_1},
     {"NOTIFICATION", NOTIFICATION},
 };
 
@@ -289,7 +292,7 @@ napi_value SystemSoundManagerNapi::CreateSystemSoundErrorObject(napi_env env)
     napi_status soundStatus;
     std::string soundPropName;
     int32_t soundRefCount = 1;
- 
+
     soundStatus = napi_create_object(env, &soundResult);
     if (soundStatus == napi_ok) {
         for (auto &iter: systemSoundErrorModeMap) {
@@ -309,7 +312,7 @@ napi_value SystemSoundManagerNapi::CreateSystemSoundErrorObject(napi_env env)
         }
     }
     napi_get_undefined(env, &soundResult);
- 
+
     return soundResult;
 }
 
@@ -1265,8 +1268,8 @@ napi_value SystemSoundManagerNapi::GetDefaultRingtoneAttrs(napi_env env, napi_ca
                 napi_get_value_int32(env, argv[i], &asyncContext->ringtoneType);
             }
         }
-        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr && (asyncContext->ringtoneType == CARD_0 ||
-            asyncContext->ringtoneType == CARD_1),
+        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr &&
+            IsValidRingtoneType(static_cast<RingtoneType>(asyncContext->ringtoneType)),
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "Parameter error");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "GetDefaultRingtoneAttrs", NAPI_AUTO_LENGTH, &resource);
@@ -1351,8 +1354,8 @@ napi_value SystemSoundManagerNapi::GetRingtoneAttrList(napi_env env, napi_callba
                 napi_get_value_int32(env, argv[i], &asyncContext->ringtoneType);
             }
         }
-        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr && (asyncContext->ringtoneType == CARD_0 ||
-            asyncContext->ringtoneType == CARD_1),
+        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr &&
+            IsValidRingtoneType(static_cast<RingtoneType>(asyncContext->ringtoneType)),
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "Parameter error");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "GetRingtoneAttrList", NAPI_AUTO_LENGTH, &resource);
@@ -1442,8 +1445,8 @@ napi_value SystemSoundManagerNapi::GetDefaultSystemToneAttrs(napi_env env, napi_
                 napi_get_value_int32(env, argv[i], &asyncContext->systemToneType);
             }
         }
-        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr && (asyncContext->systemToneType == CARD_0 ||
-            asyncContext->systemToneType == CARD_1 || asyncContext->systemToneType == SYSTEM_NOTIFICATION),
+        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr &&
+            IsValidSystemToneType(static_cast<SystemToneType>(asyncContext->systemToneType)),
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "Parameter error");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "GetDefaultSystemToneAttrs", NAPI_AUTO_LENGTH, &resource);
@@ -1502,8 +1505,8 @@ napi_value SystemSoundManagerNapi::GetSystemToneAttrList(napi_env env, napi_call
                 napi_get_value_int32(env, argv[i], &asyncContext->systemToneType);
             }
         }
-        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr && (asyncContext->systemToneType == CARD_0 ||
-            asyncContext->systemToneType == CARD_1 || asyncContext->systemToneType == SYSTEM_NOTIFICATION),
+        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr &&
+            IsValidSystemToneType(static_cast<SystemToneType>(asyncContext->systemToneType)),
             ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "Parameter error");
         napi_create_promise(env, &asyncContext->deferred, &result);
         napi_create_string_utf8(env, "GetSystemToneAttrList", NAPI_AUTO_LENGTH, &resource);
@@ -2221,7 +2224,7 @@ void SystemSoundManagerNapi::AsyncGetMockHapticRingtonePlayer(napi_env env, void
     SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
     RingtoneType type = static_cast<RingtoneType>(context->ringtoneType);
     context->status = ERROR;
-    if (type > RINGTONE_TYPE_SIM_CARD_1 || type < RINGTONE_TYPE_SIM_CARD_0) {
+    if (!IsValidRingtoneType(type)) {
         context->errCode = NAPI_ERR_PARAM_CHECK_ERROR;
         context->errMessage = "Parameter verification failed.";
         return;

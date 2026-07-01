@@ -23,11 +23,6 @@
 #include "tone_attrs_taihe.h"
 
 namespace {
-/* Constants for tone type */
-const int32_t CARD_0 = 0;
-const int32_t CARD_1 = 1;
-const int32_t SYSTEM_NOTIFICATION = 32;
-
 const int TYPEERROR = -2;
 const int ERROR = -1;
 
@@ -162,7 +157,7 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultRingtoneAttrsSync(uintptr_t con
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
     int32_t typeInner = type.get_value();
-    if (abilityContext == nullptr && (typeInner != CARD_0 || typeInner != CARD_1)) {
+    if (abilityContext == nullptr || !IsValidRingtoneType(static_cast<OHOS::Media::RingtoneType>(typeInner))) {
         MEDIA_LOGE("invalid arguments");
         CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
         return make_holder<ToneAttrsImpl, ToneAttrsTaihe>();
@@ -254,8 +249,7 @@ void SystemSoundManagerImpl::RemoveCustomizedTone(uintptr_t context, ::taihe::st
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
     int32_t systemToneType = type.get_value();
-    if (abilityContext == nullptr ||
-        !(systemToneType == CARD_0 || systemToneType == CARD_1 || systemToneType == SYSTEM_NOTIFICATION)) {
+    if (abilityContext == nullptr || !IsValidSystemToneType(static_cast<OHOS::Media::SystemToneType>(systemToneType))) {
         MEDIA_LOGE("Parameter error");
         CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
         return ReturnErrToneAttrsTaiheArray();
@@ -424,8 +418,7 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultSystemToneAttrsSync(uintptr_t c
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
     int32_t systemToneType = type.get_value();
-    if (abilityContext == nullptr ||
-        !(systemToneType == CARD_0 || systemToneType == CARD_1 || systemToneType == SYSTEM_NOTIFICATION)) {
+    if (abilityContext == nullptr || !IsValidSystemToneType(static_cast<OHOS::Media::SystemToneType>(systemToneType))) {
         MEDIA_LOGE("Parameter error");
         CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
         return make_holder<ToneAttrsImpl, ToneAttrsTaihe>();
@@ -459,7 +452,7 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultSystemToneAttrs(uintptr_t conte
 
     std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
     int32_t typeInner = type.get_value();
-    if (abilityContext == nullptr && (typeInner !=  CARD_0 || typeInner !=  CARD_1)) {
+    if (abilityContext == nullptr || !IsValidRingtoneType(static_cast<OHOS::Media::RingtoneType>(typeInner))) {
         MEDIA_LOGE("invalid arguments");
         return ReturnErrToneAttrsTaiheArray();
     }
@@ -632,8 +625,7 @@ RingtonePlayerOrNull SystemSoundManagerImpl::GetMockHapticRingtonePlayerByTypeAn
         CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed.");
         return RingtonePlayerOrNull::make_type_null();
     }
-    if (typeInner < OHOS::Media::RingtoneType::RINGTONE_TYPE_SIM_CARD_0 ||
-        typeInner > OHOS::Media::RingtoneType::RINGTONE_TYPE_SIM_CARD_1) {
+    if (!IsValidRingtoneType(static_cast<OHOS::Media::RingtoneType>(typeInner))) {
         CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed.");
         return RingtonePlayerOrNull::make_type_null();
     }

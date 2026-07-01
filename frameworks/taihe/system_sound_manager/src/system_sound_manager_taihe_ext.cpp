@@ -280,8 +280,7 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetCurrentRingtoneAttributeSync(RingtoneT
     }
 
     int32_t typeInner = type.get_value();
-    if (!(typeInner == OHOS::Media::RingtoneType::RINGTONE_TYPE_SIM_CARD_0 ||
-        typeInner == OHOS::Media::RingtoneType::RINGTONE_TYPE_SIM_CARD_1)) {
+    if (!IsValidRingtoneType(static_cast<OHOS::Media::RingtoneType>(typeInner))) {
         MEDIA_LOGE("Parameter error");
         CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
         return make_holder<ToneAttrsImpl, ToneAttrsTaihe>();

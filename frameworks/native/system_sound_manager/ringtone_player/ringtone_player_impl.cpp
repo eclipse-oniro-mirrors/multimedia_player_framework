@@ -62,7 +62,7 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     audioHapticManager_ = AudioHapticManagerFactory::CreateAudioHapticManager();
     CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
 
-    std::string ringtoneUri = systemSoundMgr_.GetRingtoneUri(databaseTool_, type_);
+    std::string ringtoneUri = systemSoundMgr_.GetRingtoneAttrs(databaseTool_, type_).GetUri();
     AudioHapticPlayerOptions options = {false, false};
     ToneHapticsSettings settings = GetHapticSettings(ringtoneUri, options.muteHaptics);
     InitPlayer(ringtoneUri, settings, options, streamUsage_);
@@ -229,6 +229,10 @@ ToneHapticsType RingtonePlayerImpl::ConvertToToneHapticsType(RingtoneType type)
             return ToneHapticsType::CALL_SIM_CARD_0;
         case RingtoneType::RINGTONE_TYPE_SIM_CARD_1:
             return ToneHapticsType::CALL_SIM_CARD_1;
+        case RingtoneType::RINGTONE_TYPE_ESIM_CARD_0:
+            return ToneHapticsType::CALL_ESIM_CARD_0;
+        case RingtoneType::RINGTONE_TYPE_ESIM_CARD_1:
+            return ToneHapticsType::CALL_ESIM_CARD_1;
         default:
             return ToneHapticsType::CALL_SIM_CARD_0;
     }
@@ -412,7 +416,7 @@ int32_t RingtonePlayerImpl::Start(const HapticStartupMode startupMode)
     MEDIA_LOGI("RingtonePlayerImpl::specifyRingtoneUri_ %{public}s", specifyRingtoneUri_.c_str());
     std::string ringtoneUri = "";
     if (specifyRingtoneUri_ == "") {
-        ringtoneUri = systemSoundMgr_.GetRingtoneUri(databaseTool_, type_);
+        ringtoneUri = systemSoundMgr_.GetRingtoneAttrs(databaseTool_, type_).GetUri();
         MEDIA_LOGI("RingtonePlayerImpl::ringtoneUri: %{public}s", ringtoneUri.c_str());
     } else if (specifyRingtoneUri_ == "-1") {
         ringtoneUri = NO_RING_SOUND;

@@ -36,21 +36,47 @@ inline const std::string ROM_IS_INSUFFICIENT = "20700006";
 enum RingtoneType {
     RINGTONE_TYPE_SIM_CARD_0 = 0,
     RINGTONE_TYPE_SIM_CARD_1 = 1,
+    RINGTONE_TYPE_ESIM_CARD_0 = 2,
+    RINGTONE_TYPE_ESIM_CARD_1 = 3,
+    RINGTONE_TYPE_INVALID,
 };
 
 enum SystemToneType {
     SYSTEM_TONE_TYPE_SIM_CARD_0 = 0,
     SYSTEM_TONE_TYPE_SIM_CARD_1 = 1,
+    SYSTEM_TONE_TYPE_ESIM_CARD_0 = 2,
+    SYSTEM_TONE_TYPE_ESIM_CARD_1 = 3,
     SYSTEM_TONE_TYPE_NOTIFICATION = 32,
 };
 
 enum ToneHapticsType {
     CALL_SIM_CARD_0 = 0,
     CALL_SIM_CARD_1 = 1,
+    CALL_ESIM_CARD_0 = 2,
+    CALL_ESIM_CARD_1 = 3,
     TEXT_MESSAGE_SIM_CARD_0 = 20,
     TEXT_MESSAGE_SIM_CARD_1 = 21,
+    TEXT_MESSAGE_ESIM_CARD_0 = 22,
+    TEXT_MESSAGE_ESIM_CARD_1 = 23,
     NOTIFICATION = 40,
 };
+
+inline bool IsValidRingtoneType(RingtoneType type)
+{
+    return type >= RINGTONE_TYPE_SIM_CARD_0 && type < RINGTONE_TYPE_INVALID;
+}
+
+inline bool IsValidSystemToneType(SystemToneType type)
+{
+    return (type >= SYSTEM_TONE_TYPE_SIM_CARD_0 && type <= SYSTEM_TONE_TYPE_ESIM_CARD_1) ||
+        type == SYSTEM_TONE_TYPE_NOTIFICATION;
+}
+
+inline bool IsValidToneHapticsType(ToneHapticsType type)
+{
+    return (type >= CALL_SIM_CARD_0 && type <= CALL_ESIM_CARD_1) ||
+        (type >= TEXT_MESSAGE_SIM_CARD_0 && type <= TEXT_MESSAGE_ESIM_CARD_1) || type == NOTIFICATION;
+}
 
 enum SystemToneUriType {
     UNKNOW_RINGTONES = -1,

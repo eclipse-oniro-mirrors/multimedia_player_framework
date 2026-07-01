@@ -660,6 +660,10 @@ ToneHapticsType SystemTonePlayerImpl::ConvertToToneHapticsType(SystemToneType ty
             return ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0;
         case SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1:
             return ToneHapticsType::TEXT_MESSAGE_SIM_CARD_1;
+        case SystemToneType::SYSTEM_TONE_TYPE_ESIM_CARD_0:
+            return ToneHapticsType::TEXT_MESSAGE_ESIM_CARD_0;
+        case SystemToneType::SYSTEM_TONE_TYPE_ESIM_CARD_1:
+            return ToneHapticsType::TEXT_MESSAGE_ESIM_CARD_1;
         case SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION:
             return ToneHapticsType::NOTIFICATION;
         default:
