@@ -281,7 +281,7 @@ ToneAttrs SystemSoundManagerImpl::QueryToneAttrsByType(const DatabaseTool &datab
     unique_ptr<RingtoneAsset> asset = results->GetFirstObject();
     while (asset != nullptr) {
         int32_t typeValue = typeColumnName == RINGTONE_COLUMN_RING_TONE_TYPE ?
-            asset->GetRingtoneType() : typeValue = asset->GetShottoneType();
+            asset->GetRingtoneType() : asset->GetShottoneType();
         if (typeValue & targetToneType) {
             toneAttrs.SetUri(asset->GetPath());
             toneAttrs.SetTitle(asset->GetTitle());
