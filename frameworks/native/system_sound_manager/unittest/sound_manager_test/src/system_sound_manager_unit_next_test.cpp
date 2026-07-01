@@ -13,8 +13,13 @@
 * limitations under the License.
 */
 #include "system_sound_manager_unit_next_test.h"
+#include "mock_datashare_helper.h"
+#include "mock_datashare_result_set.h"
 #include "media_core.h"
+#include "ringtone_db_const.h"
+#include "ringtone_type.h"
 #include <string>
+#include <gmock/gmock.h>
 
 using namespace OHOS::AbilityRuntime;
 using namespace testing::ext;
@@ -2114,6 +2119,435 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneUriInternal_Default
     EXPECT_EQ(result, ERROR);
 
     dataShareHelper->Release();
+}
+
+namespace {
+
+using namespace testing;
+
+struct MockResultSetConfig {
+    int32_t toneId = 0;
+    int32_t sourceType = SOURCE_TYPE_INVALID;
+    int32_t toneType = TONE_TYPE_INVALID;
+    int32_t ringtoneType = RING_TONE_TYPE_NOT;
+    int32_t shottoneType = SHOT_TONE_TYPE_NOT;
+    int32_t notificationToneType = NOTIFICATION_TONE_TYPE_NOT;
+    int32_t notificationToneSourceType = SOURCE_TYPE_INVALID;
+    int32_t shotToneSourceType = SOURCE_TYPE_INVALID;
+    int32_t ringtoneSourceType = SOURCE_TYPE_INVALID;
+    bool hasRows = true;
+};
+
+std::unordered_map<std::string, int> BuildColumnIndexMap()
+{
+    std::unordered_map<std::string, int> columnIndexMap;
+    int idx = 0;
+    columnIndexMap[RINGTONE_COLUMN_TONE_ID] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_DATA] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_DISPLAY_NAME] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_TITLE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_TONE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_MEDIA_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_SOURCE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_SHOT_TONE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_RING_TONE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_ALARM_TONE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_MIME_TYPE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_SIZE] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_DATE_ADDED] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_DATE_MODIFIED] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_DURATION] = idx++;
+    columnIndexMap[RINGTONE_COLUMN_SCANNER_FLAG] = idx++;
+    return columnIndexMap;
+}
+
+std::unordered_map<int, int> BuildIntValueMap(
+    const std::unordered_map<std::string, int>& columnIndexMap,
+    const MockResultSetConfig& config)
+{
+    std::unordered_map<int, int> intValueMap;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_TONE_ID)] = config.toneId;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_TONE_TYPE)] = config.toneType;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_MEDIA_TYPE)] = RINGTONE_MEDIA_TYPE_AUDIO;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_SOURCE_TYPE)] = config.sourceType;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_SHOT_TONE_TYPE)] = config.shottoneType;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE)] = config.shotToneSourceType;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE)] = config.notificationToneType;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE)] = config.notificationToneSourceType;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_RING_TONE_TYPE)] = config.ringtoneType;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE)] = config.ringtoneSourceType;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_ALARM_TONE_TYPE)] = ALARM_TONE_TYPE_NOT;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE)] = SOURCE_TYPE_INVALID;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_DURATION)] = 0;
+    intValueMap[columnIndexMap.at(RINGTONE_COLUMN_SCANNER_FLAG)] = 0;
+    return intValueMap;
+}
+
+void SetupResultSetON_CALL(std::shared_ptr<OHOS::Media::MockDataShareResultSet> resultSet,
+    const std::unordered_map<std::string, int>& columnIndexMap,
+    const std::unordered_map<int, int>& intValueMap)
+{
+    ON_CALL(*resultSet, GetColumnIndex(_, _))
+        .WillByDefault(Invoke([columnIndexMap](const std::string& name, int& outIdx) -> int {
+            auto it = columnIndexMap.find(name);
+            if (it != columnIndexMap.end()) {
+                outIdx = it->second;
+                return 0;
+            }
+            outIdx = -1;
+            return -1;
+        }));
+
+    ON_CALL(*resultSet, GetInt(_, _))
+        .WillByDefault(Invoke([intValueMap](int colIdx, int& val) -> int {
+            auto it = intValueMap.find(colIdx);
+            if (it != intValueMap.end()) {
+                val = it->second;
+                return 0;
+            }
+            val = 0;
+            return 0;
+        }));
+
+    ON_CALL(*resultSet, GetString(_, _))
+        .WillByDefault(Invoke([](int colIdx, std::string& val) -> int {
+            val = "test_value";
+            return 0;
+        }));
+
+    ON_CALL(*resultSet, GetLong(_, _))
+        .WillByDefault(Invoke([](int colIdx, int64_t& val) -> int {
+            val = 0;
+            return 0;
+        }));
+
+    ON_CALL(*resultSet, IsColumnNull(_, _))
+        .WillByDefault(Invoke([](int colIdx, bool& isNull) -> int {
+            isNull = false;
+            return 0;
+        }));
+
+    ON_CALL(*resultSet, GetAllColumnNames(_))
+        .WillByDefault(Invoke([columnIndexMap](std::vector<std::string>& columnNames) -> int {
+            columnNames.clear();
+            std::vector<std::pair<std::string, int>> sorted(columnIndexMap.begin(), columnIndexMap.end());
+            std::sort(sorted.begin(), sorted.end(),
+                [](const auto& a, const auto& b) { return a.second < b.second; });
+            for (auto& [name, idx] : sorted) {
+                columnNames.push_back(name);
+            }
+            return 0;
+        }));
+}
+
+std::shared_ptr<OHOS::Media::MockDataShareResultSet> CreateMockResultSet(const MockResultSetConfig& config)
+{
+    auto resultSet = std::make_shared<OHOS::Media::MockDataShareResultSet>();
+
+    if (!config.hasRows) {
+        ON_CALL(*resultSet, GoToFirstRow()).WillByDefault(Return(-1));
+        ON_CALL(*resultSet, GoToNextRow()).WillByDefault(Return(-1));
+        ON_CALL(*resultSet, GetRowCount(_)).WillByDefault(DoAll(SetArgReferee<0>(0), Return(0)));
+        ON_CALL(*resultSet, GetColumnCount(_)).WillByDefault(DoAll(SetArgReferee<0>(0), Return(0)));
+        return resultSet;
+    }
+
+    ON_CALL(*resultSet, GoToFirstRow()).WillByDefault(Return(0));
+    ON_CALL(*resultSet, GoToNextRow()).WillByDefault(Return(-1));
+    ON_CALL(*resultSet, GoToRow(_)).WillByDefault(Return(0));
+    ON_CALL(*resultSet, GetRowCount(_)).WillByDefault(DoAll(SetArgReferee<0>(1), Return(0)));
+    ON_CALL(*resultSet, GetColumnCount(_)).WillByDefault(DoAll(SetArgReferee<0>(16), Return(0)));
+    ON_CALL(*resultSet, Close()).WillByDefault(Return(0));
+    ON_CALL(*resultSet, IsClosed()).WillByDefault(Return(false));
+
+    auto columnIndexMap = BuildColumnIndexMap();
+    auto intValueMap = BuildIntValueMap(columnIndexMap, config);
+    SetupResultSetON_CALL(resultSet, columnIndexMap, intValueMap);
+
+    return resultSet;
+}
+
+std::shared_ptr<OHOS::Media::MockDataShareHelper> CreateMockHelperWithResultSet(
+    std::shared_ptr<OHOS::Media::MockDataShareResultSet> resultSet)
+{
+    auto mockHelper = std::make_shared<OHOS::Media::MockDataShareHelper>();
+
+    ON_CALL(*mockHelper, Query(_, _, _, _))
+        .WillByDefault(Invoke([resultSet](Uri& uri, const DataShare::DataSharePredicates& predicates,
+            std::vector<std::string>& columns, DataShare::DatashareBusinessError* businessError)
+            -> std::shared_ptr<DataShare::DataShareResultSet> {
+            return std::static_pointer_cast<DataShare::DataShareResultSet>(resultSet);
+        }));
+
+    ON_CALL(*mockHelper, Delete(_, _)).WillByDefault(Return(1));
+    ON_CALL(*mockHelper, Update(_, _, _)).WillByDefault(Return(1));
+    ON_CALL(*mockHelper, Release()).WillByDefault(Return(true));
+
+    return mockHelper;
+}
+
+}
+
+using namespace testing;
+
+/**
+ * @tc.name  : ClearNotificationToneType_NullResults
+ * @tc.number: ClearNotificationToneType_002
+ * @tc.desc  : Test ClearNotificationToneType when Query returns null result set (early return branch)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    auto mockHelper = std::make_shared<OHOS::Media::MockDataShareHelper>();
+    ON_CALL(*mockHelper, Query(_, _, _, _))
+        .WillByDefault(Return(std::shared_ptr<DataShare::DataShareResultSet>(nullptr)));
+
+    int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), SOURCE_TYPE_CUSTOMISED);
+    EXPECT_EQ(result, 0);
+}
+
+/**
+ * @tc.name  : ClearNotificationToneType_CustomisedNotification
+ * @tc.number: ClearNotificationToneType_003
+ * @tc.desc  : Test ClearNotificationToneType with customised notification tone (Delete branch)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    MockResultSetConfig config;
+    config.toneId = 1;
+    config.sourceType = SOURCE_TYPE_CUSTOMISED;
+    config.toneType = TONE_TYPE_NOTIFICATION;
+    config.notificationToneType = NOTIFICATION_TONE_TYPE;
+    config.notificationToneSourceType = SOURCE_TYPE_CUSTOMISED;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(AtLeast(1));
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
+
+    int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), SOURCE_TYPE_CUSTOMISED);
+    EXPECT_GT(result, 0);
+}
+
+/**
+ * @tc.name  : ClearNotificationToneType_PresetTone
+ * @tc.number: ClearNotificationToneType_004
+ * @tc.desc  : Test ClearNotificationToneType with preset tone (Update branch, else condition)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_004, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    MockResultSetConfig config;
+    config.toneId = 2;
+    config.sourceType = SOURCE_TYPE_PRESET;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.notificationToneType = NOTIFICATION_TONE_TYPE;
+    config.notificationToneSourceType = SOURCE_TYPE_PRESET;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
+
+    int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), SOURCE_TYPE_PRESET);
+    EXPECT_GT(result, 0);
+}
+
+/**
+ * @tc.name  : ClearNotificationToneType_EmptyResults
+ * @tc.number: ClearNotificationToneType_005
+ * @tc.desc  : Test ClearNotificationToneType when Query returns empty result set (no rows, Close branch)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_005, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = false;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
+
+    int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), SOURCE_TYPE_CUSTOMISED);
+    EXPECT_EQ(result, 0);
+}
+
+/**
+ * @tc.name  : ClearBitFromToneTypeColumn_NullResults
+ * @tc.number: ClearBitFromToneTypeColumn_004
+ * @tc.desc  : Test ClearBitFromToneTypeColumn when Query returns null result set (early return branch)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_004, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    auto mockHelper = std::make_shared<OHOS::Media::MockDataShareHelper>();
+    ON_CALL(*mockHelper, Query(_, _, _, _))
+        .WillByDefault(Return(std::shared_ptr<DataShare::DataShareResultSet>(nullptr)));
+
+    int32_t targetToneType = 1;
+    int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
+        RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
+        targetToneType, SOURCE_TYPE_CUSTOMISED);
+    EXPECT_EQ(result, 0);
+}
+
+/**
+ * @tc.name  : ClearBitFromToneTypeColumn_RemainingZeroCustomised
+ * @tc.number: ClearBitFromToneTypeColumn_005
+ * @tc.desc  : Test ClearBitFromToneTypeColumn with remaining==0 and customised source type (Delete branch)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_005, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    MockResultSetConfig config;
+    config.toneId = 3;
+    config.sourceType = SOURCE_TYPE_CUSTOMISED;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.ringtoneType = 1;
+    config.ringtoneSourceType = SOURCE_TYPE_CUSTOMISED;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(AtLeast(1));
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
+
+    int32_t targetToneType = 1;
+    int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
+        RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
+        targetToneType, SOURCE_TYPE_CUSTOMISED);
+    EXPECT_GT(result, 0);
+}
+
+/**
+ * @tc.name  : ClearBitFromToneTypeColumn_RemainingZeroPreset
+ * @tc.number: ClearBitFromToneTypeColumn_006
+ * @tc.desc  : Test ClearBitFromToneTypeColumn with remaining==0 and preset source type (Update reset branch)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_006, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    MockResultSetConfig config;
+    config.toneId = 4;
+    config.sourceType = SOURCE_TYPE_PRESET;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.ringtoneType = 1;
+    config.ringtoneSourceType = SOURCE_TYPE_PRESET;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
+
+    int32_t targetToneType = 1;
+    int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
+        RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
+        targetToneType, SOURCE_TYPE_PRESET);
+    EXPECT_GT(result, 0);
+}
+
+/**
+ * @tc.name  : ClearBitFromToneTypeColumn_RemainingNonZero
+ * @tc.number: ClearBitFromToneTypeColumn_007
+ * @tc.desc  : Test ClearBitFromToneTypeColumn with remaining!=0 (Update remaining branch)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_007, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    MockResultSetConfig config;
+    config.toneId = 5;
+    config.sourceType = SOURCE_TYPE_CUSTOMISED;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.ringtoneType = 3;
+    config.ringtoneSourceType = SOURCE_TYPE_CUSTOMISED;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
+
+    int32_t targetToneType = 1;
+    int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
+        RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
+        targetToneType, SOURCE_TYPE_CUSTOMISED);
+    EXPECT_GT(result, 0);
+}
+
+/**
+ * @tc.name  : ClearBitFromToneTypeColumn_ShotToneColumn
+ * @tc.number: ClearBitFromToneTypeColumn_008
+ * @tc.desc  : Test ClearBitFromToneTypeColumn with shot tone column name (GetShottoneType branch)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_008, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    MockResultSetConfig config;
+    config.toneId = 6;
+    config.sourceType = SOURCE_TYPE_PRESET;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.shottoneType = 1;
+    config.shotToneSourceType = SOURCE_TYPE_PRESET;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
+
+    int32_t targetToneType = 1;
+    int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
+        RINGTONE_COLUMN_SHOT_TONE_TYPE, RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
+        targetToneType, SOURCE_TYPE_PRESET);
+    EXPECT_GT(result, 0);
 }
 } // namespace Media
 } // namespace OHOS
