@@ -171,6 +171,7 @@ private:
     std::mutex mutex_;
     std::unique_ptr<Task> memoryReportTask_{nullptr};
     std::unordered_map<pid_t, uint32_t> playerPidMem_{};
+    std::future<void> future_;
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int64_t allInstancesReleasedTime_ {0};
 #endif
