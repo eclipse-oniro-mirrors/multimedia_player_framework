@@ -88,6 +88,11 @@ AVPlayerImpl::AVPlayerImpl()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Constructor success", FAKE_POINTER(this));
 }
 
+int64_t AVPlayerImpl::GetImplPtr()
+{
+    return reinterpret_cast<int64_t>(this);
+}
+
 optional<string> AVPlayerImpl::GetUrl()
 {
     OHOS::Media::MediaTrace trace("AVPlayerImpl::get url");

@@ -123,6 +123,7 @@ class AVPlayerImpl : public AVPlayerNotify {
 public:
     friend class AVAdsControllerImpl;
     AVPlayerImpl();
+    int64_t GetImplPtr();
 
     optional<string> GetUrl();
     void SetUrl(optional_view<string> url);

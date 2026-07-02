@@ -26,6 +26,7 @@
 namespace ANI::Media {
 using namespace taihe;
 using namespace ohos::multimedia::media;
+using namespace OHOS::Media;
 using AdsTaskRet = std::pair<int32_t, std::string>;
 
 class AVPlayerImpl;
@@ -33,6 +34,7 @@ class AVPlayerImpl;
 class AVAdsControllerImpl {
 public:
     AVAdsControllerImpl();
+    AVAdsControllerImpl(AVPlayerImpl *player);
     ~AVAdsControllerImpl();
     void SetPlayer(AVPlayerImpl *player);
     AVPlayerImpl *GetPlayer() const;
@@ -68,6 +70,6 @@ private:
     mutable std::mutex mutex_;
 };
 
-optional<AVAdsController> CreateAVAdsControllerSync(AVPlayer avplayer);
+optional<AVAdsController> CreateAVAdsControllerSync(::ohos::multimedia::media::weak::AVPlayer avplayer);
 } // namespace ANI::Media
 #endif // AVADS_CONTROLLER_TAIHE_H

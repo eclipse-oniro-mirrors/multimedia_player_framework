@@ -20,6 +20,8 @@
 #include "media_dfx.h"
 #include "media_source_taihe.h"
 
+using namespace ANI::Media;
+
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVAdsControllerTaihe"};
 }
@@ -29,6 +31,12 @@ namespace ANI::Media {
 AVAdsControllerImpl::AVAdsControllerImpl()
 {
     MEDIA_LOGI("AVAdsControllerImpl Constructor");
+}
+
+AVAdsControllerImpl::AVAdsControllerImpl(AVPlayerImpl *player)
+{
+    player_ = player;
+    MEDIA_LOGI("AVAdsControllerImpl Constructor with player");
 }
 
 AVAdsControllerImpl::~AVAdsControllerImpl()
@@ -417,26 +425,23 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::DisableAllAdsMedia
     return task;
 }
 
-optional<AVAdsController> CreateAVAdsControllerSync(AVPlayer avplayer)
+optional<AVAdsController> CreateAVAdsControllerSync(::ohos::multimedia::media::weak::AVPlayer avplayer)
 {
     MediaTrace trace("CreateAVAdsControllerSync");
     MEDIA_LOGI("CreateAVAdsControllerSync In");
 
-    auto playerImpl = avplayer.get_impl<AVPlayerImpl>();
+    AVPlayerImpl *playerImpl = reinterpret_cast<AVPlayerImpl *>(avplayer->GetImplPtr());
     if (playerImpl == nullptr) {
         MEDIA_LOGE("AVPlayer is null");
         return optional<AVAdsController>(std::nullopt);
     }
 
-    auto res = make_holder<AVAdsControllerImpl, AVAdsController>();
+    auto res = make_holder<AVAdsControllerImpl, AVAdsController>(playerImpl);
     if (taihe::has_error()) {
         MEDIA_LOGE("Create AVAdsController failed!");
         taihe::reset_error();
         return optional<AVAdsController>(std::nullopt);
     }
-
-    auto controllerImpl = res.get_impl<AVAdsControllerImpl>();
-    controllerImpl->SetPlayer(playerImpl.get());
 
     MEDIA_LOGI("CreateAVAdsControllerSync Out");
     return optional<AVAdsController>(std::in_place, res);

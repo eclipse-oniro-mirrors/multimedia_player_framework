@@ -360,6 +360,7 @@ struct TrackSelectionFilter {
 }
 
 interface AVPlayer {
+    GetImplPtr(): i64;
     @get GetUrl(): Optional<String>;
     @set SetUrl(url: Optional<String>): void;
     @get GetAudioEffectMode(): Optional<audio.AudioEffectMode>;
