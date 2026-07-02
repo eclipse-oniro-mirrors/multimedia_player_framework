@@ -31,7 +31,6 @@ ohos_fuzztest("RecorderServiceStubFuzzTest") {
     "../../../../services/services/sa_media/ipc",
     "../../../../services/services/sa_media/server",
     "../../../../services/services/sa_media/server_manager",
-    "../../../../services/services/subscriber",
   ]
   cflags = [
     "-std=c++17",

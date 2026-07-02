@@ -35,6 +35,7 @@ namespace Media {
 constexpr int32_t SYSTEM_STATUS_START = 1;
 constexpr int32_t SYSTEM_STATUS_STOP = 0;
 constexpr int32_t SYSTEM_PROCESS_TYPE = 1;
+std::shared_ptr<MediaServerSubscriber> subscriber_ = nullptr;
 
 #ifdef SUPPORT_START_STOP_ON_DEMAND
 const int32_t SECOND_CONVERT_MS = 1000;
