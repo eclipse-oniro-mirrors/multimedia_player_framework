@@ -237,6 +237,7 @@ public:
     int32_t RemoveAdsMediaSource(const std::string &id) override;
     int32_t SkipCurrentAdsMediaSource() override;
     int32_t DisableAllAdsMediaSource() override;
+    void HandleVideoCodecChange(const std::shared_ptr<Meta> &meta, bool &isCodecChanged, bool isSmoothSwitch);
 
 private:
     enum HiplayerSvpMode : int32_t {
@@ -391,6 +392,9 @@ private:
     void ExtractStrategyParams(const AVPlayStrategy& strategy);
     void HandleReadyAudioInterrupt();
     void InitPcmCallback();
+    bool IsNeedAudioSinkChangeTrack(std::shared_ptr<Meta> preMeta, std::shared_ptr<Meta> meta);
+    bool HandleAudioDecoderChangeEvent(const Event& event);
+    bool HandleAudioTrackChangeReportEvent(const Event& event);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
