@@ -4355,20 +4355,6 @@ bool HiPlayerImpl::IsLiveStream()
     return globalMeta->Find(Tag::MEDIA_DURATION) == globalMeta->end();
 }
 
-bool HiPlayerImpl::IsLiveStreamEx()
-{
-    FALSE_RETURN_V_NOLOG(demuxer_ != nullptr, false);
-    auto globalMeta = demuxer_->GetGlobalMetaInfo();
-    FALSE_RETURN_V_NOLOG(globalMeta != nullptr, false);
-    auto it = globalMeta->Find(Tag::MEDIA_DURATION);
-    if (it == globalMeta->end()) {
-        return true;
-    }
-    int64_t duration = 0;
-    globalMeta->Get<Tag::MEDIA_DURATION>(duration);
-    return duration < 0;
-}
-
 #ifdef SUPPORT_VIDEO
 Status HiPlayerImpl::LinkSeiDecoder(const std::shared_ptr<Filter>& preFilter,
     OHOS::Media::Pipeline::StreamType type)
@@ -5221,7 +5207,7 @@ int32_t HiPlayerImpl::AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &me
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, MSERR_INVALID_OPERATION, "DemuxerFilter is nullptr");
     FALSE_RETURN_V_MSG_E(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
     auto source = std::make_shared<MediaSource>(mediaSource->url);
-    return TransStatus(demuxer_->AddAdsMediaSource(source, startMs, IsLiveStreamEx(), outId));
+    return TransStatus(demuxer_->AddAdsMediaSource(source, startMs, IsLiveStream(), outId));
 }
 
 int32_t HiPlayerImpl::RemoveAdsMediaSource(const std::string &id)
