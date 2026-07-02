@@ -2690,6 +2690,10 @@ int32_t HiPlayerImpl::GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack)
             subtitleTrackInfo.PutStringValue("language", lang);
             subtitleTrackInfo.PutStringValue("track_name", "subtitle");
 
+            std::string title;
+ 	        trackInfo->GetData(Tag::MEDIA_TITLE, title);
+ 	        subtitleTrackInfo.PutStringValue("title", title);
+
             subtitleTrack.emplace_back(std::move(subtitleTrackInfo));
         }
     }
