@@ -26,8 +26,6 @@
 #include "media_log.h"
 #include "parameter.h"
 #include "os_account_manager.h"
-#include "datashare_helper.h"
-#include "uri.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "MediaUtils" };
