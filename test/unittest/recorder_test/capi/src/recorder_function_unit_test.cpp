@@ -339,7 +339,7 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_001, TestSize.Level2)
 
 /**
  * @tc.name: Recorder_Audio_002
- * @tc.desc: Test audio recording process 002
+ * @tc.desc: Test  audio recording process 002
  * @tc.type: FUNC
  */
 HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_002, TestSize.Level2)
