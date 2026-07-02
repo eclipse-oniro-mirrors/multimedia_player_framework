@@ -56,7 +56,7 @@ AVPlayerImpl *AVAdsControllerImpl::GetPlayer() const
     return player_;
 }
 
-string AVAdsControllerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, int64_t startMs)
+string AVAdsControllerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, int32_t startMs)
 {
     MediaTrace trace("AVAdsControllerImpl::addAdsMediaSource");
     MEDIA_LOGI("AddAdsMediaSourceSync In");
@@ -96,10 +96,10 @@ string AVAdsControllerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::wea
     return invalidId;
 }
 
-void AVAdsControllerImpl::RemoveAdsMediaSourceSync(::taihe::string_view id)
+void AVAdsControllerImpl::RemoveAdsMediaSource(::taihe::string_view id)
 {
     MediaTrace trace("AVAdsControllerImpl::removeAdsMediaSource");
-    MEDIA_LOGI("RemoveAdsMediaSourceSync In");
+    MEDIA_LOGI("RemoveAdsMediaSource In");
 
     AVPlayerImpl *player = GetPlayer();
     if (player == nullptr) {
@@ -117,13 +117,13 @@ void AVAdsControllerImpl::RemoveAdsMediaSourceSync(::taihe::string_view id)
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
     context->asyncTask = RemoveAdsMediaSourceTask(idStr);
     context->CheckTaskResult();
-    MEDIA_LOGI("RemoveAdsMediaSourceSync Out");
+    MEDIA_LOGI("RemoveAdsMediaSource Out");
 }
 
-void AVAdsControllerImpl::SkipCurrentAdsMediaSourceSync()
+void AVAdsControllerImpl::SkipCurrentAdsMediaSource()
 {
     MediaTrace trace("AVAdsControllerImpl::skipCurrentAdsMediaSource");
-    MEDIA_LOGI("SkipCurrentAdsMediaSourceSync In");
+    MEDIA_LOGI("SkipCurrentAdsMediaSource In");
 
     AVPlayerImpl *player = GetPlayer();
     if (player == nullptr) {
@@ -140,13 +140,13 @@ void AVAdsControllerImpl::SkipCurrentAdsMediaSourceSync()
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
     context->asyncTask = SkipCurrentAdsMediaSourceTask();
     context->CheckTaskResult();
-    MEDIA_LOGI("SkipCurrentAdsMediaSourceSync Out");
+    MEDIA_LOGI("SkipCurrentAdsMediaSource Out");
 }
 
-void AVAdsControllerImpl::DisableAllAdsMediaSourceSync()
+void AVAdsControllerImpl::DisableAllAdsMediaSource()
 {
     MediaTrace trace("AVAdsControllerImpl::disableAllAdsMediaSource");
-    MEDIA_LOGI("DisableAllAdsMediaSourceSync In");
+    MEDIA_LOGI("DisableAllAdsMediaSource In");
 
     AVPlayerImpl *player = GetPlayer();
     if (player == nullptr) {
@@ -163,7 +163,7 @@ void AVAdsControllerImpl::DisableAllAdsMediaSourceSync()
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
     context->asyncTask = DisableAllAdsMediaSourceTask();
     context->CheckTaskResult();
-    MEDIA_LOGI("DisableAllAdsMediaSourceSync Out");
+    MEDIA_LOGI("DisableAllAdsMediaSource Out");
 }
 
 void AVAdsControllerImpl::OnAdsEventListenerLoadingError(
@@ -349,7 +349,7 @@ void AVAdsControllerImpl::Release()
 }
 
 std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::AddAdsMediaSourceTask(
-    const std::shared_ptr<AVMediaSource> &mediaSource, int64_t startMs, std::string &outId)
+    const std::shared_ptr<AVMediaSource> &mediaSource, int32_t startMs, std::string &outId)
 {
     AVPlayerImpl *player = GetPlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");

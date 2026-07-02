@@ -712,16 +712,13 @@ interface AVAdsController {
     OffAdsListenerAdsCompleted(callback: Optional<(adsId: String) => void>): void;
 
     @gen_promise("addAdsMediaSource")
-    AddAdsMediaSourceSync(src: MediaSource, startMs: i64): String;
+    AddAdsMediaSourceSync(src: MediaSource, startMs: i32): String;
 
-    @gen_promise("removeAdsMediaSource")
-    RemoveAdsMediaSourceSync(id: String): void;
+    RemoveAdsMediaSource(id: String): void;
 
-    @gen_promise("skipCurrentAdsMediaSource")
-    SkipCurrentAdsMediaSourceSync(): void;
+    SkipCurrentAdsMediaSource(): void;
 
-    @gen_promise("disableAllAdsMediaSource")
-    DisableAllAdsMediaSourceSync(): void;
+    DisableAllAdsMediaSource(): void;
 
     Release(): void;
 }

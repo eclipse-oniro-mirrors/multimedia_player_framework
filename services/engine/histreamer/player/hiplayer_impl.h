@@ -357,6 +357,7 @@ private:
     int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo);
     int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
     bool IsLiveStream();
+    bool IsLiveStreamEx();
     Status SetSeiMessageListener();
     void UpdatePlayTotalDuration();
     inline bool IsStatisticalInfoValid();
