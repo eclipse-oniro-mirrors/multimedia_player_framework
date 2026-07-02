@@ -352,11 +352,9 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::AddAdsMediaSourceT
     const std::shared_ptr<AVMediaSource> &mediaSource, int64_t startMs, std::string &outId)
 {
     AVPlayerImpl *player = GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, mediaSource, startMs, &outId]() {
-        if (playerInstance == nullptr) {
-            return AdsTaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
-        }
         int32_t ret = playerInstance->AddAdsMediaSource(mediaSource, startMs, outId);
         if (ret != MSERR_OK) {
             return AdsTaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
@@ -371,11 +369,9 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::AddAdsMediaSourceT
 std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::RemoveAdsMediaSourceTask(const std::string &id)
 {
     AVPlayerImpl *player = GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, id]() {
-        if (playerInstance == nullptr) {
-            return AdsTaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
-        }
         int32_t ret = playerInstance->RemoveAdsMediaSource(id);
         if (ret != MSERR_OK) {
             return AdsTaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
@@ -390,11 +386,9 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::RemoveAdsMediaSour
 std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::SkipCurrentAdsMediaSourceTask()
 {
     AVPlayerImpl *player = GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance]() {
-        if (playerInstance == nullptr) {
-            return AdsTaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
-        }
         int32_t ret = playerInstance->SkipCurrentAdsMediaSource();
         if (ret != MSERR_OK) {
             return AdsTaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
@@ -409,11 +403,9 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::SkipCurrentAdsMedi
 std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::DisableAllAdsMediaSourceTask()
 {
     AVPlayerImpl *player = GetPlayer();
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance]() {
-        if (playerInstance == nullptr) {
-            return AdsTaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
-        }
         int32_t ret = playerInstance->DisableAllAdsMediaSource();
         if (ret != MSERR_OK) {
             return AdsTaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
