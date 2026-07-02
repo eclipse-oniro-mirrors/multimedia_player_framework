@@ -47,6 +47,9 @@ function CreateAVImageGeneratorSync(): Optional<AVImageGenerator>;
 @gen_promise("createAVPlayer")
 function CreateAVPlayerSync(): Optional<AVPlayer>;
 
+@gen_promise("createAVAdsController")
+function CreateAVAdsControllerSync(avplayer: AVPlayer): Optional<AVAdsController>;
+
 @gen_async("createAVRecorder")
 @gen_promise("createAVRecorder")
 function CreateAVRecorderSync(): Optional<AVRecorder>;
@@ -678,6 +681,26 @@ interface AVPlayer {
     GetMediaSources(): Array<Optional<MediaSource>>;
     OnTimedMetaData(callback: (data: AVTimedMetaData) => void): void;
     OffTimedMetaData(callback: Optional<(data: AVTimedMetaData) => void>): void;
+    @gen_promise("addPlaybackMediaSource")
+    AddPlaybackMediaSourceSync(src: MediaSource, pos: Optional<String>): String;
+
+    @gen_promise("removePlaybackMediaSource")
+    RemovePlaybackMediaSourceSync(pos: String): void;
+
+    @gen_promise("clearPlaybackList")
+    ClearPlaybackListSync(): void;
+
+    @gen_promise("advanceToNextMediaSource")
+    AdvanceToNextMediaSourceSync(): void;
+
+    @gen_promise("advanceToPrevMediaSource")
+    AdvanceToPrevMediaSourceSync(): void;
+
+    @gen_promise("advanceToMediaSource")
+    AdvanceToMediaSourceSync(id: String): void;
+}
+
+interface AVAdsController {
     OnAdsEventListenerLoadingError(callback: (adsId: String, reason: @sts_type("BusinessError<void>") Opaque) => void): void;
     OffAdsEventListenerLoadingError(callback: Optional<(adsId: String, reason: @sts_type("BusinessError<void>") Opaque) => void>): void;
     OnAdsListenerAdsStarted(callback: (adsId: String, duration: i64) => void): void;
@@ -699,23 +722,7 @@ interface AVPlayer {
     @gen_promise("disableAllAdsMediaSource")
     DisableAllAdsMediaSourceSync(): void;
 
-    @gen_promise("addPlaybackMediaSource")
-    AddPlaybackMediaSourceSync(src: MediaSource, pos: Optional<String>): String;
-
-    @gen_promise("removePlaybackMediaSource")
-    RemovePlaybackMediaSourceSync(pos: String): void;
-
-    @gen_promise("clearPlaybackList")
-    ClearPlaybackListSync(): void;
-
-    @gen_promise("advanceToNextMediaSource")
-    AdvanceToNextMediaSourceSync(): void;
-
-    @gen_promise("advanceToPrevMediaSource")
-    AdvanceToPrevMediaSourceSync(): void;
-
-    @gen_promise("advanceToMediaSource")
-    AdvanceToMediaSourceSync(id: String): void;
+    Release(): void;
 }
 
 struct SeiMessage {
