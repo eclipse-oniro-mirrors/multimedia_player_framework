@@ -55,14 +55,11 @@ public:
 private:
     int32_t Init();
     bool IsSystemApp();
-    void SubscribeDataShareReadyEvent();
-    void UnSubscribeDataShareReadyEvent();
 
     std::mutex mutex_;
     std::mutex mutexCb_;
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorCbSet_;
     bool isSystemScreenRecorderWorking_ = false;
-    std::shared_ptr<ScreenCaptureMonitorSubscriber> subscriber_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS
