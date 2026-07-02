@@ -762,8 +762,8 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTimeWithTimeout(napi_env env, 
     asyncCtx->innerHelper_ = extractor->helper_;
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
-    CHECK_AND_RETURN_RET(extractor->CheckParamsOfJsFetchFrameAtTimeWithTimeout(env, args, asyncCtx) == MSERR_OK,
-        result);
+    CHECK_AND_RETURN_RET(
+        extractor->CheckParamsOfJsFetchFrameAtTimeWithTimeout(env, args, maxArgs, asyncCtx) == MSERR_OK, result);
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsFetchFrameAtTimeWithTimeout", NAPI_AUTO_LENGTH, &resource);
@@ -787,9 +787,10 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTimeWithTimeout(napi_env env, 
 }
 
 int32_t AVMetadataExtractorNapi::CheckParamsOfJsFetchFrameAtTimeWithTimeout(napi_env env, napi_value* args,
-    std::unique_ptr<AVMetadataExtractorAsyncContext>& asyncCtx)
+    int32_t maxArgs, std::unique_ptr<AVMetadataExtractorAsyncContext>& asyncCtx)
 {
     CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, MSERR_INVALID_VAL, "asyncCtx is invalid");
+    CHECK_AND_RETURN_RET_LOG(maxArgs == ARG_FIVE, MSERR_INVALID_VAL, "args is invalid");
     napi_valuetype valueType = napi_undefined;
     napi_status ret = napi_get_value_int64(env, args[ARG_THREE], &asyncCtx->timeoutMs);
     CHECK_AND_RETURN_RET_LOG(ret == napi_ok, MSERR_INVALID_VAL, "Failed to get timeoutMs.");

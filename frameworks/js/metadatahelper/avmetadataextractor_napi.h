@@ -86,7 +86,7 @@ private:
     AVMetadataExtractorNapi();
     ~AVMetadataExtractorNapi();
 
-    int32_t CheckParamsOfJsFetchFrameAtTimeWithTimeout(napi_env env, napi_value* args,
+    int32_t CheckParamsOfJsFetchFrameAtTimeWithTimeout(napi_env env, napi_value* args, int32_t maxArgs,
         std::unique_ptr<AVMetadataExtractorAsyncContext>& asyncCtx);
     int32_t GetFetchFrameArgs(std::unique_ptr<AVMetadataExtractorAsyncContext> &asyncCtx,
         napi_env env, napi_value timeUs, napi_value option, napi_value params);
