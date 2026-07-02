@@ -123,6 +123,10 @@ private:
                                                               InitializationOptions &options);
     std::shared_ptr<PixelMap> CreatePixelMapFromSurfaceBuffer(sptr<SurfaceBuffer> &mySurfaceBuffer,
                                                               PixelMapInfo &pixelMapInfo);
+    std::shared_ptr<PixelMap> CreatePixelmapWithSDR(sptr<SurfaceBuffer> &surfaceBuffer,
+        const PixelMapInfo &pixelMapInfo, InitializationOptions &options, Status isColorSpaceInfoObtained);
+    std::shared_ptr<PixelMap> CreatePixelmapWithHDR(sptr<SurfaceBuffer> &surfaceBuffer,
+        const PixelMapInfo &pixelMapInfo, InitializationOptions &options, Status isColorSpaceInfoObtained);
     void SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<PixelMap> pixelMap,
                             PixelMapInfo &pixelMapInfo, bool needModifyStride);
     std::string pixelFormatToString(PixelFormat pixelFormat);
