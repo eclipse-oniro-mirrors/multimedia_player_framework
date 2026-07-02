@@ -24,8 +24,8 @@ namespace OHOS {
 namespace Media {
 class MediaServerSubscriber : public EventFwk::CommonEventSubscriber {
 public:
-    explicit MediaServerSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo) :
-        EventFwk::CommonEventSubscriber(subscribeInfo)
+    explicit MediaServerSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+        : EventFwk::CommonEventSubscriber(subscribeInfo)
     {}
     ~MediaServerSubscriber() = default;
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
