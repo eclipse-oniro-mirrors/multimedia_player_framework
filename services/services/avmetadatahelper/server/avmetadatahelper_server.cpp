@@ -14,14 +14,11 @@
  */
 
 #include "avmetadatahelper_server.h"
-
-#include "accesstoken_kit.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "engine_factory_repo.h"
 #include "uri_helper.h"
 #include "media_dfx.h"
-#include "media_permission.h"
 #include "media_utils.h"
 #include "ipc_skeleton.h"
 
@@ -126,14 +123,6 @@ int32_t AVMetadataHelperServer::SetUrlSource(const std::string &uri, const std::
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("Current uri is : %{private}s", uri.c_str());
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty");
-    if (uri.find("http") != std::string::npos) {
-        int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
-        if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
-            MEDIA_LOGE("user do not have the right to access INTERNET");
-            return MSERR_INVALID_OPERATION;
-        }
-    }
-
     int32_t setSourceRes = MSERR_OK;
     std::atomic<bool> isInitEngineEnd = false;
 
