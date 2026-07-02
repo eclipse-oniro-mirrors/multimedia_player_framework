@@ -50,7 +50,7 @@ protected:
 private:
     std::mutex mutex_;
     std::function<void(AVScreenCaptureStateCode)> onstatechangefunc;
-    std::function<void(int32_t, const std::string &)> onerrorfunc;
+    std::function<void(int32_t, const char *)> onerrorfunc;
 };
 }
 }
