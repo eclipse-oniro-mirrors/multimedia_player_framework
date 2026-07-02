@@ -25,9 +25,6 @@
 #ifdef SUPPORT_CALL
 #include "incall_observer.h"
 #endif
-#ifdef SUPPORT_SCREEN_CAPTURE
-#include "screen_capture_monitor_server.h"
-#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServer"};
@@ -57,11 +54,17 @@ REGISTER_SYSTEM_ABILITY_BY_ID(MediaServer, PLAYER_DISTRIBUTED_SERVICE_ID, true)
 MediaServer::MediaServer(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate)
 {
+#ifdef SUPPORT_SCREEN_CAPTURE
+    SubscribeDataShareReadyEvent();
+#endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 MediaServer::~MediaServer()
 {
+#ifdef SUPPORT_SCREEN_CAPTURE
+    UnSubscribeDataShareReadyEvent();
+#endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -80,9 +83,6 @@ void MediaServer::OnStart()
 #ifdef SUPPORT_CALL
     MEDIA_LOGD("InCallObserver init OnStart");
     InCallObserver::GetInstance();
-#endif
-#ifdef SUPPORT_SCREEN_CAPTURE
-    ScreenCaptureMonitorServer::GetInstance();
 #endif
 }
 
@@ -254,6 +254,28 @@ int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
 bool MediaServer::CanKillMediaService()
 {
     return MediaServerManager::GetInstance().CanKillMediaService();
+}
+
+void MediaServer::SubscribeDataShareReadyEvent()
+{
+    MEDIA_LOGI("MediaServer::SubscribeDataShareReadyEvent");
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    auto *tempSubscriber = new (std::nothrow) MediaServerSubscriber(subscribeInfo);
+    CHECK_AND_RETURN_LOG(tempSubscriber != nullptr, "SubscribeDataShareReadyEvent subscriber_ is null");
+    subscriber_ = std::shared_ptr<MediaServerSubscriber>(tempSubscriber);
+    bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
+    MEDIA_LOGI("MediaServer::SubscribeDataShareReadyEvent result: %{public}d", result);
+}
+
+void MediaServer::UnSubscribeDataShareReadyEvent()
+{
+    MEDIA_LOGI("MediaServer::UnSubscribeDataShareReadyEvent");
+    CHECK_AND_RETURN_LOG(subscriber_ != nullptr, "UnSubscribeDataShareReadyEvent subscriber_ is null");
+    bool result = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
+    MEDIA_LOGI("MediaServer::UnSubscribeDataShareReadyEvent result: %{public}d", result);
+    subscriber_ = nullptr;
 }
 } // namespace Media
 } // namespace OHOS

@@ -19,8 +19,6 @@
 #include <chrono>
 #include <functional>
 
-#include "common_event_manager.h"
-#include "common_event_support.h"
 #include "i_screen_capture_monitor_service.h"
 #include "nocopyable.h"
 #include "task_queue.h"
@@ -30,16 +28,6 @@
 
 namespace OHOS {
 namespace Media {
-
-class ScreenCaptureMonitorSubscriber : public EventFwk::CommonEventSubscriber {
-public:
-    explicit ScreenCaptureMonitorSubscriber(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
-        : EventFwk::CommonEventSubscriber(subscribeInfo)
-    {}
-    ~ScreenCaptureMonitorSubscriber() = default;
-    void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
-};
-
 class ScreenCaptureMonitorServer : public IScreenCaptureMonitorService, public NoCopyable {
 public:
     static std::shared_ptr<ScreenCaptureMonitorServer> GetInstance();
