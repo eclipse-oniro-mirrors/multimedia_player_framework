@@ -15,7 +15,7 @@
 
 #ifndef MEDIA_SERVER_DATASHARE_H
 #define MEDIA_SERVER_DATASHARE_H
-#include <stdint.h>
+#include <cstdlib>
 #include <string> 
 
 namespace OHOS {
