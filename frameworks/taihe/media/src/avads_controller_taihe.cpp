@@ -24,6 +24,7 @@ using namespace ANI::Media;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVAdsControllerTaihe"};
+    constexpr int32_t ERR_ADS_PARAM_INVALID = 5400108;
 }
 
 namespace ANI::Media {
@@ -68,12 +69,6 @@ string AVAdsControllerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::wea
         return invalidId;
     }
 
-    if (!player->IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport add ads media source");
-        return invalidId;
-    }
-
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceImpl::GetMediaSource(src);
     if (srcTmp == nullptr) {
         set_business_error(MSERR_EXT_API9_INVALID_PARAMETER, "get MediaSource argument failed!");
@@ -107,12 +102,6 @@ void AVAdsControllerImpl::RemoveAdsMediaSource(::taihe::string_view id)
         return;
     }
 
-    if (!player->IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport remove ads media source");
-        return;
-    }
-
     std::string idStr(id);
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
     context->asyncTask = RemoveAdsMediaSourceTask(idStr);
@@ -131,12 +120,6 @@ void AVAdsControllerImpl::SkipCurrentAdsMediaSource()
         return;
     }
 
-    if (!player->IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport skip current ads media source");
-        return;
-    }
-
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
     context->asyncTask = SkipCurrentAdsMediaSourceTask();
     context->CheckTaskResult();
@@ -151,12 +134,6 @@ void AVAdsControllerImpl::DisableAllAdsMediaSource()
     AVPlayerImpl *player = GetPlayer();
     if (player == nullptr) {
         set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
-        return;
-    }
-
-    if (!player->IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport disable all ads media source");
         return;
     }
 
@@ -333,10 +310,9 @@ void AVAdsControllerImpl::Release()
         return;
     }
 
-    if (player->IsControllable()) {
-        std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-        context->asyncTask = DisableAllAdsMediaSourceTask();
-        context->CheckTaskResult();
+    std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
+    if (playerInstance != nullptr) {
+        playerInstance->DisableAllAdsMediaSource();
     }
 
     player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
@@ -357,8 +333,7 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::AddAdsMediaSourceT
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, mediaSource, startMs, &outId]() {
         int32_t ret = playerInstance->AddAdsMediaSource(mediaSource, startMs, outId);
         if (ret != MSERR_OK) {
-            return AdsTaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
-                "failed to add ads media source");
+            return AdsTaskRet(ERR_ADS_PARAM_INVALID, "addAdsMediaSource failed");
         }
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
@@ -374,8 +349,7 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::RemoveAdsMediaSour
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, id]() {
         int32_t ret = playerInstance->RemoveAdsMediaSource(id);
         if (ret != MSERR_OK) {
-            return AdsTaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
-                "failed to remove ads media source");
+            return AdsTaskRet(ERR_ADS_PARAM_INVALID, "removeAdsMediaSource failed");
         }
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
@@ -389,11 +363,7 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::SkipCurrentAdsMedi
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance]() {
-        int32_t ret = playerInstance->SkipCurrentAdsMediaSource();
-        if (ret != MSERR_OK) {
-            return AdsTaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
-                "failed to skip current ads media source");
-        }
+        playerInstance->SkipCurrentAdsMediaSource();
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)player->GetTaskQueue()->EnqueueTask(task);
@@ -406,11 +376,7 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::DisableAllAdsMedia
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance]() {
-        int32_t ret = playerInstance->DisableAllAdsMediaSource();
-        if (ret != MSERR_OK) {
-            return AdsTaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
-                "failed to disable all ads media source");
-        }
+        playerInstance->DisableAllAdsMediaSource();
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)player->GetTaskQueue()->EnqueueTask(task);
