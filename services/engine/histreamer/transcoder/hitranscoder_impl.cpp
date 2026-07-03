@@ -216,6 +216,11 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
         FALSE_RETURN_V_MSG_E(result == MSERR_OK, result, "SetInputFile error: GetRealPath error");
         inputFile_ = "file://" + realUriPath;
     }
+    if (demuxerFilter_ != nullptr) {
+        MEDIA_LOG_I("Remove old demuxerFilter_ before creating new one");
+        pipeline_->RemoveHeadFilter(demuxerFilter_);
+        demuxerFilter_ = nullptr;
+    }
     std::shared_ptr<MediaSource> mediaSource = std::make_shared<MediaSource>(inputFile_);
     demuxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::DemuxerFilter>("builtin.player.demuxer",
         Pipeline::FilterType::FILTERTYPE_DEMUXER);
@@ -399,7 +404,14 @@ int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
 {
     MEDIA_LOG_I("HiTransCoderImpl::SetOutputFile()");
     MEDIA_LOG_I("HiTransCoder SetOutputFile in, fd is %{public}d", fd);
+    FALSE_RETURN_V_MSG_E(fd >= 0, MSERR_INVALID_VAL, "Invalid fd: %{public}d", fd);
+
+    if (fd_ >= 0) {
+        (void)::close(fd_);
+        fd_ = -1;
+    }
     fd_ = dup(fd);
+    FALSE_RETURN_V_MSG_E(fd_ >= 0, MSERR_INVALID_OPERATION, "dup failed, errno: %{public}d", errno);
     MEDIA_LOG_I("HiTransCoder SetOutputFile dup, fd is %{public}d", fd_);
     return MSERR_OK;
 }
@@ -729,6 +741,12 @@ int32_t HiTransCoderImpl::Cancel()
         MEDIA_LOG_E("Stop pipeline failed");
         CollectionErrorInfo(ret, "Cancel error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+    }
+    if (fd_ >= 0) {
+        (void)::close(fd_);
+        fd_ = -1;
+    }
+    if (ret != MSERR_OK) {
         return ret;
     }
     MEDIA_LOG_I("HiTransCoderImpl::Cancel done");
@@ -1076,7 +1094,14 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
             "muxerFilter is nullptr");
         muxerFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
         ret = muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
-        FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "muxerFilter SetOutputParameter fail");
+        if (ret != Status::OK) {
+            MEDIA_LOG_E("muxerFilter SetOutputParameter fail");
+            if (fd_ >= 0) {
+                (void)::close(fd_);
+                fd_ = -1;
+            }
+            return ret;
+        }
         muxerFilter_->SetParameter(muxerFormat_);
         muxerFilter_->SetTransCoderMode();
         MEDIA_LOG_I("HiTransCoder CloseFd, fd is %{public}d", fd_);
