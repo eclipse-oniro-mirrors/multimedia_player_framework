@@ -262,36 +262,6 @@ int32_t DownloaderImpl::AddFileTask(const std::string &url, const std::string &p
     return DOWNLOAD_RET_OK;
 }
 
-// 用于添加单个任务，加入任务队列
-int32_t DownloaderImpl::AddFileTask(const std::string &url, const std::string &path, const DownloadConfig &config)
-{
-    int32_t ret = ValidateUrl(url);
-    if (ret != DOWNLOAD_RET_OK) {
-        MEDIA_LOGE("AddFileTask failed: invalid url");
-        return ret;
-    }
-
-    ret = ValidateOutputPath(path);
-    if (ret != DOWNLOAD_RET_OK) {
-        MEDIA_LOGE("AddFileTask failed: invalid path");
-        return ret;
-    }
-
-    QueuedTaskInfo taskInfo;
-    taskInfo.url = url;
-    taskInfo.outputPath = path;
-    taskInfo.config = config;
-
-    {
-        std::lock_guard<std::mutex> lock(queueMutex_);
-        taskQueue_.push(taskInfo);
-        totalTaskCount_++;
-        MEDIA_LOGD("AddFileTask: url=%{public}s, path=%{public}s, queueSize=%{public}zu, totalTaskCount=%{public}d",
-            url.c_str(), path.c_str(), taskQueue_.size(), totalTaskCount_);
-    }
-    return DOWNLOAD_RET_OK;
-}
-
 int32_t DownloaderImpl::SetDownloadCallback(const std::shared_ptr<DownloadCallback> &callback)
 {
     std::lock_guard<std::mutex> lock(mutex_);
