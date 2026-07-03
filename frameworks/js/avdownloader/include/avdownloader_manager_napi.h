@@ -55,6 +55,7 @@ private:
     static napi_value OffStatusChange(napi_env env, napi_callback_info info);
     static napi_value OffProgressChange(napi_env env, napi_callback_info info);
     static napi_value Release(napi_env env, napi_callback_info info);
+    static void ThrowError(napi_env env, int32_t code, const std::string &errMessage);
 
     AVDownloaderManagerNapi();
     ~AVDownloaderManagerNapi();

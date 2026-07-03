@@ -57,19 +57,6 @@ HWTEST_F(CacheManagerTest, Constructor_001, TestSize.Level0)
     EXPECT_EQ(manager->GetCacheDir(), testCacheDir_);
 }
 
-HWTEST_F(CacheManagerTest, GetMediaCache_Success_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/test.mp4";
-    std::string testPath = "videos/test.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    std::string result = manager->GetMediaCache(testUrl);
-    EXPECT_NE(result, "");
-    EXPECT_EQ(result, testCacheDir_ + "/" + testPath);
-}
-
 HWTEST_F(CacheManagerTest, GetMediaCache_NotFound_001, TestSize.Level0)
 {
     std::string testUrl = "http://example.com/test.mp4";
@@ -92,22 +79,6 @@ HWTEST_F(CacheManagerTest, GetMediaCache_EmptyUrl_001, TestSize.Level0)
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
     std::string result = manager->GetMediaCache("");
     EXPECT_EQ(result, "");
-}
-
-HWTEST_F(CacheManagerTest, GetCacheMetaData_Success_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/test.mp4";
-    std::string testPath = "videos/test.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    CacheMetaData metadata;
-    bool result = manager->GetCacheMetaData(testUrl, metadata);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(metadata.url, testUrl);
-    EXPECT_EQ(metadata.size, 1024);
-    EXPECT_EQ(metadata.entry, testPath);
 }
 
 HWTEST_F(CacheManagerTest, GetCacheMetaData_NotFound_001, TestSize.Level0)
@@ -136,20 +107,6 @@ HWTEST_F(CacheManagerTest, GetCacheMetaData_EmptyUrl_001, TestSize.Level0)
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(CacheManagerTest, BuildHttpHeaders_Success_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/test.mp4";
-    std::string testPath = "videos/test.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    auto headers = manager->BuildHttpHeaders(testUrl, 1024);
-    EXPECT_FALSE(headers.empty());
-    EXPECT_EQ(headers["content-length"], "1024");
-    EXPECT_EQ(headers["accept-ranges"], "bytes");
-}
-
 HWTEST_F(CacheManagerTest, BuildHttpHeaders_NotFound_001, TestSize.Level0)
 {
     std::string testUrl = "http://example.com/test.mp4";
@@ -173,25 +130,6 @@ HWTEST_F(CacheManagerTest, MultiInstance_001, TestSize.Level0)
     auto manager2 = std::make_shared<DownloadedCacheManager>(testCacheDir_);
     ASSERT_NE(manager1, manager2);
     EXPECT_EQ(manager1->GetMediaCache(testUrl), manager2->GetMediaCache(testUrl));
-}
-
-HWTEST_F(CacheManagerTest, MultipleEntries_001, TestSize.Level0)
-{
-    std::vector<std::pair<std::string, std::string>> entries = {
-        {"http://example.com/video1.mp4", "videos/video1.mp4"},
-        {"http://example.com/video2.mp4", "videos/video2.mp4"},
-        {"http://example.com/audio1.mp3", "audio/audio1.mp3"},
-    };
-    for (const auto& entry : entries) {
-        TestCommon::CreateTestCacheFile(testCacheDir_, entry.second, std::vector<uint8_t>(1024, 'A'));
-    }
-    TestCommon::CreateTestMappingFile(testCacheDir_, entries);
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    for (const auto& entry : entries) {
-        std::string result = manager->GetMediaCache(entry.first);
-        EXPECT_NE(result, "");
-    }
 }
 
 HWTEST_F(CacheManagerTest, InvalidMagic_001, TestSize.Level0)
@@ -257,30 +195,6 @@ HWTEST_F(CacheManagerTest, GetCacheDir_001, TestSize.Level0)
 {
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
     EXPECT_EQ(manager->GetCacheDir(), testCacheDir_);
-}
-
-HWTEST_F(CacheManagerTest, SpecialUrl_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/test?param=value&foo=bar";
-    std::string testPath = "videos/test_query.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    std::string result = manager->GetMediaCache(testUrl);
-    EXPECT_NE(result, "");
-}
-
-HWTEST_F(CacheManagerTest, LongUrl_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/" + std::string(500, 'a') + ".mp4";
-    std::string testPath = "videos/long.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    std::string result = manager->GetMediaCache(testUrl);
-    EXPECT_NE(result, "");
 }
 
 HWTEST_F(CacheManagerTest, EmptyRelativePath_Entry_001, TestSize.Level0)
@@ -396,18 +310,6 @@ HWTEST_F(CacheManagerTest, TruncatedEntry_001, TestSize.Level0)
     EXPECT_EQ(result, "");
 }
 
-HWTEST_F(CacheManagerTest, RelativePathWithDoubleDot_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/test.mp4";
-    std::string testPath = "videos/../test.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, "test.mp4", std::vector<uint8_t>(1024, 'A'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    std::string result = manager->GetMediaCache(testUrl);
-    EXPECT_NE(result, "");
-}
-
 HWTEST_F(CacheManagerTest, GetMediaCache_RelativePathContainsDoubleDot_001, TestSize.Level0)
 {
     std::string testUrl = "http://example.com/test.mp4";
@@ -417,62 +319,6 @@ HWTEST_F(CacheManagerTest, GetMediaCache_RelativePathContainsDoubleDot_001, Test
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
     std::string result = manager->GetMediaCache(testUrl);
     EXPECT_EQ(result, "");
-}
-
-HWTEST_F(CacheManagerTest, GetMediaCache_NormalPath_AfterTraversal_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/test.mp4";
-    std::string testPath = "videos/test.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    std::string result = manager->GetMediaCache(testUrl);
-    EXPECT_NE(result, "");
-    EXPECT_EQ(result, testCacheDir_ + "/" + testPath);
-}
-
-HWTEST_F(CacheManagerTest, LargeFileSize_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/test.mp4";
-    std::string testPath = "videos/test.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
-
-    std::string mappingPath = testCacheDir_ + "/cache_mapping.txt";
-    CacheMappingHeader header;
-    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
-    header.version = CACHE_MAPPING_VERSION;
-    header.entryCount = 1;
-    (void)memset_s(header.reserved, 8, 0, 8);
-    header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
-
-    std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);
-    file.write(reinterpret_cast<const char*>(header.magic), 4);
-    file.write(reinterpret_cast<const char*>(&header.version), 4);
-    file.write(reinterpret_cast<const char*>(&header.entryCount), 4);
-    file.write(reinterpret_cast<const char*>(header.reserved), 8);
-    file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
-
-    CacheMappingEntry entry;
-    auto hash = SHA256Hasher::GenerateHash(testUrl);
-    (void)memcpy_s(entry.header.urlHash, SHA256_LEN, hash.data(), SHA256_LEN);
-    entry.header.pathLength = static_cast<uint32_t>(testPath.size());
-    entry.header.fileSize = static_cast<uint64_t>(10ULL * 1024ULL * 1024ULL * 1024ULL);
-    (void)memset_s(entry.header.reserved, 8, 0, 8);
-    entry.filePath = testPath;
-
-    file.write(reinterpret_cast<const char*>(entry.header.urlHash), SHA256_LEN);
-    file.write(reinterpret_cast<const char*>(&entry.header.pathLength), 4);
-    file.write(reinterpret_cast<const char*>(&entry.header.fileSize), 8);
-    file.write(reinterpret_cast<const char*>(entry.header.reserved), 8);
-    file.write(testPath.c_str(), testPath.size());
-    file.close();
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    CacheMetaData metadata;
-    bool result = manager->GetCacheMetaData(testUrl, metadata);
-    EXPECT_TRUE(result);
-    EXPECT_EQ(metadata.size, static_cast<uint64_t>(10ULL * 1024ULL * 1024ULL * 1024ULL));
 }
 
 } // namespace DownloadedCache

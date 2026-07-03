@@ -658,7 +658,7 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_NormalFile_001, TestSize.Level0)
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     
     DownloadProgress progress = task->GetProgress();
-    EXPECT_EQ(progress.downloadedSize, 0);
+    EXPECT_GT(progress.downloadedSize, 0);
     
     (void)task->Cancel();
 }

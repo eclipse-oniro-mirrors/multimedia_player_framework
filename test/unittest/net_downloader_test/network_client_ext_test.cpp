@@ -399,7 +399,7 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_WithContentRang
     std::map<std::string, std::string> header;
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
-    client->SetStartPos(1024);
+    client->SetStartPos(2048);
     (void)client->SetOutputPath(testDir_ + "/process416_1.mp4");
     client->SetResponseHeader("Content-Range", "bytes 1024-2047/2048");
     

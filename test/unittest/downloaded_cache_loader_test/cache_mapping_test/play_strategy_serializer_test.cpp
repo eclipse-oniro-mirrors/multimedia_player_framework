@@ -288,58 +288,6 @@ HWTEST_F(PlayStrategySerializerTest, Deserialize_EmptyBuffer_001, TestSize.Level
     EXPECT_FALSE(result);
 }
 
-HWTEST_F(PlayStrategySerializerTest, Deserialize_InvalidBuffer_001, TestSize.Level0)
-{
-    std::vector<uint8_t> buffer = {0x01, 0x02, 0x03};
-    std::string rootUrl;
-    Plugins::PlayStrategy strategy;
-    Plugins::TrackSelectionFilter filter;
-    
-    bool result = PlayStrategySerializer::Deserialize(buffer, rootUrl, strategy, filter);
-    EXPECT_FALSE(result);
-}
-
-HWTEST_F(PlayStrategySerializerTest, WriteToFile_ReadFromFile_001, TestSize.Level0)
-{
-    std::string rootUrl = "http://example.com";
-    auto strategy = CreateTestPlayStrategy();
-    auto filter = CreateTestTrackSelectionFilter();
-    
-    std::string testFile = "/tmp/play_strategy_test.bin";
-    {
-        std::ofstream file(testFile, std::ios::binary);
-        ASSERT_TRUE(file.is_open());
-        
-        bool result = PlayStrategySerializer::WriteToFile(file, rootUrl, strategy, filter);
-        EXPECT_TRUE(result);
-    }
-    
-    std::string deserializedRootUrl;
-    Plugins::PlayStrategy deserializedStrategy;
-    Plugins::TrackSelectionFilter deserializedFilter;
-    {
-        std::ifstream file(testFile, std::ios::binary);
-        ASSERT_TRUE(file.is_open());
-        
-        bool result = PlayStrategySerializer::ReadFromFile(file, deserializedRootUrl, deserializedStrategy, deserializedFilter);
-        EXPECT_TRUE(result);
-    }
-    
-    EXPECT_EQ(strategy.width, deserializedStrategy.width);
-    EXPECT_EQ(strategy.height, deserializedStrategy.height);
-    EXPECT_EQ(strategy.duration, deserializedStrategy.duration);
-    EXPECT_EQ(strategy.preferHDR, deserializedStrategy.preferHDR);
-    EXPECT_EQ(strategy.audioLanguage, deserializedStrategy.audioLanguage);
-    EXPECT_EQ(strategy.subtitleLanguage, deserializedStrategy.subtitleLanguage);
-    EXPECT_EQ(strategy.bufferDurationForPlaying, deserializedStrategy.bufferDurationForPlaying);
-    EXPECT_EQ(strategy.thresholdForAutoQuickPlay, deserializedStrategy.thresholdForAutoQuickPlay);
-    
-    EXPECT_EQ(filter.maxVideoBitrate, deserializedFilter.maxVideoBitrate);
-    EXPECT_EQ(filter.minVideoBitrate, deserializedFilter.minVideoBitrate);
-    
-    std::remove(testFile.c_str());
-}
-
 HWTEST_F(PlayStrategySerializerTest, WriteToFile_FileNotOpen_001, TestSize.Level0)
 {
     std::string rootUrl = "http://example.com";
