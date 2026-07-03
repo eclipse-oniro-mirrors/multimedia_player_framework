@@ -18,14 +18,13 @@
 
 #include <string>
 #include <map>
-#include <vector>
 #include <mutex>
-#include <atomic>
-#include <memory>
 #include <cstdint>
 #include <unordered_map>
 
 #include "cache_mapping_format.h"
+#include "media_source.h"
+#include "play_strategy_serializer.h"
 
 namespace OHOS {
 namespace Media {
@@ -39,28 +38,23 @@ struct CacheMetaData {
     std::string entry;
 };
 
-class MemoryReader;
 class DownloadedCacheManager {
 public:
     explicit DownloadedCacheManager(const std::string& cacheDir);
     ~DownloadedCacheManager();
 
     std::string GetCacheDir() const { return cacheDir_; }
+    std::string GetRootUrl() const { return rootUrl_; }
     std::string GetMediaCache(const std::string& url);
-    void ReleaseMap();
     bool GetCacheMetaData(const std::string& url, CacheMetaData& metadata);
-    std::map<std::string, std::string> BuildHttpHeaders(const std::string& url);
+    std::map<std::string, std::string> BuildHttpHeaders(const std::string& url, int64_t fileSize);
 
- private:
-    void LoadIndex();
-    void LoadIndexEntries(MemoryReader& reader, CacheMappingHeader& header);
+private:
+    void LoadCacheMapping();
     bool CreateDirectories(const std::string& path);
-    void LoadMapping();
 
     std::string cacheDir_;
-    std::vector<uint8_t> fileBuffer_;
-    std::atomic<bool> isLoaded_ {false};
-
+    std::string rootUrl_;
     std::unordered_map<std::string, CacheMappingEntry> index_;
     std::mutex mutex_;
 };

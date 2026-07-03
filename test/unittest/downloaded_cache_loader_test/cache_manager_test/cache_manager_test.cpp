@@ -144,7 +144,7 @@ HWTEST_F(CacheManagerTest, BuildHttpHeaders_Success_001, TestSize.Level0)
     TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
 
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    auto headers = manager->BuildHttpHeaders(testUrl);
+    auto headers = manager->BuildHttpHeaders(testUrl, 1024);
     EXPECT_FALSE(headers.empty());
     EXPECT_EQ(headers["content-length"], "1024");
     EXPECT_EQ(headers["accept-ranges"], "bytes");
@@ -158,32 +158,8 @@ HWTEST_F(CacheManagerTest, BuildHttpHeaders_NotFound_001, TestSize.Level0)
     TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
 
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    auto headers = manager->BuildHttpHeaders("http://example.com/nonexistent.mp4");
+    auto headers = manager->BuildHttpHeaders("http://example.com/nonexistent.mp4", 0);
     EXPECT_TRUE(headers.empty());
-}
-
-HWTEST_F(CacheManagerTest, ReleaseMap_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/test.mp4";
-    std::string testPath = "videos/test.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    manager->GetMediaCache(testUrl);
-    manager->ReleaseMap();
-}
-
-HWTEST_F(CacheManagerTest, ReleaseMap_Twice_001, TestSize.Level0)
-{
-    std::string testUrl = "http://example.com/test.mp4";
-    std::string testPath = "videos/test.mp4";
-    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    manager->ReleaseMap();
-    manager->ReleaseMap();
 }
 
 HWTEST_F(CacheManagerTest, MultiInstance_001, TestSize.Level0)

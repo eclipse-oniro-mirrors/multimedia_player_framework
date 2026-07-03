@@ -72,6 +72,7 @@ ohos_unittest("downloaded_path_validator_test") {
         "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
         "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
         "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
         "path_validator_test.cpp",
     ]
 }

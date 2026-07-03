@@ -30,6 +30,7 @@ ohos_unittest("avmetadata_unittest") {
     "//foundation/multimedia/player_framework/services/services/dolby_passthrough/ipc",
     "//foundation/multimedia/player_framework/services/services/media_source/ipc",
     "//foundation/multimedia/player_framework/services/services/media_source/loader",
+    "//foundation/multimedia/player_framework/services/services/media_source/utils",
     "//foundation/multimedia/player_framework/services/services/monitor/client",
     "//foundation/multimedia/player_framework/services/services/monitor/ipc",
     "//foundation/multimedia/player_framework/services/services/pcm_output/ipc",
@@ -99,6 +100,14 @@ ohos_unittest("avmetadata_unittest") {
     "../../../services/services/media_source/loader/request_handler.cpp",
     "../../../services/services/media_source/loader/custom_loader_callback.cpp",
     "../../../services/services/media_source/loader/network_client_agent.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/path_validator.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
   ]
 
   external_deps = [
@@ -143,6 +152,8 @@ ohos_unittest("avmetadata_unittest") {
     "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
     "window_manager:libwm",
+    "openssl:libcrypto_shared",
+    "zlib:shared_libz",
   ]
 
   if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {

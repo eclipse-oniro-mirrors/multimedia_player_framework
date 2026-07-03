@@ -33,6 +33,7 @@ namespace DownloadedCache {
 constexpr uint8_t CACHE_MAPPING_MAGIC[4] = {'D', 'C', 'M', 'H'};  // ASCII: D=0x44, C=0x43, M=0x4D, H=0x48
 constexpr uint32_t CACHE_MAPPING_VERSION = 1;
 constexpr int SHA256_LEN = 32;
+constexpr size_t PLAYBACK_PARAM_DATA_LENGTH_SIZE = 4;
 
 #pragma pack(push, 1)
 struct CacheMappingHeader {
@@ -69,9 +70,11 @@ struct CacheMappingEntry {
 
 class CacheMappingSerializer {
 public:
-    static bool WriteHeader(std::ofstream& file, const CacheMappingHeader& header);
-    static bool WriteEntry(std::ofstream& file, const CacheMappingEntry& entry, const std::string& cacheDir);
+    static bool WriteHeader(std::ofstream& file, const CacheMappingHeader& header);     // 1
+    static bool WriteEntry(std::ofstream& file, const CacheMappingEntry& entry, const std::string& cacheDir);   // 3
     static uint32_t CalculateHeaderChecksum(const CacheMappingHeader& header);
+    static bool WritePlaybackParamData(std::ofstream& file, const uint8_t* playbackParamData,
+        uint32_t playbackParamDataLength);
 };
 
 class CacheMappingDeserializer {
@@ -79,6 +82,7 @@ public:
     static bool ReadHeader(std::ifstream& file, CacheMappingHeader& header);
     static bool ReadEntry(std::ifstream& file, CacheMappingEntry& entry, const std::string& cacheDir);
     static bool ValidateHeader(const CacheMappingHeader& header);
+    static bool ReadPlaybackParamData(std::ifstream& file, std::vector<uint8_t>& playbackParamData);
 };
 
 } // namespace DownloadedCache

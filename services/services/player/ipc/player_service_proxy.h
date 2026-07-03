@@ -133,6 +133,7 @@ private:
     int32_t WriteM3U8FdToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
     int32_t WriteFdSourceToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
     int32_t WriteDataSourceToParcel(MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
+    uint8_t WriteSourceType(bool isUrlSource, bool isFdSource, bool isDataSource, bool isDirectorySource);
 
     static inline BrokerDelegator<PlayerServiceProxy> delegator_;
     std::map<uint32_t, std::string> playerFuncs_;

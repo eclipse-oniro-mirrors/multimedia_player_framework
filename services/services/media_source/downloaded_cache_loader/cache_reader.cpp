@@ -81,7 +81,7 @@ void CacheReader::RespondHeader(int64_t uuid)
     if (isClosed_.load()) {
         return;
     }
-    auto headers = cacheManager_->BuildHttpHeaders(url_);
+    auto headers = cacheManager_->BuildHttpHeaders(url_, fileCacheManager_->GetSize(urlDir_));
     if (headers.empty()) {
         MEDIA_LOG_E("Failed to build HTTP headers for url: %{public}s", url_.c_str());
         request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);

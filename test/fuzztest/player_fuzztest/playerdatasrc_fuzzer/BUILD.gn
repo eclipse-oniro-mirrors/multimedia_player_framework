@@ -75,6 +75,7 @@ ohos_fuzztest("PlayerDataSrcFuzzTest") {
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/services/services:media_service",
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
+    "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader:media_client_net_downloader",
   ]
   external_deps = [
     "av_codec:av_codec_client",

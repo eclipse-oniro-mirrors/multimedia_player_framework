@@ -442,7 +442,7 @@ int32_t PlayerServiceStub::SetSource(const sptr<IRemoteObject> &object)
     return playerServer_->SetSource(mediaDataSrc);
 }
 
-int32_t PlayerServiceStub::SetSourceLoader(const sptr<IRemoteObject> &object)
+int32_t PlayerServiceStub::SetSourceLoader(const sptr<IRemoteObject> &object)       // 服务端入口处
 {
     MediaTrace trace("PlayerServiceStub::SetSourceLoader(sourceLoader)");
     MEDIA_LOGI("SetSourceLoader in");
@@ -706,7 +706,8 @@ int32_t PlayerServiceStub::SetMediaSource(const std::shared_ptr<AVMediaSource> &
 {
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
-    return playerServer_->SetMediaSource(mediaSource, strategy);
+    MEDIA_LOGI("server stub url: %{public}s", mediaSource->url.c_str());
+    return playerServer_->SetMediaSource(mediaSource, strategy);        // 调到server实例中
 }
 
 int32_t PlayerServiceStub::GetPlaybackSpeed(PlaybackRateMode &mode)
@@ -1270,23 +1271,32 @@ int32_t PlayerServiceStub::ReadAVMediaSourceFromParcel(MessageParcel &data,
     bool isUrlSource = (sourceType & 0x01) != 0;
     bool isFdSource = (sourceType & 0x02) != 0;
     bool isDataSource = (sourceType & 0x04) != 0;
+    bool isDirectorySource = (sourceType & 0x08) != 0;
 
     std::string url;
     std::map<std::string, std::string> header;
+    FileDescriptor fileDesc;
+    sptr<IRemoteObject> dataSourceObject = nullptr;
+    std::string directoryPath;
+
     int32_t ret = ReadUrlSourceFromParcel(data, isUrlSource, url, header);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadUrlSourceFromParcel failed");
 
     mimeType = data.ReadString();
     fd = ReadM3U8FdFromParcel(data, isUrlSource, mimeType);
 
-    FileDescriptor fileDesc;
-    sptr<IRemoteObject> dataSourceObject = nullptr;
     ret = ReadFdSourceFromParcel(data, isFdSource, fileDesc);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadFdSourceFromParcel failed");
     ret = ReadDataSourceFromParcel(data, isDataSource, dataSourceObject);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadDataSourceFromParcel failed");
 
-    if (isFdSource) {
+    directoryPath = isDirectorySource ? data.ReadString() : "";
+
+    std::shared_ptr<AVMediaSource> mediaSource = nullptr;
+    if (isDirectorySource) {
+        mediaSource = CreateMediaSourceFromDirectory(directoryPath);
+        mediaSource->url = url;
+    } else if (isFdSource) {
         mediaSource = CreateMediaSourceFromFd(fileDesc);
     } else if (isDataSource && dataSourceObject != nullptr) {
         mediaSource = CreateMediaSourceFromDataSource(dataSourceObject);
@@ -1378,6 +1388,11 @@ std::shared_ptr<AVMediaSource> PlayerServiceStub::CreateMediaSourceFromDataSourc
         return std::make_shared<AVMediaSource>(dataSrc);
     }
     return nullptr;
+}
+
+std::shared_ptr<AVMediaSource> PlayerServiceStub::CreateMediaSourceFromDirectory(const std::string &directoryPath)
+{
+    return std::make_shared<AVMediaSource>(directoryPath);
 }
 
 int32_t PlayerServiceStub::UpdateM3U8FdUrl(std::shared_ptr<AVMediaSource> &mediaSource,

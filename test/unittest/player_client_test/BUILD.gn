@@ -1,0 +1,72 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+module_output_path = "player_framework/player_framework/player"
+
+ohos_unittest("player_client_test") {
+    module_out_path = module_output_path
+
+    include_dirs = [
+        "../",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/client",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader",
+        "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+        "$MEDIA_PLAYER_ROOT_DIR/services/include",
+        "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    ]
+
+    cflags = [
+        "-Wall",
+        "-Werror",
+        "-Dprivate=public",
+        "-Dprotected=public",
+    ]
+
+    defines = [ "MEDIA_OHOS" ]
+
+    sanitize = {
+        cfi = true
+        cfi_cross_dso = true
+    }
+
+    external_deps = [
+        "c_utils:utils",
+        "hilog:libhilog",
+        "googletest:gmock",
+        "media_foundation:media_foundation",
+    ]
+
+    deps = [
+        "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+        "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
+        "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
+        "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+    ]
+
+    sources = [
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/client/player_client.cpp",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_stub.cpp",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_proxy.cpp",
+        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
+        "player_client_test.cpp",
+    ]
+
+    resource_config_file = "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
+}

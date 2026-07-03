@@ -913,18 +913,9 @@ int32_t PlayerServiceProxy::WriteAVMediaSourceToParcel(MessageParcel &data,
     bool isUrlSource = !mediaSource->url.empty();
     bool isFdSource = mediaSource->IsFileDescriptorSet();
     bool isDataSource = mediaSource->IsDataSourceSet();
+    bool isDirectorySource = !mediaSource->GetDirectoryPath().empty();
 
-    uint8_t sourceType = 0;
-    if (isUrlSource) {
-        sourceType |= 0x01;
-    }
-    if (isFdSource) {
-        sourceType |= 0x02;
-    }
-    if (isDataSource) {
-        sourceType |= 0x04;
-    }
-    data.WriteUint8(sourceType);
+    data.WriteUint8(WriteSourceType(isUrlSource, isFdSource, isDataSource, isDirectorySource));
 
     if (isUrlSource) {
         int32_t ret = WriteUrlSourceToParcel(data, mediaSource);
@@ -943,6 +934,11 @@ int32_t PlayerServiceProxy::WriteAVMediaSourceToParcel(MessageParcel &data,
         int32_t ret = WriteDataSourceToParcel(data, mediaSource);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "WriteDataSourceToParcel failed");
     }
+
+    if (isDirectorySource) {
+        data.WriteString(mediaSource->GetDirectoryPath());
+    }
+
     return MSERR_OK;
 }
 
@@ -958,6 +954,25 @@ void PlayerServiceProxy::WriteMediaStreamListToMessageParcel(
         (void)data.WriteUint32(stream.height);
         (void)data.WriteUint32(stream.bitrate);
     }
+}
+
+uint8_t PlayerServiceProxy::WriteSourceType(bool isUrlSource, bool isFdSource, bool isDataSource,
+    bool isDirectorySource)
+{
+    uint8_t sourceType = 0;
+    if (isUrlSource) {
+        sourceType |= 0x01;
+    }
+    if (isFdSource) {
+        sourceType |= 0x02;
+    }
+    if (isDataSource) {
+        sourceType |= 0x04;
+    }
+    if (isDirectorySource) {
+        sourceType |= 0x08;
+    }
+    return sourceType;
 }
 
 int32_t PlayerServiceProxy::GetPlaybackSpeed(PlaybackRateMode &mode)

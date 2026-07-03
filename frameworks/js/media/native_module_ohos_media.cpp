@@ -15,6 +15,7 @@
 
 #include "native_module_ohos_media.h"
 #include "media_log.h"
+#include "avdownloader_manager_napi.h"
 #ifdef SUPPORT_PLAYER_API9
 #include "avads_controller_napi.h"
 #endif
@@ -64,6 +65,9 @@ static napi_value Export(napi_env env, napi_value exports)
 #endif
 #ifdef SUPPORT_MEDIA_SOURCE
     OHOS::Media::MediaSourceNapi::Init(env, exports);
+#endif
+#ifdef SUPPORT_AVDOWNLOADER     // 缓存下载
+    OHOS::Media::AVDownloaderManagerNapi::Init(env, exports);
 #endif
 
     return exports;

@@ -54,6 +54,7 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils",
   ]
 
   cflags = [
@@ -95,6 +96,8 @@ include_dirs = [
     "resource_schedule_service:ressched_client",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",
+    "openssl:libcrypto_shared",
+    "zlib:shared_libz",
   ]
 
   if (player_framework_support_drm) {
@@ -134,6 +137,14 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/request_handler.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/custom_loader_callback.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/network_client_agent.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
     "media_client_unit_test.cpp",
   ]
 

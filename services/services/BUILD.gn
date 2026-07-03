@@ -266,6 +266,7 @@ ohos_shared_library("media_service") {
   ]
 
   deps = [
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
     "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
