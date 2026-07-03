@@ -68,12 +68,6 @@ string AVAdsControllerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::wea
         return invalidId;
     }
 
-    if (!player->IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport add ads media source");
-        return invalidId;
-    }
-
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceImpl::GetMediaSource(src);
     if (srcTmp == nullptr) {
         set_business_error(MSERR_EXT_API9_INVALID_PARAMETER, "get MediaSource argument failed!");
@@ -107,12 +101,6 @@ void AVAdsControllerImpl::RemoveAdsMediaSource(::taihe::string_view id)
         return;
     }
 
-    if (!player->IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport remove ads media source");
-        return;
-    }
-
     std::string idStr(id);
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
     context->asyncTask = RemoveAdsMediaSourceTask(idStr);
@@ -131,12 +119,6 @@ void AVAdsControllerImpl::SkipCurrentAdsMediaSource()
         return;
     }
 
-    if (!player->IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport skip current ads media source");
-        return;
-    }
-
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
     context->asyncTask = SkipCurrentAdsMediaSourceTask();
     context->CheckTaskResult();
@@ -151,12 +133,6 @@ void AVAdsControllerImpl::DisableAllAdsMediaSource()
     AVPlayerImpl *player = GetPlayer();
     if (player == nullptr) {
         set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
-        return;
-    }
-
-    if (!player->IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport disable all ads media source");
         return;
     }
 
