@@ -107,8 +107,7 @@ bool ScreenCaptureServerStartCaseFuzzer::FuzzScreenCaptureServerStartCase(uint8_
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
-    screenCaptureServer_->StartStreamInnerAudioCapture();
-    screenCaptureServer_->StartStreamMicAudioCapture();
+    screenCaptureServer_->SyncAudioCaptures();
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackObj = std::make_shared<TestScreenCaptureCallbackTest>();
     TestScreenCapture::SetScreenCaptureCallback(callbackObj);
     screenCaptureServer_->ResizeCanvas(*reinterpret_cast<int32_t *>(data),

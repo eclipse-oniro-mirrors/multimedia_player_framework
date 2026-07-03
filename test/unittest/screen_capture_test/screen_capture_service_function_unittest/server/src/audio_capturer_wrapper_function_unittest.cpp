@@ -103,18 +103,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_005, TestSiz
         ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapper_001, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
-    CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->GetAudioCapturerState(), CAPTURER_STOPED);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperRelativeSleep_001, TestSize.Level2)
 {
     SetValidConfig();
@@ -202,38 +190,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUseUpBuffer_001, T
     (void)ret;
     ASSERT_EQ(wrapper->Stop(), MSERR_OK);
 }
-
-#ifdef SUPPORT_CALL
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStartInTelCall_001, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
-    auto wrapper = std::make_shared<AudioCapturerWrapper>(
-        screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
-        std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
-    SetWrapperBuilder(wrapper, false);
-    screenCaptureServer_->micAudioCapture_ = wrapper;
-    wrapper->SetIsInTelCall(true);
-    ASSERT_NE(wrapper->Start(screenCaptureServer_->appInfo_), MSERR_OK);
-    wrapper->screenCaptureCb_ = nullptr;
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperInTelCall_002, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
-    auto wrapper = std::make_shared<AudioCapturerWrapper>(
-        screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, screenCaptureServer_->screenCaptureCb_,
-        std::string("OS_MicAudioCapture"), screenCaptureServer_->contentFilter_);
-    SetWrapperBuilder(wrapper, true);
-    screenCaptureServer_->micAudioCapture_ = wrapper;
-    ASSERT_EQ(wrapper->Start(screenCaptureServer_->appInfo_), MSERR_OK);
-    sleep(RECORDER_TIME);
-    wrapper->SetIsInTelCall(true);
-}
-#endif
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer_001, TestSize.Level2)
 {

@@ -39,6 +39,7 @@ public:
     virtual void SetUp();
     virtual void TearDown();
     int32_t SetInvalidConfig();
+    std::shared_ptr<AVBuffer> CreateWatermarkBuffer();
     int32_t SetValidConfig();
     int32_t SetInvalidConfigFile(RecorderInfo &recorderInfo);
     int32_t SetValidConfigFile(RecorderInfo &recorderInfo);
@@ -48,7 +49,7 @@ public:
     int32_t InitStreamScreenCaptureServer();
     void SetHapPermission();
     int32_t SetScreenCaptureObserver();
-    int32_t StartFileAudioCapture(AVScreenCaptureMixMode mixMode);
+    int32_t StartFileAudioCapture();
     int32_t StartStreamAudioCapture();
     void SetSCInnerAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> innerAudioBuffer);
     void SetSCMicAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> micAudioBuffer);
