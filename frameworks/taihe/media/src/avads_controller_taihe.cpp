@@ -310,9 +310,10 @@ void AVAdsControllerImpl::Release()
         return;
     }
 
-    std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-    context->asyncTask = DisableAllAdsMediaSourceTask();
-    context->CheckTaskResult();
+    std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
+    if (playerInstance != nullptr) {
+        playerInstance->DisableAllAdsMediaSource();
+    }
 
     player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
     player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
