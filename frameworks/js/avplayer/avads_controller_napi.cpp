@@ -219,16 +219,10 @@ void AVAdsControllerNapi::ExecuteAdsTask(napi_env env, void *data)
             }
             break;
         case AdsAsyncContext::OpType::SKIP:
-            ret = player->SkipCurrentAdsMediaSource();
-            if (ret != MSERR_OK) {
-                ctx->SignError(ERR_ADS_PARAM_INVALID, "skipCurrentAdsMediaSource failed");
-            }
+            player->SkipCurrentAdsMediaSource();
             break;
         case AdsAsyncContext::OpType::DISABLE_ALL:
-            ret = player->DisableAllAdsMediaSource();
-            if (ret != MSERR_OK) {
-                ctx->SignError(ERR_ADS_PARAM_INVALID, "disableAllAdsMediaSource failed");
-            }
+            player->DisableAllAdsMediaSource();
             break;
         default:
             ctx->SignError(ERR_ADS_PARAM_INVALID, "unknown opType");
