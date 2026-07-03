@@ -588,6 +588,12 @@ int32_t AVDownloaderManagerImpl::ResumeDownloadTask(const std::string &taskId)
         return MSERR_INVALID_VAL;
     }
 
+    auto networkType = GetNetworkType();
+    if (!IsNetworkAllowDownload(networkType)) {
+        MEDIA_LOGE("ResumeDownloadTask failed: network not available");
+        return MSERR_IO_NETWORK_UNAVAILABLE;
+    }
+
     auto ret = downloaderIter->second->Resume();
     if (ret == MSERR_OK) {
         auto taskIter = taskMap_.find(taskId);
@@ -879,6 +885,11 @@ bool AVDownloaderManagerImpl::IsNetworkAllowDownload(MediaSourceUtils::NetConnTy
 
     MEDIA_LOGI("IsNetworkAllowDownload: network type %{public}d not allowed", newType);
     return false;
+}
+
+MediaSourceUtils::NetConnType AVDownloaderManagerImpl::GetNetworkType()
+{
+    return MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
 }
 
 } // namespace Media

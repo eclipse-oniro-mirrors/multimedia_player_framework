@@ -24,6 +24,7 @@
 #include <map>
 #include "av_downloader_manager.h"
 #include "av_downloader_manager_impl.h"
+#include "network_utils.h"
 
 namespace OHOS {
 namespace Media {
@@ -32,6 +33,16 @@ class MockAVDownloaderManagerCallback : public AVDownloaderManagerCallback {
 public:
     MOCK_METHOD(void, OnStatusChange, (const std::string &taskId, AVDownloadTaskState state), (override));
     MOCK_METHOD(void, OnProgressChange, (const std::string &taskId, double progress), (override));
+};
+
+class TestableAVDownloaderManager : public AVDownloaderManagerImpl {
+protected:
+    MediaSourceUtils::NetConnType GetNetworkType() override
+    {
+        return simulatedNetworkType_;
+    }
+public:
+    MediaSourceUtils::NetConnType simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_WIFI;
 };
 
 class AVDownloaderManagerTest : public testing::Test {

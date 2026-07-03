@@ -115,6 +115,8 @@ public:
     int32_t requestTimeoutMs_ = 30000;
     bool allowCellularAccess_ = false;
     std::atomic<int32_t> activeDownloaderCount_ {0};
+protected:
+    virtual MediaSourceUtils::NetConnType GetNetworkType();
 private:
     std::string GetDefaultCacheDir(const std::string& url);
     void HandleMessage(const MediaDownload::Message &msg);
@@ -131,6 +133,8 @@ private:
     std::string defaultCacheDir_;
     std::shared_ptr<DownloadTaskCallback> taskCallback_;
     bool networkListeningStarted_ = false;
+
+    friend class AVDownloaderManagerTest;
 };
 
 } // namespace Media
