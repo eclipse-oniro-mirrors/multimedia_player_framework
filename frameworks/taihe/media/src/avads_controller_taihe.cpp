@@ -24,6 +24,7 @@ using namespace ANI::Media;
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "AVAdsControllerTaihe"};
+    constexpr int32_t ERR_ADS_PARAM_INVALID = 5400108;
 }
 
 namespace ANI::Media {
@@ -331,7 +332,7 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::AddAdsMediaSourceT
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, mediaSource, startMs, &outId]() {
         int32_t ret = playerInstance->AddAdsMediaSource(mediaSource, startMs, outId);
         if (ret != MSERR_OK) {
-            return AdsTaskRet(5400108, "addAdsMediaSource failed");
+            return AdsTaskRet(ERR_ADS_PARAM_INVALID, "addAdsMediaSource failed");
         }
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
@@ -347,7 +348,7 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::RemoveAdsMediaSour
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, id]() {
         int32_t ret = playerInstance->RemoveAdsMediaSource(id);
         if (ret != MSERR_OK) {
-            return AdsTaskRet(5400108, "removeAdsMediaSource failed");
+            return AdsTaskRet(ERR_ADS_PARAM_INVALID, "removeAdsMediaSource failed");
         }
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
