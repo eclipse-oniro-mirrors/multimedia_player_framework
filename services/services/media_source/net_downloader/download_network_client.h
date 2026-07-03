@@ -22,6 +22,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <array>
 #include <string>
 
 #include "downloader.h"
@@ -35,6 +36,22 @@ namespace Media {
 namespace MediaDownload {
 
 class DownloadTaskCallback;
+
+class NetworkClient;
+
+struct DownloadContext {
+    NetworkClient* parent;
+    std::atomic<bool> requestSuccess{false};
+    std::atomic<int64_t> totalSize{-1};
+    std::atomic<int64_t> downloadedSize{0};
+    std::atomic<bool> isHeaderReceived{false};
+    std::atomic<int32_t> httpStatusCode{0};
+    std::string outputPath;
+    int outputFd{-1};
+    std::map<std::string, std::string> responseHeaders;
+    std::mutex mutex;
+    std::condition_variable cv;
+};
 
 class NetworkClient : public NoCopyable {
 public:
@@ -60,18 +77,23 @@ public:
     using ErrorCallback = std::function<void(DownloadErrorType errorType, int32_t errorCode)>;
     void SetErrorCallback(ErrorCallback cb);
 
-    bool IsRequestCompleted() const;
     bool IsRequestSuccess() const;
 
 private:
     static size_t RxHeaderCallback(void* buffer, size_t size, size_t nitems, void* userParam);
     static size_t RxBodyCallback(void* buffer, size_t size, size_t nitems, void* userParam);
+    static bool HandleRangeResume(DownloadContext* ctx, NetworkClient* client);
+    static size_t WriteData(DownloadContext* ctx, NetworkClient* client, void* buffer, size_t dataLen);
+    static void ParseHttpStatusCode(DownloadContext* ctx, const std::string& headerStr);
 
     int32_t DoDownload(int64_t startPos = 0);
     bool IsValidUrl(const std::string &url);
     void HandleResponse(const int32_t clientCode, const int32_t serverCode, const std::string &ca, const Status ret);
     void ProcessHttpSuccess(int32_t clientCode);
     void ProcessHttp416RangeNotSatisfiable();
+    void Handle416WithoutContentRange();
+    bool ParseContentRangeTotalSize(const std::string& rangeValue, int64_t& serverTotalSize);
+    void CompareAndSetDownloadResult(int64_t serverTotalSize);
     void ProcessHttpError(int32_t clientCode);
     void ProcessStatusError(const Status ret);
     void InitDownloadContext(int64_t startPos);
@@ -93,19 +115,6 @@ private:
     ProgressCallback progressCallback_;
     ErrorCallback errorCallback_;
 
-    struct DownloadContext {
-        NetworkClient* parent;
-        std::atomic<bool> requestSuccess{false};
-        std::atomic<bool> requestCompleted{false};
-        std::atomic<int64_t> totalSize{-1};
-        std::atomic<int64_t> downloadedSize{0};
-        std::atomic<bool> isHeaderReceived{false};
-        std::string outputPath;
-        int outputFd{-1};
-        std::map<std::string, std::string> responseHeaders;
-        std::mutex mutex;
-        std::condition_variable cv;
-    };
     std::shared_ptr<DownloadContext> ctx_;
     int64_t startPos_{0};
     std::optional<uint32_t> connectTimeoutMs_ {std::nullopt};

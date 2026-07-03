@@ -78,6 +78,7 @@ private:
     void NotifyFinish();
     void InitClient();
     void ExecuteDownload();
+    int64_t GetStartPosition();
     void ReleaseClient();
     void HandleError(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg);
     int64_t CalculateSpeed();

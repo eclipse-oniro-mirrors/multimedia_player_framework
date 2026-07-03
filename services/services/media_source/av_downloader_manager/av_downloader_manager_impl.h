@@ -23,6 +23,7 @@
 #include <queue>
 #include <memory>
 #include <atomic>
+#include <tuple>
 #include "download_task.h"
 #include "downloader.h"
 #include "refbase.h"
@@ -92,6 +93,9 @@ public:
     int32_t SetAllowCellularAccess(bool allow) override;
     int32_t SetRequestTimeout(int32_t timeoutMs) override;
     std::string AddDownloadTask(std::shared_ptr<Plugins::MediaSource> source) override;
+    std::string FindExistingTask(const std::string& url);
+    std::tuple<std::string, std::shared_ptr<AVDownloadTaskInfo>, std::shared_ptr<MediaDownload::Downloader>,
+        std::string> CreateNewDownloaderAndTask(std::shared_ptr<Plugins::MediaSource> source, const std::string& url);
     int32_t RemoveDownloadTask(const std::string &taskId) override;
     int32_t PauseDownloadTask(const std::string &taskId) override;
     int32_t ResumeDownloadTask(const std::string &taskId) override;

@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <array>
 #include <string>
 #include <thread>
 #include <queue>

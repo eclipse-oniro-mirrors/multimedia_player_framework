@@ -26,6 +26,7 @@
 #include "../downloaded_cache_loader/play_strategy_serializer.h"
 #include <dirent.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVDownloaderManagerImpl"};
@@ -427,10 +428,73 @@ std::string AVDownloaderManagerImpl::AddDownloadTask(std::shared_ptr<Plugins::Me
         return "";
     }
 
+    std::lock_guard<std::mutex> lock(mapMutex_);
+
+    std::string existingTaskId = FindExistingTask(url);
+    if (!existingTaskId.empty()) {
+        return existingTaskId;
+    }
+
+    auto [taskId, taskInfo, downloader, filePath] = CreateNewDownloaderAndTask(source, url);
+    if (taskId.empty()) {
+        return "";
+    }
+
+    taskMap_[taskId] = taskInfo;
+    downloaderMap_[taskId] = downloader;
+    HandleTaskAdded(taskInfo, taskId, url, downloader, filePath);
+
+    MEDIA_LOGI("AddDownloadTask success: taskId=%{public}s, url=%{public}s, state=%{public}d",
+        taskId.c_str(), url.c_str(), static_cast<int>(taskInfo->state));
+    return taskId;
+}
+
+std::string AVDownloaderManagerImpl::FindExistingTask(const std::string& url)
+{
+    for (const auto& pair : taskMap_) {
+        if (pair.second->url != url) {
+            continue;
+        }
+        MEDIA_LOGI("AddDownloadTask: task with same url already exists, taskId=%{public}s, state=%{public}d",
+                pair.first.c_str(), static_cast<int>(pair.second->state));
+        if (pair.second->state == AVDownloadTaskState::RUNNING ||
+            pair.second->state == AVDownloadTaskState::QUEUED ||
+            pair.second->state == AVDownloadTaskState::INIT) {
+            return pair.first;
+        }
+        if (pair.second->state != AVDownloadTaskState::PAUSED) {
+            continue;
+        }
+        MEDIA_LOGI("AddDownloadTask: resuming paused task, taskId=%{public}s", pair.first.c_str());
+        auto downloaderIter = downloaderMap_.find(pair.first);
+        if (downloaderIter == downloaderMap_.end()) {
+            continue;
+        }
+        if (activeDownloaderCount_.load() >= MAX_DOWNLOADER_COUNT) {
+            MEDIA_LOGI("AddDownloadTask: activeDownloaderCount_=%{public}d >= MAX=%{public}d, queuing paused task",
+                activeDownloaderCount_.load(), MAX_DOWNLOADER_COUNT);
+            pendingTaskQueue_.push({pair.second->url, pair.first});
+            pair.second->state = AVDownloadTaskState::QUEUED;
+            NotifyStatusChange(pair.first, AVDownloadTaskState::QUEUED);
+            return pair.first;
+        }
+        downloaderIter->second->Resume();
+        pair.second->state = AVDownloadTaskState::RUNNING;
+        NotifyStatusChange(pair.first, AVDownloadTaskState::RUNNING);
+        activeDownloaderCount_.fetch_add(1);
+        return pair.first;
+    }
+    return "";
+}
+
+std::tuple<std::string, std::shared_ptr<AVDownloadTaskInfo>, std::shared_ptr<MediaDownload::Downloader>, std::string>
+AVDownloaderManagerImpl::CreateNewDownloaderAndTask(std::shared_ptr<Plugins::MediaSource> source,
+    const std::string& url)
+{
     auto downloader = MediaDownload::DownloaderFactory::CreateDownloader();
     if (downloader == nullptr) {
         MEDIA_LOGE("CreateDownloader failed");
-        return "";
+        return {"", nullptr, nullptr, ""};
     }
 
     std::string taskId = std::to_string(downloader->GetDownloaderId());
@@ -447,7 +511,7 @@ std::string AVDownloaderManagerImpl::AddDownloadTask(std::shared_ptr<Plugins::Me
         taskInfo->strategy = *strategy;
     }
     memset_s(&(taskInfo->filter), sizeof(Plugins::TrackSelectionFilter), 0, sizeof(Plugins::TrackSelectionFilter));
-    MEDIA_LOGE("GetDefaultCacheDir: %{public}s, file path: %{public}s", cacheDir.c_str(), filePath.c_str());
+    MEDIA_LOGI("GetDefaultCacheDir: %{public}s, file path: %{public}s", cacheDir.c_str(), filePath.c_str());
     taskInfo->state = AVDownloadTaskState::INIT;
 
     DownloadFileInfo fileInfo;
@@ -455,14 +519,7 @@ std::string AVDownloaderManagerImpl::AddDownloadTask(std::shared_ptr<Plugins::Me
     fileInfo.filePath = filePath;
     taskInfo->fileList.emplace(url, fileInfo);
 
-    std::lock_guard<std::mutex> lock(mapMutex_);
-    taskMap_[taskId] = taskInfo;        // 更新map信息
-    downloaderMap_[taskId] = downloader;
-    HandleTaskAdded(taskInfo, taskId, url, downloader, filePath);
-
-    MEDIA_LOGI("AddDownloadTask success: taskId=%{public}s, url=%{public}s, state=%{public}d",
-        taskId.c_str(), url.c_str(), static_cast<int>(taskInfo->state));
-    return taskId;
+    return {taskId, taskInfo, downloader, filePath};
 }
  
 void AVDownloaderManagerImpl::HandleTaskAdded(std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::string taskId,
