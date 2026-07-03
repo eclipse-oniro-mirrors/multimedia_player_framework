@@ -157,6 +157,10 @@ HiTransCoderImpl::~HiTransCoderImpl()
     if (transCoderFilterCallback_ != nullptr) {
         transCoderFilterCallback_->NotifyRelease();
     }
+    if (fd_ >= 0) {
+        (void)::close(fd_);
+        fd_ = -1;
+    }
     PipeLineThreadPool::GetInstance().DestroyThread(transCoderId_);
     MEDIA_LOG_I("~HiTransCoderImpl");
 }

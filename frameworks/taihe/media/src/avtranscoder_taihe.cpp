@@ -332,6 +332,8 @@ uintptr_t AVTranscoderImpl::PrepareSync(AVTranscoderConfig const& config)
     } else {
         asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION, opt, "");
     }
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->promise_ != nullptr, reinterpret_cast<uintptr_t>(nullptr),
+        "promise is nullptr!");
     ani_object promiseValue = asyncCtx->promise_;
     std::thread([asyncCtx = std::move(asyncCtx)]() {
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
@@ -434,6 +436,8 @@ uintptr_t AVTranscoderImpl::ExecuteByPromise(AVTranscoderImpl *taihe, const std:
     } else {
         asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION, opt, "");
     }
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->promise_ != nullptr, reinterpret_cast<uintptr_t>(nullptr),
+        "promise is nullptr!");
     ani_object promiseValue = asyncCtx->promise_;
     std::thread([asyncCtx = std::move(asyncCtx)]() {
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
