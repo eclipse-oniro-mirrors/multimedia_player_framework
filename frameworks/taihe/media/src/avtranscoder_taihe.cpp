@@ -842,6 +842,8 @@ void AVTransCoderAsyncContext::CompleteCallback(RetInfo& result)
         return;
     }
 
+    CHECK_AND_RETURN_LOG(bindDeferred_ != nullptr, "bindDeferred_ is nullptr");
+
     ani_size nr_refs = 16;
     threadEnv->CreateLocalScope(nr_refs);
     ani_ref err = nullptr;
@@ -876,7 +878,15 @@ ani_ref AVTransCoderAsyncContext::GetTaiheResult(ani_env *threadEnv, RetInfo& re
 {
     std::string val = result.second;
     CHECK_AND_RETURN_RET_LOG(!val.empty(), nullptr, "result is null");
-    ani_object taiheRet = IntToAniObject(threadEnv, static_cast<int32_t>(std::stoi(val)));
+    int32_t intValue = 0;
+    char *end = nullptr;
+    long longVal = std::strtol(val.c_str(), &end, 10);
+    if (end == nullptr || *end != '\0' || longVal < INT32_MIN || longVal > INT32_MAX) {
+        MEDIA_LOGE("Invalid argument or out of range: %{public}s", val.c_str());
+        return nullptr;
+    }
+    intValue = static_cast<int32_t>(longVal);
+    ani_object taiheRet = IntToAniObject(threadEnv, intValue);
     return static_cast<ani_ref>(taiheRet);
 }
 
@@ -921,6 +931,8 @@ uintptr_t AVTranscoderImpl::AddWatermarkSync(::ohos::multimedia::image::image::w
     } else {
         asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION, opt, "");
     }
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->promise_ != nullptr, reinterpret_cast<uintptr_t>(nullptr),
+        "promise is nullptr!");
     ani_object promiseValue = asyncCtx->promise_;
     std::thread([asyncCtx = std::move(asyncCtx)]() {
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
@@ -975,7 +987,7 @@ int32_t AVTranscoderImpl::AddWatermark(std::shared_ptr<OHOS::Media::PixelMap> &p
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == OHOS::Media::PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
-    size_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
+    size_t dataSize = static_cast<size_t>(pixelMap->GetHeight()) * static_cast<size_t>(pixelMap->GetRowStride());
     auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
     auto buffer = AVBuffer::CreateAVBuffer(allocator, dataSize);
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_VAL, "Create buffer failed");
