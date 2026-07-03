@@ -1298,10 +1298,10 @@ int32_t PlayerServiceStub::ReadAVMediaSourceFromParcel(MessageParcel &data,
     AVMediaSourceParam param {};
 
     uint8_t sourceType = data.ReadUint8();
-    bool isUrlSource = (sourceType & 0x01) != 0;
-    bool isFdSource = (sourceType & 0x02) != 0;
-    bool isDataSource = (sourceType & 0x04) != 0;
-    bool isDirectorySource = (sourceType & 0x08) != 0;
+    param.isUrlSource = (sourceType & 0x01) != 0;
+    param.isFdSource = (sourceType & 0x02) != 0;
+    param.isDataSource = (sourceType & 0x04) != 0;
+    param.isDirectorySource = (sourceType & 0x08) != 0;
 
     int32_t ret = ReadUrlSourceFromParcel(data, param.isUrlSource, param.url, param.header);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadUrlSourceFromParcel failed");
