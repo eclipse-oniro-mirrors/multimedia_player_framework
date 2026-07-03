@@ -86,6 +86,8 @@ config("media_service_config") {
     "lpp_video_streamer/server",
     "lpp_video_streamer/ipc",
     "observer",
+    "subscriber",
+    "datashare",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/engine/histreamer/lpp/lpp_sync_manager",
     "//foundation/multimedia/player_framework/services/services/factory",
@@ -146,6 +148,8 @@ ohos_shared_library("media_service") {
     "sa_media/ipc/media_service_stub.cpp",
     "sa_media/server/media_server.cpp",
     "sa_media/server_manager/media_server_manager.cpp",
+    "subscriber/media_server_subscriber.cpp",
+    "datashare/media_server_datashare.cpp",
   ]
   if (player_framework_support_player) {
     sources += [
@@ -284,6 +288,8 @@ ohos_shared_library("media_service") {
     "av_codec:av_codec_client",
     "c_utils:utils",
     "common_event_service:cesfwk_innerkits",
+    "data_share:datashare_common",
+    "data_share:datashare_consumer",
     "drivers_interface_display:display_commontype_idl_headers",
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",

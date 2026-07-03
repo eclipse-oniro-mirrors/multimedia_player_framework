@@ -53,6 +53,7 @@
 #include "want_agent_helper.h"
 #include "common_event_manager.h"
 #include "screen_capture_record_display_listener.h"
+#include "media_server_datashare.h"
 #ifdef PC_STANDARD
 #include "power_mgr_client.h"
 #include <parameters.h>
@@ -4970,7 +4971,7 @@ void ScreenCaptureServer::ReleaseInner()
                 FAKE_POINTER(this), sessionId_);
         }
         if (GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_) {
-            DeleteSettingsByKey(SHOW_TOUCH_HINT_KEY);
+            UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
         }
     }
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");

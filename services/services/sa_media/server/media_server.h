@@ -60,6 +60,8 @@ protected:
 private:
     void OnAddSystemAbility(int32_t systemAbilityId, const std::string &deviceId) override;
     sptr<IRemoteObject> GetSubSystemAbilityPart(IStandardMediaService::MediaSystemAbility subSystemId);
+    void SubscribeDataShareReadyEvent();
+    void UnSubscribeDataShareReadyEvent();
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int32_t unloadDelayTime_ {-1};
 #endif
