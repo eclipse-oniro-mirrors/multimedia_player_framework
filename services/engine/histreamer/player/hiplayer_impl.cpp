@@ -215,6 +215,15 @@ public:
         hiPlayerImpl_ = nullptr;
     }
 
+    void HandleVideoCodecChange(const std::shared_ptr<Meta>& meta, bool& isCodecChanged, bool isSmoothSwitch) override
+    {
+        MEDIA_LOG_I("PlayerFilterCallback HandleVideoCodecChange isSmoothSwitch = %{public}d", isSmoothSwitch);
+        isCodecChanged = false;
+        std::shared_lock<std::shared_mutex> lk(cbMutex_);
+        FALSE_RETURN(hiPlayerImpl_ != nullptr);
+        return hiPlayerImpl_->HandleVideoCodecChange(meta, isCodecChanged, isSmoothSwitch);
+    }
+
 private:
     std::shared_mutex cbMutex_ {};
     HiPlayerImpl* hiPlayerImpl_;
@@ -2918,6 +2927,11 @@ void HiPlayerImpl::OnEventContinue(const Event &event)
             HandleAdsChange(AnyCast<std::shared_ptr<MediaAVCodec::AVAdsChangeEvent>>(event.param));
             break;
         }
+        case EventType::EVENT_VIDEO_DECODER_CHANGE_END: {
+            FALSE_BREAK_NOLOG(demuxer_ != nullptr);
+            demuxer_->StartTask(OHOS::Media::Plugins::MediaType::VIDEO);
+            break;
+        }
         default:
             break;
     }
@@ -2985,6 +2999,14 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         case EventType::EVENT_DECODE_ERROR_FRAME:
             NotifyDecoderErrorFrame(AnyCast<int64_t>(event.param));
             break;
+        case EventType::EVENT_AUDIO_DECODER_CHANGE: {
+            HandleAudioDecoderChangeEvent(event);
+            break;
+        }
+        case EventType::EVENT_AUDIO_TRACK_CHANGE_REPORT: {
+            HandleAudioTrackChangeReportEvent(event);
+            break;
+        }
         default:
             break;
     }
@@ -5226,6 +5248,134 @@ int32_t HiPlayerImpl::DisableAllAdsMediaSource()
 {
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, MSERR_INVALID_OPERATION, "DemuxerFilter is nullptr");
     return TransStatus(demuxer_->DisableAllAdsMediaSource());
+}
+
+void HiPlayerImpl::HandleVideoCodecChange(const std::shared_ptr<Meta> &meta, bool &isCodecChanged, bool isSmoothSwitch)
+{
+    isCodecChanged = false;
+    FALSE_RETURN(videoDecoder_ != nullptr);
+    isCodecChanged = videoDecoder_->IsCodecChanged(meta);
+    FALSE_RETURN_NOLOG(isCodecChanged);
+    isSmoothSwitch ? videoDecoder_->SetNewMeta(meta) : videoDecoder_->ChangePlugin(meta);
+}
+
+bool HiPlayerImpl::IsNeedAudioSinkChangeTrack(std::shared_ptr<Meta> preMeta, std::shared_ptr<Meta> meta)
+{
+    int32_t sampleRate = -1;
+    int32_t channels = -1;
+    Plugins::AudioSampleFormat sampleFormat;
+
+    int32_t currentSampleRate = -1;
+    int32_t currentChannels = -1;
+    Plugins::AudioSampleFormat currentSampleFormat;
+
+    FALSE_RETURN_V(preMeta->GetData(Tag::AUDIO_SAMPLE_RATE, sampleRate), false);
+    FALSE_RETURN_V(meta->GetData(Tag::AUDIO_SAMPLE_RATE, currentSampleRate), false);
+    FALSE_RETURN_V(sampleRate == currentSampleRate, true);
+
+    FALSE_RETURN_V(preMeta->GetData(Tag::AUDIO_CHANNEL_COUNT, channels), false);
+    FALSE_RETURN_V(meta->GetData(Tag::AUDIO_CHANNEL_COUNT, currentChannels), false);
+    FALSE_RETURN_V(channels == currentChannels, true);
+
+    FALSE_RETURN_V(preMeta->GetData(Tag::AUDIO_SAMPLE_FORMAT, sampleFormat), false);
+    FALSE_RETURN_V(meta->GetData(Tag::AUDIO_SAMPLE_FORMAT, currentSampleFormat), false);
+    FALSE_RETURN_V(sampleFormat == currentSampleFormat, true);
+
+    std::string mimeType;
+    AudioStandard::AudioEncodingType encodingType;
+    std::string currentMimeType;
+    AudioStandard::AudioEncodingType currentEncodingType;
+    FALSE_RETURN_V(preMeta->GetData(Tag::MIME_TYPE, mimeType), false);
+    FALSE_RETURN_V(meta->GetData(Tag::MIME_TYPE, currentMimeType), false);
+    encodingType = (mimeType == MimeType::AUDIO_AVS3DA)
+                ? AudioStandard::ENCODING_AUDIOVIVID : AudioStandard::ENCODING_PCM;
+    currentEncodingType = (currentMimeType == MimeType::AUDIO_AVS3DA)
+                ? AudioStandard::ENCODING_AUDIOVIVID : AudioStandard::ENCODING_PCM;
+    FALSE_RETURN_V(mimeType == currentMimeType, true);
+
+    return false;
+}
+
+bool HiPlayerImpl::HandleAudioDecoderChangeEvent(const Event& event)
+{
+    MEDIA_LOG_I("HandleDecoderChange audio");
+    auto meta = AnyCast<std::shared_ptr<Meta>>(event.param);
+    FALSE_RETURN_V(meta != nullptr, false);
+    std::string mime;
+
+    if (!(meta->GetData(Tag::MIME_TYPE, mime))) {
+        MEDIA_LOG_E("get mime error");
+        return false;
+    }
+
+    if (IsAudioMime(mime)) {
+        if (currentAudioTrackId_ < 0) {
+            FALSE_RETURN_V(Status::OK == InitAudioDefaultTrackIndex(), false);
+        }
+        std::shared_ptr<Meta> preMeta = std::make_shared<Meta>();
+        FALSE_RETURN_V(audioSink_ != nullptr, false);
+        audioSink_->GetParameter(preMeta);
+        FALSE_GOON_NOEXEC(audioDecoder_ != nullptr, audioDecoder_->UpdateTrackInfoSampleFormat(mime, meta));
+        if (!IsNeedAudioSinkChangeTrack(preMeta, meta)) {
+            demuxer_->StartTask(OHOS::Media::Plugins::MediaType::AUDIO);
+            return false;
+        }
+        if (audioDecoder_ != nullptr && Status::OK != audioDecoder_->ChangePlugin(meta)) {
+            MEDIA_LOG_E("audioDecoder change plugin error");
+            Event errorEvent {"audioDecoder", EventType::EVENT_ERROR, MSERR_UNSUPPORT_AUD_DEC_TYPE, mime};
+            HandleErrorEvent(errorEvent);
+            return false;
+        }
+        FALSE_GOON_NOEXEC(audioDecoder_ != nullptr, audioDecoder_->DoFlush());
+        audioSink_->DoFlush();
+        FALSE_GOON_NOEXEC(audioDecoder_ != nullptr, audioDecoder_->Start());
+        if (Status::OK != audioSink_->ChangeTrack(meta)) {
+            MEDIA_LOG_E("audioSink change track error");
+            return false;
+        }
+        demuxer_->StartTask(OHOS::Media::Plugins::MediaType::AUDIO);
+    }
+    return true;
+}
+
+bool HiPlayerImpl::HandleAudioTrackChangeReportEvent(const Event& event)
+{
+    int32_t innerTrackId = AnyCast<int32_t>(event.param);
+    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
+    std::string mime;
+    auto iter = std::find_if(metaInfo.begin(), metaInfo.end(),
+        [innerTrackId](const std::shared_ptr<Meta> &trackMeta) {
+            int32_t trackIndex;
+            if (trackMeta->GetData(Tag::REGULAR_TRACK_ID, trackIndex)) {
+                return trackIndex == innerTrackId;
+            }
+            return false;
+        }
+    );
+    FALSE_RETURN_V(iter != metaInfo.end(), false);
+    auto meta = *iter;
+    FALSE_RETURN_V(meta != nullptr, false);
+    int32_t index = std::distance(metaInfo.begin(), iter);
+    if (!(meta->GetData(Tag::MIME_TYPE, mime))) {
+        MEDIA_LOG_E("HandleAudioTrackChangeReportEvent trackId " PUBLIC_LOG_D32 "get mime error.", innerTrackId);
+        return false;
+    }
+    if (IsAudioMime(mime)) {
+        if (currentAudioTrackId_ < 0) {
+            FALSE_RETURN_V(Status::OK == InitAudioDefaultTrackIndex(), false);
+        }
+        if (Status::OK != demuxer_->StartTask(innerTrackId)) {
+            MEDIA_LOG_E("HandleAudioTrackChangeReportEvent StartTask error.trackId is " PUBLIC_LOG_D32, innerTrackId);
+            return false;
+        }
+        Format audioTrackInfo {};
+        audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(index));
+        audioTrackInfo.PutIntValue("track_is_select", 1);
+        callbackLooper_.OnInfo(INFO_TYPE_TRACKCHANGE, 0, audioTrackInfo);
+        currentAudioTrackId_ = index;
+        NotifyUpdateTrackInfo();
+    }
+    return true;
 }
 }  // namespace Media
 }  // namespace OHOS

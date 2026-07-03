@@ -1745,5 +1745,448 @@ HWTEST_F(HiplayerImplUnitTest, GetVideoSample_002, TestSize.Level0)
     int32_t ret = hiplayer_->GetVideoSample(outputResult);
     EXPECT_EQ(ret, MSERR_OK);
 }
+
+/**
+* @tc.name    : Test IsNeedAudioSinkChangeTrack API
+* @tc.number  : IsNeedAudioSinkChangeTrack_002
+* @tc.desc    : Test IsNeedAudioSinkChangeTrack sampleRate != currentSampleRate
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, IsNeedAudioSinkChangeTrack_002, TestSize.Level0)
+{
+    shared_ptr<Meta> preMeta = make_shared<Meta>();
+    shared_ptr<Meta> meta = make_shared<Meta>();
+
+    bool result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, false);
+    preMeta->SetData(Tag::AUDIO_SAMPLE_RATE, 1);
+    result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, false);
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 2);
+    result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, true);
+}
+
+/**
+* @tc.name    : Test IsNeedAudioSinkChangeTrack API
+* @tc.number  : IsNeedAudioSinkChangeTrack_003
+* @tc.desc    : Test IsNeedAudioSinkChangeTrack channels != currentChannels
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, IsNeedAudioSinkChangeTrack_003, TestSize.Level0)
+{
+    shared_ptr<Meta> preMeta = make_shared<Meta>();
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    preMeta->SetData(Tag::AUDIO_SAMPLE_RATE, 1);
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 1);
+
+    bool result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, false);
+    preMeta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, false);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 2);
+    result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, true);
+}
+
+/**
+* @tc.name    : Test IsNeedAudioSinkChangeTrack API
+* @tc.number  : IsNeedAudioSinkChangeTrack_004
+* @tc.desc    : Test IsNeedAudioSinkChangeTrack sampleFormat != currentSampleFormat
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, IsNeedAudioSinkChangeTrack_004, TestSize.Level0)
+{
+    shared_ptr<Meta> preMeta = make_shared<Meta>();
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    preMeta->SetData(Tag::AUDIO_SAMPLE_RATE, 1);
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 1);
+    preMeta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+
+    bool result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, false);
+    preMeta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, false);
+    meta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_S16LE);
+    result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, true);
+}
+
+/**
+* @tc.name    : Test IsNeedAudioSinkChangeTrack API
+* @tc.number  : IsNeedAudioSinkChangeTrack_005
+* @tc.desc    : Test IsNeedAudioSinkChangeTrack sampleFormat != currentSampleFormat
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, IsNeedAudioSinkChangeTrack_005, TestSize.Level0)
+{
+    shared_ptr<Meta> preMeta = make_shared<Meta>();
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    preMeta->SetData(Tag::AUDIO_SAMPLE_RATE, 1);
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 1);
+    preMeta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    preMeta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    meta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+
+    bool result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, false);
+    preMeta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, false);
+    meta->SetData(Tag::MIME_TYPE, "audio/raw");
+    result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, true);
+}
+
+/**
+* @tc.name    : Test IsNeedAudioSinkChangeTrack API
+* @tc.number  : IsNeedAudioSinkChangeTrack_006
+* @tc.desc    : Test IsNeedAudioSinkChangeTrack false
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, IsNeedAudioSinkChangeTrack_006, TestSize.Level0)
+{
+    shared_ptr<Meta> preMeta = make_shared<Meta>();
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    preMeta->SetData(Tag::AUDIO_SAMPLE_RATE, 1);
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 1);
+    preMeta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    preMeta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    meta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    preMeta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    meta->SetData(Tag::MIME_TYPE, "audio/av3a");
+
+    bool result = hiplayer_->IsNeedAudioSinkChangeTrack(preMeta, meta);
+    EXPECT_EQ(result, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioDecoderChangeEvent API
+* @tc.number  : HandleAudioDecoderChangeEvent_001
+* @tc.desc    : Test HandleAudioDecoderChangeEvent mimeType is nullptr
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioDecoderChangeEvent_001, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    bool result = hiplayer_->HandleAudioDecoderChangeEvent({"hiplayer", EventType::EVENT_AUDIO_DECODER_CHANGE, meta});
+    EXPECT_EQ(result, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioDecoderChangeEvent API
+* @tc.number  : HandleAudioDecoderChangeEvent_001
+* @tc.desc    : Test HandleAudioDecoderChangeEvent mimeType is not audio
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioDecoderChangeEvent_002, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "video/av3a");
+    bool result = hiplayer_->HandleAudioDecoderChangeEvent({"hiplayer", EventType::EVENT_AUDIO_DECODER_CHANGE, meta});
+    EXPECT_EQ(result, true);
+}
+
+/**
+* @tc.name    : Test HandleAudioDecoderChangeEvent API
+* @tc.number  : HandleAudioDecoderChangeEvent_003
+* @tc.desc    : Test HandleAudioDecoderChangeEvent currentAudioTrackId_ < 0
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioDecoderChangeEvent_003, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    hiplayer_->currentAudioTrackId_ = -1;
+    bool result = hiplayer_->HandleAudioDecoderChangeEvent({"hiplayer", EventType::EVENT_AUDIO_DECODER_CHANGE, meta});
+    EXPECT_EQ(result, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioDecoderChangeEvent API
+* @tc.number  : HandleAudioDecoderChangeEvent_004
+* @tc.desc    : Test HandleAudioDecoderChangeEvent IsNeedAudioSinkChangeTrack false
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioDecoderChangeEvent_004, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 48000);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    meta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    meta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    hiplayer_->currentAudioTrackId_ = 2;
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+    hiplayer_->Init();
+    hiplayer_->audioSink_->eventReceiver_ = hiplayer_->playerEventReceiver_;
+    hiplayer_->audioSink_->audioSink_->SetEventReceiver(hiplayer_->playerEventReceiver_);
+    hiplayer_->audioSink_->SetParameter(meta);
+    hiplayer_->audioSink_->audioSink_->plugin_->Init();
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->audioDecoder_ = nullptr;
+    bool result = hiplayer_->HandleAudioDecoderChangeEvent({"hiplayer", EventType::EVENT_AUDIO_DECODER_CHANGE, meta});
+    EXPECT_EQ(result, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioDecoderChangeEvent API
+* @tc.number  : HandleAudioDecoderChangeEvent_005
+* @tc.desc    : Test HandleAudioDecoderChangeEvent audioDecoder_ == nullptr
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioDecoderChangeEvent_005, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 48000);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    meta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    meta->SetData(Tag::MIME_TYPE, "audio/av3a");
+
+    shared_ptr<Meta> preMeta = make_shared<Meta>();
+    preMeta->SetData(Tag::AUDIO_SAMPLE_RATE, 44100);
+    preMeta->SetData(Tag::AUDIO_CHANNEL_COUNT, 2);
+    preMeta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    preMeta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    hiplayer_->currentAudioTrackId_ = 2;
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+    hiplayer_->Init();
+    hiplayer_->audioSink_->eventReceiver_ = hiplayer_->playerEventReceiver_;
+    hiplayer_->audioSink_->audioSink_->SetEventReceiver(hiplayer_->playerEventReceiver_);
+    hiplayer_->audioSink_->SetParameter(preMeta);
+    hiplayer_->audioSink_->audioSink_->plugin_->Init();
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->audioDecoder_ = nullptr;
+    bool result = hiplayer_->HandleAudioDecoderChangeEvent({"hiplayer", EventType::EVENT_AUDIO_DECODER_CHANGE, meta});
+    EXPECT_EQ(result, true);
+}
+
+/**
+* @tc.name    : Test HandleAudioDecoderChangeEvent API
+* @tc.number  : HandleAudioDecoderChangeEvent_006
+* @tc.desc    : Test HandleAudioDecoderChangeEvent audioDecoder_ != nullptr && ChangePlugin == Status::OK
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioDecoderChangeEvent_006, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 48000);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    meta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    meta->SetData(Tag::MIME_TYPE, "audio/av3a");
+
+    shared_ptr<Meta> preMeta = make_shared<Meta>();
+    preMeta->SetData(Tag::AUDIO_SAMPLE_RATE, 44100);
+    preMeta->SetData(Tag::AUDIO_CHANNEL_COUNT, 2);
+    preMeta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    preMeta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    hiplayer_->currentAudioTrackId_ = 2;
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+    hiplayer_->Init();
+    hiplayer_->audioSink_->eventReceiver_ = hiplayer_->playerEventReceiver_;
+    hiplayer_->audioSink_->audioSink_->SetEventReceiver(hiplayer_->playerEventReceiver_);
+    hiplayer_->audioSink_->SetParameter(preMeta);
+    hiplayer_->audioSink_->audioSink_->plugin_->Init();
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
+        FilterType::FILTERTYPE_ADEC);
+
+    hiplayer_->audioDecoder_->decoder_ = std::make_shared<AudioDecoderAdapter>();
+    bool result = hiplayer_->HandleAudioDecoderChangeEvent({"hiplayer", EventType::EVENT_AUDIO_DECODER_CHANGE, meta});
+    EXPECT_EQ(result, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioDecoderChangeEvent API
+* @tc.number  : HandleAudioDecoderChangeEvent_007
+* @tc.desc    : Test HandleAudioDecoderChangeEvent audioDecoder_ != nullptr && ChangePlugin != Status::OK
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioDecoderChangeEvent_007, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 48000);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    meta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    meta->SetData(Tag::MIME_TYPE, "audio/av3a");
+
+    shared_ptr<Meta> preMeta = make_shared<Meta>();
+    preMeta->SetData(Tag::AUDIO_SAMPLE_RATE, 44100);
+    preMeta->SetData(Tag::AUDIO_CHANNEL_COUNT, 2);
+    preMeta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    preMeta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    hiplayer_->currentAudioTrackId_ = 2;
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+        FilterType::FILTERTYPE_ASINK);
+    hiplayer_->Init();
+    hiplayer_->audioSink_->eventReceiver_ = hiplayer_->playerEventReceiver_;
+    hiplayer_->audioSink_->audioSink_->SetEventReceiver(hiplayer_->playerEventReceiver_);
+    hiplayer_->audioSink_->SetParameter(preMeta);
+    hiplayer_->audioSink_->audioSink_->plugin_->Init();
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+                                                                                FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
+                                                                                          FilterType::FILTERTYPE_ADEC);
+
+    hiplayer_->audioDecoder_->decoder_ = nullptr;
+    bool result = hiplayer_->HandleAudioDecoderChangeEvent({"hiplayer", EventType::EVENT_AUDIO_DECODER_CHANGE, meta});
+    EXPECT_EQ(result, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioDecoderChangeEvent API
+* @tc.number  : HandleAudioDecoderChangeEvent_008
+* @tc.desc    : Test HandleAudioDecoderChangeEvent Status::OK != audioSink_->ChangeTrack(meta)
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioDecoderChangeEvent_008, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::AUDIO_SAMPLE_RATE, 48000);
+    meta->SetData(Tag::AUDIO_CHANNEL_COUNT, 1);
+    meta->SetData(Tag::AUDIO_SAMPLE_FORMAT, Plugins::AudioSampleFormat::SAMPLE_U8);
+    meta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    hiplayer_->currentAudioTrackId_ = 2;
+    hiplayer_->audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
+                                                                                    FilterType::FILTERTYPE_ASINK);
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+                                                                                FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->audioDecoder_ = nullptr;
+    bool result = hiplayer_->HandleAudioDecoderChangeEvent({"hiplayer", EventType::EVENT_AUDIO_DECODER_CHANGE, meta});
+    EXPECT_EQ(result, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioTrackChangeReportEvent API
+* @tc.number  : HandleAudioTrackChangeReportEvent_001
+* @tc.desc    : Test HandleAudioDecoderChangeEvent meta not include mimeType
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioTrackChangeReportEvent_001, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::REGULAR_TRACK_ID, 1);
+    shared_ptr<Meta> meta1 = make_shared<Meta>();
+    meta1->SetData(Tag::REGULAR_TRACK_ID, 2);
+    shared_ptr<Meta> meta2 = make_shared<Meta>();
+    meta1->SetData(Tag::REGULAR_TRACK_ID, 3);
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta1);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta2);
+    bool ret = hiplayer_->HandleAudioTrackChangeReportEvent({"hiplayer", EventType::EVENT_AUDIO_TRACK_CHANGE_REPORT, 1});
+    EXPECT_EQ(ret, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioTrackChangeReportEvent API
+* @tc.number  : HandleAudioTrackChangeReportEvent_002
+* @tc.desc    : Test HandleAudioDecoderChangeEvent mimeType not audio
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioTrackChangeReportEvent_002, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "video/av3a");
+    meta->SetData(Tag::REGULAR_TRACK_ID, 1);
+    shared_ptr<Meta> meta1 = make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, "video/av3a");
+    meta1->SetData(Tag::REGULAR_TRACK_ID, 2);
+    shared_ptr<Meta> meta2 = make_shared<Meta>();
+    meta2->SetData(Tag::MIME_TYPE, "video/av3a");
+    meta2->SetData(Tag::REGULAR_TRACK_ID, 3);
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta1);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta2);
+    bool ret = hiplayer_->HandleAudioTrackChangeReportEvent({"hiplayer", EventType::EVENT_AUDIO_TRACK_CHANGE_REPORT, 1});
+    EXPECT_EQ(ret, true);
+}
+
+/**
+* @tc.name    : Test HandleAudioTrackChangeReportEvent API
+* @tc.number  : HandleAudioTrackChangeReportEvent_003
+* @tc.desc    : Test HandleAudioDecoderChangeEvent currentAudioTrackId_ < 0
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioTrackChangeReportEvent_003, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    meta->SetData(Tag::REGULAR_TRACK_ID, 1);
+    shared_ptr<Meta> meta1 = make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, "audio/av3a");
+    meta1->SetData(Tag::REGULAR_TRACK_ID, 2);
+    shared_ptr<Meta> meta2 = make_shared<Meta>();
+    meta2->SetData(Tag::MIME_TYPE, "audio/av3a");
+    meta2->SetData(Tag::REGULAR_TRACK_ID, 3);
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta1);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta2);
+    hiplayer_->currentAudioTrackId_ = -1;
+    bool ret = hiplayer_->HandleAudioTrackChangeReportEvent({"hiplayer", EventType::EVENT_AUDIO_TRACK_CHANGE_REPORT, 1});
+    EXPECT_EQ(ret, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioTrackChangeReportEvent API
+* @tc.number  : HandleAudioTrackChangeReportEvent_004
+* @tc.desc    : Test HandleAudioDecoderChangeEvent currentAudioTrackId_ < 0
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioTrackChangeReportEvent_004, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    meta->SetData(Tag::MIME_TYPE, "audio/av3a");
+    meta->SetData(Tag::REGULAR_TRACK_ID, 1);
+    shared_ptr<Meta> meta1 = make_shared<Meta>();
+    meta1->SetData(Tag::MIME_TYPE, "audio/av3a");
+    meta1->SetData(Tag::REGULAR_TRACK_ID, 2);
+    shared_ptr<Meta> meta2 = make_shared<Meta>();
+    meta2->SetData(Tag::MIME_TYPE, "audio/av3a");
+    meta2->SetData(Tag::REGULAR_TRACK_ID, 3);
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta1);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta2);
+    hiplayer_->currentAudioTrackId_ = 2;
+    bool ret = hiplayer_->HandleAudioTrackChangeReportEvent({"hiplayer", EventType::EVENT_AUDIO_TRACK_CHANGE_REPORT, 1});
+    EXPECT_EQ(ret, false);
+}
+
+/**
+* @tc.name    : Test HandleAudioTrackChangeReportEvent API
+* @tc.number  : HandleAudioTrackChangeReportEvent_005
+* @tc.desc    : Test HandleAudioDecoderChangeEvent meta not trackId
+* @tc.require : issueI5NZAQ
+*/
+HWTEST_F(HiplayerImplUnitTest, HandleAudioTrackChangeReportEvent_005, TestSize.Level0)
+{
+    shared_ptr<Meta> meta = make_shared<Meta>();
+    shared_ptr<Meta> meta1 = make_shared<Meta>();
+    shared_ptr<Meta> meta2 = make_shared<Meta>();
+    hiplayer_->demuxer_ = FilterFactory::Instance().CreateFilter<DemuxerFilter>("builtin.player.demuxer",
+        FilterType::FILTERTYPE_DEMUXER);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta1);
+    hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta2);
+    bool ret = hiplayer_->HandleAudioTrackChangeReportEvent({"hiplayer", EventType::EVENT_AUDIO_TRACK_CHANGE_REPORT, 1});
+    EXPECT_EQ(ret, false);
+}
 } // namespace Media
 } // namespace OHOS
