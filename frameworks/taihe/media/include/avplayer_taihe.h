@@ -121,7 +121,9 @@ namespace AVPlayerEvent {
 
 class AVPlayerImpl : public AVPlayerNotify {
 public:
+    friend class AVAdsControllerImpl;
     AVPlayerImpl();
+    int64_t GetImplPtr();
 
     optional<string> GetUrl();
     void SetUrl(optional_view<string> url);
@@ -224,11 +226,6 @@ public:
         ohos::multimedia::audio::AudioStreamDeviceChangeInfo const&)> callback);
     void OnMetricsEvent(callback_view<void(array_view<::ohos::multimedia::media::AVMetricsEvent> data)> callback);
     void OnTimedMetaData(callback_view<void(::ohos::multimedia::media::AVTimedMetaData const&)> callback);
-    void OnAdsEventListenerLoadingError(callback_view<void(::taihe::string_view, uintptr_t)> callback);
-    void OnAdsListenerAdsStarted(callback_view<void(::taihe::string_view, int64_t)> callback);
-    void OnAdsListenerAdsSkipped(callback_view<void(::taihe::string_view)> callback);
-    void OnAdsListenerAdsCompleted(callback_view<void(::taihe::string_view)> callback);
-
     void OffError(optional_view<callback<void(uintptr_t)>> callback);
     void OffStateChange(optional_view<callback<void(string_view,
             ohos::multimedia::media::StateChangeReason)>> callback);
@@ -259,14 +256,6 @@ public:
     void OffMetricsEvent(optional_view<callback<void(
         array_view<::ohos::multimedia::media::AVMetricsEvent> data)>> callback);
     void OffTimedMetaData(optional_view<callback<void(::ohos::multimedia::media::AVTimedMetaData const&)>> callback);
-    void OffAdsEventListenerLoadingError(
-        optional_view<callback<void(::taihe::string_view, uintptr_t)>> callback);
-    void OffAdsListenerAdsStarted(
-        optional_view<callback<void(::taihe::string_view, int64_t)>> callback);
-    void OffAdsListenerAdsSkipped(
-        optional_view<callback<void(::taihe::string_view)>> callback);
-    void OffAdsListenerAdsCompleted(
-        optional_view<callback<void(::taihe::string_view)>> callback);
     bool GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray);
     void SeiMessageCallbackOff(std::string &callbackName, const std::vector<int32_t> &payloadTypes);
     void MaxAmplitudeCallbackOff(std::string callbackName);
@@ -283,6 +272,8 @@ public:
     void EnqueueFdTask(const int32_t fd);
     void SetSource(std::string url);
     void SaveCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
+    std::shared_ptr<OHOS::Media::Player> GetPlayerInstance() const;
+    OHOS::Media::TaskQueue *GetTaskQueue() const;
     void QueueOnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     PlayerSwitchMode TransferSwitchMode(int32_t mode);
     void GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, const AVPlayStrategyTmp &strategyTmp);
@@ -298,10 +289,6 @@ public:
     void AdvanceToNextMediaSourceSync();
     void AdvanceToPrevMediaSourceSync();
     void AdvanceToMediaSourceSync(::taihe::string_view id);
-    string AddAdsMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, int64_t startMs);
-    void RemoveAdsMediaSourceSync(::taihe::string_view id);
-    void SkipCurrentAdsMediaSourceSync();
-    void DisableAllAdsMediaSourceSync();
     void OnPlaybackContentChanged(callback_view<void(string_view data)> callback);
     void OffPlaybackContentChanged(optional_view<callback<void(string_view data)>> callback);
     void SetLoudnessGainSync(double loudnessGain);
@@ -364,11 +351,6 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> AdvanceToNextMediaSourceTask();
     std::shared_ptr<TaskHandler<TaskRet>> AdvanceToPrevMediaSourceTask();
     std::shared_ptr<TaskHandler<TaskRet>> AdvanceToMediaSourceTask(const std::string &mediaSourceId);
-    std::shared_ptr<TaskHandler<TaskRet>> AddAdsMediaSourceTask(const std::shared_ptr<AVMediaSource> &mediaSource,
-        int64_t startMs, std::string &outId);
-    std::shared_ptr<TaskHandler<TaskRet>> RemoveAdsMediaSourceTask(const std::string &id);
-    std::shared_ptr<TaskHandler<TaskRet>> SkipCurrentAdsMediaSourceTask();
-    std::shared_ptr<TaskHandler<TaskRet>> DisableAllAdsMediaSourceTask();
     std::shared_ptr<TaskHandler<TaskRet>> EnableCameraPostprocessingTask();
     std::shared_ptr<TaskHandler<TaskRet>> ForceLoadVideoTask(bool status);
     void HandleSelectTrack(int32_t index, optional_view<SwitchMode> mode);

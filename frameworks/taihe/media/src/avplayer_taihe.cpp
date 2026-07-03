@@ -88,6 +88,11 @@ AVPlayerImpl::AVPlayerImpl()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Constructor success", FAKE_POINTER(this));
 }
 
+int64_t AVPlayerImpl::GetImplPtr()
+{
+    return reinterpret_cast<int64_t>(this);
+}
+
 optional<string> AVPlayerImpl::GetUrl()
 {
     OHOS::Media::MediaTrace trace("AVPlayerImpl::get url");
@@ -2633,6 +2638,16 @@ void AVPlayerImpl::SaveCallbackReference(const std::string &callbackName, std::s
     }
 }
 
+std::shared_ptr<OHOS::Media::Player> AVPlayerImpl::GetPlayerInstance() const
+{
+    return player_;
+}
+
+OHOS::Media::TaskQueue *AVPlayerImpl::GetTaskQueue() const
+{
+    return taskQue_.get();
+}
+
 void AVPlayerImpl::SetLoudnessGainSync(double loudnessGain)
 {
     MediaTrace trace("AVPlayerImpl::SetLoudnessGain");
@@ -3555,135 +3570,6 @@ void AVPlayerImpl::OffTimedMetaData(optional_view<callback<void(
     MEDIA_LOGI("OffTimedMetaData End");
 }
 
-void AVPlayerImpl::OnAdsEventListenerLoadingError(
-    callback_view<void(::taihe::string_view, uintptr_t)> callback)
-{
-    MediaTrace trace("AVPlayerImpl::OnAdsEventListenerLoadingError");
-    MEDIA_LOGD("TaiheOnAdsEventListenerLoadingError In");
-
-    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
-        return;
-    }
-
-    ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(::taihe::string_view, uintptr_t)>> taiheCallback =
-        std::make_shared<taihe::callback<void(::taihe::string_view, uintptr_t)>>(callback);
-    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
-    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    SaveCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR, autoRef);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnAdsEventListenerLoadingError success", FAKE_POINTER(this));
-}
-
-void AVPlayerImpl::OffAdsEventListenerLoadingError(
-    optional_view<callback<void(::taihe::string_view, uintptr_t)>> callback)
-{
-    MediaTrace trace("AVPlayerImpl::OffAdsEventListenerLoadingError");
-    MEDIA_LOGD("TaiheOffAdsEventListenerLoadingError In");
-
-    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        return;
-    }
-    ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
-    MEDIA_LOGI("OffAdsEventListenerLoadingError End");
-}
-
-void AVPlayerImpl::OnAdsListenerAdsStarted(callback_view<void(::taihe::string_view, int64_t)> callback)
-{
-    MediaTrace trace("AVPlayerImpl::OnAdsListenerAdsStarted");
-    MEDIA_LOGD("TaiheOnAdsListenerAdsStarted In");
-
-    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
-        return;
-    }
-
-    ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(::taihe::string_view, int64_t)>> taiheCallback =
-        std::make_shared<taihe::callback<void(::taihe::string_view, int64_t)>>(callback);
-    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
-    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    SaveCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED, autoRef);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnAdsListenerAdsStarted success", FAKE_POINTER(this));
-}
-
-void AVPlayerImpl::OffAdsListenerAdsStarted(
-    optional_view<callback<void(::taihe::string_view, int64_t)>> callback)
-{
-    MediaTrace trace("AVPlayerImpl::OffAdsListenerAdsStarted");
-    MEDIA_LOGD("TaiheOffAdsListenerAdsStarted In");
-
-    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        return;
-    }
-    ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
-    MEDIA_LOGI("OffAdsListenerAdsStarted End");
-}
-
-void AVPlayerImpl::OnAdsListenerAdsSkipped(callback_view<void(::taihe::string_view)> callback)
-{
-    MediaTrace trace("AVPlayerImpl::OnAdsListenerAdsSkipped");
-    MEDIA_LOGD("TaiheOnAdsListenerAdsSkipped In");
-
-    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
-        return;
-    }
-
-    ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(::taihe::string_view)>> taiheCallback =
-        std::make_shared<taihe::callback<void(::taihe::string_view)>>(callback);
-    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
-    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    SaveCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED, autoRef);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnAdsListenerAdsSkipped success", FAKE_POINTER(this));
-}
-
-void AVPlayerImpl::OffAdsListenerAdsSkipped(
-    optional_view<callback<void(::taihe::string_view)>> callback)
-{
-    MediaTrace trace("AVPlayerImpl::OffAdsListenerAdsSkipped");
-    MEDIA_LOGD("TaiheOffAdsListenerAdsSkipped In");
-
-    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        return;
-    }
-    ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
-    MEDIA_LOGI("OffAdsListenerAdsSkipped End");
-}
-
-void AVPlayerImpl::OnAdsListenerAdsCompleted(callback_view<void(::taihe::string_view)> callback)
-{
-    MediaTrace trace("AVPlayerImpl::OnAdsListenerAdsCompleted");
-    MEDIA_LOGD("TaiheOnAdsListenerAdsCompleted In");
-
-    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
-        return;
-    }
-
-    ani_env *env = taihe::get_env();
-    std::shared_ptr<taihe::callback<void(::taihe::string_view)>> taiheCallback =
-        std::make_shared<taihe::callback<void(::taihe::string_view)>>(callback);
-    std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
-    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    SaveCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED, autoRef);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "TaiheOnAdsListenerAdsCompleted success", FAKE_POINTER(this));
-}
-
-void AVPlayerImpl::OffAdsListenerAdsCompleted(
-    optional_view<callback<void(::taihe::string_view)>> callback)
-{
-    MediaTrace trace("AVPlayerImpl::OffAdsListenerAdsCompleted");
-    MEDIA_LOGD("TaiheOffAdsListenerAdsCompleted In");
-
-    if (GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        return;
-    }
-    ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
-    MEDIA_LOGI("OffAdsListenerAdsCompleted End");
-}
-
 bool AVPlayerImpl::GetIntArrayArgument(std::vector<int32_t> &vec, const std::vector<int32_t> &inputArray)
 {
     if (inputArray.empty()) {
@@ -4198,92 +4084,6 @@ void AVPlayerImpl::AdvanceToMediaSourceSync(::taihe::string_view id)
     MEDIA_LOGI("AdvanceToMediaSourceSync Out");
 }
 
-string AVPlayerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, int64_t startMs)
-{
-    MediaTrace trace("AVPlayerImpl::addAdsMediaSource");
-    MEDIA_LOGI("AddAdsMediaSourceSync In");
-
-    string invalidId {};
-    if (!IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport add ads media source");
-        return invalidId;
-    }
-
-    std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceImpl::GetMediaSource(src);
-    if (srcTmp == nullptr) {
-        set_business_error(MSERR_EXT_API9_INVALID_PARAMETER, "get MediaSource argument failed!");
-        return invalidId;
-    }
-    std::shared_ptr<AVMediaSource> mediaSource = GetAVMediaSource(src, srcTmp);
-    if (mediaSource == nullptr) {
-        set_business_error(MSERR_EXT_API9_INVALID_PARAMETER, "create mediaSource failed!");
-        return invalidId;
-    }
-
-    std::string outId;
-    std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-    context->asyncTask = AddAdsMediaSourceTask(mediaSource, startMs, outId);
-    context->CheckTaskResult();
-    if (!context->errFlag) {
-        MEDIA_LOGI("AddAdsMediaSourceSync Out, id: %{public}s", outId.c_str());
-        return string(outId);
-    }
-    return invalidId;
-}
-
-void AVPlayerImpl::RemoveAdsMediaSourceSync(::taihe::string_view id)
-{
-    MediaTrace trace("AVPlayerImpl::removeAdsMediaSource");
-    MEDIA_LOGI("RemoveAdsMediaSourceSync In");
-
-    if (!IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport remove ads media source");
-        return;
-    }
-
-    std::string idStr(id);
-    std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-    context->asyncTask = RemoveAdsMediaSourceTask(idStr);
-    context->CheckTaskResult();
-    MEDIA_LOGI("RemoveAdsMediaSourceSync Out");
-}
-
-void AVPlayerImpl::SkipCurrentAdsMediaSourceSync()
-{
-    MediaTrace trace("AVPlayerImpl::skipCurrentAdsMediaSource");
-    MEDIA_LOGI("SkipCurrentAdsMediaSourceSync In");
-
-    if (!IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport skip current ads media source");
-        return;
-    }
-
-    std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-    context->asyncTask = SkipCurrentAdsMediaSourceTask();
-    context->CheckTaskResult();
-    MEDIA_LOGI("SkipCurrentAdsMediaSourceSync Out");
-}
-
-void AVPlayerImpl::DisableAllAdsMediaSourceSync()
-{
-    MediaTrace trace("AVPlayerImpl::disableAllAdsMediaSource");
-    MEDIA_LOGI("DisableAllAdsMediaSourceSync In");
-
-    if (!IsControllable()) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-            "current state is not prepared/playing/paused/completed, unsupport disable all ads media source");
-        return;
-    }
-
-    std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-    context->asyncTask = DisableAllAdsMediaSourceTask();
-    context->CheckTaskResult();
-    MEDIA_LOGI("DisableAllAdsMediaSourceSync Out");
-}
-
 void AVPlayerImpl::OnPlaybackContentChanged(callback_view<void(string_view data)> callback)
 {
     MediaTrace trace("AVPlayerImpl::OnPlaybackContentChanged");
@@ -4613,75 +4413,6 @@ std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::ForceLoadVideoTask(bool stat
         auto ret = player_->ForceLoadVideo(status);
         CHECK_AND_RETURN_RET(ret == MSERR_OK,
             TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)), "ForceLoadVideo failed"));
-        return TaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-    (void)taskQue_->EnqueueTask(task);
-    return task;
-}
-
-std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::AddAdsMediaSourceTask(
-    const std::shared_ptr<AVMediaSource> &mediaSource, int64_t startMs, std::string &outId)
-{
-    auto task = std::make_shared<TaskHandler<TaskRet>>([this, mediaSource, startMs, &outId]() {
-        if (player_ == nullptr) {
-            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
-        }
-        int32_t ret = player_->AddAdsMediaSource(mediaSource, startMs, outId);
-        if (ret != MSERR_OK) {
-            return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
-                "failed to add ads media source");
-        }
-        return TaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-    (void)taskQue_->EnqueueTask(task);
-    return task;
-}
-
-std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::RemoveAdsMediaSourceTask(const std::string &id)
-{
-    auto task = std::make_shared<TaskHandler<TaskRet>>([this, id]() {
-        if (player_ == nullptr) {
-            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
-        }
-        int32_t ret = player_->RemoveAdsMediaSource(id);
-        if (ret != MSERR_OK) {
-            return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
-                "failed to remove ads media source");
-        }
-        return TaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-    (void)taskQue_->EnqueueTask(task);
-    return task;
-}
-
-std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::SkipCurrentAdsMediaSourceTask()
-{
-    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
-        if (player_ == nullptr) {
-            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
-        }
-        int32_t ret = player_->SkipCurrentAdsMediaSource();
-        if (ret != MSERR_OK) {
-            return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
-                "failed to skip current ads media source");
-        }
-        return TaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-    (void)taskQue_->EnqueueTask(task);
-    return task;
-}
-
-std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::DisableAllAdsMediaSourceTask()
-{
-    auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {
-        if (player_ == nullptr) {
-            return TaskRet(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "avplayer is deconstructed");
-        }
-        int32_t ret = player_->DisableAllAdsMediaSource();
-        if (ret != MSERR_OK) {
-            return TaskRet(MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret)),
-                "failed to disable all ads media source");
-        }
         return TaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)taskQue_->EnqueueTask(task);

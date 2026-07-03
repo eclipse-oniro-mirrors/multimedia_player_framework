@@ -47,6 +47,9 @@ function CreateAVImageGeneratorSync(): Optional<AVImageGenerator>;
 @gen_promise("createAVPlayer")
 function CreateAVPlayerSync(): Optional<AVPlayer>;
 
+@gen_promise("createAVAdsController")
+function CreateAVAdsControllerSync(avplayer: AVPlayer): Optional<AVAdsController>;
+
 @gen_async("createAVRecorder")
 @gen_promise("createAVRecorder")
 function CreateAVRecorderSync(): Optional<AVRecorder>;
@@ -357,6 +360,7 @@ struct TrackSelectionFilter {
 }
 
 interface AVPlayer {
+    GetImplPtr(): i64;
     @get GetUrl(): Optional<String>;
     @set SetUrl(url: Optional<String>): void;
     @get GetAudioEffectMode(): Optional<audio.AudioEffectMode>;
@@ -678,27 +682,6 @@ interface AVPlayer {
     GetMediaSources(): Array<Optional<MediaSource>>;
     OnTimedMetaData(callback: (data: AVTimedMetaData) => void): void;
     OffTimedMetaData(callback: Optional<(data: AVTimedMetaData) => void>): void;
-    OnAdsEventListenerLoadingError(callback: (adsId: String, reason: @sts_type("BusinessError<void>") Opaque) => void): void;
-    OffAdsEventListenerLoadingError(callback: Optional<(adsId: String, reason: @sts_type("BusinessError<void>") Opaque) => void>): void;
-    OnAdsListenerAdsStarted(callback: (adsId: String, duration: i64) => void): void;
-    OffAdsListenerAdsStarted(callback: Optional<(adsId: String, duration: i64) => void>): void;
-    OnAdsListenerAdsSkipped(callback: (adsId: String) => void): void;
-    OffAdsListenerAdsSkipped(callback: Optional<(adsId: String) => void>): void;
-    OnAdsListenerAdsCompleted(callback: (adsId: String) => void): void;
-    OffAdsListenerAdsCompleted(callback: Optional<(adsId: String) => void>): void;
-
-    @gen_promise("addAdsMediaSource")
-    AddAdsMediaSourceSync(src: MediaSource, startMs: i64): String;
-
-    @gen_promise("removeAdsMediaSource")
-    RemoveAdsMediaSourceSync(id: String): void;
-
-    @gen_promise("skipCurrentAdsMediaSource")
-    SkipCurrentAdsMediaSourceSync(): void;
-
-    @gen_promise("disableAllAdsMediaSource")
-    DisableAllAdsMediaSourceSync(): void;
-
     @gen_promise("addPlaybackMediaSource")
     AddPlaybackMediaSourceSync(src: MediaSource, pos: Optional<String>): String;
 
@@ -716,6 +699,28 @@ interface AVPlayer {
 
     @gen_promise("advanceToMediaSource")
     AdvanceToMediaSourceSync(id: String): void;
+}
+
+interface AVAdsController {
+    OnAdsEventListenerLoadingError(callback: (adsId: String, reason: @sts_type("BusinessError<void>") Opaque) => void): void;
+    OffAdsEventListenerLoadingError(callback: Optional<(adsId: String, reason: @sts_type("BusinessError<void>") Opaque) => void>): void;
+    OnAdsListenerAdsStarted(callback: (adsId: String, duration: i64) => void): void;
+    OffAdsListenerAdsStarted(callback: Optional<(adsId: String, duration: i64) => void>): void;
+    OnAdsListenerAdsSkipped(callback: (adsId: String) => void): void;
+    OffAdsListenerAdsSkipped(callback: Optional<(adsId: String) => void>): void;
+    OnAdsListenerAdsCompleted(callback: (adsId: String) => void): void;
+    OffAdsListenerAdsCompleted(callback: Optional<(adsId: String) => void>): void;
+
+    @gen_promise("addAdsMediaSource")
+    AddAdsMediaSourceSync(src: MediaSource, startMs: i32): String;
+
+    RemoveAdsMediaSource(id: String): void;
+
+    SkipCurrentAdsMediaSource(): void;
+
+    DisableAllAdsMediaSource(): void;
+
+    Release(): void;
 }
 
 struct SeiMessage {

@@ -168,6 +168,7 @@ taihe_shared_library("media_taihe") {
   sources = get_target_outputs(":run_media_taihe")
   sources += [
     "media/src/ani_constructor.cpp",
+    "media/src/avads_controller_taihe.cpp",
     "media/src/avimagegenerator_taihe.cpp",
     "media/src/avmetadatahelper_callback_taihe.cpp",
     "media/src/avmetadataextractor_taihe.cpp",
