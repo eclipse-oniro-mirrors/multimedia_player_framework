@@ -260,12 +260,18 @@ void DownloadTaskCallback::OnProgress(uint64_t downloaderId, const MediaDownload
         return;
     }
 
-    manager->NotifyProgressChange(std::to_string(downloaderId), progressValue);
-
     auto taskIter = manager->taskMap_.find(std::to_string(downloaderId));
     if (taskIter == manager->taskMap_.end()) {
         return;
     }
+    for (auto& pair : taskIter->second->fileList) {
+        if (pair.second.needParse) {
+            MEDIA_LOGI("OnProgress TaskId: %{public}" PRIu64 " not parse finished", downloaderId);
+            return;
+        }
+    }
+
+    manager->NotifyProgressChange(std::to_string(downloaderId), progressValue);
     auto& taskInfo = taskIter->second;
     if (taskInfo->protocolSniffed) {
         return;
