@@ -838,8 +838,11 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
 bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(int32_t appUid)
 {
     MEDIA_LOGI("CanScreenCaptureInstanceBeCreate start.");
-    CHECK_AND_RETURN_RET_LOG(ScreenCaptureServer::serverMap_.size() <= ScreenCaptureServer::maxSessionId_, false,
-        "ScreenCaptureInstanceCanBeCreate exceed ScreenCaptureServer instances limit.");
+    {
+        std::shared_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
+        CHECK_AND_RETURN_RET_LOG(ScreenCaptureServer::serverMap_.size() <= ScreenCaptureServer::maxSessionId_, false,
+            "ScreenCaptureInstanceCanBeCreate exceed ScreenCaptureServer instances limit.");
+    }
     MEDIA_LOGI("curAppUid: %{public}d", appUid);
     CHECK_AND_RETURN_RET_LOG(CheckScreenCaptureAppLimit(appUid), false,
         "CurScreenCaptureAppNum reach limit, cannot create more app.");
