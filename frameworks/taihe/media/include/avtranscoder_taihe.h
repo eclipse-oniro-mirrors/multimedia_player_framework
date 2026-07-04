@@ -209,7 +209,7 @@ private:
 };
 
 struct AVTransCoderAsyncContext {
-    explicit AVTransCoderAsyncContext() {}
+    explicit AVTransCoderAsyncContext() : env_(nullptr), bindDeferred_(nullptr), promise_(nullptr), etsVm_(nullptr) {}
     ~AVTransCoderAsyncContext();
 
     void AVTransCoderSignError(int32_t errCode, const std::string &operate,
