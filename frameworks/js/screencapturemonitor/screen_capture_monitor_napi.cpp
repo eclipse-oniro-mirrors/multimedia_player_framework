@@ -119,7 +119,10 @@ void ScreenCaptureMonitorNapi::Destructor(napi_env env, void *nativeObject, void
     (void)finalize;
     if (nativeObject != nullptr) {
         ScreenCaptureMonitorNapi *napi = reinterpret_cast<ScreenCaptureMonitorNapi *>(nativeObject);
-        napi->monitorCb_ = nullptr;
+        if (napi->monitorCb_ != nullptr) {
+            ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(napi->monitorCb_);
+            napi->monitorCb_ = nullptr;
+        }
         delete napi;
     }
     MEDIA_LOGI("Js Destructor End");
