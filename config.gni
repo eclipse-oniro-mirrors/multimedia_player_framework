@@ -107,14 +107,17 @@ declare_args() {
 }
 
 player_framework_support_libcurl = true
-if (defined(global_parts_info) && defined(global_parts_info.multimedia_histreamer_ext)) {
+if (defined(global_parts_info) &&
+    defined(global_parts_info.multimedia_histreamer_ext)) {
   player_framework_support_libcurl = false
 }
 
 player_framework_support_lowpower_av_defines = []
 
-if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
-  player_framework_support_lowpower_av_defines += [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
+if (player_framework_support_lowpower_av_sink &&
+    drivers_interface_lpplayer_flag) {
+  player_framework_support_lowpower_av_defines +=
+      [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
 }
 
 player_framework_defines = []
