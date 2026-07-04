@@ -20,6 +20,12 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaSourceNapi"};
 constexpr uint32_t MAX_MEDIA_STREAM_ARRAY_LENGTH = 10;
+constexpr int32_t ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE = 5411007;
+}
+
+static void ThrowError(napi_env env, int32_t code, const std::string &errMessage)
+{
+    napi_throw_error(env, std::to_string(code).c_str(), errMessage.c_str());
 }
 
 namespace OHOS {
@@ -39,6 +45,8 @@ napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
             nullptr, nullptr, nullptr, napi_writable, nullptr },
         {"createMediaSourceWithStreamData", nullptr, JsCreateMediaSourceWithStreamData,
             nullptr, nullptr, nullptr, napi_writable, nullptr },
+        {"createMediaSourceWithDirectory", nullptr, JsCreateMediaSourceWithDirectory,
+            nullptr, nullptr, nullptr, napi_writable, nullptr },    // 新增接口
     };
 
     napi_property_descriptor properties[] = {
@@ -141,7 +149,7 @@ void MediaSourceNapi::Destructor(napi_env env, void *nativeObject, void *finaliz
 
 napi_value MediaSourceNapi::JsCreateMediaSourceWithUrl(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsCreateMediaSourceWithUrl In");
+    MEDIA_LOGI("JsCreateMediaSourceWithUrl In");
     size_t argCount = 2;
     napi_value args[2] = { nullptr };
     napi_value jsMediaSource = nullptr;
@@ -313,6 +321,51 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithStreamData(napi_env env, napi
     }
     mediaSource->SetID(AVMediaSourceTmp::GenerateUniqueId());
     MEDIA_LOGD("JsCreateMediaSourceWithStreamData get mediaStreamVec length=%{public}u", length);
+    return jsMediaSource;
+}
+
+napi_value MediaSourceNapi::JsCreateMediaSourceWithDirectory(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGD("JsCreateMediaSourceWithDirectory In");
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+    napi_value jsMediaSource = nullptr;
+    napi_get_undefined(env, &jsMediaSource);
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
+    if (status != napi_ok) {
+        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "failed to napi_get_cb_info");
+        return nullptr;
+    }
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "Invalid parameter: directory path must be string");
+        return nullptr;
+    }
+
+    std::string directoryPath = CommonNapi::GetStringArgument(env, args[0]);
+    if (directoryPath.empty()) {
+        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "Directory path is empty");
+        return nullptr;
+    }
+
+    napi_value constructor = nullptr;
+    napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
+    if (ret != napi_ok || constructor == nullptr) {
+        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "failed to get constructor");
+        return nullptr;
+    }
+    napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
+
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("JsCreateMediaSourceWithDirectory GetMediaSource fail");
+        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "failed to create media source");
+        return nullptr;
+    }
+    mediaSource->directoryPath = directoryPath;
+    mediaSource->SetID(AVMediaSourceTmp::GenerateUniqueId());
+    MEDIA_LOGD("JsCreateMediaSourceWithDirectory path=%{public}s", mediaSource->directoryPath.c_str());
     return jsMediaSource;
 }
 

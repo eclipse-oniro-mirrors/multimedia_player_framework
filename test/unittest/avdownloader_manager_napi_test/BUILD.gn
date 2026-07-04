@@ -1,0 +1,63 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/test.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+module_output_path = "player_framework/player_framework/avdownloader"
+
+ohos_unittest("avdownloader_manager_napi_test") {
+  module_out_path = module_output_path
+
+  include_dirs = [
+    "../",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/avdownloader/include",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/avdownloader/src",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+  ]
+
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
+
+  defines = [ "MEDIA_OHOS" ]
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+  }
+
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock",
+    "hilog:libhilog",
+    "media_foundation:media_foundation",
+  ]
+
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
+
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/avdownloader/src/avdownloader_manager_napi.cpp",
+    "avdownloader_manager_napi_test.cpp",
+  ]
+
+  resource_config_file =
+      "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
+}

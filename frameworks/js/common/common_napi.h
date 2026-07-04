@@ -485,6 +485,7 @@ public:
     bool enable_ {false};
     AVFileDescriptor fd {};
     AVDataSrcDescriptor dataSrc {};
+    std::string directoryPath {};
 private:
     std::vector<AVPlayMediaStreamTmp> mediaStreamVec_;
 };

@@ -1,0 +1,68 @@
+# Copyright (C) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
+
+ohos_shared_library("media_av_downloader_manager") {
+  stack_protector_ret = true
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  include_dirs = [
+    MEDIA_ROOT_DIR,
+    "${MEDIA_ROOT_DIR}/services/services/media_source",
+    "${MEDIA_ROOT_DIR}/services/utils/include",
+    "${MEDIA_ROOT_DIR}/interfaces/inner_api/native",
+    "${MEDIA_ROOT_DIR}/services/services/media_source/net_downloader",
+    "${MEDIA_ROOT_DIR}/services/services/media_source/utils",
+  ]
+
+  defines = [ "MEDIA_OHOS" ]
+
+  sources = [
+    "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
+    "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
+    "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
+    "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+    "av_downloader_manager.cpp",
+    "source_parse_agent.cpp",
+  ]
+
+  deps = [
+    "${MEDIA_ROOT_DIR}/interfaces/inner_api/native:media_client",
+    "${MEDIA_ROOT_DIR}/services/services/media_source/net_downloader:media_client_net_downloader",
+    "${MEDIA_ROOT_DIR}/services/utils:media_service_utils",
+  ]
+
+  external_deps = [
+    "c_utils:utils",
+    "hilog:libhilog",
+    "media_foundation:media_foundation",
+    "netmanager_base:net_conn_manager_if",
+    "openssl:libcrypto_shared",
+    "zlib:shared_libz",
+  ]
+
+  defines += player_framework_defines
+  innerapi_tags = [ "platformsdk" ]
+  part_name = "player_framework"
+  subsystem_name = "multimedia"
+}

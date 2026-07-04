@@ -43,8 +43,13 @@ namespace MediaDownload {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "NetDownloaderDownloaderImpl"};
 constexpr int32_t MIN_URL_LENGTH = 10;
-constexpr int32_t HTTP_DISCONNECT = 56;
-constexpr int32_t HTTP_CAN_NOT_CONNECT = 7;
+constexpr std::array<int32_t, 5> HTTP_NETWORK_ERROR_CODES = {6, 7, 35, 55, 56};
+constexpr auto IsNetworkErrorCode = [](int32_t code) {
+    for (auto it : HTTP_NETWORK_ERROR_CODES) {
+        if (it == code) return true;
+    }
+    return false;
+};
 std::atomic<uint64_t> g_downloaderIdCounter{1};
 std::atomic<uint64_t> g_taskIdCounter{1};
 
@@ -714,7 +719,7 @@ void DownloaderImpl::OnCompleted(int64_t downloadedSize)
 void DownloaderImpl::OnFailed(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg)
 {
     MEDIA_LOGI("DownloaderImpl::OnFailed enter");
-    if (errorCode == HTTP_DISCONNECT || errorCode == HTTP_CAN_NOT_CONNECT) {    // 网络切换
+    if (IsNetworkErrorCode(errorCode)) {    // 网络切换
         Message msg;
         msg.type = MSG_TASK_NET_CHANGE;
         msg.errorType = errorType;

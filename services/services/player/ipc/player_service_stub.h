@@ -27,6 +27,7 @@
 namespace OHOS {
 namespace Media {
 using PlayerStubFunc = std::function<int32_t (MessageParcel &, MessageParcel &)>;
+struct AVMediaSourceParam;
 class PlayerServiceStub
     : public IRemoteStub<IStandardPlayerService>,
       public MonitorServerObject,
@@ -259,8 +260,10 @@ private:
     std::shared_ptr<AVMediaSource> CreateMediaSourceFromFd(const FileDescriptor &fileDesc);
     std::shared_ptr<AVMediaSource> CreateMediaSourceFromDataSource(
         const sptr<IRemoteObject> &dataSourceObject);
+    std::shared_ptr<AVMediaSource> CreateMediaSourceFromDirectory(const std::string &directoryPath);
     int32_t UpdateM3U8FdUrl(std::shared_ptr<AVMediaSource> &mediaSource, const std::string &mimeType, int32_t fd);
 
+    std::shared_ptr<AVMediaSource> CreateAVMediaSource(const AVMediaSourceParam& param);
     int32_t CheckandDoUnFreeze();
     std::map<uint32_t, std::pair<std::string, PlayerStubFunc>> playerFuncs_;
     void FillPlayerFuncPart1();

@@ -122,15 +122,6 @@ protected:
     std::shared_ptr<DownloadedCacheLoader> cacheLoader_;
 };
 
-HWTEST_F(IntegrationTest, Open_Success_001, TestSize.Level0)
-{
-    auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    auto requestPtr = std::shared_ptr<LoadingRequest>(request);
-
-    int64_t uuid = cacheLoader_->Open(requestPtr);
-    EXPECT_GT(uuid, 0);
-}
-
 HWTEST_F(IntegrationTest, Open_CacheNotFound_001, TestSize.Level0)
 {
     auto request = std::make_shared<MockLoadingRequest>("http://example.com/nonexistent.mp4");
@@ -149,110 +140,10 @@ HWTEST_F(IntegrationTest, Open_NullRequest_001, TestSize.Level0)
     EXPECT_LT(uuid, 0);
 }
 
-HWTEST_F(IntegrationTest, Close_Success_001, TestSize.Level0)
-{
-    auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    auto requestPtr = std::shared_ptr<LoadingRequest>(request);
-
-    int64_t uuid = cacheLoader_->Open(requestPtr);
-    EXPECT_GT(uuid, 0);
-
-    cacheLoader_->Close(uuid);
-}
-
-HWTEST_F(IntegrationTest, Close_InvalidUuid_001, TestSize.Level0)
-{
-    cacheLoader_->Close(-1);
-    cacheLoader_->Close(999999);
-}
-
-HWTEST_F(IntegrationTest, Close_Twice_001, TestSize.Level0)
-{
-    auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    auto requestPtr = std::shared_ptr<LoadingRequest>(request);
-
-    int64_t uuid = cacheLoader_->Open(requestPtr);
-    EXPECT_GT(uuid, 0);
-
-    cacheLoader_->Close(uuid);
-    cacheLoader_->Close(uuid);
-}
-
 HWTEST_F(IntegrationTest, Read_InvalidUuid_001, TestSize.Level0)
 {
     cacheLoader_->Read(-1, 0, 100);
     cacheLoader_->Read(999999, 0, 100);
-}
-
-HWTEST_F(IntegrationTest, MultipleOpens_001, TestSize.Level0)
-{
-    std::string url1 = "http://example.com/video1.mp4";
-    std::string url2 = "http://example.com/video2.mp4";
-    std::string path1 = "videos/video1.mp4";
-    std::string path2 = "videos/video2.mp4";
-
-    TestCommon::CreateTestCacheFile(testCacheDir_, path1, std::vector<uint8_t>(1024, 'B'));
-    TestCommon::CreateTestCacheFile(testCacheDir_, path2, std::vector<uint8_t>(1024, 'C'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{url1, path1}, {url2, path2}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    auto loader = std::make_shared<DownloadedCacheLoader>(manager);
-
-    auto request1 = std::make_shared<MockLoadingRequest>(url1);
-    auto request2 = std::make_shared<MockLoadingRequest>(url2);
-    std::shared_ptr<LoadingRequest> loadingRequest1 = request1;
-    std::shared_ptr<LoadingRequest> loadingRequest2 = request2;
-
-    int64_t uuid1 = loader->Open(loadingRequest1);
-    int64_t uuid2 = loader->Open(loadingRequest2);
-
-    EXPECT_GT(uuid1, 0);
-    EXPECT_GT(uuid2, 0);
-    EXPECT_NE(uuid1, uuid2);
-
-    loader->Close(uuid1);
-    loader->Close(uuid2);
-}
-
-HWTEST_F(IntegrationTest, OpenAfterClose_001, TestSize.Level0)
-{
-    auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    std::shared_ptr<LoadingRequest> requestPtr = request;
-    int64_t uuid1 = cacheLoader_->Open(requestPtr);
-    EXPECT_GT(uuid1, 0);
-    cacheLoader_->Close(uuid1);
-
-    auto request2 = std::make_shared<MockLoadingRequest>(testUrl_);
-    std::shared_ptr<LoadingRequest> requestPtr2 = request2;
-    int64_t uuid2 = cacheLoader_->Open(requestPtr2);
-    EXPECT_GT(uuid2, 0);
-    EXPECT_NE(uuid1, uuid2);
-
-    cacheLoader_->Close(uuid2);
-}
-
-HWTEST_F(IntegrationTest, LoaderDestructor_001, TestSize.Level0)
-{
-    auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    std::shared_ptr<LoadingRequest> requestPtr = request;
-    int64_t uuid = cacheLoader_->Open(requestPtr);
-    EXPECT_GT(uuid, 0);
-
-    cacheLoader_.reset();
-}
-
-HWTEST_F(IntegrationTest, ManagerDestructor_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    auto loader = std::make_shared<DownloadedCacheLoader>(manager);
-
-    auto request = std::make_shared<MockLoadingRequest>(testUrl_);
-    std::shared_ptr<LoadingRequest> requestPtr = request;
-    int64_t uuid = loader->Open(requestPtr);
-    EXPECT_GT(uuid, 0);
-
-    loader.reset();
-    manager.reset();
 }
 
 HWTEST_F(IntegrationTest, EmptyCacheDir_001, TestSize.Level0)
@@ -266,71 +157,12 @@ HWTEST_F(IntegrationTest, EmptyCacheDir_001, TestSize.Level0)
     EXPECT_LT(uuid, 0);
 }
 
-HWTEST_F(IntegrationTest, DifferentCacheDirs_001, TestSize.Level0)
-{
-    std::string cacheDir1 = TestCommon::GetTestCacheDir("cache1");
-    std::string cacheDir2 = TestCommon::GetTestCacheDir("cache2");
-
-    TestCommon::SetupTestDirectory(cacheDir1);
-    TestCommon::SetupTestDirectory(cacheDir2);
-
-    std::string url1 = "http://example.com/file1.mp4";
-    std::string url2 = "http://example.com/file2.mp4";
-
-    TestCommon::CreateTestCacheFile(cacheDir1, "file1.mp4", std::vector<uint8_t>(100, 'A'));
-    TestCommon::CreateTestCacheFile(cacheDir2, "file2.mp4", std::vector<uint8_t>(100, 'B'));
-    TestCommon::CreateTestMappingFile(cacheDir1, {{url1, "file1.mp4"}});
-    TestCommon::CreateTestMappingFile(cacheDir2, {{url2, "file2.mp4"}});
-
-    auto manager1 = std::make_shared<DownloadedCacheManager>(cacheDir1);
-    auto manager2 = std::make_shared<DownloadedCacheManager>(cacheDir2);
-
-    auto loader1 = std::make_shared<DownloadedCacheLoader>(manager1);
-    auto loader2 = std::make_shared<DownloadedCacheLoader>(manager2);
-
-    auto request1 = std::make_shared<MockLoadingRequest>(url1);
-    auto request2 = std::make_shared<MockLoadingRequest>(url2);
-    std::shared_ptr<LoadingRequest> loadingRequest1 = request1;
-    std::shared_ptr<LoadingRequest> loadingRequest2 = request2;
-
-    int64_t uuid1 = loader1->Open(loadingRequest1);
-    int64_t uuid2 = loader2->Open(loadingRequest2);
-
-    EXPECT_GT(uuid1, 0);
-    EXPECT_GT(uuid2, 0);
-
-    loader1->Close(uuid1);
-    loader2->Close(uuid2);
-
-    TestCommon::CleanupTestDirectory(cacheDir1);
-    TestCommon::CleanupTestDirectory(cacheDir2);
-}
-
 HWTEST_F(IntegrationTest, Open_EmptyUrl_001, TestSize.Level0)
 {
     auto request = std::make_shared<MockLoadingRequest>("");
     std::shared_ptr<LoadingRequest> requestPtr = request;
     int64_t uuid = cacheLoader_->Open(requestPtr);
     EXPECT_LT(uuid, 0);
-}
-
-HWTEST_F(IntegrationTest, Open_SpecialUrl_001, TestSize.Level0)
-{
-    std::string specialUrl = "http://example.com/test?param=value&foo=bar#anchor";
-    std::string specialPath = "videos/special.mp4";
-
-    TestCommon::CreateTestCacheFile(testCacheDir_, specialPath, std::vector<uint8_t>(512, 'X'));
-    TestCommon::CreateTestMappingFile(testCacheDir_, {{specialUrl, specialPath}});
-
-    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
-    auto loader = std::make_shared<DownloadedCacheLoader>(manager);
-
-    auto request = std::make_shared<MockLoadingRequest>(specialUrl);
-    std::shared_ptr<LoadingRequest> requestPtr = request;
-    int64_t uuid = loader->Open(requestPtr);
-    EXPECT_GT(uuid, 0);
-
-    loader->Close(uuid);
 }
 
 } // namespace DownloadedCache

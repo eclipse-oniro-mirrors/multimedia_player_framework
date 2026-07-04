@@ -553,22 +553,22 @@ int32_t HiPlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     MEDIA_LOG_I("SetMediaSource entered media source stream");
     CreatePlaybackInfo(CallType::AVPLAYER, appUid_, instanceId_);
     CreateStallingInfo(CallType::AVPLAYER, appUid_, instanceId_);
-    if (!ValidateAndInitMediaSource(mediaSource)) {
+    if (!ValidateAndInitMediaSource(mediaSource)) {     // 提取关键成员
         return MSERR_INVALID_VAL;
     }
     this->ExtractStrategyParams(strategy);
     SetFlvLiveParams(strategy);
     FALSE_RETURN_V(IsLivingMaxDelayTimeValid(), TransStatus(Status::ERROR_INVALID_PARAMETER));
  
-    if (HandleDataSource(mediaSource)) {
+    if (HandleDataSource(mediaSource)) {        // DataSource类型的源
         return playStatisticalInfo_.errCode;
     }
-    HandleFileDescriptor(mediaSource);
-    int32_t ret = HandleFileUrl();
+    HandleFileDescriptor(mediaSource);      // fd类型的源
+    int32_t ret = HandleFileUrl();      // 本地file类型的源
     if (ret != MSERR_OK) {
         return ret;
     }
-    DetermineSourceType();
+    DetermineSourceType();      // 标记源类型
     pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
     ret = TransStatus(Status::OK);
     playStatisticalInfo_.errCode = ret;

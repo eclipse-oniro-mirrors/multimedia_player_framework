@@ -38,6 +38,7 @@ declare_args() {
   player_framework_enable_start_stop_on_demand = false
   player_framework_support_lowpower_av_sink = false
   player_framework_support_media_madvise = false
+  player_framework_support_avdownloader = true
   player_framework_support_audio_convert = false
   drivers_interface_lpplayer_flag = false
   if (defined(build_seccomp) && build_seccomp) {
@@ -106,15 +107,18 @@ declare_args() {
 }
 
 player_framework_support_libcurl = true
-if (defined(global_parts_info) && defined(global_parts_info.multimedia_histreamer_ext)) {
+if (defined(global_parts_info) &&
+    defined(global_parts_info.multimedia_histreamer_ext)) {
   player_framework_support_libcurl = false
 }
 
 player_framework_support_lowpower_av_defines = []
- 
-if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
-  player_framework_support_lowpower_av_defines += [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
-} 
+
+if (player_framework_support_lowpower_av_sink &&
+    drivers_interface_lpplayer_flag) {
+  player_framework_support_lowpower_av_defines +=
+      [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
+}
 
 player_framework_defines = []
 
@@ -128,7 +132,7 @@ if (player_framework_support_lowpower_av_sink) {
   player_framework_defines += [ "SUPPORT_LPP" ]
   player_framework_defines += [ "SUPPORT_LPP_AUDIO_STRAMER" ]
   player_framework_defines += [ "SUPPORT_LPP_VIDEO_STRAMER" ]
-  if(drivers_interface_lpplayer_flag) {
+  if (drivers_interface_lpplayer_flag) {
     player_framework_defines += [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
   }
 } else {
@@ -260,6 +264,10 @@ if (player_framework_feature_pc_select_window ||
 
 if (player_framework_support_media_madvise) {
   player_framework_defines += [ "SUPPORT_MEDIA_MADVISE" ]
+}
+
+if (player_framework_support_avdownloader) {
+  player_framework_defines += [ "SUPPORT_AVDOWNLOADER" ]
 }
 
 # Config path

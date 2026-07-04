@@ -335,18 +335,29 @@ void DownloadTask::InitClient()
     SetClient(std::make_unique<NetworkClient>(url_, header_, config_.timeoutMs, config_.retryCount));
 }
 
-void DownloadTask::ExecuteDownload()
+int64_t DownloadTask::GetStartPosition()
 {
-    MEDIA_LOGI("ExecuteDownload start");
-
     int64_t startPos = 0;
-    if (resumePos_.load() > 0) {
+    bool isManifestFile = (url_.rfind(".m3u8") == url_.size() - 5 ||
+                           url_.rfind(".mpd") == url_.size() - 4);
+    if (isManifestFile) {
+        MEDIA_LOGI("DoPrepare: manifest file (.m3u8/.mpd), starting from 0");
+        startPos = 0;
+    } else if (resumePos_.load() > 0) {
         startPos = resumePos_.load();
         MEDIA_LOGI("DoPrepare: resuming from %{public}" PRId64, startPos);
     } else {
         startPos = GetFileSize(outputPath_);
         MEDIA_LOGI("DoPrepare: starting fresh, file size=%{public}" PRId64, startPos);
     }
+    return startPos;
+}
+
+void DownloadTask::ExecuteDownload()
+{
+    MEDIA_LOGI("ExecuteDownload start");
+
+    int64_t startPos = GetStartPosition();
 
     auto client = GetClient();
     int32_t setPathRet = client->SetOutputPath(outputPath_, startPos);

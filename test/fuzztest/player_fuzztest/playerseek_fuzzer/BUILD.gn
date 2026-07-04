@@ -42,13 +42,16 @@ ohos_fuzztest("PlayerSeekFuzzTest") {
       "playerseek_fuzzer.cpp",
     ]
   }
-  deps = [ "../../../../interfaces/inner_api/native:media_client" ]
+  deps = [
+    "../../../../interfaces/inner_api/native:media_client",
+    "../../../../services/services/media_source/net_downloader:media_client_net_downloader",
+  ]
   external_deps = [
     "c_utils:utils",
     "graphic_2d:librender_service_base",
+    "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "hilog:libhilog",
-    "graphic_2d:librender_service_client",
     "window_manager:libwm",
   ]
 }

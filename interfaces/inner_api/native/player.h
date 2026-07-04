@@ -169,6 +169,12 @@ public:
     {
         fileDescriptorSet_ = false;
     }
+    explicit AVMediaSource(const std::string& directoryPath): directoryPath_(directoryPath)     // 根据路径的构造函数
+    {
+        fileDescriptorSet_ = false;
+        dataSrcSet_ = false;
+    }
+
     ~AVMediaSource()
     {
         header.clear();

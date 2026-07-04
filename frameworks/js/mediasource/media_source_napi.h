@@ -49,8 +49,12 @@ private:
     /**
      * function createMediaSourceWithStreamData(streams: Array<MediaStream>): MediaSource;
      */
-
     static napi_value JsCreateMediaSourceWithStreamData(napi_env env, napi_callback_info info);
+
+    /**
+     * function createMediaSourceWithDirectory(path: string): MediaSource
+     */
+    static napi_value JsCreateMediaSourceWithDirectory(napi_env env, napi_callback_info info);
 
     /**
      * function EnableOfflineCache(enable: boolean): MediaSource;

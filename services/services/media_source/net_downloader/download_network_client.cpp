@@ -51,8 +51,13 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYE
 constexpr int32_t HTTP_OK = 200;
 constexpr int32_t HTTP_PARTIAL_CONTENT = 206;
 constexpr int32_t HTTP_RANGE_NOT_SATISFIABLE = 416;
-constexpr int32_t HTTP_DISCONNECT = 56;
-constexpr int32_t HTTP_CAN_NOT_CONNECT = 7;
+constexpr std::array<int32_t, 5> HTTP_NETWORK_ERROR_CODES = {6, 7, 35, 55, 56};
+constexpr auto IsNetworkErrorCode = [](int32_t code) {
+    for (auto it : HTTP_NETWORK_ERROR_CODES) {
+        if (it == code) return true;
+    }
+    return false;
+};
 }
 
 NetworkClient::NetworkClient(const std::string &url, const std::map<std::string, std::string> &header,
@@ -132,9 +137,9 @@ size_t NetworkClient::RxHeaderCallback(void* buffer, size_t size, size_t nitems,
     size_t dataLen = size * nitems;
     std::string headerStr(static_cast<const char*>(buffer), dataLen);
 
-    MEDIA_LOGD("RxHeaderCallback: header length=%{public}zu", dataLen);
-
+    MEDIA_LOGI("RxHeaderCallback: header length=%{public}zu", dataLen);
     std::lock_guard<std::mutex> lock(ctx->mutex);
+    ParseHttpStatusCode(ctx, headerStr);
     size_t pos = 0;
     size_t newlinePos = 0;
     while ((newlinePos = headerStr.find('\n', pos)) != std::string::npos) {
@@ -171,8 +176,24 @@ size_t NetworkClient::RxHeaderCallback(void* buffer, size_t size, size_t nitems,
 
     ctx->isHeaderReceived.store(true);
     ctx->cv.notify_one();
-
     return size * nitems;
+}
+
+void NetworkClient::ParseHttpStatusCode(DownloadContext* ctx, const std::string& headerStr)
+{
+    if (ctx->httpStatusCode.load() != 0) {
+        return;
+    }
+    size_t spacePos = headerStr.find(' ');
+    if (spacePos != std::string::npos && spacePos + 1 < headerStr.size()) {
+        std::string statusCodeStr = headerStr.substr(spacePos + 1, 3);
+        int32_t statusCode = 0;
+        auto [ptr, ec] = std::from_chars(statusCodeStr.data(), statusCodeStr.data() + 3, statusCode);
+        if (ec == std::errc{}) {
+            ctx->httpStatusCode.store(statusCode);
+            MEDIA_LOGI("RxHeaderCallback: HTTP status code = %{public}d", statusCode);
+        }
+    }
 }
 
 size_t NetworkClient::RxBodyCallback(void* buffer, size_t size, size_t nitems, void* userParam)
@@ -198,39 +219,72 @@ size_t NetworkClient::RxBodyCallback(void* buffer, size_t size, size_t nitems, v
         return 0;
     }
 
-    if (client->startPos_ > 0 && ctx->downloadedSize.load() == 0) {
-        auto rangeIt = ctx->responseHeaders.find("Content-Range");
-        if (rangeIt == ctx->responseHeaders.end()) {
-            MEDIA_LOGW("RxBodyCallback: server does not support range resume, truncating file");
-            if (ftruncate(ctx->outputFd, 0) != 0) {
-                MEDIA_LOGE("RxBodyCallback: failed to truncate file");
-                return 0;
-            }
-            lseek(ctx->outputFd, 0, SEEK_SET);
-            client->startPos_ = 0;
-        }
+    int32_t httpStatus = ctx->httpStatusCode.load();
+    if (httpStatus >= 400) {
+        MEDIA_LOGW("RxBodyCallback: HTTP error status=%{public}d, skip writing error body", httpStatus);
+        return dataLen;
+    }
+
+    if (!HandleRangeResume(ctx, client)) {
+        return 0;
     }
 
     MEDIA_LOGD("RxBodyCallback: data length=%{public}zu", dataLen);
 
-    if (ctx->outputFd >= 0) {
-        ssize_t writeLen = write(ctx->outputFd, buffer, dataLen);
-        if (writeLen < 0 || static_cast<size_t>(writeLen) != dataLen) {
-            MEDIA_LOGE("RxBodyCallback: write failed, errno=%{public}d", errno);
-            DownloadErrorType errorType = (errno == ENOSPC) ?
-                DOWNLOAD_ERROR_DISK_SPACE : DOWNLOAD_ERROR_FILE_IO;
+    return WriteData(ctx, client, buffer, dataLen);
+}
+
+bool NetworkClient::HandleRangeResume(DownloadContext* ctx, NetworkClient* client)
+{
+    if (client->startPos_ <= 0 || ctx->downloadedSize.load() != 0) {
+        return true;
+    }
+
+    auto rangeIt = ctx->responseHeaders.find("Content-Range");
+    if (rangeIt == ctx->responseHeaders.end()) {
+        MEDIA_LOGW("RxBodyCallback: server does not support range resume, truncating file");
+        if (ftruncate(ctx->outputFd, 0) != 0) {
+            MEDIA_LOGE("RxBodyCallback: failed to truncate file");
+            DownloadErrorType errorType = DOWNLOAD_ERROR_FILE_IO;
             if (client->errorCallback_) {
                 client->errorCallback_(errorType, errno);
             }
-            return 0;
+            return false;
         }
-        ctx->downloadedSize.fetch_add(dataLen);
-        if (client->progressCallback_) {
-            client->progressCallback_(ctx->downloadedSize.load() + client->startPos_,
-                client->totalSize_.load() + client->startPos_);
+        if (lseek(ctx->outputFd, 0, SEEK_SET) < 0) {
+            MEDIA_LOGE("RxBodyCallback: failed to seek file");
+            DownloadErrorType errorType = DOWNLOAD_ERROR_FILE_IO;
+            if (client->errorCallback_) {
+                client->errorCallback_(errorType, errno);
+            }
+            return false;
         }
+        client->startPos_ = 0;
+    }
+    return true;
+}
+
+size_t NetworkClient::WriteData(DownloadContext* ctx, NetworkClient* client, void* buffer, size_t dataLen)
+{
+    if (ctx->outputFd < 0) {
+        return dataLen;
     }
 
+    ssize_t writeLen = write(ctx->outputFd, buffer, dataLen);
+    if (writeLen < 0 || static_cast<size_t>(writeLen) != dataLen) {
+        MEDIA_LOGE("RxBodyCallback: write failed, errno=%{public}d", errno);
+        DownloadErrorType errorType = (errno == ENOSPC) ?
+            DOWNLOAD_ERROR_DISK_SPACE : DOWNLOAD_ERROR_FILE_IO;
+        if (client->errorCallback_) {
+            client->errorCallback_(errorType, errno);
+        }
+        return 0;
+    }
+    ctx->downloadedSize.fetch_add(dataLen);
+    if (client->progressCallback_) {
+        client->progressCallback_(ctx->downloadedSize.load() + client->startPos_,
+            client->totalSize_.load() + client->startPos_);
+    }
     return dataLen;
 }
 
@@ -258,7 +312,7 @@ void NetworkClient::InitDownloadContext(int64_t startPos)
     }
 
     ctx_->requestSuccess.store(false);
-    ctx_->requestCompleted.store(false);
+
     ctx_->totalSize.store(-1);
     ctx_->downloadedSize.store(0);
     ctx_->responseHeaders.clear();
@@ -328,6 +382,12 @@ int32_t NetworkClient::DoDownload(int64_t startPos)
     clientImpl->Close(false);
     CloseOutputFd();
     connected_.store(false);
+
+    if (ctx_->requestSuccess.load()) {
+        MEDIA_LOGI("DoDownload success: request completed successfully");
+        return DOWNLOAD_RET_OK;
+    }
+
     if (status != Status::OK) {
         MEDIA_LOGE("DoDownload failed: RequestData failed, status=%{public}d", static_cast<int>(status));
         return DOWNLOAD_ERROR_NETWORK;
@@ -353,17 +413,16 @@ void NetworkClient::HandleResponse(const int32_t clientCode, const int32_t serve
         clientCode, serverCode, static_cast<int>(ret));
 
     std::lock_guard<std::mutex> lock(ctx_->mutex);
-    ctx_->requestCompleted.store(true);
 
-    if (ret == Status::OK) {
-        if (clientCode == 0 || clientCode == HTTP_OK || clientCode == HTTP_PARTIAL_CONTENT) {
-            ProcessHttpSuccess(clientCode);
-        } else if (clientCode == HTTP_RANGE_NOT_SATISFIABLE && startPos_ > 0) {
-            ProcessHttp416RangeNotSatisfiable();
+    if (serverCode == HTTP_RANGE_NOT_SATISFIABLE && startPos_ > 0) {
+        ProcessHttp416RangeNotSatisfiable();
+    } else if (ret == Status::OK) {
+        if (serverCode == 0 || serverCode == HTTP_OK || serverCode == HTTP_PARTIAL_CONTENT) {
+            ProcessHttpSuccess(serverCode);
         } else {
-            ProcessHttpError(clientCode);
+            ProcessHttpError(serverCode);
         }
-    } else if (clientCode == HTTP_DISCONNECT || clientCode == HTTP_CAN_NOT_CONNECT) {
+    } else if (IsNetworkErrorCode(clientCode)) {
         ProcessHttpError(clientCode);
     } else {
         ProcessStatusError(ret);
@@ -384,45 +443,69 @@ void NetworkClient::ProcessHttp416RangeNotSatisfiable()
     MEDIA_LOGI("Response callback: 416 Range Not Satisfiable, checking file completeness");
     auto rangeIt = ctx_->responseHeaders.find("Content-Range");
     if (rangeIt == ctx_->responseHeaders.end()) {
-        MEDIA_LOGW("416 response: no Content-Range header");
+        Handle416WithoutContentRange();
+        return;
+    }
+
+    int64_t serverTotalSize = 0;
+    if (!ParseContentRangeTotalSize(rangeIt->second, serverTotalSize)) {
         ctx_->requestSuccess.store(false);
         if (errorCallback_) {
             errorCallback_(DOWNLOAD_ERROR_NETWORK, HTTP_RANGE_NOT_SATISFIABLE);
         }
         return;
     }
+    
+    CompareAndSetDownloadResult(serverTotalSize);
+}
 
-    std::string rangeValue = rangeIt->second;
+void NetworkClient::Handle416WithoutContentRange()
+{
+    MEDIA_LOGW("416 response: no Content-Range header");
+
+    if (startPos_ > 0) {
+        MEDIA_LOGI("416 without Content-Range: assuming download complete, local size: %{public}" PRId64, startPos_);
+        ctx_->requestSuccess.store(true);
+        ctx_->totalSize.store(startPos_);
+        return;
+    }
+
+    MEDIA_LOGE("416 without Content-Range on first download, resource may be unavailable");
+    ctx_->requestSuccess.store(false);
+    if (errorCallback_) {
+        errorCallback_(DOWNLOAD_ERROR_NETWORK, HTTP_RANGE_NOT_SATISFIABLE);
+    }
+}
+
+bool NetworkClient::ParseContentRangeTotalSize(const std::string& rangeValue, int64_t& serverTotalSize)
+{
     size_t slashPos = rangeValue.find('/');
     if (slashPos == std::string::npos) {
         MEDIA_LOGW("416 response: Content-Range format invalid");
-        ctx_->requestSuccess.store(false);
-        if (errorCallback_) {
-            errorCallback_(DOWNLOAD_ERROR_NETWORK, HTTP_RANGE_NOT_SATISFIABLE);
-        }
-        return;
+        return false;
     }
 
     std::string totalSizeStr = rangeValue.substr(slashPos + 1);
-    int64_t serverTotalSize = 0;
     auto [ptr, ec] = std::from_chars(totalSizeStr.data(), totalSizeStr.data() + totalSizeStr.size(), serverTotalSize);
     if (ec == std::errc{} && serverTotalSize > 0) {
         MEDIA_LOGI("Content-Range: %{public}s, server total size: %{public}" PRId64,
             rangeValue.c_str(), serverTotalSize);
-        if (serverTotalSize == startPos_) {
-            MEDIA_LOGI("416 response: local file size matches server, download complete");
-            ctx_->requestSuccess.store(true);
-            ctx_->totalSize.store(serverTotalSize);
-        } else {
-            MEDIA_LOGE("416 response: size mismatch, local: %{public}" PRId64 ", server: %{public}" PRId64,
-                startPos_, serverTotalSize);
-            ctx_->requestSuccess.store(false);
-            if (errorCallback_) {
-                errorCallback_(DOWNLOAD_ERROR_NETWORK, HTTP_RANGE_NOT_SATISFIABLE);
-            }
-        }
+        return true;
+    }
+
+    MEDIA_LOGW("416 response: failed to parse Content-Range total size");
+    return false;
+}
+
+void NetworkClient::CompareAndSetDownloadResult(int64_t serverTotalSize)
+{
+    if (serverTotalSize == startPos_) {
+        MEDIA_LOGI("416 response: local file size matches server, download complete");
+        ctx_->requestSuccess.store(true);
+        ctx_->totalSize.store(serverTotalSize);
     } else {
-        MEDIA_LOGW("416 response: failed to parse Content-Range total size");
+        MEDIA_LOGE("416 response: size mismatch, local: %{public}" PRId64 ", server: %{public}" PRId64,
+            startPos_, serverTotalSize);
         ctx_->requestSuccess.store(false);
         if (errorCallback_) {
             errorCallback_(DOWNLOAD_ERROR_NETWORK, HTTP_RANGE_NOT_SATISFIABLE);
@@ -503,14 +586,6 @@ void NetworkClient::SetProgressCallback(ProgressCallback cb)
 void NetworkClient::SetErrorCallback(ErrorCallback cb)
 {
     errorCallback_ = std::move(cb);
-}
-
-bool NetworkClient::IsRequestCompleted() const
-{
-    if (ctx_ != nullptr) {
-        return ctx_->requestCompleted.load();
-    }
-    return false;
 }
 
 bool NetworkClient::IsRequestSuccess() const

@@ -36,6 +36,13 @@ public:
     int64_t Open(std::shared_ptr<LoadingRequest>& request) override;
     void Read(int64_t uuid, int64_t requestedOffset, int64_t requestedLength) override;
     void Close(int64_t uuid) override;
+    std::string GetRootUrl() const
+    {
+        if (cacheManager_) {
+            return cacheManager_->GetRootUrl();
+        }
+        return "";
+    }
 
 private:
     std::shared_ptr<DownloadedCacheManager> cacheManager_;

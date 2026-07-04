@@ -1472,6 +1472,7 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     strategy_ = strategy;
 
     std::string uri = mediaSource_->url;
+    MEDIA_LOGI("server url: %{public}s", mediaSource_->url.c_str());
     std::string mimeType = mediaSource_->GetMimeType();
     size_t pos1 = uri.find("?");
     size_t pos2 = uri.find("offset=");

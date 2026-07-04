@@ -2566,6 +2566,9 @@ std::shared_ptr<AVMediaSource> AVPlayerNapi::GetAVMediaSource(napi_env env, napi
         std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, srcTmp->dataSrc.callback, false);
         dataSrcCb->SaveCallbackReference(READAT_CALLBACK_NAME, autoRef);
         mediaSource = std::make_shared<AVMediaSource>(dataSrcCb);
+    } else if (!srcTmp->directoryPath.empty()) {
+        MEDIA_LOGI("create AVMediaSource with directoryPath: %{public}s", srcTmp->directoryPath.c_str());
+        mediaSource = std::make_shared<AVMediaSource>(srcTmp->directoryPath);
     }
  
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, nullptr, "create mediaSource failed!");

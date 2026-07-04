@@ -15,14 +15,13 @@
 
 #include "cache_mapping_format.h"
 #include "path_validator.h"
-#include "common/log.h"
 #include "media_log.h"
 #include <fstream>
 #include <cstring>
 #include <zlib.h>
 
 namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheMappingSerializer"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DownloadedCacheMappingSerializer"};
 }
 
 namespace OHOS {
@@ -168,6 +167,51 @@ bool CacheMappingDeserializer::ValidateHeader(const CacheMappingHeader& header)
         return false;
     }
 
+    return true;
+}
+
+bool CacheMappingSerializer::WritePlaybackParamData(std::ofstream& file, const uint8_t* playbackParamData,
+    uint32_t playbackParamDataLength)
+{
+    if (!file.is_open()) {
+        MEDIA_LOGE("File stream is not open");
+        return false;
+    }
+
+    file.write(reinterpret_cast<const char*>(&playbackParamDataLength), sizeof(playbackParamDataLength));
+    if (playbackParamDataLength > 0 && playbackParamData != nullptr) {
+        file.write(reinterpret_cast<const char*>(playbackParamData), playbackParamDataLength);
+    }
+
+    if (!file) {
+        MEDIA_LOGE("Failed to write playback param data to file");
+        return false;
+    }
+    return true;
+}
+
+bool CacheMappingDeserializer::ReadPlaybackParamData(std::ifstream& file, std::vector<uint8_t>& playbackParamData)
+{
+    if (!file.is_open()) {
+        MEDIA_LOGE("File stream is not open");
+        return false;
+    }
+
+    uint32_t playbackParamDataLength = 0;
+    file.read(reinterpret_cast<char*>(&playbackParamDataLength), sizeof(playbackParamDataLength));
+    if (!file) {
+        MEDIA_LOGE("Failed to read playback param data length from file");
+        return false;
+    }
+
+    if (playbackParamDataLength > 0) {
+        playbackParamData.resize(playbackParamDataLength);
+        file.read(reinterpret_cast<char*>(playbackParamData.data()), playbackParamDataLength);
+        if (!file) {
+            MEDIA_LOGE("Failed to read playback param data from file");
+            return false;
+        }
+    }
     return true;
 }
 
