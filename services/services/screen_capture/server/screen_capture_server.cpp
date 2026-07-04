@@ -849,6 +849,8 @@ bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(int32_t appUid)
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureNewInstance()
 {
     MEDIA_LOGI("CreateScreenCaptureNewInstance");
+    CHECK_AND_RETURN_RET_LOG(CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid()), nullptr,
+        "CreateScreenCaptureNewInstance failed, reach session limit.");
     int32_t id = ScreenCaptureServer::gIdGenerator_.GetNewID();
     CHECK_AND_RETURN_RET_LOG(id != -1, nullptr, "GetNewID failed.");
     MEDIA_LOGI("CreateScreenCaptureNewInstance newId: %{public}d", id);
