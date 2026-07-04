@@ -271,7 +271,7 @@ ohos_shared_library("media_client") {
 
   public_external_deps = [
     "graphic_2d:color_manager",
-    "media_foundation",
+    "media_foundation:media_foundation",
   ]
 
   if (player_framework_support_video) {
@@ -279,7 +279,7 @@ ohos_shared_library("media_client") {
   }
 
   if (player_framework_support_drm) {
-    external_deps += [ "drm_framework" ]
+    external_deps += [ "drm_framework:drm_framework" ]
   }
 
   if (player_framework_support_hiappevent) {
