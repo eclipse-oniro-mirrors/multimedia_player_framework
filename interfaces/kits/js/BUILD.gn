@@ -136,9 +136,7 @@ ohos_shared_library("media") {
   }
 
   if (player_framework_support_avdownloader) {
-    sources += [
-      "${multimedia_player_framework_path}/frameworks/js/avdownloader/src/avdownloader_manager_napi.cpp",
-    ]
+    sources += [ "${multimedia_player_framework_path}/frameworks/js/avdownloader/src/avdownloader_manager_napi.cpp" ]
   }
 
   cflags = [
@@ -166,8 +164,8 @@ ohos_shared_library("media") {
 
   deps = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
     "//foundation/multimedia/player_framework/services/services/media_source/av_downloader_manager:media_av_downloader_manager",
+    "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
   if (player_framework_support_jssoundpool) {
@@ -195,7 +193,6 @@ ohos_shared_library("media") {
     "image_framework:image_native",
     "image_framework:ohimage",
     "image_framework:pixelmap",
-    "graphic_surface:surface",
     "ipc:ipc_core",
     "ipc:ipc_single",
     "libuv:uv",

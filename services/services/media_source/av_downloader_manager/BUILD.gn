@@ -35,31 +35,29 @@ ohos_shared_library("media_av_downloader_manager") {
     "${MEDIA_ROOT_DIR}/services/services/media_source/utils",
   ]
 
-  defines = [
-    "MEDIA_OHOS"
-  ]
+  defines = [ "MEDIA_OHOS" ]
 
   sources = [
-    "av_downloader_manager.cpp",
-    "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
     "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
-    "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
     "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
+    "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
+    "${MEDIA_ROOT_DIR}/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+    "av_downloader_manager.cpp",
     "source_parse_agent.cpp",
   ]
 
   deps = [
+    "${MEDIA_ROOT_DIR}/interfaces/inner_api/native:media_client",
     "${MEDIA_ROOT_DIR}/services/services/media_source/net_downloader:media_client_net_downloader",
     "${MEDIA_ROOT_DIR}/services/utils:media_service_utils",
-    "${MEDIA_ROOT_DIR}/interfaces/inner_api/native:media_client",
   ]
 
   external_deps = [
-    "hilog:libhilog",
     "c_utils:utils",
-    "openssl:libcrypto_shared",
+    "hilog:libhilog",
     "media_foundation:media_foundation",
     "netmanager_base:net_conn_manager_if",
+    "openssl:libcrypto_shared",
     "zlib:shared_libz",
   ]
 

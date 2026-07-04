@@ -17,149 +17,152 @@ import("//foundation/multimedia/player_framework/config.gni")
 module_output_path = "player_framework/player_framework/player_ipc"
 
 ohos_unittest("player_service_proxy_test") {
-    module_out_path = module_output_path
+  module_out_path = module_output_path
 
-    include_dirs = [
-        "../",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
-        "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-        "$MEDIA_PLAYER_ROOT_DIR/services/include",
-        "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
-    ]
+  include_dirs = [
+    "../",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+  ]
 
-    cflags = [
-        "-Wall",
-        "-Werror",
-        "-Dprivate=public",
-        "-Dprotected=public",
-    ]
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
 
-    defines = [ "MEDIA_OHOS" ]
+  defines = [ "MEDIA_OHOS" ]
 
-    sanitize = {
-        cfi = true
-        cfi_cross_dso = true
-    }
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+  }
 
-    external_deps = [
-        "c_utils:utils",
-        "hilog:libhilog",
-        "googletest:gmock",
-        "media_foundation:media_foundation",
-    ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock",
+    "hilog:libhilog",
+    "media_foundation:media_foundation",
+  ]
 
-    deps = [
-        "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
-        "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
-        "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
-        "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
-    ]
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
 
-    sources = [
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_stub.cpp",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_proxy.cpp",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
-        "player_service_proxy_test.cpp",
-    ]
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_proxy.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_stub.cpp",
+    "player_service_proxy_test.cpp",
+  ]
 
-    resource_config_file = "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
+  resource_config_file =
+      "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
 }
 
 ohos_unittest("player_service_stub_test") {
-    module_out_path = module_output_path
+  module_out_path = module_output_path
 
-    include_dirs = [
-        "../",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
-        "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-        "$MEDIA_PLAYER_ROOT_DIR/services/include",
-        "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
-    ]
+  include_dirs = [
+    "../",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+  ]
 
-    cflags = [
-        "-Wall",
-        "-Werror",
-        "-Dprivate=public",
-        "-Dprotected=public",
-    ]
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
 
-    defines = [ "MEDIA_OHOS" ]
+  defines = [ "MEDIA_OHOS" ]
 
-    sanitize = {
-        cfi = true
-        cfi_cross_dso = true
-    }
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+  }
 
-    external_deps = [
-        "c_utils:utils",
-        "hilog:libhilog",
-        "googletest:gmock",
-        "media_foundation:media_foundation",
-    ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock",
+    "hilog:libhilog",
+    "media_foundation:media_foundation",
+  ]
 
-    deps = [
-        "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
-        "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
-        "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
-        "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
-    ]
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
 
-    sources = [
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_stub.cpp",
-        "player_service_stub_test.cpp",
-    ]
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_stub.cpp",
+    "player_service_stub_test.cpp",
+  ]
 
-    resource_config_file = "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
+  resource_config_file =
+      "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
 }
 
 ohos_unittest("player_listener_test") {
-    module_out_path = module_output_path
+  module_out_path = module_output_path
 
-    include_dirs = [
-        "../",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
-        "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-        "$MEDIA_PLAYER_ROOT_DIR/services/include",
-        "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
-    ]
+  include_dirs = [
+    "../",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+  ]
 
-    cflags = [
-        "-Wall",
-        "-Werror",
-        "-Dprivate=public",
-        "-Dprotected=public",
-    ]
+  cflags = [
+    "-Wall",
+    "-Werror",
+    "-Dprivate=public",
+    "-Dprotected=public",
+  ]
 
-    defines = [ "MEDIA_OHOS" ]
+  defines = [ "MEDIA_OHOS" ]
 
-    sanitize = {
-        cfi = true
-        cfi_cross_dso = true
-    }
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+  }
 
-    external_deps = [
-        "c_utils:utils",
-        "hilog:libhilog",
-        "googletest:gmock",
-        "media_foundation:media_foundation",
-    ]
+  external_deps = [
+    "c_utils:utils",
+    "googletest:gmock",
+    "hilog:libhilog",
+    "media_foundation:media_foundation",
+  ]
 
-    deps = [
-        "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
-        "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
-        "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
-        "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
-    ]
+  deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+  ]
 
-    sources = [
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_proxy.cpp",
-        "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
-        "player_listener_test.cpp",
-    ]
+  sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_proxy.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
+    "player_listener_test.cpp",
+  ]
 
-    resource_config_file = "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
+  resource_config_file =
+      "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
 }

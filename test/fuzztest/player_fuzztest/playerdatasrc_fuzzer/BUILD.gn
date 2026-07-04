@@ -74,8 +74,8 @@ ohos_fuzztest("PlayerDataSrcFuzzTest") {
   deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/services/services:media_service",
-    "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
     "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader:media_client_net_downloader",
+    "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
   ]
   external_deps = [
     "av_codec:av_codec_client",
@@ -88,9 +88,9 @@ ohos_fuzztest("PlayerDataSrcFuzzTest") {
     "samgr:samgr_proxy",
   ]
 
-  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
-    external_deps += [
-      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
-    ]
+  if (player_framework_support_lowpower_av_sink &&
+      drivers_interface_lpplayer_flag) {
+    external_deps +=
+        [ "drivers_interface_lpplayer:liblow_power_player_proxy_1.0" ]
   }
 }

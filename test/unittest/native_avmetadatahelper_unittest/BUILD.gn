@@ -66,16 +66,29 @@ ohos_unittest("avmetadata_unittest") {
   ]
 
   sources = [
-    "src/avmetadata_unittest.cpp",
-    "mock/avsharedmemory_ipc.cpp",
     "../../../frameworks/native/avmetadatahelper/avmetadatahelper_impl.cpp",
     "../../../frameworks/native/media_source_loading_request/loading_request_impl.cpp",
     "../../../services/services/avmetadatahelper/client/avmetadatahelper_client.cpp",
     "../../../services/services/avmetadatahelper/ipc/helper_listener_stub.cpp",
-    "../../../services/services/media_data_source/ipc/media_data_source_stub.cpp",
     "../../../services/services/dolby_passthrough/ipc/dolby_passthrough_stub.cpp",
+    "../../../services/services/media_data_source/ipc/media_data_source_stub.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/path_validator.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
+    "../../../services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
     "../../../services/services/media_source/ipc/media_source_loader_stub.cpp",
     "../../../services/services/media_source/ipc/media_source_loading_request_proxy.cpp",
+    "../../../services/services/media_source/loader/cache_manager.cpp",
+    "../../../services/services/media_source/loader/custom_loader_callback.cpp",
+    "../../../services/services/media_source/loader/file_cache_manager.cpp",
+    "../../../services/services/media_source/loader/http_header_parser.cpp",
+    "../../../services/services/media_source/loader/media_loader.cpp",
+    "../../../services/services/media_source/loader/network_client_agent.cpp",
+    "../../../services/services/media_source/loader/request_handler.cpp",
     "../../../services/services/monitor/client/monitor_client.cpp",
     "../../../services/services/monitor/client/monitor_client_object.cpp",
     "../../../services/services/pcm_output/ipc/pcm_output_callback_stub.cpp",
@@ -87,36 +100,23 @@ ohos_unittest("avmetadata_unittest") {
     "../../../services/services/sa_media/ipc/media_listener_stub.cpp",
     "../../../services/services/sa_media/ipc/media_parcel.cpp",
     "../../../services/services/screen_capture/client/screen_capture_client.cpp",
-    "../../../services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
     "../../../services/services/screen_capture/client/screen_capture_controller_client.cpp",
+    "../../../services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
     "../../../services/services/screen_capture_monitor/client/screen_capture_monitor_client.cpp",
     "../../../services/services/screen_capture_monitor/ipc/screen_capture_monitor_listener_stub.cpp",
     "../../../services/services/transcoder/client/transcoder_client.cpp",
     "../../../services/services/transcoder/ipc/transcoder_listener_stub.cpp",
-    "../../../services/services/media_source/loader/cache_manager.cpp",
-    "../../../services/services/media_source/loader/file_cache_manager.cpp",
-    "../../../services/services/media_source/loader/media_loader.cpp",
-    "../../../services/services/media_source/loader/http_header_parser.cpp",
-    "../../../services/services/media_source/loader/request_handler.cpp",
-    "../../../services/services/media_source/loader/custom_loader_callback.cpp",
-    "../../../services/services/media_source/loader/network_client_agent.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/path_validator.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
+    "mock/avsharedmemory_ipc.cpp",
+    "src/avmetadata_unittest.cpp",
   ]
 
   external_deps = [
-    "access_token:libaccesstoken_sdk",
     "ability_runtime:ability_connect_callback_stub",
+    "access_token:libaccesstoken_sdk",
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
-    "call_manager:tel_call_manager_api",
     "c_utils:utils",
+    "call_manager:tel_call_manager_api",
     "common_event_service:cesfwk_innerkits",
     "core_service:tel_core_service_api",
     "drivers_interface_camera:metadata",
@@ -125,8 +125,8 @@ ohos_unittest("avmetadata_unittest") {
     "googletest:gmock_main",
     "graphic_2d:librender_service_base",
     "graphic_2d:librender_service_client",
-    "graphic_surface:sync_fence",
     "graphic_surface:surface",
+    "graphic_surface:sync_fence",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",
@@ -136,7 +136,6 @@ ohos_unittest("avmetadata_unittest") {
     "i18n:intl_util",
     "image_framework:image_native",
     "image_framework:pixelmap",
-    "napi:ace_napi",
     "init:libbegetutil",
     "ipc:ipc_single",
     "libxml2:libxml2",
@@ -144,6 +143,7 @@ ohos_unittest("avmetadata_unittest") {
     "memmgr:memmgrclient",
     "napi:ace_napi",
     "netmanager_base:net_security_config_if",
+    "openssl:libcrypto_shared",
     "os_account:os_account_innerkits",
     "qos_manager:concurrent_task_client",
     "qos_manager:qos",
@@ -152,14 +152,13 @@ ohos_unittest("avmetadata_unittest") {
     "samgr:samgr_proxy",
     "state_registry:tel_state_registry_api",
     "window_manager:libwm",
-    "openssl:libcrypto_shared",
     "zlib:shared_libz",
   ]
 
-  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
-    external_deps += [
-      "drivers_interface_lpplayer:liblow_power_player_stub_1.0",
-    ]
+  if (player_framework_support_lowpower_av_sink &&
+      drivers_interface_lpplayer_flag) {
+    external_deps +=
+        [ "drivers_interface_lpplayer:liblow_power_player_stub_1.0" ]
   }
 
   if (player_framework_support_drm) {
