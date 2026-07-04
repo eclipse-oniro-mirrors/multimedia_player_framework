@@ -2941,6 +2941,8 @@ int32_t ScreenCaptureServer::InitRecorder()
     }
     ON_SCOPE_EXIT(0) {
         recorder_->Release();
+        recorder_ = nullptr;
+        consumer_ = nullptr;
     };
     int32_t ret;
     AudioCaptureInfo audioInfo;
@@ -4809,8 +4811,10 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
 #endif
     AccountObserver::GetInstance().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
     if (screenCaptureObserverCb_) {
+        auto observerCb = screenCaptureObserverCb_;
+        screenCaptureObserverCb_ = nullptr;
         lock.unlock();
-        screenCaptureObserverCb_->Release();
+        observerCb->Release();
         lock.lock();
     }
     StopScreenCaptureInnerUnBind();
