@@ -181,7 +181,6 @@ public:
     bool IsInnerCaptureRunning();
     void SetInnerAudioCapture(std::shared_ptr<AudioCapturerWrapper> innerAudioCapture);
     int32_t StopInnerAudioCapture();
-    void ClearWindowIdList();
     void SetWindowIdList(uint64_t windowId);
     std::vector<int32_t> GetWindowIdList();
     void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
@@ -382,7 +381,6 @@ private:
     std::string liveViewText_;
     std::string liveViewSubText_;
     std::atomic<int32_t> micCount_{0};
-    std::atomic<bool> released_ = false;
     float density_ = 0.0f;
     int32_t capsuleVpSize_ = 18;
     int32_t capsulePxSize_ = 0;

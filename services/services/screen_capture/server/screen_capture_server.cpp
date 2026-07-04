@@ -136,7 +136,6 @@ const int32_t ScreenCaptureServer::maxSCServerDataTypePerUid_ = 2;
 std::atomic<int32_t> ScreenCaptureServer::systemScreenRecorderPid_ = -1;
 
 std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
-std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexSaAppInfoMapGlobal_;
 
 template <typename T> static std::string JoinVector(const std::vector<T> &vec, const std::string_view &separator = ",")
@@ -350,7 +349,6 @@ std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServer
 std::list<int32_t> ScreenCaptureServer::GetStartedScreenCaptureServerPidList()
 {
     std::list<int32_t> startedScreenCapturePidList{};
-    std::unique_lock<std::shared_mutex> lockList(ScreenCaptureServer::mutexListRWGlobal_);
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto sessionId: ScreenCaptureServer::startedSessionIDList_) {
         std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerById(sessionId);
@@ -364,7 +362,6 @@ std::list<int32_t> ScreenCaptureServer::GetStartedScreenCaptureServerPidList()
 int32_t ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(int32_t pid)
 {
     int32_t count = 0;
-    std::unique_lock<std::shared_mutex> lockList(ScreenCaptureServer::mutexListRWGlobal_);
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto sessionId: ScreenCaptureServer::startedSessionIDList_) {
         std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerById(sessionId);
@@ -377,14 +374,14 @@ int32_t ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(int32_t pid
 
 size_t ScreenCaptureServer::AddStartedSessionIdList(int32_t value)
 {
-    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     ScreenCaptureServer::startedSessionIDList_.push_back(value);
     return ScreenCaptureServer::startedSessionIDList_.size();
 }
 
 size_t ScreenCaptureServer::RemoveStartedSessionIdList(int32_t value)
 {
-    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     ScreenCaptureServer::startedSessionIDList_.remove(value);
     return ScreenCaptureServer::startedSessionIDList_.size();
 }
@@ -415,12 +412,6 @@ void ScreenCaptureServer::SetWindowIdList(uint64_t windowId)
     windowIdList_.push_back(static_cast<int32_t>(windowId));
 }
 
-void ScreenCaptureServer::ClearWindowIdList()
-{
-    std::unique_lock<std::shared_mutex> lock(windowIdListMutex_);
-    windowIdList_.clear();
-}
-
 std::vector<int32_t> ScreenCaptureServer::GetWindowIdList()
 {
     std::shared_lock<std::shared_mutex> lock(windowIdListMutex_);
@@ -435,13 +426,11 @@ bool ScreenCaptureServer::IsCaptureScreen(uint64_t displayId)
 
 void ScreenCaptureServer::SetCurDisplayId(uint64_t displayId)
 {
-    std::unique_lock<std::shared_mutex> lock(windowIdListMutex_);
     curWindowInDisplayId_ = displayId;
 }
 
 uint64_t ScreenCaptureServer::GetCurDisplayId()
 {
-    std::shared_lock<std::shared_mutex> lock(windowIdListMutex_);
     return curWindowInDisplayId_;
 }
 
@@ -861,8 +850,6 @@ bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(int32_t appUid)
 std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::CreateScreenCaptureNewInstance()
 {
     MEDIA_LOGI("CreateScreenCaptureNewInstance");
-    CHECK_AND_RETURN_RET_LOG(CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid()), nullptr,
-        "CreateScreenCaptureNewInstance failed, reach session limit.");
     int32_t id = ScreenCaptureServer::gIdGenerator_.GetNewID();
     CHECK_AND_RETURN_RET_LOG(id != -1, nullptr, "GetNewID failed.");
     MEDIA_LOGI("CreateScreenCaptureNewInstance newId: %{public}d", id);
@@ -1203,7 +1190,10 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
         return MSERR_UNKNOWN;
     }
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
-        ClearWindowIdList();
+        {
+            std::unique_lock<std::shared_mutex> lock(windowIdListMutex_);
+            windowIdList_.clear();
+        }
         SetWindowIdList(missionIds_.front());
         SetDefaultDisplayIdOfWindows();
         RegisterWindowRelatedListener();
@@ -2791,7 +2781,6 @@ void ScreenCaptureServer::UnRegisterLanguageSwitchListener()
         return;
     }
     EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
-    subscriber_ = nullptr;
 }
 
 int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
@@ -2942,7 +2931,6 @@ int32_t ScreenCaptureServer::InitRecorder()
     ON_SCOPE_EXIT(0) {
         recorder_->Release();
         recorder_ = nullptr;
-        consumer_ = nullptr;
     };
     int32_t ret;
     AudioCaptureInfo audioInfo;
@@ -4812,7 +4800,6 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     AccountObserver::GetInstance().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
     if (screenCaptureObserverCb_) {
         auto observerCb = screenCaptureObserverCb_;
-        screenCaptureObserverCb_ = nullptr;
         lock.unlock();
         observerCb->Release();
         lock.lock();
@@ -4995,13 +4982,6 @@ void ScreenCaptureServer::Release()
 void ScreenCaptureServer::ReleaseInner()
 {
     MediaTrace trace("ScreenCaptureServer::ReleaseInner");
-
-    bool expected = false;
-    if (!released_.compare_exchange_strong(expected, true)) {
-        MEDIA_LOGW("ReleaseInner: already released, skip duplicate cleanup");
-        return;
-    }
-
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner S", FAKE_POINTER(this));
     if (IsState(CAP_ALIVE)) {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -5017,12 +4997,9 @@ void ScreenCaptureServer::ReleaseInner()
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");
 
     watermarkCount_ = 0;
-    int32_t curSessionId = sessionId_;
-    int32_t curSaUid = saUid_;
+    RemoveSaAppInfoMap(saUid_);
+    RemoveScreenCaptureServerMap(sessionId_);
     sessionId_ = SESSION_ID_INVALID;
-    saUid_ = -1;
-    RemoveSaAppInfoMap(curSaUid);
-    RemoveScreenCaptureServerMap(curSessionId);
     MEDIA_LOGD("ReleaseInner removeMap success, mapSize: %{public}d",
         static_cast<int32_t>(ScreenCaptureServer::serverMap_.size()));
     skipPrivacyWindowIDsVec_.clear();
