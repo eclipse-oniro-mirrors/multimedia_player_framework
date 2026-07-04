@@ -60,8 +60,8 @@ public:
     static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id);
     static std::list<int32_t> GetStartedScreenCaptureServerPidList();
     static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid);
-    static void AddStartedSessionIdList(int32_t value);
-    static void RemoveStartedSessionIdList(int32_t value);
+    static size_t AddStartedSessionIdList(int32_t value);
+    static size_t RemoveStartedSessionIdList(int32_t value);
     static std::list<int32_t> GetAllStartedSessionIdList();
     static void AddSaAppInfoMap(int32_t saUid, int32_t curAppUid);
     static void RemoveSaAppInfoMap(int32_t saUid);

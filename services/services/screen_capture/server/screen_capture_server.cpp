@@ -375,16 +375,18 @@ int32_t ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(int32_t pid
     return count;
 }
 
-void ScreenCaptureServer::AddStartedSessionIdList(int32_t value)
+size_t ScreenCaptureServer::AddStartedSessionIdList(int32_t value)
 {
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
     ScreenCaptureServer::startedSessionIDList_.push_back(value);
+    return ScreenCaptureServer::startedSessionIDList_.size();
 }
 
-void ScreenCaptureServer::RemoveStartedSessionIdList(int32_t value)
+size_t ScreenCaptureServer::RemoveStartedSessionIdList(int32_t value)
 {
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
     ScreenCaptureServer::startedSessionIDList_.remove(value);
+    return ScreenCaptureServer::startedSessionIDList_.size();
 }
 
 std::list<int32_t> ScreenCaptureServer::GetAllStartedSessionIdList()
@@ -2547,9 +2549,9 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::START_SCREEN_CAPTURE;
     ResSchedReportData(value, payload);
     captureState_ = AVScreenCaptureState::STARTED;
-    AddStartedSessionIdList(this->sessionId_);
+    size_t listSize = AddStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("sessionId: %{public}d is pushed, now the size of startedSessionIDList_ is: %{public}d",
-        this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
+        this->sessionId_, static_cast<uint32_t>(listSize));
     SetSystemScreenRecorderStatus(true);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
     NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
@@ -4931,9 +4933,9 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     std::unordered_map<std::string, std::string> payload;
     int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::STOP_SCREEN_CAPTURE;
     ResSchedReportData(value, payload);
-    RemoveStartedSessionIdList(this->sessionId_);
+    size_t listSize = RemoveStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("PostStopScreenCapture sessionId: %{public}d is removed from list, list_size is %{public}d.",
-        this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
+        this->sessionId_, static_cast<uint32_t>(listSize));
     captureState_ = AVScreenCaptureState::STOPPED;
 }
 
