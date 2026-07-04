@@ -4995,8 +4995,10 @@ void ScreenCaptureServer::ReleaseInner()
 
     watermarkCount_ = 0;
     int32_t curSessionId = sessionId_;
+    int32_t curSaUid = saUid_;
     sessionId_ = SESSION_ID_INVALID;
-    RemoveSaAppInfoMap(saUid_);
+    saUid_ = -1;
+    RemoveSaAppInfoMap(curSaUid);
     RemoveScreenCaptureServerMap(curSessionId);
     MEDIA_LOGD("ReleaseInner removeMap success, mapSize: %{public}d",
         static_cast<int32_t>(ScreenCaptureServer::serverMap_.size()));
