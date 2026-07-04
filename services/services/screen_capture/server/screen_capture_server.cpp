@@ -4962,6 +4962,13 @@ void ScreenCaptureServer::Release()
 void ScreenCaptureServer::ReleaseInner()
 {
     MediaTrace trace("ScreenCaptureServer::ReleaseInner");
+
+    bool expected = false;
+    if (!released_.compare_exchange_strong(expected, true)) {
+        MEDIA_LOGW("ReleaseInner: already released, skip duplicate cleanup");
+        return;
+    }
+
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner S", FAKE_POINTER(this));
     if (IsState(CAP_ALIVE)) {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -4977,9 +4984,10 @@ void ScreenCaptureServer::ReleaseInner()
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");
 
     watermarkCount_ = 0;
-    RemoveSaAppInfoMap(saUid_);
-    RemoveScreenCaptureServerMap(sessionId_);
+    int32_t curSessionId = sessionId_;
     sessionId_ = SESSION_ID_INVALID;
+    RemoveSaAppInfoMap(saUid_);
+    RemoveScreenCaptureServerMap(curSessionId);
     MEDIA_LOGD("ReleaseInner removeMap success, mapSize: %{public}d",
         static_cast<int32_t>(ScreenCaptureServer::serverMap_.size()));
     skipPrivacyWindowIDsVec_.clear();

@@ -381,6 +381,7 @@ private:
     std::string liveViewText_;
     std::string liveViewSubText_;
     std::atomic<int32_t> micCount_{0};
+    std::atomic<bool> released_ = false;
     float density_ = 0.0f;
     int32_t capsuleVpSize_ = 18;
     int32_t capsulePxSize_ = 0;
