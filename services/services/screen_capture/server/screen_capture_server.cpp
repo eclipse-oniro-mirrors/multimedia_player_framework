@@ -1191,7 +1191,7 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     }
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
         {
-            std::unique_lock<std::shared_mutex> lock(windowIdListMutex_);
+            std::unique_lock<std::shared_mutex> lockList(windowIdListMutex_);
             windowIdList_.clear();
         }
         SetWindowIdList(missionIds_.front());
