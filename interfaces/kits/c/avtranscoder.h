@@ -40,6 +40,7 @@
 #ifndef MULTIMEDIA_PLAYER_FRAMEWORK_AVTRANSCODER_H
 #define MULTIMEDIA_PLAYER_FRAMEWORK_AVTRANSCODER_H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 #include "avtranscoder_base.h"
