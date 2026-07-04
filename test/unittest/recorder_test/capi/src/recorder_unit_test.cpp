@@ -1124,7 +1124,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Start_001, TestSize.Level2)
 
 /**
  * @tc.name: Recorder_Start_002
- * @tc.desc: Test recorder start process 002
+ * @tc.desc: Test recorder start  process 002
  * @tc.type: FUNC
  */
 HWTEST_F(NativeRecorderUnitTest, Recorder_Start_002, TestSize.Level2)
