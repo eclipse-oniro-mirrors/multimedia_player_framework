@@ -350,6 +350,7 @@ std::shared_ptr<ScreenCaptureServer> ScreenCaptureServer::GetScreenCaptureServer
 std::list<int32_t> ScreenCaptureServer::GetStartedScreenCaptureServerPidList()
 {
     std::list<int32_t> startedScreenCapturePidList{};
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto sessionId: ScreenCaptureServer::startedSessionIDList_) {
         std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerById(sessionId);
@@ -363,6 +364,7 @@ std::list<int32_t> ScreenCaptureServer::GetStartedScreenCaptureServerPidList()
 int32_t ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(int32_t pid)
 {
     int32_t count = 0;
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
     std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     for (auto sessionId: ScreenCaptureServer::startedSessionIDList_) {
         std::shared_ptr<ScreenCaptureServer> currentServer = GetScreenCaptureServerById(sessionId);
@@ -387,7 +389,6 @@ void ScreenCaptureServer::RemoveStartedSessionIdList(int32_t value)
 
 std::list<int32_t> ScreenCaptureServer::GetAllStartedSessionIdList()
 {
-    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
     return GetStartedScreenCaptureServerPidList();
 }
 
