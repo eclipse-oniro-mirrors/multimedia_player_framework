@@ -112,10 +112,10 @@ if (defined(global_parts_info) && defined(global_parts_info.multimedia_histreame
 }
 
 player_framework_support_lowpower_av_defines = []
- 
+
 if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
   player_framework_support_lowpower_av_defines += [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
-} 
+}
 
 player_framework_defines = []
 
@@ -129,7 +129,7 @@ if (player_framework_support_lowpower_av_sink) {
   player_framework_defines += [ "SUPPORT_LPP" ]
   player_framework_defines += [ "SUPPORT_LPP_AUDIO_STRAMER" ]
   player_framework_defines += [ "SUPPORT_LPP_VIDEO_STRAMER" ]
-  if(drivers_interface_lpplayer_flag) {
+  if (drivers_interface_lpplayer_flag) {
     player_framework_defines += [ "SUPPORT_DRIVERS_INTERFACE_LPPLAYER" ]
   }
 } else {
