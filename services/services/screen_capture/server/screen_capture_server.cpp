@@ -2742,7 +2742,13 @@ void ScreenCaptureServer::RegisterLanguageSwitchListener()
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent("usual.event.LOCALE_CHANGED");
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    auto onReceiveEvent = std::bind(&ScreenCaptureServer::OnReceiveEvent, this, std::placeholders::_1);
+    auto selfWeak = weak_from_this();
+    auto onReceiveEvent = [selfWeak](const EventFwk::CommonEventData &data) {
+        auto self = selfWeak.lock();
+        if (self) {
+            self->OnReceiveEvent(data);
+        }
+    };
     subscriber_ = std::make_shared<ScreenCaptureSubscriber>(
         subscribeInfo, onReceiveEvent);
     if (subscriber_ == nullptr) {
@@ -2769,6 +2775,7 @@ void ScreenCaptureServer::UnRegisterLanguageSwitchListener()
         return;
     }
     EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
+    subscriber_ = nullptr;
 }
 
 int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
