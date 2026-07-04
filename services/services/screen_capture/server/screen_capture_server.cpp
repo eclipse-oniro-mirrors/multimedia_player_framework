@@ -4689,7 +4689,7 @@ int32_t ScreenCaptureServer::StopVideoCapture()
 {
     MediaTrace trace("ScreenCaptureServer::StopVideoCapture");
     MEDIA_LOGI("StopVideoCapture");
-    if ((virtualScreenId_ < 0) || ((consumer_ == nullptr) && !isSurfaceMode_) || !isConsumerStart_) {
+    if ((virtualScreenId_ < 0) || ((consumer_ == nullptr) && !isSurfaceMode_)) {
         MEDIA_LOGI("StopVideoCapture IGNORED, video capture not start");
         CHECK_AND_RETURN_RET(surfaceCb_ != nullptr, MSERR_OK);
         (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->StopBufferThread();
