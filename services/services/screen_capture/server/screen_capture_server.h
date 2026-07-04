@@ -181,6 +181,7 @@ public:
     bool IsInnerCaptureRunning();
     void SetInnerAudioCapture(std::shared_ptr<AudioCapturerWrapper> innerAudioCapture);
     int32_t StopInnerAudioCapture();
+    void ClearWindowIdList();
     void SetWindowIdList(uint64_t windowId);
     std::vector<int32_t> GetWindowIdList();
     void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);

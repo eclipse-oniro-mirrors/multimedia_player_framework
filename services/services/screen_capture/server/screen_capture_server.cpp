@@ -415,8 +415,15 @@ void ScreenCaptureServer::SetWindowIdList(uint64_t windowId)
     windowIdList_.push_back(static_cast<int32_t>(windowId));
 }
 
+void ScreenCaptureServer::ClearWindowIdList()
+{
+    std::unique_lock<std::shared_mutex> lock(windowIdListMutex_);
+    windowIdList_.clear();
+}
+
 std::vector<int32_t> ScreenCaptureServer::GetWindowIdList()
 {
+    std::shared_lock<std::shared_mutex> lock(windowIdListMutex_);
     return windowIdList_;
 }
 
@@ -428,11 +435,13 @@ bool ScreenCaptureServer::IsCaptureScreen(uint64_t displayId)
 
 void ScreenCaptureServer::SetCurDisplayId(uint64_t displayId)
 {
+    std::unique_lock<std::shared_mutex> lock(windowIdListMutex_);
     curWindowInDisplayId_ = displayId;
 }
 
 uint64_t ScreenCaptureServer::GetCurDisplayId()
 {
+    std::shared_lock<std::shared_mutex> lock(windowIdListMutex_);
     return curWindowInDisplayId_;
 }
 
@@ -636,9 +645,10 @@ int32_t ScreenCaptureServer::RegisterWindowInfoChangedListener()
         "create new windowInfoChangedListener failed.");
     windowInfoChangedListener_ = listener;
     windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::WINDOW_ID);
-    CHECK_AND_RETURN_RET_LOG(!windowIdList_.empty(), MSERR_INVALID_OPERATION,
+    std::vector<int32_t> windowIdList = GetWindowIdList();
+    CHECK_AND_RETURN_RET_LOG(!windowIdList.empty(), MSERR_INVALID_OPERATION,
         "windowIdList is empty, AddInterestWindowId failed.");
-    windowInfoChangedListener_->AddInterestWindowId(windowIdList_.front());
+    windowInfoChangedListener_->AddInterestWindowId(windowIdList.front());
 
     std::unordered_set<Rosen::WindowInfoKey> observedInfo;
     observedInfo.insert(Rosen::WindowInfoKey::DISPLAY_ID);
@@ -674,7 +684,8 @@ int32_t ScreenCaptureServer::UnRegisterWindowInfoChangedListener()
 
 int32_t ScreenCaptureServer::RegisterWindowRelatedListener()
 {
-    int32_t ret = RegisterWindowLifecycleListener(windowIdList_);
+    std::vector<int32_t> windowIdListSnapshot = GetWindowIdList();
+    int32_t ret = RegisterWindowLifecycleListener(windowIdListSnapshot);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
         "RegisterWindowRelatedListener RegisterWindowLifecycleListener failed");
     ret = RegisterWindowInfoChangedListener();
@@ -708,7 +719,6 @@ void ScreenCaptureServer::OnWindowInfoChanged(const uint64_t &displayId)
 
 void ScreenCaptureServer::OnCaptureContentChanged(bool isMirrorChanged)
 {
-    std::shared_lock<std::shared_mutex> lock(windowIdListMutex_);
     MEDIA_LOGI("OnCaptureContentChanged, displayId: %{public}" PRIu64 " event: %{public}d, lifecycle: %{public}d",
         GetCurDisplayId(), static_cast<int32_t>(curWindowEvent_), static_cast<int32_t>(curWindowLifecycle_));
     if (!IsCaptureScreen(GetCurDisplayId())) {
@@ -736,7 +746,6 @@ void ScreenCaptureServer::OnCaptureContentChanged(bool isMirrorChanged)
 
 void ScreenCaptureServer::OnWindowLifecycle(SCWindowLifecycleListener::SessionLifecycleEvent event)
 {
-    std::shared_lock<std::shared_mutex> lock(windowIdListMutex_);
     switch (event) {
         case SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND: {
             MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::FOREGROUND");
@@ -1194,7 +1203,7 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
         return MSERR_UNKNOWN;
     }
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
-        windowIdList_.clear();
+        ClearWindowIdList();
         SetWindowIdList(missionIds_.front());
         SetDefaultDisplayIdOfWindows();
         RegisterWindowRelatedListener();
