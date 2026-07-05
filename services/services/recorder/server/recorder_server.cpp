@@ -720,9 +720,8 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
 
 int32_t RecorderServer::SetOutputFile(int32_t fd)
 {
-    int64_t curPos = lseek(fd, 0, SEEK_CUR);
-    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOutputFile in, fd: " PUBLIC_LOG_D32 ", lseek: "
-        PUBLIC_LOG_D64, FAKE_POINTER(this), fd, curPos);
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetOutputFile in, fd: %{public}d, lseek: %{public}" PRId64,
+        FAKE_POINTER(this), fd, lseek(fd, 0, SEEK_CUR));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");

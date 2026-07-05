@@ -351,8 +351,7 @@ int32_t RecorderClient::SetOutputFile(int32_t fd)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NO_MEMORY, "recorder service does not exist.");
 
-    int64_t curPos = lseek(fd, 0, SEEK_CUR);
-    MEDIA_LOGI("SetOutputFile fd: " PUBLIC_LOG_D32 ", lseek: " PUBLIC_LOG_D64, fd, curPos);
+    MEDIA_LOGI("SetOutputFile fd: %{public}d, lseek: %{public}" PRId64, fd, lseek(fd, 0, SEEK_CUR));
     return recorderProxy_->SetOutputFile(fd);
 }
 
