@@ -96,7 +96,7 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
         MEDIA_LOGI("TaskId: %{public}" PRIu64 ", has no more files to parse", downloaderId);
         taskInfo->parseCompleted = true;
     }
-    SubmitRemainingTasks(downloaderId, downloaderIter, taskInfo, manager);
+    SubmitRemainingTasks(downloaderIter, taskInfo, manager);
 }
 
 void DownloadTaskCallback::ProcessDownloadFinish(uint64_t downloaderId,
@@ -221,7 +221,7 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
     f.close();
 }
 
-void DownloadTaskCallback::SubmitRemainingTasks(uint64_t downloaderId,
+void DownloadTaskCallback::SubmitRemainingTasks(
     std::map<std::string, std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter,
     std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::shared_ptr<AVDownloaderManagerImpl> manager)
 {
