@@ -830,6 +830,8 @@ int32_t AVMetadataHelperImpl::SetSource(const std::shared_ptr<IMediaDataSource> 
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("AVMetadataHelperImpl:0x%{public}06" PRIXPTR " SetSource in(dataSrc)", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, MSERR_NO_MEMORY,
+        "avmetadatahelper service does not exist..");
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
 
     concurrentWorkCount_++;

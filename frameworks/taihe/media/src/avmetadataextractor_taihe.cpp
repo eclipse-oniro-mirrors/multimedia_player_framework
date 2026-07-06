@@ -447,8 +447,16 @@ void AVMetadataExtractorImpl::ReleaseSync()
     }
     if (state_ == OHOS::Media::HelperState::HELPER_STATE_RELEASED) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Has released once, can't release again.");
+        return;
+    }
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("Invalid AVMetadataExtractorTaihe.");
+        state_ = OHOS::Media::HelperState::HELPER_STATE_RELEASED;
+        return;
     }
     helper_->Release();
+    helper_ = nullptr;
+    state_ = OHOS::Media::HelperState::HELPER_STATE_RELEASED;
 }
 
 int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(int64_t timeUs)
