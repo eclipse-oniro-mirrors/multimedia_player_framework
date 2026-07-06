@@ -45,7 +45,7 @@ private:
     ~MediaDatashareObserverRegister();
     DISALLOW_COPY_AND_MOVE(MediaDatashareObserverRegister);
     std::mutex mutex_;
-    std::shared_ptr<DatashareObserver> datashareObserver_ = nullptr;
+    std::shared_ptr<MediaDatashareObserver> datashareObserver_ = nullptr;
 };
 
 int32_t UpdateSettingsValue(const std::string &key, const std::string &value);
