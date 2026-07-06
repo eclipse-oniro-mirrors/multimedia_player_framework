@@ -14,12 +14,17 @@
 */
 
 #include "media_server_subscriber.h"
-#include "media_server_datashare.h"
 #include "media_log.h"
 
 namespace {
 static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "MediaServerSubscriber"};
+static const int32_t MEDIA_SERVICE_SA_ID = 3002;
+static const std::string SETTINGS_DATA_BASE_URI =
+    "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
+static const std::string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
+static const std::string SETTINGS_DATA_FIELD_KEYWORD = "KEYWORD";
+static const std::string SETTINGS_DATA_FIELD_VALUE = "VALUE";
 }
 
 namespace OHOS {
@@ -75,6 +80,35 @@ void MediaServerSubscriberRegister::UnSubscribe()
     bool result = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
     MEDIA_LOGI("MediaServerSubscriberRegister::UnSubscribe result: %{public}d", result);
     subscriber_ = nullptr;
+}
+
+std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper()
+{
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    CHECK_AND_RETURN_RET_LOG(samgr != nullptr, nullptr, "GetSystemAbilityManager failed");
+    sptr<IRemoteObject> remoteObj = samgr->GetSystemAbility(MEDIA_SERVICE_SA_ID);
+    CHECK_AND_RETURN_RET_LOG(remoteObj != nullptr, nullptr, "GetSystemAbility service failed");
+    return DataShare::DataShareHelper::Creator(remoteObj, SETTINGS_DATA_BASE_URI, SETTINGS_DATA_EXT_URI);
+}
+
+int32_t UpdateSettingsValue(const std::string &key, const std::string &value)
+{
+    MEDIA_LOG_I("UpdateSettingsValue start key: %{public}s", key.c_str());
+    auto dataShareHelper = CreateDataShareHelper();
+    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, MSERR_INVALID_VAL, "dataShareHelper is nullptr");
+    Uri uri(SETTINGS_DATA_BASE_URI + "&key=" + key);
+    DataShare::DataSharePredicates predicates;
+    predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, key);
+    DataShare::DataShareValuesBucket bucket;
+    DataShare::DataShareValueObject keyObj(key);
+    DataShare::DataShareValueObject valueObj(value);
+    bucket.Put(SETTINGS_DATA_FIELD_KEYWORD, keyObj);
+    bucket.Put(SETTINGS_DATA_FIELD_VALUE, valueObj);
+    int32_t updateResult = dataShareHelper->Update(uri, predicates, bucket);
+    MEDIA_LOG_I("UpdateSettingsValue update %{public}d", updateResult);
+    dataShareHelper->NotifyChange(uri);
+    dataShareHelper->Release();
+    return updateResult;
 }
 } // namespace Media
 } // namespace OHOS

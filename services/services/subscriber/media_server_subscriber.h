@@ -20,6 +20,8 @@
 #include "common_event_manager.h"
 #include "common_event_support.h"
 #include "nocopyable.h"
+#include <cstdlib>
+#include <string>
 
 namespace OHOS {
 namespace Media {
@@ -45,6 +47,8 @@ private:
     std::mutex mutex_;
     std::shared_ptr<MediaServerSubscriber> subscriber_ = nullptr;
 };
+
+int32_t UpdateSettingsValue(const std::string &key, const std::string &value);
 } // namespace Media
 } // namespace OHOS
 #endif // MEDIA_SERVER_SUBSCRIBER_H
