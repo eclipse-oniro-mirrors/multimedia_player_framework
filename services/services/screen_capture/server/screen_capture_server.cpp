@@ -53,7 +53,7 @@
 #include "want_agent_helper.h"
 #include "common_event_manager.h"
 #include "screen_capture_record_display_listener.h"
-#include "media_server_subscriber.h"
+#include "datashare_observer.h"
 #ifdef PC_STANDARD
 #include "power_mgr_client.h"
 #include <parameters.h>

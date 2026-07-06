@@ -21,7 +21,7 @@
 #include "media_server_manager.h"
 #include "mem_mgr_client.h"
 #include "mem_mgr_proxy.h"
-#include "media_server_subscriber.h"
+#include "datashare_observer.h"
 #include "audio_background_adapter.h"
 #ifdef SUPPORT_CALL
 #include "incall_observer.h"
@@ -56,7 +56,7 @@ MediaServer::MediaServer(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate)
 {
 #ifdef SUPPORT_SCREEN_CAPTURE
-    MediaServerSubscriberRegister::GetInstance().Subscribe();
+    DatashareObserverRegister::GetInstance().Subscribe();
 #endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -64,7 +64,7 @@ MediaServer::MediaServer(int32_t systemAbilityId, bool runOnCreate)
 MediaServer::~MediaServer()
 {
 #ifdef SUPPORT_SCREEN_CAPTURE
-    MediaServerSubscriberRegister::GetInstance().UnSubscribe();
+    DatashareObserverRegister::GetInstance().UnSubscribe();
 #endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
