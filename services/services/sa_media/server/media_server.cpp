@@ -56,7 +56,7 @@ MediaServer::MediaServer(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate)
 {
 #ifdef SUPPORT_SCREEN_CAPTURE
-    DatashareObserverRegister::GetInstance().Subscribe();
+    MediaDatashareObserverRegister::GetInstance().Subscribe();
 #endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -64,7 +64,7 @@ MediaServer::MediaServer(int32_t systemAbilityId, bool runOnCreate)
 MediaServer::~MediaServer()
 {
 #ifdef SUPPORT_SCREEN_CAPTURE
-    DatashareObserverRegister::GetInstance().UnSubscribe();
+    MediaDatashareObserverRegister::GetInstance().UnSubscribe();
 #endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }

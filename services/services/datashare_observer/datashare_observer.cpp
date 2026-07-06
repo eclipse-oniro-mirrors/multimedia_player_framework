@@ -35,57 +35,57 @@ static const std::string SETTINGS_DATA_FIELD_VALUE = "VALUE";
 
 namespace OHOS {
 namespace Media {
-void DatashareObserver::OnReceiveEvent(const EventFwk::CommonEventData &data)
+void MediaDatashareObserver::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     auto const &want = data.GetWant();
     std::string action = want.GetAction();
-    MEDIA_LOGI("DatashareObserver::OnReceiveEvent action: %{public}s", action.c_str());
+    MEDIA_LOGI("MediaDatashareObserver::OnReceiveEvent action: %{public}s", action.c_str());
     CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
-    MEDIA_LOGI("DatashareObserver::HandleDataShareReadyEvent");
+    MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent");
     int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
-    MEDIA_LOGI("DatashareObserver::HandleDataShareReadyEvent update result: %{public}d", ret);
+    MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent update result: %{public}d", ret);
 }
 
-DatashareObserverRegister &DatashareObserverRegister::GetInstance()
+MediaDatashareObserverRegister &MediaDatashareObserverRegister::GetInstance()
 {
-    static DatashareObserverRegister instance;
+    static MediaDatashareObserverRegister instance;
     return instance;
 }
 
-DatashareObserverRegister::~DatashareObserverRegister()
+MediaDatashareObserverRegister::~MediaDatashareObserverRegister()
 {
-    MEDIA_LOGI("DatashareObserverRegister::~DatashareObserverRegister");
+    MEDIA_LOGI("MediaDatashareObserverRegister::~MediaDatashareObserverRegister");
     UnSubscribe();
 }
 
-bool DatashareObserverRegister::Subscribe()
+bool MediaDatashareObserverRegister::Subscribe()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("DatashareObserverRegister::Subscribe");
+    MEDIA_LOGI("MediaDatashareObserverRegister::Subscribe");
     if (datashareObserver_ != nullptr) {
-        MEDIA_LOGI("DatashareObserverRegister already subscribed");
+        MEDIA_LOGI("MediaDatashareObserverRegister already subscribed");
         return true;
     }
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    auto *tempObserver = new (std::nothrow) DatashareObserver(subscribeInfo);
+    auto *tempObserver = new (std::nothrow) MediaDatashareObserver(subscribeInfo);
     CHECK_AND_RETURN_RET_LOG(tempObserver != nullptr, false,
-        "DatashareObserverRegister::Subscribe failed to create observer");
+        "MediaDatashareObserverRegister::Subscribe failed to create observer");
     datashareObserver_ = std::shared_ptr<DatashareObserver>(tempObserver);
     bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(datashareObserver_);
-    MEDIA_LOGI("DatashareObserverRegister::Subscribe result: %{public}d", result);
+    MEDIA_LOGI("MediaDatashareObserverRegister::Subscribe result: %{public}d", result);
     return result;
 }
 
-void DatashareObserverRegister::UnSubscribe()
+void MediaDatashareObserverRegister::UnSubscribe()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("DatashareObserverRegister::UnSubscribe");
+    MEDIA_LOGI("MediaDatashareObserverRegister::UnSubscribe");
     CHECK_AND_RETURN_LOG(datashareObserver_ != nullptr,
-        "DatashareObserverRegister::UnSubscribe datashareObserver_ is null");
+        "MediaDatashareObserverRegister::UnSubscribe datashareObserver_ is null");
     bool result = EventFwk::CommonEventManager::UnSubscribeCommonEvent(datashareObserver_);
-    MEDIA_LOGI("DatashareObserverRegister::UnSubscribe result: %{public}d", result);
+    MEDIA_LOGI("MediaDatashareObserverRegister::UnSubscribe result: %{public}d", result);
     datashareObserver_ = nullptr;
 }
 

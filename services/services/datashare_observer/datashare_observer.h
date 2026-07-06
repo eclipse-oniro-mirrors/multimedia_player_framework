@@ -25,25 +25,25 @@
 
 namespace OHOS {
 namespace Media {
-class DatashareObserver : public EventFwk::CommonEventSubscriber {
+class MediaDatashareObserver : public EventFwk::CommonEventSubscriber {
 public:
-    explicit DatashareObserver(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
+    explicit MediaDatashareObserver(const EventFwk::CommonEventSubscribeInfo &subscribeInfo)
         : EventFwk::CommonEventSubscriber(subscribeInfo)
     {}
-    ~DatashareObserver() = default;
+    ~MediaDatashareObserver() = default;
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
 };
 
-class DatashareObserverRegister {
+class MediaDatashareObserverRegister {
 public:
-    static DatashareObserverRegister &GetInstance();
+    static MediaDatashareObserverRegister &GetInstance();
     bool Subscribe();
     void UnSubscribe();
 
 private:
-    DatashareObserverRegister() = default;
-    ~DatashareObserverRegister();
-    DISALLOW_COPY_AND_MOVE(DatashareObserverRegister);
+    MediaDatashareObserverRegister() = default;
+    ~MediaDatashareObserverRegister();
+    DISALLOW_COPY_AND_MOVE(MediaDatashareObserverRegister);
     std::mutex mutex_;
     std::shared_ptr<DatashareObserver> datashareObserver_ = nullptr;
 };
