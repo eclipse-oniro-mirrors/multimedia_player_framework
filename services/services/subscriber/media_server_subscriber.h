@@ -19,6 +19,7 @@
 #include "common_event_subscriber.h"
 #include "common_event_manager.h"
 #include "common_event_support.h"
+#include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
@@ -29,6 +30,20 @@ public:
     {}
     ~MediaServerSubscriber() = default;
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+};
+
+class MediaServerSubscriberRegister {
+public:
+    static MediaServerSubscriberRegister &GetInstance();
+    bool Subscribe();
+    void UnSubscribe();
+
+private:
+    MediaServerSubscriberRegister() = default;
+    ~MediaServerSubscriberRegister();
+    DISALLOW_COPY_AND_MOVE(MediaServerSubscriberRegister);
+    std::mutex mutex_;
+    std::shared_ptr<MediaServerSubscriber> subscriber_ = nullptr;
 };
 } // namespace Media
 } // namespace OHOS

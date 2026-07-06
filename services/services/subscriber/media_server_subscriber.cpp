@@ -34,5 +34,47 @@ void MediaServerSubscriber::OnReceiveEvent(const EventFwk::CommonEventData &data
     int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
     MEDIA_LOGI("MediaServerSubscriber::HandleDataShareReadyEvent update result: %{public}d", ret);
 }
+
+MediaServerSubscriberRegister &MediaServerSubscriberRegister::GetInstance()
+{
+    static MediaServerSubscriberRegister instance;
+    return instance;
+}
+
+MediaServerSubscriberRegister::~MediaServerSubscriberRegister()
+{
+    MEDIA_LOGI("MediaServerSubscriberRegister::~MediaServerSubscriberRegister");
+    UnSubscribe();
+}
+
+bool MediaServerSubscriberRegister::Subscribe()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("MediaServerSubscriberRegister::Subscribe");
+    if (subscriber_ != nullptr) {
+        MEDIA_LOGI("MediaServerSubscriberRegister already subscribed");
+        return true;
+    }
+    EventFwk::MatchingSkills matchingSkills;
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
+    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
+    auto *tempSubscriber = new (std::nothrow) MediaServerSubscriber(subscribeInfo);
+    CHECK_AND_RETURN_RET_LOG(tempSubscriber != nullptr, false,
+        "MediaServerSubscriberRegister::Subscribe failed to create subscriber");
+    subscriber_ = std::shared_ptr<MediaServerSubscriber>(tempSubscriber);
+    bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
+    MEDIA_LOGI("MediaServerSubscriberRegister::Subscribe result: %{public}d", result);
+    return result;
+}
+
+void MediaServerSubscriberRegister::UnSubscribe()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("MediaServerSubscriberRegister::UnSubscribe");
+    CHECK_AND_RETURN_LOG(subscriber_ != nullptr, "MediaServerSubscriberRegister::UnSubscribe subscriber_ is null");
+    bool result = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
+    MEDIA_LOGI("MediaServerSubscriberRegister::UnSubscribe result: %{public}d", result);
+    subscriber_ = nullptr;
+}
 } // namespace Media
 } // namespace OHOS
