@@ -168,7 +168,7 @@ void ScreenCaptureListenerStub::OnAudioBufferAvailable(bool isReady, AudioCaptur
         cb = callback_;
     }
     if (cb != nullptr) {
-        callback_->OnAudioBufferAvailable(isReady, type);
+        cb->OnAudioBufferAvailable(isReady, type);
     }
 }
 
@@ -180,7 +180,7 @@ void ScreenCaptureListenerStub::OnVideoBufferAvailable(bool isReady)
         cb = callback_;
     }
     if (cb != nullptr) {
-        callback_->OnVideoBufferAvailable(isReady);
+        cb->OnVideoBufferAvailable(isReady);
     }
 }
 
@@ -192,7 +192,7 @@ void ScreenCaptureListenerStub::OnStateChange(AVScreenCaptureStateCode stateCode
         cb = callback_;
     }
     if (cb != nullptr) {
-        callback_->OnStateChange(stateCode);
+        cb->OnStateChange(stateCode);
     }
 }
 
@@ -204,7 +204,7 @@ void ScreenCaptureListenerStub::OnDisplaySelected(uint64_t displayId)
         cb = callback_;
     }
     if (cb != nullptr) {
-        callback_->OnDisplaySelected(displayId);
+        cb->OnDisplaySelected(displayId);
     }
 }
 
@@ -217,7 +217,7 @@ void ScreenCaptureListenerStub::OnCaptureContentChanged(AVScreenCaptureContentCh
         cb = callback_;
     }
     if (cb != nullptr) {
-        callback_->OnCaptureContentChanged(event, area);
+        cb->OnCaptureContentChanged(event, area);
     }
 }
 
@@ -229,7 +229,7 @@ void ScreenCaptureListenerStub::OnUserSelected(ScreenCaptureUserSelectionInfo se
         cb = callback_;
     }
     if (cb != nullptr) {
-        callback_->OnUserSelected(selectionInfo);
+        cb->OnUserSelected(selectionInfo);
     }
 }
 
@@ -241,7 +241,7 @@ void ScreenCaptureListenerStub::OnPrivacyProtect(AVScreenCapturePrivacyProtect p
         cb = callback_;
     }
     if (cb != nullptr) {
-        callback_->OnPrivacyProtect(privacyProtect);
+        cb->OnPrivacyProtect(privacyProtect);
     }
 }
 } // namespace Media
