@@ -24,6 +24,7 @@
 #include <map>
 #include "av_downloader_manager.h"
 #include "av_downloader_manager_impl.h"
+#include "downloader_impl.h"
 #include "network_utils.h"
 
 namespace OHOS {
@@ -33,6 +34,36 @@ class MockAVDownloaderManagerCallback : public AVDownloaderManagerCallback {
 public:
     MOCK_METHOD(void, OnStatusChange, (const std::string &taskId, AVDownloadTaskState state), (override));
     MOCK_METHOD(void, OnProgressChange, (const std::string &taskId, double progress), (override));
+};
+
+class MockDownloader : public MediaDownload::Downloader {
+public:
+    MOCK_METHOD(uint64_t, GetDownloaderId, (), (override));
+    MOCK_METHOD(uint64_t, GetCurrentTaskId, (), (override));
+    MOCK_METHOD(int32_t, SetUrl, (const std::string &url), (override));
+    MOCK_METHOD(int32_t, SetOutputPath, (const std::string &path), (override));
+    MOCK_METHOD(int32_t, SetHeader, (const std::map<std::string, std::string> &header), (override));
+    MOCK_METHOD(int32_t, SetConfig, (const MediaDownload::DownloadConfig &config), (override));
+    MOCK_METHOD(int32_t, AddFileTask, (const std::string &url, const std::string &path,
+        const MediaDownload::DownloadConfig &config), (override));
+    MOCK_METHOD(int32_t, SetDownloadCallback,
+        (const std::shared_ptr<MediaDownload::DownloadCallback> &callback), (override));
+    MOCK_METHOD(int32_t, Start, (), (override));
+    MOCK_METHOD(int32_t, Pause, (), (override));
+    MOCK_METHOD(int32_t, Resume, (), (override));
+    MOCK_METHOD(int32_t, Cancel, (), (override));
+    MOCK_METHOD(int32_t, Release, (), (override));
+    MOCK_METHOD(MediaDownload::DownloadState, GetState, (), (override));
+    MOCK_METHOD(int32_t, GetProgress, (MediaDownload::DownloadProgress &progress), (override));
+    MOCK_METHOD(std::string, GetCurrentFilePath, (), (const, override));
+};
+
+class MockDownloaderImpl : public MediaDownload::DownloaderImpl {
+public:
+    MOCK_METHOD(int32_t, SetConfig, (const MediaDownload::DownloadConfig &config), (override));
+    MOCK_METHOD(int32_t, AddFileTask, (const std::string &url, const std::string &path,
+        const MediaDownload::DownloadConfig &config), (override));
+    MOCK_METHOD(int32_t, Start, (), (override));
 };
 
 class TestableAVDownloaderManager : public AVDownloaderManagerImpl {

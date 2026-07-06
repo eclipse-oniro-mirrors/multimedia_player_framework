@@ -53,6 +53,7 @@ struct AVDownloadTaskInfo {     // 对应DonwloaderImpl
     int32_t errorCode = 0;
     std::string errorMsg;
     bool protocolSniffed = false;       // 当前downloader是否已嗅探过
+    bool parseCompleted = false;        // ParseFiles解析完成标记，用于控制进度上报
     Plugins::HttpPlugin::StreamProtocolType detectedProtocol = Plugins::HttpPlugin::StreamProtocolType::HTTP;   // 协议类型
     std::map<std::string, DownloadFileInfo> fileList;       // 所有下载文件
     Plugins::PlayStrategy strategy;
@@ -81,6 +82,9 @@ private:
     void GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo);
     void SniffStreamProtocol(uint64_t downloaderId, const MediaDownload::DownloadProgress &progress,
         std::string currentFilePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo);
+    void SubmitRemainingTasks(uint64_t downloaderId,
+        std::map<std::string, std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter,
+        std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::shared_ptr<AVDownloaderManagerImpl> manager);
     std::weak_ptr<AVDownloaderManagerImpl> manager_;
 };
 

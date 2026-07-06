@@ -83,20 +83,20 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
     for (const auto& fileInfo : filesToAdd) {
         taskInfo->fileList.emplace(fileInfo.url, fileInfo);
     }
-    auto downloader = std::static_pointer_cast<MediaDownload::DownloaderImpl>(downloaderIter->second);
-    MediaDownload::DownloadConfig config;
-    config.timeoutMs = manager->requestTimeoutMs_;
-    config.allowMobileData = manager->allowCellularAccess_;
-    config.allowWifi = true;
+
+    // 检查是否还有需要解析的文件（如HLS子列表），若无则标记完成
+    bool hasMoreToParse = false;
     for (const auto& pair : taskInfo->fileList) {
-        const auto& fileInfo = pair.second;
-        if (fileInfo.downloaded) {      // 已下载的跳过
-            continue;
+        if (pair.second.needParse) {
+            hasMoreToParse = true;
+            break;
         }
-        downloader->SetConfig(config);
-        downloader->AddFileTask(fileInfo.url, fileInfo.filePath, config);
     }
-    (void)downloader->Start();
+    if (!hasMoreToParse) {
+        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", has no more files to parse", downloaderId);
+        taskInfo->parseCompleted = true;
+    }
+    SubmitRemainingTasks(downloaderId, downloaderIter, taskInfo, manager);
 }
 
 void DownloadTaskCallback::ProcessDownloadFinish(uint64_t downloaderId,
@@ -221,6 +221,26 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
     f.close();
 }
 
+void DownloadTaskCallback::SubmitRemainingTasks(uint64_t downloaderId,
+    std::map<std::string, std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter,
+    std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::shared_ptr<AVDownloaderManagerImpl> manager)
+{
+    auto downloader = std::static_pointer_cast<MediaDownload::DownloaderImpl>(downloaderIter->second);
+    MediaDownload::DownloadConfig config;
+    config.timeoutMs = manager->requestTimeoutMs_;
+    config.allowMobileData = manager->allowCellularAccess_;
+    config.allowWifi = true;
+    for (const auto& pair : taskInfo->fileList) {
+        const auto& fileInfo = pair.second;
+        if (fileInfo.downloaded) {
+            continue;
+        }
+        downloader->SetConfig(config);
+        downloader->AddFileTask(fileInfo.url, fileInfo.filePath, config);
+    }
+    (void)downloader->Start();
+}
+
 void DownloadTaskCallback::OnFailed(uint64_t downloaderId, MediaDownload::DownloadErrorType errorType,
     int32_t errorCode, const std::string &errorMsg)
 {
@@ -264,15 +284,12 @@ void DownloadTaskCallback::OnProgress(uint64_t downloaderId, const MediaDownload
     if (taskIter == manager->taskMap_.end()) {
         return;
     }
-    for (auto& pair : taskIter->second->fileList) {
-        if (pair.second.needParse) {
-            MEDIA_LOGI("OnProgress TaskId: %{public}" PRIu64 " not parse finished", downloaderId);
-            return;
-        }
-    }
-
-    manager->NotifyProgressChange(std::to_string(downloaderId), progressValue);
     auto& taskInfo = taskIter->second;
+    bool shouldReportProgress = taskInfo->parseCompleted ||
+        (taskInfo->protocolSniffed && taskInfo->detectedProtocol == Plugins::HttpPlugin::StreamProtocolType::HTTP);
+    if (shouldReportProgress) {
+        manager->NotifyProgressChange(std::to_string(downloaderId), progressValue);
+    }
     if (taskInfo->protocolSniffed) {
         return;
     }
