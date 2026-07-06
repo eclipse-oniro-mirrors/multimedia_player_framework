@@ -15,6 +15,12 @@
 
 #include "datashare_observer.h"
 #include "media_log.h"
+#include "media_utils.h"
+#include "media_log.h"
+#include "datashare_helper.h"
+#include "uri.h"
+#include "iservice_registry.h"
+#include "system_ability_definition.h"
 
 namespace {
 static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
