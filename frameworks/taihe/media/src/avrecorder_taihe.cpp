@@ -97,32 +97,6 @@ RetInfo GetRetInfo(int32_t errCode, const std::string &operate, const std::strin
     return RetInfo(err, message);
 }
 
-void SetRetInfoError(int32_t errCode, const std::string &operate,
-    const std::string &param, const std::string &add = "")
-{
-    MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
-    MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
-    if (errCode == MSERR_UNSUPPORT_VID_PARAMS) {
-        set_business_error(err, "The video parameter is not supported. Please check the type and range.");
-        return;
-    }
-
-    if (errCode == MSERR_UNSUPPORT_AUD_PARAMS) {
-        set_business_error(err, "The audio parameter is not supported. Please check the type and range.");
-        return;
-    }
-
-    std::string message;
-    if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
-        message = MSExtErrorAPI9ToString(err, param, "") + add;
-    } else {
-        message = MSExtErrorAPI9ToString(err, operate, "") + add;
-    }
-
-    MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
-    set_business_error(err, message);
-}
-
 void AVRecorderImpl::PrepareSync(ohos::multimedia::media::AVRecorderConfig const& config)
 {
     MediaTrace trace("AVRecorder::PrepareSync");
@@ -2166,7 +2140,7 @@ void AVRecorderImpl::OffPhotoAssetAvailable(optional_view<callback<void(uintptr_
         "type must be error, stateChange or audioCapturerChange.");
 }
 
-void AVRecorderImpl::AddWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
+int32_t AVRecorderImpl::AddWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
     ::ohos::multimedia::media::WatermarkConfiguration const& config)
 {
     MediaTrace trace("AVRecorder::AddWatermarkSync");
@@ -2175,8 +2149,9 @@ void AVRecorderImpl::AddWatermarkSync(::ohos::multimedia::image::image::weak::Pi
 
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
     asyncCtx->taihe = this;
-    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
- 
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, -1, "taskQue is nullptr!");
+
+    int32_t watermarkCount = 0;
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         if (asyncCtx->taihe->GetAddWatermarkParameter(asyncCtx, watermark, config) == MSERR_OK) {
             asyncCtx->task_ = AddWatermarkTask(asyncCtx);
@@ -2190,31 +2165,79 @@ void AVRecorderImpl::AddWatermarkSync(::ohos::multimedia::image::image::weak::Pi
         auto result = asyncCtx->task_->GetResult();
         if (result.Value().first != MSERR_EXT_API9_OK) {
             set_business_error(result.Value().first, result.Value().second);
+        } else {
+            watermarkCount = asyncCtx->addWatermarkCount_;
         }
     }
     asyncCtx.release();
- 
+
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+    return watermarkCount;
 }
  
-int32_t AVRecorderImpl::GetAddWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
-    ::ohos::multimedia::image::image::weak::PixelMap watermark,
-    ::ohos::multimedia::media::WatermarkConfiguration const& config)
+int32_t AVRecorderImpl::GetAddWatermarkPixelMap(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+    ::ohos::multimedia::image::image::weak::PixelMap watermark)
 {
     asyncCtx->pixelMap_ = Image::PixelMapImpl::GetPixelMap(watermark);
     CHECK_AND_RETURN_RET(asyncCtx->pixelMap_ != nullptr,
         (SetRetInfoError(MSERR_INVALID_VAL, "GetAddWatermarkPixelMap", "PixelMap"), MSERR_INVALID_VAL));
- 
+
+    CHECK_AND_RETURN_RET(asyncCtx->pixelMap_->GetWidth() > 0
+        && asyncCtx->pixelMap_->GetWidth() <= AVRECORDER_WATERMARK_MAX_LENGTH,
+        (SetRetInfoError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetAddWatermarkPixelMap",
+            "pixelMap Width", "width of pixelmap must be greater than zero and less than 4097"),
+            MSERR_PARAMETER_VERIFICATION_FAILED));
+    CHECK_AND_RETURN_RET(asyncCtx->pixelMap_->GetHeight() > 0
+        && asyncCtx->pixelMap_->GetHeight() <= AVRECORDER_WATERMARK_MAX_LENGTH,
+        (SetRetInfoError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetAddWatermarkPixelMap",
+            "pixelMap Height", "height of pixelmap must be greater than zero and less than 4097"),
+            MSERR_PARAMETER_VERIFICATION_FAILED));
+    return MSERR_OK;
+}
+
+int32_t AVRecorderImpl::GetAddWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+    ::ohos::multimedia::media::WatermarkConfiguration const& config)
+{
     asyncCtx->watermarkConfiguration_ = std::make_shared<WatermarkConfiguration>();
+    CHECK_AND_RETURN_RET(asyncCtx->watermarkConfiguration_,
+        (SetRetInfoError(MSERR_NO_MEMORY, "GetAddWatermarkConfig", "WatermarkConfiguration"), MSERR_NO_MEMORY));
+
     asyncCtx->watermarkConfiguration_->top = config.top;
-    CHECK_AND_RETURN_RET(asyncCtx->watermarkConfiguration_->top >= 0,
-        (SetRetInfoError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetAddWatermarkParameter", "top",
-            "config top cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
- 
     asyncCtx->watermarkConfiguration_->left = config.left;
-    CHECK_AND_RETURN_RET(asyncCtx->watermarkConfiguration_->left >= 0,
-        (SetRetInfoError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetAddWatermarkParameter", "left",
-            "config left cannot be null or less than zero"), MSERR_PARAMETER_VERIFICATION_FAILED));
+
+    int32_t inputWidth = config.width.value_or(-1);
+    int32_t inputHeight = config.height.value_or(-1);
+
+    if (config.width.has_value()) {
+        CHECK_AND_RETURN_RET(inputWidth > 0 && inputWidth <= AVRECORDER_WATERMARK_MAX_LENGTH,
+            (SetRetInfoError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetAddWatermarkConfig",
+                "width", "width of watermarkConfig must be greater than zero and less than 4097"),
+                MSERR_PARAMETER_VERIFICATION_FAILED));
+    }
+
+    if (config.height.has_value()) {
+        CHECK_AND_RETURN_RET(inputHeight > 0 && inputHeight <= AVRECORDER_WATERMARK_MAX_LENGTH,
+            (SetRetInfoError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetAddWatermarkConfig",
+                "height", "height of watermarkConfig must be greater than zero and less than 4097"),
+                MSERR_PARAMETER_VERIFICATION_FAILED));
+    }
+    asyncCtx->watermarkConfiguration_->width = inputWidth;
+    asyncCtx->watermarkConfiguration_->height = inputHeight;
+
+    MEDIA_LOGI("watermarkConfig_ top %{public}d, left %{public}d, width %{public}d, height %{public}d",
+        asyncCtx->watermarkConfiguration_->top, asyncCtx->watermarkConfiguration_->left,
+        asyncCtx->watermarkConfiguration_->width, asyncCtx->watermarkConfiguration_->height);
+    return MSERR_OK;
+}
+
+int32_t AVRecorderImpl::GetAddWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+    ::ohos::multimedia::image::image::weak::PixelMap watermark,
+    ::ohos::multimedia::media::WatermarkConfiguration const& config)
+{
+    int32_t ret = GetAddWatermarkPixelMap(asyncCtx, watermark);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetAddWatermarkPixelMap");
+    ret = GetAddWatermarkConfig(asyncCtx, config);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetAddWatermarkConfig");
     return MSERR_OK;
 }
  
@@ -2241,47 +2264,66 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::AddWatermarkTask(
     });
 }
  
-int32_t AVRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
-    std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
+int32_t AVRecorderImpl::CreateWatermarkBuffer(std::shared_ptr<PixelMap> &pixelMap,
+    int32_t pixelMapWidth, int32_t pixelMapHeight, std::shared_ptr<OHOS::Media::AVBuffer> &buffer)
 {
-    int32_t pixelMapWidth = pixelMap->GetWidth();
-    int32_t pixelMapHeight = pixelMap->GetHeight();
-    int32_t pixelMapRowStride = pixelMap->GetRowStride();
-    MEDIA_LOGI("pixelMap Width: %{public}d, height: %{public}d, adjust Width: %{public}d, adjust height: %{public}d, "
-        "pixelformat %{public}d, RowStride %{public}d", pixelMapWidth, pixelMapHeight,
-        watermarkConfig->width, watermarkConfig->height, pixelMap->GetPixelFormat(), pixelMapRowStride);
-    CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == OHOS::Media::PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
-        "Invalid pixel format");
-
-    CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapRowStride > 0 &&
-        pixelMapHeight <= MAX_WATERMARK_SIZE / pixelMapRowStride, MSERR_INVALID_VAL, "Invalid data size");
-    int32_t dataSize = pixelMapHeight * pixelMapRowStride;
+    int32_t dataSize = pixelMapHeight * pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(dataSize > 0 && dataSize <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL, "Invalid data size");
 
     std::vector<uint8_t> dataBuffer(dataSize);
- 
     errno_t err = memcpy_s(dataBuffer.data(), dataSize, pixelMap->GetPixels(), dataSize);
     CHECK_AND_RETURN_RET_LOG(err == 0, MSERR_INVALID_VAL, "memcpy_s failed with error: %{public}d", err);
- 
+
     auto allocator = OHOS::Media::AVAllocatorFactory::CreateSharedAllocator(
         OHOS::Media::MemoryFlag::MEMORY_READ_WRITE);
     CHECK_AND_RETURN_RET_LOG(allocator != nullptr, MSERR_INVALID_OPERATION, "Failed to create allocator");
- 
-    auto buffer = OHOS::Media::AVBuffer::CreateAVBuffer(allocator, dataSize);
+
+    buffer = OHOS::Media::AVBuffer::CreateAVBuffer(allocator, dataSize);
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_OPERATION, "Failed to create AVBuffer");
- 
     CHECK_AND_RETURN_RET_LOG(buffer->memory_ != nullptr, MSERR_INVALID_OPERATION, "AVBuffer memory is null");
     CHECK_AND_RETURN_RET_LOG(buffer->meta_ != nullptr, MSERR_INVALID_OPERATION, "AVBuffer meta is null");
- 
+
     bool writeRet = buffer->memory_->Write(dataBuffer.data(), dataSize, 0);
     CHECK_AND_RETURN_RET_LOG(writeRet, MSERR_INVALID_OPERATION, "Failed to write data to AVBuffer");
- 
+
+    return MSERR_OK;
+}
+
+int32_t AVRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
+    std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
+{
+    MEDIA_LOGI("pixelMap Width: %{public}d, height: %{public}d, adjust Width: %{public}d, adjust height: %{public}d, "
+        "pixelformat %{public}d, RowStride %{public}d", pixelMap->GetWidth(), pixelMap->GetHeight(),
+        watermarkConfig->width, watermarkConfig->height, pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
+
+    CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == OHOS::Media::PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
+        "Invalid pixel format");
+
+    int32_t pixelMapWidth = pixelMap->GetWidth();
+    int32_t pixelMapHeight = pixelMap->GetHeight();
+    int32_t pixelMapRowStride = pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(pixelMapWidth > 0 && pixelMapWidth <= AVRECORDER_WATERMARK_MAX_LENGTH,
+        MSERR_INVALID_VAL, "Invalid pixelMap width");
+    CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapHeight <= AVRECORDER_WATERMARK_MAX_LENGTH,
+        MSERR_INVALID_VAL, "Invalid pixelMap height");
+    CHECK_AND_RETURN_RET_LOG(pixelMapRowStride > 0, MSERR_INVALID_VAL, "Invalid pixelMap row stride");
+    CHECK_AND_RETURN_RET_LOG(pixelMapHeight <= MAX_WATERMARK_SIZE / pixelMapRowStride,
+        MSERR_INVALID_VAL, "Invalid data size");
+
+    std::shared_ptr<OHOS::Media::AVBuffer> buffer = nullptr;
+    int32_t ret = CreateWatermarkBuffer(pixelMap, pixelMapWidth, pixelMapHeight, buffer);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to CreateWatermarkBuffer");
+
+    int32_t targetWidth = (watermarkConfig->width > 0) ? watermarkConfig->width : pixelMapWidth;
+    int32_t targetHeight = (watermarkConfig->height > 0) ? watermarkConfig->height : pixelMapHeight;
+
     buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_X>(watermarkConfig->left);
     buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_Y>(watermarkConfig->top);
-    buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_W>(pixelMapWidth);
-    buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_H>(pixelMapHeight);
+    buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_W>(targetWidth);
+    buffer->meta_->Set<OHOS::Media::Tag::VIDEO_COORDINATE_H>(targetHeight);
     buffer->meta_->Set<OHOS::Media::Tag::VIDEO_STRIDE>(pixelMapRowStride);
- 
-    return recorder_->AddWatermark(buffer, watermarkConfig->width, watermarkConfig->height, watermarkCount);
+
+    return recorder_->AddWatermark(buffer, targetWidth, targetHeight, watermarkCount);
 }
 } // namespace ANI::Media
 

@@ -1236,7 +1236,7 @@ int32_t RecorderServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
 
 int32_t RecorderServer::GetWatermarkCount(int32_t &watermarkCount)
 {
-    CHECK_AND_RETURN_RET_LOG(watermarkCount_ < WATERMARK_COUNT_MAX, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(watermarkCount_ < WATERMARK_COUNT_MAX, MSERR_PARAM_OUT_OF_RANGE,
         "GetWatermarkCount Failed to add watermark");
     watermarkCount_++;
     watermarkCount = watermarkCount_;
