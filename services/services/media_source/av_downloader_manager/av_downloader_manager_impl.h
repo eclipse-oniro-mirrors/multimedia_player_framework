@@ -82,8 +82,7 @@ private:
     void GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo);
     void SniffStreamProtocol(uint64_t downloaderId, const MediaDownload::DownloadProgress &progress,
         std::string currentFilePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo);
-    void SubmitRemainingTasks(
-        std::map<std::string, std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter,
+    void SubmitRemainingTasks(std::shared_ptr<MediaDownload::Downloader> downloader,
         std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::shared_ptr<AVDownloaderManagerImpl> manager);
     std::weak_ptr<AVDownloaderManagerImpl> manager_;
 };

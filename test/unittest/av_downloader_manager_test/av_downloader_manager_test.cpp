@@ -747,64 +747,49 @@ HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_FileListPopulated_0
 HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_AllFilesDownloaded_001, TestSize.Level0)
 {
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
-    auto mockDownloaderImpl = std::make_shared<MockDownloaderImpl>();
-    std::string taskId = std::to_string(mockDownloaderImpl->GetDownloaderId());
-    manager->downloaderMap_[taskId] = mockDownloaderImpl;
+    auto mockDownloader = std::make_shared<MockDownloader>();
 
     auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
     DownloadFileInfo fileInfo;
     fileInfo.url = "http://example.com/file1.mp4";
     fileInfo.filePath = "/cache/file1.mp4";
     fileInfo.downloaded = true;
     taskInfo->fileList.emplace(fileInfo.url, fileInfo);
 
-    EXPECT_CALL(*mockDownloaderImpl, SetConfig(_)).Times(0);
-    EXPECT_CALL(*mockDownloaderImpl, AddFileTask(_, _, _)).Times(0);
-    EXPECT_CALL(*mockDownloaderImpl, Start()).WillOnce(Return(0));
+    EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(0);
+    EXPECT_CALL(*mockDownloader, AddFileTask(_, _, _)).Times(0);
+    EXPECT_CALL(*mockDownloader, Start()).WillOnce(Return(0));
 
     auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
-    auto downloaderIter = manager->downloaderMap_.find(taskId);
-    callback->SubmitRemainingTasks(downloaderIter, taskInfo, manager);
-
-    manager->downloaderMap_.erase(taskId);
+    callback->SubmitRemainingTasks(mockDownloader, taskInfo, manager);
 }
 
 HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_OneFileNotDownloaded_001, TestSize.Level0)
 {
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
-    auto mockDownloaderImpl = std::make_shared<MockDownloaderImpl>();
-    std::string taskId = std::to_string(mockDownloaderImpl->GetDownloaderId());
-    manager->downloaderMap_[taskId] = mockDownloaderImpl;
+    auto mockDownloader = std::make_shared<MockDownloader>();
 
     auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
     DownloadFileInfo fileInfo;
     fileInfo.url = "http://example.com/file1.mp4";
     fileInfo.filePath = "/cache/file1.mp4";
     fileInfo.downloaded = false;
     taskInfo->fileList.emplace(fileInfo.url, fileInfo);
 
-    EXPECT_CALL(*mockDownloaderImpl, SetConfig(_)).Times(1);
-    EXPECT_CALL(*mockDownloaderImpl, AddFileTask("http://example.com/file1.mp4", "/cache/file1.mp4", _)).Times(1);
-    EXPECT_CALL(*mockDownloaderImpl, Start()).WillOnce(Return(0));
+    EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(1);
+    EXPECT_CALL(*mockDownloader, AddFileTask("http://example.com/file1.mp4", "/cache/file1.mp4", _)).Times(1);
+    EXPECT_CALL(*mockDownloader, Start()).WillOnce(Return(0));
 
     auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
-    auto downloaderIter = manager->downloaderMap_.find(taskId);
-    callback->SubmitRemainingTasks(downloaderIter, taskInfo, manager);
-
-    manager->downloaderMap_.erase(taskId);
+    callback->SubmitRemainingTasks(mockDownloader, taskInfo, manager);
 }
 
 HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_MixDownloadedAndNot_001, TestSize.Level0)
 {
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
-    auto mockDownloaderImpl = std::make_shared<MockDownloaderImpl>();
-    std::string taskId = std::to_string(mockDownloaderImpl->GetDownloaderId());
-    manager->downloaderMap_[taskId] = mockDownloaderImpl;
+    auto mockDownloader = std::make_shared<MockDownloader>();
 
     auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
 
     DownloadFileInfo fileInfo1;
     fileInfo1.url = "http://example.com/file1.mp4";
@@ -824,37 +809,28 @@ HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_MixDownloadedAndNot_001, 
     fileInfo3.downloaded = false;
     taskInfo->fileList.emplace(fileInfo3.url, fileInfo3);
 
-    EXPECT_CALL(*mockDownloaderImpl, SetConfig(_)).Times(2);
-    EXPECT_CALL(*mockDownloaderImpl, AddFileTask("http://example.com/file3.ts", "/cache/file3.ts", _)).Times(1);
-    EXPECT_CALL(*mockDownloaderImpl, AddFileTask("http://example.com/sub.m3u8", "/cache/sub.m3u8", _)).Times(1);
-    EXPECT_CALL(*mockDownloaderImpl, Start()).WillOnce(Return(0));
+    EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(2);
+    EXPECT_CALL(*mockDownloader, AddFileTask("http://example.com/file3.ts", "/cache/file3.ts", _)).Times(1);
+    EXPECT_CALL(*mockDownloader, AddFileTask("http://example.com/sub.m3u8", "/cache/sub.m3u8", _)).Times(1);
+    EXPECT_CALL(*mockDownloader, Start()).WillOnce(Return(0));
 
     auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
-    auto downloaderIter = manager->downloaderMap_.find(taskId);
-    callback->SubmitRemainingTasks(downloaderIter, taskInfo, manager);
-
-    manager->downloaderMap_.erase(taskId);
+    callback->SubmitRemainingTasks(mockDownloader, taskInfo, manager);
 }
 
 HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_EmptyFileList_001, TestSize.Level0)
 {
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
-    auto mockDownloaderImpl = std::make_shared<MockDownloaderImpl>();
-    std::string taskId = std::to_string(mockDownloaderImpl->GetDownloaderId());
-    manager->downloaderMap_[taskId] = mockDownloaderImpl;
+    auto mockDownloader = std::make_shared<MockDownloader>();
 
     auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
 
-    EXPECT_CALL(*mockDownloaderImpl, SetConfig(_)).Times(0);
-    EXPECT_CALL(*mockDownloaderImpl, AddFileTask(_, _, _)).Times(0);
-    EXPECT_CALL(*mockDownloaderImpl, Start()).WillOnce(Return(0));
+    EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(0);
+    EXPECT_CALL(*mockDownloader, AddFileTask(_, _, _)).Times(0);
+    EXPECT_CALL(*mockDownloader, Start()).WillOnce(Return(0));
 
     auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
-    auto downloaderIter = manager->downloaderMap_.find(taskId);
-    callback->SubmitRemainingTasks(downloaderIter, taskInfo, manager);
-
-    manager->downloaderMap_.erase(taskId);
+    callback->SubmitRemainingTasks(mockDownloader, taskInfo, manager);
 }
 
 HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_ConfigValues_001, TestSize.Level0)
@@ -862,34 +838,27 @@ HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_ConfigValues_001, TestSiz
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
     (void)manager->SetRequestTimeout(5000);
     (void)manager->SetAllowCellularAccess(true);
-
-    auto mockDownloaderImpl = std::make_shared<MockDownloaderImpl>();
-    std::string taskId = std::to_string(mockDownloaderImpl->GetDownloaderId());
-    manager->downloaderMap_[taskId] = mockDownloaderImpl;
+    auto mockDownloader = std::make_shared<MockDownloader>();
 
     auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
     DownloadFileInfo fileInfo;
     fileInfo.url = "http://example.com/file.mp4";
     fileInfo.filePath = "/cache/file.mp4";
     fileInfo.downloaded = false;
     taskInfo->fileList.emplace(fileInfo.url, fileInfo);
 
-    EXPECT_CALL(*mockDownloaderImpl, SetConfig(_)).WillOnce(
+    EXPECT_CALL(*mockDownloader, SetConfig(_)).WillOnce(
         testing::Invoke([](const MediaDownload::DownloadConfig &config) {
             EXPECT_EQ(config.timeoutMs, 5000);
             EXPECT_TRUE(config.allowMobileData);
             EXPECT_TRUE(config.allowWifi);
             return 0;
         }));
-    EXPECT_CALL(*mockDownloaderImpl, AddFileTask("http://example.com/file.mp4", "/cache/file.mp4", _)).Times(1);
-    EXPECT_CALL(*mockDownloaderImpl, Start()).WillOnce(Return(0));
+    EXPECT_CALL(*mockDownloader, AddFileTask("http://example.com/file.mp4", "/cache/file.mp4", _)).Times(1);
+    EXPECT_CALL(*mockDownloader, Start()).WillOnce(Return(0));
 
     auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
-    auto downloaderIter = manager->downloaderMap_.find(taskId);
-    callback->SubmitRemainingTasks(downloaderIter, taskInfo, manager);
-
-    manager->downloaderMap_.erase(taskId);
+    callback->SubmitRemainingTasks(mockDownloader, taskInfo, manager);
 }
 
 } // namespace Media

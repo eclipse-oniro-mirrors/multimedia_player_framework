@@ -24,7 +24,7 @@
 #include <map>
 #include "av_downloader_manager.h"
 #include "av_downloader_manager_impl.h"
-#include "downloader_impl.h"
+#include "downloader.h"
 #include "network_utils.h"
 
 namespace OHOS {
@@ -56,14 +56,6 @@ public:
     MOCK_METHOD(MediaDownload::DownloadState, GetState, (), (override));
     MOCK_METHOD(int32_t, GetProgress, (MediaDownload::DownloadProgress &progress), (override));
     MOCK_METHOD(std::string, GetCurrentFilePath, (), (const, override));
-};
-
-class MockDownloaderImpl : public MediaDownload::DownloaderImpl {
-public:
-    MOCK_METHOD(int32_t, SetConfig, (const MediaDownload::DownloadConfig &config), (override));
-    MOCK_METHOD(int32_t, AddFileTask, (const std::string &url, const std::string &path,
-        const MediaDownload::DownloadConfig &config), (override));
-    MOCK_METHOD(int32_t, Start, (), (override));
 };
 
 class TestableAVDownloaderManager : public AVDownloaderManagerImpl {
