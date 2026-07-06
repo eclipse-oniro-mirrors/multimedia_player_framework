@@ -100,7 +100,7 @@ std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper()
 
 int32_t UpdateSettingsValue(const std::string &key, const std::string &value)
 {
-    MEDIA_LOG_I("UpdateSettingsValue start key: %{public}s", key.c_str());
+    MEDIA_LOGI("UpdateSettingsValue start key: %{public}s", key.c_str());
     auto dataShareHelper = CreateDataShareHelper();
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, MSERR_INVALID_VAL, "dataShareHelper is nullptr");
     Uri uri(SETTINGS_DATA_BASE_URI + "&key=" + key);
@@ -112,7 +112,7 @@ int32_t UpdateSettingsValue(const std::string &key, const std::string &value)
     bucket.Put(SETTINGS_DATA_FIELD_KEYWORD, keyObj);
     bucket.Put(SETTINGS_DATA_FIELD_VALUE, valueObj);
     int32_t updateResult = dataShareHelper->Update(uri, predicates, bucket);
-    MEDIA_LOG_I("UpdateSettingsValue update %{public}d", updateResult);
+    MEDIA_LOGI("UpdateSettingsValue update %{public}d", updateResult);
     dataShareHelper->NotifyChange(uri);
     dataShareHelper->Release();
     return updateResult;
