@@ -788,7 +788,7 @@ HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_OneFileNotDownloaded_001,
     taskInfo->fileList.emplace(fileInfo.url, fileInfo);
 
     EXPECT_CALL(*mockDownloaderImpl, SetConfig(_)).Times(1);
-    EXPECT_CALL(*mockDownloaderImpl, AddFileTask(_, _, _)).Times(1);
+    EXPECT_CALL(*mockDownloaderImpl, AddFileTask("http://example.com/file1.mp4", "/cache/file1.mp4", _)).Times(1);
     EXPECT_CALL(*mockDownloaderImpl, Start()).WillOnce(Return(0));
 
     auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
