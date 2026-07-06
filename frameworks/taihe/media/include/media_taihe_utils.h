@@ -35,6 +35,10 @@ using namespace ohos::multimedia::media;
 constexpr char CLASS_NAME_BUSINESSERROR[] = "@ohos.base.BusinessError";
 constexpr char CLASS_NAME_ERRORINFO[] = "multimedia.soundPool._taihe_ErrorInfo_inject";
 constexpr char ENUM_NAME_ERRORTYPE[] = "multimedia.soundPool.ErrorType";
+
+void SetRetInfoError(int32_t errCode, const std::string &operate,
+    const std::string &param, const std::string &add = "");
+
 class MediaTaiheUtils {
 public:
     static string ToTaiheString(const std::string &src);

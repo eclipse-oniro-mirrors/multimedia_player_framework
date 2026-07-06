@@ -73,6 +73,7 @@ constexpr int32_t AVRECORDER_DEFAULT_VIDEO_BIT_RATE = 48000;
 constexpr int32_t AVRECORDER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVRECORDER_DEFAULT_FRAME_WIDTH = -1;
 constexpr int32_t AVRECORDER_DEFAULT_FRAME_RATE = 30;
+constexpr int32_t AVRECORDER_WATERMARK_MAX_LENGTH = 4096;
 
 const std::map<std::string, std::vector<std::string>> stateCtrlList = {
     {AVRecorderState::STATE_IDLE, {
@@ -223,11 +224,17 @@ public:
     std::shared_ptr<TaskHandler<RetInfo>> SetWatermarkTask(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
         std::shared_ptr<WatermarkConfig> &watermarkConfig);
-    void AddWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
+    int32_t AddWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
         ::ohos::multimedia::media::WatermarkConfiguration const& config);
     std::shared_ptr<TaskHandler<RetInfo>> AddWatermarkTask(const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
         std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount);
+    int32_t CreateWatermarkBuffer(std::shared_ptr<PixelMap> &pixelMap,
+        int32_t pixelMapWidth, int32_t pixelMapHeight, std::shared_ptr<OHOS::Media::AVBuffer> &buffer);
+    int32_t GetAddWatermarkPixelMap(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::image::image::weak::PixelMap watermark);
+    int32_t GetAddWatermarkConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::WatermarkConfiguration const& config);
     int32_t GetAddWatermarkParameter(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
         ::ohos::multimedia::image::image::weak::PixelMap watermark,
         ::ohos::multimedia::media::WatermarkConfiguration const& config);
@@ -391,10 +398,10 @@ struct WatermarkConfig {
 };
 
 struct WatermarkConfiguration {
-    int32_t top = -1; // offset of the watermark to the top line of pixel
-    int32_t left = -1; // offset of the watermark to the left line if pixel
-    int32_t width = 0; // target width of the watermark in pixel
-    int32_t height = 0; // target height of the watermark in pixel
+    int32_t top = 0; // offset of the watermark to the top line of pixel
+    int32_t left = 0; // offset of the watermark to the left line if pixel
+    int32_t width = -1; // target width of the watermark in pixel
+    int32_t height = -1; // target height of the watermark in pixel
 };
 } // namespace ANI::Media
 #endif // AVRECORDER_TAIHE_H

@@ -20,6 +20,7 @@
 #include "accesstoken_kit.h"
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
+#include "media_errors.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "MediaTaiheUtils"};
@@ -28,6 +29,33 @@ namespace {
 namespace ANI {
 namespace Media {
 ani_ref MediaTaiheUtils::globalRef = nullptr;
+
+void SetRetInfoError(int32_t errCode, const std::string &operate,
+    const std::string &param, const std::string &add)
+{
+    MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
+    OHOS::Media::MediaServiceExtErrCodeAPI9 err =
+        MSErrorToExtErrorAPI9(static_cast<OHOS::Media::MediaServiceErrCode>(errCode));
+    if (errCode == OHOS::Media::MSERR_UNSUPPORT_VID_PARAMS) {
+        set_business_error(err, "The video parameter is not supported. Please check the type and range.");
+        return;
+    }
+
+    if (errCode == OHOS::Media::MSERR_UNSUPPORT_AUD_PARAMS) {
+        set_business_error(err, "The audio parameter is not supported. Please check the type and range.");
+        return;
+    }
+
+    std::string message;
+    if (err == OHOS::Media::MSERR_EXT_API9_INVALID_PARAMETER) {
+        message = MSExtErrorAPI9ToString(err, param, "") + add;
+    } else {
+        message = MSExtErrorAPI9ToString(err, operate, "") + add;
+    }
+
+    MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
+    set_business_error(err, message);
+}
 
 static const std::map<OHOS::AudioStandard::InterruptMode, int32_t> TAIHE_INTERRUPTMODE_INDEX_MAP = {
     {OHOS::AudioStandard::InterruptMode::SHARE_MODE, 0},

@@ -555,14 +555,15 @@ int32_t HiRecorderImpl::PrepareVideoCapture()
 int32_t HiRecorderImpl::Start()
 {
     MediaTrace trace("HiRecorderImpl::Start");
+    MEDIA_LOG_I("Start enter.");
     int32_t ret = MSERR_OK;
     if (hasWatermark_) {
-    ret = TransRecorderStatus(SetVideoEncoderSurface());
+        ret = TransRecorderStatus(SetVideoEncoderSurface());
     }
     if (curState_ == StateId::PAUSE) {
-    ret = TransRecorderStatus(pipeline_->Resume());
+        ret = TransRecorderStatus(pipeline_->Resume());
     } else {
-    ret = TransRecorderStatus(pipeline_->Start());
+        ret = TransRecorderStatus(pipeline_->Start());
     }
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "HiRecorderImpl Start fail");
     OnStateChanged(StateId::RECORDING);
@@ -575,8 +576,8 @@ int32_t HiRecorderImpl::Pause()
     MEDIA_LOG_I("Pause enter.");
     int32_t ret = MSERR_OK;
     if (curState_ != StateId::READY) {
-    ret = TransRecorderStatus(pipeline_->Pause());
-    FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "HiRecorderImpl Pause fail");
+        ret = TransRecorderStatus(pipeline_->Pause());
+        FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "HiRecorderImpl Pause fail");
     }
     OnStateChanged(StateId::PAUSE);
     return ret;
@@ -605,10 +606,6 @@ Status HiRecorderImpl::HandleStopOperation()
     }
     if (audioDataSourceFilter_) {
         ret = audioDataSourceFilter_->SendEos();
-    }
-    if (waterMarkFilter_) {
-        auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
-        ret = filter->NotifyNextFilterEos();
     }
     ret = pipeline_->Stop();
     if (ret == Status::OK) {
