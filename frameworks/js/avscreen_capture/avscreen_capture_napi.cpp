@@ -31,7 +31,7 @@ namespace OHOS {
 namespace Media {
 thread_local napi_ref AVScreenCaptureNapi::constructor_ = nullptr;
 constexpr int MAX_WINDOWS_LEN = 1000;
-const std::string CLASS_NAME = "AVScreenCapture";
+const std::string CLASS_NAME = "AVScreenCaptureRecorder";
 std::map<std::string, AVScreenCaptureNapi::AvScreenCaptureTaskqFunc> AVScreenCaptureNapi::taskQFuncs_ = {
     {AVScreenCapturegOpt::START_RECORDING, &AVScreenCaptureNapi::StartRecording},
     {AVScreenCapturegOpt::STOP_RECORDING, &AVScreenCaptureNapi::StopRecording},
