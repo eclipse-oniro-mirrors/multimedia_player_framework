@@ -13,8 +13,8 @@
 * limitations under the License.
 */
 
-#ifndef DATASHARE_OBSERVER_H
-#define DATASHARE_OBSERVER_H
+#ifndef MEDIA_DATASHARE_OBSERVER_H
+#define MEDIA_DATASHARE_OBSERVER_H
 
 #include "common_event_subscriber.h"
 #include "common_event_manager.h"
@@ -51,4 +51,4 @@ private:
 int32_t UpdateSettingsValue(const std::string &key, const std::string &value);
 } // namespace Media
 } // namespace OHOS
-#endif // DATASHARE_OBSERVER_H
+#endif // MEDIA_DATASHARE_OBSERVER_H

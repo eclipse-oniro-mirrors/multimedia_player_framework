@@ -21,7 +21,7 @@
 #include "media_server_manager.h"
 #include "mem_mgr_client.h"
 #include "mem_mgr_proxy.h"
-#include "datashare_observer.h"
+#include "media_datashare_observer.h"
 #include "audio_background_adapter.h"
 #ifdef SUPPORT_CALL
 #include "incall_observer.h"

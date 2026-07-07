@@ -13,7 +13,7 @@
 * limitations under the License.
 */
 
-#include "datashare_observer.h"
+#include "media_datashare_observer.h"
 #include "media_log.h"
 #include "media_utils.h"
 #include "media_log.h"
@@ -24,7 +24,7 @@
 
 namespace {
 static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "DatashareObserver"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "MediaDatashareObserver"};
 static const int32_t MEDIA_SERVICE_SA_ID = 3002;
 static const std::string SETTINGS_DATA_BASE_URI =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
@@ -72,7 +72,7 @@ bool MediaDatashareObserverRegister::Subscribe()
     auto *tempObserver = new (std::nothrow) MediaDatashareObserver(subscribeInfo);
     CHECK_AND_RETURN_RET_LOG(tempObserver != nullptr, false,
         "MediaDatashareObserverRegister::Subscribe failed to create observer");
-    datashareObserver_ = std::shared_ptr<DatashareObserver>(tempObserver);
+    datashareObserver_ = std::shared_ptr<MediaDatashareObserver>(tempObserver);
     bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(datashareObserver_);
     MEDIA_LOGI("MediaDatashareObserverRegister::Subscribe result: %{public}d", result);
     return result;
