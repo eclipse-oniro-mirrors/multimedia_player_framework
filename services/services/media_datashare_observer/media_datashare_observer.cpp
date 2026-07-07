@@ -61,11 +61,7 @@ MediaDatashareObserverRegister::~MediaDatashareObserverRegister()
 bool MediaDatashareObserverRegister::Subscribe()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGI("MediaDatashareObserverRegister::Subscribe");
-    if (datashareObserver_ != nullptr) {
-        MEDIA_LOGI("MediaDatashareObserverRegister already subscribed");
-        return true;
-    }
+    CHECK_AND_RETURN_RET_LOG(datashareObserver_ != nullptr, true, "MediaDatashareObserverRegister already subscribed");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
