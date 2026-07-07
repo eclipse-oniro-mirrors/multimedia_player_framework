@@ -699,6 +699,7 @@ void CJAVPlayer::Seek(int32_t time, int32_t mode)
     if (!IsControllable()) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                   "current state is not prepared/playing/paused/completed, unsupport seek operation");
+        return;
     }
     SeekTask(time, mode);
 }
@@ -1588,6 +1589,7 @@ int32_t CJAVPlayer::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSo
         return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
     }
     StartListenCurrentResource(); // Listen to the events of the current resource
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
     return player_->SetMediaSource(mediaSource, strategy);
 }
 
@@ -1748,6 +1750,7 @@ void CJAVPlayer::SetBitrate(int32_t bitrate)
 
 void CJAVPlayer::SetVolume(float volume)
 {
+    CHECK_AND_RETURN_LOG(playerCb_ != nullptr, "playerCb_ is nullptr");
     if (playerCb_->isSetVolume_) {
         MEDIA_LOGI("SetVolume is processing, skip this task until onVolumeChangedCb");
     }
@@ -1755,12 +1758,19 @@ void CJAVPlayer::SetVolume(float volume)
 
     if (volume < 0.0f || volume > 1.0f) {
         OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "invalid parameters, check volume level");
+        playerCb_->isSetVolume_ = false;
         return;
     }
 
     if (!IsControllable()) {
         OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                   "current state is not prepared/playing/paused/completed, unsupport volume operation");
+        playerCb_->isSetVolume_ = false;
+        return;
+    }
+    if (player_ == nullptr) {
+        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
+        playerCb_->isSetVolume_ = false;
         return;
     }
     (void)player_->SetVolume(volume, volume);
@@ -1768,6 +1778,7 @@ void CJAVPlayer::SetVolume(float volume)
 
 int32_t CJAVPlayer::AddSubtitleFromFd(int32_t fd, int64_t offset, int64_t length)
 {
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
     if (player_->AddSubSource(fd, offset, length) != MSERR_OK) {
         OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to AddSubtitleAVFileDescriptor");
         return MSERR_EXT_API9_INVALID_PARAMETER;
@@ -1778,6 +1789,7 @@ int32_t CJAVPlayer::AddSubtitleFromFd(int32_t fd, int64_t offset, int64_t length
 int32_t CJAVPlayer::AddSubtitleFromUrl(std::string url)
 {
     MEDIA_LOGI("input url is %{private}s!", url.c_str());
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
     bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
     bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
     if (isNetwork) {
