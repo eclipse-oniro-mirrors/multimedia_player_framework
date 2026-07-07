@@ -144,63 +144,104 @@ int ScreenCaptureListenerStub::OnRemoteRequestInner(uint32_t code, MessageParcel
 
 void ScreenCaptureListenerStub::OnError(ScreenCaptureErrorType errorType, int32_t errorCode)
 {
-    if (callback_ != nullptr) {
-        callback_->OnError(errorType, errorCode);
+    std::shared_ptr<ScreenCaptureCallBack> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnError(errorType, errorCode);
     }
 }
 
 void ScreenCaptureListenerStub::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback)
 {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     callback_ = callback;
 }
 
 void ScreenCaptureListenerStub::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type)
 {
-    if (callback_ != nullptr) {
-        callback_->OnAudioBufferAvailable(isReady, type);
+    std::shared_ptr<ScreenCaptureCallBack> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnAudioBufferAvailable(isReady, type);
     }
 }
 
 void ScreenCaptureListenerStub::OnVideoBufferAvailable(bool isReady)
 {
-    if (callback_ != nullptr) {
-        callback_->OnVideoBufferAvailable(isReady);
+    std::shared_ptr<ScreenCaptureCallBack> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnVideoBufferAvailable(isReady);
     }
 }
 
 void ScreenCaptureListenerStub::OnStateChange(AVScreenCaptureStateCode stateCode)
 {
-    if (callback_ != nullptr) {
-        callback_->OnStateChange(stateCode);
+    std::shared_ptr<ScreenCaptureCallBack> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnStateChange(stateCode);
     }
 }
 
 void ScreenCaptureListenerStub::OnDisplaySelected(uint64_t displayId)
 {
-    if (callback_ != nullptr) {
-        callback_->OnDisplaySelected(displayId);
+    std::shared_ptr<ScreenCaptureCallBack> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnDisplaySelected(displayId);
     }
 }
 
 void ScreenCaptureListenerStub::OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event,
     ScreenCaptureRect* area)
 {
-    if (callback_ != nullptr) {
-        callback_->OnCaptureContentChanged(event, area);
+    std::shared_ptr<ScreenCaptureCallBack> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnCaptureContentChanged(event, area);
     }
 }
 
 void ScreenCaptureListenerStub::OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
 {
-    if (callback_ != nullptr) {
-        callback_->OnUserSelected(selectionInfo);
+    std::shared_ptr<ScreenCaptureCallBack> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnUserSelected(selectionInfo);
     }
 }
 
 void ScreenCaptureListenerStub::OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect)
 {
-    if (callback_ != nullptr) {
-        callback_->OnPrivacyProtect(privacyProtect);
+    std::shared_ptr<ScreenCaptureCallBack> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnPrivacyProtect(privacyProtect);
     }
 }
 } // namespace Media

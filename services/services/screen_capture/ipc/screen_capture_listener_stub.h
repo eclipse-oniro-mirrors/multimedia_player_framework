@@ -43,6 +43,7 @@ private:
     int OnRemoteRequestInner(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
 
     std::shared_ptr<ScreenCaptureCallBack> callback_ = nullptr;
+    std::mutex callbackMutex_;
 };
 } // namespace Media
 } // namespace OHOS

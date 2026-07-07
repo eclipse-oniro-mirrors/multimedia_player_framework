@@ -136,7 +136,6 @@ const int32_t ScreenCaptureServer::maxSCServerDataTypePerUid_ = 2;
 std::atomic<int32_t> ScreenCaptureServer::systemScreenRecorderPid_ = -1;
 
 std::shared_mutex ScreenCaptureServer::mutexServerMapRWGlobal_;
-std::shared_mutex ScreenCaptureServer::mutexListRWGlobal_;
 std::shared_mutex ScreenCaptureServer::mutexSaAppInfoMapGlobal_;
 
 template <typename T> static std::string JoinVector(const std::vector<T> &vec, const std::string_view &separator = ",")
@@ -373,21 +372,22 @@ int32_t ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(int32_t pid
     return count;
 }
 
-void ScreenCaptureServer::AddStartedSessionIdList(int32_t value)
+size_t ScreenCaptureServer::AddStartedSessionIdList(int32_t value)
 {
-    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     ScreenCaptureServer::startedSessionIDList_.push_back(value);
+    return ScreenCaptureServer::startedSessionIDList_.size();
 }
 
-void ScreenCaptureServer::RemoveStartedSessionIdList(int32_t value)
+size_t ScreenCaptureServer::RemoveStartedSessionIdList(int32_t value)
 {
-    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
+    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
     ScreenCaptureServer::startedSessionIDList_.remove(value);
+    return ScreenCaptureServer::startedSessionIDList_.size();
 }
 
 std::list<int32_t> ScreenCaptureServer::GetAllStartedSessionIdList()
 {
-    std::unique_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexListRWGlobal_);
     return GetStartedScreenCaptureServerPidList();
 }
 
@@ -414,6 +414,7 @@ void ScreenCaptureServer::SetWindowIdList(uint64_t windowId)
 
 std::vector<int32_t> ScreenCaptureServer::GetWindowIdList()
 {
+    std::shared_lock<std::shared_mutex> lock(windowIdListMutex_);
     return windowIdList_;
 }
 
@@ -633,9 +634,10 @@ int32_t ScreenCaptureServer::RegisterWindowInfoChangedListener()
         "create new windowInfoChangedListener failed.");
     windowInfoChangedListener_ = listener;
     windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::WINDOW_ID);
-    CHECK_AND_RETURN_RET_LOG(!windowIdList_.empty(), MSERR_INVALID_OPERATION,
+    std::vector<int32_t> windowIdList = GetWindowIdList();
+    CHECK_AND_RETURN_RET_LOG(!windowIdList.empty(), MSERR_INVALID_OPERATION,
         "windowIdList is empty, AddInterestWindowId failed.");
-    windowInfoChangedListener_->AddInterestWindowId(windowIdList_.front());
+    windowInfoChangedListener_->AddInterestWindowId(windowIdList.front());
 
     std::unordered_set<Rosen::WindowInfoKey> observedInfo;
     observedInfo.insert(Rosen::WindowInfoKey::DISPLAY_ID);
@@ -671,7 +673,8 @@ int32_t ScreenCaptureServer::UnRegisterWindowInfoChangedListener()
 
 int32_t ScreenCaptureServer::RegisterWindowRelatedListener()
 {
-    int32_t ret = RegisterWindowLifecycleListener(windowIdList_);
+    std::vector<int32_t> windowIdListSnapshot = GetWindowIdList();
+    int32_t ret = RegisterWindowLifecycleListener(windowIdListSnapshot);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret,
         "RegisterWindowRelatedListener RegisterWindowLifecycleListener failed");
     ret = RegisterWindowInfoChangedListener();
@@ -705,7 +708,6 @@ void ScreenCaptureServer::OnWindowInfoChanged(const uint64_t &displayId)
 
 void ScreenCaptureServer::OnCaptureContentChanged(bool isMirrorChanged)
 {
-    std::shared_lock<std::shared_mutex> lock(windowIdListMutex_);
     MEDIA_LOGI("OnCaptureContentChanged, displayId: %{public}" PRIu64 " event: %{public}d, lifecycle: %{public}d",
         GetCurDisplayId(), static_cast<int32_t>(curWindowEvent_), static_cast<int32_t>(curWindowLifecycle_));
     if (!IsCaptureScreen(GetCurDisplayId())) {
@@ -733,7 +735,6 @@ void ScreenCaptureServer::OnCaptureContentChanged(bool isMirrorChanged)
 
 void ScreenCaptureServer::OnWindowLifecycle(SCWindowLifecycleListener::SessionLifecycleEvent event)
 {
-    std::shared_lock<std::shared_mutex> lock(windowIdListMutex_);
     switch (event) {
         case SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND: {
             MEDIA_LOGI("OnLifecycleEvent: SessionLifecycleEvent::FOREGROUND");
@@ -835,8 +836,11 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
 bool ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(int32_t appUid)
 {
     MEDIA_LOGI("CanScreenCaptureInstanceBeCreate start.");
-    CHECK_AND_RETURN_RET_LOG(ScreenCaptureServer::serverMap_.size() <= ScreenCaptureServer::maxSessionId_, false,
-        "ScreenCaptureInstanceCanBeCreate exceed ScreenCaptureServer instances limit.");
+    {
+        std::shared_lock<std::shared_mutex> lock(ScreenCaptureServer::mutexServerMapRWGlobal_);
+        CHECK_AND_RETURN_RET_LOG(ScreenCaptureServer::serverMap_.size() <= ScreenCaptureServer::maxSessionId_, false,
+            "ScreenCaptureInstanceCanBeCreate exceed ScreenCaptureServer instances limit.");
+    }
     MEDIA_LOGI("curAppUid: %{public}d", appUid);
     CHECK_AND_RETURN_RET_LOG(CheckScreenCaptureAppLimit(appUid), false,
         "CurScreenCaptureAppNum reach limit, cannot create more app.");
@@ -1186,7 +1190,10 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
         return MSERR_UNKNOWN;
     }
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_WINDOW && missionIds_.size() == 1) {
-        windowIdList_.clear();
+        {
+            std::unique_lock<std::shared_mutex> lockList(windowIdListMutex_);
+            windowIdList_.clear();
+        }
         SetWindowIdList(missionIds_.front());
         SetDefaultDisplayIdOfWindows();
         RegisterWindowRelatedListener();
@@ -2546,9 +2553,9 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::START_SCREEN_CAPTURE;
     ResSchedReportData(value, payload);
     captureState_ = AVScreenCaptureState::STARTED;
-    AddStartedSessionIdList(this->sessionId_);
+    size_t listSize = AddStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("sessionId: %{public}d is pushed, now the size of startedSessionIDList_ is: %{public}d",
-        this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
+        this->sessionId_, static_cast<uint32_t>(listSize));
     SetSystemScreenRecorderStatus(true);
     ScreenCaptureMonitorServer::GetInstance()->CallOnScreenCaptureStarted(appInfo_.appPid);
     NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
@@ -2741,7 +2748,13 @@ void ScreenCaptureServer::RegisterLanguageSwitchListener()
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent("usual.event.LOCALE_CHANGED");
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    auto onReceiveEvent = std::bind(&ScreenCaptureServer::OnReceiveEvent, this, std::placeholders::_1);
+    auto selfWeak = weak_from_this();
+    auto onReceiveEvent = [selfWeak](const EventFwk::CommonEventData &data) {
+        auto self = selfWeak.lock();
+        if (self) {
+            self->OnReceiveEvent(data);
+        }
+    };
     subscriber_ = std::make_shared<ScreenCaptureSubscriber>(
         subscribeInfo, onReceiveEvent);
     if (subscriber_ == nullptr) {
@@ -2917,6 +2930,7 @@ int32_t ScreenCaptureServer::InitRecorder()
     }
     ON_SCOPE_EXIT(0) {
         recorder_->Release();
+        recorder_ = nullptr;
     };
     int32_t ret;
     AudioCaptureInfo audioInfo;
@@ -4161,6 +4175,11 @@ bool ScreenCaptureServer::CheckDisplayArea(uint64_t displayId, OHOS::Rect area)
     auto screenWidth = targetDisplay->GetWidth();
     auto screenHeight = targetDisplay->GetHeight();
     MEDIA_LOGI("CheckDisplayArea display with width: %{public}d, height:%{public}d", screenWidth, screenHeight);
+    if (area.x < 0 || area.y < 0 || area.w < 0 || area.h < 0) {
+        MEDIA_LOGE("CheckDisplayArea input area has negative value, "
+            "x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d", area.x, area.y, area.w, area.h);
+        return false;
+    }
     if (static_cast<int64_t>(area.x) + area.w > screenWidth || static_cast<int64_t>(area.y) + area.h > screenHeight) {
         MEDIA_LOGE("CheckDisplayArea input area out of range");
         return false;
@@ -4660,7 +4679,7 @@ int32_t ScreenCaptureServer::StopVideoCapture()
 {
     MediaTrace trace("ScreenCaptureServer::StopVideoCapture");
     MEDIA_LOGI("StopVideoCapture");
-    if ((virtualScreenId_ < 0) || ((consumer_ == nullptr) && !isSurfaceMode_) || !isConsumerStart_) {
+    if ((virtualScreenId_ < 0) || ((consumer_ == nullptr) && !isSurfaceMode_)) {
         MEDIA_LOGI("StopVideoCapture IGNORED, video capture not start");
         CHECK_AND_RETURN_RET(surfaceCb_ != nullptr, MSERR_OK);
         (static_cast<ScreenCapBufferConsumerListener *>(surfaceCb_.GetRefPtr()))->StopBufferThread();
@@ -4780,8 +4799,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
 #endif
     AccountObserver::GetInstance().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
     if (screenCaptureObserverCb_) {
+        auto observerCb = screenCaptureObserverCb_;
         lock.unlock();
-        screenCaptureObserverCb_->Release();
+        observerCb->Release();
         lock.lock();
     }
     StopScreenCaptureInnerUnBind();
@@ -4923,9 +4943,9 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     std::unordered_map<std::string, std::string> payload;
     int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::STOP_SCREEN_CAPTURE;
     ResSchedReportData(value, payload);
-    RemoveStartedSessionIdList(this->sessionId_);
+    size_t listSize = RemoveStartedSessionIdList(this->sessionId_);
     MEDIA_LOGI("PostStopScreenCapture sessionId: %{public}d is removed from list, list_size is %{public}d.",
-        this->sessionId_, static_cast<uint32_t>(ScreenCaptureServer::startedSessionIDList_.size()));
+        this->sessionId_, static_cast<uint32_t>(listSize));
     captureState_ = AVScreenCaptureState::STOPPED;
 }
 

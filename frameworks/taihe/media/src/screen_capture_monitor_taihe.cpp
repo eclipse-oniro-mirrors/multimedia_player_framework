@@ -39,6 +39,14 @@ ScreenCaptureMonitorImpl::ScreenCaptureMonitorImpl()
     OHOS::Media::ScreenCaptureMonitor::GetInstance()->RegisterScreenCaptureMonitorListener(monitorCb_);
 }
 
+ScreenCaptureMonitorImpl::~ScreenCaptureMonitorImpl()
+{
+    if (monitorCb_ != nullptr) {
+        OHOS::Media::ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(monitorCb_);
+        monitorCb_ = nullptr;
+    }
+}
+
 static void SignError(int32_t code, const std::string &param1, const std::string &param2, const std::string &add = "")
 {
     std::string message = MSExtErrorAPI9ToString(static_cast<OHOS::Media::MediaServiceExtErrCodeAPI9>(code),
