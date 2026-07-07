@@ -123,11 +123,23 @@ class PlayerClientTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
     static void TearDownTestCase(void) {}
-    void SetUp(void) {}
-    void TearDown(void) {}
+    void SetUp(void) override
+    {
+        mockService_ = sptr<MockIPlayerService>::MakeRaw();
+        EXPECT_CALL(*mockService_, SetListenerObject(_)).WillOnce(Return(MSERR_OK));
+        EXPECT_CALL(*mockService_, DestroyStub()).WillRepeatedly(Return(MSERR_OK));
+        playerClient_ = PlayerClient::Create(mockService_);
+        ASSERT_NE(playerClient_, nullptr);
+    }
+    void TearDown(void) override
+    {
+        playerClient_ = nullptr;
+        mockService_ = nullptr;
+    }
 
 protected:
-    sptr<MockIPlayerService> mockPlayerService_;
+    sptr<MockIPlayerService> mockService_;
+    std::shared_ptr<PlayerClient> playerClient_;
 };
 
 } // namespace Media

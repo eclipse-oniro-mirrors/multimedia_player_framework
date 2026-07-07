@@ -411,8 +411,10 @@ HWTEST_F(DownloadTaskTest, CalculateSpeed_001, TestSize.Level0)
     
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
     
+    int64_t downloadedSize = task->GetProgress().downloadedSize;
     int64_t speed = task->CalculateSpeed();
-    EXPECT_GE(speed, 0);
+    EXPECT_GT(downloadedSize, 0);
+    EXPECT_GT(speed, 0);
     
     (void)task->Cancel();
 }
@@ -672,6 +674,11 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_NormalFile_WithExistingFile_001, Tes
         ofs.close();
     }
 
+    struct stat originalStat;
+    EXPECT_EQ(stat(existingFile.c_str(), &originalStat), 0);
+    int64_t originalSize = originalStat.st_size;
+    EXPECT_GT(originalSize, 0);
+
     DownloadTaskInfo info;
     info.taskId = 103;
     info.url = TEST_MEDIA_URL;
@@ -686,10 +693,11 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_NormalFile_WithExistingFile_001, Tes
     (void)task->Start();
     std::this_thread::sleep_for(std::chrono::milliseconds(500));
     
-    DownloadProgress progress = task->GetProgress();
-    EXPECT_GE(progress.downloadedSize, 0);
-    
     (void)task->Cancel();
+
+    struct stat newStat;
+    EXPECT_EQ(stat(existingFile.c_str(), &newStat), 0);
+    EXPECT_GT(newStat.st_size, originalSize);
 }
 
 HWTEST_F(DownloadTaskTest, GetStartPosition_ResumeScenario_001, TestSize.Level0)
@@ -710,13 +718,20 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_ResumeScenario_001, TestSize.Level0)
     
     DownloadState state = task->GetState();
     if (state == DOWNLOAD_RUNNING) {
+        int64_t downloadedBeforePause = task->GetProgress().downloadedSize;
+        EXPECT_GT(downloadedBeforePause, 0);
+
         (void)task->Pause();
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
         
         state = task->GetState();
+        EXPECT_EQ(state, DOWNLOAD_PAUSED);
+
         if (state == DOWNLOAD_PAUSED) {
             (void)task->Resume();
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            int64_t downloadedAfterResume = task->GetProgress().downloadedSize;
+            EXPECT_GT(downloadedAfterResume, downloadedBeforePause);
         }
     }
     

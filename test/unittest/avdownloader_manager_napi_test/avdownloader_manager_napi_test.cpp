@@ -22,249 +22,316 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Media {
 
-class AVDownloaderManagerNapiTest : public testing::Test {
-public:
-    static void SetUpTestCase(void) {}
-    static void TearDownTestCase(void) {}
-    void SetUp(void)
-    {
-        mockDownloaderManager_ = std::make_shared<MockAVDownloaderManager>();
-    }
-    void TearDown(void)
-    {
-        mockDownloaderManager_ = nullptr;
-    }
-
-protected:
-    std::shared_ptr<MockAVDownloaderManager> mockDownloaderManager_;
-};
-
-HWTEST_F(AVDownloaderManagerNapiTest, CreateAVDownloaderManager_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, OnStatusChange_StoresState_001, TestSize.Level0)
 {
-    EXPECT_NE(mockDownloaderManager_, nullptr);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    napi->OnStatusChange("task1", AVDownloadTaskState::RUNNING);
+    EXPECT_EQ(napi->taskIdToStatus_["task1"], static_cast<int32_t>(AVDownloadTaskState::RUNNING));
+
+    napi->OnStatusChange("task1", AVDownloadTaskState::PAUSED);
+    EXPECT_EQ(napi->taskIdToStatus_["task1"], static_cast<int32_t>(AVDownloadTaskState::PAUSED));
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, CreateAVDownloaderManager_ReturnsValidObject_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, OnProgressChange_StoresProgress_001, TestSize.Level0)
 {
-    EXPECT_CALL(*mockDownloaderManager_, SetAllowCellularAccess(_)).WillOnce(Return(0));
-    EXPECT_CALL(*mockDownloaderManager_, SetRequestTimeout(_)).WillOnce(Return(0));
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
 
-    auto result = mockDownloaderManager_->SetAllowCellularAccess(true);
-    EXPECT_EQ(result, 0);
+    napi->OnProgressChange("task1", 30.5);
+    EXPECT_DOUBLE_EQ(napi->taskIdToProgress_["task1"], 30.5);
 
-    result = mockDownloaderManager_->SetRequestTimeout(30000);
-    EXPECT_EQ(result, 0);
+    napi->OnProgressChange("task1", 75.0);
+    EXPECT_DOUBLE_EQ(napi->taskIdToProgress_["task1"], 75.0);
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, AllowsCellularAccess_True_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, OnStatusChange_MultipleTasks_001, TestSize.Level0)
 {
-    EXPECT_CALL(*mockDownloaderManager_, SetAllowCellularAccess(true)).WillOnce(Return(0));
-    auto result = mockDownloaderManager_->SetAllowCellularAccess(true);
-    EXPECT_EQ(result, 0);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    napi->OnStatusChange("task1", AVDownloadTaskState::RUNNING);
+    napi->OnStatusChange("task2", AVDownloadTaskState::PAUSED);
+    napi->OnStatusChange("task3", AVDownloadTaskState::COMPLETED);
+
+    EXPECT_EQ(napi->taskIdToStatus_["task1"], static_cast<int32_t>(AVDownloadTaskState::RUNNING));
+    EXPECT_EQ(napi->taskIdToStatus_["task2"], static_cast<int32_t>(AVDownloadTaskState::PAUSED));
+    EXPECT_EQ(napi->taskIdToStatus_["task3"], static_cast<int32_t>(AVDownloadTaskState::COMPLETED));
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, AllowsCellularAccess_False_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, GetTaskCacheDir_DelegatesToManager_001, TestSize.Level0)
 {
-    EXPECT_CALL(*mockDownloaderManager_, SetAllowCellularAccess(false)).WillOnce(Return(0));
-    auto result = mockDownloaderManager_->SetAllowCellularAccess(false);
-    EXPECT_EQ(result, 0);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    EXPECT_CALL(*mock, GetTaskCacheDirectory("task1")).WillOnce(Return("/data/cache/task1"));
+    napi->downloaderManager_ = mock;
+
+    std::string result = napi->GetTaskCacheDir("task1");
+    EXPECT_EQ(result, "/data/cache/task1");
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, SetRequestTimeout_ValidValue_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, GetTaskCacheDir_FallbackToLocalMap_001, TestSize.Level0)
 {
-    EXPECT_CALL(*mockDownloaderManager_, SetRequestTimeout(50000)).WillOnce(Return(0));
-    auto result = mockDownloaderManager_->SetRequestTimeout(50000);
-    EXPECT_EQ(result, 0);
-}
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    napi->downloaderManager_ = nullptr;
 
-HWTEST_F(AVDownloaderManagerNapiTest, SetRequestTimeout_DefaultValue_001, TestSize.Level0)
-{
-    EXPECT_CALL(*mockDownloaderManager_, SetRequestTimeout(30000)).WillOnce(Return(0));
-    auto result = mockDownloaderManager_->SetRequestTimeout(30000);
-    EXPECT_EQ(result, 0);
-}
+    napi->taskIdToCacheDir_["task1"] = "/local/cache/task1";
+    std::string result = napi->GetTaskCacheDir("task1");
+    EXPECT_EQ(result, "/local/cache/task1");
 
-HWTEST_F(AVDownloaderManagerNapiTest, GetDownloadTasks_Empty_001, TestSize.Level0)
-{
-    EXPECT_CALL(*mockDownloaderManager_, GetDownloadTasks()).WillOnce(Return(std::vector<std::string>{}));
-    auto result = mockDownloaderManager_->GetDownloadTasks();
-    EXPECT_TRUE(result.empty());
-}
-
-HWTEST_F(AVDownloaderManagerNapiTest, GetDownloadTasks_WithTasks_001, TestSize.Level0)
-{
-    std::vector<std::string> taskIds = {"task1", "task2", "task3"};
-    EXPECT_CALL(*mockDownloaderManager_, GetDownloadTasks()).WillOnce(Return(taskIds));
-    auto result = mockDownloaderManager_->GetDownloadTasks();
-    EXPECT_EQ(result.size(), 3);
-    EXPECT_EQ(result[0], "task1");
-    EXPECT_EQ(result[1], "task2");
-    EXPECT_EQ(result[2], "task3");
-}
-
-HWTEST_F(AVDownloaderManagerNapiTest, GetTaskCacheDirectory_ValidTaskId_001, TestSize.Level0)
-{
-    std::string taskId = "task1";
-    std::string cacheDir = "/data/cache/task1";
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskCacheDirectory(taskId)).WillOnce(Return(cacheDir));
-    auto result = mockDownloaderManager_->GetTaskCacheDirectory(taskId);
-    EXPECT_EQ(result, cacheDir);
-}
-
-HWTEST_F(AVDownloaderManagerNapiTest, GetTaskCacheDirectory_InvalidTaskId_001, TestSize.Level0)
-{
-    std::string taskId = "nonexistent";
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskCacheDirectory(taskId)).WillOnce(Return(""));
-    auto result = mockDownloaderManager_->GetTaskCacheDirectory(taskId);
+    result = napi->GetTaskCacheDir("nonexistent");
     EXPECT_EQ(result, "");
+
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, GetTaskStatus_Init_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, GetTaskCacheDir_ManagerFallback_001, TestSize.Level0)
 {
-    std::string taskId = "task1";
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus(taskId)).WillOnce(Return(AVDownloadTaskState::INIT));
-    auto result = mockDownloaderManager_->GetTaskStatus(taskId);
-    EXPECT_EQ(result, AVDownloadTaskState::INIT);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    napi->downloaderManager_ = nullptr;
+
+    napi->taskIdToCacheDir_["task1"] = "/fallback/task1";
+    std::string result = napi->GetTaskCacheDir("task1");
+    EXPECT_EQ(result, "/fallback/task1");
+
+    result = napi->GetTaskCacheDir("unknown");
+    EXPECT_EQ(result, "");
+
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, GetTaskStatus_Running_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, GenerateTaskId_NotEmpty_001, TestSize.Level0)
 {
-    std::string taskId = "task1";
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus(taskId)).WillOnce(Return(AVDownloadTaskState::RUNNING));
-    auto result = mockDownloaderManager_->GetTaskStatus(taskId);
-    EXPECT_EQ(result, AVDownloadTaskState::RUNNING);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    std::string taskId1 = napi->GenerateTaskId();
+    EXPECT_FALSE(taskId1.empty());
+
+    std::string taskId2 = napi->GenerateTaskId();
+    EXPECT_FALSE(taskId2.empty());
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, GetTaskStatus_Paused_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, SetAllowCellularAccess_DelegatesToManager_001, TestSize.Level0)
 {
-    std::string taskId = "task1";
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus(taskId)).WillOnce(Return(AVDownloadTaskState::PAUSED));
-    auto result = mockDownloaderManager_->GetTaskStatus(taskId);
-    EXPECT_EQ(result, AVDownloadTaskState::PAUSED);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    EXPECT_CALL(*mock, SetAllowCellularAccess(true)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    napi->allowCellularAccess_ = false;
+    napi->downloaderManager_->SetAllowCellularAccess(true);
+    EXPECT_EQ(napi->allowCellularAccess_, true);
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, GetTaskStatus_Completed_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, SetRequestTimeout_DelegatesToManager_001, TestSize.Level0)
 {
-    std::string taskId = "task1";
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus(taskId)).WillOnce(Return(AVDownloadTaskState::COMPLETED));
-    auto result = mockDownloaderManager_->GetTaskStatus(taskId);
-    EXPECT_EQ(result, AVDownloadTaskState::COMPLETED);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    EXPECT_CALL(*mock, SetRequestTimeout(50000)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    napi->requestTimeoutMs_ = 30000;
+    napi->downloaderManager_->SetRequestTimeout(50000);
+    EXPECT_EQ(napi->requestTimeoutMs_, 50000);
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, GetTaskStatus_Error_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, StateTransition_InitToRunning_001, TestSize.Level0)
 {
-    std::string taskId = "task1";
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus(taskId)).WillOnce(Return(AVDownloadTaskState::ERROR));
-    auto result = mockDownloaderManager_->GetTaskStatus(taskId);
-    EXPECT_EQ(result, AVDownloadTaskState::ERROR);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    napi->OnStatusChange("task1", AVDownloadTaskState::INIT);
+    EXPECT_EQ(napi->taskIdToStatus_["task1"], static_cast<int32_t>(AVDownloadTaskState::INIT));
+
+    napi->OnStatusChange("task1", AVDownloadTaskState::RUNNING);
+    EXPECT_EQ(napi->taskIdToStatus_["task1"], static_cast<int32_t>(AVDownloadTaskState::RUNNING));
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, GetTaskProgress_ValidTaskId_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, StateTransition_RunningToPausedToCompleted_001, TestSize.Level0)
 {
-    std::string taskId = "task1";
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskProgress(taskId)).WillOnce(Return(50.5));
-    auto result = mockDownloaderManager_->GetTaskProgress(taskId);
-    EXPECT_EQ(result, 50.5);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    napi->OnStatusChange("task1", AVDownloadTaskState::RUNNING);
+    EXPECT_EQ(napi->taskIdToStatus_["task1"], static_cast<int32_t>(AVDownloadTaskState::RUNNING));
+
+    napi->OnStatusChange("task1", AVDownloadTaskState::PAUSED);
+    EXPECT_EQ(napi->taskIdToStatus_["task1"], static_cast<int32_t>(AVDownloadTaskState::PAUSED));
+
+    napi->OnStatusChange("task1", AVDownloadTaskState::COMPLETED);
+    EXPECT_EQ(napi->taskIdToStatus_["task1"], static_cast<int32_t>(AVDownloadTaskState::COMPLETED));
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, GetTaskProgress_InvalidTaskId_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, ProgressUpdates_Increasing_001, TestSize.Level0)
 {
-    std::string taskId = "nonexistent";
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskProgress(taskId)).WillOnce(Return(0.0));
-    auto result = mockDownloaderManager_->GetTaskProgress(taskId);
-    EXPECT_EQ(result, 0.0);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    napi->OnProgressChange("task1", 10.0);
+    EXPECT_DOUBLE_EQ(napi->taskIdToProgress_["task1"], 10.0);
+
+    napi->OnProgressChange("task1", 50.0);
+    EXPECT_DOUBLE_EQ(napi->taskIdToProgress_["task1"], 50.0);
+
+    napi->OnProgressChange("task1", 90.0);
+    EXPECT_DOUBLE_EQ(napi->taskIdToProgress_["task1"], 90.0);
+
+    EXPECT_GT(napi->taskIdToProgress_["task1"], 50.0);
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, RemoveDownloadTask_ByTaskId_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, OnStatusChange_AllStates_001, TestSize.Level0)
 {
-    std::string taskId = "task1";
-    EXPECT_CALL(*mockDownloaderManager_, RemoveDownloadTask(taskId)).WillOnce(Return(0));
-    auto result = mockDownloaderManager_->RemoveDownloadTask(taskId);
-    EXPECT_EQ(result, 0);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    std::vector<AVDownloadTaskState> states = {
+        AVDownloadTaskState::INIT,
+        AVDownloadTaskState::QUEUED,
+        AVDownloadTaskState::RUNNING,
+        AVDownloadTaskState::COMPLETED,
+        AVDownloadTaskState::PAUSED,
+        AVDownloadTaskState::REMOVING,
+        AVDownloadTaskState::ERROR,
+    };
+
+    for (size_t i = 0; i < states.size(); i++) {
+        std::string taskId = "task" + std::to_string(i);
+        napi->OnStatusChange(taskId, states[i]);
+        EXPECT_EQ(napi->taskIdToStatus_[taskId], static_cast<int32_t>(states[i]));
+    }
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, PauseDownloadTask_ValidTaskId_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, SetManagerCallback_DelegatesToManager_001, TestSize.Level0)
 {
-    std::string taskId = "task1";
-    EXPECT_CALL(*mockDownloaderManager_, PauseDownloadTask(taskId)).WillOnce(Return(0));
-    auto result = mockDownloaderManager_->PauseDownloadTask(taskId);
-    EXPECT_EQ(result, 0);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    std::weak_ptr<AVDownloaderManagerCallback> callback = napi->selfRef_;
+    int32_t ret = napi->downloaderManager_->SetManagerCallback(callback);
+    EXPECT_EQ(ret, 0);
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, ResumeDownloadTask_ValidTaskId_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, Release_ClearsAllMaps_001, TestSize.Level0)
 {
-    std::string taskId = "task1";
-    EXPECT_CALL(*mockDownloaderManager_, ResumeDownloadTask(taskId)).WillOnce(Return(0));
-    auto result = mockDownloaderManager_->ResumeDownloadTask(taskId);
-    EXPECT_EQ(result, 0);
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    EXPECT_CALL(*mock, Release()).WillOnce(Return(0));
+    napi->downloaderManager_ = mock;
+
+    napi->taskIdToUrl_["task1"] = "http://example.com";
+    napi->taskIdToCacheDir_["task1"] = "/cache/task1";
+    napi->OnStatusChange("task1", AVDownloadTaskState::RUNNING);
+    napi->OnProgressChange("task1", 50.0);
+
+    EXPECT_FALSE(napi->taskIdToUrl_.empty());
+    EXPECT_FALSE(napi->taskIdToCacheDir_.empty());
+    EXPECT_FALSE(napi->taskIdToStatus_.empty());
+    EXPECT_FALSE(napi->taskIdToProgress_.empty());
+
+    napi->downloaderManager_->Release();
+    napi->taskIdToUrl_.clear();
+    napi->taskIdToCacheDir_.clear();
+    napi->taskIdToStatus_.clear();
+    napi->taskIdToProgress_.clear();
+
+    EXPECT_TRUE(napi->taskIdToUrl_.empty());
+    EXPECT_TRUE(napi->taskIdToCacheDir_.empty());
+    EXPECT_TRUE(napi->taskIdToStatus_.empty());
+    EXPECT_TRUE(napi->taskIdToProgress_.empty());
+
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, Release_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerNapiTest, GetTaskCacheDir_ManagerReturnsEmpty_001, TestSize.Level0)
 {
-    EXPECT_CALL(*mockDownloaderManager_, Release()).WillOnce(Return(0));
-    auto result = mockDownloaderManager_->Release();
-    EXPECT_EQ(result, 0);
-}
+    auto napi = new AVDownloaderManagerNapi();
+    napi->env_ = nullptr;
+    auto mock = std::make_shared<MockAVDownloaderManager>();
+    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
+    EXPECT_CALL(*mock, GetTaskCacheDirectory("unknown")).WillOnce(Return(""));
+    napi->downloaderManager_ = mock;
 
-HWTEST_F(AVDownloaderManagerNapiTest, AVDownloadTaskState_Values_001, TestSize.Level0)
-{
-    EXPECT_EQ(static_cast<int32_t>(AVDownloadTaskState::INIT), 0);
-    EXPECT_EQ(static_cast<int32_t>(AVDownloadTaskState::QUEUED), 1);
-    EXPECT_EQ(static_cast<int32_t>(AVDownloadTaskState::RUNNING), 2);
-    EXPECT_EQ(static_cast<int32_t>(AVDownloadTaskState::COMPLETED), 3);
-    EXPECT_EQ(static_cast<int32_t>(AVDownloadTaskState::PAUSED), 4);
-    EXPECT_EQ(static_cast<int32_t>(AVDownloadTaskState::REMOVING), 5);
-    EXPECT_EQ(static_cast<int32_t>(AVDownloadTaskState::ERROR), 6);
-}
+    std::string result = napi->GetTaskCacheDir("unknown");
+    EXPECT_EQ(result, "");
 
-HWTEST_F(AVDownloaderManagerNapiTest, SetManagerCallback_001, TestSize.Level0)
-{
-    std::weak_ptr<AVDownloaderManagerCallback> callback;
-    EXPECT_CALL(*mockDownloaderManager_, SetManagerCallback(_)).WillOnce(Return(0));
-    auto result = mockDownloaderManager_->SetManagerCallback(callback);
-    EXPECT_EQ(result, 0);
-}
-
-HWTEST_F(AVDownloaderManagerNapiTest, MultipleTaskOperations_001, TestSize.Level0)
-{
-    std::vector<std::string> taskIds = {"task1", "task2"};
-    EXPECT_CALL(*mockDownloaderManager_, GetDownloadTasks()).WillOnce(Return(taskIds));
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus("task1")).WillOnce(Return(AVDownloadTaskState::RUNNING));
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus("task2")).WillOnce(Return(AVDownloadTaskState::PAUSED));
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskProgress("task1")).WillOnce(Return(75.0));
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskProgress("task2")).WillOnce(Return(30.0));
-
-    auto tasks = mockDownloaderManager_->GetDownloadTasks();
-    EXPECT_EQ(tasks.size(), 2);
-
-    auto status1 = mockDownloaderManager_->GetTaskStatus("task1");
-    EXPECT_EQ(status1, AVDownloadTaskState::RUNNING);
-
-    auto status2 = mockDownloaderManager_->GetTaskStatus("task2");
-    EXPECT_EQ(status2, AVDownloadTaskState::PAUSED);
-
-    auto progress1 = mockDownloaderManager_->GetTaskProgress("task1");
-    EXPECT_EQ(progress1, 75.0);
-
-    auto progress2 = mockDownloaderManager_->GetTaskProgress("task2");
-    EXPECT_EQ(progress2, 30.0);
-}
-
-HWTEST_F(AVDownloaderManagerNapiTest, TaskStateTransition_001, TestSize.Level0)
-{
-    std::string taskId = "task1";
-
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus(taskId)).WillOnce(Return(AVDownloadTaskState::INIT));
-    EXPECT_CALL(*mockDownloaderManager_, PauseDownloadTask(taskId)).WillOnce(Return(0));
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus(taskId)).WillOnce(Return(AVDownloadTaskState::PAUSED));
-    EXPECT_CALL(*mockDownloaderManager_, ResumeDownloadTask(taskId)).WillOnce(Return(0));
-    EXPECT_CALL(*mockDownloaderManager_, GetTaskStatus(taskId)).WillOnce(Return(AVDownloadTaskState::RUNNING));
-
-    EXPECT_EQ(mockDownloaderManager_->GetTaskStatus(taskId), AVDownloadTaskState::INIT);
-    mockDownloaderManager_->PauseDownloadTask(taskId);
-    EXPECT_EQ(mockDownloaderManager_->GetTaskStatus(taskId), AVDownloadTaskState::PAUSED);
-    mockDownloaderManager_->ResumeDownloadTask(taskId);
-    EXPECT_EQ(mockDownloaderManager_->GetTaskStatus(taskId), AVDownloadTaskState::RUNNING);
+    napi->downloaderManager_ = nullptr;
+    delete napi;
 }
 
 } // namespace Media

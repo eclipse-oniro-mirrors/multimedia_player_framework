@@ -47,20 +47,32 @@ HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithUrl_WithHeader_001, TestSize.
 
 HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithFd_001, TestSize.Level0)
 {
-    auto mediaSource = std::make_shared<MockMediaSource>();
+    auto mediaSource = std::make_shared<MockMediaSource>("fd://42?offset=0&size=1024");
     ASSERT_NE(mediaSource, nullptr);
+    EXPECT_CALL(*mediaSource, GetSourceUri()).WillRepeatedly(Return("fd://42?offset=0&size=1024"));
+    EXPECT_EQ(mediaSource->GetSourceUri(), "fd://42?offset=0&size=1024");
+    EXPECT_CALL(*mediaSource, GetSourceType()).WillRepeatedly(Return(Plugins::MediaSourceType::SOURCE_TYPE_FD));
+    EXPECT_EQ(mediaSource->GetSourceType(), Plugins::MediaSourceType::SOURCE_TYPE_FD);
 }
 
 HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithDataSource_001, TestSize.Level0)
 {
     auto mediaSource = std::make_shared<MockMediaSource>();
     ASSERT_NE(mediaSource, nullptr);
+    EXPECT_CALL(*mediaSource, GetSourceUri()).WillRepeatedly(Return(""));
+    EXPECT_EQ(mediaSource->GetSourceUri(), "");
+    EXPECT_CALL(*mediaSource, GetSourceType()).WillRepeatedly(Return(Plugins::MediaSourceType::SOURCE_TYPE_STREAM));
+    EXPECT_EQ(mediaSource->GetSourceType(), Plugins::MediaSourceType::SOURCE_TYPE_STREAM);
 }
 
 HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithStreamData_Empty_001, TestSize.Level0)
 {
     auto mediaSource = std::make_shared<MockMediaSource>();
     ASSERT_NE(mediaSource, nullptr);
+    EXPECT_CALL(*mediaSource, GetSourceUri()).WillRepeatedly(Return(""));
+    EXPECT_EQ(mediaSource->GetSourceUri(), "");
+    EXPECT_CALL(*mediaSource, GetSourceType()).WillRepeatedly(Return(Plugins::MediaSourceType::SOURCE_TYPE_STREAM));
+    EXPECT_EQ(mediaSource->GetSourceType(), Plugins::MediaSourceType::SOURCE_TYPE_STREAM);
 }
 
 HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithDirectory_ValidPath_001, TestSize.Level0)
@@ -75,6 +87,8 @@ HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithDirectory_InvalidPath_001, Te
 {
     auto mediaSource = std::make_shared<MockMediaSource>("");
     ASSERT_NE(mediaSource, nullptr);
+    EXPECT_CALL(*mediaSource, GetSourceUri()).WillRepeatedly(Return(""));
+    EXPECT_EQ(mediaSource->GetSourceUri(), "");
 }
 
 HWTEST_F(MediaSourceNapiTest, MediaSourceType_001, TestSize.Level0)
