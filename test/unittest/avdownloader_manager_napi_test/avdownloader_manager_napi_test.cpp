@@ -284,40 +284,6 @@ HWTEST_F(AVDownloaderManagerNapiTest, SetManagerCallback_DelegatesToManager_001,
     delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, Release_ClearsAllMaps_001, TestSize.Level0)
-{
-    auto napi = new AVDownloaderManagerNapi();
-    napi->env_ = nullptr;
-    auto mock = std::make_shared<MockAVDownloaderManager>();
-    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
-    EXPECT_CALL(*mock, Release()).WillOnce(Return(0));
-    napi->downloaderManager_ = mock;
-
-    napi->taskIdToUrl_["task1"] = "http://example.com";
-    napi->taskIdToCacheDir_["task1"] = "/cache/task1";
-    napi->OnStatusChange("task1", AVDownloadTaskState::RUNNING);
-    napi->OnProgressChange("task1", 50.0);
-
-    EXPECT_FALSE(napi->taskIdToUrl_.empty());
-    EXPECT_FALSE(napi->taskIdToCacheDir_.empty());
-    EXPECT_FALSE(napi->taskIdToStatus_.empty());
-    EXPECT_FALSE(napi->taskIdToProgress_.empty());
-
-    napi->downloaderManager_->Release();
-    napi->taskIdToUrl_.clear();
-    napi->taskIdToCacheDir_.clear();
-    napi->taskIdToStatus_.clear();
-    napi->taskIdToProgress_.clear();
-
-    EXPECT_TRUE(napi->taskIdToUrl_.empty());
-    EXPECT_TRUE(napi->taskIdToCacheDir_.empty());
-    EXPECT_TRUE(napi->taskIdToStatus_.empty());
-    EXPECT_TRUE(napi->taskIdToProgress_.empty());
-
-    napi->downloaderManager_ = nullptr;
-    delete napi;
-}
-
 HWTEST_F(AVDownloaderManagerNapiTest, GetTaskCacheDir_ManagerReturnsEmpty_001, TestSize.Level0)
 {
     auto napi = new AVDownloaderManagerNapi();

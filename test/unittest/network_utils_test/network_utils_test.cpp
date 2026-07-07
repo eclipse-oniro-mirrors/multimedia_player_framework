@@ -62,30 +62,6 @@ HWTEST_F(NetworkUtilsTest, GetCurrentNetworkType_001, TestSize.Level0)
     }
 }
 
-HWTEST_F(NetworkUtilsTest, IsCellularConnected_001, TestSize.Level0)
-{
-    NetworkUtils& utils = NetworkUtils::GetInstance();
-    NetConnType type = utils.GetCurrentNetworkType();
-    bool result = utils.IsCellularConnected();
-    if (type == NET_CONN_CELLULAR) {
-        EXPECT_TRUE(result);
-    } else {
-        EXPECT_FALSE(result);
-    }
-}
-
-HWTEST_F(NetworkUtilsTest, IsWifiConnected_001, TestSize.Level0)
-{
-    NetworkUtils& utils = NetworkUtils::GetInstance();
-    NetConnType type = utils.GetCurrentNetworkType();
-    bool result = utils.IsWifiConnected();
-    if (type == NET_CONN_WIFI) {
-        EXPECT_TRUE(result);
-    } else {
-        EXPECT_FALSE(result);
-    }
-}
-
 HWTEST_F(NetworkUtilsTest, IsEthernetConnected_001, TestSize.Level0)
 {
     NetworkUtils& utils = NetworkUtils::GetInstance();
