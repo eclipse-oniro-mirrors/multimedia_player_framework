@@ -159,6 +159,7 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
         }
         auto proxy = weakProxy_.promote();
         CHECK_AND_RETURN_LOG(proxy != nullptr, "media proxy is nullptr.");
+        CHECK_AND_RETURN_LOG(listenerStub_ != nullptr, "listenerStub_ is nullptr.");
         object = proxy->GetSubSystemAbilityWithTimeOut(subSystemId, listenerStub_->AsObject(), MAX_WAIT_TIME);
         if (object != nullptr) {
             return;
@@ -171,6 +172,7 @@ void MediaClient::CreateMediaServiceInstance(IStandardMediaService::MediaSystemA
     CHECK_AND_RETURN_LOG(IsAlived(), "media service does not exist.");
     auto proxy = weakProxy_.promote();
     CHECK_AND_RETURN_LOG(proxy != nullptr, "media proxy is nullptr.");
+    CHECK_AND_RETURN_LOG(listenerStub_ != nullptr, "listenerStub_ is nullptr.");
     object = proxy->GetSubSystemAbility(subSystemId, listenerStub_->AsObject());
 #endif
 }
