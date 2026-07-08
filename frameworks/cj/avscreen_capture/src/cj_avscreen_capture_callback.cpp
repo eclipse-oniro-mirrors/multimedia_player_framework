@@ -32,22 +32,30 @@ CJAVScreenCaptureCallback::~CJAVScreenCaptureCallback()
 
 void CJAVScreenCaptureCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (onerrorfunc == nullptr) {
-        MEDIA_LOGW("can not find error callback!");
-        return;
+    std::function<void(int32_t, const char *)> cb;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (onerrorfunc == nullptr) {
+            MEDIA_LOGW("can not find error callback!");
+            return;
+        }
+        cb = onerrorfunc;
     }
-    onerrorfunc(errCode, msg.c_str());
+    cb(errCode, msg.c_str());
 }
 
 void CJAVScreenCaptureCallback::SendStateCallback(AVScreenCaptureStateCode stateCode)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (onstatechangefunc == nullptr) {
-        MEDIA_LOGW("can not find stateChange callback!");
-        return;
+    std::function<void(AVScreenCaptureStateCode)> cb;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (onstatechangefunc == nullptr) {
+            MEDIA_LOGW("can not find stateChange callback!");
+            return;
+        }
+        cb = onstatechangefunc;
     }
-    onstatechangefunc(stateCode);
+    cb(stateCode);
 }
 
 void CJAVScreenCaptureCallback::SaveCallbackReference(const std::string &name, int64_t callbackId)

@@ -144,6 +144,10 @@ int32_t CjAudioHapticPlayer::On(const char* type, int64_t callbackId)
 
 int32_t CjAudioHapticPlayer::Off(const char* type)
 {
+    if (!cjCallback) {
+        MEDIA_LOGE("cjCallback is null");
+        return SUCCESS;
+    }
     cjCallback->RemoveCallbackReference(type);
     return SUCCESS;
 }
