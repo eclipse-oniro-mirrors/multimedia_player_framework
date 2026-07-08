@@ -48,6 +48,7 @@
       *OHOS::Media::MediaServiceHelper::ProxyForFreeze*;
       *OHOS::Media::MediaServiceHelper::ResetAllProxy*;
       *OHOS::Media::MediaDownload::*;
+      *OHOS::Media::AVDownloaderManagerFactory::*;
     };
     "*MSErrorToString*";
     "*MSExtErrorToString*";
