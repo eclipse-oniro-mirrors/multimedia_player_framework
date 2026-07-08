@@ -2290,10 +2290,7 @@ std::shared_ptr<OHOS::Media::MockDataShareHelper> CreateMockHelperWithResultSet(
 
     return mockHelper;
 }
-
 }
-
-using namespace testing;
 
 /**
  * @tc.name  : ClearNotificationToneType_NullResults
