@@ -248,6 +248,10 @@ int32_t CJAVMetadataExtractorImpl::FetchMetadata(CAVMetadata* data)
         MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
         return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
     }
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("Invalid CJAVMetadataExtractorImpl.");
+        return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
+    }
     auto metadata = helper_->GetAVMetadata();
     for (const auto &key : g_Metadata) {
         if (metadata->Find(key) == metadata->end()) {
@@ -284,6 +288,10 @@ int64_t CJAVMetadataExtractorImpl::FetchAlbumCover()
         MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
         return 0;
     }
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("Invalid CJAVMetadataExtractorImpl.");
+        return 0;
+    }
     auto sharedMemory = helper_->FetchArtPicture();
     auto pixelMap = ConvertMemToPixelMap(sharedMemory);
     if (pixelMap == nullptr) {
@@ -299,11 +307,19 @@ int64_t CJAVMetadataExtractorImpl::FetchAlbumCover()
 
 int32_t CJAVMetadataExtractorImpl::SetAVFileDescriptor(CAVFileDescriptor file)
 {
+    if (state_ != HelperState::HELPER_STATE_IDLE) {
+        MEDIA_LOGE("Has set source once, unsupport set again.");
+        return MSERR_OK;
+    }
     fileDescriptor_.fd = file.fd;
     fileDescriptor_.offset = file.offset;
     fileDescriptor_.length = file.length;
     MEDIA_LOGD("get fd argument, fd = %{public}d, offset = %{public}" PRIi64 ", size = %{public}" PRIi64 "",
         fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length);
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("helper_ is released");
+        return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
+    }
     auto res = helper_->SetSource(fileDescriptor_.fd, fileDescriptor_.offset, fileDescriptor_.length);
     state_ = res == MSERR_OK ? HelperState::HELPER_STATE_RUNNABLE : HelperState::HELPER_ERROR;
     return MSERR_OK;
@@ -353,6 +369,7 @@ int32_t CJAVMetadataExtractorImpl::GetAVDataSrcDescriptor(CAVDataSrcDescriptor* 
     if (data == nullptr) {
         return MSERR_INVALID_VAL;
     }
+    CHECK_AND_RETURN_RET_LOG(dataSrcCb_ != nullptr, MSERR_INVALID_VAL, "dataSrcCb_ is nullptr");
     dataSrcCb_->GetSize(dataSrcDescriptor_.fileSize);
     dataSrcCb_->GetCallbackId(dataSrcDescriptor_.callback);
     data->fileSize = dataSrcDescriptor_.fileSize;
@@ -394,7 +411,13 @@ void CJAVMetadataExtractorImpl::Release()
         dataSrcCb_->ClearCallbackReference();
         dataSrcCb_ = nullptr;
     }
+    if (helper_ == nullptr) {
+        MEDIA_LOGE("helper_ is nullptr!");
+        return;
+    }
     helper_->Release();
+    helper_ = nullptr;
+    state_ = HelperState::HELPER_STATE_RELEASED;
 }
 
 } // namespace Media
