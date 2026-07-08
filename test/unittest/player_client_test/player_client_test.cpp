@@ -246,7 +246,8 @@ HWTEST_F(PlayerClientTest, SetPlayRange_DelegatesToProxy_001, TestSize.Level0)
 
 HWTEST_F(PlayerClientTest, SetPlayRangeWithMode_DelegatesToProxy_001, TestSize.Level0)
 {
-    EXPECT_CALL(*mockService_, SetPlayRangeWithMode(0, 60000, PlayerSeekMode::SEEK_PREVIOUS_SYNC)).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*mockService_,
+        SetPlayRangeWithMode(0, 60000, PlayerSeekMode::SEEK_PREVIOUS_SYNC)).WillOnce(Return(MSERR_OK));
     int32_t ret = playerClient_->SetPlayRangeWithMode(0, 60000, PlayerSeekMode::SEEK_PREVIOUS_SYNC);
     EXPECT_EQ(ret, MSERR_OK);
 }
