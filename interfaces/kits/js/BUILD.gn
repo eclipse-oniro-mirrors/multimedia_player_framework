@@ -164,7 +164,6 @@ ohos_shared_library("media") {
 
   deps = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-    "//foundation/multimedia/player_framework/services/services/media_source/av_downloader_manager:media_av_downloader_manager",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 

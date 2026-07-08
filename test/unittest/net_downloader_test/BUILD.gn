@@ -48,6 +48,7 @@ ohos_unittest("net_downloader_test") {
     "googletest:gmock",
     "hilog:libhilog",
     "media_foundation:media_foundation",
+    "netmanager_base:net_conn_manager_if",
   ]
 
   deps = [
@@ -66,6 +67,7 @@ ohos_unittest("net_downloader_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/message_queue.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/network_client_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/network_monitor.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils/network_utils.cpp",
     "common/http_server_demo.cpp",
     "common/net_downloader_test_common.h",
     "download_task_test.cpp",
@@ -109,6 +111,7 @@ ohos_unittest("net_downloader_client_agent_test") {
     "googletest:gmock",
     "hilog:libhilog",
     "media_foundation:media_foundation",
+    "netmanager_base:net_conn_manager_if",
   ]
 
   deps = [
@@ -127,6 +130,7 @@ ohos_unittest("net_downloader_client_agent_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/message_queue.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/network_client_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/network_monitor.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils/network_utils.cpp",
     "common/net_downloader_test_common.h",
     "network_client_agent_test.cpp",
   ]

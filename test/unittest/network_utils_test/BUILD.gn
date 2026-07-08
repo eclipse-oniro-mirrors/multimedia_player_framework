@@ -46,6 +46,7 @@ ohos_unittest("network_utils_test") {
     "googletest:gmock",
     "hilog:libhilog",
     "media_foundation:media_foundation",
+    "netmanager_base:net_conn_manager_if",
   ]
 
   deps = [

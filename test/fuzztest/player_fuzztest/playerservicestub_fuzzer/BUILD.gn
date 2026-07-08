@@ -59,7 +59,6 @@ ohos_fuzztest("PlayerServiceStubFuzzTest") {
   deps = [
     "../../../../interfaces/inner_api/native:media_client",
     "../../../../services/services:media_service",
-    "../../../../services/services/media_source/net_downloader:media_client_net_downloader",
   ]
   external_deps = [
     "c_utils:utils",
