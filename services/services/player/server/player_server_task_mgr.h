@@ -94,7 +94,7 @@ private:
     __attribute__((visibility("hidden")))
     int32_t currentSeekMode_ = -1;
     __attribute__((visibility("hidden")))
-    int64_t currentSeekTime_ = -1;
+    int32_t currentSeekTime_ = -1;
     __attribute__((visibility("hidden")))
     std::list<TwoPhaseTaskItem> pendingTwoPhaseTasks_;
     __attribute__((visibility("hidden")))
