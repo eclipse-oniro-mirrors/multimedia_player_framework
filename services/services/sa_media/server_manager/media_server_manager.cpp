@@ -605,6 +605,7 @@ int32_t MediaServerManager::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
     return -1;
 }
 
+
 sptr<IRemoteObject> MediaServerManager::CreateLppVideoPlayerStubObject()
 {
     MEDIA_LOGI("CreateLppVideoPlayerStubObject start");

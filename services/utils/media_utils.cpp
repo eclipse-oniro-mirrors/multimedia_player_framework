@@ -62,8 +62,8 @@ const std::unordered_map<Status, int32_t> transcoder_statusPair = {
     {Status::ERROR_SET_OUTPUT_SURFACE_FAILED, MSERR_SET_OUTPUT_SURFACE_FAILED},
     {Status::ERROR_AUD_ENC_FAILED, MSERR_AUD_ENC_FAILED},
     {Status::ERROR_VID_RESIZE_FAILED, MSERR_VID_RESIZE_FAILED},
+    {Status::ERROR_OUT_OF_RANGE, MSERR_PARAM_OUT_OF_RANGE},
 };
-
 
 const std::unordered_map<Status, int32_t> recorder_statusPair = {
     {Status::OK, MSERR_OK},
@@ -441,5 +441,6 @@ int32_t __attribute__((visibility("default"))) GetAPIVersion()
         return FAULT_API_VERSION;
     #endif
 }
+
 }  // namespace Media
 }  // namespace OHOS

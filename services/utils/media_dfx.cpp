@@ -74,7 +74,7 @@ namespace {
     bool g_reachMaxMapSize {false};
     bool g_reachMaxMapSizeStalling {false};
 
-    int32_t ValidateOrInstanceId(CallType callType, int32_t uid, uint64_t instanceId, const char* funcName)
+    int32_t ValidateOrAddInstanceId(CallType callType, int32_t uid, uint64_t instanceId, const char* funcName)
     {
         auto instanceIdMap = idMap_.find(instanceId);
         if (instanceIdMap != idMap_.end()) {
@@ -94,7 +94,7 @@ namespace {
     void SetPlayErrEvents(CallType callType, int32_t uid, json &eventInfoJson)
     {
         std::lock_guard<std::mutex> lock(collectMut_);
-        auto  playErrIt = playErrInfoMap_.find(callType);
+        auto playErrIt = playErrInfoMap_.find(callType);
         if (playErrIt == playErrInfoMap_.end()) {
             return;
         }
@@ -274,6 +274,7 @@ namespace {
         {
             std::lock_guard<std::mutex> lock(collectMut_);
             reportPlaybackInfoMap_.clear();
+            playErrInfoMap_.clear();
         }
         {
             std::lock_guard<std::mutex> lock(subtitleCbReportMut_);
@@ -310,7 +311,6 @@ namespace {
         {
             std::lock_guard<std::mutex> lock(collectMut_);
             reportStallingInfoMap_.clear();
-            playErrInfoMap_.clear();
         }
     }
 
@@ -707,7 +707,7 @@ int32_t CreatePlaybackInfo(CallType callType, int32_t uid, uint64_t instanceId)
     MEDIA_LOG_I("CreatePlaybackInfo uid is: %{public}" PRId32, uid);
     {
         std::lock_guard<std::mutex> lock(collectMut_);
-        auto ret = ValidateOrInstanceId(callType, uid, instanceId, "CreatePlaybackInfo");
+        auto ret = ValidateOrAddInstanceId(callType, uid, instanceId, "CreatePlaybackInfo");
         if (ret != OHOS::Media::MSERR_OK) {
             return ret;
         }
@@ -737,7 +737,7 @@ int32_t CreateStallingInfo(CallType callType, int32_t uid, uint64_t instanceId)
     MEDIA_LOG_I("CreateStallingInfo uid is: %{public}" PRId32, uid);
     {
         std::lock_guard<std::mutex> lock(collectMut_);
-        auto ret = ValidateOrInstanceId(callType, uid, instanceId, "CreateStallingInfo");
+        auto ret = ValidateOrAddInstanceId(callType, uid, instanceId, "CreateStallingInfo");
         if (ret != OHOS::Media::MSERR_OK) {
             return ret;
         }
@@ -755,12 +755,12 @@ int32_t CreatePlayErrInfo(CallType callType, int32_t uid, uint64_t instanceId)
 {
     MEDIA_LOG_I("CreatePlayErrInfo uid is: %{public}" PRId32, uid);
     std::lock_guard<std::mutex> lock(collectMut_);
-    auto ret = ValidateOrInstanceId(callType, uid, instanceId, "CreateStallingInfo");
+    auto ret = ValidateOrAddInstanceId(callType, uid, instanceId, "CreatePlayErrInfo");
     if (ret != OHOS::Media::MSERR_OK) {
         return ret;
     }
     playErrInfoMap_[callType][uid] = std::map<PlayErrEvent, uint32_t>();
-    MEDIA_LOG_D("CreatePlayErrInfo Successfully created playErrInfo for callType and uid");
+    MEDIA_LOG_D("CreatePlayErrInfo: Successfully created playErrInfo for callType and uid");
     return OHOS::Media::MSERR_OK;
 }
 
@@ -964,7 +964,7 @@ int32_t AppendPlayErrInfo(PlayErrEvent eventType, uint64_t instanceId)
     std::lock_guard<std::mutex> lock(collectMut_);
     auto idMapIt = idMap_.find(instanceId);
     if (idMapIt == idMap_.end()) {
-        MEDIA_LOG_I("Not found instanceId when append stalling meta");
+        MEDIA_LOG_I("Not found instanceId when append play err info");
         return MSERR_INVALID_VAL;
     }
     CallType ct = idMapIt->second.first;

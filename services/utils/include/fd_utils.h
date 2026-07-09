@@ -63,7 +63,6 @@ public:
         return FdsanFd();
     }
 
-private:
 #if __linux__
     static bool LocalFd(int32_t fd)
     {
@@ -80,6 +79,7 @@ private:
     }
 #endif
 
+private:
     // The HMDFS I/O control code
     static constexpr unsigned int HMDFS_IOC = 0xf2;
     // The I/O control code for retrieving the HMDFS location
