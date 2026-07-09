@@ -74,6 +74,9 @@ const off_t MAX_FILE_SIZE_200M = 200 * 1024 * 1024;
 const int32_t PARAM1 = 1;
 const int32_t PARAM2 = 2;
 const int32_t TONE_BIT_BASE = 1;
+const int32_t RINGER_MODE_OFFSET_RING_OR_SILENT = 0;
+const int32_t RINGER_MODE_OFFSET_VIBRATE = 1;
+const int32_t TONE_SETTING_TYPE_BASE = 100;
 #ifdef SUPPORT_VIBRATOR
 const int OPERATION_ERROR = -4;
 #endif
@@ -124,7 +127,7 @@ std::unordered_map<int32_t, ToneCustomizedType> sourceTypeMap_;
 std::unordered_map<RingtoneType, int32_t> defaultoneTypeMap_;
 std::unordered_map<SystemToneType, int32_t> defaultsystemTypeMap_;
 std::unordered_map<ToneHapticsMode, VibratePlayMode> hapticsModeMap_;
-std::unordered_map<ToneHapticsType, std::pair<int32_t, int32_t>> hapticsTypeWhereArgsMap_;
+std::unordered_map<ToneHapticsType, std::pair<int32_t, int32_t>> toneHapticsQueryArgsMap_;
 std::unordered_map<int32_t, std::unordered_map<HapticsStyle, int32_t>> hapticsStyleMap_;
 Uri RINGTONEURI(RINGTONE_PATH_URI);
 Uri VIBRATEURI(VIBRATE_PATH_URI);
@@ -204,7 +207,7 @@ void SystemSoundManagerImpl::InitMap(void)
     hapticsModeMap_[NONE] = VIBRATE_PLAYMODE_NONE;
     hapticsModeMap_[SYNC] = VIBRATE_PLAYMODE_SYNC;
     hapticsModeMap_[NON_SYNC] = VIBRATE_PLAYMODE_CLASSIC;
-    hapticsTypeWhereArgsMap_ = {
+    toneHapticsQueryArgsMap_ = {
         {ToneHapticsType::CALL_SIM_CARD_0, {SIMCARD_MODE_1, TONE_SETTING_TYPE_RINGTONE}},
         {ToneHapticsType::CALL_SIM_CARD_1, {SIMCARD_MODE_2, TONE_SETTING_TYPE_RINGTONE}},
         {ToneHapticsType::CALL_ESIM_CARD_0, {ESIMCARD_MODE_1, TONE_SETTING_TYPE_RINGTONE}},
@@ -2037,9 +2040,9 @@ int32_t SystemSoundManagerImpl::UpdateToneHapticsSettings(const DatabaseTool &da
     MEDIA_LOGI("UpdateToneHapticsSettings: toneUri[%{public}s], mode[%{public}d], hapticsUri[%{public}s]",
         toneUri.c_str(), settings.mode, settings.hapticsUri.c_str());
     DataShare::DataSharePredicates queryPredicates;
-    queryPredicates.EqualTo(SIMCARD_SETTING_COLUMN_MODE, hapticsTypeWhereArgsMap_[toneHapticsType].first);
+    queryPredicates.EqualTo(SIMCARD_SETTING_COLUMN_MODE, toneHapticsQueryArgsMap_[toneHapticsType].first);
     queryPredicates.And();
-    queryPredicates.EqualTo(SIMCARD_SETTING_COLUMN_RINGTONE_TYPE, hapticsTypeWhereArgsMap_[toneHapticsType].second);
+    queryPredicates.EqualTo(SIMCARD_SETTING_COLUMN_RINGTONE_TYPE, GetToneSettingType(toneHapticsType));
 
     DataShareValuesBucket valuesBucket;
     valuesBucket.Put(SIMCARD_SETTING_COLUMN_TONE_FILE, toneUri);
@@ -2061,9 +2064,8 @@ int32_t SystemSoundManagerImpl::UpdateToneHapticsSettings(const DatabaseTool &da
     } else {
         MEDIA_LOGE("UpdateToneHapticsSettings: update haptics settings fail");
     }
-    valuesBucket.Put(SIMCARD_SETTING_COLUMN_MODE, to_string(hapticsTypeWhereArgsMap_[toneHapticsType].first));
-    valuesBucket.Put(SIMCARD_SETTING_COLUMN_RINGTONE_TYPE,
-        to_string(hapticsTypeWhereArgsMap_[toneHapticsType].second));
+    valuesBucket.Put(SIMCARD_SETTING_COLUMN_MODE, to_string(toneHapticsQueryArgsMap_[toneHapticsType].first));
+    valuesBucket.Put(SIMCARD_SETTING_COLUMN_RINGTONE_TYPE, to_string(GetToneSettingType(toneHapticsType)));
     result = databaseTool.dataShareHelper->Insert(queryUri, valuesBucket);
     if (result <= 0) {
         MEDIA_LOGE("UpdateToneHapticsSettings: insert haptics settings fail");
@@ -2071,14 +2073,23 @@ int32_t SystemSoundManagerImpl::UpdateToneHapticsSettings(const DatabaseTool &da
     return result > 0 ? SUCCESS : IO_ERROR;
 }
 
+int32_t SystemSoundManagerImpl::GetToneSettingType(ToneHapticsType toneHapticsType)
+{
+    AudioStandard::AudioRingerMode ringerMode = GetRingerMode();
+    int32_t offset = (ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_VIBRATE)
+        ? RINGER_MODE_OFFSET_VIBRATE : RINGER_MODE_OFFSET_RING_OR_SILENT;
+    MEDIA_LOGI("GetToneSettingType: current ringermode: %{public}d", ringerMode);
+    return offset * TONE_SETTING_TYPE_BASE + toneHapticsQueryArgsMap_[toneHapticsType].second;
+}
+
 std::unique_ptr<SimcardSettingAsset> SystemSoundManagerImpl::GetSimcardSettingAssetByToneHapticsType(
     const DatabaseTool &databaseTool, ToneHapticsType toneHapticsType)
 {
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
-    queryPredicates.EqualTo(SIMCARD_SETTING_COLUMN_MODE, hapticsTypeWhereArgsMap_[toneHapticsType].first);
+    queryPredicates.EqualTo(SIMCARD_SETTING_COLUMN_MODE, toneHapticsQueryArgsMap_[toneHapticsType].first);
     queryPredicates.And();
-    queryPredicates.EqualTo(SIMCARD_SETTING_COLUMN_RINGTONE_TYPE, hapticsTypeWhereArgsMap_[toneHapticsType].second);
+    queryPredicates.EqualTo(SIMCARD_SETTING_COLUMN_RINGTONE_TYPE, GetToneSettingType(toneHapticsType));
 
     std::string ringtoneLibraryUri = "";
     if (databaseTool.isProxy) {

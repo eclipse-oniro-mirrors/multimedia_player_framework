@@ -246,6 +246,7 @@ private:
     int32_t UpdateToneHapticsSettings(const DatabaseTool &databaseTool,
         const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
     bool GetVibrateTypeByStyle(int standardVibrateType, HapticsStyle hapticsStyle, int &vibrateType);
+    int32_t GetToneSettingType(ToneHapticsType toneHapticsType);
     std::unique_ptr<RingtoneAsset> IsPresetRingtone(const DatabaseTool &databaseTool, const std::string &toneUri);
     int GetStandardVibrateType(int toneType);
 
