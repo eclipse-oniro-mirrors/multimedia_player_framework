@@ -25,7 +25,7 @@ namespace Media {
 HWTEST_F(SourceParseAgentTest, GetSniffBufferSize_001, TestSize.Level0)
 {
     auto size = SourceParseAgent::GetSniffBufferSize();
-    EXPECT_GT(size, 0);
+    EXPECT_EQ(size, MIN_SNIFF_BUFFER_SIZE);
 }
 
 HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_HTTP_001, TestSize.Level0)
@@ -70,13 +70,11 @@ HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_EmptyData_001, TestSize.Level
     EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::UNKNOWN);
 }
 
-HWTEST_F(SourceParseAgentTest, StreamProtocolType_Values_001, TestSize.Level0)
+HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_UnrecognizedData_001, TestSize.Level0)
 {
-    EXPECT_EQ(static_cast<int32_t>(Plugins::HttpPlugin::StreamProtocolType::HTTP), 0);
-    EXPECT_EQ(static_cast<int32_t>(Plugins::HttpPlugin::StreamProtocolType::HTTPS), 1);
-    EXPECT_EQ(static_cast<int32_t>(Plugins::HttpPlugin::StreamProtocolType::HLS), 2);
-    EXPECT_EQ(static_cast<int32_t>(Plugins::HttpPlugin::StreamProtocolType::DASH), 3);
-    EXPECT_EQ(static_cast<int32_t>(Plugins::HttpPlugin::StreamProtocolType::UNKNOWN), 4);
+    std::vector<uint8_t> data = {'R', 'A', 'N', 'D', 'O', 'M'};
+    auto protocol = SourceParseAgent::SniffStreamProtocol(data.data(), data.size());
+    EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::UNKNOWN);
 }
 
 } // namespace Media

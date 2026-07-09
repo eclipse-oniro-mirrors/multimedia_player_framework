@@ -133,8 +133,8 @@ HWTEST_F(DownloaderImplSuppTest, Concurrent_StartAndCancel_ThreadSafe_001, TestS
 
     int32_t startRet = startFuture.get();
     int32_t cancelRet = cancelFuture.get();
-    EXPECT_TRUE(startRet == DOWNLOAD_RET_OK || startRet != DOWNLOAD_RET_OK);
-    EXPECT_TRUE(cancelRet == DOWNLOAD_RET_OK || cancelRet != DOWNLOAD_RET_OK);
+    DownloadState state = downloader->GetState();
+    EXPECT_TRUE(state == DOWNLOAD_COMPLETED || state == DOWNLOAD_FAILED || state == DOWNLOAD_CANCELED);
 }
 
 HWTEST_F(DownloaderImplSuppTest, Progress_MutexProtection_001, TestSize.Level0)

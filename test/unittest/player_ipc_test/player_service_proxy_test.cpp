@@ -16,281 +16,397 @@
 #include "player_service_proxy_test.h"
 
 using namespace testing;
-using namespace testing::Ext;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
 
-HWTEST_F(PlayerServiceProxyTest, SetListenerObject_001, TestSize.Level0)
-{
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    ASSERT_NE(mockService, nullptr);
-    EXPECT_CALL(*mockService, SetListenerObject(_)).WillOnce(Return(0));
-    int32_t ret = mockService->SetListenerObject(nullptr);
-    EXPECT_EQ(ret, 0);
-}
-
 HWTEST_F(PlayerServiceProxyTest, SetSource_Url_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SetSource(_)).WillOnce(Return(0));
-    int32_t ret = mockService->SetSource("http://example.com/test.mp4");
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_SOURCE, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SetSource("http://example.com/test.mp4");
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
-HWTEST_F(PlayerServiceProxyTest, SetSource_Fd_001, TestSize.Level0)
+HWTEST_F(PlayerServiceProxyTest, SetSource_Url_Error_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SetSource(5, 0, 1024)).WillOnce(Return(0));
-    int32_t ret = mockService->SetSource(5, 0, 1024);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_SOURCE, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_INVALID_OPERATION);
+        }), Return(0)));
+    int32_t ret = proxy_->SetSource("http://invalid.com/test.mp4");
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
 }
 
 HWTEST_F(PlayerServiceProxyTest, Prepare_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, Prepare()).WillOnce(Return(0));
-    int32_t ret = mockService->Prepare();
-    EXPECT_EQ(ret, 0);
-}
-
-HWTEST_F(PlayerServiceProxyTest, PrepareAsync_001, TestSize.Level0)
-{
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, PrepareAsync()).WillOnce(Return(0));
-    int32_t ret = mockService->PrepareAsync();
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(PREPARE, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->Prepare();
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, Play_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, Play()).WillOnce(Return(0));
-    int32_t ret = mockService->Play();
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(PLAY, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->Play();
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, Pause_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, Pause()).WillOnce(Return(0));
-    int32_t ret = mockService->Pause();
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(PAUSE, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->Pause();
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, Stop_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, Stop()).WillOnce(Return(0));
-    int32_t ret = mockService->Stop();
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(STOP, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->Stop();
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, Reset_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, Reset()).WillOnce(Return(0));
-    int32_t ret = mockService->Reset();
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(RESET, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->Reset();
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, Release_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, Release()).WillOnce(Return(0));
-    int32_t ret = mockService->Release();
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(RELEASE, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->Release();
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
-HWTEST_F(PlayerServiceProxyTest, ReleaseSync_001, TestSize.Level0)
+HWTEST_F(PlayerServiceProxyTest, IsPlaying_True_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, ReleaseSync()).WillOnce(Return(0));
-    int32_t ret = mockService->ReleaseSync();
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(IS_PLAYING, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteBool(true);
+        }), Return(0)));
+    bool ret = proxy_->IsPlaying();
+    EXPECT_TRUE(ret);
+}
+
+HWTEST_F(PlayerServiceProxyTest, IsPlaying_False_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(IS_PLAYING, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteBool(false);
+        }), Return(0)));
+    bool ret = proxy_->IsPlaying();
+    EXPECT_FALSE(ret);
+}
+
+HWTEST_F(PlayerServiceProxyTest, IsLooping_True_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(IS_LOOPING, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteBool(true);
+        }), Return(0)));
+    bool ret = proxy_->IsLooping();
+    EXPECT_TRUE(ret);
+}
+
+HWTEST_F(PlayerServiceProxyTest, IsLooping_False_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(IS_LOOPING, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteBool(false);
+        }), Return(0)));
+    bool ret = proxy_->IsLooping();
+    EXPECT_FALSE(ret);
 }
 
 HWTEST_F(PlayerServiceProxyTest, SetVolume_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SetVolume(0.5f, 0.5f)).WillOnce(Return(0));
-    int32_t ret = mockService->SetVolume(0.5f, 0.5f);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_VOLUME, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SetVolume(0.5f, 0.5f);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, Seek_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, Seek(1000, PlayerSeekMode::SEEK_PREVIOUS_SYNC)).WillOnce(Return(0));
-    int32_t ret = mockService->Seek(1000, PlayerSeekMode::SEEK_PREVIOUS_SYNC);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(SEEK, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->Seek(1000, PlayerSeekMode::SEEK_PREVIOUS_SYNC);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, SetLooping_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SetLooping(true)).WillOnce(Return(0));
-    int32_t ret = mockService->SetLooping(true);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_LOOPING, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SetLooping(true);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, SetPlaybackSpeed_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2X)).WillOnce(Return(0));
-    int32_t ret = mockService->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2X);
-    EXPECT_EQ(ret, 0);
-}
-
-HWTEST_F(PlayerServiceProxyTest, SetPlaybackRate_001, TestSize.Level0)
-{
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SetPlaybackRate(2.0f)).WillOnce(Return(0));
-    int32_t ret = mockService->SetPlaybackRate(2.0f);
-    EXPECT_EQ(ret, 0);
-}
-
-HWTEST_F(PlayerServiceProxyTest, IsPlaying_001, TestSize.Level0)
-{
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, IsPlaying()).WillOnce(Return(true));
-    bool ret = mockService->IsPlaying();
-    EXPECT_TRUE(ret);
-}
-
-HWTEST_F(PlayerServiceProxyTest, IsLooping_001, TestSize.Level0)
-{
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, IsLooping()).WillOnce(Return(true));
-    bool ret = mockService->IsLooping();
-    EXPECT_TRUE(ret);
-}
-
-HWTEST_F(PlayerServiceProxyTest, IsLiveSeek_001, TestSize.Level0)
-{
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, IsLiveSeek()).WillOnce(Return(false));
-    bool ret = mockService->IsLiveSeek();
-    EXPECT_FALSE(ret);
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_PLAYERBACK_SPEED, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2X);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, GetCurrentTime_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, GetCurrentTime(_)).WillOnce(DoAll(SetArgReferee<0>(5000), Return(0)));
+    EXPECT_CALL(*mockRemote_, SendRequest(GET_CURRENT_TIME, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+            reply.WriteInt32(5000);
+        }), Return(0)));
     int32_t currentTime = 0;
-    int32_t ret = mockService->GetCurrentTime(currentTime);
-    EXPECT_EQ(ret, 0);
+    int32_t ret = proxy_->GetCurrentTime(currentTime);
+    EXPECT_EQ(ret, MSERR_OK);
     EXPECT_EQ(currentTime, 5000);
 }
 
 HWTEST_F(PlayerServiceProxyTest, GetDuration_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, GetDuration(_)).WillOnce(DoAll(SetArgReferee<0>(120000), Return(0)));
+    EXPECT_CALL(*mockRemote_, SendRequest(GET_DURATION, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+            reply.WriteInt32(120000);
+        }), Return(0)));
     int32_t duration = 0;
-    int32_t ret = mockService->GetDuration(duration);
-    EXPECT_EQ(ret, 0);
+    int32_t ret = proxy_->GetDuration(duration);
+    EXPECT_EQ(ret, MSERR_OK);
     EXPECT_EQ(duration, 120000);
 }
 
 HWTEST_F(PlayerServiceProxyTest, GetVideoWidth_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, GetVideoWidth()).WillOnce(Return(1920));
-    int32_t width = mockService->GetVideoWidth();
+    EXPECT_CALL(*mockRemote_, SendRequest(GET_VIDEO_WIDTH, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(1920);
+        }), Return(0)));
+    int32_t width = proxy_->GetVideoWidth();
     EXPECT_EQ(width, 1920);
 }
 
 HWTEST_F(PlayerServiceProxyTest, GetVideoHeight_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, GetVideoHeight()).WillOnce(Return(1080));
-    int32_t height = mockService->GetVideoHeight();
+    EXPECT_CALL(*mockRemote_, SendRequest(GET_VIDEO_HEIGHT, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(1080);
+        }), Return(0)));
+    int32_t height = proxy_->GetVideoHeight();
     EXPECT_EQ(height, 1080);
 }
 
-HWTEST_F(PlayerServiceProxyTest, SelectTrack_001, TestSize.Level0)
+HWTEST_F(PlayerServiceProxyTest, SetSource_Fd_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SelectTrack(1, PlayerSwitchMode::SWITCH_SMOOTH)).WillOnce(Return(0));
-    int32_t ret = mockService->SelectTrack(1, PlayerSwitchMode::SWITCH_SMOOTH);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_FD_SOURCE, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SetSource(5, 0, 1024);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
-HWTEST_F(PlayerServiceProxyTest, DeselectTrack_001, TestSize.Level0)
+HWTEST_F(PlayerServiceProxyTest, PrepareAsync_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, DeselectTrack(1)).WillOnce(Return(0));
-    int32_t ret = mockService->DeselectTrack(1);
-    EXPECT_EQ(ret, 0);
-}
-
-HWTEST_F(PlayerServiceProxyTest, GetCurrentTrack_001, TestSize.Level0)
-{
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, GetCurrentTrack(0, _)).WillOnce(DoAll(SetArgReferee<1>(1), Return(0)));
-    int32_t index = 0;
-    int32_t ret = mockService->GetCurrentTrack(0, index);
-    EXPECT_EQ(ret, 0);
-    EXPECT_EQ(index, 1);
+    EXPECT_CALL(*mockRemote_, SendRequest(PREPAREASYNC, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->PrepareAsync();
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, SelectBitRate_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SelectBitRate(1000000)).WillOnce(Return(0));
-    int32_t ret = mockService->SelectBitRate(1000000);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(SELECT_BIT_RATE, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SelectBitRate(1000000);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, DestroyStub_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, DestroyStub()).WillOnce(Return(0));
-    int32_t ret = mockService->DestroyStub();
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(DESTROY, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->DestroyStub();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(PlayerServiceProxyTest, SelectTrack_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(SELECT_TRACK, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SelectTrack(1, PlayerSwitchMode::SWITCH_SMOOTH);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(PlayerServiceProxyTest, DeselectTrack_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(DESELECT_TRACK, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->DeselectTrack(1);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(PlayerServiceProxyTest, GetCurrentTrack_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(GET_CURRENT_TRACK, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+            reply.WriteInt32(1);
+        }), Return(0)));
+    int32_t index = 0;
+    int32_t ret = proxy_->GetCurrentTrack(0, index);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(index, 1);
+}
+
+HWTEST_F(PlayerServiceProxyTest, SendRequest_Failure_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(PLAY, _, _, _))
+        .WillOnce(Return(-1));
+    int32_t ret = proxy_->Play();
+    EXPECT_NE(ret, MSERR_OK);
+}
+
+HWTEST_F(PlayerServiceProxyTest, SetListenerObject_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_LISTENER_OBJ, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SetListenerObject(nullptr);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(PlayerServiceProxyTest, ReleaseSync_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(RELEASE, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->ReleaseSync();
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, SetMaxAmplitudeCbStatus_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SetMaxAmplitudeCbStatus(true)).WillOnce(Return(0));
-    int32_t ret = mockService->SetMaxAmplitudeCbStatus(true);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_MAX_AMPLITUDE_CB_STATUS, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SetMaxAmplitudeCbStatus(true);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, SetDeviceChangeCbStatus_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, SetDeviceChangeCbStatus(true)).WillOnce(Return(0));
-    int32_t ret = mockService->SetDeviceChangeCbStatus(true);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_DEVICE_CHANGE_CB_STATUS, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SetDeviceChangeCbStatus(true);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, SetSeiMessageCbStatus_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_SEI_MESSAGE_CB_STATUS, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
     std::vector<int32_t> payloadTypes = {1, 2, 3};
-    EXPECT_CALL(*mockService, SetSeiMessageCbStatus(true, payloadTypes)).WillOnce(Return(0));
-    int32_t ret = mockService->SetSeiMessageCbStatus(true, payloadTypes);
-    EXPECT_EQ(ret, 0);
+    int32_t ret = proxy_->SetSeiMessageCbStatus(true, payloadTypes);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, EnableReportMediaProgress_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, EnableReportMediaProgress(true)).WillOnce(Return(0));
-    int32_t ret = mockService->EnableReportMediaProgress(true);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(ENABLE_REPORT_MEDIA_PROGRESS, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->EnableReportMediaProgress(true);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, EnableReportAudioInterrupt_001, TestSize.Level0)
 {
-    auto mockService = sptr<MockIStandardPlayerService>::MakeRaw();
-    EXPECT_CALL(*mockService, EnableReportAudioInterrupt(true)).WillOnce(Return(0));
-    int32_t ret = mockService->EnableReportAudioInterrupt(true);
-    EXPECT_EQ(ret, 0);
+    EXPECT_CALL(*mockRemote_, SendRequest(ENABLE_REPORT_AUDIO_INTERRUPT, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->EnableReportAudioInterrupt(true);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(PlayerServiceProxyTest, SetPlaybackRate_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(SET_PLAYERBACK_RATE, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteInt32(MSERR_OK);
+        }), Return(0)));
+    int32_t ret = proxy_->SetPlaybackRate(2.0f);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+HWTEST_F(PlayerServiceProxyTest, IsLiveSeek_True_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(IS_LIVE_SEEK, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteBool(true);
+        }), Return(0)));
+    bool ret = proxy_->IsLiveSeek();
+    EXPECT_TRUE(ret);
+}
+
+HWTEST_F(PlayerServiceProxyTest, IsLiveSeek_False_001, TestSize.Level0)
+{
+    EXPECT_CALL(*mockRemote_, SendRequest(IS_LIVE_SEEK, _, _, _))
+        .WillOnce(DoAll(SetArgReferee<2>([](MessageParcel &reply) {
+            reply.WriteBool(false);
+        }), Return(0)));
+    bool ret = proxy_->IsLiveSeek();
+    EXPECT_FALSE(ret);
 }
 
 } // namespace Media

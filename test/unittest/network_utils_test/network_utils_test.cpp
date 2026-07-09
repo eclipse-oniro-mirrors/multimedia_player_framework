@@ -33,63 +33,103 @@ HWTEST_F(NetworkUtilsTest, GetCurrentNetworkType_001, TestSize.Level0)
 {
     NetworkUtils& utils = NetworkUtils::GetInstance();
     NetConnType type = utils.GetCurrentNetworkType();
-    (void)type;
-}
-
-HWTEST_F(NetworkUtilsTest, IsCellularConnected_001, TestSize.Level0)
-{
-    NetworkUtils& utils = NetworkUtils::GetInstance();
-    bool result = utils.IsCellularConnected();
-    EXPECT_TRUE(result == true || result == false);
-}
-
-HWTEST_F(NetworkUtilsTest, IsWifiConnected_001, TestSize.Level0)
-{
-    NetworkUtils& utils = NetworkUtils::GetInstance();
-    bool result = utils.IsWifiConnected();
-    EXPECT_TRUE(result == true || result == false);
+    bool isWifi = utils.IsWifiConnected();
+    bool isCellular = utils.IsCellularConnected();
+    bool isEthernet = utils.IsEthernetConnected();
+    bool isBluetooth = utils.IsBluetoothConnected();
+    bool isVpn = utils.IsVpnConnected();
+    switch (type) {
+        case NET_CONN_WIFI:
+            EXPECT_TRUE(isWifi);
+            break;
+        case NET_CONN_CELLULAR:
+            EXPECT_TRUE(isCellular);
+            break;
+        case NET_CONN_ETHERNET:
+            EXPECT_TRUE(isEthernet);
+            break;
+        case NET_CONN_BLUETOOTH:
+            EXPECT_TRUE(isBluetooth);
+            break;
+        case NET_CONN_VPN:
+            EXPECT_TRUE(isVpn);
+            break;
+        case NET_CONN_NONE:
+            EXPECT_FALSE(isWifi || isCellular || isEthernet || isBluetooth || isVpn);
+            break;
+        default:
+            break;
+    }
 }
 
 HWTEST_F(NetworkUtilsTest, IsEthernetConnected_001, TestSize.Level0)
 {
     NetworkUtils& utils = NetworkUtils::GetInstance();
+    NetConnType type = utils.GetCurrentNetworkType();
     bool result = utils.IsEthernetConnected();
-    EXPECT_TRUE(result == true || result == false);
+    if (type == NET_CONN_ETHERNET) {
+        EXPECT_TRUE(result);
+    } else {
+        EXPECT_FALSE(result);
+    }
 }
 
 HWTEST_F(NetworkUtilsTest, IsBluetoothConnected_001, TestSize.Level0)
 {
     NetworkUtils& utils = NetworkUtils::GetInstance();
+    NetConnType type = utils.GetCurrentNetworkType();
     bool result = utils.IsBluetoothConnected();
-    EXPECT_TRUE(result == true || result == false);
+    if (type == NET_CONN_BLUETOOTH) {
+        EXPECT_TRUE(result);
+    } else {
+        EXPECT_FALSE(result);
+    }
 }
 
 HWTEST_F(NetworkUtilsTest, IsVpnConnected_001, TestSize.Level0)
 {
     NetworkUtils& utils = NetworkUtils::GetInstance();
+    NetConnType type = utils.GetCurrentNetworkType();
     bool result = utils.IsVpnConnected();
-    EXPECT_TRUE(result == true || result == false);
+    if (type == NET_CONN_VPN) {
+        EXPECT_TRUE(result);
+    } else {
+        EXPECT_FALSE(result);
+    }
 }
 
 HWTEST_F(NetworkUtilsTest, IsNetworkAvailable_001, TestSize.Level0)
 {
     NetworkUtils& utils = NetworkUtils::GetInstance();
+    NetConnType type = utils.GetCurrentNetworkType();
     bool result = utils.IsNetworkAvailable();
-    EXPECT_TRUE(result == true || result == false);
+    if (type == NET_CONN_NONE || type == NET_CONN_UNKNOWN) {
+        EXPECT_FALSE(result);
+    } else {
+        EXPECT_TRUE(result);
+    }
 }
 
 HWTEST_F(NetworkUtilsTest, IsDefaultNetMetered_001, TestSize.Level0)
 {
     NetworkUtils& utils = NetworkUtils::GetInstance();
+    NetConnType type = utils.GetCurrentNetworkType();
     bool result = utils.IsDefaultNetMetered();
-    EXPECT_TRUE(result == true || result == false);
+    if (type == NET_CONN_CELLULAR) {
+        EXPECT_TRUE(result);
+    } else if (type == NET_CONN_WIFI || type == NET_CONN_ETHERNET) {
+        EXPECT_FALSE(result);
+    }
 }
 
 HWTEST_F(NetworkUtilsTest, GetConnectionProperties_001, TestSize.Level0)
 {
     NetworkUtils& utils = NetworkUtils::GetInstance();
+    NetConnType type = utils.GetCurrentNetworkType();
     ConnProperties props = utils.GetConnectionProperties();
-    (void)props;
+    if (type != NET_CONN_NONE && type != NET_CONN_UNKNOWN) {
+        EXPECT_FALSE(props.ifaceName.empty());
+    }
 }
 
 HWTEST_F(NetworkUtilsTest, NetConnType_Values_001, TestSize.Level0)
@@ -101,23 +141,6 @@ HWTEST_F(NetworkUtilsTest, NetConnType_Values_001, TestSize.Level0)
     EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_ETHERNET), 4);
     EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_VPN), 5);
     EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_NONE), 6);
-}
-
-HWTEST_F(NetworkUtilsTest, RegisterNetworkChangeCallback_001, TestSize.Level0)
-{
-    NetworkUtils& utils = NetworkUtils::GetInstance();
-    bool callbackCalled = false;
-    NetworkChangeCallback callback = [&callbackCalled](NetConnType type) {
-        (void)type;
-        callbackCalled = true;
-    };
-    utils.RegisterNetworkChangeCallback(callback);
-}
-
-HWTEST_F(NetworkUtilsTest, UnregisterNetworkChangeCallback_001, TestSize.Level0)
-{
-    NetworkUtils& utils = NetworkUtils::GetInstance();
-    utils.UnregisterNetworkChangeCallback();
 }
 
 HWTEST_F(NetworkUtilsTest, ConnProperties_Struct_001, TestSize.Level0)
@@ -142,22 +165,6 @@ HWTEST_F(NetworkUtilsTest, NetworkChangeCallback_Type_001, TestSize.Level0)
         EXPECT_TRUE(type >= NetConnType::NET_CONN_UNKNOWN && type <= NetConnType::NET_CONN_NONE);
     };
     callback(NetConnType::NET_CONN_WIFI);
-}
-
-HWTEST_F(NetworkUtilsTest, MultipleCallbackRegistrations_001, TestSize.Level0)
-{
-    NetworkUtils& utils = NetworkUtils::GetInstance();
-    int callCount = 0;
-    NetworkChangeCallback callback1 = [&callCount](NetConnType type) {
-        (void)type;
-        ++callCount;
-    };
-    NetworkChangeCallback callback2 = [&callCount](NetConnType type) {
-        (void)type;
-        ++callCount;
-    };
-    utils.RegisterNetworkChangeCallback(callback1);
-    utils.RegisterNetworkChangeCallback(callback2);
 }
 
 } // namespace Media

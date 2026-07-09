@@ -45,36 +45,12 @@ HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithUrl_WithHeader_001, TestSize.
     EXPECT_EQ(mediaSource->GetSourceUri(), "http://example.com/test.mp4");
 }
 
-HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithFd_001, TestSize.Level0)
-{
-    auto mediaSource = std::make_shared<MockMediaSource>();
-    ASSERT_NE(mediaSource, nullptr);
-}
-
-HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithDataSource_001, TestSize.Level0)
-{
-    auto mediaSource = std::make_shared<MockMediaSource>();
-    ASSERT_NE(mediaSource, nullptr);
-}
-
-HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithStreamData_Empty_001, TestSize.Level0)
-{
-    auto mediaSource = std::make_shared<MockMediaSource>();
-    ASSERT_NE(mediaSource, nullptr);
-}
-
 HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithDirectory_ValidPath_001, TestSize.Level0)
 {
     auto mediaSource = std::make_shared<MockMediaSource>("/data/media");
     ASSERT_NE(mediaSource, nullptr);
     EXPECT_CALL(*mediaSource, GetSourceUri()).WillRepeatedly(Return("/data/media"));
     EXPECT_EQ(mediaSource->GetSourceUri(), "/data/media");
-}
-
-HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithDirectory_InvalidPath_001, TestSize.Level0)
-{
-    auto mediaSource = std::make_shared<MockMediaSource>("");
-    ASSERT_NE(mediaSource, nullptr);
 }
 
 HWTEST_F(MediaSourceNapiTest, MediaSourceType_001, TestSize.Level0)

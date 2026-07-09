@@ -23,6 +23,7 @@
 #include <vector>
 #include <map>
 #include "av_downloader_manager.h"
+#include "avdownloader_manager_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -51,7 +52,7 @@ public:
     void TearDown(void) {}
 
 protected:
-    std::shared_ptr<MockAVDownloaderManager> mockDownloaderManager_;
+    std::shared_ptr<MockAVDownloaderManager> mockManager_;
 };
 
 } // namespace Media
