@@ -680,7 +680,7 @@ void AVMetadataHelperImpl::SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer
         .uvHeight = srcHeight / UV_DIV_BASE,
         .yStride = srcWidth,
         .uvStride = srcWidth,
-        .uvOffset = srcWidth * srcHeight 
+        .uvOffset = srcWidth * srcHeight
     };
 
     if (surfaceBuffer == nullptr || !needModifyStride) {
