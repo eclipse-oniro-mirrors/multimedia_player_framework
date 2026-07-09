@@ -39,7 +39,6 @@ namespace Media {
 
 using namespace std;
 using namespace AudioStandard;
-using namespace MediaAVCodec;
 
 class SoundPoolCallbackMock : public ISoundPoolCallback {
 public:
