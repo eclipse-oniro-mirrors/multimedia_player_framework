@@ -3823,7 +3823,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
     auto iter = std::find_if(metaInfo.begin(), metaInfo.end(),
-                            [innerTrackId](const std::shared_ptr<Meta> &trackMeta) {
+        [innerTrackId](const std::shared_ptr<Meta> &trackMeta) {
             int32_t trackIndex;
             if (trackMeta->GetData(Tag::REGULAR_TRACK_ID, trackIndex)) {
                 return trackIndex == innerTrackId;
@@ -3876,7 +3876,7 @@ void HiPlayerImpl::HandleVideoTrackChangeEvent(const Event& event)
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
     auto iter = std::find_if(metaInfo.begin(), metaInfo.end(),
-                            [innerTrackId](const std::shared_ptr<Meta> &trackMeta) {
+        [innerTrackId](const std::shared_ptr<Meta> &trackMeta) {
             int32_t trackIndex;
             if (trackMeta->GetData(Tag::REGULAR_TRACK_ID, trackIndex)) {
                 return trackIndex == innerTrackId;
@@ -3915,7 +3915,7 @@ void HiPlayerImpl::HandleSubtitleTrackChangeEvent(const Event& event)
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
     auto iter = std::find_if(metaInfo.begin(), metaInfo.end(),
-                            [innerTrackId](const std::shared_ptr<Meta> &trackMeta) {
+        [innerTrackId](const std::shared_ptr<Meta> &trackMeta) {
             int32_t trackIndex;
             if (trackMeta->GetData(Tag::REGULAR_TRACK_ID, trackIndex)) {
                 return trackIndex == innerTrackId;
