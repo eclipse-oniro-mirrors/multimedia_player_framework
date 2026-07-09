@@ -42,7 +42,7 @@ constexpr int32_t TUPLE_POS_1 = 1;
 constexpr int32_t TUPLE_POS_2 = 2;
 constexpr int32_t MAX_AMPLITUDE_SIZE = 5;
 
-constexpr int PROGRESS_REPORT_INTERVAL = 100;
+constexpr int PROGRESS_REPORT_INTERVAL = 90;
 }
 HiPlayerCallbackLooper::HiPlayerCallbackLooper()
 {
