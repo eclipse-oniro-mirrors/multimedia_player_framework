@@ -121,8 +121,6 @@ public:
     MOCK_METHOD(void, EnableVoiceModemCommunicationStartStream, (bool), (override));
     MOCK_METHOD(bool, IsNoStreamRenderer, (), (const, override));
     MOCK_METHOD(int32_t, SetDefaultOutputDevice, (AudioStandard::DeviceType), (override));
-    MOCK_METHOD(bool, Mute, (AudioStandard::StateChangeCmdType), (override));
-    MOCK_METHOD(bool, Unmute, (AudioStandard::StateChangeCmdType), (override));
     MOCK_METHOD(int32_t, GetAudioTimestampInfo,
         (AudioStandard::Timestamp &, AudioStandard::Timestamp::Timestampbase), (const, override));
     MOCK_METHOD(void, SetFastStatusChangeCallback,
