@@ -124,8 +124,9 @@ RenderTexturePtr ImageEffectRender::Render(
     SetImageValue((int32_t) width, SET_TEXTURE_WIDTH);
     SetImageValue((int32_t) height, SET_TEXTURE_HEIGHT);
 
-    OH_EffectFilter_Render(effectFilter_, nullptr, nullptr);
-    return tex;
+    auto renderRes = OH_EffectFilter_Render(effectFilter_, nullptr, nullptr);
+    MEDIA_LOGI("OH_EffectFilter_Render result = %{public}d.", renderRes);
+    return renderRes == ImageEffect_ErrorCode::EFFECT_SUCCESS ? tex : inputRenderTexture;
 #else
     return inputRenderTexture;
 #endif
