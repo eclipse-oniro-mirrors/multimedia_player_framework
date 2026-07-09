@@ -309,7 +309,7 @@ void AVMetadataHelperImpl::InitDumpFlag()
 }
 
 int32_t AVMetadataHelperImpl::DumpPixelMap(bool isDump, std::shared_ptr<PixelMap> pixelMap,
-                                           const std::string &fileNameSuffix)
+    const std::string &fileNameSuffix)
 {
     if (!isDump) {
         return MSERR_INVALID_VAL;
@@ -332,7 +332,7 @@ int32_t AVMetadataHelperImpl::DumpPixelMap(bool isDump, std::shared_ptr<PixelMap
 }
 
 int32_t AVMetadataHelperImpl::DumpAVBuffer(bool isDump, const std::shared_ptr<AVBuffer> &frameBuffer,
-                                           const std::string &fileNameSuffix)
+    const std::string &fileNameSuffix)
 {
     if (!isDump) {
         return MSERR_INVALID_VAL;
@@ -381,7 +381,7 @@ std::string AVMetadataHelperImpl::pixelFormatToString(PixelFormat pixelFormat)
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
-                                                                  PixelMapInfo &pixelMapInfo)
+    PixelMapInfo &pixelMapInfo)
 {
     bool isValid = frameBuffer != nullptr && frameBuffer->meta_ != nullptr && frameBuffer->memory_ != nullptr;
     CHECK_AND_RETURN_RET_LOG(isValid, nullptr, "invalid frame buffer");
@@ -425,10 +425,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapYuv(const std::sha
     return CreatePixelMapFromSurfaceBuffer(surfaceBuffer, pixelMapInfo);
 }
 
-std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromAVShareMemory(const std::shared_ptr<AVBuffer>
-                                                                                &frameBuffer,
-                                                                                PixelMapInfo &pixelMapInfo,
-                                                                                InitializationOptions &options)
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromAVShareMemory(
+    const std::shared_ptr<AVBuffer> &frameBuffer, PixelMapInfo &pixelMapInfo, InitializationOptions &options)
 {
     bool isValid = frameBuffer != nullptr && frameBuffer->memory_ != nullptr;
     CHECK_AND_RETURN_RET_LOG(isValid, nullptr, "invalid frame buffer");
@@ -505,7 +503,7 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
 }
 
 Status AVMetadataHelperImpl::GetColorSpaceWithDefaultValue(sptr<SurfaceBuffer> &surfaceBuffer,
-                                                           PixelMapInfo &pixelMapInfo)
+    PixelMapInfo &pixelMapInfo)
 {
     std::vector<uint8_t> colorSpaceInfoVec;
     if (surfaceBuffer->GetMetadata(ATTRKEY_COLORSPACE_INFO, colorSpaceInfoVec) != GSERROR_OK) {
@@ -547,7 +545,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
     Status isColorSpaceInfoObtained = convertColorSpace_ ? GetColorSpace(surfaceBuffer, pixelMapInfo) :
         GetColorSpaceWithDefaultValue(surfaceBuffer, pixelMapInfo);
     
-    InitializationOptions options = { 
+    InitializationOptions options = {
         .size = { .width = pixelMapInfo.width, .height = pixelMapInfo.height },
         .srcPixelFormat = pixelMapInfo.isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12,
         .pixelFormat = pixelMapInfo.isHdr ? PixelFormat::YCBCR_P010 : PixelFormat::NV12,
@@ -564,9 +562,9 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
         return pixelMap;
     }
     
-    pixelMap = CreatePixelmapWithHDR(surfaceBuffer, pixelMapInfo, options);
+    pixelMap = CreatePixelmapWithHDR(surfaceBuffer, pixelMapInfo, options, isColorSpaceInfoObtained);
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create DMA pixelMap failed");
-    SetPixelMapYuvInfo(surfaceBuffer, pixelMap, pixelMapInfo, true, isColorSpaceInfoObtained);
+    SetPixelMapYuvInfo(surfaceBuffer, pixelMap, pixelMapInfo, true);
     return pixelMap;
 }
 
@@ -622,16 +620,16 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
     int32_t stride = surfaceBuffer->GetStride();
     int32_t displayWidth = pixelMapInfo.width;
     int32_t displayHeight = pixelMapInfo.height;
+    int32_t outputHeight = pixelMapInfo.outputHeight;
     MEDIA_LOGI("surfaceBufferInfo: width=%{public}d|height=%{public}d|stride=%{public}d", width, height, stride);
 
-    CHECK_AND_RETURN_RET(width > 0 && height > 0 && stride > 0, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(pixelMapInfo.outputHeight > 0, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(displayWidth > 0 && displayHeight > 0, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(width > 0 && height > 0 && stride > 0 && outputHeight > 0 && displayWidth > 0 &&
+        displayHeight > 0, MSERR_INVALID_VAL);
 
-    CHECK_AND_RETURN_RET(INT64_MAX - (static_cast<int64_t>(stride) * pixelMapInfo.outputHeight)
-        >= static_cast<int64_t>(stride) * height / UV_DIV_BASE, MSERR_INVALID_VAL);
+    CHECK_AND_RETURN_RET(INT64_MAX - (static_cast<int64_t>(stride) * outputHeight) >=
+        static_cast<int64_t>(stride) * height / UV_DIV_BASE, MSERR_INVALID_VAL);
     int64_t copySrcSize = std::max(static_cast<int64_t>(stride) * height,
-        static_cast<int64_t>(stride) * pixelMapInfo.outputHeight + static_cast<int64_t>(stride) * height / UV_DIV_BASE);
+        static_cast<int64_t>(stride) * outputHeight + static_cast<int64_t>(stride) * height / UV_DIV_BASE);
     CHECK_AND_RETURN_RET(static_cast<int64_t>(surfaceBuffer->GetSize()) >= copySrcSize, MSERR_INVALID_VAL);
  
     CHECK_AND_RETURN_RET(INT64_MAX - (static_cast<int64_t>(width) * height) >=
@@ -652,9 +650,8 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
         dstPtr += lineByteCount;
     }
     
-    int64_t uvOffset = static_cast<int64_t>(stride) * pixelMapInfo.outputHeight;
-    CHECK_AND_RETURN_RET(uvOffset > 0, MSERR_INVALID_VAL);
-    CHECK_AND_RETURN_RET(uvOffset < static_cast<int64_t>(surfaceBuffer->GetSize()), MSERR_INVALID_VAL);
+    int64_t uvOffset = static_cast<int64_t>(stride) * outputHeight;
+    CHECK_AND_RETURN_RET(uvOffset > 0 && uvOffset < static_cast<int64_t>(surfaceBuffer->GetSize()), MSERR_INVALID_VAL);
     srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + uvOffset;
     
     // copy src UV plane to dst, height(UV) = height(Y) / 2
@@ -700,6 +697,7 @@ void AVMetadataHelperImpl::SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer
         return;
     }
     
+    // byte to pixel
     yuvDataInfo.yStride = planes->planes[PLANE_Y].columnStride / ratio;
     yuvDataInfo.uvStride = planes->planes[PLANE_U].columnStride / ratio;
     yuvDataInfo.yOffset = planes->planes[PLANE_Y].offset / ratio;
@@ -932,8 +930,8 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchArtPicture()
     return res;
 }
 
-std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
-    int64_t timeUs, int32_t option, const PixelMapParams &param)
+std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(int64_t timeUs, int32_t option,
+    const PixelMapParams &param)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadataHelperService_ != nullptr, nullptr,
@@ -975,8 +973,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameAtTime(
     return pixelMap;
 }
 
-void AVMetadataHelperImpl::ScalePixelMapWithEqualRatio(
-    std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param)
+void AVMetadataHelperImpl::ScalePixelMapWithEqualRatio(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info,
+    const PixelMapParams &param)
 {
     CHECK_AND_RETURN_LOG(pixelMap != nullptr, "pixelMap is nullptr");
     int32_t srcWidth = pixelMap->GetWidth();
@@ -1003,8 +1001,8 @@ void AVMetadataHelperImpl::ScalePixelMapWithEqualRatio(
         pixelMap->GetWidth(), pixelMap->GetHeight());
 }
 
-void AVMetadataHelperImpl::ScalePixelMap(
-    std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param)
+void AVMetadataHelperImpl::ScalePixelMap(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info,
+    const PixelMapParams &param)
 {
     int32_t srcWidth = pixelMap->GetWidth();
     int32_t srcHeight = pixelMap->GetHeight();
@@ -1018,13 +1016,13 @@ void AVMetadataHelperImpl::ScalePixelMap(
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
-                                                              const PixelMapParams &param)
+    const PixelMapParams &param)
 {
     return FetchFrameBase(timeUs, option, param, FrameScaleMode::NORMAL_RATIO);
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchScaledFrameYuv(int64_t timeUs, int32_t option,
-                                                                    const PixelMapParams &param)
+    const PixelMapParams &param)
 {
     return FetchFrameBase(timeUs, option, param, FrameScaleMode::ASPECT_RATIO);
 }
@@ -1066,7 +1064,7 @@ int32_t AVMetadataHelperImpl::FetchScaledFrameYuvsWithTimeout(const std::vector<
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, int32_t option,
-                                                               const PixelMapParams &param, int32_t scaleMode)
+    const PixelMapParams &param, int32_t scaleMode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
@@ -1084,8 +1082,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
     return ProcessPixelMap(frameBuffer, param, scaleMode);
 }
 
-FetchFrameResult AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, int32_t option,
-    const PixelMapParams &param, int64_t timeoutMs, int32_t scaleMode)
+FetchFrameResult AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, int32_t option, const PixelMapParams &param,
+    int64_t timeoutMs, int32_t scaleMode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     std::shared_ptr<IAVMetadataHelperService> avMetadataHelperService = avMetadataHelperService_;
@@ -1108,7 +1106,7 @@ FetchFrameResult AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, int32_t op
 }
 
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer,
-                                                                const PixelMapParams &param, int32_t scaleMode)
+    const PixelMapParams &param, int32_t scaleMode)
 {
     DumpAVBuffer(isDump_, frameBuffer, DUMP_FILE_NAME_AVBUFFER);
 
@@ -1146,7 +1144,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::ProcessPixelMap(const std::share
 }
 
 void AVMetadataHelperImpl::ScalePixelMapByMode(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info,
-                                               const PixelMapParams &param, int32_t scaleMode)
+    const PixelMapParams &param, int32_t scaleMode)
 {
     CHECK_AND_RETURN_LOG(pixelMap != nullptr, "pixelMap is nullptr");
     switch (scaleMode) {
