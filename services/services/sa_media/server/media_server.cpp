@@ -21,7 +21,7 @@
 #include "media_server_manager.h"
 #include "mem_mgr_client.h"
 #include "mem_mgr_proxy.h"
-#include "media_server_subscriber.h"
+#include "media_datashare_observer.h"
 #include "audio_background_adapter.h"
 #ifdef SUPPORT_CALL
 #include "incall_observer.h"
@@ -36,7 +36,6 @@ namespace Media {
 constexpr int32_t SYSTEM_STATUS_START = 1;
 constexpr int32_t SYSTEM_STATUS_STOP = 0;
 constexpr int32_t SYSTEM_PROCESS_TYPE = 1;
-std::shared_ptr<MediaServerSubscriber> subscriber_ = nullptr;
 
 #ifdef SUPPORT_START_STOP_ON_DEMAND
 const int32_t SECOND_CONVERT_MS = 1000;
@@ -57,7 +56,7 @@ MediaServer::MediaServer(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate)
 {
 #ifdef SUPPORT_SCREEN_CAPTURE
-    SubscribeDataShareReadyEvent();
+    MediaDatashareObserverRegister::GetInstance().Subscribe();
 #endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -65,7 +64,7 @@ MediaServer::MediaServer(int32_t systemAbilityId, bool runOnCreate)
 MediaServer::~MediaServer()
 {
 #ifdef SUPPORT_SCREEN_CAPTURE
-    UnSubscribeDataShareReadyEvent();
+    MediaDatashareObserverRegister::GetInstance().UnSubscribe();
 #endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
@@ -256,28 +255,6 @@ int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
 bool MediaServer::CanKillMediaService()
 {
     return MediaServerManager::GetInstance().CanKillMediaService();
-}
-
-void MediaServer::SubscribeDataShareReadyEvent()
-{
-    MEDIA_LOGI("MediaServer::SubscribeDataShareReadyEvent");
-    EventFwk::MatchingSkills matchingSkills;
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
-    EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
-    auto *tempSubscriber = new (std::nothrow) MediaServerSubscriber(subscribeInfo);
-    CHECK_AND_RETURN_LOG(tempSubscriber != nullptr, "SubscribeDataShareReadyEvent subscriber_ is null");
-    subscriber_ = std::shared_ptr<MediaServerSubscriber>(tempSubscriber);
-    bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(subscriber_);
-    MEDIA_LOGI("MediaServer::SubscribeDataShareReadyEvent result: %{public}d", result);
-}
-
-void MediaServer::UnSubscribeDataShareReadyEvent()
-{
-    MEDIA_LOGI("MediaServer::UnSubscribeDataShareReadyEvent");
-    CHECK_AND_RETURN_LOG(subscriber_ != nullptr, "UnSubscribeDataShareReadyEvent subscriber_ is null");
-    bool result = EventFwk::CommonEventManager::UnSubscribeCommonEvent(subscriber_);
-    MEDIA_LOGI("MediaServer::UnSubscribeDataShareReadyEvent result: %{public}d", result);
-    subscriber_ = nullptr;
 }
 } // namespace Media
 } // namespace OHOS
