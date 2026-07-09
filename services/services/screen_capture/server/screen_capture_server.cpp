@@ -3566,9 +3566,11 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
     };
     consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
     CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsConsumer failed");
+#ifndef PC_STANDARD
     MEDIA_LOGI("ScreenCaptureServer consumer_ BUFFER_USAGE_CPU_READ BUFFER_USAGE_MEM_MMZ_CACHE S");
     consumer_->SetDefaultUsage(BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE);
     MEDIA_LOGI("ScreenCaptureServer consumer_ BUFFER_USAGE_CPU_READ BUFFER_USAGE_MEM_MMZ_CACHE E");
+#endif
     auto producer = consumer_->GetProducer();
     CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_UNKNOWN, "GetProducer failed");
     producerSurface_ = OHOS::Surface::CreateSurfaceAsProducer(producer);
