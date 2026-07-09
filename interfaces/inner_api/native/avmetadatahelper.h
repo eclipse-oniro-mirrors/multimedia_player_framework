@@ -684,7 +684,7 @@ public:
      * frame cannot be fetched.
      */
     virtual std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option,
-                                                          const PixelMapParams &param) = 0;
+        const PixelMapParams &param) = 0;
 
     /**
      * Fetch a representative video frame near a given timestamp by considering the given
@@ -721,8 +721,8 @@ public:
      * @return Returns a pixelmap containing a scaled video frame, which can be null, if such a
      * frame cannot be fetched.
      */
-    virtual int32_t FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs,
-        int32_t option, const PixelMapParams &param) = 0;
+    virtual int32_t FetchScaledFrameYuvs(const std::vector<int64_t>& timeUs, int32_t option,
+        const PixelMapParams &param) = 0;
 
     /**
      * Fetch a representative video frame near a given timestamp by considering the given
@@ -740,14 +740,14 @@ public:
      * exceeds this time, it will return an error.
      * @return Returns status code indicating success or failure.
      */
-    virtual int32_t FetchScaledFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs,
-        int32_t option, const PixelMapParams &param, int64_t timeoutMs) = 0;
+    virtual int32_t FetchScaledFrameYuvsWithTimeout(const std::vector<int64_t>& timeUs, int32_t option,
+        const PixelMapParams &param, int64_t timeoutMs) = 0;
     
     /**
      * Process the obtained pixelmap.
      */
     virtual std::shared_ptr<PixelMap> ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer,
-                                                    const PixelMapParams &param, int32_t scaleMode) = 0;
+        const PixelMapParams &param, int32_t scaleMode) = 0;
 
     /**
      * Cancel all fetch tasks which are triggered by { fetchFramesByTimes }.
