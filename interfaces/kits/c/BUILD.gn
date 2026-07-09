@@ -508,9 +508,22 @@ ohos_shared_library("avtranscoder") {
 
   public_configs = [ ":media_capi_public_config" ]
 
-  cflags_cc = [ "--coverage" ]
-  cflags = [ "--coverage" ]
-  ldflags = [ "--coverage" ]
+  cflags_cc = [
+    "-flto",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+    "-fno-merge-all-constants",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+  ]
+
+  ldflags = [
+    "-flto",
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+    "-Wl,--no-whole-archive",
+  ]
 
   sources = [
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/avtranscoder/native_avtranscoder.cpp",

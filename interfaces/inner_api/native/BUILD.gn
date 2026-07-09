@@ -80,7 +80,7 @@ config("media_client_base_config") {
     "-Wshadow",
     "-FPIC",
     "-FS",
-    "-O2",
+    "-Os",
     "-D_FORTIFY_SOURCE=2",
     "-Wformat=2",
     "-Wfloat-equal",
@@ -90,6 +90,19 @@ config("media_client_base_config") {
     "-Wimplicit-fallthrough",
     "-Wsign-compare",
     "-Wunused-parameter",
+    "-flto",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-fno-merge-all-constants",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+  ]
+
+  ldflags = [
+    "-flto",
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+    "-Wl,--no-whole-archive",
   ]
 
   if (target_cpu == "arm") {
