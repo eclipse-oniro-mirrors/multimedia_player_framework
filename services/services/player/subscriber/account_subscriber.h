@@ -23,7 +23,7 @@
 
 namespace OHOS {
 namespace Media {
-class CommonEventReceiver {
+class __attribute__((visibility("hidden"))) CommonEventReceiver {
 public:
     virtual void OnCommonEventReceived(const std::string &event) {};
     virtual ~CommonEventReceiver() = default;
@@ -40,11 +40,15 @@ public:
 
     static std::shared_ptr<AccountSubscriber> GetInstance();
 private:
+    __attribute__((visibility("hidden")))
     AccountSubscriber() = default;
     void DispatchEvent(int32_t userId, const std::string &action);
 
+    __attribute__((visibility("hidden")))
     static std::shared_ptr<AccountSubscriber> instance_;
+    __attribute__((visibility("hidden")))
     std::mutex userMutex_;
+    __attribute__((visibility("hidden")))
     std::map<int32_t, std::vector<std::shared_ptr<CommonEventReceiver>>> userMap_;
 };
 } // namespace Media

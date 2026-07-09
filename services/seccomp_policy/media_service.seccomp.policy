@@ -151,6 +151,7 @@ epoll_pwait;all
 timerfd_create;all
 timerfd_settime;all
 fchown;all
+fstatfs;all
 sched_getscheduler;all
 memfd_create;all
 getgroups;arm64

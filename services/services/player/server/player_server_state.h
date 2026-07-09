@@ -20,7 +20,7 @@
 
 namespace OHOS {
 namespace Media {
-class PlayerServer::BaseState : public PlayerServerState {
+class __attribute__((visibility("hidden"))) PlayerServer::BaseState : public PlayerServerState {
 public:
     BaseState(PlayerServer &server, const std::string &name) : PlayerServerState(name), server_(server) {}
     virtual ~BaseState() = default;
@@ -68,7 +68,7 @@ protected:
     PlayerServer &server_;
 };
 
-class PlayerServer::IdleState : public PlayerServer::BaseState {
+class __attribute__((visibility("hidden"))) PlayerServer::IdleState : public PlayerServer::BaseState {
 public:
     explicit IdleState(PlayerServer &server) : BaseState(server, "idle_state") {}
     ~IdleState() = default;
@@ -77,7 +77,7 @@ protected:
     void StateEnter() override;
 };
 
-class PlayerServer::InitializedState : public PlayerServer::BaseState {
+class __attribute__((visibility("hidden"))) PlayerServer::InitializedState : public PlayerServer::BaseState {
 public:
     explicit InitializedState(PlayerServer &server) : BaseState(server, "inited_state") {}
     ~InitializedState() = default;
@@ -86,7 +86,7 @@ public:
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 };
 
-class PlayerServer::PreparingState : public PlayerServer::BaseState {
+class __attribute__((visibility("hidden"))) PlayerServer::PreparingState : public PlayerServer::BaseState {
 public:
     explicit PreparingState(PlayerServer &server) : BaseState(server, "preparing_state") {}
     ~PreparingState() = default;
@@ -98,7 +98,7 @@ protected:
     void StateEnter() override;
 };
 
-class PlayerServer::PreparedState : public PlayerServer::BaseState {
+class __attribute__((visibility("hidden"))) PlayerServer::PreparedState : public PlayerServer::BaseState {
 public:
     explicit PreparedState(PlayerServer &server) : BaseState(server, "prepared_state") {}
     ~PreparedState() = default;
@@ -119,7 +119,7 @@ protected:
     void HandleEos() override;
 };
 
-class PlayerServer::PlayingState : public PlayerServer::BaseState {
+class __attribute__((visibility("hidden"))) PlayerServer::PlayingState : public PlayerServer::BaseState {
 public:
     explicit PlayingState(PlayerServer &server) : BaseState(server, "playing_state") {}
     ~PlayingState() = default;
@@ -146,7 +146,7 @@ protected:
     void StateExit() override;
 };
 
-class PlayerServer::PausedState : public PlayerServer::BaseState {
+class __attribute__((visibility("hidden"))) PlayerServer::PausedState : public PlayerServer::BaseState {
 public:
     explicit PausedState(PlayerServer &server) : BaseState(server, "paused_state") {}
     ~PausedState() = default;
@@ -168,7 +168,7 @@ protected:
     void HandleEos() override;
 };
 
-class PlayerServer::StoppedState : public PlayerServer::BaseState {
+class __attribute__((visibility("hidden"))) PlayerServer::StoppedState : public PlayerServer::BaseState {
 public:
     explicit StoppedState(PlayerServer &server) : BaseState(server, "stopped_state") {}
     ~StoppedState() = default;
@@ -179,7 +179,7 @@ public:
     int32_t SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode) override;
 };
 
-class PlayerServer::PlaybackCompletedState : public PlayerServer::BaseState {
+class __attribute__((visibility("hidden"))) PlayerServer::PlaybackCompletedState : public PlayerServer::BaseState {
 public:
     explicit PlaybackCompletedState(PlayerServer &server) : BaseState(server, "playbackCompleted_state") {}
     ~PlaybackCompletedState() = default;
@@ -198,6 +198,7 @@ protected:
     void HandleStateChange(int32_t newState) override;
 
 private:
+    __attribute__((visibility("hidden")))
     int64_t stateEnterTimeMs_ = 0;
 };
 }

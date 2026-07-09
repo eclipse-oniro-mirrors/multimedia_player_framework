@@ -33,8 +33,11 @@ public:
     void RecoverByMemManageRecall();
 
 private:
+    __attribute__((visibility("hidden")))
     PlayerServiceStubMem();
+    __attribute__((visibility("hidden")))
     int32_t Init() override;
+    __attribute__((visibility("hidden")))
     MemManageRecall memRecallStruct_;
 };
 } // namespace Media

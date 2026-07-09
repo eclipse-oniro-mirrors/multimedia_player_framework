@@ -68,8 +68,10 @@ public:
     int32_t Reset();
 
 private:
+    __attribute__((visibility("hidden")))
     int32_t EnqueueTask(const std::shared_ptr<ITaskHandler> &task, PlayerServerTaskType type,
         const std::string &taskName);
+    __attribute__((visibility("hidden")))
     int32_t EnqueueSeekTask(const std::shared_ptr<ITaskHandler> &task, PlayerServerTaskType type,
         const std::string &taskName, int32_t seekMode, int64_t seekTime);
     struct TwoPhaseTaskItem {
@@ -81,16 +83,25 @@ private:
         int64_t seekTime_ = -1;
         int32_t speedMode_ = -1;
     };
-
+    __attribute__((visibility("hidden")))
     std::unique_ptr<TaskQueue> taskThread_;
+    __attribute__((visibility("hidden")))
     std::shared_ptr<ITaskHandler> currTwoPhaseTask_;
+    __attribute__((visibility("hidden")))
     PlayerServerTaskType currTwoPhaseType_ = PlayerServerTaskType::BUTT;
+    __attribute__((visibility("hidden")))
     std::string currTwoPhaseTaskName_ = "Unknown";
+    __attribute__((visibility("hidden")))
     int32_t currentSeekMode_ = -1;
+    __attribute__((visibility("hidden")))
     int64_t currentSeekTime_ = -1;
+    __attribute__((visibility("hidden")))
     std::list<TwoPhaseTaskItem> pendingTwoPhaseTasks_;
+    __attribute__((visibility("hidden")))
     bool isInited_ = false;
+    __attribute__((visibility("hidden")))
     std::thread::id taskThreadId_;
+    __attribute__((visibility("hidden")))
     std::mutex mutex_;
 };
 }
