@@ -32,7 +32,6 @@
 
 namespace OHOS {
 namespace Media {
-using namespace MediaAVCodec;
 class IStreamIDManager;
 
 struct AudioBufferEntry {

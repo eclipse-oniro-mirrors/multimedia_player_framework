@@ -50,6 +50,7 @@ ohos_unittest("soundpool_cachebuffer_unittest") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "av_codec:av_codec_client",
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
     "bundle_framework:appexecfwk_base",
@@ -63,6 +64,7 @@ ohos_unittest("soundpool_cachebuffer_unittest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "media_foundation:media_foundation",
     "qos_manager:qos",
   ]
 

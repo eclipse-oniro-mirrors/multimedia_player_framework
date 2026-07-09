@@ -37,7 +37,6 @@ namespace OHOS {
 namespace Media {
 using namespace std;
 using namespace AudioStandard;
-using namespace MediaAVCodec;
 class AudioStreamMock {
 public:
     AudioStreamMock() = default;

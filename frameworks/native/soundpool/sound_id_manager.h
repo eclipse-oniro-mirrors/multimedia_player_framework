@@ -36,7 +36,6 @@ public:
     int32_t Load(int32_t fd, int64_t offset, int64_t length);
     int32_t DoLoad(int32_t soundID);
     int32_t DoParser();
-
     int32_t Unload(int32_t soundID);
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
@@ -60,7 +59,7 @@ private:
     std::condition_variable queueDataValid_;
     std::deque<int32_t> soundIDs_;
     bool isQuitQueue_ = false;
-    
+
     int32_t apiVersion_ = 0;
 };
 } // namespace Media

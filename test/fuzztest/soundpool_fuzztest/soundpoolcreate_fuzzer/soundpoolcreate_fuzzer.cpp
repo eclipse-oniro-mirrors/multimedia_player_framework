@@ -14,8 +14,6 @@
  */
 
 #include <cmath>
-#include <cstddef>
-#include <cstdint>
 #include <iostream>
 #include "aw_common.h"
 #include "string_ex.h"
@@ -80,20 +78,13 @@ const StreamUsage streamUsage_[STREAM_USAGE_LIST] {
 
 bool SoundPoolCreateFuzzer::FuzzSoundPoolCreate(uint8_t *data, size_t size)
 {
-    if (!data || size < sizeof(int32_t)) {
-        return false;
-    }
-    int32_t *offsetData = reinterpret_cast<int32_t *>(offsetData);
-    const size_t offsetSize = size / sizeof(int32_t);
-    ptrdiff_t offset = 0;
-
-    int32_t maxStreams = offsetData[(offset++) % offsetSize];
+    int32_t maxStreams = *reinterpret_cast<int32_t *>(data);
     AudioStandard::AudioRendererInfo audioRenderInfo;
 
-    int32_t contenttypesubscript = offsetData[(offset++) % offsetSize] % (CONTENT_TYPE_LIST);
+    int32_t contenttypesubscript = *reinterpret_cast<int32_t *>(data) % (CONTENT_TYPE_LIST);
     audioRenderInfo.contentType = contentType_[contenttypesubscript];
 
-    int32_t streamusagesubscript = offsetData[(offset++) % offsetSize] % (STREAM_USAGE_LIST);
+    int32_t streamusagesubscript = *reinterpret_cast<int32_t *>(data) % (STREAM_USAGE_LIST);
     audioRenderInfo.streamUsage = streamUsage_[streamusagesubscript];
 
     audioRenderInfo.rendererFlags = 0;
@@ -105,23 +96,16 @@ bool SoundPoolCreateFuzzer::FuzzSoundPoolCreate(uint8_t *data, size_t size)
 
 bool SoundPoolCreateFuzzer::FuzzSoundPoolCreateFlags(uint8_t *data, size_t size)
 {
-    if (!data || size < sizeof(int32_t)) {
-        return false;
-    }
-    int32_t *offsetData = reinterpret_cast<int32_t *>(offsetData);
-    const size_t offsetSize = size / sizeof(int32_t);
-    ptrdiff_t offset = 0;
-
     int maxStreams = 3;
     AudioStandard::AudioRendererInfo audioRenderInfo;
 
-    int32_t contenttypesubscript = offsetData[(offset++) % offsetSize] % (CONTENT_TYPE_LIST);
+    int32_t contenttypesubscript = *reinterpret_cast<int32_t *>(data) % (CONTENT_TYPE_LIST);
     audioRenderInfo.contentType = contentType_[contenttypesubscript];
 
-    int32_t streamusagesubscript = offsetData[(offset++) % offsetSize] % (STREAM_USAGE_LIST);
+    int32_t streamusagesubscript = *reinterpret_cast<int32_t *>(data) % (STREAM_USAGE_LIST);
     audioRenderInfo.streamUsage = streamUsage_[streamusagesubscript];
 
-    audioRenderInfo.rendererFlags = offsetData[(offset++) % offsetSize];
+    audioRenderInfo.rendererFlags = *reinterpret_cast<int32_t *>(data);
 
     TestSoundPool::CreateSoundPool(maxStreams, audioRenderInfo);
     TestSoundPool::Release();

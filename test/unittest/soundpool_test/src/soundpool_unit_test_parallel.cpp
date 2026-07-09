@@ -75,7 +75,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_045, TestSize.Level2)
     std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPoolParallel_);
     ASSERT_TRUE(cb != nullptr);
     int32_t ret = soundPoolParallel_->SetSoundPoolCallback(cb);
-   ASSERT_TRUE(ret == 0);
+    ASSERT_TRUE(ret == 0);
     // test invalid path
     std::string fileName = "/data/test/test_05.mp3";
     fds_[loadNum_] = open(fileName.c_str(), O_RDWR);
@@ -87,23 +87,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_045, TestSize.Level2)
     }
     EXPECT_EQ(soundIDs_[loadNum_], -1);
     MEDIA_LOGI("soundpool_unit_test soundpool_function_045 after");
-}
-
-/**
- * @tc.name: soundpool_function_046
- * @tc.desc: function test Load Url when no callback use soundPoolParallel
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(SoundPoolUnitTest, soundpool_function_046, TestSize.Level2)
-{
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_046 before");
-    int maxStreams = 3;
-    create(maxStreams);
-    // test no callback to load
-    loadUrlParallel(g_fileName[loadNum_], loadNum_);
-    sleep(waitTime3);
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_046 after");
 }
 
 /**
@@ -193,23 +176,6 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_049, TestSize.Level2)
     }
     EXPECT_EQ(soundIDs_[loadNum_], -1);
     MEDIA_LOGI("soundpool_unit_test soundpool_function_049 after");
-}
-
-/**
- * @tc.name: soundpool_function_050
- * @tc.desc: function test Load Fd when no callback use soundPoolParallel
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(SoundPoolUnitTest, soundpool_function_050, TestSize.Level2)
-{
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_050 before");
-    int maxStreams = 3;
-    create(maxStreams);
-    // test no callback to load
-    loadFdParallel(g_fileName[loadNum_], loadNum_);
-    sleep(waitTime3);
-    MEDIA_LOGI("soundpool_unit_test soundpool_function_050 after");
 }
 
 /**

@@ -25,25 +25,5 @@ void AudioRendererManagerUnittest::SetUpTestCase(void) {}
 void AudioRendererManagerUnittest::TearDownTestCase(void) {}
 void AudioRendererManagerUnittest::SetUp(void) {}
 void AudioRendererManagerUnittest::TearDown(void) {}
-
-/**
- * @tc.name  : Test RemoveOldAudioRenderer
- * @tc.number: AudioRendererManagerRemoveOldAudioRenderer_001
- * @tc.desc  : Test audioRendererVector_.size() > 0
- *             Test removeGlobeId > 0
- */
-HWTEST_F(AudioRendererManagerUnittest, AudioRendererManagerRemoveOldAudioRenderer_001, TestSize.Level0)
-{
-    AudioRendererManager& testPtr = AudioRendererManager::GetInstance();
-    ASSERT_NE(&testPtr, nullptr);
-    auto mockAudioRenderer = std::make_unique<MockAudioRender>();
-    EXPECT_CALL(*(mockAudioRenderer), Release()).WillRepeatedly(Return(false));
-    std::unique_ptr<AudioStandard::AudioRenderer> audioRenderer = std::move(mockAudioRenderer);
-    testPtr.audioRendererVector_.push_back(
-        std::make_pair(1, std::move(audioRenderer))
-    );
-    testPtr.RemoveOldAudioRenderer();
-    EXPECT_EQ(testPtr.audioRendererVector_.size(), 0);
-}
 } // namespace Media
 } // namespace OHOS

@@ -24,14 +24,15 @@ namespace {
     static const std::string THREAD_POOL_NAME = "OS_SoundMgr";
 
     static const int32_t MAX_THREADS_NUM = std::thread::hardware_concurrency() >= 4 ? 2 : 1;
+
     static constexpr size_t MAX_LOAD_NUM_BELOW_API18 = 32;
     static constexpr size_t MAX_LOAD_NUM_ABOVE_API18 = 128;
 
     static constexpr int32_t SOUNDPOOL_API_VERSION_ISOLATION = 18;
     static constexpr int32_t FAULT_API_VERSION = -1;
-
-    static constexpr int32_t MAX_SOUND_ID_QUEUE = 128;
     
+    static constexpr int32_t MAX_SOUND_ID_QUEUE = 128;
+
     static constexpr int32_t WAIT_TIME_BEFORE_CLOSE_MS = 1000;
 }
 
@@ -84,7 +85,6 @@ int32_t SoundIDManager::InitThreadPool()
     CHECK_AND_RETURN_RET_LOG(soundParserThreadPool_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain ThreadPool");
     soundParserThreadPool_->Start(MAX_THREADS_NUM);
     isParsingThreadPoolStarted_ = true;
-
     return MSERR_OK;
 }
 
@@ -98,7 +98,7 @@ int32_t SoundIDManager::Load(const std::string &url)
             soundParsersSize >= MAX_LOAD_NUM_BELOW_API18) {
             MEDIA_LOGE("Failed to create soundParser by url below api18, soundParsers_ size is %{public}zu",
                 soundParsersSize);
-            return soundID;
+                return soundID;
         }
         if ((apiVersion_ == FAULT_API_VERSION || apiVersion_ >= SOUNDPOOL_API_VERSION_ISOLATION) &&
             soundParsersSize >= MAX_LOAD_NUM_ABOVE_API18) {
@@ -148,9 +148,11 @@ int32_t SoundIDManager::Load(int32_t fd, int64_t offset, int64_t length)
                 soundParsersSize);
             return soundID;
         }
+
         do {
             nextSoundID_ = nextSoundID_ == INT32_MAX ? 1 : nextSoundID_ + 1;
         } while (GetSoundParserBySoundID(nextSoundID_) != nullptr);
+
         soundID = nextSoundID_;
         std::shared_ptr<SoundParser> soundParser = std::make_shared<SoundParser>(soundID, fd, offset, length);
         CHECK_AND_RETURN_RET_LOG(soundParser != nullptr, -1, "Failed to create soundParser");
@@ -166,6 +168,7 @@ int32_t SoundIDManager::DoLoad(int32_t soundID)
     if (!isParsingThreadPoolStarted_) {
         InitThreadPool();
     }
+    
     {
         std::unique_lock lock(soundManagerLock_);
         while (soundIDs_.size() == MAX_SOUND_ID_QUEUE) {
@@ -178,6 +181,7 @@ int32_t SoundIDManager::DoLoad(int32_t soundID)
         soundIDs_.push_back(soundID);
         queueDataValid_.notify_one();
     }
+
     ThreadPool::Task soundTask = [this] { this->DoParser(); };
     CHECK_AND_RETURN_RET_LOG(soundParserThreadPool_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain ThreadPool");
     CHECK_AND_RETURN_RET_LOG(soundTask != nullptr, MSERR_INVALID_VAL, "Failed to obtain Task");
@@ -205,11 +209,11 @@ int32_t SoundIDManager::DoParser()
         lock.unlock();
         soundParser->SetCallback(callback_);
         soundParser->DoParser();
+
         lock.lock();
     }
     return MSERR_OK;
 }
-
 
 std::shared_ptr<SoundParser> SoundIDManager::GetSoundParserBySoundID(int32_t soundID) const
 {
@@ -236,6 +240,7 @@ int32_t SoundIDManager::Unload(int32_t soundID)
         soundParsers_.erase(it);
         return MSERR_OK;
     }
+
     MEDIA_LOGE("Invalid soundID, unload failed, soundID is %{public}d", soundID);
     return MSERR_INVALID_VAL;
 }

@@ -41,6 +41,7 @@ public:
     virtual int32_t ClearStreamIDInDeque(int32_t soundID, int32_t streamID) = 0;
     virtual void OnPlayFinished(int32_t streamID) = 0;
 
+    int32_t StopAudioStream(int32_t streamID);
     int32_t Play(const std::shared_ptr<SoundParser> &soundParser, const PlayParams &playParameters);
     int32_t InitThreadPool();
     std::vector<int32_t> GetStreamIDBySoundIDWithLock(int32_t soundID);
@@ -105,8 +106,8 @@ protected:
     AudioStandard::AudioRendererInfo audioRendererInfo_;
     int32_t maxStreams_ = MIN_PLAY_STREAMS_NUMBER;
 
-    std::atomic<bool> isStreamPlayingThreadPoolStarted_ = false;
-    std::unique_ptr<ThreadPool> streamPlayingThreadPool_ = nullptr;
+    std::atomic<bool> isStreamThreadPoolStarted_ = false;
+    std::unique_ptr<ThreadPool> streamThreadPool_ = nullptr;
     std::atomic<bool> isStreamStopThreadPoolStarted_ = false;
     std::shared_ptr<ThreadPool> streamStopThreadPool_ = nullptr;
 
