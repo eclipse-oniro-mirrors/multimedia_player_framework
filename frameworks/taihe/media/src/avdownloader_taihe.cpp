@@ -71,20 +71,20 @@ string AVDownloaderManagerImpl::AddAVDownloadTask(ohos::multimedia::media::weak:
     MEDIA_LOGI("AddAVDownloadTask In");
 
     if (downloaderManager_ == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         return string("");
     }
 
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceImpl::GetMediaSource(source);
     if (srcTmp == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Invalid parameter: media source is null");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Invalid parameter: media source is null");
         return string("");
     }
 
     auto pluginSource = std::make_shared<OHOS::Media::Plugins::MediaSource>(srcTmp->url, srcTmp->header);
     std::string taskId = downloaderManager_->AddDownloadTask(pluginSource);
     if (taskId.empty()) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: failed to add download task");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: failed to add download task");
         return string("");
     }
 
@@ -98,14 +98,14 @@ void AVDownloaderManagerImpl::RemoveDownloadTask(optional_view<string> taskId)
     MEDIA_LOGI("RemoveDownloadTask In");
 
     if (downloaderManager_ == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         return;
     }
 
     if (taskId.has_value()) {
         std::string taskIdStr(taskId.value());
         if (taskIdToUrl_.find(taskIdStr) == taskIdToUrl_.end()) {
-            set_business_error(ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
+            set_business_error(ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
             return;
         }
         downloaderManager_->RemoveDownloadTask(taskIdStr);
@@ -131,19 +131,19 @@ void AVDownloaderManagerImpl::PauseDownloadTask(optional_view<string> taskId)
     MEDIA_LOGI("PauseDownloadTask In");
 
     if (downloaderManager_ == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         return;
     }
 
     if (taskId.has_value()) {
         std::string taskIdStr(taskId.value());
         if (taskIdToUrl_.find(taskIdStr) == taskIdToUrl_.end()) {
-            set_business_error(ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
+            set_business_error(ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
             return;
         }
         int32_t ret = downloaderManager_->PauseDownloadTask(taskIdStr);
         if (ret != 0) {
-            set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: pause failed");
+            set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: pause failed");
         }
     } else {
         // Pause all tasks
@@ -159,19 +159,19 @@ void AVDownloaderManagerImpl::ResumeDownloadTask(optional_view<string> taskId)
     MEDIA_LOGI("ResumeDownloadTask In");
 
     if (downloaderManager_ == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         return;
     }
 
     if (taskId.has_value()) {
         std::string taskIdStr(taskId.value());
         if (taskIdToUrl_.find(taskIdStr) == taskIdToUrl_.end()) {
-            set_business_error(ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
+            set_business_error(ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
             return;
         }
         int32_t ret = downloaderManager_->ResumeDownloadTask(taskIdStr);
         if (ret != 0) {
-            set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: resume failed");
+            set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: resume failed");
         }
     } else {
         // Resume all tasks
@@ -187,7 +187,7 @@ array<string> AVDownloaderManagerImpl::GetDownloadTasks()
     MEDIA_LOGI("GetDownloadTasks In");
 
     if (downloaderManager_ == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         std::vector<string> empty;
         return array<string>(copy_data_t{}, empty.data(), empty.size());
     }
@@ -206,13 +206,13 @@ string AVDownloaderManagerImpl::GetTaskCacheDirectory(string_view taskId)
     MEDIA_LOGI("GetTaskCacheDirectory In, taskId: %{public}s", std::string(taskId).c_str());
 
     if (downloaderManager_ == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         return string("");
     }
 
     std::string taskIdStr(taskId);
     if (taskIdToUrl_.find(taskIdStr) == taskIdToUrl_.end()) {
-        set_business_error(ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
+        set_business_error(ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
         return string("");
     }
 
@@ -233,13 +233,13 @@ string AVDownloaderManagerImpl::GetTaskStatus(string_view taskId)
     MEDIA_LOGI("GetTaskStatus In, taskId: %{public}s", std::string(taskId).c_str());
 
     if (downloaderManager_ == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         return MediaTaiheUtils::ToTaiheString(std::string("error"));
     }
 
     std::string taskIdStr(taskId);
     if (taskIdToUrl_.find(taskIdStr) == taskIdToUrl_.end()) {
-        set_business_error(ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
+        set_business_error(ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
         return MediaTaiheUtils::ToTaiheString(std::string("error"));
     }
 
@@ -279,13 +279,13 @@ double AVDownloaderManagerImpl::GetTaskProgress(string_view taskId)
     MEDIA_LOGI("GetTaskProgress In, taskId: %{public}s", std::string(taskId).c_str());
 
     if (downloaderManager_ == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         return -1.0;
     }
 
     std::string taskIdStr(taskId);
     if (taskIdToUrl_.find(taskIdStr) == taskIdToUrl_.end()) {
-        set_business_error(ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
+        set_business_error(ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
         return -1.0;
     }
 
@@ -345,13 +345,13 @@ void AVDownloaderManagerImpl::Release()
     MEDIA_LOGI("ReleaseSync In");
 
     if (downloaderManager_ == nullptr) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         return;
     }
 
     int32_t ret = downloaderManager_->Release();
     if (ret != 0) {
-        set_business_error(ERR_AVD_OPERATION_NOT_PERMIT, "Release failed");
+        set_business_error(ERR_OPERATION_NOT_PERMIT, "Release failed");
         return;
     }
 

@@ -31,8 +31,8 @@ using namespace taihe;
 using namespace ohos::multimedia::media;
 using namespace OHOS::Media;
 
-constexpr int32_t ERR_AVD_PARAM_OUT_OF_RANGE = 5400108;
-constexpr int32_t ERR_AVD_OPERATION_NOT_PERMIT = 5400102;
+constexpr int32_t ERR_PARAM_OUT_OF_RANGE = 5400108;
+constexpr int32_t ERR_OPERATION_NOT_PERMIT = 5400102;
 
 class AVDownloaderManagerImpl {
 public:
