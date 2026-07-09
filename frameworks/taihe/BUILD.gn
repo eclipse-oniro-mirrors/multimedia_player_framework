@@ -168,6 +168,8 @@ taihe_shared_library("media_taihe") {
   sources = get_target_outputs(":run_media_taihe")
   sources += [
     "media/src/ani_constructor.cpp",
+    "media/src/avdownloader_callback_taihe.cpp",
+    "media/src/avdownloader_taihe.cpp",
     "media/src/avads_controller_taihe.cpp",
     "media/src/avimagegenerator_taihe.cpp",
     "media/src/avmetadatahelper_callback_taihe.cpp",
@@ -196,6 +198,7 @@ taihe_shared_library("media_taihe") {
     ":run_media_taihe",
     ":soundpool_taihe",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
+    "//foundation/multimedia/player_framework/services/services/media_source/av_downloader_manager:media_av_downloader_manager",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 

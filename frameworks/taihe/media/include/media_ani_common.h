@@ -98,6 +98,7 @@ public:
     std::string id_ {};
     ::ohos::multimedia::media::AVFileDescriptor fd {};
     DataSrcDescriptor dataSrc {};
+    std::string directoryPath {};
 private:
     std::vector<AVPlayMediaStreamTmp> mediaStreamVec_;
 };
