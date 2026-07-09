@@ -1399,7 +1399,7 @@ HWTEST_F(PlayerServerUnitTest, Player_Play_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_TRUE(player_->IsPlaying());
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));
-    EXPECT_EQ(MSERR_OK, player_->Seek(duration, SEEK_CLOSEST));
+    EXPECT_EQ(MSERR_OK, player_->Seek(duration - DELTA_TIME, SEEK_CLOSEST));
     sleep(PLAYING_TIME_2_SEC);
     EXPECT_EQ(MSERR_OK, player_->Play());
 }
