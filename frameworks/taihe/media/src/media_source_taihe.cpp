@@ -114,6 +114,19 @@ MediaSourceImpl::MediaSourceImpl(::ohos::multimedia::media::AVDataSrcDescriptor 
     mediaSource_->SetID(AVMediaSourceTmp::GenerateUniqueId());
 }
 
+MediaSourceImpl::MediaSourceImpl(string_view directoryPath)
+{
+    mediaSource_ = std::make_shared<AVMediaSourceTmp>();
+    if (mediaSource_ == nullptr) {
+        MEDIA_LOGE("TaiheCreateMediaSourceWithDirectory GetMediaSource fail");
+        MediaTaiheUtils::ThrowExceptionError("TaiheCreateMediaSourceWithDirectory GetMediaSource fail");
+        return;
+    }
+    mediaSource_->directoryPath = static_cast<std::string>(directoryPath);
+    mediaSource_->SetID(AVMediaSourceTmp::GenerateUniqueId());
+    MEDIA_LOGD("TaiheCreateMediaSourceWithDirectory path=%{public}s", mediaSource_->directoryPath.c_str());
+}
+
 int64_t MediaSourceImpl::GetImplPtr()
 {
     return reinterpret_cast<uintptr_t>(this);
@@ -163,6 +176,18 @@ optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithDataSource
 {
     MEDIA_LOGD("TaiheCreateMediaSourceWithDataSource In");
     auto res = taihe::make_holder<MediaSourceImpl, ::ohos::multimedia::media::MediaSource>(dataSrc);
+    if (taihe::has_error()) {
+        MEDIA_LOGE("Create MediaSource failed!");
+        taihe::reset_error();
+        return optional<::ohos::multimedia::media::MediaSource>(std::nullopt);
+    }
+    return optional<::ohos::multimedia::media::MediaSource>(std::in_place, res);
+}
+
+optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithDirectorySync(string_view directoryPath)
+{
+    MEDIA_LOGD("TaiheCreateMediaSourceWithDirectory In");
+    auto res = taihe::make_holder<MediaSourceImpl, ::ohos::multimedia::media::MediaSource>(directoryPath);
     if (taihe::has_error()) {
         MEDIA_LOGE("Create MediaSource failed!");
         taihe::reset_error();
@@ -260,3 +285,4 @@ TH_EXPORT_CPP_API_CreateMediaSourceWithUrl(CreateMediaSourceWithUrl);
 TH_EXPORT_CPP_API_CreateMediaSourceWithStreamData(CreateMediaSourceWithStreamData);
 TH_EXPORT_CPP_API_CreateMediaSourceWithFd(CreateMediaSourceWithFd);
 TH_EXPORT_CPP_API_CreateMediaSourceWithDataSource(CreateMediaSourceWithDataSource);
+TH_EXPORT_CPP_API_CreateMediaSourceWithDirectorySync(CreateMediaSourceWithDirectorySync);

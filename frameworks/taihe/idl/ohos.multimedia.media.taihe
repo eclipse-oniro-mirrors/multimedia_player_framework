@@ -83,6 +83,9 @@ function CreateMediaSourceWithUrl(url: String, headers: Optional<@record Map<Str
 function CreateMediaSourceWithStreamData(streams: Array<MediaStream>): Optional<MediaSource>;
 function CreateMediaSourceWithFd(fd: AVFileDescriptor): Optional<MediaSource>;
 function CreateMediaSourceWithDataSource(dataSrc: AVDataSrcDescriptor): Optional<MediaSource>;
+@gen_async("createMediaSourceWithDirectory")
+@gen_promise("createMediaSourceWithDirectory")
+function CreateMediaSourceWithDirectorySync(directoryPath: String): Optional<MediaSource>;
 
 @gen_promise("reportAVScreenCaptureUserChoice")
 function ReportAVScreenCaptureUserChoiceSync(sessionId: i32, choice: String): void;
@@ -1371,4 +1374,58 @@ interface MediaSource {
     SetMimeType(mimeType: AVMimeTypes): void;
     SetMediaResourceLoaderDelegate(resourceLoader: MediaSourceLoader): void;
     GetID(): String;
+}
+
+enum AVDownloadTaskState: i32 {
+    INIT = 0,
+    QUEUED = 1,
+    RUNNING = 2,
+    COMPLETED = 3,
+    PAUSED = 4,
+    REMOVING = 5,
+    ERROR = 6
+}
+
+@gen_async("createAVDownloaderManager")
+@gen_promise("createAVDownloaderManager")
+function CreateAVDownloaderManagerSync(): Optional<AVDownloaderManager>;
+
+interface AVDownloaderManager {
+    AllowsCellularAccess(value: bool): void;
+    SetRequestTimeout(expired: i32): void;
+    AddAVDownloadTask(source: MediaSource): String;
+    RemoveDownloadTask(taskId: Optional<String>): void;
+    PauseDownloadTask(taskId: Optional<String>): void;
+    ResumeDownloadTask(taskId: Optional<String>): void;
+    GetDownloadTasks(): Array<String>;
+    GetTaskCacheDirectory(taskId: String): String;
+    GetTaskStatus(taskId: String): String;
+    GetTaskProgress(taskId: String): f64;
+
+    OnStatusChange(callback: (taskId: String, state: String) => void): void;
+    OnProgressChange(callback: (taskId: String, progress: f64) => void): void;
+    OffStatusChange(callback: Optional<(taskId: String, state: String) => void>): void;
+    OffProgressChange(callback: Optional<(taskId: String, progress: f64) => void>): void;
+
+    Release(): void;
+
+    @!sts_inject_into_class("""on(type: string, callback: object): void {
+        if (type === "statusChange") {
+            this.onStatusChange(callback as (taskId: String, state: String)=> void);
+        } else if (type === "progressChange") {
+            this.onProgressChange(callback as (taskId: String, progress: double)=> void);
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
+
+    @!sts_inject_into_class("""off(type: string, callback?: object): void {
+        if (type === "statusChange") {
+            this.offStatusChange(callback as (((taskId: String, state: String)=> void) | undefined));
+        } else if (type === "progressChange") {
+            this.offProgressChange(callback as (((taskId: String, progress: double)=> void) | undefined));
+        } else {
+            throw new Error(`Unknown type: ${type}`);
+        }
+    }""")
 }

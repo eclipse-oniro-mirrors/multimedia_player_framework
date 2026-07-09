@@ -185,6 +185,9 @@ bool MediaTaiheUtils::GetEnumKeyByValue<::ohos::multimedia::media::PlaylistLoopM
 template
 bool MediaTaiheUtils::GetEnumKeyByValue<::ohos::multimedia::audio::AudioPrivacyType>(int32_t value,
     typename ::ohos::multimedia::audio::AudioPrivacyType::key_t &key);
+template
+bool MediaTaiheUtils::GetEnumKeyByValue<::ohos::multimedia::media::AVDownloadTaskState>(int32_t value,
+    typename ::ohos::multimedia::media::AVDownloadTaskState::key_t &key);
 
 
 ani_object MediaTaiheUtils::ToBusinessError(ani_env *env, int32_t code, const std::string &message)
