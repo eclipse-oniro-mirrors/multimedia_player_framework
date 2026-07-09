@@ -113,8 +113,6 @@ public:
     MOCK_METHOD(bool, GetSilentModeAndMixWithOthers, (), (override));
     MOCK_METHOD(void, EnableVoiceModemCommunicationStartStream, (bool enable), (override));
     MOCK_METHOD(bool, IsNoStreamRenderer, (), (const, override));
-    MOCK_METHOD(bool, Mute, (AudioStandard::StateChangeCmdType), (override));
-    MOCK_METHOD(bool, Unmute, (AudioStandard::StateChangeCmdType), (override));
     MOCK_METHOD(int32_t, GetAudioTimestampInfo,
         (AudioStandard::Timestamp &timestamp, AudioStandard::Timestamp::Timestampbase base), (const, override));
     MOCK_METHOD(bool, Release, (), (override));
