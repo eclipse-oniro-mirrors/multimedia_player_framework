@@ -198,7 +198,6 @@ taihe_shared_library("media_taihe") {
     ":run_media_taihe",
     ":soundpool_taihe",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
-    "//foundation/multimedia/player_framework/services/services/media_source/av_downloader_manager:media_av_downloader_manager",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
   ]
 
