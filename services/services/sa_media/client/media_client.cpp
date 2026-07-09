@@ -66,7 +66,6 @@ constexpr int32_t POWERMGR_UID = 5528;
 constexpr int32_t RETYR_WAIT_TIME = 5;
 constexpr int32_t MAX_RETYR = 20;
 static MediaClient g_mediaClientInstance;
-std::once_flag onceFlag_;
 IMediaService &MediaServiceFactory::GetInstance()
 {
     return g_mediaClientInstance;
@@ -459,7 +458,7 @@ LppAvCapabilityInfo *MediaClient::GetLppCapacity()
     if (ret != MSERR_OK) {
         delete lppAvCapabilityInfo;
     }
-    CHECK_AND_RETURN_RET_LOG(ret == 0, nullptr, "MediaClient::GetLppCapacityfailed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "MediaClient::GetLppCapacityfailed");
     return lppAvCapabilityInfo;
 }
 

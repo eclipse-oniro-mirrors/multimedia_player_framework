@@ -59,7 +59,7 @@ bool MediaMadviseUtils::ApplyMadviseAligned(void *addr, size_t len)
     const size_t pageSize = PageSize();
     auto start = reinterpret_cast<uintptr_t>(addr);
     auto alignedStart = start & ~(pageSize - 1);
-    if (start > MAX_SAFE_ADDRESS - len) {
+    if (start > MAX_SAFE_ADDRESS || len > MAX_SAFE_ADDRESS - start) {
         MEDIA_LOG_E("Address overflow detected");
         return false;
     }
