@@ -185,7 +185,7 @@ private:
     bool enableStableQualityMode_ = false;
     bool enableBFrame_ = false;
 
-    Mutex stateMutex_ {};
+    std::mutex stateMutex_;
     ConditionVariable cond_ {};
 
     sptr<Surface> producerSurface_{nullptr};

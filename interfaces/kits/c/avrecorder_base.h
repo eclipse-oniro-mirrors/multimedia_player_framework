@@ -38,7 +38,7 @@
 #ifndef MULTIMEDIA_PLAYER_FRAMEWORK_NATIVE_AVRECORDER_BASE_H
 #define MULTIMEDIA_PLAYER_FRAMEWORK_NATIVE_AVRECORDER_BASE_H
 
-#include <string>
+#include <stdbool.h>
 #include <stdint.h>
 #ifdef SUPPORT_RECORDER_CREATE_FILE
 #include "media_asset_base_capi.h"

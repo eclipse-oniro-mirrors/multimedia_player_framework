@@ -139,6 +139,7 @@ HiRecorderImpl::~HiRecorderImpl()
         capturerInfoChangeCallback_->NotifyRelease();
     }
     Stop(false);
+    CloseFd();
     PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
 
@@ -410,7 +411,10 @@ sptr<Surface> HiRecorderImpl::GetMetaSurface(int32_t sourceId)
     if (SourceIdGenerator::IsMeta(sourceId) &&
         (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&
         GetMetaSourceType(sourceId) < VIDEO_META_SOURCE_BUTT)) {
-        producerMetaSurface_ = metaDataFilters_.at(sourceId)->GetInputMetaSurface();
+        auto it = metaDataFilters_.find(sourceId);
+        if (it != metaDataFilters_.end() && it->second != nullptr) {
+            producerMetaSurface_ = it->second->GetInputMetaSurface();
+        }
     }
     return producerMetaSurface_;
 }
@@ -662,6 +666,7 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
 {
     MediaTrace trace("HiRecorderImpl::Stop");
     MEDIA_LOG_I("Stop enter.");
+    std::lock_guard<std::mutex> lock(stateMutex_);
     if (curState_ == StateId::INIT) {
         MEDIA_LOG_I("Stop exit.the reason is state = INIT");
         return static_cast<int32_t>(Status::OK);
@@ -1186,6 +1191,7 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
     MEDIA_LOG_I("HiRecorderImpl ConfigureMuxer enter");
     switch (recParam.type) {
         case RecorderPublicParamType::OUT_FD: {
+            CloseFd();
             OutFd outFd = static_cast<const OutFd&>(recParam);
             fd_ = dup(outFd.fd);
             muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");

@@ -224,6 +224,13 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         // none audio request no need to check permission in recorder server
         permissionResult = Security::AccessToken::PERMISSION_GRANTED;
     }
+    if (permissionResult == Security::AccessToken::PERMISSION_DENIED) {
+        MEDIA_LOGE("user do not have the correct permission");
+        if (code == SET_AUDIO_SOURCE) {
+            audioSourceType_ = AUDIO_SOURCE_INVALID;
+        }
+        return MSERR_EXT_API9_NO_PERMISSION;
+    }
     CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED,
         MSERR_EXT_API9_NO_PERMISSION, "user do not have the correct permission");
 
