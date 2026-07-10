@@ -29,7 +29,6 @@
 namespace OHOS {
 namespace Media {
 using namespace AudioStandard;
-using namespace MediaAVCodec;
 class AudioStreamUnitTest : public testing::Test {
 public:
     static void SetUpTestCase(void);

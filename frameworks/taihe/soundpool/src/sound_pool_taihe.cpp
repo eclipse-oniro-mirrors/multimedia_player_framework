@@ -118,11 +118,17 @@ int32_t SoundPoolImpl::PlaySync(int32_t soundID, optional_view<PlayParameters> p
         }
         CHECK_AND_RETURN_RET_LOG(soundPool_ != nullptr, 0, "soundPool_ is nullptr!");
         int32_t streamId = soundPool_->Play(soundID, playParameters);
-        if (streamId < 0) {
+        if (streamId == MSERR_INVALID_VAL) {
+            SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound, soundID not found");
+        } else if (streamId == MSERR_SOUNDPOOL_SOUND_NOT_LOADED) {
+            SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound, soundID not loaded");
+        } else if (streamId < 0) {
             SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "play sound failed");
+        } else { // correct case
+            MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
+            return streamId;
         }
-        MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
-        return streamId;
+        return 0;
     }
 }
 
@@ -140,12 +146,17 @@ int32_t SoundPoolImpl::PlayWithoutParam(int32_t soundID)
         }
         PlayParams playParameters;
         int32_t streamId = soundPool_->Play(soundID, playParameters);
-        if (streamId < 0) {
+        if (streamId == MSERR_INVALID_VAL) {
+            SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound, soundID not found");
+        } else if (streamId == MSERR_SOUNDPOOL_SOUND_NOT_LOADED) {
+            SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound, soundID not loaded");
+        } else if (streamId < 0) {
             SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "play sound failed");
-            return 0;
+        } else { // correct case
+            MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
+            return streamId;
         }
-        MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
-        return streamId;
+        return 0;
     }
 }
 
@@ -166,12 +177,17 @@ int32_t SoundPoolImpl::PlayWithParam(int32_t soundID, PlayParameters const& para
             return 0;
         }
         int32_t streamId = soundPool_->Play(soundID, playParameters);
-        if (streamId < 0) {
+        if (streamId == MSERR_INVALID_VAL) {
+            SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound, soundID not found");
+        } else if (streamId == MSERR_SOUNDPOOL_SOUND_NOT_LOADED) {
+            SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound, soundID not loaded");
+        } else if (streamId < 0) {
             SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "play sound failed");
-            return 0;
+        } else { // correct case
+            MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
+            return streamId;
         }
-        MEDIA_LOGI("The taihe thread of play finishes execution and returns, streamId: %{public}d", streamId);
-        return streamId;
+        return 0;
     }
 }
 

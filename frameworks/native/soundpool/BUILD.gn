@@ -57,6 +57,7 @@ ohos_shared_library("soundpool_client") {
     "ability_base:zuri",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
+    "av_codec:av_codec_client",
     "audio_framework:audio_client",
     "audio_framework:audio_common",
     "audio_framework:audio_renderer",
@@ -70,14 +71,13 @@ ohos_shared_library("soundpool_client") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "media_foundation:media_foundation",
     "qos_manager:qos",
   ]
 
   if (player_framework_support_drm) {
     external_deps += [ "drm_framework:drm_framework" ]
   }
-
-  public_external_deps = [ "av_codec:av_codec_client" ]
 
   cflags = [
     "-Wall",

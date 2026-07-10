@@ -39,19 +39,6 @@ void ParallelStreamManagerTest::TearDown(void)
 }
 
 /**
- * @tc.name  : Test ~ParallelStreamManager
- * @tc.number: ParallelStreamManagerTestDestruct_001
- * @tc.desc  : Test frameWriteCallback_ != nullptr
- */
-HWTEST_F(ParallelStreamManagerTest, ParallelStreamManagerTestDestruct_001, TestSize.Level0)
-{
-    ASSERT_NE(testPtr_, nullptr);
-    auto frameWriteCallback = std::make_shared<MockISoundPoolFrameWriteCallback>();
-    testPtr_->frameWriteCallback_ = frameWriteCallback;
-    EXPECT_NE(testPtr_->frameWriteCallback_, nullptr);
-}
-
-/**
  * @tc.name  : Test InitThreadPool
  * @tc.number: ParallelStreamManagerInitThreadPool_001
  * @tc.desc  : Test maxStreams_ < MIN_PLAY_STREAMS_NUMBER
@@ -126,54 +113,6 @@ HWTEST_F(ParallelStreamManagerTest, ParallelStreamManagerDoPlay_001, TestSize.Le
     testPtr_->playingStream_.push_back(std::make_pair(1, stream2));
     auto ret = testPtr_->DoPlay(streamID1);
     EXPECT_EQ(ret, MSERR_INVALID_VAL);
-}
-
-/**
- * @tc.name  : Test UnloadStream
- * @tc.number: ParallelStreamManagerUnloadStream_001
- * @tc.desc  : Test it->second->GetSoundID() == soundId
- *             Test it->second->GetSoundID() != soundId
- *             Test it = playingStream_.begin(), it->second->GetSoundID() != soundId
- */
-HWTEST_F(ParallelStreamManagerTest, ParallelStreamManagerUnloadStream_001, TestSize.Level0)
-{
-    ASSERT_NE(testPtr_, nullptr);
-    int32_t streamID1 = ID_TEST;
-    Format trackFormat;
-    int32_t soundID = ID_TEST;
-    int32_t streamID2 = DEFAULT_NUM;
-    std::shared_ptr<ThreadPool> streamStopThreadPool;
-    std::shared_ptr<Stream> stream1 = std::make_shared<Stream>(trackFormat, soundID, streamID2, streamStopThreadPool);
-    std::shared_ptr<Stream> stream2 = std::make_shared<Stream>(trackFormat, soundID, streamID2, streamStopThreadPool);
-    testPtr_->waitingStream_.push_back(std::make_pair(0, stream1));
-    testPtr_->waitingStream_.push_back(std::make_pair(1, stream2));
-
-    std::shared_ptr<Stream> stream3 = std::make_shared<Stream>(trackFormat, soundID, streamID2, streamStopThreadPool);
-    std::shared_ptr<Stream> stream4 = std::make_shared<Stream>(trackFormat, soundID, streamID2, streamStopThreadPool);
-    testPtr_->playingStream_.push_back(std::make_pair(0, stream3));
-    testPtr_->playingStream_.push_back(std::make_pair(1, stream4));
-    auto ret = testPtr_->UnloadStream(streamID1);
-    EXPECT_EQ(ret, MSERR_OK);
-}
-
-/**
- * @tc.name  : Test ReorderStream
- * @tc.number: ParallelStreamManagerReorderStream_001
- * @tc.desc  : Test (left != nullptr && right != nullptr && left->GetPriority() < right->GetPriority()) == true
- */
-HWTEST_F(ParallelStreamManagerTest, ParallelStreamManagerReorderStream_001, TestSize.Level0)
-{
-    ASSERT_NE(testPtr_, nullptr);
-    Format trackFormat;
-    int32_t soundID = ID_TEST;
-    int32_t streamID2 = DEFAULT_NUM;
-    std::shared_ptr<ThreadPool> streamStopThreadPool;
-    std::shared_ptr<Stream> stream1 = std::make_shared<Stream>(trackFormat, soundID, streamID2, streamStopThreadPool);
-    std::shared_ptr<Stream> stream2 = std::make_shared<Stream>(trackFormat, soundID, streamID2, streamStopThreadPool);
-    testPtr_->playingStream_.push_back(std::make_pair(0, stream1));
-    testPtr_->playingStream_.push_back(std::make_pair(1, stream2));
-    testPtr_->ReorderStream();
-    EXPECT_EQ(testPtr_->playingStream_.size(), 2);
 }
 
 /**

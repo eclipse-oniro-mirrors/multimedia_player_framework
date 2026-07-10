@@ -14,7 +14,6 @@
  */
 
 #include "media_errors.h"
-#include "media_log.h"
 #include "ability.h"
 #include "napi_base_context.h"
 #include "soundpool_napi.h"
@@ -22,6 +21,34 @@
 #include "ipc_skeleton.h"
 #include "tokenid_kit.h"
 #endif
+
+#ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
+#include "histogram_plugin_macros.h"
+#define DFX_API_CALL(apiName, result)                                                 \
+do {                                                                                  \
+    SoundPoolApiType calledApi = (apiName);                                           \
+    if (calledApi > SOUNDPOOL_API_TYPE_BEGIN && calledApi < SOUNDPOOL_API_TYPE_END) { \
+        HISTOGRAM_BOOLEAN("MediaKit.ArkTS.SoundPool.APICall." #apiName, (result));    \
+        MEDIA_LOGI("DFX_API_CALL opt " #apiName " synced.");                          \
+    } else {                                                                          \
+        MEDIA_LOGE("DFX_API_CALL opt " #apiName " does not supported!");              \
+    }                                                                                 \
+} while (0)
+#else
+#define DFX_API_CALL(apiName, result)
+#endif
+
+#define DFX_API_CALL_SUCC(apiName) DFX_API_CALL(apiName, true)
+#define DFX_API_CALL_FAIL(apiName) DFX_API_CALL(apiName, false)
+#define DFX_REPORT_BEFORE_CHECK_RETURN(apiName, cond) \
+([] (bool checkResult) {                              \
+    if (!checkResult) {                               \
+        DFX_API_CALL_FAIL(apiName);                   \
+    }                                                 \
+    return checkResult;                               \
+} ((cond)))
+
+#include "media_log.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundPoolNapi"};
@@ -197,11 +224,15 @@ napi_value SoundPoolNapi::JsCreateSoundPool(napi_env env, napi_callback_info inf
     napi_value args[PARAM3] = { nullptr };
     size_t argCount = PARAM3;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(createSoundPool, status == napi_ok),
+        result, "failed to napi_get_cb_info");
 
     // get create soundpool Parameter
     status = GetJsInstanceWithParameter(env, args, PARAM3);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to Get InstanceWithParameter");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(createSoundPool, status == napi_ok),
+        result, "failed to Get InstanceWithParameter");
 
     std::unique_ptr<SoundPoolAsyncContext> asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
 
@@ -211,6 +242,7 @@ napi_value SoundPoolNapi::JsCreateSoundPool(napi_env env, napi_callback_info inf
     asyncCtx->ctorFlag = true;
 
     SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
+    DFX_API_CALL_SUCC(createSoundPool);
     return result;
 }
 
@@ -226,11 +258,15 @@ napi_value SoundPoolNapi::JsCreateParallelSoundPool(napi_env env, napi_callback_
     napi_value args[PARAM2] = { nullptr };
     size_t argCount = PARAM2;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(createParallelSoundPool, status == napi_ok),
+        result, "failed to napi_get_cb_info");
 
     // get create soundpool Parameter
     status = GetJsInstanceWithParameter(env, args, PARAM2);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to Get InstanceWithParameter");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(createParallelSoundPool, status == napi_ok),
+        result, "failed to Get InstanceWithParameter");
 
     std::unique_ptr<SoundPoolAsyncContext> asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
 
@@ -238,10 +274,43 @@ napi_value SoundPoolNapi::JsCreateParallelSoundPool(napi_env env, napi_callback_
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructorParallel_);
     asyncCtx->ctorFlag = true;
     if (!IsSystemApp()) {
+        DFX_API_CALL_FAIL(createParallelSoundPool);
         asyncCtx->SignError(MSERR_EXT_API9_PERMISSION_DENIED, "failed to get without permission");
+        SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
+    } else {
+        SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
+        DFX_API_CALL_SUCC(createParallelSoundPool);
     }
+    return result;
+}
 
-    SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
+static inline napi_value DoLoadNapiCall(
+    napi_env env, napi_value resource, napi_value result, std::unique_ptr<SoundPoolAsyncContext> asyncCtx)
+{
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(load, asyncCtx != nullptr), "asyncCtx is nullptr!");
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(load, asyncCtx->soundPool_ != nullptr), "soundPool_ is nullptr!");
+        int32_t soundId;
+        if (asyncCtx->url_.empty()) {
+            soundId = asyncCtx->soundPool_->Load(asyncCtx->fd_, asyncCtx->offset_, asyncCtx->length_);
+        } else {
+            soundId = asyncCtx->soundPool_->Load(asyncCtx->url_);
+        }
+        if (soundId < 0) {
+            DFX_API_CALL_FAIL(load);
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Failed to load sound, the resource path is invalid, please check input parameters");
+        } else {
+            DFX_API_CALL_SUCC(load);
+            asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(soundId);
+        }
+        MEDIA_LOGI("The js thread of load finishes execution and returns, soundId: %{public}d", soundId);
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
     return result;
 }
 
@@ -255,9 +324,13 @@ napi_value SoundPoolNapi::JsLoad(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(load, asyncCtx != nullptr),
+        result, "failed to get SoundPoolAsyncContext");
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(load, asyncCtx->napi != nullptr),
+        result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
 
     if (argCount == PARAM4) {
@@ -269,27 +342,9 @@ napi_value SoundPoolNapi::JsLoad(napi_env env, napi_callback_info info)
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsLoad", NAPI_AUTO_LENGTH, &resource);
     if (asyncCtx->napi->ParserLoadOptionFromJs(asyncCtx, env, args, argCount) == MSERR_OK) {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-            SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-            CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
-            int32_t soundId;
-            if (asyncCtx->url_.empty()) {
-                soundId = asyncCtx->soundPool_->Load(asyncCtx->fd_, asyncCtx->offset_, asyncCtx->length_);
-            } else {
-                soundId = asyncCtx->soundPool_->Load(asyncCtx->url_);
-            }
-            if (soundId < 0) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                    "Failed to load sound, the resource path is invalid, please check input parameters");
-            } else {
-                asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(soundId);
-            }
-            MEDIA_LOGI("The js thread of load finishes execution and returns, soundId: %{public}d", soundId);
-        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-        NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-        asyncCtx.release();
+        return DoLoadNapiCall(env, resource, result, std::move(asyncCtx));
     } else {
+        DFX_API_CALL_FAIL(load);
         SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
     }
     return result;
@@ -306,9 +361,11 @@ napi_value SoundPoolNapi::JsPlay(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(play, asyncCtx != nullptr), result, "failed to get SoundPoolAsyncContext");
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(play, asyncCtx->napi != nullptr), result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
 
     if (argCount == PARAM3) {
@@ -322,12 +379,19 @@ napi_value SoundPoolNapi::JsPlay(napi_env env, napi_callback_info info)
     if (asyncCtx->napi->ParserPlayOptionFromJs(asyncCtx, env, args, argCount) == MSERR_OK) {
         NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
             SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-            CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
+            CHECK_AND_RETURN_LOG(DFX_REPORT_BEFORE_CHECK_RETURN(play, asyncCtx != nullptr), "asyncCtx is nullptr!");
+            CHECK_AND_RETURN_LOG(
+                DFX_REPORT_BEFORE_CHECK_RETURN(play, asyncCtx->soundPool_ != nullptr), "soundPool_ is nullptr!");
             int32_t streamId = asyncCtx->soundPool_->Play(asyncCtx->soundId_, asyncCtx->playParameters_);
-            if (streamId < 0) {
+            if (streamId == MSERR_SOUNDPOOL_SOUND_NOT_LOADED) {
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound, soundID not loaded");
+            } else if (streamId == MSERR_INVALID_VAL) {
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound, soundID not found");
+            } else if (streamId < 0) {
+                DFX_API_CALL_FAIL(play);
                 asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to play sound");
             } else {
+                DFX_API_CALL_SUCC(play);
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(streamId);
             }
             MEDIA_LOGI("The js thread of play finishes execution and returns, streamId: %{public}d", streamId);
@@ -335,8 +399,36 @@ napi_value SoundPoolNapi::JsPlay(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
         asyncCtx.release();
     } else {
+        DFX_API_CALL_FAIL(play);
         SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
     }
+    return result;
+}
+
+static inline napi_value DoStopNapiCall(
+    napi_env env, napi_value resource, napi_value result, std::unique_ptr<SoundPoolAsyncContext> asyncCtx)
+{
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(stop, asyncCtx != nullptr), "asyncCtx is nullptr!");
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(stop, asyncCtx->soundPool_ != nullptr), "soundPool_ is nullptr!");
+        int32_t ret = asyncCtx->soundPool_->Stop(asyncCtx->streamId_);
+        if (ret == MSERR_SOUNDPOOL_STREAM_NOT_FOUND) {
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Failed to stop sound, streamID not found");
+        } else if (ret != MSERR_OK) {
+            DFX_API_CALL_FAIL(stop);
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Failed to stop sound, audio stream does not exist");
+        } else {
+            DFX_API_CALL_SUCC(stop);
+        }
+        MEDIA_LOGI("The js thread of stop finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
     return result;
 }
 
@@ -351,36 +443,54 @@ napi_value SoundPoolNapi::JsStop(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(stop, asyncCtx != nullptr), result, "failed to get SoundPoolAsyncContext");
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(stop, asyncCtx->napi != nullptr), result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[PARAM1]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->streamId_);
     if (status != napi_ok || asyncCtx->streamId_ <= 0) {
+        DFX_API_CALL_FAIL(stop);
         asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to stop sound, streamID is invalid");
     }
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsStop", NAPI_AUTO_LENGTH, &resource);
     if (status == napi_ok && asyncCtx->streamId_ > 0) {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-            SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-            CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
-            int32_t ret = asyncCtx->soundPool_->Stop(asyncCtx->streamId_);
-            if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                    "Failed to stop sound, audio stream does not exist");
-            }
-            MEDIA_LOGI("The js thread of stop finishes execution and returns");
-        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-        NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-        asyncCtx.release();
+        return DoStopNapiCall(env, resource, result, std::move(asyncCtx));
     } else {
+        DFX_API_CALL_FAIL(stop);
         SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
     }
+    return result;
+}
+
+static inline napi_value DoSetLoopNapiCall(
+    napi_env env, napi_value resource, napi_value result, std::unique_ptr<SoundPoolAsyncContext> asyncCtx)
+{
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(setLoop, asyncCtx != nullptr), "asyncCtx is nullptr!");
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(setLoop, asyncCtx->soundPool_ != nullptr), "soundPool_ is nullptr!");
+        int32_t ret = asyncCtx->soundPool_->SetLoop(asyncCtx->streamId_, asyncCtx->loop_);
+        if (ret == MSERR_SOUNDPOOL_STREAM_NOT_FOUND) {
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Failed to setLoop, streamID not found");
+        } else if (ret != MSERR_OK) {
+            DFX_API_CALL_FAIL(setLoop);
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to setLoop");
+        } else {
+            DFX_API_CALL_SUCC(setLoop);
+        }
+        MEDIA_LOGI("The js thread of SetLoop finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
     return result;
 }
 
@@ -395,38 +505,62 @@ napi_value SoundPoolNapi::JsSetLoop(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setLoop, asyncCtx != nullptr), result, "failed to get SoundPoolAsyncContext");
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setLoop, asyncCtx->napi != nullptr), result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[PARAM2]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->streamId_);
     if (status != napi_ok || asyncCtx->streamId_ <= 0) {
+        DFX_API_CALL_FAIL(setLoop);
         asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to setLoop, streamID is invalid");
     }
     status = napi_get_value_int32(env, args[PARAM1], &asyncCtx->loop_);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to setLoop");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setLoop, status == napi_ok), nullptr, "Failed to setLoop");
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsSetLoop", NAPI_AUTO_LENGTH, &resource);
     if (status == napi_ok && asyncCtx->streamId_ > 0) {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-            SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-            CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
-            int32_t ret = asyncCtx->soundPool_->SetLoop(asyncCtx->streamId_, asyncCtx->loop_);
-            if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to setLoop");
-            }
-            MEDIA_LOGI("The js thread of SetLoop finishes execution and returns");
-        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-        NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-        asyncCtx.release();
+        return DoSetLoopNapiCall(env, resource, result, std::move(asyncCtx));
     } else {
+        DFX_API_CALL_FAIL(setLoop);
         SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
     }
+    return result;
+}
+
+static inline napi_value DoSetPriorityNapiCall(
+    napi_env env, napi_value resource, napi_value result, std::unique_ptr<SoundPoolAsyncContext> asyncCtx)
+{
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(setPriority, asyncCtx != nullptr),
+            "asyncCtx is nullptr!");
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(setPriority, asyncCtx->soundPool_ != nullptr),
+            "soundPool_ is nullptr!");
+        int32_t ret = asyncCtx->soundPool_->SetPriority(asyncCtx->streamId_, asyncCtx->priority_);
+        if (ret == MSERR_SOUNDPOOL_STREAM_NOT_FOUND) {
+            DFX_API_CALL_FAIL(setPriority);
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Failed to setPriority, streamID not found");
+        } else if (ret != MSERR_OK) {
+            DFX_API_CALL_FAIL(setPriority);
+            asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "Failed to setPriority, audio stream does not exist");
+        } else {
+            DFX_API_CALL_SUCC(setPriority);
+        }
+        MEDIA_LOGI("The js thread of SetPriority finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
     return result;
 }
 
@@ -441,39 +575,34 @@ napi_value SoundPoolNapi::JsSetPriority(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setPriority, asyncCtx != nullptr),
+        result, "failed to get SoundPoolAsyncContext");
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setPriority, asyncCtx->napi != nullptr),
+        result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[PARAM2]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->streamId_);
     if (status != napi_ok || asyncCtx->streamId_ <= 0) {
+        DFX_API_CALL_FAIL(setPriority);
         asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to setPriority");
     }
     status = napi_get_value_int32(env, args[PARAM1], &asyncCtx->priority_);
     if (status != napi_ok || asyncCtx->priority_ < 0) {
+        DFX_API_CALL_FAIL(setPriority);
         asyncCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER, "Failed to setPriority, priority is invalid");
     }
 
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsSetPriority", NAPI_AUTO_LENGTH, &resource);
     if (status == napi_ok && asyncCtx->streamId_ > 0) {
-        NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-            SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-            CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
-            int32_t ret = asyncCtx->soundPool_->SetPriority(asyncCtx->streamId_, asyncCtx->priority_);
-            if (ret != MSERR_OK) {
-                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
-                    "Failed to setPriority, audio stream does not exist");
-            }
-            MEDIA_LOGI("The js thread of SetPriority finishes execution and returns");
-        }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-        NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-        asyncCtx.release();
+        return DoSetPriorityNapiCall(env, resource, result, std::move(asyncCtx));
     } else {
+        DFX_API_CALL_FAIL(setPriority);
         SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
     }
     return result;
@@ -490,9 +619,11 @@ napi_value SoundPoolNapi::JsSetRate(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setRate, asyncCtx != nullptr), result, "failed to get SoundPoolAsyncContext");
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setRate, asyncCtx->napi != nullptr), result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[PARAM2]);
@@ -502,18 +633,27 @@ napi_value SoundPoolNapi::JsSetRate(napi_env env, napi_callback_info info)
     if (asyncCtx->napi->ParserRateOptionFromJs(asyncCtx, env, args) == MSERR_OK) {
         NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
             SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-            CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
+            CHECK_AND_RETURN_LOG(
+                DFX_REPORT_BEFORE_CHECK_RETURN(setRate, asyncCtx != nullptr), "asyncCtx is nullptr!");
+            CHECK_AND_RETURN_LOG(
+                DFX_REPORT_BEFORE_CHECK_RETURN(setRate, asyncCtx->soundPool_ != nullptr), "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->SetRate(asyncCtx->streamId_, asyncCtx->renderRate_);
-            if (ret != MSERR_OK) {
+            if (ret == MSERR_SOUNDPOOL_STREAM_NOT_FOUND) {
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to setRate, streamID not found");
+            } else if (ret != MSERR_OK) {
+                DFX_API_CALL_FAIL(setRate);
                 asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                     "Failed to setRate, audio stream does not exist or rate is invalid");
+            } else {
+                DFX_API_CALL_SUCC(setRate);
             }
             MEDIA_LOGI("The js thread of SetRate finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
         asyncCtx.release();
     } else {
+        DFX_API_CALL_FAIL(setRate);
         SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
     }
     return result;
@@ -530,9 +670,13 @@ napi_value SoundPoolNapi::JsSetVolume(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setVolume, asyncCtx != nullptr),
+        result, "failed to get SoundPoolAsyncContext");
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setVolume, asyncCtx->napi != nullptr),
+        result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[PARAM3]);
@@ -542,18 +686,27 @@ napi_value SoundPoolNapi::JsSetVolume(napi_env env, napi_callback_info info)
     if (asyncCtx->napi->ParserVolumeOptionFromJs(asyncCtx, env, args) == MSERR_OK) {
         NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
             SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-            CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
+            CHECK_AND_RETURN_LOG(
+                DFX_REPORT_BEFORE_CHECK_RETURN(setVolume, asyncCtx != nullptr), "asyncCtx is nullptr!");
+            CHECK_AND_RETURN_LOG(
+                DFX_REPORT_BEFORE_CHECK_RETURN(setVolume, asyncCtx->soundPool_ != nullptr), "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->SetVolume(asyncCtx->streamId_,
                 asyncCtx->leftVolume_, asyncCtx->rightVolume_);
-            if (ret != MSERR_OK) {
+            if (ret == MSERR_SOUNDPOOL_STREAM_NOT_FOUND) {
+                asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "Failed to setVolume, streamID not found");
+            } else if (ret != MSERR_OK) {
+                DFX_API_CALL_FAIL(setVolume);
                 asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Failed to setVolume");
+            } else {
+                DFX_API_CALL_SUCC(setVolume);
             }
             MEDIA_LOGI("The js thread of SetVolume finishes execution and returns");
         }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
         asyncCtx.release();
     } else {
+        DFX_API_CALL_FAIL(setVolume);
         SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
     }
     return result;
@@ -570,11 +723,16 @@ napi_value SoundPoolNapi::JsSetInterruptMode(napi_env env, napi_callback_info in
     napi_get_undefined(env, &result);
 
     SoundPoolNapi *soundPoolNapi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(soundPoolNapi != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(setInterruptMode, soundPoolNapi != nullptr),
+        result, "Failed to retrieve instance");
     int32_t interruptMode = soundPoolNapi->ParserInterruptModeFromJs(env, args, argCount);
-    CHECK_AND_RETURN_RET_LOG(soundPoolNapi->soundPool_ != nullptr && interruptMode != MSERR_INVALID_VAL, result,
-        "soundPool_ is nullptr or ParserInterruptModeFromJs failed");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(
+            setInterruptMode, soundPoolNapi->soundPool_ != nullptr && interruptMode != MSERR_INVALID_VAL),
+        result, "soundPool_ is nullptr or ParserInterruptModeFromJs failed");
     soundPoolNapi->soundPool_->SetInterruptMode(static_cast<InterruptMode>(interruptMode));
+    DFX_API_CALL_SUCC(setInterruptMode);
     return result;
 }
 
@@ -589,15 +747,18 @@ napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(DFX_REPORT_BEFORE_CHECK_RETURN(unload, asyncCtx != nullptr),
+        result, "failed to get SoundPoolAsyncContext");
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(DFX_REPORT_BEFORE_CHECK_RETURN(unload, asyncCtx->napi != nullptr),
+        result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
 
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[PARAM1]);
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     napi_status status = napi_get_value_int32(env, args[PARAM0], &asyncCtx->soundId_);
     if (status != napi_ok || asyncCtx->soundId_ <= 0) {
+        DFX_API_CALL_FAIL(unload);
         asyncCtx->SignError(MSERR_EXT_API9_IO, "Failed to unLoad sound, soundID is invalid");
     }
 
@@ -606,12 +767,17 @@ napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
     if (status == napi_ok && asyncCtx->soundId_ > 0) {
         NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
             SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
-            CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-            CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
+            CHECK_AND_RETURN_LOG(
+                DFX_REPORT_BEFORE_CHECK_RETURN(unload, asyncCtx != nullptr), "asyncCtx is nullptr!");
+            CHECK_AND_RETURN_LOG(
+                DFX_REPORT_BEFORE_CHECK_RETURN(unload, asyncCtx->soundPool_ != nullptr), "soundPool_ is nullptr!");
             int32_t ret = asyncCtx->soundPool_->Unload(asyncCtx->soundId_);
             if (ret != MSERR_OK) {
+                DFX_API_CALL_FAIL(unload);
                 asyncCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                     "Failed to unLoad sound, audio stream does not exist");
+            } else {
+                DFX_API_CALL_SUCC(unload);
             }
             MEDIA_LOGI("The js thread of Unload finishes execution and returns, soundID: %{public}d",
                 asyncCtx->soundId_);
@@ -619,6 +785,7 @@ napi_value SoundPoolNapi::JsUnload(napi_env env, napi_callback_info info)
         NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
         asyncCtx.release();
     } else {
+        DFX_API_CALL_FAIL(unload);
         SoundPoolNapi::SendCompleteEvent(env, std::move(asyncCtx));
     }
     return result;
@@ -635,9 +802,13 @@ napi_value SoundPoolNapi::JsRelease(napi_env env, napi_callback_info info)
     napi_get_undefined(env, &result);
 
     auto asyncCtx = std::make_unique<SoundPoolAsyncContext>(env);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get SoundPoolAsyncContext");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(release, asyncCtx != nullptr),
+        result, "failed to get SoundPoolAsyncContext");
     asyncCtx->napi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(release, asyncCtx->napi != nullptr),
+        result, "failed to GetJsInstanceAndArgs");
     asyncCtx->soundPool_ = asyncCtx->napi->soundPool_;
     asyncCtx->callbackNapi_ = asyncCtx->napi->callbackNapi_;
 
@@ -648,17 +819,24 @@ napi_value SoundPoolNapi::JsRelease(napi_env env, napi_callback_info info)
     napi_create_string_utf8(env, "JsRelease", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         SoundPoolAsyncContext* asyncCtx = reinterpret_cast<SoundPoolAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        CHECK_AND_RETURN_LOG(asyncCtx->soundPool_ != nullptr, "soundPool_ is nullptr!");
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(release, asyncCtx != nullptr),
+            "asyncCtx is nullptr!");
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(release, asyncCtx->soundPool_ != nullptr),
+            "soundPool_ is nullptr!");
         int32_t ret = asyncCtx->soundPool_->Release();
-        CHECK_AND_RETURN_LOG(ret == MSERR_OK, "Release failed!");
-        CHECK_AND_RETURN_LOG(asyncCtx->callbackNapi_ != nullptr, "release callbackNapi_ is nullptr!");
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(release, ret == MSERR_OK), "Release failed!");
+        CHECK_AND_RETURN_LOG(
+            DFX_REPORT_BEFORE_CHECK_RETURN(release, asyncCtx->callbackNapi_ != nullptr),
+            "release callbackNapi_ is nullptr!");
         asyncCtx->napi->CancelCallback(asyncCtx->callbackNapi_);
         MEDIA_LOGI("The js thread of JsRelease finishes execution and returns");
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
-
+    DFX_API_CALL_SUCC(release);
     return result;
 }
 
@@ -672,13 +850,15 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     size_t argCount = 2;
     napi_value args[2] = { nullptr, nullptr };
     SoundPoolNapi *soundPoolNapi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(soundPoolNapi != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(on, soundPoolNapi != nullptr), result, "Failed to retrieve instance");
 
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
     if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
         napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
+        DFX_API_CALL_FAIL(on);
         return result;
     }
 
@@ -688,17 +868,21 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
         callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID &&
         callbackName != SoundPoolEvent::EVENT_ERROR && callbackName != SoundPoolEvent::EVENT_ERROR_OCCURRED) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
+        DFX_API_CALL_FAIL(on);
         return result;
     }
 
     napi_ref ref = nullptr;
     napi_status status = napi_create_reference(env, args[1], 1, &ref);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(on, status == napi_ok && ref != nullptr),
+        result, "failed to create reference!");
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     soundPoolNapi->SetCallbackReference(callbackName, autoRef);
 
     MEDIA_LOGI("JsSetOnCallback callbackName: %{public}s success", callbackName.c_str());
+    DFX_API_CALL_SUCC(on);
     return result;
 }
 
@@ -712,11 +896,13 @@ napi_value SoundPoolNapi::JsClearOnCallback(napi_env env, napi_callback_info inf
     size_t argCount = 1;
     napi_value args[1] = { nullptr };
     SoundPoolNapi *soundPoolNapi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(soundPoolNapi != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(
+        DFX_REPORT_BEFORE_CHECK_RETURN(off, soundPoolNapi != nullptr), result, "Failed to retrieve instance");
 
     napi_valuetype valueType0 = napi_undefined;
     if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "CancelEventCallback");
+        DFX_API_CALL_FAIL(off);
         return result;
     }
 
@@ -725,12 +911,14 @@ napi_value SoundPoolNapi::JsClearOnCallback(napi_env env, napi_callback_info inf
         callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID &&
         callbackName != SoundPoolEvent::EVENT_ERROR && callbackName != SoundPoolEvent::EVENT_ERROR_OCCURRED) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "CancelEventCallback");
+        DFX_API_CALL_FAIL(off);
         return result;
     }
 
     soundPoolNapi->CancelCallbackReference(callbackName);
 
     MEDIA_LOGI("0x%{public}06" PRIXPTR " JsClearOnCallback success", FAKE_POINTER(soundPoolNapi));
+    DFX_API_CALL_SUCC(off);
     return result;
 }
 
@@ -775,7 +963,7 @@ napi_status SoundPoolNapi::GetJsInstanceWithParameter(napi_env env, napi_value *
     if (status == napi_ok) {
         napi_get_value_int32(env, tempValue, &(rendererInfo.rendererFlags));
     }
-
+    
     napi_status statusOption = napi_get_named_property(env, argv[PARAM1], "volumeMode", &tempValue);
     if (statusOption == napi_ok) {
         napi_get_value_int32(env, tempValue, reinterpret_cast<int32_t *>(&(rendererInfo.volumeMode)));

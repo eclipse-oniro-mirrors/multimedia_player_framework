@@ -36,4 +36,4 @@ protected:
 };
 }  // namespace Media
 }  // namespace OHOS
-#endif
+#endif

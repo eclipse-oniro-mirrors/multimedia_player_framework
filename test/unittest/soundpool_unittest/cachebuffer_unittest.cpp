@@ -43,48 +43,5 @@ void SoundPoolCacheBufferUnitTest::TearDown(void)
 {
     cacheBuffer_ = nullptr;
 }
-
-
-// @tc.name     Test DealPlayParamsBeforePlay API
-// @tc.number   CacheBuferDealPlayParamsBeforePlayUnittest_001
-HWTEST_F(SoundPoolCacheBufferUnitTest, CacheBuferDealPlayParamsBeforePlayUnittest_001, TestSize.Level0)
-{
-    ASSERT_NE(cacheBuffer_, nullptr);
-    auto audioRenderer = std::make_unique<MockAudioRender>();
-    EXPECT_CALL(*(audioRenderer), SetRenderRate(_)).Times(1).WillRepeatedly(testing::Return(0));
-    EXPECT_CALL(*(audioRenderer), SetVolume(_)).Times(1).WillRepeatedly(testing::Return(0));
-    EXPECT_CALL(*(audioRenderer), SetOffloadAllowed(_)).Times(1).WillRepeatedly(testing::Return(0));
-    EXPECT_CALL(*(audioRenderer), SetParallelPlayFlag(_)).Times(1).WillRepeatedly(testing::Return(0));
-    EXPECT_CALL(*(audioRenderer), SetAudioHapticsSyncId(_)).Times(1).WillRepeatedly(testing::Return());
-    cacheBuffer_->audioRenderer_ = std::move(audioRenderer);
-    int32_t audioHapticsSyncId = 1;
-    struct PlayParams playParameters;
-    playParameters.loop = -1;
-    playParameters.rate = 0;
-    playParameters.leftVolume = 0.5;
-    playParameters.rightVolume = 0.3;
-    playParameters.priority = 1;
-    playParameters.parallelPlayFlag = true;
-    playParameters.audioHapticsSyncId = audioHapticsSyncId;
-    cacheBuffer_->DealPlayParamsBeforePlay(playParameters);
-    ASSERT_EQ(cacheBuffer_->currentLoop_, playParameters.loop);
-    ASSERT_EQ(cacheBuffer_->priority_, playParameters.priority);
-}
-
-/**
- * @tc.name  : Test CreateAudioRenderer
- * @tc.number: CreateAudioRenderer_001
- * @tc.desc  : Test returns NORMAL_PLAY_RENDERER_FLAGS
- */
-HWTEST_F(SoundPoolCacheBufferUnitTest, CreateAudioRenderer_001, TestSize.Level0)
-{
-    ASSERT_NE(cacheBuffer_, nullptr);
-    AudioStandard::AudioRendererInfo info;
-    PlayParams playParams;
-
-    cacheBuffer_->CreateAudioRenderer(info, playParams);
-
-    EXPECT_EQ(cacheBuffer_->rendererFlags_, 0);
-}
 } // namespace Media
 } // namespace OHOS

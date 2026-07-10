@@ -89,11 +89,11 @@ ohos_shared_library("media_soundpool") {
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "eventhandler:libeventhandler",
-    "graphic_surface:surface",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "media_foundation:media_foundation",
     "napi:ace_napi",
     "qos_manager:qos",
     "resource_management:global_resmgr",
@@ -101,6 +101,10 @@ ohos_shared_library("media_soundpool") {
 
   defines = []
   defines += player_framework_defines
+  if (defined(media_framework_histogram_enable) && media_framework_histogram_enable) {
+    external_deps += [ "api_metrics:histogrammanager" ]
+    defines += [ "MEDIA_HISTOGRAM_MANAGEMENT_ENABLE" ]
+  }
   innerapi_tags = [ "platformsdk" ]
   part_name = "player_framework"
   subsystem_name = "multimedia"

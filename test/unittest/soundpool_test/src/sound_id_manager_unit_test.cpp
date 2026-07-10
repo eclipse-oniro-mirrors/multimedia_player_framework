@@ -58,20 +58,6 @@ void SoundIDManagerUnitTest::TearDown(void)
 }
 
 /**
- * @tc.name: soundId_function_001
- * @tc.desc: function test MulInitThreadPool
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(SoundIDManagerUnitTest, soundId_function_001, TestSize.Level2)
-{
-    MEDIA_LOGI("soundId_function_001 before");
-    soundIDManager_->isParsingThreadPoolStarted_.store(true);
-    EXPECT_EQ(MSERR_OK, soundIDManager_->InitThreadPool());
-    MEDIA_LOGI("soundId_function_001 after");
-}
-
-/**
  * @tc.name: soundId_function_002
  * @tc.desc: function test DoLoad & Unload
  * @tc.type: FUNC

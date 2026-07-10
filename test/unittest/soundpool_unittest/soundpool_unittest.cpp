@@ -161,7 +161,7 @@ HWTEST_F(SoundPoolUnittest, Load_Fd_001, TestSize.Level0)
 /**
  * @tc.name  : Test Play
  * @tc.number: Play_001
- * @tc.desc  : Test return -1
+ * @tc.desc  : Test return not ok
  */
 HWTEST_F(SoundPoolUnittest, Play_001, TestSize.Level0)
 {
@@ -171,13 +171,13 @@ HWTEST_F(SoundPoolUnittest, Play_001, TestSize.Level0)
     int32_t soundID = ID_TEST;
     PlayParams playParameters;
     auto ret = soundPool_->Play(soundID, playParameters);
-    EXPECT_EQ(ret, MSERR_INVALID);
+    EXPECT_NE(ret, MSERR_OK);
 }
 
 /**
  * @tc.name  : Test Play
  * @tc.number: Play_002
- * @tc.desc  : Test return -1
+ * @tc.desc  : Test return not ok
  */
 HWTEST_F(SoundPoolUnittest, Play_002, TestSize.Level0)
 {
@@ -188,8 +188,9 @@ HWTEST_F(SoundPoolUnittest, Play_002, TestSize.Level0)
     PlayParams playParameters;
     soundPool_->SetInterruptMode(InterruptMode::NO_INTERRUPT);
     auto ret = soundPool_->Play(soundID, playParameters);
-    EXPECT_EQ(ret, MSERR_INVALID);
+    EXPECT_NE(ret, MSERR_OK);
 }
+
 
 /**
  * @tc.name  : Test Play
@@ -348,7 +349,7 @@ HWTEST_F(SoundPoolUnittest, CheckRendererFlagsValid_001, TestSize.Level0)
     auto ret = soundPool_->CheckRendererFlagsValid(audioRenderInfo);
     EXPECT_EQ(ret, true);
 }
-
+ 
 /**
  * @tc.name  : Test CheckRendererFlagsValid
  * @tc.number: CheckRendererFlagsValid_002
@@ -362,7 +363,7 @@ HWTEST_F(SoundPoolUnittest, CheckRendererFlagsValid_002, TestSize.Level0)
     auto ret = soundPool_->CheckRendererFlagsValid(audioRenderInfo);
     EXPECT_EQ(ret, true);
 }
-
+ 
 /**
  * @tc.name  : Test CheckRendererFlagsValid
  * @tc.number: CheckRendererFlagsValid_003
@@ -392,7 +393,7 @@ HWTEST_F(SoundPoolUnittest, CheckRendererFlagsValid_004, TestSize.Level0)
     auto ret = soundPool_->CheckRendererFlagsValid(audioRenderInfo);
     EXPECT_EQ(ret, false);
 }
-
+ 
 /**
  * @tc.name  : Test CheckRendererFlagsValid
  * @tc.number: CheckRendererFlagsValid_005

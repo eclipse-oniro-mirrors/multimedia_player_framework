@@ -62,6 +62,7 @@ ohos_shared_library("cj_soundpool_ffi") {
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "ipc:ipc_core",
+    "media_foundation:media_foundation",
     "napi:ace_napi",
     "napi:cj_bind_ffi",
     "napi:cj_bind_native",

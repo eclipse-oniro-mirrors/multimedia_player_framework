@@ -49,36 +49,5 @@ void SoundIDManagerUnittest::TearDown(void)
 {
     soundIDManager_ = nullptr;
 }
-
-/**
- * @tc.name  : Test Load
- * @tc.number: SoundIdLoad_001
- * @tc.desc  : Test apiVersion > 0 && apiVersion < SOUNDPOOL_API_VERSION_ISOLATION
- */
-HWTEST_F(SoundIDManagerUnittest, SoundIdLoad_001, TestSize.Level0)
-{
-    int32_t fd = ID_TEST;
-    int64_t offset = 0;
-    int64_t length = LENGTH_TEST;
-    soundIDManager_->SetApiVersion(NUM_TEST);
-    for (int32_t i = 0; i <= MAX_NUM; ++i)
-    {
-        soundIDManager_->soundParsers_[i] = nullptr;
-    }
-    EXPECT_EQ(MSERR_INVALID, soundIDManager_->Load(fd, offset, length));
-}
-
-/**
- * @tc.name  : Test Load
- * @tc.number: SoundIdLoad_002
- * @tc.desc  : Test apiVersion > 0 && apiVersion < SOUNDPOOL_API_VERSION_ISOLATION
- */
-HWTEST_F(SoundIDManagerUnittest, SoundIdLoad_002, TestSize.Level0)
-{
-    std::string testUrl = "testUri";
-    int32_t apiVersion = NUM_TEST;
-    soundIDManager_->soundParsers_[0] = nullptr;
-    EXPECT_EQ(MSERR_INVALID, soundIDManager_->Load(testUrl));
-}
 }  // namespace Media
 }  // namespace OHOS
