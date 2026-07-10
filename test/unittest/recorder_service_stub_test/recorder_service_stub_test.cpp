@@ -413,11 +413,11 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Denied_SetAudioSource, TestSiz
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(stub->GetDescriptor());
-    data.WriteInt32(static_cast<int32_t>(AUDIO_INNER));
+    data.WriteInt32(static_cast<int32_t>(AudioSourceType::AUDIO_INNER));
 
-    int32_t ret = stub->OnRemoteRequest(SET_AUDIO_SOURCE, data, reply, option);
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_AUDIO_SOURCE, data, reply, option);
     EXPECT_EQ(ret, MSERR_EXT_API9_NO_PERMISSION);
-    EXPECT_EQ(stub->audioSourceType_, AUDIO_SOURCE_INVALID);
+    EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_SOURCE_INVALID);
 }
 
 /**
@@ -433,15 +433,15 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Denied_OtherAudioRequest, Test
     sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
     ASSERT_NE(stub, nullptr);
     stub->recorderServer_ = nullptr;
-    stub->audioSourceType_ = AUDIO_INNER;
+    stub->audioSourceType_ = AudioSourceType::AUDIO_INNER;
 
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(stub->GetDescriptor());
 
-    int32_t ret = stub->OnRemoteRequest(SET_AUDIO_ENCODER, data, reply, option);
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_AUDIO_ENCODER, data, reply, option);
     EXPECT_EQ(ret, MSERR_EXT_API9_NO_PERMISSION);
-    EXPECT_EQ(stub->audioSourceType_, AUDIO_INNER);
+    EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_INNER);
 }
 
 /**
@@ -461,9 +461,9 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Granted_CommonNoAudioCheck, Te
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(stub->GetDescriptor());
-    data.WriteInt32(static_cast<int32_t>(FORMAT_MPEG_4));
+    data.WriteInt32(static_cast<int32_t>(OutputFormatType::FORMAT_MPEG_4));
 
-    int32_t ret = stub->OnRemoteRequest(SET_OUTPUT_FORMAT, data, reply, option);
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_OUTPUT_FORMAT, data, reply, option);
     EXPECT_NE(ret, MSERR_EXT_API9_NO_PERMISSION);
 }
 
@@ -480,16 +480,16 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Denied_CommonWithAudioCheck, T
     sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
     ASSERT_NE(stub, nullptr);
     stub->recorderServer_ = nullptr;
-    stub->audioSourceType_ = AUDIO_INNER;
+    stub->audioSourceType_ = AudioSourceType::AUDIO_INNER;
     stub->needAudioPermissionCheck = true;
 
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(stub->GetDescriptor());
 
-    int32_t ret = stub->OnRemoteRequest(PREPARE, data, reply, option);
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::PREPARE, data, reply, option);
     EXPECT_EQ(ret, MSERR_EXT_API9_NO_PERMISSION);
-    EXPECT_EQ(stub->audioSourceType_, AUDIO_INNER);
+    EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_INNER);
 }
 
 /**
@@ -508,9 +508,9 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Granted_NonAudioNonCommon, Tes
     MessageParcel data, reply;
     MessageOption option;
     data.WriteInterfaceToken(stub->GetDescriptor());
-    data.WriteInt32(static_cast<int32_t>(VIDEO_SOURCE_SURFACE_ES));
+    data.WriteInt32(static_cast<int32_t>(VideoSourceType::VIDEO_SOURCE_SURFACE_ES));
 
-    int32_t ret = stub->OnRemoteRequest(SET_VIDEO_SOURCE, data, reply, option);
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_VIDEO_SOURCE, data, reply, option);
     EXPECT_NE(ret, MSERR_EXT_API9_NO_PERMISSION);
 }
 } // namespace Media

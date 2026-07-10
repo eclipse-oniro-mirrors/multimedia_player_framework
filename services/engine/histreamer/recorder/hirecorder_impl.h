@@ -110,6 +110,7 @@ private:
     void ConfigureVidEnableBFrame(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
+    void ConfigureOutFd(const RecorderParam &recParam);
     Status HandleStopOperation();
     void ClearAllConfiguration();
     int32_t PrepareAudioCapture();

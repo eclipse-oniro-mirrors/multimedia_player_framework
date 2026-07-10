@@ -1191,11 +1191,7 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
     MEDIA_LOG_I("HiRecorderImpl ConfigureMuxer enter");
     switch (recParam.type) {
         case RecorderPublicParamType::OUT_FD: {
-            CloseFd();
-            OutFd outFd = static_cast<const OutFd&>(recParam);
-            fd_ = dup(outFd.fd);
-            muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
-            MEDIA_LOG_I("ConfigureMuxer enter " PUBLIC_LOG_D32, fd_);
+            ConfigureOutFd(recParam);
             break;
         }
         case RecorderPublicParamType::MAX_DURATION: {
@@ -1237,6 +1233,15 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
         default:
             break;
     }
+}
+
+void HiRecorderImpl::ConfigureOutFd(const RecorderParam &recParam)
+{
+    CloseFd();
+    OutFd outFd = static_cast<const OutFd&>(recParam);
+    fd_ = dup(outFd.fd);
+    muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
+    MEDIA_LOG_I("ConfigureMuxer enter " PUBLIC_LOG_D32, fd_);
 }
 
 bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)
