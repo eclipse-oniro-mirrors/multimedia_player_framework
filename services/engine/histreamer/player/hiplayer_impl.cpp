@@ -2412,7 +2412,7 @@ int32_t HiPlayerImpl::InnerSelectTrack(std::string mime, int32_t trackId, Player
     int32_t innerTrackId;
     if (!meta->GetData(Tag::REGULAR_TRACK_ID, innerTrackId)) {
         MEDIA_LOG_E_SHORT("trackIndex not found, trackId is " PUBLIC_LOG_D32, trackId);
-        continue;
+        return MSERR_UNKNOWN;
     }
     if (Status::OK != demuxer_->SelectTrack(innerTrackId)) {
         MEDIA_LOG_E_SHORT("SelectTrack error. trackId is " PUBLIC_LOG_D32, trackId);
