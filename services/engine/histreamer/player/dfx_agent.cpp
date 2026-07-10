@@ -301,11 +301,13 @@ DfxAgent::DfxAgent(const std::string& groupId, const std::string& appName) : gro
  
 DfxAgent::~DfxAgent()
 {
+    std::lock_guard<std::mutex> lock(taskMutex_);
     dfxTask_.reset();
 }
  
 void DfxAgent::SetSourceType(PlayerDfxSourceType type)
 {
+    std::lock_guard<std::mutex> lock(taskMutex_);
     FALSE_RETURN(dfxTask_ != nullptr);
     std::weak_ptr<DfxAgent> agent = shared_from_this();
     dfxTask_->SubmitJobOnce([agent, type] {
@@ -317,6 +319,7 @@ void DfxAgent::SetSourceType(PlayerDfxSourceType type)
  
 void DfxAgent::SetInstanceId(const std::string& instanceId)
 {
+    std::lock_guard<std::mutex> lock(taskMutex_);
     FALSE_RETURN(dfxTask_ != nullptr);
     std::weak_ptr<DfxAgent> agent = shared_from_this();
     dfxTask_->SubmitJobOnce([agent, instanceId] {
@@ -328,6 +331,7 @@ void DfxAgent::SetInstanceId(const std::string& instanceId)
  
 void DfxAgent::OnDfxEvent(const DfxEvent &event)
 {
+    std::lock_guard<std::mutex> lock(taskMutex_);
     auto ret = DfxAgent::DFX_EVENT_HANDLERS_.find(event.type);
     FALSE_RETURN(ret != DfxAgent::DFX_EVENT_HANDLERS_.end());
     FALSE_RETURN(dfxTask_ != nullptr);
@@ -341,6 +345,7 @@ void DfxAgent::OnDfxEvent(const DfxEvent &event)
  
 void DfxAgent::ReportLagEvent(int64_t lagDuration, const std::string& eventMsg)
 {
+    std::lock_guard<std::mutex> lock(taskMutex_);
     FALSE_RETURN(dfxTask_ != nullptr);
     std::weak_ptr<DfxAgent> agent = shared_from_this();
     dfxTask_->SubmitJobOnce([agent, lagDuration, eventMsg] {
@@ -364,6 +369,7 @@ void DfxAgent::ReportLagEvent(int64_t lagDuration, const std::string& eventMsg)
 
 void DfxAgent::ReportEosSeek0Event(int32_t appUid)
 {
+    std::lock_guard<std::mutex> lock(taskMutex_);
     FALSE_RETURN(dfxTask_ != nullptr);
     dfxTask_->SubmitJobOnce([appUid, appName = appName_] {
         FALSE_RETURN(g_appUidSet.IsAppFirstEvent(appUid));
@@ -377,6 +383,7 @@ void DfxAgent::ReportEosSeek0Event(int32_t appUid)
 
 void DfxAgent::ResetAgent()
 {
+    std::lock_guard<std::mutex> lock(taskMutex_);
     FALSE_RETURN(dfxTask_ != nullptr);
     std::weak_ptr<DfxAgent> agent = shared_from_this();
     dfxTask_->SubmitJobOnce([agent] {
@@ -388,6 +395,7 @@ void DfxAgent::ResetAgent()
 
 void DfxAgent::SetMetricsCallback(DfxEventHandleFunc cb)
 {
+    std::lock_guard<std::mutex> lock(taskMutex_);
     FALSE_RETURN(dfxTask_ != nullptr);
     std::weak_ptr<DfxAgent> agent = shared_from_this();
     dfxTask_->SubmitJobOnce([agent, cb] {
