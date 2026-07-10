@@ -139,7 +139,7 @@ private:
     FetchFrameResult FetchFrameBase(int64_t timeUs, int32_t option, const PixelMapParams &param, int64_t timeoutMs,
         int32_t scaleMode);
     int32_t CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &SurfaceBuffer, std::shared_ptr<PixelMap> pixelMap,
-        PixelMapInfo &pixelMapInfo);
+        const PixelMapInfo &pixelMapInfo);
     int32_t SaveDataToFile(const std::string &fileName, const char *data, const size_t &totalSize);
     void InitDumpFlag();
     int32_t DumpPixelMap(bool isDump, std::shared_ptr<PixelMap> pixelMap, const std::string &fileName);

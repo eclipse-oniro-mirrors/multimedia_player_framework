@@ -539,7 +539,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
 {
     MEDIA_LOGI("pixelMapInfo: hdr=%{public}d|width=%{public}d|height=%{public}d|outputHeight=%{public}d, "
         "ColorSpaceInfo: primaries=%{public}d|matrix=%{public}d|range=%{public}u", pixelMapInfo.isHdr,
-        pixelMapInfo.width, pixelMapInfo.height,  outputHeight, pixelMapInfo.primaries, pixelMapInfo.matrix,
+        pixelMapInfo.width, pixelMapInfo.height, pixelMapInfo.outputHeight, pixelMapInfo.primaries, pixelMapInfo.matrix,
         pixelMapInfo.srcRange);
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, nullptr, "surfaceBuffer is nullptr");
     Status isColorSpaceInfoObtained = convertColorSpace_ ? GetColorSpace(surfaceBuffer, pixelMapInfo) :
@@ -609,10 +609,11 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelmapWithHDR(sptr<Surfa
     }
     pixelMap->SetPixelsAddr(surfaceBuffer->GetVirAddr(), surfaceBuffer.GetRefPtr(), surfaceBuffer->GetSize(),
         AllocatorType::DMA_ALLOC, FreeSurfaceBuffer);
+    return pixelMap;
 }
 
 int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &surfaceBuffer,
-    std::shared_ptr<PixelMap> pixelMap, PixelMapInfo &pixelMapInfo)
+    std::shared_ptr<PixelMap> pixelMap, const PixelMapInfo &pixelMapInfo)
 {
     CHECK_AND_RETURN_RET(surfaceBuffer != nullptr && pixelMap != nullptr, MSERR_INVALID_VAL);
     int32_t width = surfaceBuffer->GetWidth();
@@ -642,7 +643,7 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
     uint8_t *dstPtr = const_cast<uint8_t *>(pixelMap->GetPixels());
 
     // copy src Y plane to dst
-    int32_t lineByteCount = width;
+    int32_t lineByteCount = displayWidth;
     for (int32_t y = 0; y < displayHeight; y++) {
         auto ret = memcpy_s(dstPtr, lineByteCount, srcPtr, lineByteCount);
         TRUE_LOG(ret != EOK, MEDIA_LOGW, "Memcpy Y component failed.");
@@ -684,7 +685,7 @@ void AVMetadataHelperImpl::SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer
     };
 
     if (surfaceBuffer == nullptr || !needModifyStride) {
-        MEDIA_LOGE("surfaceBuffer is nullptr or needModifyStride is false")
+        MEDIA_LOGE("surfaceBuffer is nullptr or needModifyStride is false");
         pixelMap->SetImageYUVInfo(yuvDataInfo);
         return;
     }
@@ -692,7 +693,7 @@ void AVMetadataHelperImpl::SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer
     OH_NativeBuffer_Planes *planes = nullptr;
     GSError retVal = surfaceBuffer->GetPlanesInfo(reinterpret_cast<void**>(&planes));
     if (retVal != OHOS::GSERROR_OK || planes == nullptr) {
-        MEDIA_LOGE("GetPlanesInfo failed or planes is nullptr")
+        MEDIA_LOGE("GetPlanesInfo failed or planes is nullptr");
         pixelMap->SetImageYUVInfo(yuvDataInfo);
         return;
     }
