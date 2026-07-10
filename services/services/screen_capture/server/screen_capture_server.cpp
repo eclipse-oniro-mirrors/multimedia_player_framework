@@ -2921,6 +2921,17 @@ int32_t ScreenCaptureServer::InitRecorderInner()
     return ret;
 }
 
+int32_t ScreenCaptureServer::InitRecorderMic()
+{
+    int32_t ret = MSERR_OK;
+    MEDIA_LOGI("InitRecorder prepare to SetAudioSource mic");
+    std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
+    audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, wpScreenCaptureServer);
+    ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
+    recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
+    return ret;
+}
+
 int32_t ScreenCaptureServer::InitRecorder()
 {
     CHECK_AND_RETURN_RET_LOG(outputFd_ > 0, MSERR_INVALID_FD, "the outputFd is invalid");
@@ -2947,11 +2958,7 @@ int32_t ScreenCaptureServer::InitRecorder()
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETAUDIO, "SetAudioDataSource failed");
     } else if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         audioInfo = captureConfig_.audioInfo.micCapInfo;
-        MEDIA_LOGI("InitRecorder prepare to SetAudioSource mic");
-    std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-        audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, wpScreenCaptureServer);
-        ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
-        recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
+        ret = InitRecorderMic();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETAUDIO, "SetAudioDataSource failed");
     } else {
         MEDIA_LOGE("InitRecorder not VALIDATION_VALID");
