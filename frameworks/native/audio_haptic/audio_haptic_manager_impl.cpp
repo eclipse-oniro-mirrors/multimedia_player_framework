@@ -278,7 +278,7 @@ int32_t AudioHapticManagerImpl::SetStreamUsage(const int32_t &sourceID, const Au
         return MSERR_INVALID_VAL;
     }
     if (!CheckAudioStreamUsage(streamUsage)) {
-        MEDIA_LOGE("SetStreamUsage: failed for invalid latencyMode: %{public}d", streamUsage);
+        MEDIA_LOGE("SetStreamUsage: failed for invalid streamUsage: %{public}d", streamUsage);
         return MSERR_INVALID_VAL;
     }
     audioHapticPlayerMap_[sourceID]->streamUsage_ = streamUsage;

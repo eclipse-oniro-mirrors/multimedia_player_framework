@@ -109,6 +109,8 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
     Sensors::SetUsage(USAGE_NOTIFICATION);
     Sensors::SetLoopCount(1);
     result = Sensors::PlayVibratorCustom(fd, 0, statbuf.st_size);
+    MEDIA_LOGI("PlayVibratorCustom result: %{public}d, fd %{public}d, size %{public}lld",
+        result, fd, static_cast<long long>(statbuf.st_size));
     close(fd);
 #endif
 

@@ -470,7 +470,9 @@ void AudioHapticVibratorImpl::ResetStopState()
 
 int32_t AudioHapticVibratorImpl::StartVibrate(const AudioLatencyMode &latencyMode)
 {
-    MEDIA_LOGI("StartVibrate: for latency mode %{public}d", latencyMode);
+    MEDIA_LOGI("StartVibrate: latency mode %{public}d, hapticsMode %{public}d, isSupportEffectId %{public}d, "
+        "audioHapticSyncId %{public}d", latencyMode, audioHapticPlayer_.GetHapticsMode(), isSupportEffectId_,
+        audioHapticSyncId_);
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
     vibrationTimeElapsed_ = 0;
@@ -561,7 +563,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
 {
     std::unique_lock<std::mutex> lock(vibrateMutex_);
     if (isStopped_) {
-        MEDIA_LOGW("Vibrator has been stopped. Return ok immediately");
+        MEDIA_LOGW("StartVibrateForSoundPool: Vibrator has been stopped. Return ok immediately");
         AudioHapticPlayerImpl::SendHapticPlayerEvent(MSERR_OK, "VIBRATOR_STOP");
         return MSERR_OK;
     }
@@ -569,7 +571,7 @@ int32_t AudioHapticVibratorImpl::StartVibrateForSoundPool()
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
     if (vibratorPkg_ == nullptr || vibratorFD_ == nullptr) {
-        MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
+        MEDIA_LOGE("StartVibrateForSoundPool: Vibration source file is not prepared. Can not start vibrating");
         AudioHapticPlayerImpl::SendHapticPlayerEvent(MSERR_INVALID_OPERATION, "VIBRATOR_NOT_PREPARE");
         return MSERR_INVALID_OPERATION;
     }
@@ -615,14 +617,14 @@ int32_t AudioHapticVibratorImpl::StartNonSyncVibration()
 {
     std::unique_lock<std::mutex> lock(vibrateMutex_);
     if (isStopped_) {
-        MEDIA_LOGW("Vibrator has been stopped. Return ok immediately");
+        MEDIA_LOGW("StartNonSyncVibration: Vibrator has been stopped. Return ok immediately");
         return MSERR_OK;
     }
 
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
     if (vibratorPkg_ == nullptr || vibratorFD_ == nullptr) {
-        MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
+        MEDIA_LOGE("StartNonSyncVibration: Vibration source file is not prepared. Can not start vibrating");
         return MSERR_INVALID_OPERATION;
     }
 
@@ -648,14 +650,14 @@ int32_t AudioHapticVibratorImpl::StartNonSyncOnceVibration()
 {
     std::unique_lock<std::mutex> lock(vibrateMutex_);
     if (isStopped_) {
-        MEDIA_LOGW("Vibrator has been stopped. Return ok immediately");
+        MEDIA_LOGW("StartNonSyncOnceVibration: Vibrator has been stopped. Return ok immediately");
         return MSERR_OK;
     }
 
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
     if (vibratorPkg_ == nullptr || vibratorFD_ == nullptr) {
-        MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
+        MEDIA_LOGE("StartNonSyncOnceVibration: Vibration source file is not prepared. Can not start vibrating");
         return MSERR_INVALID_OPERATION;
     }
     isRunning_ = true;
@@ -702,8 +704,11 @@ int32_t AudioHapticVibratorImpl::PlayVibrationPattern(
     vibrationTimeElapsed_ = vibratorPkg->patterns[patternIndex].time;
     if (audioHapticSyncId_ > 0 && !IsNonSync()) {
         result = Sensors::PlayPatternBySessionId(audioHapticSyncId_, vibratorPkg->patterns[patternIndex]);
+        MEDIA_LOGI("PlayPatternBySessionId result: %{public}d, patternIndex %{public}d, syncId %{public}d",
+            result, patternIndex, audioHapticSyncId_);
     } else {
         result = Sensors::PlayPattern(vibratorPkg->patterns[patternIndex]);
+        MEDIA_LOGI("PlayPattern result: %{public}d, patternIndex %{public}d", result, patternIndex);
     }
     CHECK_AND_RETURN_RET_LOG(result == 0, result,
         "AudioHapticVibratorImpl::PlayVibrationPattern: Failed to PlayPattern. Error %{public}d", result);
@@ -777,14 +782,14 @@ int32_t AudioHapticVibratorImpl::StartVibrateForAVPlayer()
 {
     std::unique_lock<std::mutex> lock(vibrateMutex_);
     if (isStopped_) {
-        MEDIA_LOGW("Vibrator has been stopped. Return ok immediately");
+        MEDIA_LOGW("StartVibrateForAVPlayer: Vibrator has been stopped. Return ok immediately");
         return MSERR_OK;
     }
 
     int32_t result = MSERR_OK;
 #ifdef SUPPORT_VIBRATOR
     if (vibratorPkg_ == nullptr || vibratorFD_ == nullptr) {
-        MEDIA_LOGE("Vibration source file is not prepared. Can not start vibrating");
+        MEDIA_LOGE("StartVibrateForAVPlayer: Vibration source file is not prepared. Can not start vibrating");
         return MSERR_INVALID_OPERATION;
     }
     isRunning_.store(true);

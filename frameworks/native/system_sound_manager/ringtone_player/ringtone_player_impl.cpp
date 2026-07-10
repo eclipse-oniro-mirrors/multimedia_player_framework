@@ -272,7 +272,7 @@ ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri,
             settings.mode = ToneHapticsMode::NONE;
         }
     }
-    MEDIA_LOGI("GetHapticSettings: hapticsUri:%{public}s, mode:%{public}d.",
+    MEDIA_LOGI("GetHapticSettings fallback: hapticsUri:%{public}s, mode:%{public}d.",
         settings.hapticsUri.c_str(), settings.mode);
     return settings;
 }
@@ -343,6 +343,9 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
         (ringerMode == AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL && !hapticsSwitchStatus)) {
         options.muteHaptics = true;
     }
+    MEDIA_LOGI("InitPlayer mute decision: ringerMode %{public}d, hapticsSwitchStatus %{public}d, "
+        "options.muteAudio %{public}d, options.muteHaptics %{public}d",
+        ringerMode, hapticsSwitchStatus, options.muteAudio, options.muteHaptics);
     player_ = audioHapticManager_->CreatePlayer(sourceId_, options);
     CHECK_AND_RETURN_LOG(player_ != nullptr, "Failed to create ringtone player instance");
     player_->SetHapticsMode(ConvertToHapticsMode(settings.mode));
@@ -457,7 +460,7 @@ int32_t RingtonePlayerImpl::StartForNoRing(const HapticStartupMode startupMode)
 
     if (ringtoneUri != configuredUri_ || settings.hapticsUri != configuredHaptcisSettings_.hapticsUri ||
         settings.mode != configuredHaptcisSettings_.mode) {
-        MEDIA_LOGI("Ringtone uri changed. Reload player");
+        MEDIA_LOGI("Ringtone uri changed. Reload player for NoRing");
         InitPlayer(ringtoneUri, settings, options, streamUsage_);
     }
     // Start an empty audio stream for NoRing.
@@ -565,14 +568,12 @@ int32_t RingtonePlayerImpl::Release()
 
 RingtoneState RingtonePlayerImpl::GetRingtoneState()
 {
-    MEDIA_LOGI("RingtonePlayerImpl::GetRingtoneState");
     std::lock_guard<std::mutex> lock(playerMutex_);
     return ringtoneState_;
 }
 
 int32_t RingtonePlayerImpl::GetAudioRendererInfo(AudioStandard::AudioRendererInfo &rendererInfo) const
 {
-    MEDIA_LOGI("RingtonePlayerImpl::GetAudioRendererInfo");
     rendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
     rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_RINGTONE;
     rendererInfo.rendererFlags = 0;
@@ -581,7 +582,6 @@ int32_t RingtonePlayerImpl::GetAudioRendererInfo(AudioStandard::AudioRendererInf
 
 std::string RingtonePlayerImpl::GetTitle()
 {
-    MEDIA_LOGI("RingtonePlayerImpl::GetTitle");
     CHECK_AND_RETURN_RET_LOG(configuredUri_ != "", "", "Configured uri is null");
     return systemSoundMgr_.GetRingtoneTitle(configuredUri_);
 }
@@ -589,7 +589,6 @@ std::string RingtonePlayerImpl::GetTitle()
 int32_t RingtonePlayerImpl::SetRingtonePlayerInterruptCallback(
     const std::shared_ptr<RingtonePlayerInterruptCallback> &interruptCallback)
 {
-    MEDIA_LOGI("RingtonePlayerImpl::SetRingtonePlayerInterruptCallback");
     std::lock_guard<std::mutex> lock(playerMutex_);
     interruptCallback_ = interruptCallback;
     return MSERR_OK;
@@ -607,15 +606,14 @@ void RingtonePlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptEven
 {
     if (interruptCallback_ != nullptr) {
         interruptCallback_->OnInterrupt(interruptEvent);
-        MEDIA_LOGI("RingtonePlayerImpl::NotifyInterruptEvent");
+        MEDIA_LOGI("NotifyInterruptEvent: hintType %{public}d", interruptEvent.hintType);
     } else {
-        MEDIA_LOGE("RingtonePlayerImpl::interruptCallback_ is nullptr");
+        MEDIA_LOGE("NotifyInterruptEvent: interruptCallback_ is nullptr");
     }
 }
 
 int32_t RingtonePlayerImpl::SetRingtoneHapticsFeature(const RingtoneHapticsFeature &feature)
 {
-    MEDIA_LOGI("RingtonePlayerImpl::SetRingtoneHapticsFeature");
     std::lock_guard<std::mutex> lock(playerMutex_);
     CHECK_AND_RETURN_RET_LOG(ringtoneState_ != STATE_RELEASED, MSERR_INVALID_OPERATION,
         "ringtone player has been released");

@@ -49,7 +49,7 @@ AudioHapticSoundLowLatencyImpl::~AudioHapticSoundLowLatencyImpl()
 
 int32_t AudioHapticSoundLowLatencyImpl::LoadSoundPoolPlayer()
 {
-    MEDIA_LOGI("Enter LoadSoundPoolPlayer()");
+    MEDIA_LOGI("LoadSoundPoolPlayer: streamUsage %{public}d, muteAudio %{public}d", streamUsage_, muteAudio_);
 
     AudioStandard::AudioRendererInfo audioRendererInfo;
     audioRendererInfo.contentType = AudioStandard::ContentType::CONTENT_TYPE_UNKNOWN;
@@ -121,7 +121,7 @@ int32_t AudioHapticSoundLowLatencyImpl::OpenAudioSource()
 
 int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
 {
-    MEDIA_LOGI("Enter PrepareSound with sound pool");
+    MEDIA_LOGI("PrepareSound with sound pool: muteAudio %{public}d, audioFd %{public}d", muteAudio_, audioSource_.fd);
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     int32_t result = LoadSoundPoolPlayer();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK && soundPoolPlayer_ != nullptr, MSERR_INVALID_STATE,
@@ -164,7 +164,8 @@ int32_t AudioHapticSoundLowLatencyImpl::PrepareSound()
 
 int32_t AudioHapticSoundLowLatencyImpl::StartSound(const int32_t &audioHapticSyncId)
 {
-    MEDIA_LOGI("Enter StartSound with sound pool");
+    MEDIA_LOGI("StartSound with sound pool: syncId %{public}d, volume %{public}f, loop %{public}d,"
+        " muteAudio %{public}d", audioHapticSyncId, volume_, loop_, muteAudio_);
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
         playerState_ != AudioHapticPlayerState::STATE_RUNNING &&
@@ -193,7 +194,7 @@ int32_t AudioHapticSoundLowLatencyImpl::StartSound(const int32_t &audioHapticSyn
 
 int32_t AudioHapticSoundLowLatencyImpl::StopSound()
 {
-    MEDIA_LOGI("Enter StopSound with sound pool");
+    MEDIA_LOGI("StopSound with sound pool: streamID %{public}d", streamID_);
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(soundPoolPlayer_ != nullptr, MSERR_INVALID_STATE, "Sound pool player instance is null");
 
@@ -211,7 +212,7 @@ int32_t AudioHapticSoundLowLatencyImpl::ReleaseSound()
 
 int32_t AudioHapticSoundLowLatencyImpl::ReleaseSoundInternal()
 {
-    MEDIA_LOGI("Enter ReleaseSoundInternal().");
+    MEDIA_LOGI("Enter ReleaseSoundInternal() with sound pool.");
     {
         std::lock_guard<std::mutex> lockPrepare(prepareMutex_);
         isReleased_ = true;
@@ -253,7 +254,7 @@ int32_t AudioHapticSoundLowLatencyImpl::SetVolume(float volume)
 
     if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
         playerState_ != AudioHapticPlayerState::STATE_RUNNING) {
-        MEDIA_LOGI("Audio haptic player is not prepared or running. No need to modify player");
+        MEDIA_LOGI("SetVolume: Audio haptic player is not prepared or running. No need to modify player");
         return result;
     }
     if (streamID_ != -1) {
@@ -272,7 +273,7 @@ int32_t AudioHapticSoundLowLatencyImpl::SetLoop(bool loop)
 
     if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
         playerState_ != AudioHapticPlayerState::STATE_RUNNING) {
-        MEDIA_LOGI("Audio haptic player is not prepared or running. No need to modify player");
+        MEDIA_LOGI("SetLoop: Audio haptic player is not prepared or running. No need to modify player");
         return result;
     }
     if (streamID_ != -1) {
@@ -319,10 +320,10 @@ void AudioHapticSoundLowLatencyImpl::NotifyErrorEvent(int32_t errorCode)
 
     std::shared_ptr<AudioHapticSoundCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
-        MEDIA_LOGI("NotifyFirstFrameEvent for audio haptic player");
+        MEDIA_LOGI("NotifyErrorEvent for audio haptic player. errCode: %{public}d", errorCode);
         cb->OnError(errorCode);
     } else {
-        MEDIA_LOGE("NotifyFirstFrameEvent: audioHapticPlayerCallback_ is nullptr");
+        MEDIA_LOGE("NotifyErrorEvent: audioHapticPlayerCallback_ is nullptr");
     }
 }
 
@@ -330,7 +331,7 @@ void AudioHapticSoundLowLatencyImpl::NotifyFirstFrameEvent(uint64_t latency)
 {
     std::shared_ptr<AudioHapticSoundCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
-        MEDIA_LOGI("NotifyFirstFrameEvent for audio haptic player");
+        MEDIA_LOGI("NotifyFirstFrameEvent for audio haptic player. latency: %{public}" PRIu64 "", latency);
         cb->OnFirstFrameWriting(latency);
     } else {
         MEDIA_LOGE("NotifyFirstFrameEvent: audioHapticPlayerCallback_ is nullptr");
