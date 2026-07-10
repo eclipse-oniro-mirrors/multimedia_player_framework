@@ -90,6 +90,7 @@ private:
     std::unordered_map<std::string, MainPerfData> perfDataMap_ {};
     std::atomic<int64_t> totalStallingDuration_{0};
     std::atomic<int64_t> totalStallingTimes_{0};
+    std::mutex taskMutex_{};
 
     static const std::map<DfxEventType, DfxEventHandleFunc> DFX_EVENT_HANDLERS_;
 };
