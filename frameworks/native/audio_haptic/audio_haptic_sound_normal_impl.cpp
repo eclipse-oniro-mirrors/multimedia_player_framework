@@ -63,7 +63,7 @@ int32_t AudioHapticSoundNormalImpl::LoadAVPlayer()
 
 int32_t AudioHapticSoundNormalImpl::PrepareSound()
 {
-    MEDIA_LOGI("PrepareSound with AVPlayer");
+    MEDIA_LOGI("PrepareSound with AVPlayer: muteAudio %{public}d, streamUsage %{public}d", muteAudio_, streamUsage_);
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     int32_t result = LoadAVPlayer();
     CHECK_AND_RETURN_RET_LOG(result == MSERR_OK && avPlayer_ != nullptr, MSERR_INVALID_VAL,
@@ -158,7 +158,7 @@ int32_t AudioHapticSoundNormalImpl::ResetAVPlayer()
 
 int32_t AudioHapticSoundNormalImpl::StartSound(const int32_t &audioHapticSyncId)
 {
-    MEDIA_LOGI("StartSound with AVPlayer");
+    MEDIA_LOGI("StartSound with AVPlayer: syncId %{public}d", audioHapticSyncId);
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(avPlayer_ != nullptr && playerState_ != AudioHapticPlayerState::STATE_INVALID,
         MSERR_INVALID_VAL, "StartAVPlayer: no available AVPlayer_");
@@ -194,7 +194,7 @@ int32_t AudioHapticSoundNormalImpl::StartSound(const int32_t &audioHapticSyncId)
 
 int32_t AudioHapticSoundNormalImpl::StopSound()
 {
-    MEDIA_LOGI("StopSound with AVPlayer");
+    MEDIA_LOGI("StopSound with AVPlayer: playerState %{public}d", static_cast<int32_t>(playerState_.load()));
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(avPlayer_ != nullptr && playerState_ != AudioHapticPlayerState::STATE_INVALID,
         MSERR_INVALID_VAL, "StopAVPlayer: no available AVPlayer_");
@@ -215,7 +215,6 @@ int32_t AudioHapticSoundNormalImpl::ReleaseSound()
 
 int32_t AudioHapticSoundNormalImpl::ReleaseSoundInternal()
 {
-    MEDIA_LOGI("Enter ReleaseSoundInternal().");
     {
         std::lock_guard<std::mutex> lockPrepare(prepareMutex_);
         isReleased_ = true;
@@ -256,7 +255,7 @@ int32_t AudioHapticSoundNormalImpl::SetVolume(float volume)
 
     if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
         playerState_ != AudioHapticPlayerState::STATE_RUNNING) {
-        MEDIA_LOGI("Audio haptic player is not prepared or running. No need to modify player");
+        MEDIA_LOGI("SetVolume: Audio haptic player is not prepared or running. No need to modify player");
         return result;
     }
 
@@ -274,7 +273,7 @@ int32_t AudioHapticSoundNormalImpl::SetLoop(bool loop)
 
     if (playerState_ != AudioHapticPlayerState::STATE_PREPARED &&
         playerState_ != AudioHapticPlayerState::STATE_RUNNING) {
-        MEDIA_LOGI("Audio haptic player is not prepared or running. No need to modify player");
+        MEDIA_LOGI("SetLoop: Audio haptic player is not prepared or running. No need to modify player");
         return result;
     }
 
@@ -330,10 +329,10 @@ void AudioHapticSoundNormalImpl::NotifyErrorEvent(int32_t errorCode)
 
     std::shared_ptr<AudioHapticSoundCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
-        MEDIA_LOGI("NotifyFirstFrameEvent for audio haptic player");
+        MEDIA_LOGI("NotifyErrorEvent for audio haptic player. errCode: %{public}d", errorCode);
         cb->OnError(errorCode);
     } else {
-        MEDIA_LOGE("NotifyFirstFrameEvent: audioHapticPlayerCallback_ is nullptr");
+        MEDIA_LOGE("NotifyErrorEvent: audioHapticPlayerCallback_ is nullptr");
     }
 }
 
@@ -341,7 +340,7 @@ void AudioHapticSoundNormalImpl::NotifyFirstFrameEvent(uint64_t latency)
 {
     std::shared_ptr<AudioHapticSoundCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
-        MEDIA_LOGI("NotifyFirstFrameEvent for audio haptic player");
+        MEDIA_LOGI("NotifyFirstFrameEvent for audio haptic player. latency: %{public}" PRIu64 "", latency);
         cb->OnFirstFrameWriting(latency);
     } else {
         MEDIA_LOGE("NotifyFirstFrameEvent: audioHapticPlayerCallback_ is nullptr");
@@ -429,7 +428,7 @@ void AHSoundNormalCallback::OnInfo(Media::PlayerOnInfoType type, int32_t extra, 
 
 void AHSoundNormalCallback::HandleStateChangeEvent(int32_t extra, const Format &infoBody)
 {
-    MEDIA_LOGI("HandleStateChangeEvent from AVPlayer");
+    MEDIA_LOGD("HandleStateChangeEvent from AVPlayer");
     PlayerStates avPlayerState = static_cast<PlayerStates>(extra);
     switch (avPlayerState) {
         case PLAYER_STATE_ERROR:

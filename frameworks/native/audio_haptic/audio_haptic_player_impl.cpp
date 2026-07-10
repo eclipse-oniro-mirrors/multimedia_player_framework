@@ -161,6 +161,9 @@ void AudioHapticPlayerImpl::SetPlayerParam(const AudioHapticPlayerParam &param)
 
 void AudioHapticPlayerImpl::LoadPlayer()
 {
+    MEDIA_LOGI("LoadPlayer: latencyMode %{public}d, streamUsage %{public}d, isMockMode %{public}d, "
+        "muteAudio %{public}d, muteHaptic %{public}d", latencyMode_, streamUsage_, isMockMode_,
+        muteAudio_, muteHaptic_);
     // Load audio player
     int32_t rendererFlags = AudioStandard::AUDIO_FLAG_NORMAL;
     if (isMockMode_) {
@@ -190,6 +193,8 @@ bool AudioHapticPlayerImpl::IsMuted(const AudioHapticType &audioHapticType) cons
 
 int32_t AudioHapticPlayerImpl::Prepare()
 {
+    MEDIA_LOGI("Enter Prepare() with muteAudio %{public}d, muteHaptic %{public}d, latencyMode %{public}d, "
+        "streamUsage %{public}d", muteAudio_, muteHaptic_, latencyMode_, streamUsage_);
     int32_t result = MSERR_OK;
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     CHECK_AND_RETURN_RET_LOG(audioHapticSound_ != nullptr, MSERR_INVALID_OPERATION,
@@ -210,6 +215,9 @@ int32_t AudioHapticPlayerImpl::Prepare()
 
 int32_t AudioHapticPlayerImpl::Start()
 {
+    MEDIA_LOGI("Enter Start() with muteAudio %{public}d, muteHaptic %{public}d, latencyMode %{public}d, "
+        "streamUsage %{public}d, isSupportDSPSync %{public}d, isMockMode %{public}d",
+        muteAudio_, muteHaptic_, latencyMode_, streamUsage_, isSupportDSPSync_, isMockMode_);
     int32_t result = MSERR_OK;
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
 
@@ -328,6 +336,8 @@ int32_t AudioHapticPlayerImpl::SetVolume(float volume)
         return result;
     }
     float actualVolume = volume_ * (muteAudio_ ? 0 : 1);
+    MEDIA_LOGI("SetVolume actualVolume: %{public}f (input: %{public}f, muteAudio: %{public}d)",
+        actualVolume, volume_, muteAudio_);
     result = audioHapticSound_->SetVolume(actualVolume);
 
     if (latencyMode_ == AUDIO_LATENCY_MODE_NORMAL &&
@@ -521,7 +531,8 @@ int32_t AudioHapticPlayerImpl::StartVibrate()
         return MSERR_OK;
     }
 
-    MEDIA_LOGI("Enter StartVibrate()");
+    MEDIA_LOGI("Enter StartVibrate: muteHaptic %{public}d, loop %{public}d, latencyMode %{public}d",
+        muteHaptic_, loop_.load(), latencyMode_);
     std::unique_lock<std::mutex> lockWait(waitStartVibrateMutex_);
     int32_t playedTimes = 0;
     do {
@@ -631,12 +642,12 @@ void AudioHapticPlayerImpl::HandleEndOfStreamEvent()
 {
     std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
     if (playerState_ == AudioHapticPlayerState::STATE_RELEASED) {
-        MEDIA_LOGE("The audio haptic player has been released!");
+        MEDIA_LOGE("HandleEndOfStream: The audio haptic player has been released!");
         return;
     }
 
     if (playerState_ == AudioHapticPlayerState::STATE_STOPPED) {
-        MEDIA_LOGE("The audio haptic player has been stopped!");
+        MEDIA_LOGE("HandleEndOfStream: The audio haptic player has been stopped!");
         return;
     }
 
@@ -718,7 +729,7 @@ void AudioHapticSoundCallbackImpl::OnEndOfStream()
     MEDIA_LOGI("OnEndOfStream reported from audio haptic sound.");
     std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
     if (player == nullptr) {
-        MEDIA_LOGE("The audio haptic player has been released.");
+        MEDIA_LOGE("OnEndOfStream: The audio haptic player has been released.");
         return;
     }
     player->NotifyEndOfStreamEvent();
@@ -729,7 +740,7 @@ void AudioHapticSoundCallbackImpl::OnError(int32_t errorCode)
     MEDIA_LOGE("OnError reported from audio haptic sound: %{public}d", errorCode);
     std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
     if (player == nullptr) {
-        MEDIA_LOGE("The audio haptic player has been released.");
+        MEDIA_LOGE("OnError: The audio haptic player has been released.");
         return;
     }
     player->NotifyErrorEvent(errorCode);
@@ -740,7 +751,7 @@ void AudioHapticSoundCallbackImpl::OnInterrupt(const AudioStandard::InterruptEve
     MEDIA_LOGI("OnInterrupt from audio haptic sound. hintType: %{public}d", interruptEvent.hintType);
     std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
     if (player == nullptr) {
-        MEDIA_LOGE("The audio haptic player has been released.");
+        MEDIA_LOGE("OnInterrupt: The audio haptic player has been released.");
         return;
     }
     player->NotifyInterruptEvent(interruptEvent);
@@ -751,7 +762,7 @@ void AudioHapticSoundCallbackImpl::OnFirstFrameWriting(uint64_t latency)
     MEDIA_LOGI("OnFirstFrameWriting from audio haptic sound. Latency %{public}" PRIu64 "", latency);
     std::shared_ptr<AudioHapticPlayerImpl> player = audioHapticPlayerImpl_.lock();
     if (player == nullptr) {
-        MEDIA_LOGE("The audio haptic player has been released.");
+        MEDIA_LOGE("OnFirstFrameWriting: The audio haptic player has been released.");
         return;
     }
 

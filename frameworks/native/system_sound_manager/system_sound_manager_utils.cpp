@@ -81,7 +81,6 @@ int32_t SystemSoundManagerUtils::GetCurrentUserId()
 
 shared_ptr<DataShare::DataShareHelper> SystemSoundManagerUtils::CreateDataShareHelperUri(int32_t systemAbilityId)
 {
-    MEDIA_LOGI("Enter CreateDataShareHelperUri()");
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
         MEDIA_LOGE("Get system ability manager failed.");
@@ -103,7 +102,7 @@ shared_ptr<DataShare::DataShareHelper> SystemSoundManagerUtils::CreateDataShareH
 
 shared_ptr<DataShare::DataShareHelper> SystemSoundManagerUtils::CreateDataShareHelper(int32_t systemAbilityId)
 {
-    MEDIA_LOGI("Enter CreateDataShareHelper()");
+    MEDIA_LOGI("CreateDataShareHelper: systemAbilityId %{public}d", systemAbilityId);
     auto saManager = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
     if (saManager == nullptr) {
         MEDIA_LOGE("Get system ability manager failed.");

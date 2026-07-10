@@ -351,7 +351,7 @@ void SystemTonePlayerImpl::ReleaseDatabaseTool()
 
 int32_t SystemTonePlayerImpl::Prepare()
 {
-    MEDIA_LOGI("Enter Prepare()");
+    MEDIA_LOGI("Enter Prepare(): state %{public}d", static_cast<int32_t>(systemToneState_));
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     CHECK_AND_RETURN_RET_LOG(systemToneState_ != SystemToneState::STATE_RELEASED, MSERR_INVALID_STATE,
         "System tone player has been released!");
@@ -371,7 +371,6 @@ int32_t SystemTonePlayerImpl::Prepare()
 
 int32_t SystemTonePlayerImpl::Start()
 {
-    MEDIA_LOGI("Enter Start()");
     SystemToneOptions systemToneOptions = {false, false};
     return Start(systemToneOptions);
 }
@@ -391,6 +390,11 @@ int32_t SystemTonePlayerImpl::Start(const SystemToneOptions &systemToneOptions)
         configuredUri_ == NO_SYSTEM_SOUND || std::abs(volume_) <= std::numeric_limits<float>::epsilon();
     bool actualMuteHaptics = ringerModeOptions.muteHaptics || systemToneOptions.muteHaptics || isHapticUriEmpty_ ||
         isNoneHaptics_;
+    MEDIA_LOGI("Final mute options: actualMuteAudio %{public}d, actualMuteHaptics %{public}d, "
+        "configuredUri %{public}s, ringerModeOptions.muteAudio %{public}d, ringerModeOptions.muteHaptics %{public}d, "
+        "isHapticUriEmpty %{public}d, isNoneHaptics %{public}d, volume %{public}f",
+        actualMuteAudio, actualMuteHaptics, configuredUri_.c_str(), ringerModeOptions.muteAudio,
+        ringerModeOptions.muteHaptics, isHapticUriEmpty_, isNoneHaptics_, volume_);
     if (actualMuteAudio) {
         int32_t delayTime = DEFAULT_DELAY;
         // the audio of system tone player has been muted. Only start vibrator.
@@ -446,7 +450,7 @@ int32_t SystemTonePlayerImpl::Stop(const int32_t &streamId)
 
 int32_t SystemTonePlayerImpl::Release()
 {
-    MEDIA_LOGI("Enter Release()");
+    MEDIA_LOGI("Enter Release(): state %{public}d", static_cast<int32_t>(systemToneState_));
     std::lock_guard<std::mutex> lock(systemTonePlayerMutex_);
     if (systemToneState_ == SystemToneState::STATE_RELEASED) {
         MEDIA_LOGW("System tone player has been released!");
@@ -469,7 +473,6 @@ int32_t SystemTonePlayerImpl::Release()
 
 std::string SystemTonePlayerImpl::GetTitle() const
 {
-    MEDIA_LOGI("Enter GetTitle()");
     std::string uri = systemSoundMgr_.GetSystemToneUri(context_, systemToneType_);
     return uri.substr(uri.find_last_of("/") + 1);
 }

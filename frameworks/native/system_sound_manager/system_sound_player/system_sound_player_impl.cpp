@@ -33,12 +33,12 @@ const std::string FDHEAD = "fd://";
 
 SystemSoundPlayerImpl::SystemSoundPlayerImpl()
 {
-    MEDIA_LOGI("Construtor");
+    MEDIA_LOGI("SystemSoundPlayerImpl constructor");
 }
 
 SystemSoundPlayerImpl::~SystemSoundPlayerImpl()
 {
-    MEDIA_LOGI("Destructor");
+    MEDIA_LOGI("Destructor, isReleased %{public}d", isReleased_.load());
     if (!isReleased_) {
         (void)ReleaseInternal();
     }
@@ -238,7 +238,7 @@ int32_t SystemSoundPlayerImpl::Unload(SystemSoundType systemSoundType)
 
 int32_t SystemSoundPlayerImpl::Release()
 {
-    MEDIA_LOGI("Release in");
+    MEDIA_LOGI("Release: isReleased %{public}d", isReleased_.load());
     std::lock_guard<std::mutex> lock(systemSoundPlayerMutex_);
     if (isReleased_) {
         MEDIA_LOGW("The SystemSoundPlayer has been released!");
@@ -249,7 +249,6 @@ int32_t SystemSoundPlayerImpl::Release()
 
 int32_t SystemSoundPlayerImpl::ReleaseInternal()
 {
-    MEDIA_LOGI("ReleaseInternal in");
     {
         std::lock_guard<std::mutex> loadLock(loadMutex_);
         isReleased_ = true;
@@ -272,7 +271,7 @@ int32_t SystemSoundPlayerImpl::ReleaseInternal()
 
 void SystemSoundPlayerImpl::OnLoadCompleted(int32_t soundId)
 {
-    MEDIA_LOGI("soundId: %{public}d", soundId);
+    MEDIA_LOGD("OnLoadCompleted: soundId %{public}d", soundId);
     std::lock_guard<std::mutex> loadLock(loadMutex_);
     isLoadCompleted_ = true;
     loadCond_.notify_all();
@@ -280,12 +279,12 @@ void SystemSoundPlayerImpl::OnLoadCompleted(int32_t soundId)
 
 void SystemSoundPlayerImpl::OnPlayFinished(int32_t streamID)
 {
-    MEDIA_LOGI("streamID: %{public}d", streamID);
+    MEDIA_LOGD("OnPlayFinished: streamID %{public}d", streamID);
 }
 
 void SystemSoundPlayerImpl::OnError(int32_t errorCode)
 {
-    MEDIA_LOGI("errorCode: %{public}d", errorCode);
+    MEDIA_LOGE("OnError: errorCode %{public}d", errorCode);
 }
 
 // PlayerSoundPoolCallback class symbols

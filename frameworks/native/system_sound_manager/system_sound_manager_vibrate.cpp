@@ -105,6 +105,7 @@ bool SystemSoundManagerImpl::CheckVibrateSwitchStatus()
     std::string tableType = "system";
     int32_t ret = GetStringValue(key, valueStr, tableType);
     if (ret != MSERR_OK) {
+        MEDIA_LOGW("CheckVibrateSwitchStatus: GetStringValue failed, return default(true)");
         return true; // default status is open
     }
     MEDIA_LOGI("vibrare switch value %{public}s", valueStr.c_str());
@@ -178,6 +179,7 @@ RingerModeCallbackImpl::RingerModeCallbackImpl(SystemSoundManagerImpl &systemSou
  
 void RingerModeCallbackImpl::OnRingerModeUpdated(const AudioStandard::AudioRingerMode &ringerMode)
 {
+    MEDIA_LOGI("OnRingerModeUpdated: ringerMode %{public}d", ringerMode);
     ringerMode_ = ringerMode;
     int32_t result = sysSoundMgr_.SetRingerMode(ringerMode_);
     if (result == MSERR_OK && ringerMode_ == AudioStandard::AudioRingerMode::RINGER_MODE_SILENT) {
