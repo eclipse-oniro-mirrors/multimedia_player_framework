@@ -110,7 +110,7 @@ public:
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
     void HandleBufferTimeStamp(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    ScreenCaptureServer* GetScreenCaptureServer();
+    std::weak_ptr<ScreenCaptureServer> GetScreenCaptureServer();
     void Pause();
     void Resume();
 private:
