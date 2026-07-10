@@ -78,7 +78,6 @@ int32_t ScreenCaptureMonitorClient::CreateListenerObject()
 
 int32_t ScreenCaptureMonitorClient::CreateListenerObjectLocked()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     listenerStub_ = new(std::nothrow) ScreenCaptureMonitorListenerStub();
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY,
         "failed to new ScreenCaptureMonitorListenerStub object");
