@@ -124,10 +124,6 @@ int32_t AudioCapturerWrapper::Stop()
     std::unique_lock<std::mutex> bufferLock(bufferMutex_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Stop pop, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     while (!availBuffers_.empty()) {
-        if (availBuffers_.front() != nullptr) {
-            free(availBuffers_.front()->buffer);
-            availBuffers_.front()->buffer = nullptr;
-        }
         availBuffers_.pop_front();
     }
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
