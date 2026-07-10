@@ -116,7 +116,7 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout, const std::shared_ptr<Pip
     return st;
 }
 
-Status SeekAgent::GetAllTrackInfo(int32_t &videoTrackId, std::vector<int32_t> &audioTrackIds)
+Status SeekAgent::GetAllTrackInfo(std::vector<int32_t> &videoTrackIds, std::vector<int32_t> &audioTrackIds)
 {
     auto trackInfo = demuxer_->GetStreamMetaInfo();
     int32_t trackInfoSize = static_cast<int32_t>(trackInfo.size());
@@ -131,7 +131,7 @@ Status SeekAgent::GetAllTrackInfo(int32_t &videoTrackId, std::vector<int32_t> &a
         if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("video") == 0) {
             MEDIA_LOG_I("Find video trackId: " PUBLIC_LOG_U32 
                 ", mimeType: " PUBLIC_LOG_S, trackIndex, mimeType.c_str());
-            videoTrackId = trackIndex;
+            videoTrackIds.push_back(index);
             continue;
         }
         if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("audio") == 0) {
