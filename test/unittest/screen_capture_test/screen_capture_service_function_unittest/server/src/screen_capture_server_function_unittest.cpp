@@ -1294,34 +1294,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureInner_001, TestSize.
     ASSERT_NE(screenCaptureServer_->StartScreenCaptureInner(true), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, IsTelInCallSkipList_001, TestSize.Level2)
-{
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
-    ASSERT_EQ(screenCaptureServer_->IsTelInCallSkipList(), true);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, IsTelInCallSkipList_002, TestSize.Level2)
-{
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = "";
-    ASSERT_EQ(screenCaptureServer_->IsTelInCallSkipList(), false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, IsTelInCallSkipList_003, TestSize.Level2)
-{
-    screenCaptureServer_->isCalledBySystemApp_ = false;
-    screenCaptureServer_->appName_ = "";
-    ASSERT_EQ(screenCaptureServer_->IsTelInCallSkipList(), false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, IsTelInCallSkipList_004, TestSize.Level2)
-{
-    screenCaptureServer_->isCalledBySystemApp_ = false;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
-    ASSERT_EQ(screenCaptureServer_->IsTelInCallSkipList(), false);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, GetStringByResourceName_001, TestSize.Level2)
 {
     screenCaptureServer_->InitResourceManager();
@@ -2967,8 +2939,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileInnerAudioCapture_003, TestSi
 #ifdef SUPPORT_CALL
 HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_001, TestSize.Level2)
 {
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(true);
     auto ret = screenCaptureServer_->StartFileMicAudioCapture();
     EXPECT_EQ(ret, MSERR_OK);
@@ -2976,8 +2946,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_001, TestSize
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_002, TestSize.Level2)
 {
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(false);
     auto ret = screenCaptureServer_->StartFileMicAudioCapture();
     EXPECT_EQ(ret, MSERR_OK);
@@ -2985,8 +2953,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_002, TestSize
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_003, TestSize.Level2)
 {
-    screenCaptureServer_->isCalledBySystemApp_ = false;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(true);
     auto ret = screenCaptureServer_->StartFileMicAudioCapture();
     EXPECT_EQ(ret, MSERR_OK);
@@ -2994,8 +2960,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_003, TestSize
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartFileMicAudioCapture_004, TestSize.Level2)
 {
-    screenCaptureServer_->isCalledBySystemApp_ = false;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(false);
     auto ret = screenCaptureServer_->StartFileMicAudioCapture();
     EXPECT_EQ(ret, MSERR_OK);
@@ -3054,7 +3018,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStateUpdated_001, TestSiz
 
 HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_002, TestSize.Level2)
 {
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
@@ -3093,7 +3056,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnTelCallStateChanged_001, TestSize.Le
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(true);
     ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(true), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->TelCallAudioStateUpdated(true), MSERR_OK);
     sleep(RECORDER_TIME);
@@ -3436,8 +3398,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneOn_002, TestSize.Level2)
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneOn_003, TestSize.Level2)
 {
     screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(false);
     int ret = screenCaptureServer_->SetMicrophoneOn();
     ASSERT_EQ(ret, MSERR_OK);
@@ -3446,8 +3406,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneOn_003, TestSize.Level2)
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneOn_004, TestSize.Level2)
 {
     screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(true);
     int ret = screenCaptureServer_->SetMicrophoneOn();
     ASSERT_EQ(ret, MSERR_OK);
@@ -3536,8 +3494,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_001, Tes
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_002, TestSize.Level2)
 {
-    screenCaptureServer_->appName_ =
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    screenCaptureServer_->isSystemRecorder_.store(true);
     screenCaptureServer_->appInfo_.appPid = 15000;
     screenCaptureServer_->SetSystemScreenRecorderStatus(true);
     ASSERT_EQ(ScreenCaptureServer::systemScreenRecorderPid_, 15000);
@@ -3546,8 +3503,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_002, Tes
 HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_003, TestSize.Level2)
 {
     ScreenCaptureServer::systemScreenRecorderPid_ = -1;
-    screenCaptureServer_->appName_ =
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    screenCaptureServer_->isSystemRecorder_.store(true);
     screenCaptureServer_->appInfo_.appPid = 15000;
     screenCaptureServer_->SetSystemScreenRecorderStatus(false);
     ASSERT_EQ(ScreenCaptureServer::systemScreenRecorderPid_, -1);
@@ -3717,8 +3673,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_004, TestSize.Lev
     SetWrapperBuilder(screenCaptureServer_->micAudioCapture_);
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(false);
     int ret = screenCaptureServer_->StartMicAudioCapture();
     ASSERT_EQ(ret, MSERR_OK);
@@ -3735,8 +3689,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_005, TestSize.Lev
     SetWrapperBuilder(screenCaptureServer_->micAudioCapture_);
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(true);
     int ret = screenCaptureServer_->StartMicAudioCapture();
     ASSERT_EQ(ret, MSERR_OK);
@@ -3813,8 +3765,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReStartMicForVoIPStatusSwitch_001, Tes
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(true);
     int ret = screenCaptureServer_->ReStartMicForVoIPStatusSwitch();
     ASSERT_EQ(ret, MSERR_OK);
@@ -3834,8 +3784,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReStartMicForVoIPStatusSwitch_002, Tes
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(false);
     int ret = screenCaptureServer_->ReStartMicForVoIPStatusSwitch();
     ASSERT_EQ(ret, MSERR_OK);
@@ -3851,7 +3799,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReStartMicForVoIPStatusSwitch_003, Tes
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
-    screenCaptureServer_->isCalledBySystemApp_ = false;
     InCallObserver::GetInstance().OnCallStateUpdated(false);
     int ret = screenCaptureServer_->ReStartMicForVoIPStatusSwitch();
     ASSERT_EQ(ret, MSERR_OK);
@@ -3862,8 +3809,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterServerCallbacks_001, TestSize.
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.keepCaptureDuringCall = true;
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(false);
     int ret = screenCaptureServer_->RegisterServerCallbacks();
     ASSERT_EQ(ret, MSERR_OK);
@@ -3884,8 +3829,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterServerCallbacks_003, TestSize.
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.keepCaptureDuringCall = false;
-    screenCaptureServer_->isCalledBySystemApp_ = true;
-    screenCaptureServer_->appName_ = HiviewCareBundleName;
     InCallObserver::GetInstance().OnCallStateUpdated(true);
     int ret = screenCaptureServer_->RegisterServerCallbacks();
     ASSERT_EQ(ret, MSERR_OK);
@@ -4376,15 +4319,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterLanguageSwitchListener_001, Te
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSkipPrivacyWindow_001, TestSize.Level2)
 {
-    screenCaptureServer_->appName_ =
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    screenCaptureServer_->isSystemRecorder_.store(true);
     EXPECT_EQ(screenCaptureServer_->IsSkipPrivacyWindow(), true);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSkipPrivacyWindow_002, TestSize.Level2)
 {
-    screenCaptureServer_->appName_ =
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    screenCaptureServer_->isSystemRecorder_.store(true);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     EXPECT_EQ(screenCaptureServer_->IsSkipPrivacyWindow(), true);
 }

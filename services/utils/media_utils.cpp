@@ -402,8 +402,6 @@ std::unordered_map<std::string, std::string>& __attribute__((visibility("default
             g_readSysParaMap["const.multimedia.screencapture.screenrecorderbundlename"]);
         GetPackageName("const.multimedia.screencapture.screenrecorderabilityname",
             g_readSysParaMap["const.multimedia.screencapture.screenrecorderabilityname"]);
-        GetPackageName("const.multimedia.screencapture.hiviewcarebundlename",
-            g_readSysParaMap["const.multimedia.screencapture.hiviewcarebundlename"]);
         g_readSysParaIdx++;
     }
     return g_readSysParaMap;

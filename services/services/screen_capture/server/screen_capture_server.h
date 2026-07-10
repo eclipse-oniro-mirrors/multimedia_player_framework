@@ -159,7 +159,6 @@ public:
     void ChangeMirrorScreen();
     void ChangeMirrorScreenForRemove();
     void ChangeMirrorScreenForSet();
-    bool IsTelInCallSkipList();
     int32_t GetAppPid();
     int32_t GetAppUid();
     void NotifyStateChange(AVScreenCaptureStateCode stateCode);
@@ -392,6 +391,7 @@ private:
     bool isScreenCaptureAuthority_ = false;
     bool isPresentPickerPopWindow_ = false;
     std::string appName_ = "";
+    std::atomic<bool> isSystemRecorder_ = {false};
     AVScreenCaptureConfig captureConfig_;
     AVScreenCaptureAvType avType_ = AVScreenCaptureAvType::INVALID_TYPE;
     AVScreenCaptureDataMode dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
@@ -453,7 +453,6 @@ private:
     std::shared_ptr<ScreenRendererAudioStateChangeCallback> captureCallback_;
     std::vector<uint64_t> skipPrivacyWindowIDsVec_;
     sptr<DisplayManager::IPrivateWindowListener> displayListener_;
-    bool isCalledBySystemApp_ = false;
     Global::Resource::ResourceManager *resourceManager_ = nullptr;
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
