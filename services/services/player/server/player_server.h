@@ -50,6 +50,10 @@ private:
     __attribute__((visibility("hidden")))
     std::string name_;
 };
+
+class PlayerServerStateMachine { 
+public: 
+    PlayerServerStateMachine() = default;
     virtual ~PlayerServerStateMachine() = default;
 
     DISALLOW_COPY_AND_MOVE(PlayerServerStateMachine);
