@@ -466,7 +466,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestS
 {
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+    screenCaptureServer_->isSystemRecorder_.store(true);
     bool isSkip = false;
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_OK);
 }
@@ -483,7 +483,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestS
 {
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+    screenCaptureServer_->isSystemRecorder_.store(true);
     bool isSkip = false;
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_OK);
 }
@@ -772,7 +772,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_SkipPrivacy_005, 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_SkipPrivacy_001, TestSize.Level2) {
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+    screenCaptureServer_->isSystemRecorder_.store(true);
     bool isSkipPrivacyWindow = false;
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkipPrivacyWindow), MSERR_OK);
     ASSERT_EQ(isSkipPrivacyWindow, true);
@@ -781,7 +781,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_SkipPrivac
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_SkipPrivacy_002, TestSize.Level2) {
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+    screenCaptureServer_->isSystemRecorder_.store(true);
     bool isSkipPrivacyWindow = false;
     ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkipPrivacyWindow), MSERR_OK);
     ASSERT_EQ(isSkipPrivacyWindow, true);
@@ -794,7 +794,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureInner_SkipPrivacy_00
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+    screenCaptureServer_->isSystemRecorder_.store(true);
     screenCaptureServer_->isScreenCaptureAuthority_ = true;
     ASSERT_EQ(screenCaptureServer_->StartScreenCaptureInner(true), MSERR_OK);
 }

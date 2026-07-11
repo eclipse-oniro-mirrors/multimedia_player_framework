@@ -48,8 +48,6 @@ public:
 private:
     const std::string screenRecorderBundleName =
         GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
-    const std::string hiviewCareBundleName =
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.hiviewcarebundlename"];
     Security::AccessToken::HapInfoParams info_ = {
         .userID = 100, // 100 UserID
         .bundleName = "com.ohos.test.screencapturetdd",

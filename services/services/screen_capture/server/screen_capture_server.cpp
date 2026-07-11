@@ -951,6 +951,7 @@ int32_t ScreenCaptureServer::SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &ap
     appInfo_.appTokenId = appInfo.appTokenId;
     appInfo_.appFullTokenId = appInfo.appFullTokenId;
     appName_ = GetClientBundleName(appInfo_.appUid);
+    isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
     AddSaAppInfoMap(saUid, appInfo_.appUid);
     MEDIA_LOGI("ScreenCaptureServer::SetAndCheckAppInfo end.");
     return MSERR_OK;
@@ -2114,6 +2115,7 @@ void ScreenCaptureServer::InitAppInfo()
     appInfo_.appUid = IPCSkeleton::GetCallingUid();
     appInfo_.appPid = IPCSkeleton::GetCallingPid();
     appName_ = GetClientBundleName(appInfo_.appUid);
+    isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitAppInfo end.", FAKE_POINTER(this));
 }
 
@@ -2300,7 +2302,7 @@ int32_t ScreenCaptureServer::StartFileMicAudioCapture()
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
     CHECK_AND_RETURN_RET(!IsMicrophoneCaptureRunning(), MSERR_OK); // prevent repeat start
 #ifdef SUPPORT_CALL
-    if (InCallObserver::GetInstance().IsInCall(false) && !IsTelInCallSkipList()) {
+    if (InCallObserver::GetInstance().IsInCall(false)) {
         MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip creating micAudioCapture", FAKE_POINTER(this));
         NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         return MSERR_OK;
@@ -2656,12 +2658,9 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
         SetTimeoutScreenoffDisableLock(false);
 #endif
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-        if (isPrivacyAuthorityEnabled_ &&
-            GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-                .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
-            if (TryNotificationOnPostStartScreenCapture() == MSERR_UNKNOWN) {
-                return;
-            }
+        if (isPrivacyAuthorityEnabled_ && !isSystemRecorder_.load() && !isScreenCaptureAuthority_ &&
+            TryNotificationOnPostStartScreenCapture() == MSERR_UNKNOWN) {
+            return;
         }
 #endif
         if (!FirstPidUpdatePrivacyUsingPermissionState(appInfo_.appPid)) {
@@ -2741,8 +2740,7 @@ int32_t ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
 void ScreenCaptureServer::RegisterLanguageSwitchListener()
 {
     MEDIA_LOGI("ScreenCaptureServer::RegisterLanguageSwitchListener");
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) == 0) {
+    if (isSystemRecorder_.load()) {
         return;
     }
     EventFwk::MatchingSkills matchingSkills;
@@ -3016,6 +3014,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 
     GetSystemUIFlag();
     appName_ = GetClientBundleName(appInfo_.appUid);
+    isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
     callingLabel_ = GetBundleResourceLabel(appName_);
     MEDIA_LOGD("StartScreenCaptureInner callingLabel: %{public}s", callingLabel_.c_str());
 
@@ -3077,28 +3076,12 @@ void ScreenCaptureServer::PublishScreenCaptureEvent(const std::string& state)
         appInfo_.appUid, captureConfig_.dataType, sessionId_);
 }
 
-bool ScreenCaptureServer::IsTelInCallSkipList()
-{
-    MEDIA_LOGI("ScreenCaptureServer::IsTelInCallSkipList isCalledBySystemApp : %{public}d", isCalledBySystemApp_);
-    if (isCalledBySystemApp_ &&
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.hiviewcarebundlename"]
-            .compare(appName_) == 0) {
-        MEDIA_LOGI("ScreenCaptureServer::IsTelInCallSkipList true");
-        return true;
-    }
-    return false;
-}
-
 int32_t ScreenCaptureServer::RegisterServerCallbacks()
 {
     std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
     screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
 #ifdef SUPPORT_CALL
-    uint64_t tokenId = IPCSkeleton::GetCallingFullTokenID();
-    isCalledBySystemApp_ = OHOS::Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(tokenId);
-    MEDIA_LOGI("ScreenCaptureServer::RegisterServerCallbacks isCalledBySystemApp: %{public}d", isCalledBySystemApp_);
-    if (!captureConfig_.strategy.keepCaptureDuringCall && InCallObserver::GetInstance().IsInCall(true) &&
-        !IsTelInCallSkipList()) {
+    if (!captureConfig_.strategy.keepCaptureDuringCall && InCallObserver::GetInstance().IsInCall(true)) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
         NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
         FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
@@ -4224,7 +4207,7 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
 int32_t ScreenCaptureServer::SetMicrophoneOn()
 {
 #ifdef SUPPORT_CALL
-    if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
+    if (InCallObserver::GetInstance().IsInCall(true)) {
         MEDIA_LOGE("Try SetMicrophoneOn But In Call");
         NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         return MSERR_UNKNOWN_INCALL;
@@ -4289,7 +4272,7 @@ int32_t ScreenCaptureServer::ReStartMicForVoIPStatusSwitch()
     StopMicAudioCapture();
     if (isMicrophoneSwitchTurnOn_) {
 #ifdef SUPPORT_CALL
-        if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
+        if (InCallObserver::GetInstance().IsInCall(true)) {
             MEDIA_LOGE("Try ReStartMicForVoIPStatusSwitch But In Call");
             NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
             return MSERR_UNKNOWN;
@@ -4337,7 +4320,7 @@ int32_t ScreenCaptureServer::TelCallStateUpdated(bool isInTelCall)
 
 int32_t ScreenCaptureServer::TelCallAudioStateUpdated(bool isInTelCallAudio)
 {
-    if (IsTelInCallSkipList() || isInTelCallAudio_.load() == isInTelCallAudio) {
+    if (isInTelCallAudio_.load() == isInTelCallAudio) {
         return MSERR_OK;
     }
     isInTelCallAudio_.store(isInTelCallAudio);
@@ -4630,7 +4613,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture()
         "micCapInfo.state:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state);
 #ifdef SUPPORT_CALL
-    if (InCallObserver::GetInstance().IsInCall(true) && !IsTelInCallSkipList()) {
+    if (InCallObserver::GetInstance().IsInCall(true)) {
         MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip creating micAudioCapture", FAKE_POINTER(this));
         NotifyStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         return MSERR_OK;
@@ -4749,8 +4732,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureByEvent(AVScreenCaptureStateCode s
 
 void ScreenCaptureServer::SetSystemScreenRecorderStatus(bool status)
 {
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) != 0) {
+    if (!isSystemRecorder_.load()) {
         return;
     }
     if (status) {
@@ -4928,9 +4910,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
         screenCaptureCb_->OnStateChange(stateCode);
     }
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
-    if (isPrivacyAuthorityEnabled_ &&
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName_) != 0 && !isScreenCaptureAuthority_) {
+    if (isPrivacyAuthorityEnabled_ && !isSystemRecorder_.load() && !isScreenCaptureAuthority_) {
         // Remove real time notification
         int32_t ret = NotificationHelper::CancelNotification(notificationId_);
         MEDIA_LOGI("StopScreenCaptureInner CancelNotification id:%{public}d, ret:%{public}d ", notificationId_, ret);
@@ -4992,7 +4972,7 @@ void ScreenCaptureServer::ReleaseInner()
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
                 FAKE_POINTER(this), sessionId_);
         }
-        if (GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_) {
+        if (isSystemRecorder_.load()) {
             UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
         }
     }
@@ -5109,10 +5089,9 @@ void ScreenCaptureServer::PrivacyProtected(ScreenId &virtualScreenId, bool syste
 bool ScreenCaptureServer::IsSkipPrivacyWindow()
 {
 #ifdef SUPPORT_SCREEN_CAPTURE_PICKER
-    return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ ||
-        (CheckCustScrRecPermission() && !IsPickerPopUp());
+    return isSystemRecorder_.load() || (CheckCustScrRecPermission() && !IsPickerPopUp());
 #else
-    return GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_ || CheckCustScrRecPermission();
+    return isSystemRecorder_.load() || CheckCustScrRecPermission();
 #endif
 }
 
@@ -5128,7 +5107,7 @@ bool ScreenCaptureObserverCallBack::StopAndRelease(AVScreenCaptureStateCode stat
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBack::StopAndRelease");
     auto scrServer = screenCaptureServer_.lock();
-    if (scrServer && !scrServer->IsTelInCallSkipList()) {
+    if (scrServer) {
         if (!scrServer->IsState(CAP_ALIVE)) {
             MEDIA_LOGI("StopAndRelease repeat, capture is STOPPED.");
             return true;
@@ -5155,7 +5134,7 @@ bool ScreenCaptureObserverCallBack::TelCallStateUpdated(bool isInCall)
 {
     MEDIA_LOGI("ScreenCaptureObserverCallBack::TelCallStateUpdated InCall:%{public}d", isInCall);
     auto scrServer = screenCaptureServer_.lock();
-    if (scrServer && !scrServer->IsTelInCallSkipList()) {
+    if (scrServer) {
         if (!scrServer->IsState(CAP_ALIVE)) {
             MEDIA_LOGI("TelCallStateUpdated: capture is STOPPED.");
             return true;
