@@ -46,7 +46,7 @@ void AudioDataSource::SpeakerStateUpdate(
     if (speakerAlive != speakerAliveStatus_) {
         speakerAliveStatus_ = speakerAlive;
         auto server = screenCaptureServer_.lock();
-        CHECK_AND_RETURN_RET_LOG(server != nullptr, ret, "screenCaptureServer_ is nullptr");
+        CHECK_AND_RETURN_LOG(server != nullptr, "screenCaptureServer_ is nullptr");
         server->OnSpeakerAliveStatusChanged(speakerAlive);
         if (speakerAlive) {
             MEDIA_LOGI("HEADSET Change to Speaker.");
@@ -61,7 +61,7 @@ void AudioDataSource::TelCallAudioStateUpdate(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     auto server = screenCaptureServer_.lock();
-    CHECK_AND_RETURN_RET_LOG(server != nullptr, ret, "screenCaptureServer_ is nullptr");
+    CHECK_AND_RETURN_LOG(server != nullptr, "screenCaptureServer_ is nullptr");
     (void)audioRendererChangeInfos;
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
     AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
@@ -123,7 +123,7 @@ void AudioDataSource::VoIPStateUpdate(
     }
     isInVoIPCall_.store(isInVoIPCall);
     auto server = screenCaptureServer_.lock();
-    CHECK_AND_RETURN_RET_LOG(server != nullptr, ret, "screenCaptureServer_ is nullptr");
+    CHECK_AND_RETURN_RET_LOG(server != nullptr, "screenCaptureServer_ is nullptr");
     server->OnVoIPStatusChanged(isInVoIPCall);
 }
 
