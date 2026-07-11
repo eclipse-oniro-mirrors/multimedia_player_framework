@@ -24,6 +24,8 @@ namespace Media {
 
 class PlayerServer;
 
+class __attribute__((visibility("hidden"))) PlayerServerCommonEventReceiver : public CommonEventReceiver { 
+ public:
     explicit PlayerServerCommonEventReceiver(const std::weak_ptr<PlayerServer>& server);
     ~PlayerServerCommonEventReceiver();
     void OnCommonEventReceived(const std::string &event) override;
