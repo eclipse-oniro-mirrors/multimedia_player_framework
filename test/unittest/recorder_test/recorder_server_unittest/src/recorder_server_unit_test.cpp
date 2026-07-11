@@ -1714,7 +1714,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
 
-    constexpr int32_t VIDEO_SOURCE_ID = SourceIdGenerator::GenerateVideoSourceId(0);
+    const int32_t VIDEO_SOURCE_ID = SourceIdGenerator::GenerateVideoSourceId(0);
     OHOS::sptr<OHOS::Surface> surface = recorderServer_->GetMetaSurface(VIDEO_SOURCE_ID);
     EXPECT_TRUE(surface == nullptr);
 
@@ -1737,7 +1737,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
 
-    constexpr int32_t OUT_OF_RANGE_META_ID = SourceIdGenerator::GenerateMetaSourceId(1);
+    const int32_t OUT_OF_RANGE_META_ID = SourceIdGenerator::GenerateMetaSourceId(1);
     OHOS::sptr<OHOS::Surface> surface = recorderServer_->GetMetaSurface(OUT_OF_RANGE_META_ID);
     EXPECT_TRUE(surface == nullptr);
 
@@ -1762,7 +1762,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
 
-    constexpr int32_t VALID_META_ID_NOT_IN_MAP = SourceIdGenerator::GenerateMetaSourceId(0);
+    const int32_t VALID_META_ID_NOT_IN_MAP = SourceIdGenerator::GenerateMetaSourceId(0);
     OHOS::sptr<OHOS::Surface> surface = recorderServer_->GetMetaSurface(VALID_META_ID_NOT_IN_MAP);
     EXPECT_TRUE(surface == nullptr);
 
