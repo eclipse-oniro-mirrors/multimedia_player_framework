@@ -123,7 +123,7 @@ void AudioDataSource::VoIPStateUpdate(
     }
     isInVoIPCall_.store(isInVoIPCall);
     auto server = screenCaptureServer_.lock();
-    CHECK_AND_RETURN_RET_LOG(server != nullptr, "screenCaptureServer_ is nullptr");
+    CHECK_AND_RETURN_LOG(server != nullptr, "screenCaptureServer_ is nullptr");
     server->OnVoIPStatusChanged(isInVoIPCall);
 }
 
