@@ -51,8 +51,8 @@ private:
     std::string name_;
 };
 
-class PlayerServerStateMachine { 
-public: 
+class PlayerServerStateMachine {
+public:
     PlayerServerStateMachine() = default;
     virtual ~PlayerServerStateMachine() = default;
 
