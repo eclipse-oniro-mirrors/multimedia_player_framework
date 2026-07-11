@@ -306,6 +306,10 @@
             <option name="shell" value="touch /data/test/media/recorder_video_SetCustomInfo_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_video_SetCustomInfo_002.m4a"/>
             <option name="shell" value="touch /data/test/media/recorder_video_GetMetaSurface.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetMetaSurface_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetMetaSurface_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetMetaSurface_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetMetaSurface_004.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
             <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetAudioSourceType_002.mp4"/>
