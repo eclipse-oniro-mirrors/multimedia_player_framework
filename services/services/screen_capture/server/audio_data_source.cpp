@@ -540,10 +540,8 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAtInnerMode(std::shared_pt
 AudioDataSourceReadAtActionState AudioDataSource::ReadAudioBuffer(
     std::shared_ptr<AVBuffer> &buffer, const uint32_t &length)
 {
-    auto server = screenCaptureServer_.lock();
-    CHECK_AND_RETURN_RET_LOG(server != nullptr, AudioDataSourceReadAtActionState::INVALID,
-        "screenCaptureServer_ is nullptr");
     MEDIA_LOGD("AudioDataSource ReadAt start");
+    auto server = screenCaptureServer_.lock();
     CHECK_AND_RETURN_RET_LOG(server != nullptr, AudioDataSourceReadAtActionState::RETRY_SKIP,
         "ReadAt screenCaptureServer null");
     if (!server->IsState(CAP_ACTIVE)) {
