@@ -1380,7 +1380,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMix_001, TestSize.Level2)
     screenCaptureServer_->audioSource_->type_ = AVScreenCaptureMixMode::INVALID_MODE;
     ret = screenCaptureServer_->audioSource_->ReadAt(buffer, bufferSize);
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
-    screenCaptureServer_->audioSource_->screenCaptureServer_ = nullptr;
+    screenCaptureServer_->audioSource_->screenCaptureServer_.reset();
     ret = screenCaptureServer_->audioSource_->ReadAt(buffer, bufferSize);
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
 }
@@ -2044,7 +2044,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_GetScreenCaptureServer
 {
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_);
-    ASSERT_EQ(screenCaptureServer_->audioSource_->GetScreenCaptureServer(), screenCaptureServer_);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->GetScreenCaptureServer().lock(), screenCaptureServer_);
 }
  
 // Test AudioDataSource::GetCurrentTimeNs
