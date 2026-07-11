@@ -3845,7 +3845,7 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
     FALSE_RETURN(meta != nullptr);
     int32_t index = std::distance(metaInfo.begin(), iter);
     if (!(meta->GetData(Tag::MIME_TYPE, mime))) {
-        MEDIA_LOG_E("HandleAudioTrackChangeEvent trackId " PUBLIC_LOG_D32 "get mime error", innerTrackId);
+        MEDIA_LOG_E("HandleAudioTrackChangeEvent trackId " PUBLIC_LOG_D32 "get mime error.", innerTrackId);
         return;
     }
     if (IsAudioMime(mime)) {
@@ -3862,10 +3862,8 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
         audioDecoder_->Start();
         if (IsNeedAudioSinkChangeTrack(metaInfo, index)) {
             MEDIA_LOG_I("AudioSink changeTrack in");
-            if (Status::OK != audioSink_->ChangeTrack(meta)) {
-                MEDIA_LOG_E("HandleAudioTrackChangeEvent audioSink change track error");
-                return;
-            }
+            FALSE_RETURN_MSG(Status::OK == audioSink_->ChangeTrack(meta),
+                "HandleAudioTrackChangeEvent audioSink change track error");
         }
         if (Status::OK != demuxer_->StartTask(innerTrackId)) {
             MEDIA_LOG_E("HandleAudioTrackChangeEvent StartTask error. trackId is " PUBLIC_LOG_D32, innerTrackId);
