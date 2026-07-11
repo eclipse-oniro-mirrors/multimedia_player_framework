@@ -106,7 +106,6 @@ struct AVImageGeneratorAsyncContext : public MediaAsyncContext {
     explicit AVImageGeneratorAsyncContext(napi_env env) : MediaAsyncContext(env) {}
     ~AVImageGeneratorAsyncContext() = default;
 
-    AVImageGeneratorNapi *napi = nullptr;
     std::string opt_ = "";
     std::shared_ptr<PixelMap> pixel_ = nullptr;
     int32_t status = 0;

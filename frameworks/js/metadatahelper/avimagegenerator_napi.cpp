@@ -322,7 +322,7 @@ napi_value AVImageGeneratorNapi::VerifyTheParameters(napi_env env, napi_callback
 
     promiseCtx = std::make_unique<AVImageGeneratorAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(promiseCtx != nullptr, nullptr, "promiseCtx is null");
-    promiseCtx->napi = napi;
+    promiseCtx->innerHelper_ = napi->helper_;
     promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
 
     napi_valuetype valueType = napi_undefined;
@@ -333,10 +333,10 @@ napi_value AVImageGeneratorNapi::VerifyTheParameters(napi_env env, napi_callback
     }
     if (argCount == maxArgs) {
         notParamValid = napi_typeof(env, args[argOutputSizeIndex], &valueType) != napi_ok ||
-            valueType != napi_object || promiseCtx->napi->GetFetchScaledFrameArgs(promiseCtx, env, args[ARG_ZERO],
+            valueType != napi_object || napi->GetFetchScaledFrameArgs(promiseCtx, env, args[ARG_ZERO],
             args[ARG_ONE], args[ARG_TWO]) != MSERR_OK;
     } else {
-        notParamValid = promiseCtx->napi->GetFetchScaledFrameArgs(
+        notParamValid = napi->GetFetchScaledFrameArgs(
             promiseCtx, env, args[ARG_ZERO], args[ARG_ONE], nullptr) != MSERR_OK;
     }
     if (notParamValid) {
@@ -365,10 +365,9 @@ napi_value AVImageGeneratorNapi::JsFetchScaledFrameAtTime(napi_env env, napi_cal
     napi_create_string_utf8(env, "JsFetchScaledFrameAtTime", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
         auto asyncCtx = reinterpret_cast<AVImageGeneratorAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx && asyncCtx->napi && !asyncCtx->errFlag,
+        CHECK_AND_RETURN_LOG(asyncCtx && asyncCtx->innerHelper_ && !asyncCtx->errFlag,
             "Invalid AVImageGeneratorAsyncContext.");
-        CHECK_AND_RETURN_LOG(asyncCtx->napi->helper_ != nullptr, "Invalid AVImageGeneratorNapi.");
-        auto pixelMap = asyncCtx->napi->helper_->
+        auto pixelMap = asyncCtx->innerHelper_->
             FetchScaledFrameYuv(asyncCtx->timeUs_, asyncCtx->option_, asyncCtx->param_);
         asyncCtx->pixel_ = pixelMap;
         if (asyncCtx->pixel_ == nullptr) {
