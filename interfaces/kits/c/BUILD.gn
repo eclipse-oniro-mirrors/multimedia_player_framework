@@ -49,7 +49,7 @@ config("media_capi_config") {
     "-Wshadow",
     "-FPIC",
     "-FS",
-    "-O2",
+    "-Os",
     "-D_FORTIFY_SOURCE=2",
     "-Wformat=2",
     "-Wdate-time",
@@ -58,6 +58,8 @@ config("media_capi_config") {
   cflags_cc = [
     "-std=c++17",
     "-fno-rtti",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
   ]
 }
 
