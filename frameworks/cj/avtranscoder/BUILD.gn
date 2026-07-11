@@ -22,6 +22,22 @@ config("public_ffi_config") {
 
 ohos_shared_library("cj_avtranscoder_ffi") {
   public_configs = [ ":public_ffi_config" ]
+  cflags_cc = [
+    "-flto",
+    "-fdata-sections",
+    "-ffunction-sections",
+    "-Os",
+    "-fno-merge-all-constants",
+    "-fno-unwind-tables",
+    "-fno-asynchronous-unwind-tables",
+  ]
+
+  ldflags = [
+    "-flto",
+    "-Wl,--as-needed",
+    "-Wl,--gc-sections",
+    "-Wl,--no-whole-archive",
+  ]
 
   sanitize = {
     cfi = true
