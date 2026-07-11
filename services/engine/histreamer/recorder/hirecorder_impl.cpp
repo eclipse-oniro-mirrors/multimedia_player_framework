@@ -139,7 +139,6 @@ HiRecorderImpl::~HiRecorderImpl()
         capturerInfoChangeCallback_->NotifyRelease();
     }
     Stop(false);
-    CloseFd();
     PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
 
@@ -1237,7 +1236,6 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureOutFd(const RecorderParam &recParam)
 {
-    CloseFd();
     OutFd outFd = static_cast<const OutFd&>(recParam);
     fd_ = dup(outFd.fd);
     muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
