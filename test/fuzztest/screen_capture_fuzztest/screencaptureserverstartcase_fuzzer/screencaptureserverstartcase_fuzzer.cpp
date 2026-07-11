@@ -104,7 +104,7 @@ bool ScreenCaptureServerStartCaseFuzzer::FuzzScreenCaptureServerStartCase(uint8_
     screenCaptureServer_->InitAudioCap(config_.audioInfo.innerCapInfo);
     screenCaptureServer_->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_);
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
     screenCaptureServer_->StartStreamInnerAudioCapture();
