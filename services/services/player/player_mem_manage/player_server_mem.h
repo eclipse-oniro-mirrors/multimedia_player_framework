@@ -144,47 +144,88 @@ private:
         std::string lastErrMsg = "";
         std::unique_ptr<UriHelper> uriHelper = nullptr;
     } playerServerConfig_;
+    __attribute__((visibility("hidden")))
     std::mutex mutex_;
+    __attribute__((visibility("hidden")))
     std::mutex mutexCb_;
+    __attribute__((visibility("hidden")))
     bool isReleaseMemByManage_ = false;
+    __attribute__((visibility("hidden")))
     bool isRecoverMemByUser_ = false;
+    __attribute__((visibility("hidden")))
     bool isAudioPlayer_ = true;
+    __attribute__((visibility("hidden")))
     int32_t continueReset = 0;
+    __attribute__((visibility("hidden")))
     std::map<void *, std::shared_ptr<MemBaseState>> stateMap_;
+    __attribute__((visibility("hidden")))
     std::chrono::steady_clock::time_point lastestUserSetTime_;
+    __attribute__((visibility("hidden")))
     std::condition_variable recoverCond_;
+    __attribute__((visibility("hidden")))
     int32_t defaultAudioIndex_ = -1;
+    __attribute__((visibility("hidden")))
     bool isSeekToCurrentTime_ = false;
+    __attribute__((visibility("hidden")))
     bool isLocalResource_ = false;
 
+    __attribute__((visibility("hidden")))
     int32_t Init() override;
+    __attribute__((visibility("hidden")))
     void SetStateMap();
+    __attribute__((visibility("hidden")))
     void SaveParameter(const Format &param);
+    __attribute__((visibility("hidden")))
     int32_t SetSaveParameter();
+    __attribute__((visibility("hidden")))
     int32_t SetSourceInternal();
+    __attribute__((visibility("hidden")))
     int32_t AddSubSourceInternal();
+    __attribute__((visibility("hidden")))
     int32_t PrepareAsyncInner();
+    __attribute__((visibility("hidden")))
     void SetPlayerServerConfig();
+    __attribute__((visibility("hidden")))
     void GetPlayerServerConfig();
+    __attribute__((visibility("hidden")))
     int32_t SetConfigInternal();
+    __attribute__((visibility("hidden")))
     int32_t SetBehaviorInternal();
+    __attribute__((visibility("hidden")))
     int32_t SetPlaybackSpeedInternal();
+    __attribute__((visibility("hidden")))
     int32_t GetInformationBeforeMemReset();
+    __attribute__((visibility("hidden")))
     void RecoverToInitialized(PlayerOnInfoType type, int32_t extra);
+    __attribute__((visibility("hidden")))
     void RecoverToPrepared(PlayerOnInfoType type, int32_t extra);
+    __attribute__((visibility("hidden")))
     void RecoverToCompleted(PlayerOnInfoType type, int32_t extra);
+    __attribute__((visibility("hidden")))
     int32_t RecoverPlayerCb();
+    __attribute__((visibility("hidden")))
     void CheckHasRecover(PlayerOnInfoType type, int32_t extra);
+    __attribute__((visibility("hidden")))
     int32_t ReleaseMemByManage();
+    __attribute__((visibility("hidden")))
     int32_t RecoverMemByUser();
+    __attribute__((visibility("hidden")))
     bool NeedSelectAudioTrack();
+    __attribute__((visibility("hidden")))
     void GetDefaultTrack(PlayerOnInfoType type, int32_t extra, const Format &infoBody);
+    __attribute__((visibility("hidden")))
     int32_t SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode);
+    __attribute__((visibility("hidden")))
     int32_t HandleCodecBuffers(bool enable);
+    __attribute__((visibility("hidden")))
     int32_t LocalResourceRelease();
+    __attribute__((visibility("hidden")))
     int32_t NetworkResourceRelease();
+    __attribute__((visibility("hidden")))
     int32_t LocalResourceRecover();
+    __attribute__((visibility("hidden")))
     int32_t NetworkRecover();
+    __attribute__((visibility("hidden")))
     void SetResourceTypeBySysParam();
 };
 }

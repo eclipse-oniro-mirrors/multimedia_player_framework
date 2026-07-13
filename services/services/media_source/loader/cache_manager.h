@@ -96,6 +96,7 @@ private:
     bool RemoveMediaCache(const std::string& url);
     bool InsertMapping(const std::vector<std::pair<CacheFieldId, std::string>>& activeFields,
         size_t headerSize, size_t fieldsHeaderSize);
+    bool RemapMemory(size_t totalSize, size_t fileSize);
 
     static std::shared_ptr<StreamCacheManager> cacheManager_;
     static std::once_flag onceFlag_;

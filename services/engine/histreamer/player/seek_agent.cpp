@@ -123,14 +123,21 @@ Status SeekAgent::GetAllTrackInfo(std::vector<int32_t> &videoTrackIds, std::vect
     for (int32_t index = 0; index < trackInfoSize; index++) {
         auto trackMeta = trackInfo[index];
         std::string mimeType;
+        int32_t trackIndex;
+        if (!trackMeta->GetData(Tag::REGULAR_TRACK_ID, trackIndex)) {
+            MEDIA_LOG_I("not found trackIndex，index：" PUBLIC_LOG_D32 , index);
+            continue;
+        }
         if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("video") == 0) {
-            MEDIA_LOG_I("Find video trackId: " PUBLIC_LOG_U32 ", mimeType: " PUBLIC_LOG_S, index, mimeType.c_str());
+            MEDIA_LOG_I("Find video trackId: " PUBLIC_LOG_U32 
+                ", mimeType: " PUBLIC_LOG_S, trackIndex, mimeType.c_str());
             videoTrackIds.push_back(index);
             continue;
         }
         if (trackMeta->Get<Tag::MIME_TYPE>(mimeType) && mimeType.find("audio") == 0) {
-            MEDIA_LOG_I("Find audio trackId: " PUBLIC_LOG_U32 ", mimeType: " PUBLIC_LOG_S, index, mimeType.c_str());
-            audioTrackIds.push_back(index);
+            MEDIA_LOG_I("Find audio trackId: " PUBLIC_LOG_U32 
+                ", mimeType: " PUBLIC_LOG_S, index, mimeType.c_str());
+            audioTrackIds.push_back(trackIndex);
         }
     }
     return Status::OK;
@@ -149,8 +156,12 @@ bool SeekAgent::GetAudioTrackId(int32_t &audioTrackId)
         if (!trackMeta->Get<Tag::MIME_TYPE>(mimeType) || mimeType.find("audio") != 0) {
             continue;
         }
-        if (producerMap_.find(index) != producerMap_.end() && producerMap_[index] != nullptr) {
-            audioTrackId = index;
+        int32_t trackIndex;
+        if (!trackMeta->GetData(Tag::REGULAR_TRACK_ID, trackIndex)) {
+            continue;
+        }
+        if (producerMap_.find(trackIndex) != producerMap_.end() && producerMap_[trackIndex] != nullptr) {
+            audioTrackId = trackIndex;
             return true;
         }
     }

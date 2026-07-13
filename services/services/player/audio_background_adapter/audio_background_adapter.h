@@ -35,14 +35,22 @@ public:
     ~AudioBackgroundAdapter();
 
 private:
+    __attribute__((visibility("hidden")))
     void Init();
+    __attribute__((visibility("hidden")))
     void OnBackgroundMute(const int32_t uid) override;
 
+    __attribute__((visibility("hidden")))
     static std::shared_ptr<AudioBackgroundAdapter> instance_;
+    __attribute__((visibility("hidden")))
     static std::once_flag onceFlag_;
+    __attribute__((visibility("hidden")))
     std::atomic<bool> init_ = false;
+    __attribute__((visibility("hidden")))
     std::map<int32_t, std::list<std::weak_ptr<IPlayerService>>> playerMap_;
+    __attribute__((visibility("hidden")))
     std::mutex mutex_;
+    __attribute__((visibility("hidden")))
     std::mutex initMutex_;
 };
 }

@@ -24,13 +24,14 @@ namespace Media {
 
 class PlayerServer;
 
-class PlayerServerCommonEventReceiver : public CommonEventReceiver {
+class __attribute__((visibility("hidden"))) PlayerServerCommonEventReceiver : public CommonEventReceiver {
 public:
     explicit PlayerServerCommonEventReceiver(const std::weak_ptr<PlayerServer>& server);
     ~PlayerServerCommonEventReceiver();
     void OnCommonEventReceived(const std::string &event) override;
 
 private:
+    __attribute__((visibility("hidden")))
     std::weak_ptr<PlayerServer> server_;
 };
 } // namespace Media

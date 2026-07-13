@@ -94,7 +94,8 @@ public:
     ~MemStoppedState() override = default;
 };
 
-class PlayerServerMem::MemPlaybackCompletedState : public PlayerServerMem::MemBaseState {
+class PlayerServerMem::MemPlaybackCompletedState
+    : public PlayerServerMem::MemBaseState {
 public:
     explicit MemPlaybackCompletedState(PlayerServerMem &playerServerMem)
         : MemBaseState(playerServerMem, "mem_playbackCompleted_state") {}

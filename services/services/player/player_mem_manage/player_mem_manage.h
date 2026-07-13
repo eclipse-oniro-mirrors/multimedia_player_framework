@@ -56,26 +56,42 @@ private:
     };
     PlayerMemManage();
     bool Init();
+    __attribute__((visibility("hidden")))
+    void ProbeTask();
     void HandleOnTrimLevelLow();
     void FindBackGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo);
     void FindFrontGroundPlayerFromVec(AppPlayerInfo &appPlayerInfo);
     void FindProbeTaskPlayer();
+    __attribute__((visibility("hidden")))
     void FindDeregisterPlayerFromVec(bool &isFind, AppPlayerInfo &appPlayerInfo,
         const MemManageRecall &memRecallStruct);
+    __attribute__((visibility("hidden")))
     void AwakeFrontGroundAppMedia(AppPlayerInfo &appPlayerInfo);
+    __attribute__((visibility("hidden")))
     void SetAppPlayerInfo(AppPlayerInfo &appPlayerInfo, int32_t state);
+    __attribute__((visibility("hidden")))
     void RemoteDieAgainRegisterActiveApps();
     static void WritePurgeableEvent(int32_t level, int32_t useTime);
 
+    __attribute__((visibility("hidden")))
     bool isParsed_ = false;
+    __attribute__((visibility("hidden")))
     std::recursive_mutex recMutex_;
+    __attribute__((visibility("hidden")))
     std::recursive_mutex recTaskMutex_;
+    __attribute__((visibility("hidden")))
     std::shared_ptr<AppStateListener> appStateListener_;
+    __attribute__((visibility("hidden")))
     bool isAppStateListenerConnected_ = false;
+    __attribute__((visibility("hidden")))
     bool isAppStateListenerRemoteDied_ = false;
+
     using PidPlayersInfo = std::unordered_map<int32_t, AppPlayerInfo>;
+    __attribute__((visibility("hidden")))
     std::unordered_map<int32_t, PidPlayersInfo> playerManage_;
+    __attribute__((visibility("hidden")))
     std::unique_ptr<TaskQueue> probeTaskQueue_;
+    __attribute__((visibility("hidden")))
     bool isProbeTaskCreated_ = false;
 };
 }

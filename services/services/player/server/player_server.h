@@ -30,7 +30,7 @@
 
 namespace OHOS {
 namespace Media {
-class PlayerServerState {
+class __attribute__((visibility("hidden"))) PlayerServerState {
 public:
     explicit PlayerServerState(const std::string &name) : name_(name) {}
     virtual ~PlayerServerState() = default;
@@ -47,6 +47,7 @@ protected:
     friend class PlayerServerStateMachine;
 
 private:
+    __attribute__((visibility("hidden")))
     std::string name_;
 };
 
@@ -64,7 +65,9 @@ protected:
     std::shared_ptr<PlayerServerState> GetCurrState();
 
 private:
+    __attribute__((visibility("hidden")))
     std::recursive_mutex recMutex_;
+    __attribute__((visibility("hidden")))
     std::shared_ptr<PlayerServerState> currState_ = nullptr;
 };
 

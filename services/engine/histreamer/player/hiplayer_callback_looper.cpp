@@ -131,6 +131,7 @@ void HiPlayerCallbackLooper::StartCollectMaxAmplitude(int64_t updateIntervalMs)
     if (collectMaxAmplitude_) { // already set
         return;
     }
+    lastReportTime_ = 0;
     collectMaxAmplitude_ = true;
     FALSE_RETURN(reportUV_);
     reportUVProgressLoopRunning_ = true;
@@ -370,9 +371,6 @@ void HiPlayerCallbackLooper::LoopOnce(const std::shared_ptr<HiPlayerCallbackLoop
 
 void HiPlayerCallbackLooper::Enqueue(const std::shared_ptr<HiPlayerCallbackLooper::Event>& event)
 {
-    if (!event) {
-        return;
-    }
     if (event->what == WHAT_NONE) {
         MEDIA_LOG_I("invalid event");
     }

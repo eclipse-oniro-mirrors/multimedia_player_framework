@@ -241,9 +241,7 @@ bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::str
         "ftruncate failed:%{public}s", strerror(errno));
 
     // 重新映射
-    void* newMapped = mmap(nullptr, fileSize_ + totalSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
-    CHECK_AND_RETURN_RET_LOG(newMapped != MAP_FAILED, false, "mmap failed: %{public}s", strerror(errno));
-    mapped_ = newMapped;
+    CHECK_AND_RETURN_RET_LOG(RemapMemory(totalSize, fileSize_), false, "RemapMemory failed");
 
     // 写入数据
     InsertMapping(activeFields, headerSize, fieldsHeaderSize);
@@ -264,6 +262,17 @@ bool StreamCacheManager::CreateMediaCache(const std::string& url, const std::str
     // 刷新到磁盘
     msync(mapped_, fileSize_, MS_SYNC);
 
+    return true;
+}
+
+bool StreamCacheManager::RemapMemory(size_t totalSize, size_t fileSize)
+{
+    void* newMapped = mmap(nullptr, fileSize + totalSize, PROT_READ | PROT_WRITE, MAP_SHARED, fd_, 0);
+    CHECK_AND_RETURN_RET_LOG(newMapped != MAP_FAILED, false, "mmap failed: %{public}s", strerror(errno));
+    if (mapped_ != MAP_FAILED) {
+        munmap(mapped_, fileSize_);
+    }
+    mapped_ = newMapped;
     return true;
 }
 
