@@ -75,6 +75,7 @@ public:
     static uint32_t CalculateHeaderChecksum(const CacheMappingHeader& header);
     static bool WritePlaybackParamData(std::ofstream& file, const uint8_t* playbackParamData,
         uint32_t playbackParamDataLength);
+    static bool UpdateFileSize(const std::string &filePath, std::streamoff fileSizeOffset, uint64_t fileSize);
 };
 
 class CacheMappingDeserializer {

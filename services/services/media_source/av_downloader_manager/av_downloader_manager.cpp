@@ -50,8 +50,7 @@ void DownloadTaskCallback::OnStateChanged(uint64_t downloaderId, MediaDownload::
 
 void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloadedSize)
 {
-    MEDIA_LOGI("OnCompleted TaskId: %{public}" PRIu64 " completed, size: %{public}" PRId64,
-        downloaderId, downloadedSize);
+    MEDIA_LOGI("OnCompleted TaskId: %{public}" PRIu64 ", size: %{public}" PRId64, downloaderId, downloadedSize);
     auto manager = manager_.lock();
     if (manager == nullptr) {
         return;
@@ -62,9 +61,9 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
     }
     auto& taskInfo = taskIter->second;
     bool hasFilesToParse = false;
-    for (auto& pair : taskInfo->fileList) {
-        pair.second.downloaded = true;
-        if (pair.second.needParse && !hasFilesToParse) {
+    for (auto& info : taskInfo->fileList) {
+        info.downloaded = true;
+        if (info.needParse && !hasFilesToParse) {
             hasFilesToParse = true;
         }
     }
@@ -73,7 +72,9 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
         return;
     }
     if (!hasFilesToParse) {
-        GenerateMappingFile(taskInfo);
+        if (!taskInfo->mappingFileCreated) {
+            GenerateMappingFile(taskInfo);
+        }
         ProcessDownloadFinish(downloaderId, manager, downloaderIter);
         return;
     }
@@ -81,13 +82,13 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
     std::vector<DownloadFileInfo> filesToAdd;
     ParseFiles(downloaderId, taskInfo, filesToAdd, manager);
     for (const auto& fileInfo : filesToAdd) {
-        taskInfo->fileList.emplace(fileInfo.url, fileInfo);
+        taskInfo->fileList.push_back(fileInfo);
     }
 
     // 检查是否还有需要解析的文件（如HLS子列表），若无则标记完成
     bool hasMoreToParse = false;
-    for (const auto& pair : taskInfo->fileList) {
-        if (pair.second.needParse) {
+    for (const auto& info : taskInfo->fileList) {
+        if (info.needParse) {
             hasMoreToParse = true;
             break;
         }
@@ -95,6 +96,9 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
     if (!hasMoreToParse) {
         MEDIA_LOGI("TaskId: %{public}" PRIu64 ", has no more files to parse", downloaderId);
         taskInfo->parseCompleted = true;
+    }
+    if (!hasMoreToParse && !taskInfo->mappingFileCreated) {
+        GenerateMappingFile(taskInfo);
     }
     SubmitRemainingTasks(downloaderIter->second, taskInfo, manager);
 }
@@ -123,8 +127,7 @@ void DownloadTaskCallback::ParseFiles(uint64_t downloaderId, std::shared_ptr<AVD
     std::vector<DownloadFileInfo> &filesToAdd, std::shared_ptr<AVDownloaderManagerImpl> manager)
 {
     (void)SourceParseAgent::Create();
-    for (auto& pair : taskInfo->fileList) {
-        auto& fileInfo = pair.second;
+    for (auto& fileInfo : taskInfo->fileList) {
         if (!fileInfo.needParse) {
             continue;
         }
@@ -177,48 +180,60 @@ void DownloadTaskCallback::ParseFiles(uint64_t downloaderId, std::shared_ptr<AVD
 }
 
 // generate mapping file
+void DownloadTaskCallback::WriteMappingEntries(std::ofstream& f,
+    std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::streamoff baseOffset)
+{
+    std::streamoff currentOffset = baseOffset;
+    for (const auto& v : taskInfo->fileList) {
+        DownloadedCache::CacheMappingEntry entry {};
+        auto urlHash = DownloadedCache::SHA256Hasher::GenerateHash(v.url);
+        std::copy_n(urlHash.data(), urlHash.size(), entry.header.urlHash);
+        std::string relPath = v.filePath.substr(taskInfo->cacheDir.size());
+        entry.header.pathLength = relPath.length();
+        uint64_t fileSize = 0;
+        if (v.downloaded) {
+            struct stat st;
+            if (stat(v.filePath.c_str(), &st) == 0) {
+                fileSize = static_cast<uint64_t>(st.st_size);
+            }
+        }
+        entry.header.fileSize = fileSize;
+        entry.filePath = relPath;
+
+        taskInfo->urlToFileSizeOffset_[v.url] = currentOffset + 36;  // 36 = 32 urlHash + 4 pathLength
+        currentOffset += sizeof(DownloadedCache::CacheMappingEntryHeader) + relPath.length();
+
+        DownloadedCache::CacheMappingSerializer::WriteEntry(f, entry, taskInfo->cacheDir);
+        MEDIA_LOGD("Serialize: %{public}s, hash: %{public}s, tmp path: %{public}s, value path: %{public}s",
+            v.url.c_str(), DownloadedCache::SHA256Hasher::HashToString(urlHash).c_str(),
+            relPath.c_str(), v.filePath.c_str());
+    }
+}
+
 void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo)
 {
-    DownloadedCache::CacheMappingHeader* mappingHeader = new DownloadedCache::CacheMappingHeader;
-    memset_s(mappingHeader, sizeof(DownloadedCache::CacheMappingHeader), 0,
-        sizeof(DownloadedCache::CacheMappingHeader));
-    mappingHeader->magic[0] = 'D';
-    mappingHeader->magic[1] = 'C';
-    mappingHeader->magic[2] = 'M';
-    mappingHeader->magic[3] = 'H';
-    mappingHeader->version = 1;
+    DownloadedCache::CacheMappingHeader mappingHeader {};
+    std::copy_n(DownloadedCache::CACHE_MAPPING_MAGIC, 4, mappingHeader.magic);
+    mappingHeader.version = 1;
+    mappingHeader.entryCount = taskInfo->fileList.size();
 
-    auto count = taskInfo->fileList.size();
-    mappingHeader->entryCount = count;
-    DownloadedCache::CacheMappingEntry* mappingEntries = new DownloadedCache::CacheMappingEntry[count];
-    memset_s(mappingEntries, sizeof(DownloadedCache::CacheMappingEntry) * count, 0,
-        sizeof(DownloadedCache::CacheMappingEntry) * count);
+    taskInfo->urlToFileSizeOffset_.clear();
 
     std::ofstream f(taskInfo->cacheDir + "/cache_mapping.txt", std::ios::out | std::ios::binary);
-    DownloadedCache::CacheMappingSerializer::CalculateHeaderChecksum(*mappingHeader);
-    DownloadedCache::CacheMappingSerializer::WriteHeader(f, *mappingHeader);
+    DownloadedCache::CacheMappingSerializer::CalculateHeaderChecksum(mappingHeader);
+    DownloadedCache::CacheMappingSerializer::WriteHeader(f, mappingHeader);
 
     std::vector<uint8_t> playbackParam;
     DownloadedCache::PlayStrategySerializer::Serialize(taskInfo->url, taskInfo->strategy, taskInfo->filter,
         playbackParam);
-    DownloadedCache::CacheMappingSerializer::WritePlaybackParamData(f, playbackParam.data(),
-        playbackParam.size());
+    DownloadedCache::CacheMappingSerializer::WritePlaybackParamData(f, playbackParam.data(), playbackParam.size());
 
-    int32_t index = 0;
-    for (const auto& [k, v] : taskInfo->fileList) {
-        auto urlHash = DownloadedCache::SHA256Hasher::GenerateHash(v.url);
-        std::copy_n(urlHash.data(), urlHash.size(), mappingEntries[index].header.urlHash);
-        std::string tmp = v.filePath.substr(taskInfo->cacheDir.size());
-        mappingEntries[index].header.pathLength = tmp.length();
-        mappingEntries[index].header.fileSize = 0;
-        mappingEntries[index].filePath = tmp;
-        DownloadedCache::CacheMappingSerializer::WriteEntry(f, mappingEntries[index], taskInfo->cacheDir);
-        std::string hashIndexTmp = DownloadedCache::SHA256Hasher::HashToString(urlHash);
-        index++;
-        MEDIA_LOGD("Serialize: %{public}s, hash: %{public}s, tmp path: %{public}s, value path: %{public}s",
-            v.url.c_str(), hashIndexTmp.c_str(), tmp.c_str(), v.filePath.c_str());
-    }
+    std::streamoff entriesBaseOffset = sizeof(DownloadedCache::CacheMappingHeader) +
+        DownloadedCache::PLAYBACK_PARAM_DATA_LENGTH_SIZE + playbackParam.size();
+    WriteMappingEntries(f, taskInfo, entriesBaseOffset);
+
     f.close();
+    taskInfo->mappingFileCreated = true;
 }
 
 void DownloadTaskCallback::SubmitRemainingTasks(std::shared_ptr<MediaDownload::Downloader> downloader,
@@ -228,8 +243,7 @@ void DownloadTaskCallback::SubmitRemainingTasks(std::shared_ptr<MediaDownload::D
     config.timeoutMs = manager->requestTimeoutMs_;
     config.allowMobileData = manager->allowCellularAccess_;
     config.allowWifi = true;
-    for (const auto& pair : taskInfo->fileList) {
-        const auto& fileInfo = pair.second;
+    for (const auto& fileInfo : taskInfo->fileList) {
         if (fileInfo.downloaded) {
             continue;
         }
@@ -237,6 +251,38 @@ void DownloadTaskCallback::SubmitRemainingTasks(std::shared_ptr<MediaDownload::D
         downloader->AddFileTask(fileInfo.url, fileInfo.filePath, config);
     }
     (void)downloader->Start();
+}
+
+void DownloadTaskCallback::OnFileCompleted(uint64_t downloaderId, const std::string &url, int64_t fileSize)
+{
+    MEDIA_LOGI("OnFileCompleted: downloaderId=%{public}" PRIu64 ", fileSize=%{public}" PRId64,
+        downloaderId, fileSize);
+    auto manager = manager_.lock();
+    if (manager == nullptr) {
+        return;
+    }
+    auto taskIter = manager->taskMap_.find(std::to_string(downloaderId));
+    if (taskIter == manager->taskMap_.end()) {
+        return;
+    }
+    auto& taskInfo = taskIter->second;
+
+    // 1. 更新内存中的fileSize
+    auto fileIter = std::find_if(taskInfo->fileList.begin(), taskInfo->fileList.end(),
+        [&url](const DownloadFileInfo& info) { return info.url == url; });
+    if (fileIter != taskInfo->fileList.end()) {
+        fileIter->fileSize = static_cast<uint64_t>(fileSize);
+    }
+
+    // 2. in-place更新元文件
+    auto offsetIter = taskInfo->urlToFileSizeOffset_.find(url);
+    if (offsetIter == taskInfo->urlToFileSizeOffset_.end()) {
+        MEDIA_LOGW("OnFileCompleted: no offset for url, mapping file may not exist yet");
+        return;
+    }
+    std::string mappingFilePath = taskInfo->cacheDir + "/cache_mapping.txt";
+    DownloadedCache::CacheMappingSerializer::UpdateFileSize(
+        mappingFilePath, offsetIter->second, static_cast<uint64_t>(fileSize));
 }
 
 void DownloadTaskCallback::OnFailed(uint64_t downloaderId, MediaDownload::DownloadErrorType errorType,
@@ -339,7 +385,7 @@ void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const Medi
         if (protocol == Plugins::HttpPlugin::StreamProtocolType::HLS ||
             protocol == Plugins::HttpPlugin::StreamProtocolType::DASH) {    // HLS or Dash
             if (!taskInfo->fileList.empty()) {
-                taskInfo->fileList.begin()->second.needParse = true;
+                taskInfo->fileList.front().needParse = true;
                 MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol is HLS/DASH, needParse", downloaderId);
             }
         }
@@ -347,6 +393,12 @@ void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const Medi
             downloaderId, static_cast<int>(protocol));
     } while (0);
     SourceParseAgent::Destroy();
+    // HTTP单文件场景：嗅探完成且非HLS/DASH时，提前创建mapping文件
+    if (taskInfo->protocolSniffed && !taskInfo->mappingFileCreated &&
+        taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::HLS &&
+        taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::DASH) {
+        GenerateMappingFile(taskInfo);
+    }
 }
 
 std::shared_ptr<AVDownloaderManager> AVDownloaderManagerFactory::Create()
@@ -538,7 +590,7 @@ AVDownloaderManagerImpl::CreateNewDownloaderAndTask(std::shared_ptr<Plugins::Med
     DownloadFileInfo fileInfo;
     fileInfo.url = url;
     fileInfo.filePath = filePath;
-    taskInfo->fileList.emplace(url, fileInfo);
+    taskInfo->fileList.push_back(fileInfo);
 
     return {taskId, taskInfo, downloader, filePath};
 }

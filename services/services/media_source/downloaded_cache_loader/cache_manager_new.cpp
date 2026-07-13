@@ -137,7 +137,14 @@ bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaD
     const CacheMappingEntry& entry = it->second;
 
     metadata.url = url;
-    metadata.size = entry.header.fileSize;
+    metadata.size = static_cast<int64_t>(entry.header.fileSize);
+    if (metadata.size == 0) {
+        std::string fullPath = cacheDir_ + "/" + entry.filePath;
+        struct stat st;
+        if (stat(fullPath.c_str(), &st) == 0 && st.st_size > 0) {
+            metadata.size = static_cast<int64_t>(st.st_size);
+        }
+    }
     metadata.type = "application/octet-stream";
     metadata.randomAccess = true;
     metadata.entry = entry.filePath;

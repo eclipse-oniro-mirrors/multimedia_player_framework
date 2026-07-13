@@ -371,6 +371,9 @@ void DownloaderImpl::StartMessageQueue()
             case MSG_PROGRESS:
                 cb->OnProgress(strongThis->downloaderId_, msg.progress);
                 break;
+            case MSG_FILE_COMPLETED:
+                cb->OnFileCompleted(strongThis->downloaderId_, msg.fileUrl, msg.downloadedSize);
+                break;
             default:
                 break;
         }
@@ -768,6 +771,17 @@ void DownloaderImpl::OnProgress(const DownloadProgress &progress)
 void DownloaderImpl::HandleTaskCompleted()
 {
     MEDIA_LOGI("HandleTaskCompleted enter: %{public}" PRIu64, downloaderId_);
+
+    // 通知上层单文件完成
+    {
+        Message fileMsg;
+        fileMsg.type = MSG_FILE_COMPLETED;
+        fileMsg.fileUrl = url_;
+        fileMsg.downloadedSize = pendingTaskToRelease_->GetProgress().downloadedSize;
+        if (messageQueue_ != nullptr) {
+            messageQueue_->PostMessage(fileMsg);
+        }
+    }
 
     completedTaskCount_++;
     pendingTaskToRelease_ = nullptr;
