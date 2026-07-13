@@ -42,6 +42,7 @@ namespace {
     constexpr uint32_t MAX_MAP_SIZE = 100;
     constexpr size_t MAX_PAYLOAD_TYPES_SIZE = 100;
     constexpr uint32_t MAX_MEDIA_STREAM_LIST_SIZE = 10;
+    constexpr uint32_t MAX_MIME_TYPES_SIZE = 100;
 }
 
 namespace OHOS {
@@ -1650,12 +1651,13 @@ int32_t PlayerServiceStub::SetTrackSelectionFilter(MessageParcel &data, MessageP
 {
     MEDIA_LOGI("SetTrackSelectionFilter");
     AVPlayTrackSelectionFilter trackFilter;
-    ReadTrackSelectionFilter(data, trackFilter);
+    int32_t ret = ReadTrackSelectionFilter(data, trackFilter);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadTrackSelectionFilter failed");
     reply.WriteInt32(SetTrackSelectionFilter(trackFilter));
     return MSERR_OK;
 }
 
-void PlayerServiceStub::ReadTrackSelectionFilter(MessageParcel &data, AVPlayTrackSelectionFilter &trackFilter)
+int32_t PlayerServiceStub::ReadTrackSelectionFilter(MessageParcel &data, AVPlayTrackSelectionFilter &trackFilter)
 {
     trackFilter.maxVideoBitrate = data.ReadInt32();
     trackFilter.minVideoBitrate = data.ReadInt32();
@@ -1670,12 +1672,13 @@ void PlayerServiceStub::ReadTrackSelectionFilter(MessageParcel &data, AVPlayTrac
     trackFilter.maxAudioBitrate = data.ReadInt32();
     trackFilter.minAudioBitrate = data.ReadInt32();
     trackFilter.maxAudioChannels = data.ReadInt32();
-    ReadTrackSelectionFilterInner(data, trackFilter);
+    return ReadTrackSelectionFilterInner(data, trackFilter);
 }
 
-void PlayerServiceStub::ReadTrackSelectionFilterInner(MessageParcel &data, AVPlayTrackSelectionFilter &trackFilter)
+int32_t PlayerServiceStub::ReadTrackSelectionFilterInner(MessageParcel &data, AVPlayTrackSelectionFilter &trackFilter)
 {
     uint32_t size = data.ReadUint32();
+    CHECK_AND_RETURN_RET_LOG(size <= MAX_MIME_TYPES_SIZE, MSERR_INVALID_OPERATION, "Invalid videoMimeTypes size");
     std::vector<std::string> videoMimeTypes;
     for (uint32_t i = 0; i < size; i++) {
         videoMimeTypes.emplace_back(data.ReadString());
@@ -1683,6 +1686,7 @@ void PlayerServiceStub::ReadTrackSelectionFilterInner(MessageParcel &data, AVPla
     trackFilter.preferredVideoMimeTypes = videoMimeTypes;
 
     size = data.ReadUint32();
+    CHECK_AND_RETURN_RET_LOG(size <= MAX_MIME_TYPES_SIZE, MSERR_INVALID_OPERATION, "Invalid audioMimeTypes size");
     std::vector<std::string> audioMimeTypes;
     for (uint32_t i = 0; i < size; i++) {
         audioMimeTypes.emplace_back(data.ReadString());
@@ -1690,6 +1694,7 @@ void PlayerServiceStub::ReadTrackSelectionFilterInner(MessageParcel &data, AVPla
     trackFilter.preferredAudioMimeTypes = audioMimeTypes;
 
     size = data.ReadUint32();
+    CHECK_AND_RETURN_RET_LOG(size <= MAX_MIME_TYPES_SIZE, MSERR_INVALID_OPERATION, "Invalid audioLanguages size");
     std::vector<std::string> audioLanguages;
     for (uint32_t i = 0; i < size; i++) {
         audioLanguages.emplace_back(data.ReadString());
@@ -1697,11 +1702,13 @@ void PlayerServiceStub::ReadTrackSelectionFilterInner(MessageParcel &data, AVPla
     trackFilter.preferredAudioLanguages = audioLanguages;
 
     size = data.ReadUint32();
+    CHECK_AND_RETURN_RET_LOG(size <= MAX_MIME_TYPES_SIZE, MSERR_INVALID_OPERATION, "Invalid subtitleLanguages size");
     std::vector<std::string> subtitleLanguages;
     for (uint32_t i = 0; i < size; i++) {
         subtitleLanguages.emplace_back(data.ReadString());
     }
     trackFilter.preferredSubtitleLanguages = subtitleLanguages;
+    return MSERR_OK;
 }
 
 int32_t PlayerServiceStub::GetTrackSelectionFilter(MessageParcel &data, MessageParcel &reply)
