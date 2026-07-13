@@ -19,6 +19,8 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
+#include <fstream>
 #include <mutex>
 #include <queue>
 #include <memory>
@@ -41,6 +43,7 @@ struct DownloadFileInfo {       // 一份源中的所有下载数据结构
     std::string filePath;
     bool downloaded = false;
     bool needParse = false;
+    uint64_t fileSize = 0;
 };
 
 struct AVDownloadTaskInfo {     // 对应DonwloaderImpl
@@ -55,9 +58,11 @@ struct AVDownloadTaskInfo {     // 对应DonwloaderImpl
     bool protocolSniffed = false;       // 当前downloader是否已嗅探过
     bool parseCompleted = false;        // ParseFiles解析完成标记，用于控制进度上报
     Plugins::HttpPlugin::StreamProtocolType detectedProtocol = Plugins::HttpPlugin::StreamProtocolType::HTTP;   // 协议类型
-    std::map<std::string, DownloadFileInfo> fileList;       // 所有下载文件
+    std::vector<DownloadFileInfo> fileList;       // 所有下载文件（保持插入/解析顺序）
     Plugins::PlayStrategy strategy;
     Plugins::TrackSelectionFilter filter;
+    std::unordered_map<std::string, std::streamoff> urlToFileSizeOffset_;
+    bool mappingFileCreated = false;
 };
 
 class AVDownloaderManagerImpl;
@@ -73,6 +78,7 @@ public:
     void OnFailed(uint64_t downloaderId, MediaDownload::DownloadErrorType errorType, int32_t errorCode,
                   const std::string &errorMsg) override;
     void OnProgress(uint64_t downloaderId, const MediaDownload::DownloadProgress &progress) override;
+    void OnFileCompleted(uint64_t downloaderId, const std::string &url, int64_t fileSize) override;
 
 private:
     void ProcessDownloadFinish(uint64_t downloaderId, std::shared_ptr<AVDownloaderManagerImpl> manager,
@@ -80,6 +86,8 @@ private:
     void ParseFiles(uint64_t downloaderId, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
         std::vector<DownloadFileInfo> &filesToAdd, std::shared_ptr<AVDownloaderManagerImpl> manager);
     void GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo);
+    void WriteMappingEntries(std::ofstream& f, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
+        std::streamoff baseOffset);
     void SniffStreamProtocol(uint64_t downloaderId, const MediaDownload::DownloadProgress &progress,
         std::string currentFilePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo);
     void SubmitRemainingTasks(std::shared_ptr<MediaDownload::Downloader> downloader,

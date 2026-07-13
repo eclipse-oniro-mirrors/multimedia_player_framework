@@ -38,6 +38,7 @@ public:
     void OnFailed(uint64_t downloaderId, DownloadErrorType errorType, int32_t errorCode,
                   const std::string &errorMsg) override {}
     void OnProgress(uint64_t downloaderId, const DownloadProgress &progress) override {}
+    void OnFileCompleted(uint64_t downloaderId, const std::string &url, int64_t fileSize) override {}
 };
 
 class DownloaderImplSuppTest : public testing::Test {

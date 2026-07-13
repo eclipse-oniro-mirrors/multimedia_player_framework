@@ -109,6 +109,7 @@ public:
     virtual void OnFailed(uint64_t downloaderId, DownloadErrorType errorType, int32_t errorCode,
                           const std::string &errorMsg) = 0;
     virtual void OnProgress(uint64_t downloaderId, const DownloadProgress &progress) = 0;
+    virtual void OnFileCompleted(uint64_t downloaderId, const std::string &url, int64_t fileSize) = 0;
 };
 
 class __attribute__((visibility("default"))) Downloader {

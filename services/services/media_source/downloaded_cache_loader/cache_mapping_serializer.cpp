@@ -93,6 +93,28 @@ bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingE
     return true;
 }
 
+bool CacheMappingSerializer::UpdateFileSize(const std::string &filePath, std::streamoff fileSizeOffset,
+    uint64_t fileSize)
+{
+    std::fstream f(filePath, std::ios::in | std::ios::out | std::ios::binary);
+    if (!f.is_open()) {
+        MEDIA_LOGE("UpdateFileSize: failed to open mapping file");
+        return false;
+    }
+    f.seekp(fileSizeOffset, std::ios::beg);
+    if (!f) {
+        MEDIA_LOGE("UpdateFileSize: failed to seek to offset");
+        return false;
+    }
+    f.write(reinterpret_cast<const char*>(&fileSize), sizeof(fileSize));
+    if (!f) {
+        MEDIA_LOGE("UpdateFileSize: failed to write fileSize");
+        return false;
+    }
+    f.close();
+    return true;
+}
+
 bool CacheMappingDeserializer::ReadHeader(std::ifstream& file, CacheMappingHeader& header)
 {
     if (!file.is_open()) {
