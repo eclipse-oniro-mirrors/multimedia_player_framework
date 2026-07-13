@@ -626,14 +626,14 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
         displayHeight > 0, MSERR_INVALID_VAL, "Invalid parameters");
 
     CHECK_AND_RETURN_RET_LOG(INT64_MAX - (static_cast<int64_t>(stride) * sliceHeight) >=
-        static_cast<int64_t>(stride) * displayHeight / UV_DIV_BASE, MSERR_INVALID_VAL, "surfaceBuffer overflow");
+        static_cast<int64_t>(stride) * displayHeight / UV_DIV_BASE, MSERR_INVALID_VAL, "copySrcSize overflow");
     int64_t copySrcSize = static_cast<int64_t>(stride) * sliceHeight +
         static_cast<int64_t>(stride) * displayHeight / UV_DIV_BASE;
     CHECK_AND_RETURN_RET_LOG(static_cast<int64_t>(surfaceBuffer->GetSize()) >= copySrcSize, MSERR_INVALID_VAL,
         "surfaceBuffer size < copySrcSize");
  
     CHECK_AND_RETURN_RET_LOG(INT64_MAX - (static_cast<int64_t>(displayWidth) * displayHeight) >=
-        static_cast<int64_t>(displayWidth) * displayHeight / UV_DIV_BASE, MSERR_INVALID_VAL, "pixelMap overflow");
+        static_cast<int64_t>(displayWidth) * displayHeight / UV_DIV_BASE, MSERR_INVALID_VAL, "copyDstSize overflow");
     int64_t copyDstSize = static_cast<int64_t>(displayWidth) * displayHeight +
         static_cast<int64_t>(displayWidth) * displayHeight / UV_DIV_BASE;
     CHECK_AND_RETURN_RET_LOG(static_cast<int64_t>(pixelMap->GetCapacity()) >= copyDstSize, MSERR_INVALID_VAL,
