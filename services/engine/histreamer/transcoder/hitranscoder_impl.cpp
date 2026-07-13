@@ -886,6 +886,7 @@ void HiTransCoderImpl::AppendMediaKitTranscoderMediaInfo()
         return;
     }
     std::shared_ptr<Meta> globalInfo = demuxerFilter_->GetGlobalMetaInfo();
+    FALSE_RETURN_MSG(globalInfo != nullptr, "globalInfo is nullptr");
     FileType fileType_ = FileType::UNKNOW;
     globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType_);
     mediaInfo_.push_back({"SrcFormat", std::to_string(static_cast<int32_t>(fileType_))});
