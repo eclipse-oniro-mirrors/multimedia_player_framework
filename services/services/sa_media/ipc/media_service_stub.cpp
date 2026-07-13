@@ -163,7 +163,6 @@ void MediaServiceStub::ClientDied(pid_t pid)
 
 int32_t MediaServiceStub::SetDeathListener(const sptr<IRemoteObject> &object)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "set listener object is nullptr");
 
     sptr<IStandardMediaListener> mediaListener = iface_cast<IStandardMediaListener>(object);
@@ -255,6 +254,7 @@ int32_t MediaServiceStub::GetLppCapacity(LppAvCapabilityInfo &lppAvCapability)
 
 int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &reply)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     int32_t mediaSystemAbility = data.ReadInt32();
     MediaSystemAbility id = static_cast<MediaSystemAbility>(mediaSystemAbility);
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
@@ -265,6 +265,7 @@ int32_t MediaServiceStub::GetSystemAbility(MessageParcel &data, MessageParcel &r
 
 int32_t MediaServiceStub::GetSystemAbilityAync(MessageParcel &data, MessageParcel &reply)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     int32_t mediaSystemAbility = data.ReadInt32();
     MediaSystemAbility id = static_cast<MediaSystemAbility>(mediaSystemAbility);
     sptr<IRemoteObject> listenerObj = data.ReadRemoteObject();
