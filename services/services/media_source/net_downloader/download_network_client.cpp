@@ -51,6 +51,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYE
 constexpr int32_t HTTP_OK = 200;
 constexpr int32_t HTTP_PARTIAL_CONTENT = 206;
 constexpr int32_t HTTP_RANGE_NOT_SATISFIABLE = 416;
+const std::string HTTP_HEADER_CONTENT_LENGTH = "content-length";
+const std::string HTTP_HEADER_CONTENT_RANGE = "content-range";
 constexpr std::array<int32_t, 5> HTTP_NETWORK_ERROR_CODES = {6, 7, 35, 55, 56};
 constexpr auto IsNetworkErrorCode = [](int32_t code) {
     for (auto it : HTTP_NETWORK_ERROR_CODES) {
@@ -154,13 +156,14 @@ size_t NetworkClient::RxHeaderCallback(void* buffer, size_t size, size_t nitems,
             continue;
         }
         std::string key = line.substr(0, colonPos);
+        std::transform(key.begin(), key.end(), key.begin(), ::tolower);
         std::string value = line.substr(colonPos + 1);
         while (!value.empty() && (value.front() == ' ' || value.front() == '\t')) {
             value.erase(value.begin());
         }
         ctx->responseHeaders[key] = value;
 
-        if (key == "Content-Length" || key == "content-length") {
+        if (key == HTTP_HEADER_CONTENT_LENGTH) {
             int64_t contentLength = 0;
             auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), contentLength);
             if (ec == std::errc{} && ptr == value.data() + value.size()) {
@@ -240,7 +243,7 @@ bool NetworkClient::HandleRangeResume(DownloadContext* ctx, NetworkClient* clien
         return true;
     }
 
-    auto rangeIt = ctx->responseHeaders.find("Content-Range");
+    auto rangeIt = ctx->responseHeaders.find(HTTP_HEADER_CONTENT_RANGE);
     if (rangeIt == ctx->responseHeaders.end()) {
         MEDIA_LOGW("RxBodyCallback: server does not support range resume, truncating file");
         if (ftruncate(ctx->outputFd, 0) != 0) {
@@ -441,7 +444,7 @@ void NetworkClient::ProcessHttpSuccess(int32_t clientCode)
 void NetworkClient::ProcessHttp416RangeNotSatisfiable()
 {
     MEDIA_LOGI("Response callback: 416 Range Not Satisfiable, checking file completeness");
-    auto rangeIt = ctx_->responseHeaders.find("Content-Range");
+    auto rangeIt = ctx_->responseHeaders.find(HTTP_HEADER_CONTENT_RANGE);
     if (rangeIt == ctx_->responseHeaders.end()) {
         Handle416WithoutContentRange();
         return;
