@@ -42,7 +42,7 @@ namespace {
     constexpr uint32_t MAX_MAP_SIZE = 100;
     constexpr size_t MAX_PAYLOAD_TYPES_SIZE = 100;
     constexpr uint32_t MAX_MEDIA_STREAM_LIST_SIZE = 10;
-    constexpr uint32_t MAX_MIME_TYPES_SIZE = 100;
+    constexpr uint32_t MAX_MIME_TYPES_SIZE = 1000;
 }
 
 namespace OHOS {
