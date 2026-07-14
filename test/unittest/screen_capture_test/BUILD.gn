@@ -318,6 +318,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "window_manager:scene_session",
     "window_manager:scene_session_manager",
     "window_manager:session_manager_lite",
+    "jsoncpp:jsoncpp",
   ]
 
   if (player_framework_support_power_manager) {
