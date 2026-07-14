@@ -148,10 +148,6 @@ int32_t LppVideoDecoderAdapter::Init(const std::string &mime, bool &switchToComm
 int32_t LppVideoDecoderAdapter::Configure(const Format &param)
 {
     FALSE_RETURN_V_MSG(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ nullptr");
-    int32_t isHdrVivid = 0;
-    bool getRes = param.GetIntValue(Tag::VIDEO_IS_HDR_VIVID, isHdrVivid);
-    bool enableHdrVivid = OHOS::system::GetBoolParameter("debug.media_service.enable_hdr_vivid", false);
-    FALSE_RETURN_V_MSG(!getRes || isHdrVivid == 0 || enableHdrVivid, MSERR_VID_DEC_FAILED, "HDRVivid not support");
     int32_t ret = videoDecoder_->Configure(param);
     FALSE_RETURN_V_MSG(ret == MediaAVCodec::AVCS_ERR_OK, AVCSErrorToMSError(ret), "Configure failed");
     return MSERR_OK;
