@@ -96,8 +96,7 @@ int32_t HelperDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &
                              "Failed to SendEvent, ret = %{public}d", ret);
     CANCEL_SCOPE_EXIT_GUARD(1);
     cb_->WaitResult();
-    CHECK_AND_RETURN_RET_LOG(cb_->readSize_ <= 0 ||
-        static_cast<uint32_t>(cb_->readSize_) <= length, SOURCE_ERROR_IO,
+    CHECK_AND_RETURN_RET_LOG(cb_->readSize_ <= 0 || static_cast<uint32_t>(cb_->readSize_) <= length, SOURCE_ERROR_IO,
         "Read size exceeds requested length");
     MEDIA_LOGD("HelperDataSourceCallback ReadAt out");
     return cb_->readSize_;

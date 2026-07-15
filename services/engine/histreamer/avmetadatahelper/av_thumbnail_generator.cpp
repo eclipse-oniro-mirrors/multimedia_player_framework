@@ -668,8 +668,9 @@ void AVThumbnailGenerator::DfxReport(std::string apiCall)
         return;
     }
     const std::shared_ptr<Meta> globalInfo = mediaDemuxer_->GetGlobalMetaInfo();
+    CHECK_AND_RETURN_LOG(globalInfo != nullptr, "globalInfo is nullptr");
     Plugins::FileType fileType =  Plugins::FileType::UNKNOW;
-    globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+    (void)globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
     metaInfoJson["fileType"] = static_cast<int32_t>(fileType);
     const std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
