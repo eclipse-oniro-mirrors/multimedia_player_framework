@@ -200,7 +200,6 @@ private:
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
     int32_t InitRecorderMix();
     int32_t InitRecorderInner();
-    int32_t InitRecorderMic();
     int32_t InitRecorder();
     OutlineShape ConvertToOutlineShape(ScreenCaptureHighlightMode mode);
     void UpdateHighlightOutline(bool isStarted);

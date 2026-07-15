@@ -137,7 +137,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_005, TestSize.Leve
     screenCaptureServer_->SetMicrophoneEnabled(false);
     screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_);
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
@@ -157,7 +157,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_006, TestSize.Leve
     screenCaptureServer_->SetMicrophoneEnabled(false);
     screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_);
+        AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
@@ -178,7 +178,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_007, TestSize.Leve
     screenCaptureServer_->SetMicrophoneEnabled(false);
     screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_);
+        AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
     auto wrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
@@ -199,7 +199,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnVoIPStatusChanged_008, TestSize.Leve
     screenCaptureServer_->SetMicrophoneEnabled(false);
     screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_);
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
     auto wrapper2 = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
@@ -295,7 +295,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneFile_003, TestSize.Level2
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = false;
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_);
+        screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
     ASSERT_EQ(screenCaptureServer_->StartScreenCaptureFile(), MSERR_OK);
@@ -340,7 +340,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledStream_003, TestSi
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_);
+        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetAudioSource(screenCaptureServer_->audioSource_);
     screenCaptureServer_->SetMicrophoneEnabled(false);

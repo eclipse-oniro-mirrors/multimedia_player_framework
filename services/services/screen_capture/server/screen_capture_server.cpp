@@ -2894,8 +2894,7 @@ int32_t ScreenCaptureServer::InitRecorderMix()
 {
     int32_t ret = MSERR_OK;
     MEDIA_LOGI("InitRecorder prepare to SetAudioDataSource");
-    std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-    audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, wpScreenCaptureServer);
+    audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, this);
     captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     audioSource_->SetAppPid(appInfo_.appPid);
     audioSource_->SetAppName(appName_);
@@ -2912,21 +2911,9 @@ int32_t ScreenCaptureServer::InitRecorderInner()
     int32_t ret = MSERR_OK;
     isMicrophoneSwitchTurnOn_ = false;
     MEDIA_LOGI("InitRecorder prepare to SetAudioSource inner");
-    std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-    audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, wpScreenCaptureServer);
+    audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, this);
     ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
     recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
-    return ret;
-}
-
-int32_t ScreenCaptureServer::InitRecorderMic()
-{
-    int32_t ret = MSERR_OK;
-    MEDIA_LOGI("InitRecorder prepare to SetAudioSource mic");
-    std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
-    audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, wpScreenCaptureServer);
-    ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
-    recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
     return ret;
 }
 
@@ -2956,7 +2943,10 @@ int32_t ScreenCaptureServer::InitRecorder()
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETAUDIO, "SetAudioDataSource failed");
     } else if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         audioInfo = captureConfig_.audioInfo.micCapInfo;
-        ret = InitRecorderMic();
+        MEDIA_LOGI("InitRecorder prepare to SetAudioSource mic");
+        audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, this);
+        ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
+        recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETAUDIO, "SetAudioDataSource failed");
     } else {
         MEDIA_LOGE("InitRecorder not VALIDATION_VALID");
@@ -5194,9 +5184,8 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
     CHECK_AND_RETURN(audioSource_ != nullptr);
     auto screenCaptureServer = audioSource_->GetScreenCaptureServer();
-    auto server = screenCaptureServer.lock();
-    CHECK_AND_RETURN(server != nullptr);
-    CHECK_AND_RETURN(server->IsState(CAP_ALIVE));
+    CHECK_AND_RETURN(screenCaptureServer != nullptr);
+    CHECK_AND_RETURN(screenCaptureServer->IsState(CAP_ALIVE));
     audioSource_->SpeakerStateUpdate(audioRendererChangeInfos);
 #ifdef SUPPORT_CALL
     audioSource_->TelCallAudioStateUpdate(audioRendererChangeInfos);
