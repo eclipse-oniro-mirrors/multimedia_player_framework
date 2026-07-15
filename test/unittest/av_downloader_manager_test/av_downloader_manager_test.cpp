@@ -861,5 +861,123 @@ HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_ConfigValues_001, TestSiz
     callback->SubmitRemainingTasks(mockDownloader, taskInfo, manager);
 }
 
+HWTEST_F(AVDownloaderManagerTest, GenerateMappingFile_NullTaskInfo_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
+    callback->GenerateMappingFile(nullptr);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->cacheDir = "/data/../etc";
+    DownloadFileInfo fileInfo;
+    fileInfo.url = "http://example.com/test.mp4";
+    fileInfo.filePath = "/data/../etc/test.mp4";
+    fileInfo.downloaded = true;
+    taskInfo->fileList.push_back(fileInfo);
+    callback->GenerateMappingFile(taskInfo);
+    EXPECT_FALSE(taskInfo->mappingFileCreated);
+}
+
+HWTEST_F(AVDownloaderManagerTest, GenerateMappingFile_EmptyCacheDir_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->cacheDir = "";
+    callback->GenerateMappingFile(taskInfo);
+    EXPECT_FALSE(taskInfo->mappingFileCreated);
+}
+
+HWTEST_F(AVDownloaderManagerTest, GenerateMappingFile_PathTraversal_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->cacheDir = "/data/../etc";
+    DownloadFileInfo fileInfo;
+    fileInfo.url = "http://example.com/test.mp4";
+    fileInfo.filePath = "/data/../etc/test.mp4";
+    fileInfo.downloaded = true;
+    taskInfo->fileList.push_back(fileInfo);
+    callback->GenerateMappingFile(taskInfo);
+    EXPECT_FALSE(taskInfo->mappingFileCreated);
+}
+
+HWTEST_F(AVDownloaderManagerTest, GenerateMappingFile_OfstreamOpenFail_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->cacheDir = "/proc";
+    DownloadFileInfo fileInfo;
+    fileInfo.url = "http://example.com/test.mp4";
+    fileInfo.filePath = "/proc/test.mp4";
+    fileInfo.downloaded = true;
+    taskInfo->fileList.push_back(fileInfo);
+    callback->GenerateMappingFile(taskInfo);
+    EXPECT_FALSE(taskInfo->mappingFileCreated);
+}
+
+HWTEST_F(AVDownloaderManagerTest, ParseSingleFile_PathTraversal_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    DownloadFileInfo fileInfo;
+    fileInfo.url = "http://example.com/test.m3u8";
+    fileInfo.filePath = "/cache/../etc/passwd";
+    fileInfo.needParse = true;
+    std::vector<DownloadFileInfo> filesToAdd;
+    callback->ParseSingleFile(1, fileInfo, taskInfo, filesToAdd, manager);
+    EXPECT_TRUE(filesToAdd.empty());
+    EXPECT_TRUE(fileInfo.needParse);
+}
+
+HWTEST_F(AVDownloaderManagerTest, SniffStreamProtocol_PathTraversal_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    MediaDownload::DownloadProgress progress;
+    progress.downloadedSize = 4096;
+    callback->SniffStreamProtocol(1, progress, "/cache/../etc/passwd", taskInfo);
+    EXPECT_FALSE(taskInfo->protocolSniffed);
+}
+
+HWTEST_F(AVDownloaderManagerTest, GetFilePath_NormalFilename_002, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto result = manager->GetFilePath("/data/storage/el2/base/cache/test",
+        "http://example.com/normal.mp4");
+    EXPECT_NE(result.find("normal.mp4"), std::string::npos);
+}
+
+HWTEST_F(AVDownloaderManagerTest, GetFilePath_TraversalFilename_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto result = manager->GetFilePath("/data/storage/el2/base/cache/test",
+        "http://example.com/test..mp4");
+    EXPECT_EQ(result.find("test..mp4"), std::string::npos);
+    EXPECT_FALSE(result.empty());
+}
+
+HWTEST_F(AVDownloaderManagerTest, GetFilePath_EmptyFilename_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto result = manager->GetFilePath("/data/storage/el2/base/cache/test",
+        "http://example.com/");
+    EXPECT_FALSE(result.empty());
+    size_t lastSlash = result.find_last_of('/');
+    std::string fileNamePart = result.substr(lastSlash + 1);
+    EXPECT_FALSE(fileNamePart.empty());
+}
+
 } // namespace Media
 } // namespace OHOS

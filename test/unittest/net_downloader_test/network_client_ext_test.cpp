@@ -618,6 +618,55 @@ HWTEST_F(NetworkClientExtTest, RxHeaderCallback_NormalizesHeaderKeyToLowerCase_0
     }
 }
 
+HWTEST_F(NetworkClientExtTest, SetOutputPath_EmptyPath_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        int32_t ret = client->SetOutputPath("");
+        EXPECT_NE(ret, DOWNLOAD_RET_OK);
+    }
+
+    HWTEST_F(NetworkClientExtTest, SetOutputPath_PathTraversal_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        int32_t ret = client->SetOutputPath("/data/../etc/passwd");
+        EXPECT_NE(ret, DOWNLOAD_RET_OK);
+    }
+
+    HWTEST_F(NetworkClientExtTest, SetOutputPath_RelativePath_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        int32_t ret = client->SetOutputPath("relative/path.mp4");
+        EXPECT_NE(ret, DOWNLOAD_RET_OK);
+    }
+
+    HWTEST_F(NetworkClientExtTest, SetOutputPath_ValidAbsolute_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        int32_t ret = client->SetOutputPath(testDir_ + "/valid_path_test.mp4");
+        EXPECT_EQ(ret, DOWNLOAD_RET_OK);
+        auto ctx = client->GetContext();
+        EXPECT_EQ(ctx->outputPath, testDir_ + "/valid_path_test.mp4");
+    }
+
+    HWTEST_F(NetworkClientExtTest, SetOutputPath_ResumeValid_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        std::string filePath = testDir_ + "/resume_valid_test.mp4";
+        int32_t ret = client->SetOutputPath(filePath, 100);
+        EXPECT_EQ(ret, DOWNLOAD_RET_OK);
+        EXPECT_GE(client->GetOutputFd(), 0);
+    }
+
 } // namespace MediaDownload
 } // namespace Media
 } // namespace OHOS

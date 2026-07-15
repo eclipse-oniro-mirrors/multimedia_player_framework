@@ -90,7 +90,14 @@ int32_t NetworkClient::SetOutputPath(const std::string &path, int64_t existingSi
         return DOWNLOAD_ERROR_INTERNAL;
     }
 
-    ctx_->outputPath = path;
+    std::string normalizedPath;
+    auto validateRet = MediaSourceUtils::PathUtils::ValidateAndNormalizePath(path, normalizedPath);
+    if (validateRet != MediaSourceUtils::PATH_VALIDATE_OK) {
+        MEDIA_LOGE("SetOutputPath failed: path validation failed, ret=%{public}d", static_cast<int32_t>(validateRet));
+        return DOWNLOAD_ERROR_INVALID_PARAM;
+    }
+
+    ctx_->outputPath = normalizedPath;
 
     if (ctx_->outputFd >= 0) {
         close(ctx_->outputFd);
@@ -101,9 +108,9 @@ int32_t NetworkClient::SetOutputPath(const std::string &path, int64_t existingSi
 
     if (existingSize > 0) {
         MEDIA_LOGI("SetOutputPath: resuming from %{public}" PRId64, existingSize);
-        ctx_->outputFd = open(path.c_str(), O_WRONLY | O_CREAT | O_APPEND, mode);
+        ctx_->outputFd = open(normalizedPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, mode);
     } else {
-        ctx_->outputFd = open(path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, mode);
+        ctx_->outputFd = open(normalizedPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, mode);
     }
 
     if (ctx_->outputFd < 0) {
@@ -111,7 +118,7 @@ int32_t NetworkClient::SetOutputPath(const std::string &path, int64_t existingSi
         return DOWNLOAD_ERROR_FILE_IO;
     }
 
-    MEDIA_LOGI("SetOutputPath success: %{public}s, existingSize=%{public}" PRId64, path.c_str(), existingSize);
+    MEDIA_LOGI("SetOutputPath: %{public}s, existingSize=%{public}" PRId64, normalizedPath.c_str(), existingSize);
     return DOWNLOAD_RET_OK;
 }
 

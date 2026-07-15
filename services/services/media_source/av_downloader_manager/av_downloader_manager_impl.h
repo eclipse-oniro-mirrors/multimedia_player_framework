@@ -16,6 +16,7 @@
 #ifndef AVDOWNLOADER_MANAGER_IMPL_H
 #define AVDOWNLOADER_MANAGER_IMPL_H
 
+#include <fstream>
 #include <string>
 #include <vector>
 #include <map>
@@ -34,6 +35,7 @@
 #include "message_queue.h"
 #include "media_source.h"
 #include "network_utils.h"
+#include "../downloaded_cache_loader/cache_mapping_format.h"
 
 namespace OHOS {
 namespace Media {
@@ -88,6 +90,9 @@ private:
     void GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo);
     void WriteMappingEntries(std::ofstream& f, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
         std::streamoff baseOffset);
+    void ParseSingleFile(uint64_t downloaderId, DownloadFileInfo &fileInfo,
+        std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::vector<DownloadFileInfo> &filesToAdd,
+        std::shared_ptr<AVDownloaderManagerImpl> manager);
     void SniffStreamProtocol(uint64_t downloaderId, const MediaDownload::DownloadProgress &progress,
         std::string currentFilePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo);
     void SubmitRemainingTasks(std::shared_ptr<MediaDownload::Downloader> downloader,

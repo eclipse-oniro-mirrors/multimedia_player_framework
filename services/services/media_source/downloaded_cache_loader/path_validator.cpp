@@ -44,12 +44,7 @@ bool PathValidator::Validate(const std::string& rootPath, const std::string& rel
 
     std::string resolvedPath = NormalizePath(rootPath + "/" + relativePath);
     std::string normalizedRoot = NormalizePath(rootPath);
-    if (resolvedPath.length() < normalizedRoot.length()) {
-        MEDIA_LOGE("Resolved path shorter than root path");
-        return false;
-    }
-
-    if (resolvedPath.substr(0, normalizedRoot.length()) != normalizedRoot) {
+    if (IsPathEscaped(resolvedPath, normalizedRoot)) {
         MEDIA_LOGE("Path escapes root directory");
         return false;
     }

@@ -29,6 +29,7 @@
 #include "nocopyable.h"
 #include "network/network_client.h"
 #include "network/network_typs.h"
+#include "path_utils.h"
 #include "status.h"
 
 namespace OHOS {
