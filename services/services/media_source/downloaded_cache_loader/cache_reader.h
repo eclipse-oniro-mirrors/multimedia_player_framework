@@ -46,6 +46,7 @@ public:
 
 private:
     void RespondHeader(int64_t uuid);
+    void RespondHeaderInner(int64_t uuid);
     void HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength);
 
     std::string url_;

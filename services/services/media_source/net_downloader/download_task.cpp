@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include "common/log.h"
+#include "path_utils.h"
 
 #ifndef MEDIA_LOGD
 #define MEDIA_LOGD MEDIA_LOG_D
@@ -63,6 +64,10 @@ DownloadTask::DownloadTask(const DownloadTaskInfo &info, const DownloadConfig &c
       downloadSpeed_(0),
       callback_(callback)
 {
+    if (!MediaSourceUtils::PathUtils::IsPathTraversalSafe(outputPath_)) {
+        MEDIA_LOGE("DownloadTask: outputPath contains path traversal sequence");
+        outputPath_.clear();
+    }
     MEDIA_LOGI("DownloadTask created, taskId=%{public}" PRIu64, taskId_);
 }
 
@@ -340,6 +345,10 @@ int64_t DownloadTask::GetStartPosition()
     int64_t startPos = 0;
     bool isManifestFile = (url_.rfind(".m3u8") == url_.size() - 5 ||
                            url_.rfind(".mpd") == url_.size() - 4);
+    if (outputPath_.empty()) {
+        MEDIA_LOGE("GetStartPosition: outputPath is empty or invalid");
+        return -1;
+    }
     if (isManifestFile) {
         MEDIA_LOGI("DoPrepare: manifest file (.m3u8/.mpd), starting from 0");
         startPos = 0;
@@ -425,6 +434,10 @@ void DownloadTask::Run()
 
 int64_t DownloadTask::GetFileSize(const std::string &path)
 {
+    if (path.empty() || !MediaSourceUtils::PathUtils::IsPathTraversalSafe(path)) {
+        MEDIA_LOGE("GetFileSize: path validation failed");
+        return 0;
+    }
     struct stat statbuf;
     if (stat(path.c_str(), &statbuf) == 0) {
         return statbuf.st_size;
