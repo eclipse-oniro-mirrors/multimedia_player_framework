@@ -20,6 +20,7 @@
 #include <random>
 
 #include "network_monitor.h"
+#include "path_utils.h"
 
 #include "common/log.h"
 
@@ -154,6 +155,11 @@ int32_t DownloaderImpl::ValidateOutputPath(const std::string &path)
 {
     if (path.empty()) {
         MEDIA_LOGE("Invalid output path: empty");
+        return DOWNLOAD_ERROR_INVALID_PARAM;
+    }
+
+    if (!MediaSourceUtils::PathUtils::IsPathTraversalSafe(path)) {
+        MEDIA_LOGE("Invalid output path: contains path traversal sequence");
         return DOWNLOAD_ERROR_INVALID_PARAM;
     }
 

@@ -24,6 +24,7 @@
 #include "../downloaded_cache_loader/sha256_hasher.h"
 #include "../downloaded_cache_loader/cache_mapping_format.h"
 #include "../downloaded_cache_loader/play_strategy_serializer.h"
+#include "path_utils.h"
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -131,52 +132,68 @@ void DownloadTaskCallback::ParseFiles(uint64_t downloaderId, std::shared_ptr<AVD
         if (!fileInfo.needParse) {
             continue;
         }
-        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", parsing file: %{public}s", downloaderId, fileInfo.filePath.c_str());
-
-        FILE* fp = fopen(fileInfo.filePath.c_str(), "rb");
-        if (fp == nullptr) {
-            MEDIA_LOGE("failed to open file");
-            continue;
-        }
-        fseek(fp, 0, SEEK_END);
-        long fileSize = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-        if (fileSize <= 0) {
-            fclose(fp);
-            MEDIA_LOGE("file size is 0");
-            continue;
-        }
-        std::vector<uint8_t> buffer(fileSize);
-        size_t readLen = fread(buffer.data(), 1, fileSize, fp);
-        fclose(fp);
-        if (readLen != static_cast<size_t>(fileSize)) {
-            MEDIA_LOGE("failed to read full file");
-            continue;
-        }
-
-        auto parser = SourceParseAgent::GetStreamResourceParser(buffer.data(), buffer.size(),
-            taskInfo->detectedProtocol, fileInfo.url);
-        if (parser == nullptr) {
-            MEDIA_LOGE("TaskId: %{public}" PRIu64 ", GetStreamResourceParser failed", downloaderId);
-            continue;
-        }
-
-        auto resources = parser->GetAll();
-        MEDIA_LOGD("TaskId: %{public}" PRIu64 ", parsed %{public}zu sub-resources from %{public}s",
-            downloaderId, resources.size(), fileInfo.filePath.c_str());
-
-        for (const auto& resource : resources) {
-            std::string subFilePath = manager->GetFilePath(taskInfo->cacheDir, resource.url);
-            DownloadFileInfo subFileInfo;
-            subFileInfo.url = resource.url;
-            subFileInfo.filePath = subFilePath;
-            subFileInfo.downloaded = false;
-            subFileInfo.needParse = resource.isSubPlaylist;
-            filesToAdd.push_back(subFileInfo);
-        }
-        fileInfo.needParse = false;
+        ParseSingleFile(downloaderId, fileInfo, taskInfo, filesToAdd, manager);
     }
     SourceParseAgent::Destroy();
+}
+
+void DownloadTaskCallback::ParseSingleFile(uint64_t downloaderId, DownloadFileInfo &fileInfo,
+    std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::vector<DownloadFileInfo> &filesToAdd,
+    std::shared_ptr<AVDownloaderManagerImpl> manager)
+{
+    std::string normalizedPath;
+    auto validateRet = MediaSourceUtils::PathUtils::ValidateAndNormalizePath(
+        fileInfo.filePath, normalizedPath);
+    if (validateRet != MediaSourceUtils::PATH_VALIDATE_OK) {
+        MEDIA_LOGE("ParseFiles: path validation failed for %{public}s, ret=%{public}d",
+            fileInfo.filePath.c_str(), static_cast<int32_t>(validateRet));
+        return;
+    }
+
+    MEDIA_LOGI("TaskId: %{public}" PRIu64 ", parsing file: %{public}s", downloaderId, normalizedPath.c_str());
+
+    FILE* fp = fopen(normalizedPath.c_str(), "rb");
+    if (fp == nullptr) {
+        MEDIA_LOGE("failed to open file");
+        return;
+    }
+    fseek(fp, 0, SEEK_END);
+    long fileSize = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    if (fileSize <= 0) {
+        fclose(fp);
+        MEDIA_LOGE("file size is 0");
+        return;
+    }
+    std::vector<uint8_t> buffer(fileSize);
+    size_t readLen = fread(buffer.data(), 1, fileSize, fp);
+    fclose(fp);
+    if (readLen != static_cast<size_t>(fileSize)) {
+        MEDIA_LOGE("failed to read full file");
+        return;
+    }
+
+    auto parser = SourceParseAgent::GetStreamResourceParser(buffer.data(), buffer.size(),
+        taskInfo->detectedProtocol, fileInfo.url);
+    if (parser == nullptr) {
+        MEDIA_LOGE("TaskId: %{public}" PRIu64 ", GetStreamResourceParser failed", downloaderId);
+        return;
+    }
+
+    auto resources = parser->GetAll();
+    MEDIA_LOGD("TaskId: %{public}" PRIu64 ", parsed %{public}zu sub-resources from %{public}s",
+        downloaderId, resources.size(), fileInfo.filePath.c_str());
+
+    for (const auto& resource : resources) {
+        std::string subFilePath = manager->GetFilePath(taskInfo->cacheDir, resource.url);
+        DownloadFileInfo subFileInfo;
+        subFileInfo.url = resource.url;
+        subFileInfo.filePath = subFilePath;
+        subFileInfo.downloaded = false;
+        subFileInfo.needParse = resource.isSubPlaylist;
+        filesToAdd.push_back(subFileInfo);
+    }
+    fileInfo.needParse = false;
 }
 
 // generate mapping file
@@ -212,6 +229,20 @@ void DownloadTaskCallback::WriteMappingEntries(std::ofstream& f,
 
 void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo)
 {
+    if (taskInfo == nullptr || taskInfo->cacheDir.empty()) {
+        MEDIA_LOGE("GenerateMappingFile failed: taskInfo is null or cacheDir is empty");
+        return;
+    }
+
+    std::string normalizedCacheDir;
+    auto validateRet = MediaSourceUtils::PathUtils::ValidateAndNormalizePath(
+        taskInfo->cacheDir, normalizedCacheDir);
+    if (validateRet != MediaSourceUtils::PATH_VALIDATE_OK) {
+        MEDIA_LOGE("GenerateMappingFile failed: cacheDir validation failed, ret=%{public}d",
+            static_cast<int32_t>(validateRet));
+        return;
+    }
+
     DownloadedCache::CacheMappingHeader mappingHeader {};
     std::copy_n(DownloadedCache::CACHE_MAPPING_MAGIC, 4, mappingHeader.magic);
     mappingHeader.version = 1;
@@ -219,7 +250,11 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
 
     taskInfo->urlToFileSizeOffset_.clear();
 
-    std::ofstream f(taskInfo->cacheDir + "/cache_mapping.txt", std::ios::out | std::ios::binary);
+    std::ofstream f(normalizedCacheDir + "/cache_mapping.txt", std::ios::out | std::ios::binary);
+    if (!f.is_open()) {
+        MEDIA_LOGE("GenerateMappingFile failed: unable to open file %{public}s", normalizedCacheDir.c_str());
+        return;
+    }
     DownloadedCache::CacheMappingSerializer::CalculateHeaderChecksum(mappingHeader);
     DownloadedCache::CacheMappingSerializer::WriteHeader(f, mappingHeader);
 
@@ -232,8 +267,8 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
         DownloadedCache::PLAYBACK_PARAM_DATA_LENGTH_SIZE + playbackParam.size();
     WriteMappingEntries(f, taskInfo, entriesBaseOffset);
 
-    f.close();
     taskInfo->mappingFileCreated = true;
+    f.close();
 }
 
 void DownloadTaskCallback::SubmitRemainingTasks(std::shared_ptr<MediaDownload::Downloader> downloader,
@@ -361,9 +396,17 @@ void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const Medi
         if (progress.downloadedSize < static_cast<int64_t>(sniffSize)) {
             break;
         }
+
+        std::string normalizedFilePath;
+        auto validateRet = MediaSourceUtils::PathUtils::ValidateAndNormalizePath(currentFilePath, normalizedFilePath);
+        if (validateRet != MediaSourceUtils::PATH_VALIDATE_OK) {
+            MEDIA_LOGE("SniffProtocol: path validation failed, ret=%{public}d", static_cast<int32_t>(validateRet));
+            break;
+        }
+
         MEDIA_LOGI("TaskId: %{public}" PRIu64 ", downloadedSize=%{public}" PRId64 " >= sniffSize=%{public}zu, sniff",
             downloaderId, progress.downloadedSize, sniffSize);
-        FILE* fp = fopen(currentFilePath.c_str(), "rb");
+        FILE* fp = fopen(normalizedFilePath.c_str(), "rb");
         if (fp == nullptr) {
             MEDIA_LOGE("TaskId: %{public}" PRIu64 ", failed to open file: %{public}s",
                 downloaderId, currentFilePath.c_str());
@@ -372,12 +415,10 @@ void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const Medi
         std::vector<uint8_t> buffer(sniffSize);
         size_t readLen = fread(buffer.data(), 1, sniffSize, fp);
         fclose(fp);
+        MEDIA_LOGI("readLen: %{public}zu", readLen);
         if (readLen < sniffSize) {
-            MEDIA_LOGW("TaskId: %{public}" PRIu64 ", readLen=%{public}zu < sniffSize=%{public}zu",
-                downloaderId, readLen, sniffSize);
             break;
         }
-        MEDIA_LOGI("readLen: %{public}zu", readLen);
         auto protocol = SourceParseAgent::SniffStreamProtocol(buffer.data(), readLen);
         taskInfo->detectedProtocol = protocol;
         taskInfo->protocolSniffed = true;
@@ -389,8 +430,7 @@ void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const Medi
                 MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol is HLS/DASH, needParse", downloaderId);
             }
         }
-        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", detected protocol: %{public}d",
-            downloaderId, static_cast<int>(protocol));
+        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol: %{public}d", downloaderId, static_cast<int>(protocol));
     } while (0);
     SourceParseAgent::Destroy();
     // HTTP单文件场景：嗅探完成且非HLS/DASH时，提前创建mapping文件
@@ -463,8 +503,10 @@ std::string AVDownloaderManagerImpl::GetFilePath(const std::string& rootDir, con
 {
     size_t lastSlashPos = url.find_last_of("/\\");
     std::string fileName = (lastSlashPos != std::string::npos) ? url.substr(lastSlashPos + 1) : url;
-    if (fileName.empty()) {
-        fileName = "download";
+    if (fileName.empty() || !MediaSourceUtils::PathUtils::IsPathTraversalSafe(fileName) ||
+        fileName.find('/') != std::string::npos || fileName.find('\\') != std::string::npos) {
+        auto hash = DownloadedCache::SHA256Hasher::GenerateHash(url);
+        fileName = DownloadedCache::SHA256Hasher::HashToString(hash);
     }
     std::string filePath = rootDir + "/1/" + fileName;
     std::string dirPath = rootDir + "/1";
