@@ -138,6 +138,7 @@ ohos_shared_library("media_service") {
     "//foundation/multimedia/player_framework/frameworks/native/common/media_errors.cpp",
     "common/avsharedmemory_ipc.cpp",
     "factory/engine_factory_repo.cpp",
+    "media_source/utils/path_utils.cpp",
     "monitor/ipc/monitor_service_stub.cpp",
     "monitor/server/monitor_server.cpp",
     "monitor/server/monitor_server_object.cpp",

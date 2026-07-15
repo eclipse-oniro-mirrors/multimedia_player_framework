@@ -137,7 +137,8 @@
           "histreamer_ext",
           "egl",
           "opengles",
-          "node"
+          "node",
+          "taihe_ffi_gen"
         ],
         "third_party": [
           "bounds_checking_function"

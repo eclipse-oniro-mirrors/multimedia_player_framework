@@ -265,6 +265,44 @@ HWTEST_F(PathValidatorTest, RootPathEscaped_001, TestSize.Level0)
     TestCommon::CleanupTestDirectory(rootPath);
 }
 
+HWTEST_F(PathValidatorTest, SiblingDirectoryBypass_001, TestSize.Level0)
+{
+    std::string rootPath = testCacheDir_ + "/cache_dir";
+    TestCommon::SetupTestDirectory(rootPath);
+    std::string siblingPath = testCacheDir_ + "/cache_dir_sibling";
+    TestCommon::SetupTestDirectory(siblingPath);
+
+    std::string relativePath = "_sibling/evil.txt";
+    bool result = PathValidator::Validate(rootPath, relativePath);
+    EXPECT_TRUE(result);
+
+    TestCommon::CleanupTestDirectory(siblingPath);
+    TestCommon::CleanupTestDirectory(rootPath);
+}
+
+HWTEST_F(PathValidatorTest, ExactRootMatch_001, TestSize.Level0)
+{
+    std::string relativePath = "";
+    bool result = PathValidator::Validate(testCacheDir_, relativePath);
+    EXPECT_TRUE(result);
+}
+
+HWTEST_F(PathValidatorTest, SiblingWithCommonPrefix_001, TestSize.Level0)
+{
+    std::string rootPath = "/data/test/cache";
+    std::string relativePath = "_extra/malicious";
+    bool result = PathValidator::Validate(rootPath, relativePath);
+    EXPECT_TRUE(result);
+}
+
+HWTEST_F(PathValidatorTest, RootTrailingSlash_001, TestSize.Level0)
+{
+    std::string rootPath = testCacheDir_;
+    std::string relativePath = "subdir/file.mp4";
+    bool result = PathValidator::Validate(rootPath, relativePath);
+    EXPECT_TRUE(result);
+}
+
 } // namespace DownloadedCache
 } // namespace Media
 } // namespace OHOS

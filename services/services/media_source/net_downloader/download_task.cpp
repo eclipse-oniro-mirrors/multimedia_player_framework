@@ -375,7 +375,7 @@ void DownloadTask::ExecuteDownload()
     });
 
     client->SetErrorCallback([this](DownloadErrorType errorType, int32_t errorCode) {
-        MEDIA_LOGE("download error, type: %{public}d, code: %{puiblic}d", static_cast<int32_t>(errorType), errorCode);
+        MEDIA_LOGE("download error, type: %{public}d, code: %{public}d", static_cast<int32_t>(errorType), errorCode);
         lastErrorType_.store(errorType);
         lastErrorCode_.store(errorCode);
     });
