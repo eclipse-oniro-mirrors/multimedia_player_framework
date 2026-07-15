@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <algorithm>
 #include <gtest/gtest.h>
 #include <string>
 #include <memory>
@@ -44,6 +45,7 @@ public:
     using NetworkClient::IsValidUrl;
     using NetworkClient::HandleRangeResume;
     using NetworkClient::WriteData;
+    using NetworkClient::RxHeaderCallback;
 
     TestableNetworkClient(const std::string &url, const std::map<std::string, std::string> &header,
         int32_t timeoutMs, int32_t retryCount)
@@ -67,7 +69,9 @@ public:
     void SetResponseHeader(const std::string &key, const std::string &value)
     {
         std::lock_guard<std::mutex> lock(ctx_->mutex);
-        ctx_->responseHeaders[key] = value;
+        std::string normalizedKey = key;
+        std::transform(normalizedKey.begin(), normalizedKey.end(), normalizedKey.begin(), ::tolower);
+        ctx_->responseHeaders[normalizedKey] = value;
     }
 
     void SetHttpStatusCode(int32_t code)
@@ -508,6 +512,110 @@ HWTEST_F(NetworkClientExtTest, WriteData_ErrorCallback_001, TestSize.Level0)
     char buffer[100] = "test data";
     size_t result = client->WriteData(client->GetContext().get(), client.get(), buffer, 100);
     EXPECT_EQ(result, 100);
+}
+
+HWTEST_F(NetworkClientExtTest, HandleRangeResume_LowerCaseContentRange_001, TestSize.Level0)
+{
+    std::string url = "http://example.com/test.mp4";
+    std::map<std::string, std::string> header;
+    auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+
+    (void)client->SetOutputPath(testDir_ + "/range_resume_lowercase.mp4");
+    client->SetStartPos(100);
+    client->SetDownloadedSize(0);
+    client->SetResponseHeader("content-range", "bytes 100-199/200");
+
+    bool result = client->HandleRangeResume(client->GetContext().get(), client.get());
+    EXPECT_TRUE(result);
+    EXPECT_EQ(client->GetStartPosValue(), 100);
+}
+
+HWTEST_F(NetworkClientExtTest, HandleRangeResume_UpperCaseContentRange_001, TestSize.Level0)
+{
+    std::string url = "http://example.com/test.mp4";
+    std::map<std::string, std::string> header;
+    auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+
+    (void)client->SetOutputPath(testDir_ + "/range_resume_uppercase.mp4");
+    client->SetStartPos(100);
+    client->SetDownloadedSize(0);
+    client->SetResponseHeader("CONTENT-RANGE", "bytes 100-199/200");
+
+    bool result = client->HandleRangeResume(client->GetContext().get(), client.get());
+    EXPECT_TRUE(result);
+    EXPECT_EQ(client->GetStartPosValue(), 100);
+}
+
+HWTEST_F(NetworkClientExtTest, HandleRangeResume_MixedCaseContentRange_001, TestSize.Level0)
+{
+    std::string url = "http://example.com/test.mp4";
+    std::map<std::string, std::string> header;
+    auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+
+    (void)client->SetOutputPath(testDir_ + "/range_resume_mixedcase.mp4");
+    client->SetStartPos(100);
+    client->SetDownloadedSize(0);
+    client->SetResponseHeader("Content-range", "bytes 100-199/200");
+
+    bool result = client->HandleRangeResume(client->GetContext().get(), client.get());
+    EXPECT_TRUE(result);
+    EXPECT_EQ(client->GetStartPosValue(), 100);
+}
+
+HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_LowerCaseContentRange_001, TestSize.Level0)
+{
+    std::string url = "http://example.com/test.mp4";
+    std::map<std::string, std::string> header;
+    auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+
+    client->SetStartPos(2048);
+    (void)client->SetOutputPath(testDir_ + "/process416_lowercase.mp4");
+    client->SetResponseHeader("content-range", "bytes 1024-2047/2048");
+
+    client->ProcessHttp416RangeNotSatisfiable();
+
+    auto ctx = client->GetContext();
+    EXPECT_TRUE(ctx->requestSuccess.load());
+    EXPECT_EQ(ctx->totalSize.load(), 2048);
+}
+
+HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_UpperCaseContentRange_001, TestSize.Level0)
+{
+    std::string url = "http://example.com/test.mp4";
+    std::map<std::string, std::string> header;
+    auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+
+    client->SetStartPos(2048);
+    (void)client->SetOutputPath(testDir_ + "/process416_uppercase.mp4");
+    client->SetResponseHeader("CONTENT-RANGE", "bytes 1024-2047/2048");
+
+    client->ProcessHttp416RangeNotSatisfiable();
+
+    auto ctx = client->GetContext();
+    EXPECT_TRUE(ctx->requestSuccess.load());
+    EXPECT_EQ(ctx->totalSize.load(), 2048);
+}
+
+HWTEST_F(NetworkClientExtTest, RxHeaderCallback_NormalizesHeaderKeyToLowerCase_001, TestSize.Level0)
+{
+    std::string url = "http://example.com/test.mp4";
+    std::map<std::string, std::string> header;
+    auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+
+    auto ctx = client->GetContext();
+    ctx->httpStatusCode.store(206);
+
+    std::string headerLine = "Content-Range: bytes 0-99/1024\r\n";
+    size_t result = TestableNetworkClient::RxHeaderCallback(
+        headerLine.data(), 1, headerLine.size(), ctx.get());
+
+    EXPECT_EQ(result, headerLine.size());
+
+    auto it = ctx->responseHeaders.find("content-range");
+    EXPECT_NE(it, ctx->responseHeaders.end());
+    if (it != ctx->responseHeaders.end()) {
+        EXPECT_EQ(it->second, "bytes 0-99/1024");
+    }
 }
 
 } // namespace MediaDownload
