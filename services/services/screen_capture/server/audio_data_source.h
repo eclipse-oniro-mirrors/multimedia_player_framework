@@ -52,8 +52,8 @@ class AudioDataSource : public IAudioDataSource {
         void WriteTo(const std::shared_ptr<AVMemory> &avMem, const uint32_t &len);
     };
 public:
-    AudioDataSource(AVScreenCaptureMixMode type, std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
-        : type_(type), screenCaptureServer_(screenCaptureServer) {}
+    AudioDataSource(AVScreenCaptureMixMode type, ScreenCaptureServer* screenCaptureServer) : type_(type),
+        screenCaptureServer_(screenCaptureServer) {}
     virtual ~AudioDataSource();
 
     int64_t GetFirstAudioTime(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
@@ -110,7 +110,7 @@ public:
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
     void HandleBufferTimeStamp(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    std::weak_ptr<ScreenCaptureServer> GetScreenCaptureServer();
+    ScreenCaptureServer* GetScreenCaptureServer();
     void Pause();
     void Resume();
 private:
@@ -141,7 +141,7 @@ private:
     bool mixModeAddAudioMicFrame_ = false;
     bool isInWaitMicSyncState_ = false;
     AVScreenCaptureMixMode type_;
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
+    ScreenCaptureServer* screenCaptureServer_;
     std::atomic<int64_t> pauseStartTime_{0};
     std::atomic<int64_t> pauseDuration_{0};
  
