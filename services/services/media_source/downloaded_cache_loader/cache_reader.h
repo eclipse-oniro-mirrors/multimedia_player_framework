@@ -48,6 +48,13 @@ private:
     void RespondHeader(int64_t uuid);
     void RespondHeaderInner(int64_t uuid);
     void HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength);
+    bool PrepareCacheRequest(int64_t uuid, int64_t requestedLength,
+        std::string &urlDir, std::shared_ptr<LoadingRequest> &request);
+    int64_t ReadCacheFile(const std::string &urlDir, int64_t requestedOffset, int64_t requestedLength);
+    void RespondCacheData(int64_t uuid, int64_t requestedOffset, int64_t requestedLength,
+        int64_t actualReadLength, const std::shared_ptr<AVSharedMemoryBase> &buffer,
+        const std::shared_ptr<LoadingRequest> &request);
+    void FinishLoadingLocked(int64_t uuid, const std::shared_ptr<LoadingRequest> &request, int32_t errorCode);
 
     std::string url_;
     std::string urlDir_;

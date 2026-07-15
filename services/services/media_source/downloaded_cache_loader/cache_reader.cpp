@@ -117,96 +117,94 @@ void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int6
 {
     std::string urlDir;
     std::shared_ptr<LoadingRequest> request;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (isClosed_.load()) {
-            return;
-        }
-        RespondHeaderInner(uuid);
-        if (isClosed_.load()) {
-            return;
-        }
-
-        if (requestedLength == 0) {
-            request_->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
-            return;
-        }
-
-        urlDir = urlDir_;
-        request = request_;
+    if (!PrepareCacheRequest(uuid, requestedLength, urlDir, request) || isClosed_.load()) {
+        return;
     }
-
+    int64_t actualReadLength = ReadCacheFile(urlDir, requestedOffset, requestedLength);
+    if (actualReadLength <= 0) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        FinishLoadingLocked(uuid, request, LOADING_ERROR_NOT_READY);
+        return;
+    }
     if (isClosed_.load()) {
         return;
     }
+    RespondCacheData(uuid, requestedOffset, requestedLength, actualReadLength, nullptr, request);
+}
 
+bool CacheReader::PrepareCacheRequest(int64_t uuid, int64_t requestedLength,
+    std::string &urlDir, std::shared_ptr<LoadingRequest> &request)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isClosed_.load()) {
+        return false;
+    }
+    RespondHeaderInner(uuid);
+    if (isClosed_.load()) {
+        return false;
+    }
+    if (requestedLength == 0) {
+        request_->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
+        return false;
+    }
+    urlDir = urlDir_;
+    request = request_;
+    return true;
+}
+
+int64_t CacheReader::ReadCacheFile(const std::string &urlDir, int64_t requestedOffset, int64_t requestedLength)
+{
     int64_t fileSize = fileCacheManager_->GetSize(urlDir);
     if (fileSize < 0) {
         MEDIA_LOG_E("Failed to get cache file size: %{public}s", urlDir.c_str());
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (!isClosed_.load() && request) {
-            request->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
-        }
-        return;
+        return -1;
     }
-
-    int64_t actualRequestedLength = (requestedLength <= 0) ? fileSize : requestedLength;
     if (requestedOffset >= fileSize) {
         MEDIA_LOG_E("Requested offset exceeds file size");
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (!isClosed_.load() && request) {
-            request->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
-        }
-        return;
+        return -1;
     }
-
+    int64_t actualRequestedLength = (requestedLength <= 0) ? fileSize : requestedLength;
     int64_t actualReadLength = std::min(actualRequestedLength, fileSize - requestedOffset);
-
     MEDIA_LOG_I("Read from file offset: " PUBLIC_LOG_D64 ", length: " PUBLIC_LOG_D64,
         requestedOffset, actualReadLength);
-
     auto buffer = std::make_shared<AVSharedMemoryBase>(
         static_cast<int32_t>(actualReadLength), AVSharedMemory::FLAGS_READ_WRITE, "userBuffer");
     buffer->Init();
-
     if (isClosed_.load()) {
-        return;
+        return -1;
     }
-
     if (fileCacheManager_->Read(urlDir, buffer->GetBase(), requestedOffset, actualReadLength) != 0) {
         MEDIA_LOG_E("Failed to read cache file: %{public}s", urlDir.c_str());
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (!isClosed_.load() && request) {
-            request->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
-        }
-        return;
+        return -1;
     }
+    return actualReadLength;
+}
 
-    if (isClosed_.load()) {
-        return;
-    }
-
+void CacheReader::RespondCacheData(int64_t uuid, int64_t requestedOffset, int64_t requestedLength,
+    int64_t actualReadLength, const std::shared_ptr<AVSharedMemoryBase> &buffer,
+    const std::shared_ptr<LoadingRequest> &request)
+{
     MEDIA_LOG_I("RespondData offset: " PUBLIC_LOG_D64 ", readLen: " PUBLIC_LOG_D64,
         requestedOffset, actualReadLength);
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (isClosed_.load() || !request) {
+        return;
+    }
+    auto ret = request->RespondData(uuid, requestedOffset, buffer);
+    if (ret < 0) {
+        MEDIA_LOG_E("RespondData failed");
+        request->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
+        return;
+    }
+    if (requestedLength == -1 || actualReadLength != requestedLength) {
+        request->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
+    }
+}
 
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (isClosed_.load() || !request) {
-            return;
-        }
-
-        auto ret = request->RespondData(uuid, requestedOffset, buffer);
-        if (ret < 0) {
-            MEDIA_LOG_E("RespondData failed");
-            request->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
-            return;
-        }
-
-        if (requestedLength == -1 || actualReadLength != requestedLength) {
-            MEDIA_LOG_I("RespondData whole file complete, offset: " PUBLIC_LOG_D64 ", request: " PUBLIC_LOG_D64
-                ", readLen: " PUBLIC_LOG_D64, requestedOffset, requestedLength, actualReadLength);
-            request->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
-        }
+void CacheReader::FinishLoadingLocked(int64_t uuid, const std::shared_ptr<LoadingRequest> &request, int32_t errorCode)
+{
+    if (!isClosed_.load() && request) {
+        request->FinishLoading(uuid, errorCode);
     }
 }
 
