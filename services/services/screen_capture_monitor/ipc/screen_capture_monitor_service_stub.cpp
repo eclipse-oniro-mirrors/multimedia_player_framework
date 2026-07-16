@@ -1,17 +1,17 @@
 /*
-* Copyright (C) 2024 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "screen_capture_monitor_service_stub.h"
 #include <unistd.h>
@@ -27,14 +27,14 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServiceStub"};
 constexpr int MAX_LIST_COUNT = 1000;
-}
+} // namespace
 
 namespace OHOS {
 namespace Media {
 sptr<ScreenCaptureMonitorServiceStub> ScreenCaptureMonitorServiceStub::Create()
 {
     sptr<ScreenCaptureMonitorServiceStub> screenCaptureMonitorStub =
-        new(std::nothrow) ScreenCaptureMonitorServiceStub();
+        new (std::nothrow) ScreenCaptureMonitorServiceStub();
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorStub != nullptr, nullptr,
         "failed to new ScreenCaptureMonitorServiceStub");
 
@@ -55,10 +55,7 @@ ScreenCaptureMonitorServiceStub::~ScreenCaptureMonitorServiceStub()
 
 int32_t ScreenCaptureMonitorServiceStub::Init()
 {
-    screenCaptureMonitorServer_ = ScreenCaptureMonitorServer::GetInstance();
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
-        "failed to create ScreenCaptureMonitorServer");
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_->HasSystemPermission(), MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(ScreenCaptureMonitorServer::GetInstance().HasSystemPermission(), MSERR_INVALID_OPERATION,
         "is not system app failed to init ScreenCaptureMonitorServer");
     screenCaptureMonitorStubFuncs_[SET_LISTENER_OBJ] = &ScreenCaptureMonitorServiceStub::SetListenerObject;
     screenCaptureMonitorStubFuncs_[IS_SCREEN_CAPTURE_WORKING] =
@@ -113,40 +110,31 @@ int32_t ScreenCaptureMonitorServiceStub::SetListenerObject(const sptr<IRemoteObj
         new ScreenCaptureMonitorListenerCallback(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY,
         "failed to new ScreenCaptureMonitorListenerCallback");
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_NO_MEMORY,
-        "screen capture monitor server is nullptr");
     screenCaptureMonitorCallback_ = callback;
-    (void)screenCaptureMonitorServer_->SetScreenCaptureMonitorCallback(callback);
+    (void)ScreenCaptureMonitorServer::GetInstance().SetScreenCaptureMonitorCallback(callback);
     return MSERR_OK;
 }
 
 int32_t ScreenCaptureMonitorServiceStub::CloseListenerObject()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, MSERR_OK,
-        "screenCaptureMonitorServer is nullptr");
-    (void)screenCaptureMonitorServer_->RemoveScreenCaptureMonitorCallback(screenCaptureMonitorCallback_);
+    (void)ScreenCaptureMonitorServer::GetInstance().RemoveScreenCaptureMonitorCallback(screenCaptureMonitorCallback_);
     screenCaptureMonitorCallback_ = nullptr;
     return MSERR_OK;
 }
 
 std::list<int32_t> ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr, {}, "screen capture monitor server is nullptr");
-    return screenCaptureMonitorServer_->IsScreenCaptureWorking();
+    return ScreenCaptureMonitorServer::GetInstance().IsScreenCaptureWorking();
 }
 
 bool ScreenCaptureMonitorServiceStub::IsSystemScreenRecorder(int32_t pid)
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr,
-        false, "screen capture monitor server is nullptr");
-    return screenCaptureMonitorServer_->IsSystemScreenRecorder(pid);
+    return ScreenCaptureMonitorServer::GetInstance().IsSystemScreenRecorder(pid);
 }
 
 bool ScreenCaptureMonitorServiceStub::IsSystemScreenRecorderWorking()
 {
-    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorServer_ != nullptr,
-        false, "screen capture monitor server is nullptr");
-    return screenCaptureMonitorServer_->IsSystemScreenRecorderWorking();
+    return ScreenCaptureMonitorServer::GetInstance().IsSystemScreenRecorderWorking();
 }
 
 int32_t ScreenCaptureMonitorServiceStub::SetListenerObject(MessageParcel &data, MessageParcel &reply)
@@ -172,7 +160,7 @@ int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking(MessageParcel &d
     reply.WriteInt32(size);
 
     MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid start.");
-    for (auto pid: pidList) {
+    for (auto pid : pidList) {
         MEDIA_LOGD("pid: %{public}d", pid);
         reply.WriteInt32(pid);
     }

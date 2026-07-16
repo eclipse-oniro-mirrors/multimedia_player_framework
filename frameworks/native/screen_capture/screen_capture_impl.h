@@ -15,6 +15,7 @@
 #ifndef SCREEN_CAPTURE_IMPL_H
 #define SCREEN_CAPTURE_IMPL_H
 
+#include <mutex>
 #include <media_dfx.h>
 #include "screen_capture.h"
 #include "nocopyable.h"
@@ -75,10 +76,12 @@ private:
     bool IsVideoCapInfoIgnored(const VideoCaptureInfo &videoCapInfo);
     int32_t InitOriginalStream(AVScreenCaptureConfig config);
     int32_t InitCaptureFile(AVScreenCaptureConfig config);
+    int32_t SetPrivacyAuthorityEnabledInner();
     std::shared_ptr<IScreenCaptureService> screenCaptureService_ = nullptr;
     DataType dataType_ = DataType::INVAILD;
     bool isPrivacyAuthorityEnabled_ = false;
     HiTraceId traceId_;
+    std::mutex mutex_;
 };
 } // namespace Media
 } // namespace OHOS

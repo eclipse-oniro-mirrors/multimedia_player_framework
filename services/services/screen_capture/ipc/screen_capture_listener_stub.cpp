@@ -146,7 +146,7 @@ void ScreenCaptureListenerStub::OnError(ScreenCaptureErrorType errorType, int32_
 {
     std::shared_ptr<ScreenCaptureCallBack> cb;
     {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         cb = callback_;
     }
     if (cb != nullptr) {
@@ -156,7 +156,7 @@ void ScreenCaptureListenerStub::OnError(ScreenCaptureErrorType errorType, int32_
 
 void ScreenCaptureListenerStub::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback)
 {
-    std::lock_guard<std::mutex> lock(callbackMutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     callback_ = callback;
 }
 
@@ -164,7 +164,7 @@ void ScreenCaptureListenerStub::OnAudioBufferAvailable(bool isReady, AudioCaptur
 {
     std::shared_ptr<ScreenCaptureCallBack> cb;
     {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         cb = callback_;
     }
     if (cb != nullptr) {
@@ -176,7 +176,7 @@ void ScreenCaptureListenerStub::OnVideoBufferAvailable(bool isReady)
 {
     std::shared_ptr<ScreenCaptureCallBack> cb;
     {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         cb = callback_;
     }
     if (cb != nullptr) {
@@ -188,7 +188,7 @@ void ScreenCaptureListenerStub::OnStateChange(AVScreenCaptureStateCode stateCode
 {
     std::shared_ptr<ScreenCaptureCallBack> cb;
     {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         cb = callback_;
     }
     if (cb != nullptr) {
@@ -200,7 +200,7 @@ void ScreenCaptureListenerStub::OnDisplaySelected(uint64_t displayId)
 {
     std::shared_ptr<ScreenCaptureCallBack> cb;
     {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         cb = callback_;
     }
     if (cb != nullptr) {
@@ -213,7 +213,7 @@ void ScreenCaptureListenerStub::OnCaptureContentChanged(AVScreenCaptureContentCh
 {
     std::shared_ptr<ScreenCaptureCallBack> cb;
     {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         cb = callback_;
     }
     if (cb != nullptr) {
@@ -225,7 +225,7 @@ void ScreenCaptureListenerStub::OnUserSelected(ScreenCaptureUserSelectionInfo se
 {
     std::shared_ptr<ScreenCaptureCallBack> cb;
     {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         cb = callback_;
     }
     if (cb != nullptr) {
@@ -237,7 +237,7 @@ void ScreenCaptureListenerStub::OnPrivacyProtect(AVScreenCapturePrivacyProtect p
 {
     std::shared_ptr<ScreenCaptureCallBack> cb;
     {
-        std::lock_guard<std::mutex> lock(callbackMutex_);
+        std::lock_guard<std::mutex> lock(mutex_);
         cb = callback_;
     }
     if (cb != nullptr) {
