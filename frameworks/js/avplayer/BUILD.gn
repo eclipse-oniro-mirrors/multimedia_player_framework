@@ -92,6 +92,7 @@ ohos_shared_library("media_avplayer") {
     "ipc:ipc_core",
     "libuv:uv",
     "napi:ace_napi",
+    "node:node_header_notice",
     "qos_manager:qos",
     "samgr:samgr_proxy",
     "media_foundation:media_foundation",

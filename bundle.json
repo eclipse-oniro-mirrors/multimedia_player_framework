@@ -137,6 +137,7 @@
           "histreamer_ext",
           "egl",
           "opengles",
+          "node",
           "taihe_ffi_gen"
         ],
         "third_party": [
