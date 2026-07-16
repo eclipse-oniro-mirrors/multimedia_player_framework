@@ -32,7 +32,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
   include_dirs = [
     "sa_media/ipc",
     "sa_media/server",
-    "sa_media/server_manager",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server_manager",
     "common",
     "player/audio_background_adapter",
     "player/ipc",
@@ -117,11 +117,14 @@ ohos_unittest("avmetadatahelper_unit_test") {
   }
 
   sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_proxy.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc/avmetadatahelper_service_stub.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/server/avmetadatahelper_server.cpp",
     "./../../../../player_framework/services/services/factory/engine_factory_repo.cpp",
     "av_thumbnail_generator_unit_test.cpp",
     "avmetadata_mock.cpp",
     "avmetadata_unit_test.cpp",
+    "avmetadatahelper_ipc_unit_test.cpp",
     "avmetadatahelper_impl_unit_test.cpp",
     "avmetadatahelper_server_unit_test.cpp",
   ]
@@ -136,6 +139,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/avmetadatahelper:media_engine_histreamer_avmetadatahelper",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
@@ -143,6 +147,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
   external_deps = [
     "ability_runtime:ability_connect_callback_stub",
     "access_token:libaccesstoken_sdk",
+    "access_token:libtokensetproc_shared",
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "av_codec:av_codec_media_engine_filters",
@@ -157,6 +162,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "graphic_2d:librender_service_client",
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
+    "googletest:gmock",
     "hdf_core:libhdi",
     "hicollie:libhicollie",
     "hilog:libhilog",
@@ -202,7 +208,6 @@ ohos_unittest("avmetadatahelper_unit_test") {
       "ability_runtime:runtime",
       "access_token:libnativetoken_shared",
       "access_token:libprivacy_sdk",
-      "access_token:libtokensetproc_shared",
       "audio_framework:audio_capturer",
       "audio_framework:audio_client",
       "distributed_notification_service:ans_innerkits",
