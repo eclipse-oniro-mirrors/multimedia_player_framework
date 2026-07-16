@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "common_napi.h"
 #include "media_dfx.h"
+#include "scope_guard.h"
 
 namespace OHOS {
 namespace Media {
@@ -32,7 +33,10 @@ namespace {
     void RejectPromise(napi_env env, napi_deferred deferred, int32_t code, const std::string &msg)
     {
         napi_value error = nullptr;
-        CommonNapi::CreateError(env, code, msg, error);
+        napi_status status = CommonNapi::CreateError(env, code, msg, error);
+        if (status != napi_ok || error == nullptr) {
+            napi_get_undefined(env, &error);
+        }
         napi_reject_deferred(env, deferred, error);
     }
 }
@@ -49,15 +53,35 @@ AVAdsControllerNapi::~AVAdsControllerNapi()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " dtor", FAKE_POINTER(this));
 }
 
-void AVAdsControllerNapi::SetPlayer(AVPlayerNapi *player)
+void AVAdsControllerNapi::SetPlayer(napi_env env, napi_value playerObj)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    AVPlayerNapi *player = nullptr;
+    napi_status status = napi_unwrap(env, playerObj, reinterpret_cast<void **>(&player));
+    if (status != napi_ok || player == nullptr) {
+        MEDIA_LOGE("Failed to unwrap player object");
+        return;
+    }
     player_ = player;
+    status = napi_create_reference(env, playerObj, 1, &playerRef_);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to create player reference");
+        player_ = nullptr;
+    }
+}
+
+void AVAdsControllerNapi::ClearPlayer(napi_env env)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (playerRef_ != nullptr) {
+        napi_delete_reference(env, playerRef_);
+        playerRef_ = nullptr;
+    }
+    player_ = nullptr;
 }
 
 AVPlayerNapi *AVAdsControllerNapi::GetPlayer() const
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     return player_;
 }
 
@@ -97,7 +121,7 @@ napi_value AVAdsControllerNapi::Init(napi_env env, napi_value exports)
     return exports;
 }
 
-napi_value AVAdsControllerNapi::CreateInstance(napi_env env, AVPlayerNapi *player)
+napi_value AVAdsControllerNapi::CreateInstance(napi_env env, napi_value playerObj)
 {
     napi_value constructor = nullptr;
     napi_status status = napi_get_reference_value(env, constructor_, &constructor);
@@ -111,7 +135,7 @@ napi_value AVAdsControllerNapi::CreateInstance(napi_env env, AVPlayerNapi *playe
     status = napi_unwrap(env, instance, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, nullptr, "Failed to unwrap controller");
 
-    controller->SetPlayer(player);
+    controller->SetPlayer(env, playerObj);
     return instance;
 }
 
@@ -134,8 +158,8 @@ napi_value AVAdsControllerNapi::JsCreateAVAdsController(napi_env env, napi_callb
     }
 
     napi_valuetype type;
-    napi_typeof(env, args[0], &type);
-    if (type != napi_object) {
+    status = napi_typeof(env, args[0], &type);
+    if (status != napi_ok || type != napi_object) {
         napi_throw_error(env, nullptr, "First argument must be AVPlayer");
         return result;
     }
@@ -152,7 +176,7 @@ napi_value AVAdsControllerNapi::JsCreateAVAdsController(napi_env env, napi_callb
         return result;
     }
 
-    return CreateInstance(env, jsPlayer);
+    return CreateInstance(env, args[0]);
 }
 
 napi_value AVAdsControllerNapi::Constructor(napi_env env, napi_callback_info info)
@@ -180,10 +204,10 @@ napi_value AVAdsControllerNapi::Constructor(napi_env env, napi_callback_info inf
 
 void AVAdsControllerNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
 {
-    (void)env;
     (void)finalize;
     auto *controller = reinterpret_cast<AVAdsControllerNapi *>(nativeObject);
     if (controller != nullptr) {
+        controller->ClearPlayer(env);
         delete controller;
     }
 }
@@ -256,6 +280,27 @@ void AVAdsControllerNapi::CompleteAdsTask(napi_env env, napi_status status, void
     delete ctx;
 }
 
+bool AVAdsControllerNapi::QueueAdsAsyncWork(napi_env env, AdsAsyncContext *ctx, const std::string &name)
+{
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, name.c_str(), NAPI_AUTO_LENGTH, &resource);
+    napi_status status = napi_create_async_work(env, nullptr, resource, ExecuteAdsTask, CompleteAdsTask,
+        static_cast<void *>(ctx), &ctx->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to create async work");
+        RejectPromise(env, ctx->deferred, MSERR_EXT_UNKNOWN, "Failed to create async work");
+        return false;
+    }
+    status = napi_queue_async_work_with_qos(env, ctx->work, napi_qos_user_initiated);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to queue async work");
+        napi_delete_async_work(env, ctx->work);
+        RejectPromise(env, ctx->deferred, MSERR_EXT_UNKNOWN, "Failed to queue async work");
+        return false;
+    }
+    return true;
+}
+
 napi_value AVAdsControllerNapi::JsAddAdsMediaSource(napi_env env, napi_callback_info info)
 {
     MEDIA_LOGI("JsAddAdsMediaSource enter");
@@ -278,37 +323,37 @@ napi_value AVAdsControllerNapi::JsAddAdsMediaSource(napi_env env, napi_callback_
 
     auto ctx = new (std::nothrow) AdsAsyncContext(env);
     CHECK_AND_RETURN_RET_LOG(ctx != nullptr, result, "Failed to allocate AdsAsyncContext");
+    ON_SCOPE_EXIT(0) { delete ctx; };
     ctx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    if (ctx->deferred == nullptr) {
+        MEDIA_LOGE("Failed to create promise");
+        return result;
+    }
     ctx->player = player->GetPlayerInstance();
     ctx->opType = AdsAsyncContext::OpType::ADD;
 
     napi_valuetype type;
-    napi_typeof(env, argv[1], &type);
-    if (argc < MIN_REQUIRED_ARGS || ctx->player == nullptr || type != napi_number) {
+    status = napi_typeof(env, argv[1], &type);
+    if (argc < MIN_REQUIRED_ARGS || ctx->player == nullptr || status != napi_ok || type != napi_number) {
         RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Invalid arguments");
-        delete ctx;
         return result;
     }
-
     napi_get_value_int64(env, argv[1], &ctx->startMs);
-    std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceNapi::GetMediaSource(env, argv[0]);
+    auto srcTmp = MediaSourceNapi::GetMediaSource(env, argv[0]);
     if (srcTmp == nullptr) {
         RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Failed to get MediaSource");
-        delete ctx;
         return result;
     }
     ctx->mediaSource = AVPlayerNapi::GetAVMediaSource(env, argv[0], srcTmp);
     if (ctx->mediaSource == nullptr) {
         RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Failed to convert MediaSource");
-        delete ctx;
         return result;
     }
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JsAddAdsMediaSource", NAPI_AUTO_LENGTH, &resource);
-    napi_create_async_work(env, nullptr, resource, ExecuteAdsTask, CompleteAdsTask,
-        static_cast<void *>(ctx), &ctx->work);
-    napi_queue_async_work_with_qos(env, ctx->work, napi_qos_user_initiated);
+    if (!QueueAdsAsyncWork(env, ctx, "JsAddAdsMediaSource")) {
+        return result;
+    }
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return result;
 }
 
@@ -334,31 +379,33 @@ napi_value AVAdsControllerNapi::JsRemoveAdsMediaSource(napi_env env, napi_callba
 
     auto ctx = new (std::nothrow) AdsAsyncContext(env);
     CHECK_AND_RETURN_RET_LOG(ctx != nullptr, result, "Failed to allocate AdsAsyncContext");
+    ON_SCOPE_EXIT(0) { delete ctx; };
     ctx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    if (ctx->deferred == nullptr) {
+        MEDIA_LOGE("Failed to create promise");
+        return result;
+    }
     ctx->player = player->GetPlayerInstance();
     ctx->opType = AdsAsyncContext::OpType::REMOVE;
 
     if (argc < 1 || ctx->player == nullptr) {
         RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Invalid arguments");
-        delete ctx;
         return result;
     }
 
     napi_valuetype type;
-    napi_typeof(env, argv[0], &type);
-    if (type != napi_string) {
+    status = napi_typeof(env, argv[0], &type);
+    if (status != napi_ok || type != napi_string) {
         RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Argument must be string");
-        delete ctx;
         return result;
     }
 
     ctx->adId = CommonNapi::GetStringArgument(env, argv[0]);
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JsRemoveAdsMediaSource", NAPI_AUTO_LENGTH, &resource);
-    napi_create_async_work(env, nullptr, resource, ExecuteAdsTask, CompleteAdsTask,
-        static_cast<void *>(ctx), &ctx->work);
-    napi_queue_async_work_with_qos(env, ctx->work, napi_qos_user_initiated);
+    if (!QueueAdsAsyncWork(env, ctx, "JsRemoveAdsMediaSource")) {
+        return result;
+    }
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return result;
 }
 
@@ -382,21 +429,24 @@ napi_value AVAdsControllerNapi::JsSkipCurrentAdsMediaSource(napi_env env, napi_c
 
     auto ctx = new (std::nothrow) AdsAsyncContext(env);
     CHECK_AND_RETURN_RET_LOG(ctx != nullptr, result, "Failed to allocate AdsAsyncContext");
+    ON_SCOPE_EXIT(0) { delete ctx; };
     ctx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    if (ctx->deferred == nullptr) {
+        MEDIA_LOGE("Failed to create promise");
+        return result;
+    }
     ctx->player = player->GetPlayerInstance();
     ctx->opType = AdsAsyncContext::OpType::SKIP;
 
     if (ctx->player == nullptr) {
         RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Player instance is null");
-        delete ctx;
         return result;
     }
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JsSkipCurrentAdsMediaSource", NAPI_AUTO_LENGTH, &resource);
-    napi_create_async_work(env, nullptr, resource, ExecuteAdsTask, CompleteAdsTask,
-        static_cast<void *>(ctx), &ctx->work);
-    napi_queue_async_work_with_qos(env, ctx->work, napi_qos_user_initiated);
+    if (!QueueAdsAsyncWork(env, ctx, "JsSkipCurrentAdsMediaSource")) {
+        return result;
+    }
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return result;
 }
 
@@ -420,21 +470,24 @@ napi_value AVAdsControllerNapi::JsDisableAllAdsMediaSource(napi_env env, napi_ca
 
     auto ctx = new (std::nothrow) AdsAsyncContext(env);
     CHECK_AND_RETURN_RET_LOG(ctx != nullptr, result, "Failed to allocate AdsAsyncContext");
+    ON_SCOPE_EXIT(0) { delete ctx; };
     ctx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+    if (ctx->deferred == nullptr) {
+        MEDIA_LOGE("Failed to create promise");
+        return result;
+    }
     ctx->player = player->GetPlayerInstance();
     ctx->opType = AdsAsyncContext::OpType::DISABLE_ALL;
 
     if (ctx->player == nullptr) {
         RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Player instance is null");
-        delete ctx;
         return result;
     }
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, "JsDisableAllAdsMediaSource", NAPI_AUTO_LENGTH, &resource);
-    napi_create_async_work(env, nullptr, resource, ExecuteAdsTask, CompleteAdsTask,
-        static_cast<void *>(ctx), &ctx->work);
-    napi_queue_async_work_with_qos(env, ctx->work, napi_qos_user_initiated);
+    if (!QueueAdsAsyncWork(env, ctx, "JsDisableAllAdsMediaSource")) {
+        return result;
+    }
+    CANCEL_SCOPE_EXIT_GUARD(0);
     return result;
 }
 
@@ -462,10 +515,7 @@ napi_value AVAdsControllerNapi::JsRelease(napi_env env, napi_callback_info info)
         player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
     }
 
-    {
-        std::lock_guard<std::mutex> lock(controller->mutex_);
-        controller->player_ = nullptr;
-    }
+    controller->ClearPlayer(env);
 
     return result;
 }
@@ -493,8 +543,8 @@ napi_value AVAdsControllerNapi::JsOnAdsEventListenerLoadingError(napi_env env, n
     }
 
     napi_valuetype type;
-    napi_typeof(env, argv[0], &type);
-    CHECK_AND_RETURN_RET_LOG(type == napi_function, result, "Argument must be function");
+    status = napi_typeof(env, argv[0], &type);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && type == napi_function, result, "Argument must be function");
 
     napi_ref ref = nullptr;
     status = napi_create_reference(env, argv[0], 1, &ref);
@@ -555,8 +605,8 @@ napi_value AVAdsControllerNapi::JsOnAdsListenerAdsStarted(napi_env env, napi_cal
     }
 
     napi_valuetype type;
-    napi_typeof(env, argv[0], &type);
-    CHECK_AND_RETURN_RET_LOG(type == napi_function, result, "Argument must be function");
+    status = napi_typeof(env, argv[0], &type);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && type == napi_function, result, "Argument must be function");
 
     napi_ref ref = nullptr;
     status = napi_create_reference(env, argv[0], 1, &ref);
@@ -617,8 +667,8 @@ napi_value AVAdsControllerNapi::JsOnAdsListenerAdsSkipped(napi_env env, napi_cal
     }
 
     napi_valuetype type;
-    napi_typeof(env, argv[0], &type);
-    CHECK_AND_RETURN_RET_LOG(type == napi_function, result, "Argument must be function");
+    status = napi_typeof(env, argv[0], &type);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && type == napi_function, result, "Argument must be function");
 
     napi_ref ref = nullptr;
     status = napi_create_reference(env, argv[0], 1, &ref);
@@ -679,8 +729,8 @@ napi_value AVAdsControllerNapi::JsOnAdsListenerAdsCompleted(napi_env env, napi_c
     }
 
     napi_valuetype type;
-    napi_typeof(env, argv[0], &type);
-    CHECK_AND_RETURN_RET_LOG(type == napi_function, result, "Argument must be function");
+    status = napi_typeof(env, argv[0], &type);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && type == napi_function, result, "Argument must be function");
 
     napi_ref ref = nullptr;
     status = napi_create_reference(env, argv[0], 1, &ref);
