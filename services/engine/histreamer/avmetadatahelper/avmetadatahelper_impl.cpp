@@ -290,7 +290,8 @@ std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
     Plugins::FileType fileType =  Plugins::FileType::UNKNOW;
     if (mediaDemuxer_ != nullptr) {
         const std::shared_ptr<Meta> globalInfo = mediaDemuxer_->GetGlobalMetaInfo();
-        globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+        CHECK_AND_RETURN_RET_LOG(globalInfo != nullptr, nullptr, "globalInfo is nullptr");
+        (void)globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
     }
     CHECK_AND_RETURN_RET_NOLOG(avBuffer != nullptr, nullptr);
     bool isEosBuffer = avBuffer->flag_ & (uint32_t)(AVBufferFlag::EOS);
