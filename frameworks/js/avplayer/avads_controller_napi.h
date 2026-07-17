@@ -53,12 +53,13 @@ struct AdsAsyncContext : public MediaAsyncContext {
 class AVAdsControllerNapi {
 public:
     __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
-    static napi_value CreateInstance(napi_env env, AVPlayerNapi *player);
+    static napi_value CreateInstance(napi_env env, napi_value playerObj);
 
     AVAdsControllerNapi();
     ~AVAdsControllerNapi();
 
-    void SetPlayer(AVPlayerNapi *player);
+    void SetPlayer(napi_env env, napi_value playerObj);
+    void ClearPlayer(napi_env env);
     AVPlayerNapi *GetPlayer() const;
 
 private:
@@ -82,8 +83,10 @@ private:
 
     static void ExecuteAdsTask(napi_env env, void *data);
     static void CompleteAdsTask(napi_env env, napi_status status, void *data);
+    static bool QueueAdsAsyncWork(napi_env env, AdsAsyncContext *ctx, const std::string &name);
 
     static thread_local napi_ref constructor_;
+    napi_ref playerRef_ = nullptr;
     AVPlayerNapi *player_ = nullptr;
     mutable std::mutex mutex_;
 };

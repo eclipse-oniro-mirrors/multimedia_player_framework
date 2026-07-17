@@ -119,6 +119,10 @@ void AVAdsControllerImpl::SkipCurrentAdsMediaSource()
         set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
         return;
     }
+    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        player->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to skip");
+        return;
+    }
 
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
     context->asyncTask = SkipCurrentAdsMediaSourceTask();
@@ -161,6 +165,7 @@ void AVAdsControllerImpl::OnAdsEventListenerLoadingError(
     }
 
     ani_env *env = taihe::get_env();
+    CHECK_AND_RETURN_LOG(env != nullptr, "Failed to get ani_env");
     std::shared_ptr<taihe::callback<void(::taihe::string_view, uintptr_t)>> taiheCallback =
         std::make_shared<taihe::callback<void(::taihe::string_view, uintptr_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
@@ -200,6 +205,7 @@ void AVAdsControllerImpl::OnAdsListenerAdsStarted(callback_view<void(::taihe::st
     }
 
     ani_env *env = taihe::get_env();
+    CHECK_AND_RETURN_LOG(env != nullptr, "Failed to get ani_env");
     std::shared_ptr<taihe::callback<void(::taihe::string_view, int64_t)>> taiheCallback =
         std::make_shared<taihe::callback<void(::taihe::string_view, int64_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
@@ -239,6 +245,7 @@ void AVAdsControllerImpl::OnAdsListenerAdsSkipped(callback_view<void(::taihe::st
     }
 
     ani_env *env = taihe::get_env();
+    CHECK_AND_RETURN_LOG(env != nullptr, "Failed to get ani_env");
     std::shared_ptr<taihe::callback<void(::taihe::string_view)>> taiheCallback =
         std::make_shared<taihe::callback<void(::taihe::string_view)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
@@ -278,6 +285,7 @@ void AVAdsControllerImpl::OnAdsListenerAdsCompleted(callback_view<void(::taihe::
     }
 
     ani_env *env = taihe::get_env();
+    CHECK_AND_RETURN_LOG(env != nullptr, "Failed to get ani_env");
     std::shared_ptr<taihe::callback<void(::taihe::string_view)>> taiheCallback =
         std::make_shared<taihe::callback<void(::taihe::string_view)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
@@ -305,22 +313,23 @@ void AVAdsControllerImpl::Release()
     MediaTrace trace("AVAdsControllerImpl::Release");
     MEDIA_LOGI("AVAdsController Release In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr) {
-        return;
+    std::shared_ptr<OHOS::Media::Player> playerInstance;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (player_ == nullptr) {
+            return;
+        }
+        playerInstance = player_->GetPlayerInstance();
+        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
+        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
+        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
+        player_ = nullptr;
     }
 
-    std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
     if (playerInstance != nullptr) {
         playerInstance->DisableAllAdsMediaSource();
     }
-
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
-
-    SetPlayer(nullptr);
     MEDIA_LOGI("AVAdsController Release Out");
 }
 
@@ -330,6 +339,9 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::AddAdsMediaSourceT
     AVPlayerImpl *player = GetPlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
+    CHECK_AND_RETURN_RET_LOG(playerInstance != nullptr, nullptr, "player instance is null");
+    auto taskQueue = player->GetTaskQueue();
+    CHECK_AND_RETURN_RET_LOG(taskQueue != nullptr, nullptr, "task queue is null");
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, mediaSource, startMs, &outId]() {
         int32_t ret = playerInstance->AddAdsMediaSource(mediaSource, startMs, outId);
         if (ret != MSERR_OK) {
@@ -337,7 +349,7 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::AddAdsMediaSourceT
         }
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
-    (void)player->GetTaskQueue()->EnqueueTask(task);
+    (void)taskQueue->EnqueueTask(task);
     return task;
 }
 
@@ -346,6 +358,9 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::RemoveAdsMediaSour
     AVPlayerImpl *player = GetPlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
+    CHECK_AND_RETURN_RET_LOG(playerInstance != nullptr, nullptr, "player instance is null");
+    auto taskQueue = player->GetTaskQueue();
+    CHECK_AND_RETURN_RET_LOG(taskQueue != nullptr, nullptr, "task queue is null");
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, id]() {
         int32_t ret = playerInstance->RemoveAdsMediaSource(id);
         if (ret != MSERR_OK) {
@@ -353,7 +368,7 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::RemoveAdsMediaSour
         }
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
-    (void)player->GetTaskQueue()->EnqueueTask(task);
+    (void)taskQueue->EnqueueTask(task);
     return task;
 }
 
@@ -362,11 +377,14 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::SkipCurrentAdsMedi
     AVPlayerImpl *player = GetPlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
+    CHECK_AND_RETURN_RET_LOG(playerInstance != nullptr, nullptr, "player instance is null");
+    auto taskQueue = player->GetTaskQueue();
+    CHECK_AND_RETURN_RET_LOG(taskQueue != nullptr, nullptr, "task queue is null");
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance]() {
         playerInstance->SkipCurrentAdsMediaSource();
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
-    (void)player->GetTaskQueue()->EnqueueTask(task);
+    (void)taskQueue->EnqueueTask(task);
     return task;
 }
 
@@ -375,11 +393,14 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::DisableAllAdsMedia
     AVPlayerImpl *player = GetPlayer();
     CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
     std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
+    CHECK_AND_RETURN_RET_LOG(playerInstance != nullptr, nullptr, "player instance is null");
+    auto taskQueue = player->GetTaskQueue();
+    CHECK_AND_RETURN_RET_LOG(taskQueue != nullptr, nullptr, "task queue is null");
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance]() {
         playerInstance->DisableAllAdsMediaSource();
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
-    (void)player->GetTaskQueue()->EnqueueTask(task);
+    (void)taskQueue->EnqueueTask(task);
     return task;
 }
 
@@ -387,7 +408,10 @@ optional<AVAdsController> CreateAVAdsControllerSync(::ohos::multimedia::media::w
 {
     MediaTrace trace("CreateAVAdsControllerSync");
     MEDIA_LOGI("CreateAVAdsControllerSync In");
-
+    if (avplayer.is_error()) {
+        MEDIA_LOGE("AVPlayer weak reference is invalid");
+        return optional<AVAdsController>(std::nullopt);
+    }
     AVPlayerImpl *playerImpl = reinterpret_cast<AVPlayerImpl *>(avplayer->GetImplPtr());
     if (playerImpl == nullptr) {
         MEDIA_LOGE("AVPlayer is null");
