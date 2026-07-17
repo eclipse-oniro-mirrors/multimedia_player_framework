@@ -38,6 +38,42 @@ namespace TestCommon {
 constexpr const char* TEST_BASE_DIR = "/data/test/downloaded_cache_loader_test";
 constexpr const char* TEST_MAPPING_FILE = "cache_mapping.txt";
 
+inline void WriteDefaultPlaybackParamData(std::ofstream& file)
+{
+    std::vector<uint8_t> strategyData;
+    auto writeU32 = [&strategyData](uint32_t v) {
+        const uint8_t* b = reinterpret_cast<const uint8_t*>(&v);
+        strategyData.insert(strategyData.end(), b, b + 4);
+    };
+    auto writeI32 = [&strategyData](int32_t v) {
+        const uint8_t* b = reinterpret_cast<const uint8_t*>(&v);
+        strategyData.insert(strategyData.end(), b, b + 4);
+    };
+    auto writeU8 = [&strategyData](uint8_t v) {
+        strategyData.push_back(v);
+    };
+    auto writeD64 = [&strategyData](double v) {
+        const uint8_t* b = reinterpret_cast<const uint8_t*>(&v);
+        strategyData.insert(strategyData.end(), b, b + 8);
+    };
+
+    writeU32(0); writeU32(0); writeU32(0); writeU32(0);
+    writeU8(0);
+    writeU32(0); writeU32(0);
+    writeD64(0.0); writeD64(0.0);
+    writeI32(0); writeI32(0); writeI32(0); writeI32(0);
+    writeI32(0); writeI32(0); writeI32(0); writeI32(0);
+    writeU32(0);
+    writeI32(0); writeI32(0); writeI32(0);
+    writeU32(0); writeU32(0); writeU32(0);
+
+    uint32_t dataLength = static_cast<uint32_t>(strategyData.size());
+    file.write(reinterpret_cast<const char*>(&dataLength), sizeof(dataLength));
+    if (dataLength > 0) {
+        file.write(reinterpret_cast<const char*>(strategyData.data()), dataLength);
+    }
+}
+
 inline std::string GetTestCacheDir(const std::string& subdir)
 {
     return std::string(TEST_BASE_DIR) + "_" + subdir + "_" + std::to_string(getpid());
@@ -79,6 +115,8 @@ void CreateTestMappingFile(const std::string& cacheDir,
     file.write(reinterpret_cast<const char*>(&header.entryCount), 4);
     file.write(reinterpret_cast<const char*>(header.reserved), 8);
     file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
+
+    WriteDefaultPlaybackParamData(file);
 
     for (const auto& entry : entries) {
         auto hash = SHA256Hasher::GenerateHash(entry.first);

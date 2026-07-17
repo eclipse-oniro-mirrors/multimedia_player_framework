@@ -21,6 +21,7 @@
 #include <memory>
 #include <atomic>
 #include <map>
+#include <thread>
 #include <securec.h>
 #include "../common/downloaded_cache_test_common.h"
 #include "downloaded_cache_loader.h"
@@ -163,6 +164,25 @@ HWTEST_F(IntegrationTest, Open_EmptyUrl_001, TestSize.Level0)
     std::shared_ptr<LoadingRequest> requestPtr = request;
     int64_t uuid = cacheLoader_->Open(requestPtr);
     EXPECT_LT(uuid, 0);
+}
+
+HWTEST_F(IntegrationTest, CacheReader_CloseBeforeRead_001, TestSize.Level0)
+{
+    auto request = std::make_shared<MockLoadingRequest>(testUrl_);
+    std::shared_ptr<LoadingRequest> requestPtr = request;
+
+    auto readTask = std::make_shared<Task>("OS_Custom_Read_Test", "", TaskType::SINGLETON, TaskPriority::HIGH, false);
+    auto cacheReader = std::make_shared<CacheReader>(1, requestPtr, readTask, cacheManager_);
+
+    int64_t openResult = cacheReader->Open(requestPtr);
+    EXPECT_GE(openResult, 0);
+
+    cacheReader->Close(openResult);
+    cacheReader->Read(openResult, 0, 100);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    EXPECT_FALSE(request->IsRespondHeaderCalled());
+    EXPECT_FALSE(request->IsRespondDataCalled());
 }
 
 } // namespace DownloadedCache

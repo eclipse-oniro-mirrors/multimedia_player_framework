@@ -18,6 +18,7 @@
 #include <cstring>
 #include <securec.h>
 #include "cache_mapping_format.h"
+#include "path_validator.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -400,6 +401,94 @@ HWTEST_F(CacheMappingTest, MaxEntryCount_001, TestSize.Level0)
 
     uint32_t checksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
     EXPECT_NE(checksum, 0);
+}
+
+HWTEST_F(CacheMappingTest, ReadEntry_PathLengthTooLarge_001, TestSize.Level0)
+{
+    std::string testFile = "/data/test/test_pathlength_overflow.bin";
+
+    CacheMappingHeader header;
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
+    header.version = CACHE_MAPPING_VERSION;
+    header.entryCount = 1;
+    (void)memset_s(header.reserved, 8, 0, 8);
+    header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
+
+    std::ofstream writeFile(testFile, std::ios::binary | std::ios::trunc);
+    writeFile.write(reinterpret_cast<const char*>(header.magic), 4);
+    writeFile.write(reinterpret_cast<const char*>(&header.version), 4);
+    writeFile.write(reinterpret_cast<const char*>(&header.entryCount), 4);
+    writeFile.write(reinterpret_cast<const char*>(header.reserved), 8);
+    writeFile.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
+
+    CacheMappingEntryHeader entryHeader;
+    (void)memset_s(&entryHeader, sizeof(entryHeader), 0, sizeof(entryHeader));
+    entryHeader.pathLength = static_cast<uint32_t>(PathValidator::MAX_PATH_LENGTH + 1);
+    entryHeader.fileSize = 1024;
+
+    writeFile.write(reinterpret_cast<const char*>(entryHeader.urlHash), SHA256_LEN);
+    writeFile.write(reinterpret_cast<const char*>(&entryHeader.pathLength), 4);
+    writeFile.write(reinterpret_cast<const char*>(&entryHeader.fileSize), 8);
+    writeFile.write(reinterpret_cast<const char*>(entryHeader.reserved), 8);
+    writeFile.close();
+
+    std::ifstream readFile(testFile, std::ios::binary);
+    CacheMappingHeader readHeader;
+    (void)CacheMappingDeserializer::ReadHeader(readFile, readHeader);
+
+    CacheMappingEntry entry;
+    bool result = CacheMappingDeserializer::ReadEntry(readFile, entry, "/data/test");
+    EXPECT_FALSE(result);
+    readFile.close();
+}
+
+HWTEST_F(CacheMappingTest, ReadPlaybackParamData_LengthTooLarge_001, TestSize.Level0)
+{
+    std::string testFile = "/data/test/test_playback_param_overflow.bin";
+
+    uint32_t overflowLength = 10 * 1024 * 1024 + 1;
+
+    std::ofstream writeFile(testFile, std::ios::binary | std::ios::trunc);
+    writeFile.write(reinterpret_cast<const char*>(&overflowLength), sizeof(overflowLength));
+    writeFile.close();
+
+    std::ifstream readFile(testFile, std::ios::binary);
+    std::vector<uint8_t> playbackParamData;
+    bool result = CacheMappingDeserializer::ReadPlaybackParamData(readFile, playbackParamData);
+    EXPECT_FALSE(result);
+    readFile.close();
+}
+
+HWTEST_F(CacheMappingTest, ReadPlaybackParamData_ZeroLength_001, TestSize.Level0)
+{
+    std::string testFile = "/data/test/test_playback_param_zero.bin";
+
+    uint32_t zeroLength = 0;
+
+    std::ofstream writeFile(testFile, std::ios::binary | std::ios::trunc);
+    writeFile.write(reinterpret_cast<const char*>(&zeroLength), sizeof(zeroLength));
+    writeFile.close();
+
+    std::ifstream readFile(testFile, std::ios::binary);
+    std::vector<uint8_t> playbackParamData;
+    bool result = CacheMappingDeserializer::ReadPlaybackParamData(readFile, playbackParamData);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(playbackParamData.size(), 0);
+    readFile.close();
+}
+
+HWTEST_F(CacheMappingTest, WriteEntry_PathTraversal_001, TestSize.Level0)
+{
+    std::string testFile = "/data/test/test_write_entry_traversal.bin";
+    std::ofstream file(testFile, std::ios::binary | std::ios::trunc);
+
+    CacheMappingEntry entry;
+    (void)memset_s(&entry.header, sizeof(entry.header), 0, sizeof(entry.header));
+    entry.filePath = "../../etc/passwd";
+
+    bool result = CacheMappingSerializer::WriteEntry(file, entry, "/data/test/cache");
+    EXPECT_FALSE(result);
+    file.close();
 }
 
 } // namespace DownloadedCache
