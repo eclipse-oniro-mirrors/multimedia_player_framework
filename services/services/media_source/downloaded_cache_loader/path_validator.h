@@ -25,9 +25,9 @@ namespace DownloadedCache {
 class PathValidator {
 public:
     static bool Validate(const std::string& rootPath, const std::string& relativePath);
+    static constexpr size_t MAX_PATH_LENGTH = 1024;
 
 private:
-    static constexpr size_t MAX_PATH_LENGTH = 1024;
     static bool ContainsIllegalCharacters(const std::string& path);
     static bool IsPathEscaped(const std::string& resolvedPath, const std::string& rootPath);
     static std::string NormalizePath(const std::string& path);
