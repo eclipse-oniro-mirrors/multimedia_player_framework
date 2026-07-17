@@ -55,10 +55,14 @@ ScreenCaptureMonitorClient::~ScreenCaptureMonitorClient()
 
 void ScreenCaptureMonitorClient::MediaServerDied()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    screenCaptureMonitorProxy_ = nullptr;
-    listenerStub_ = nullptr;
-    for (const auto &it : screenCaptureMonitorClientCallbacks_) {
+    std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> callbacks;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        screenCaptureMonitorProxy_ = nullptr;
+        listenerStub_ = nullptr;
+        callbacks = screenCaptureMonitorClientCallbacks_;
+    }
+    for (const auto &it : callbacks) {
         if (it != nullptr) {
             MEDIA_LOGE("ScreenCaptureMonitorClient::MediaServerDied start");
             it->OnScreenCaptureDied();
@@ -69,6 +73,11 @@ void ScreenCaptureMonitorClient::MediaServerDied()
 int32_t ScreenCaptureMonitorClient::CreateListenerObject()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    return CreateListenerObjectLocked();
+}
+
+int32_t ScreenCaptureMonitorClient::CreateListenerObjectLocked()
+{
     listenerStub_ = new(std::nothrow) ScreenCaptureMonitorListenerStub();
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY,
         "failed to new ScreenCaptureMonitorListenerStub object");
@@ -101,7 +110,7 @@ void ScreenCaptureMonitorClient::RegisterScreenCaptureMonitorListener(
 {
     std::lock_guard<std::mutex> lock(mutex_);
     if (!listenerStubIPCExist_) {
-        CreateListenerObject();
+        CreateListenerObjectLocked();
     }
     CHECK_AND_RETURN_LOG(listener != nullptr, "input param listener is nullptr.");
     CHECK_AND_RETURN_LOG(listenerStub_ != nullptr, "listenerStub_ is nullptr.");
