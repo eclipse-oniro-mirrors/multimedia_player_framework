@@ -21,6 +21,29 @@
 #include "isoundpool.h"
 #include "media_ani_common.h"
 
+#define TAIHE_FUNC_SYNC(RetType, FuncName, Params) \
+RetType FuncName##Sync Params
+#define TAIHE_FUNC_ASYNC(RetType, FuncName, Params) \
+RetType FuncName##Async Params
+#define TAIHE_FUNC_PROMISE(RetType, FuncName, Params) \
+RetType FuncName##Promise Params
+#define TAIHE_FUNC_PROTOTYPE(RetType, FuncName, Params) TAIHE_FUNC_SYNC(RetType, FuncName, Params)
+
+#define TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(RetType, FuncName, Params) \
+    TAIHE_FUNC_SYNC(RetType, FuncName, Params);                                      \
+    TAIHE_FUNC_ASYNC(RetType, FuncName, Params);                                     \
+    TAIHE_FUNC_PROMISE(RetType, FuncName, Params)
+#define TAIHE_OVERLOAD_INNER_CLASS_ASYNC_ONLY(RetType, FuncName, Params) \
+    TAIHE_FUNC_SYNC(RetType, FuncName, Params);                          \
+    TAIHE_FUNC_ASYNC(RetType, FuncName, Params)
+#define TAIHE_OVERLOAD_INNER_CLASS_PROMISE_ONLY(RetType, FuncName, Params) \
+    TAIHE_FUNC_SYNC(RetType, FuncName, Params);                            \
+    TAIHE_FUNC_PROMISE(RetType, FuncName, Params)
+#define TAIHE_OVERLOAD_IMPLEMENT(Func, Overload, ArgsAdapter) \
+Overload {                                                    \
+    return Func##Sync ArgsAdapter;                            \
+}
+
 namespace ANI {
 namespace Media {
 using namespace taihe;
@@ -36,18 +59,22 @@ public:
     SoundPoolImpl(int32_t maxStreams, ohos::multimedia::audio::AudioRendererInfo const& audioRendererInfo,
         const bool isParallel);
 
-    int32_t LoadSync(string_view uri);
-    int32_t LoadWithFdSync(int32_t fd, int64_t offset, int64_t length);
-    int32_t PlaySync(int32_t soundID, optional_view<PlayParameters> params);
-    int32_t PlayWithoutParam(int32_t soundID);
-    int32_t PlayWithParam(int32_t soundID, PlayParameters const& params);
-    void StopSync(int32_t streamID);
-    void UnloadSync(int32_t soundID);
-    void ReleaseSync();
-    void SetLoopSync(int32_t streamID, int32_t loop);
-    void SetPrioritySync(int32_t streamID, int32_t priority);
-    void SetRateSync(int32_t streamID, ::ohos::multimedia::audio::AudioRendererRate rate);
-    void SetVolumeSync(int32_t streamID, double leftVolume, double rightVolume);
+    TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(int32_t, Load, (string_view uri));
+    TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(
+        int32_t, LoadWithFd, (int32_t fd, int64_t offset, int64_t length));
+    TAIHE_OVERLOAD_INNER_CLASS_PROMISE_ONLY(
+        int32_t, Play, (int32_t soundID, optional_view<PlayParameters> params));
+    TAIHE_OVERLOAD_INNER_CLASS_ASYNC_ONLY(int32_t, PlayWithoutParam, (int32_t soundID));
+    TAIHE_OVERLOAD_INNER_CLASS_ASYNC_ONLY(int32_t, PlayWithParam, (int32_t soundID, PlayParameters const& params));
+    TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(void, Stop, (int32_t streamID));
+    TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(void, Unload, (int32_t soundID));
+    TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(void, Release, ());
+    TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(void, SetLoop, (int32_t streamID, int32_t loop));
+    TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(void, SetPriority, (int32_t streamID, int32_t priority));
+    TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(
+        void, SetRate, (int32_t streamID, ::ohos::multimedia::audio::AudioRendererRate rate));
+    TAIHE_OVERLOAD_INNER_CLASS_BOTH_ASYNC_AND_PROMISE(
+        void, SetVolume, (int32_t streamID, double leftVolume, double rightVolume));
     void SetInterruptMode(::soundPool::InterruptMode interruptMode);
     void OnError(callback_view<void(uintptr_t)> callback);
     void OffError();
