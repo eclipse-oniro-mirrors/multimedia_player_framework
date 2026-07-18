@@ -132,15 +132,8 @@ public:
     void OnWindowLifecycle(SCWindowLifecycleListener::SessionLifecycleEvent event);
 #ifdef SUPPORT_CALL
     int32_t TelCallStateUpdated(bool isInTelCall);
-    int32_t TelCallAudioStateUpdated(bool isInTelCallAudio);
 #endif
     void UpdateMicrophoneEnabled();
-    int32_t ReleaseMicAudioBuffer();
-    int32_t ReleaseInnerAudioBuffer();
-    int32_t GetInnerAudioCaptureBufferSize(size_t &size);
-    int32_t GetMicAudioCaptureBufferSize(size_t &size);
-    int32_t OnVoIPStatusChanged(bool isInVoIPCall);
-    int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
     int32_t ShowCursorInner();
     void OnDMPrivateWindowChange(bool hasPrivate);
     void SetMissionId(uint64_t missionId);
@@ -172,14 +165,11 @@ public:
     DataType GetSCServerDataType();
     bool IsState(uint32_t cap) const;
     bool IsSCRecorderFileWithVideo();
-    std::shared_ptr<AudioCapturerWrapper> GetInnerAudioCapture();
-    std::shared_ptr<AudioCapturerWrapper> GetMicAudioCapture();
+    std::shared_ptr<AudioCapturerWrapper> GetAudioCapture(CaptureRole role);
     bool IsStopAcquireAudioBufferFlag();
     bool IsMicrophoneSwitchTurnOn();
-    bool IsMicrophoneCaptureRunning();
-    bool IsInnerCaptureRunning();
-    void SetInnerAudioCapture(std::shared_ptr<AudioCapturerWrapper> innerAudioCapture);
-    int32_t StopInnerAudioCapture();
+    int32_t AudioRendererStateUpdate(
+        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void SetWindowIdList(uint64_t windowId);
     std::vector<int32_t> GetWindowIdList();
     void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
@@ -208,15 +198,10 @@ private:
     bool IsSetHighlightConfig();
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
-    int32_t StartAudioCapture();
+    int32_t SyncAudioCaptures(bool ignoreMicError = false);
     std::string GenerateThreadNameByPrefix(std::string threadName);
-    int32_t StartStreamInnerAudioCapture();
-    int32_t StartStreamMicAudioCapture();
-    int32_t StartFileInnerAudioCapture();
-    int32_t StartFileMicAudioCapture();
-    int32_t StartFileAudioCapture();
-    int32_t StartMicAudioCapture();
-    int32_t StopMicAudioCapture();
+    int32_t StartInnerAudioCapture();
+    int32_t StartMicAudioCapture(bool isVoip);
     int32_t StartStreamVideoCapture();
     int32_t StartStreamHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
@@ -239,8 +224,6 @@ private:
     void ReleaseInner();
     void GetDumpFlag();
     void GetSystemUIFlag();
-    int32_t SetMicrophoneOn();
-    int32_t SetMicrophoneOff();
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
@@ -305,7 +288,6 @@ private:
     void SetMetaDataReport();
     void SetMediaKitReport(const std::string &errMsg);
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
-    int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
     void RegisterScreenConnectListener();
     uint64_t GetDisplayIdOfWindows(uint64_t displayId);
@@ -313,10 +295,6 @@ private:
     void RefreshResConfig();
     void InitResourceManager();
     void SetSystemScreenRecorderStatus(bool status);
-#ifdef SUPPORT_CALL
-    int32_t OnTelCallStart();
-    int32_t OnTelCallStop();
-#endif
     bool DestroyPopWindow();
     bool DestroyPrivacySheet();
     void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
@@ -361,7 +339,7 @@ private:
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
     bool canvasRotation_ = false;
     bool showCursor_ = true;
-    bool isMicrophoneSwitchTurnOn_ = true;
+    std::atomic<bool> isMicrophoneSwitchTurnOn_{true};
     bool isPrivacyAuthorityEnabled_ = false;
     bool showSensitiveCheckBox_ = false;
     bool checkBoxSelected_ = false;
@@ -438,7 +416,7 @@ private:
     bool isSurfaceMode_ = false;
     std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;
     std::shared_ptr<AudioCapturerWrapper> micAudioCapture_;
-    std::mutex innerAudioMutex_;
+    std::mutex audioMutex_;
 
     /* used for CAPTURE FILE */
     std::shared_ptr<IRecorderService> recorder_ = nullptr;
@@ -465,7 +443,6 @@ private:
     bool isPickerModePopUp_ = false;
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
-    std::atomic<bool> isInTelCallAudio_ = false;
 #endif
     std::atomic<bool> recorderFileWithVideo_{false};
 private:

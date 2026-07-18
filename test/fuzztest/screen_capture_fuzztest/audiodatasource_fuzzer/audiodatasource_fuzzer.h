@@ -36,12 +36,11 @@ namespace Media {
 class AudioDataSourceFuzzer {
 public:
 
-    bool FuzzSpeakerStateUpdate();
-    bool FuzzHasSpeakerStream();
-    bool FuzzVoIPStateUpdate();
+    bool FuzzAudioRendererStateUpdate();
+    bool FuzzGetAudioRendererState();
+    bool FuzzAudioRendererStateUpdateVoIP();
     bool FuzzHasVoIPStream();
     bool FuzzSetAndGetAppPid();
-    bool FuzzSetAndGetAppName();
     bool FuzzSetVideoFirstFramePts();
     bool FuzzSetAudioFirstFramePts();
     bool FuzzReadAtMixMode();

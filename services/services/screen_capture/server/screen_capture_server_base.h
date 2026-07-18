@@ -89,6 +89,11 @@ enum VideoPermissionState : int32_t {
     STOP_VIDEO = 1
 };
 
+enum class CaptureRole : int32_t {
+    INNER = 0,
+    MIC = 1,
+};
+
 enum AVScreenCaptureState : int32_t {
     CREATED = 0,
     POPUP_WINDOW = 1,
@@ -129,6 +134,12 @@ enum Capability : uint32_t {
     CAP_RUNNING = 1 << 5,
     CAP_PAUSED = 1 << 6,
     CAP_ACTIVE = 1 << 7,
+};
+
+enum AudioStateFlag : uint32_t {
+    AUDIO_STATE_HEADSET = 1 << 0,
+    AUDIO_STATE_VOIP = 1 << 1,
+    AUDIO_STATE_TEL = 1 << 2,
 };
 
 struct StatisticalEventInfo {
@@ -177,11 +188,9 @@ private:
 class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCallback {
 public:
     void OnRendererStateChange(const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
-    void SetAudioSource(std::shared_ptr<AudioDataSource> audioSource);
-    void SetAppName(std::string appName);
+    void SetScreenCaptureServer(std::weak_ptr<ScreenCaptureServer> server);
 private:
-    std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
-    std::string appName_;
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
 
 class ScreenConnectListenerForSC : public Rosen::ScreenManager::IScreenListener {
