@@ -123,6 +123,7 @@ taihe_shared_library("system_sound_manager_taihe") {
     "media_foundation:media_foundation",
     "qos_manager:qos",
     "resource_management:global_resmgr",
+    "node:node_header_notice",
   ]
 }
 
