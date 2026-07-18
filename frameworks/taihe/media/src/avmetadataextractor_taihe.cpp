@@ -33,6 +33,7 @@ AVMetadataExtractorImpl::AVMetadataExtractorImpl() {}
 
 AVMetadataExtractorImpl::AVMetadataExtractorImpl(std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper)
 {
+    CHECK_AND_RETURN_LOG(avMetadataHelper != nullptr, "avMetadataHelper is nullptr");
     helper_ = avMetadataHelper;
     helperCb_ = std::make_shared<AVMetadataHelperCallback>();
     if (helperCb_ == nullptr) {

@@ -137,7 +137,7 @@ Status AVMetaDataCollector::GetVideoTrackId(uint32_t &trackId)
     CHECK_AND_RETURN_RET_LOG(trackCount > 0, Status::ERROR_INVALID_DATA, "GetTargetTrackInfo trackCount is invalid");
     for (size_t index = 0; index < trackCount; index++) {
         std::string trackMime = "";
-        if (!(trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime))) {
+        if (trackInfos[index] == nullptr || !(trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime))) {
             continue;
         }
         if (trackMime.find("video/") == 0) {
@@ -420,7 +420,8 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
         auto keyNameIt = AVMETA_KEY_TO_X_MAP.find(it->first);
-        if (keyNameIt == AVMETA_KEY_TO_X_MAP.end()) {
+        if (keyNameIt == AVMETA_KEY_TO_X_MAP.end() || keyNameIt == AV_KEY_LOCATION_LONGITUDE ||
+            keyNameIt == AV_KEY_LOCATION_LATITUDE) {
             it++;
             continue;
         }

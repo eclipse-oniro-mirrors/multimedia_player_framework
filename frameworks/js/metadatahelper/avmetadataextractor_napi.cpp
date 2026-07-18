@@ -328,6 +328,7 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
     napi_get_undefined(env, &tracks);
     napi_get_undefined(env, &gltfOffset);
     std::shared_ptr<Meta> metadata = promiseCtx->metadata_;
+    CHECK_AND_RETURN_LOG(metadata != nullptr, "metadata is nullptr!");
     std::string notFoundKey = {};
     for (const auto &key : g_Metadata) {
         if (metadata->Find(key) == metadata->end()) {
@@ -494,6 +495,7 @@ void AVMetadataExtractorNapi::FetchArtPictureComplete(napi_env env, napi_status 
 
     MEDIA_LOGI("FetchArtPictureComplete In");
     auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+    CHECK_AND_RETURN_LOG(context != nullptr, "Invalid context.");
 
     if (status == napi_ok && context->errCode == napi_ok) {
         result = Media::PixelMapNapi::CreatePixelMap(env, context->artPicture_);
@@ -1178,6 +1180,7 @@ void AVMetadataExtractorNapi::GetTimeByFrameIndexComplete(napi_env env, napi_sta
 {
     napi_value result = nullptr;
     auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+    CHECK_AND_RETURN_LOG(context != nullptr, "Invalid context.");
 
     if (status == napi_ok && context->errCode == napi_ok) {
         napi_create_int64(env, context->timeStamp_, &result);
@@ -1242,6 +1245,7 @@ void AVMetadataExtractorNapi::GetFrameIndexByTimeComplete(napi_env env, napi_sta
 {
     napi_value result = nullptr;
     auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+    CHECK_AND_RETURN_LOG(context != nullptr, "Invalid context.");
 
     if (status == napi_ok && context->errCode == napi_ok) {
         napi_create_uint32(env, context->index_, &result);
