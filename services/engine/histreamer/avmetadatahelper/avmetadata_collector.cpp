@@ -737,9 +737,9 @@ void AVMetaDataCollector::Destroy()
     mediaDemuxer_ = nullptr;
 }
 
-void AVMetaDataCollector::SetClientBundleName(std::string calledAppName)
+void AVMetaDataCollector::SetClientBundleName(std::string appName)
 {
-    calledAppName_ = calledAppName;
+    appName_ = appName;
     return;
 }
 
@@ -749,7 +749,7 @@ void AVMetaDataCollector::DfxReport(std::string calledApi)
     OHOS::Media::MediaEvent event;
     if (mediaDemuxer_ == nullptr) {
         std::string events = metaInfoJson.dump();
-        event.MediaKitStatistics("AVMetaDataCollector", calledAppName_, std::to_string(FAKE_POINTER(this)), calledApi,
+        event.MediaKitStatistics("AVMetaDataCollector", appName_, std::to_string(FAKE_POINTER(this)), calledApi,
             events);
         return;
     }
