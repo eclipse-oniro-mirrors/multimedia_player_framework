@@ -422,6 +422,7 @@ Status AVMetadataHelperImpl::InitMetadataCollector()
     }
     CHECK_AND_RETURN_RET_LOG(
         metadataCollector_ != nullptr, Status::ERROR_INVALID_STATE, "Init metadata collector failed.");
+    metadataCollector_->SetClientBundleName(appName_);
     return Status::OK;
 }
 
