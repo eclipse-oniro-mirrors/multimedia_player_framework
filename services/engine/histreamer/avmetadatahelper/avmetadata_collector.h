@@ -76,6 +76,7 @@ public:
     int32_t GetFrameIndexByTime(uint64_t timeUs, uint32_t &index);
     void Reset();
     void Destroy();
+    void SetClientBundleName(std::string appName);
     void DfxReport(std::string calledApi);
     void GetAudioTrackInfo(const std::shared_ptr<Meta> &trackInfo, const std::string& mime, size_t index);
     void GetVideoTrackInfo(const std::shared_ptr<Meta> &trackInfo, const std::string& mime, size_t index);
@@ -116,7 +117,6 @@ private:
         size_t index);
     bool IsOggFile(const std::shared_ptr<Meta> &globalInfo);
     void ApplyOggTrackMetadataOverride(const std::vector<std::shared_ptr<Meta>> &trackInfos, Metadata &metadata);
-    void SetClientBundleName(std::string appName);
 };
 }  // namespace Media
 }  // namespace OHOS
