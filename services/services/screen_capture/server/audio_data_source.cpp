@@ -152,7 +152,7 @@ AudioDataSourceReadAtActionState AudioDataSource::InnerMicAudioSync(uint32_t len
 {
     int64_t timeWindow = micAudioBuffer->timestamp - innerAudioBuffer->timestamp;
     if (timeWindow <= NEG_AUDIO_INTERVAL_IN_NS) { // mic before inner
-        const auto &capture = screenCaptureServer_->GetAudioCapture(CaptureRole::Mic);
+        const auto &capture = screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
         CHECK_AND_RETURN_RET_NOLOG(capture != nullptr, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
         auto count = capture->DropBufferUntil(innerAudioBuffer->timestamp);
         MEDIA_LOGI("mic before inner timeDiff: %{public}" PRId64 " DropBufferUntil inner time: %{public}" PRId64
@@ -170,8 +170,8 @@ AudioDataSourceReadAtActionState AudioDataSource::InnerMicAudioSync(uint32_t len
 AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncMixMode(uint32_t length, int64_t timeWindow,
     std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
-    auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Mic);
-    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Inner);
+    auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
+    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
     if (timeWindow <= NEG_AUDIO_INTERVAL_IN_NS) { // video before audio add 0
         if (micAudioBuffer && micCapture && mixModeAddAudioMicFrame_) {
             MEDIA_LOGI("mic AddBufferFrom timeWindow: %{public}" PRId64, timeWindow);
@@ -232,7 +232,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMixCore(ui
         }
         if (screenCaptureServer_->IsMicrophoneSwitchTurnOn()) {
             int64_t currentAudioTime = 0;
-            auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Inner);
+            auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
             if (innerCapture) {
                 innerCapture->GetCurrentAudioTime(currentAudioTime);
             }
@@ -259,11 +259,11 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMixCore(ui
 AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMix(uint32_t length,
     std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
-    auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Mic);
+    auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
     if (micCapture && micCapture->IsRecording() && micCapture->AcquireAudioBuffer(micAudioBuffer) != MSERR_OK) {
         MEDIA_LOGD("micAudioCapture AcquireAudioBuffer failed");
     }
-    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Inner);
+    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
     if (innerCapture && innerCapture->IsRecording() && innerCapture->AcquireAudioBuffer(innerAudioBuffer) != MSERR_OK) {
         MEDIA_LOGD("innerAudioCapture AcquireAudioBuffer failed");
     }
@@ -295,7 +295,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAtMixMode(uint32_t length)
 
 AudioDataSourceReadAtActionState AudioDataSource::ReadAtMicMode(uint32_t length)
 {
-    auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Mic);
+    auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
     if (micCapture == nullptr) {
         return AudioDataSourceReadAtActionState::INVALID;
     }
@@ -326,7 +326,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAtMicMode(uint32_t length)
 AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncInnerMode(uint32_t length, int64_t timeWindow,
     std::shared_ptr<AudioBuffer> &innerAudioBuffer)
 {
-    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Inner);
+    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
     if (timeWindow <= NEG_AUDIO_INTERVAL_IN_NS) { // video before audio add 0
         if (innerAudioBuffer && innerCapture) {
             innerCapture->AddBufferFrom(-1 * timeWindow, length, firstVideoFramePts_.load());
@@ -357,7 +357,7 @@ AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncInnerMode(uint32
 
 AudioDataSourceReadAtActionState AudioDataSource::ReadAtInnerMode(uint32_t length)
 {
-    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Inner);
+    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
     if (innerCapture == nullptr) {
         return AudioDataSourceReadAtActionState::INVALID;
     }
@@ -415,7 +415,7 @@ void AudioDataSource::HandlePastMicBuffer(std::shared_ptr<AudioBuffer> &micAudio
     if (micAudioBuffer->timestamp < lastWriteAudioFramePts_.load() &&
         micAudioBuffer->timestamp < lastMicAudioFramePts_.load() + AUDIO_MIC_TOO_CLOSE_LIMIT_IN_NS &&
         lastWriteType_ == AVScreenCaptureMixBufferType::INNER) { // drop past mic data when switch,keep when mic stable
-        auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Mic);
+        auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
         if (micCapture) {
             micCapture->ReleaseAudioBuffer();
         }
@@ -428,7 +428,7 @@ void AudioDataSource::HandlePastMicBuffer(std::shared_ptr<AudioBuffer> &micAudio
 void AudioDataSource::HandleSwitchToSpeakerOptimise(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
-    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Inner);
+    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
     if (GetAudioRendererState() == 0 && innerCapture && screenCaptureServer_->IsMicrophoneSwitchTurnOn() &&
         micAudioBuffer->buffer && lastWriteType_ == AVScreenCaptureMixBufferType::MIX) {
         if (stableStopInnerSwitchCount_ > INNER_SWITCH_MIC_REQUIRE_COUNT) { // optimise inner while use speaker
@@ -451,7 +451,7 @@ void AudioDataSource::HandleBufferTimeStamp(std::shared_ptr<AudioBuffer> &innerA
     }
     if (innerAudioBuffer) {
         if (innerAudioBuffer->timestamp < lastWriteAudioFramePts_.load() && GetAudioRendererState() == 0) {
-            auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Inner);
+            auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
             if (innerCapture) {
                 innerCapture->ReleaseAudioBuffer();
             }
@@ -521,14 +521,14 @@ void AudioDataSource::ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudi
     std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
     if (innerAudioBuffer) {
-        auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Inner);
+        auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
         if (innerCapture) {
             innerCapture->ReleaseAudioBuffer();
         }
         innerAudioBuffer = nullptr;
     }
     if (micAudioBuffer) {
-        auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Mic);
+        auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
         if (micCapture) {
             micCapture->ReleaseAudioBuffer();
         }
@@ -539,7 +539,7 @@ void AudioDataSource::ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudi
 int32_t AudioDataSource::GetSize(int64_t &size)
 {
     int32_t ret = MSERR_UNKNOWN;
-    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Inner);
+    auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
     if (innerCapture) {
         size_t bufferLen = 0;
         ret = innerCapture->GetBufferSize(bufferLen);
@@ -549,7 +549,7 @@ int32_t AudioDataSource::GetSize(int64_t &size)
             return ret;
         }
     }
-    auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::Mic);
+    auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
     if (micCapture) {
         size_t bufferLen = 0;
         ret = micCapture->GetBufferSize(bufferLen);

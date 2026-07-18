@@ -78,11 +78,11 @@ void ScreenCaptureServerFunctionTest::SetMockBuilder(std::shared_ptr<ScreenCaptu
     auto *mockCommonService = static_cast<MockCommonServiceProvider *>(mockProviders->commonService.get());
 
     EXPECT_CALL(*mockCommonService, CreateAudioCapturerWrapper(_, _, _, _))
-        .WillRepeatedly(
-            [this](AudioCaptureInfo &audioInfo, std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
-                std::string &&name, const ScreenCaptureContentFilter &filter) -> std::shared_ptr<AudioCapturerWrapper> {
-                return CreateTestWrapper(audioInfo, name, true, true);
-            });
+        .WillRepeatedly([this](AudioCaptureInfo &audioInfo, std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
+                               std::string &&name,
+                               const ScreenCaptureContentFilter &filter) -> std::shared_ptr<AudioCapturerWrapper> {
+            return CreateTestWrapper(audioInfo, name, true, true);
+        });
     EXPECT_CALL(*mockCommonService, SubscribeCommonEvent(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mockCommonService, UnSubscribeCommonEvent(_)).WillRepeatedly(Return(true));
     EXPECT_CALL(*mockCommonService, PublishCommonEvent(_, _)).WillRepeatedly(Return(true));
@@ -100,16 +100,21 @@ void ScreenCaptureServerFunctionTest::TearDown()
 
 std::shared_ptr<AVBuffer> ScreenCaptureServerFunctionTest::CreateWatermarkBuffer()
 {
-    int32_t dataSize = 200 * 800;
+    constexpr int32_t dataSize = 200 * 800;
+    constexpr int32_t coordX = 100;
+    constexpr int32_t coordY = 100;
+    constexpr int32_t coordW = 200;
+    constexpr int32_t coordH = 200;
+    constexpr int32_t stride = 800;
     std::vector<uint8_t> dataBuffer(dataSize, 0);
     auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
     auto buffer = AVBuffer::CreateAVBuffer(allocator, dataSize);
     buffer->memory_->Write(dataBuffer.data(), dataSize, 0);
-    buffer->meta_->Set<Tag::VIDEO_COORDINATE_X>(100);
-    buffer->meta_->Set<Tag::VIDEO_COORDINATE_Y>(100);
-    buffer->meta_->Set<Tag::VIDEO_COORDINATE_W>(200);
-    buffer->meta_->Set<Tag::VIDEO_COORDINATE_H>(200);
-    buffer->meta_->Set<Tag::VIDEO_STRIDE>(800);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_X>(coordX);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_Y>(coordY);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_W>(coordW);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_H>(coordH);
+    buffer->meta_->Set<Tag::VIDEO_STRIDE>(stride);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     return buffer;
@@ -378,7 +383,6 @@ int32_t ScreenCaptureServerFunctionTest::StartFileAudioCapture()
 {
     screenCaptureServer_->audioSource_ =
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(mixMode, screenCaptureServer_);
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_);
     MEDIA_LOGI("StartFileAudioCapture start");
@@ -1340,8 +1344,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMix_001, TestSize.Level2)
     screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->IsMicrophoneSwitchTurnOn();
     screenCaptureServer_->IsSCRecorderFileWithVideo();
-    screenCaptureServer_->GetInnerAudioCapture();
-    screenCaptureServer_->GetMicAudioCapture();
+    screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
+    screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
     screenCaptureServer_->IsStopAcquireAudioBufferFlag();
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
@@ -2637,7 +2641,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MixModeBufferWrite_004, TestSize.Level
 {
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
-    const int bufferSize = 10;
     std::shared_ptr<AudioBuffer> innerAudioBuffer;
     std::shared_ptr<AudioBuffer> micAudioBuffer;
     AudioDataSourceReadAtActionState ret =

@@ -1338,7 +1338,7 @@ bool ScreenCaptureServer::IsSCRecorderFileWithVideo()
 std::shared_ptr<AudioCapturerWrapper> ScreenCaptureServer::GetAudioCapture(CaptureRole role)
 {
     std::lock_guard<std::mutex> lock(audioMutex_);
-    return role == CaptureRole::Inner ? innerAudioCapture_ : micAudioCapture_;
+    return role == CaptureRole::INNER ? innerAudioCapture_ : micAudioCapture_;
 }
 
 bool ScreenCaptureServer::IsStopAcquireAudioBufferFlag()
@@ -2248,13 +2248,13 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
         DestroyVirtualScreen();
     };
 
-    ON_SCOPE_EXIT(2) { StopAudioCapture(); };
+    ON_SCOPE_EXIT(2) { StopAudioCapture(); }; // 2:stop audio
     ret = SyncAudioCaptures(true);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SyncAudioCaptures failed, ret:%{public}d", ret);
     MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
     ret = recorder_->Start();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "recorder start failed, ret:%{public}d", ret);
-    CANCEL_SCOPE_EXIT_GUARD(2);
+    CANCEL_SCOPE_EXIT_GUARD(2); // 2:stop audio
     CANCEL_SCOPE_EXIT_GUARD(1);
     CANCEL_SCOPE_EXIT_GUARD(0);
 
@@ -3714,12 +3714,12 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
         "AcquireAudioBuffer failed, capture is not STARTED or RESUMED, state:%{public}d, type:%{public}d",
         captureState_.load(), type);
 
-    auto micCapture = GetAudioCapture(CaptureRole::Mic);
+    auto micCapture = GetAudioCapture(CaptureRole::MIC);
     if (((type == AudioCaptureSourceType::MIC) || (type == AudioCaptureSourceType::SOURCE_DEFAULT)) && micCapture &&
         micCapture->IsRecording()) {
         return micCapture->AcquireAudioBuffer(audioBuffer);
     }
-    auto innerCapture = GetAudioCapture(CaptureRole::Inner);
+    auto innerCapture = GetAudioCapture(CaptureRole::INNER);
     if (((type == AudioCaptureSourceType::ALL_PLAYBACK) || (type == AudioCaptureSourceType::APP_PLAYBACK)) &&
         innerCapture && innerCapture->IsRecording()) {
         return innerCapture->AcquireAudioBuffer(audioBuffer);
@@ -3740,12 +3740,12 @@ int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
         "ReleaseAudioBuffer failed, capture is not STARTED or RESUMED, state:%{public}d, type:%{public}d",
         captureState_.load(), type);
 
-    auto micCapture = GetAudioCapture(CaptureRole::Mic);
+    auto micCapture = GetAudioCapture(CaptureRole::MIC);
     if (((type == AudioCaptureSourceType::MIC) || (type == AudioCaptureSourceType::SOURCE_DEFAULT)) && micCapture &&
         micCapture->IsRecording()) {
         return micCapture->ReleaseAudioBuffer();
     }
-    auto innerCapture = GetAudioCapture(CaptureRole::Inner);
+    auto innerCapture = GetAudioCapture(CaptureRole::INNER);
     if (((type == AudioCaptureSourceType::ALL_PLAYBACK) || (type == AudioCaptureSourceType::APP_PLAYBACK)) &&
         innerCapture && innerCapture->IsRecording()) {
         return innerCapture->ReleaseAudioBuffer();
@@ -3828,7 +3828,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
             contentFilter_.windowIDsVec, surfaceIdList_, surfaceTypeList_);
     }
     int32_t ret = MSERR_OK;
-    auto innerCapture = GetAudioCapture(CaptureRole::Inner);
+    auto innerCapture = GetAudioCapture(CaptureRole::INNER);
     if (innerCapture != nullptr) {
         ret = innerCapture->UpdateAudioCapturerConfig(contentFilter_);
     }
@@ -4352,11 +4352,11 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
 int32_t ScreenCaptureServer::StopAudioCapture()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopAudioCapture start.", FAKE_POINTER(this));
-    auto micCapture = GetAudioCapture(CaptureRole::Mic);
+    auto micCapture = GetAudioCapture(CaptureRole::MIC);
     if (micCapture) {
         micCapture->Stop();
     }
-    auto innerCapture = GetAudioCapture(CaptureRole::Inner);
+    auto innerCapture = GetAudioCapture(CaptureRole::INNER);
     if (innerCapture) {
         innerCapture->Stop();
     }
@@ -4436,7 +4436,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
     int32_t ret = MSERR_OK;
     if (recorder_ != nullptr) {
         stopAcquireAudioBufferFromAudio_.store(true);
-        auto innerCapture = GetAudioCapture(CaptureRole::Inner);
+        auto innerCapture = GetAudioCapture(CaptureRole::INNER);
         if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && audioSource_ &&
             audioSource_->IsInWaitMicSyncState() && innerCapture && innerCapture->IsRecording()) {
             int64_t currentAudioTime;

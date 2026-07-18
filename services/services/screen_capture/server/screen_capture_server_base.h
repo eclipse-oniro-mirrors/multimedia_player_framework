@@ -90,8 +90,8 @@ enum VideoPermissionState : int32_t {
 };
 
 enum class CaptureRole : int32_t {
-    Inner,
-    Mic,
+    INNER = 0,
+    MIC = 1,
 };
 
 enum AVScreenCaptureState : int32_t {

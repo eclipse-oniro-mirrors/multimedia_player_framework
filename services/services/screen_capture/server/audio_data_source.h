@@ -25,12 +25,21 @@ using namespace AudioStandard;
 
 class ScreenCaptureServer;
 
-enum class AVScreenCaptureMixMode : int32_t { MIX_MODE = 0, MIC_MODE = 1, INNER_MODE = 2, INVALID_MODE = 3 };
+enum class AVScreenCaptureMixMode : int32_t {
+    MIX_MODE = 0,
+    MIC_MODE = 1,
+    INNER_MODE = 2,
+    INVALID_MODE = 3
+};
 
-enum class AVScreenCaptureMixBufferType : int32_t { MIX = 0, MIC = 1, INNER = 2, INVALID = 3 };
+enum class AVScreenCaptureMixBufferType : int32_t {
+    MIX = 0,
+    MIC = 1,
+    INNER = 2,
+    INVALID = 3
+};
 
 class AudioDataSource : public IAudioDataSource {
-
     class CacheBuffer {
     private:
         std::shared_ptr<AudioBuffer> refBuf_{nullptr};
