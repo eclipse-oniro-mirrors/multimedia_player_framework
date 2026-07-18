@@ -20,6 +20,7 @@
 
 #include "avmetadatahelper.h"
 #include "buffer/avsharedmemorybase.h"
+#include "media_dfx.h"
 #include "media_log.h"
 #include "meta/video_types.h"
 #include "meta/any.h"
@@ -759,7 +760,7 @@ void AVMetaDataCollector::DfxReport(std::string calledApi)
     (void)globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
     metaInfoJson["fileType"] = static_cast<int32_t>(fileType);
     if (collectedMeta_.find(AV_KEY_MIME_TYPE) != collectedMeta_.end()) {
-        std::string mimeType = collectedMeta_[AV_KEY_MIME_TYPE]
+        std::string mimeType = collectedMeta_[AV_KEY_MIME_TYPE];
         metaInfoJson["fileMimeType"] = mimeType;
     }
     
@@ -770,10 +771,10 @@ void AVMetaDataCollector::DfxReport(std::string calledApi)
         CHECK_AND_RETURN_LOG(meta != nullptr, "DfxReport meta is nullptr");
         std::string mimeType = "";
         meta->Get<Tag::MIME_TYPE>(mimeType);
-        if (mime.find("video/") == 0) {
+        if (mimeType.find("video/") == 0) {
             metaInfoJson["videoTrackMimeType"] = mimeType;
         }
-        if (mime.find("audio/") == 0) {
+        if (mimeType.find("audio/") == 0) {
             metaInfoJson["audioTrackMimeType"] = mimeType;
         }
     }
