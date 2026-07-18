@@ -50,6 +50,7 @@ constexpr int32_t RATE_UV = 2;
 constexpr int32_t SHIFT_BITS_P010_2_NV12 = 8;
 constexpr double VIDEO_FRAME_RATE = 2000.0;
 constexpr int32_t MAX_WAIT_TIME_SECOND = 3;
+constexpr int32_t S_TO_MS = 1000;
 constexpr uint32_t REQUEST_BUFFER_TIMEOUT = 0; // Requesting buffer overtimes 0ms means no retry
 constexpr uint32_t ERROR_AGAIN_SLEEP_TIME_US = 1000;
 const std::string AV_THUMBNAIL_GENERATOR_INPUT_BUFFER_QUEUE_NAME = "AVThumbnailGeneratorInputBufferQueue";
@@ -317,6 +318,10 @@ int32_t AVThumbnailGenerator::Init()
     sptr<IConsumerListener> listener = new ThumbnailGeneratorAVBufferAvailableListener(shared_from_this());
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_NO_MEMORY, "listener is nullptr");
     inputBufferQueueConsumer_->SetBufferAvailableListener(listener);
+    
+    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, MSERR_UNKNOWN, "mediaDemuxer_ is nullptr");
+    mediaDemuxer_->SetReadSampleMode(ReadSampleMode::READ_SAMPLE_ASYNC);
+    mediaDemuxer_->SetReadSampleTimeout(MAX_WAIT_TIME_SECOND * S_TO_MS);
 
     readTask_ = std::make_unique<Task>(std::string("AVThumbReadLoop"));
     CHECK_AND_RETURN_RET_LOG(readTask_ != nullptr, MSERR_NO_MEMORY, "Task is nullptr");
