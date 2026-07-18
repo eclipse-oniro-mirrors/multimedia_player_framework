@@ -55,6 +55,7 @@ ohos_shared_library("audiohaptic_napi") {
     "ipc:ipc_single",
     "media_foundation:media_foundation",
     "napi:ace_napi",
+    "node:node_header_notice",
   ]
   relative_install_dir = "module/multimedia"
   part_name = "player_framework"
