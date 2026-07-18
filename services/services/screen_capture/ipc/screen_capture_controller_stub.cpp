@@ -19,6 +19,8 @@
 #include "media_errors.h"
 #include "avsharedmemory_ipc.h"
 #include "media_utils.h"
+#include "tokenid_kit.h"
+#include "accesstoken_kit.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureControllerStub"};
@@ -111,13 +113,8 @@ int32_t ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice(int32_t ses
     MEDIA_LOGI("ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice start 2");
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
         "screen capture controller server is nullptr");
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    std::string appName = GetClientBundleName(appUid);
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName) != 0) {
-        MEDIA_LOGE("ScreenCaptureControllerStub called by app name %{public}s", appName.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(HasSystemPermission(), MSERR_INVALID_OPERATION,
+        "is not system app failed to init ScreenCaptureMonitorServer");
     return screenCaptureControllerServer_->ReportAVScreenCaptureUserChoice(sessionId, choice);
 }
 
@@ -139,13 +136,8 @@ int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(in
     MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start");
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
         "screen capture controller server is nullptr");
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    std::string appName = GetClientBundleName(appUid);
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName) != 0) {
-        MEDIA_LOGE("ScreenCaptureControllerStub called by app name %{public}s", appName.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(HasSystemPermission(), MSERR_INVALID_OPERATION,
+        "is not system app failed to init ScreenCaptureMonitorServer");
     return screenCaptureControllerServer_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
 }
 
@@ -165,6 +157,21 @@ int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(Me
     return MSERR_OK;
 }
 
+bool ScreenCaptureControllerStub::IsSystemApp()
+{
+    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
+    return isSystemApp;
+}
 
+bool ScreenCaptureControllerStub::HasSystemPermission()
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    if (tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL) {
+        return true;
+    }
+    return IsSystemApp();
+}
 } // namespace Media
 } // namespace OHOS
