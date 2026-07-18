@@ -1116,7 +1116,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_video_size_0005, 
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_001, TestSize.Level0)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_001, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_from_display_001 before");
     SetConfig(config_);
@@ -1153,7 +1153,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_001,
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_002, TestSize.Level0)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_002, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_from_display_002 before");
     SetConfig(config_);
@@ -1189,7 +1189,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_002,
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_003, TestSize.Level0)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_003, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_from_display_003 before");
     SetConfig(config_);
@@ -1226,7 +1226,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_003,
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_004, TestSize.Level0)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_004, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_from_display_004 before");
     SetConfig(config_);
@@ -1265,7 +1265,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_004,
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_005, TestSize.Level0)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_from_display_005, TestSize.Level2)
 {
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_from_display_005 before");
     SetConfig(config_);
