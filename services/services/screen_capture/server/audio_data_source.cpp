@@ -414,7 +414,7 @@ void AudioDataSource::HandlePastMicBuffer(std::shared_ptr<AudioBuffer> &micAudio
 {
     if (micAudioBuffer->timestamp < lastWriteAudioFramePts_.load() &&
         micAudioBuffer->timestamp < lastMicAudioFramePts_.load() + AUDIO_MIC_TOO_CLOSE_LIMIT_IN_NS &&
-        lastWriteType_.load() == AVScreenCaptureMixBufferType::INNER) { // drop past mic data when switch,keep when mic stable
+        lastWriteType_.load() == AVScreenCaptureMixBufferType::INNER) {
         auto micCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
         if (micCapture) {
             micCapture->ReleaseAudioBuffer();
@@ -422,7 +422,7 @@ void AudioDataSource::HandlePastMicBuffer(std::shared_ptr<AudioBuffer> &micAudio
         MEDIA_LOGD("ABuffer drop mix mic error cur:%{public}" PRId64 " last: %{public}" PRId64,
             micAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
         micAudioBuffer = nullptr;
-    }
+    } // drop past mic data when switch,keep when mic stable
 }
 
 void AudioDataSource::HandleSwitchToSpeakerOptimise(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
