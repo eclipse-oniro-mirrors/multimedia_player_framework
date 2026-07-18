@@ -136,7 +136,8 @@
           "json",
           "histreamer_ext",
           "egl",
-          "opengles"
+          "opengles",
+          "taihe_ffi_gen"
         ],
         "third_party": [
           "bounds_checking_function"
