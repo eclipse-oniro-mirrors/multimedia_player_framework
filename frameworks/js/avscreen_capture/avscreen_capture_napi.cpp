@@ -1539,8 +1539,10 @@ int32_t AVScreenCaptureNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
 
-    int32_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
-    CHECK_AND_RETURN_RET_LOG(dataSize > 0 && dataSize <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL, "Invalid data size");
+    int64_t dataSize64 = static_cast<int64_t>(pixelMap->GetHeight()) * pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(dataSize64 > 0 && dataSize64 <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL,
+        "Invalid data size");
+    int32_t dataSize = static_cast<int32_t>(dataSize64);
 
     std::vector<uint8_t> dataBuffer(dataSize);
 

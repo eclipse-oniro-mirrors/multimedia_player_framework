@@ -136,10 +136,10 @@ private:
     std::atomic<int64_t> lastMicAudioFramePts_{0};
     std::atomic<AVScreenCaptureMixBufferType> audioType_{AVScreenCaptureMixBufferType::INVALID};
     std::atomic<uint64_t> audioTypeSize_{0};
-    AVScreenCaptureMixBufferType lastWriteType_ = AVScreenCaptureMixBufferType::INVALID;
+    std::atomic<AVScreenCaptureMixBufferType> lastWriteType_{AVScreenCaptureMixBufferType::INVALID};
     int32_t stableStopInnerSwitchCount_ = 0;
     bool mixModeAddAudioMicFrame_ = false;
-    bool isInWaitMicSyncState_ = false;
+    std::atomic<bool> isInWaitMicSyncState_{false};
     AVScreenCaptureMixMode type_;
     ScreenCaptureServer* screenCaptureServer_;
     std::atomic<int64_t> pauseStartTime_{0};
