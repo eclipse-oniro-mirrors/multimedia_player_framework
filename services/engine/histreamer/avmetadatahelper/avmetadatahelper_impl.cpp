@@ -217,8 +217,8 @@ std::shared_ptr<Meta> AVMetadataHelperImpl::GetAVMetadata()
     return metadataCollector_->GetAVMetadata();
 }
 
-std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(
-    int64_t timeUs, int32_t option, const OutputConfiguration &param)
+std::shared_ptr<AVSharedMemory> AVMetadataHelperImpl::FetchFrameAtTime(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param)
 {
     MEDIA_LOGD("enter FetchFrameAtTime");
     auto res = InitThumbnailGenerator();
@@ -280,8 +280,8 @@ int32_t AVMetadataHelperImpl::GetIndexForFrameConvert(uint64_t time, uint32_t &i
     return res == Status::OK ? MSERR_OK : MSERR_UNSUPPORT_FILE;
 }
 
-std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(
-    int64_t timeUs, int32_t option, const OutputConfiguration &param)
+std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuv(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param)
 {
     MEDIA_LOGD("enter FetchFrameAtTime");
     auto res = InitThumbnailGenerator();
@@ -328,8 +328,8 @@ FetchFrameResult AVMetadataHelperImpl::FetchFrameYuvWithTimeout(int64_t timeUs, 
     return result;
 }
 
-std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuvs(
-    int64_t timeUs, int32_t option, const OutputConfiguration &param, bool &errCallback)
+std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuvs(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param, bool &errCallback)
 {
     MEDIA_LOGD("enter FetchFrameYuvs");
     auto res = InitThumbnailGenerator();
@@ -341,8 +341,8 @@ std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuvs(
     return avBuffer;
 }
 
-std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuvsWithTimeout(
-    int64_t timeUs, int32_t option, const OutputConfiguration &param, bool &isTimeout, int64_t timeoutMs)
+std::shared_ptr<AVBuffer> AVMetadataHelperImpl::FetchFrameYuvsWithTimeout(int64_t timeUs, int32_t option,
+    const OutputConfiguration &param, bool &isTimeout, int64_t timeoutMs)
 {
     MEDIA_LOGD("enter FetchFrameYuvsWithTimeout");
     SetInterruptState(false);
