@@ -318,10 +318,6 @@ int32_t AVThumbnailGenerator::Init()
     sptr<IConsumerListener> listener = new ThumbnailGeneratorAVBufferAvailableListener(shared_from_this());
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_NO_MEMORY, "listener is nullptr");
     inputBufferQueueConsumer_->SetBufferAvailableListener(listener);
-    
-    CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, MSERR_UNKNOWN, "mediaDemuxer_ is nullptr");
-    mediaDemuxer_->SetReadSampleMode(ReadSampleMode::READ_SAMPLE_ASYNC);
-    mediaDemuxer_->SetReadSampleTimeout(MAX_WAIT_TIME_SECOND * S_TO_MS);
 
     readTask_ = std::make_unique<Task>(std::string("AVThumbReadLoop"));
     CHECK_AND_RETURN_RET_LOG(readTask_ != nullptr, MSERR_NO_MEMORY, "Task is nullptr");
@@ -629,6 +625,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     isBufferAvailable_.store(false);
     outputConfig_ = param;
     seekTime_ = timeUs;
+    
     trackInfo_ = GetVideoTrackInfo();
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
     mediaDemuxer_->Resume();
@@ -636,6 +633,9 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    mediaDemuxer_->SetReadSampleMode(ReadSampleMode::READ_SAMPLE_ASYNC);
+    mediaDemuxer_->SetReadSampleTimeout(MAX_WAIT_TIME_SECOND * S_TO_MS);
+
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
     {
