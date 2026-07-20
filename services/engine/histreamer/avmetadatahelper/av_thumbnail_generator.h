@@ -118,6 +118,7 @@ private:
     int32_t GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime, int64_t &seekTimeCostMs);
+    void ConfigureReadSample(uint32_t readSampleTimeoutMs, ReadSampleMode readSampleMode);
 
     int32_t width_ = 0;
     int32_t height_ = 0;
