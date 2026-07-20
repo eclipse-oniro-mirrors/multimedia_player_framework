@@ -625,7 +625,6 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     isBufferAvailable_.store(false);
     outputConfig_ = param;
     seekTime_ = timeUs;
-    
     trackInfo_ = GetVideoTrackInfo();
     CHECK_AND_RETURN_RET_LOG(trackInfo_ != nullptr, nullptr, "FetchFrameAtTime trackInfo_ is nullptr.");
     mediaDemuxer_->Resume();
@@ -634,7 +633,6 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
     ConfigureReadSample(MAX_WAIT_TIME_SECOND * S_TO_MS);
-
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
     {
