@@ -4753,6 +4753,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         (static_cast<ScreenCaptureListenerCallback *>(screenCaptureCb_.get()))->Stop();
     }
     if (audioSource_ && audioSource_->GetAppPid() > 0) { // DataType::CAPTURE_FILE
+
         audioSource_->UnregisterAudioRendererEventListener(audioSource_->GetAppPid());
     }
     providers_->displayManager->GetInstance().UnregisterPrivateWindowListener(displayListener_);
@@ -5182,6 +5183,7 @@ void ScreenRendererAudioStateChangeCallback::OnRendererStateChange(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     MEDIA_LOGD("ScreenRendererAudioStateChangeCallback IN");
+
     CHECK_AND_RETURN(audioSource_ != nullptr);
     auto screenCaptureServer = audioSource_->GetScreenCaptureServer();
     CHECK_AND_RETURN(screenCaptureServer != nullptr);

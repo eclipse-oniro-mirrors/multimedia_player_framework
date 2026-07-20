@@ -40,7 +40,8 @@ void MediaDatashareObserver::OnReceiveEvent(const EventFwk::CommonEventData &dat
     auto const &want = data.GetWant();
     std::string action = want.GetAction();
     MEDIA_LOGI("MediaDatashareObserver::OnReceiveEvent action: %{public}s", action.c_str());
-    CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
+    CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY
+        ||action == EventFwk::CommonEventSupport::COMMON_EVENT_BOOT_COMPLETED);
     MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent");
     int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
     MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent update result: %{public}d", ret);
@@ -64,6 +65,7 @@ bool MediaDatashareObserverRegister::Subscribe()
     CHECK_AND_RETURN_RET_LOG(datashareObserver_ != nullptr, true, "MediaDatashareObserverRegister already subscribed");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
+    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_BOOT_COMPLETED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     auto *tempObserver = new (std::nothrow) MediaDatashareObserver(subscribeInfo);
     CHECK_AND_RETURN_RET_LOG(tempObserver != nullptr, false,
