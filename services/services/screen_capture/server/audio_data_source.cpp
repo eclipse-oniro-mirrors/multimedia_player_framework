@@ -228,7 +228,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadWriteAudioBufferMixCore(ui
     }
     if (innerAudioBuffer && micAudioBuffer == nullptr) {
         if (screenCaptureServer_->IsStopAcquireAudioBufferFlag() && isInWaitMicSyncState_.load()) {
-            return WriteInnerAudio(buffer, length, innerAudioBuffer);
+            return WriteInnerAudio(length, innerAudioBuffer);
         }
         if (screenCaptureServer_->IsMicrophoneSwitchTurnOn()) {
             int64_t currentAudioTime = 0;
