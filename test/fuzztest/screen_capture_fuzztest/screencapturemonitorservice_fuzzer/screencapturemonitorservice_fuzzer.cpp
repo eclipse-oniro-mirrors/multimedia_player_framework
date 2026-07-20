@@ -65,17 +65,16 @@ bool ScreenCaptureMonitorServiceFuzzer::FuzzScreenCaptureMonitorCase(uint8_t *da
     g_baseFuzzSize = size;
     g_baseFuzzPos = 0;
 
-    std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer =
-        ScreenCaptureMonitorServer::GetInstance();
+    auto& screenCaptureMonitorServer = ScreenCaptureMonitorServer::GetInstance();
     sptr<ScreenCaptureMonitorListenerTest> listener = new ScreenCaptureMonitorListenerTest();
-    screenCaptureMonitorServer->SetScreenCaptureMonitorCallback(listener);
-    screenCaptureMonitorServer->RegisterScreenCaptureMonitorListener(listener);
-    screenCaptureMonitorServer->UnregisterScreenCaptureMonitorListener(listener);
+    screenCaptureMonitorServer.SetScreenCaptureMonitorCallback(listener);
+    screenCaptureMonitorServer.RegisterScreenCaptureMonitorListener(listener);
+    screenCaptureMonitorServer.UnregisterScreenCaptureMonitorListener(listener);
     int32_t pid = GetData<int32_t>();
-    screenCaptureMonitorServer->CallOnScreenCaptureStarted(pid);
+    screenCaptureMonitorServer.CallOnScreenCaptureStarted(pid);
     bool started = GetData<bool>();
-    screenCaptureMonitorServer->SetSystemScreenRecorderStatus(started);
-    screenCaptureMonitorServer->RemoveScreenCaptureMonitorCallback(listener);
+    screenCaptureMonitorServer.SetSystemScreenRecorderStatus(started);
+    screenCaptureMonitorServer.RemoveScreenCaptureMonitorCallback(listener);
     return true;
 }
 }

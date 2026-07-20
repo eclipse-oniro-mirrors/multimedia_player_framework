@@ -915,19 +915,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestS
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_003, TestSize.Level2)
-{
-    screenCaptureServer_->screenCaptureCb_ = nullptr;
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
-        nullptr);
-    ASSERT_EQ(screenCaptureServer_->curWindowEvent_,
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_004, TestSize.Level2)
 {
-    screenCaptureServer_->screenCaptureCb_ = nullptr;
+    screenCaptureServer_->cbProxy_->Reset();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
     screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
         nullptr);

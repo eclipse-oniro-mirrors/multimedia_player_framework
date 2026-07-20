@@ -206,6 +206,7 @@ ohos_shared_library("media_service") {
       "observer/account_listener.cpp",
       "observer/account_observer.cpp",
       "screen_capture/ipc/screen_capture_controller_stub.cpp",
+      "screen_capture/ipc/screen_capture_listener_callback.cpp",
       "screen_capture/ipc/screen_capture_listener_proxy.cpp",
       "screen_capture/ipc/screen_capture_service_stub.cpp",
       "screen_capture/server/audio_capturer_wrapper.cpp",

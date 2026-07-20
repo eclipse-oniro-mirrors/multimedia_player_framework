@@ -68,7 +68,7 @@ public:
     MOCK_METHOD(int, OnRemoteRequest, (uint32_t code, MessageParcel &data, MessageParcel &reply,
         MessageOption &option), (override));
     MOCK_METHOD(int32_t, ExcludeContent, (ScreenCaptureContentFilter &contentFilter), (override));
-    MOCK_METHOD(int32_t, ExcludePickerWindows, (std::vector<int32_t> &windowIDsVec), (override));
+    MOCK_METHOD(int32_t, ExcludePickerWindows, (const std::vector<int32_t> &windowIDsVec), (override));
     MOCK_METHOD(int32_t, SetPickerMode, (PickerMode pickerMode), (override));
     MOCK_METHOD(int32_t, SetScreenCaptureStrategy, (ScreenCaptureStrategy strategy), (override));
     MOCK_METHOD(int32_t, UpdateSurface, (sptr<Surface> surface), (override));

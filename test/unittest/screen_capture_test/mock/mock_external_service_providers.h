@@ -73,7 +73,7 @@ public:
     MOCK_METHOD(bool, PublishCommonEvent, (const EventFwk::CommonEventData &, const EventFwk::CommonEventPublishInfo &),
         (override));
     MOCK_METHOD(std::shared_ptr<AudioCapturerWrapper>, CreateAudioCapturerWrapper,
-        (AudioCaptureInfo &, std::shared_ptr<ScreenCaptureCallBack> &, std::string &&,
+        (AudioCaptureInfo &, const std::shared_ptr<ScreenCaptureCallBack> &, std::string &&,
             const ScreenCaptureContentFilter &),
         (override));
 };

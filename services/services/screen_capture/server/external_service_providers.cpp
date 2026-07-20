@@ -91,7 +91,7 @@ public:
         return EventFwk::CommonEventManager::PublishCommonEvent(data, publishInfo);
     }
     std::shared_ptr<AudioCapturerWrapper> CreateAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
         const ScreenCaptureContentFilter &filter) override
     {
         return std::make_shared<AudioCapturerWrapper>(audioInfo, screenCaptureCb, std::move(name), filter);
