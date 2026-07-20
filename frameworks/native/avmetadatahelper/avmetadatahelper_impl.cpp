@@ -653,7 +653,7 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
     
     int64_t uvOffset = static_cast<int64_t>(stride) * sliceHeight;
     CHECK_AND_RETURN_RET_LOG(uvOffset > 0 && uvOffset < static_cast<int64_t>(surfaceBuffer->GetSize()),
-        MSERR_INVALID_VAL, "uvOffset(%{public}lld) is invalid", uvOffset);
+        MSERR_INVALID_VAL, "uvOffset(%{public}ld) is invalid", uvOffset);
     srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + uvOffset;
     
     // copy src UV plane to dst, height(UV) = height(Y) / 2
