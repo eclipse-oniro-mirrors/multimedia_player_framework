@@ -41,7 +41,7 @@ void MediaDatashareObserver::OnReceiveEvent(const EventFwk::CommonEventData &dat
     std::string action = want.GetAction();
     MEDIA_LOGI("MediaDatashareObserver::OnReceiveEvent action: %{public}s", action.c_str());
     CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY
-        ||action == EventFwk::CommonEventSupport::COMMON_EVENT_BOOT_COMPLETED);
+        || action == EventFwk::CommonEventSupport::COMMON_EVENT_BOOT_COMPLETED);
     MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent");
     int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
     MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent update result: %{public}d", ret);
