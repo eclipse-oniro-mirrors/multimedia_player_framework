@@ -91,7 +91,7 @@ public:
     virtual bool PublishCommonEvent(const EventFwk::CommonEventData &data,
         const EventFwk::CommonEventPublishInfo &publishInfo) = 0;
     virtual std::shared_ptr<AudioCapturerWrapper> CreateAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
         const ScreenCaptureContentFilter &filter) = 0;
 };
 

@@ -60,8 +60,8 @@ public:
     std::shared_ptr<PixelMap> FetchScaledFrameYuv(int64_t timeUs, int32_t option, const PixelMapParams &param) override;
     FetchFrameResult FetchScaledFrameYuvWithTimeout(int64_t timeUs, int32_t option,
         const PixelMapParams &param, int64_t timeoutMs) override;
-    std::shared_ptr<PixelMap> ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer,
-                                            const PixelMapParams &param, int32_t scaleMode) override;
+    std::shared_ptr<PixelMap> ProcessPixelMap(const std::shared_ptr<AVBuffer> &frameBuffer, const PixelMapParams &param,
+        int32_t scaleMode) override;
     void Release() override;
     int32_t Init();
     int32_t SetHelperCallback(const std::shared_ptr<HelperCallback> &callback) override;
@@ -117,27 +117,29 @@ private:
     void ReportSceneCode(Scene scene);
 
     std::shared_ptr<PixelMap> CreatePixelMapYuv(const std::shared_ptr<AVBuffer> &frameBuffer,
-                                                PixelMapInfo &pixelMapInfo);
+        PixelMapInfo &pixelMapInfo);
     std::shared_ptr<PixelMap> CreatePixelMapFromAVShareMemory(const std::shared_ptr<AVBuffer> &frameBuffer,
-                                                              PixelMapInfo &pixelMapInfo,
-                                                              InitializationOptions &options);
+        PixelMapInfo &pixelMapInfo, InitializationOptions &options);
     std::shared_ptr<PixelMap> CreatePixelMapFromSurfaceBuffer(sptr<SurfaceBuffer> &mySurfaceBuffer,
-                                                              PixelMapInfo &pixelMapInfo);
+        PixelMapInfo &pixelMapInfo);
+    std::shared_ptr<PixelMap> CreatePixelmapWithSDR(sptr<SurfaceBuffer> &surfaceBuffer,
+        const PixelMapInfo &pixelMapInfo, InitializationOptions &options, Status isColorSpaceInfoObtained);
+    std::shared_ptr<PixelMap> CreatePixelmapWithHDR(sptr<SurfaceBuffer> &surfaceBuffer,
+        const PixelMapInfo &pixelMapInfo, InitializationOptions &options, Status isColorSpaceInfoObtained);
     void SetPixelMapYuvInfo(sptr<SurfaceBuffer> &surfaceBuffer, std::shared_ptr<PixelMap> pixelMap,
-                            PixelMapInfo &pixelMapInfo, bool needModifyStride);
+        PixelMapInfo &pixelMapInfo, bool needModifyStride);
     std::string pixelFormatToString(PixelFormat pixelFormat);
     static void ScalePixelMapByMode(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info,
-                                    const PixelMapParams &param, int32_t scaleMode);
+        const PixelMapParams &param, int32_t scaleMode);
     static void ScalePixelMap(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info, const PixelMapParams &param);
     static void ScalePixelMapWithEqualRatio(std::shared_ptr<PixelMap> &pixelMap, PixelMapInfo &info,
-                                            const PixelMapParams &param);
-    std::shared_ptr<PixelMap> FetchFrameBase(int64_t timeUs, int32_t option,
-        const PixelMapParams &param, int32_t scaleMode);
-    FetchFrameResult FetchFrameBase(int64_t timeUs, int32_t option,
-        const PixelMapParams &param, int64_t timeoutMs, int32_t scaleMode);
-    int32_t CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &SurfaceBuffer,
-                                        std::shared_ptr<PixelMap> pixelMap,
-                                        PixelMapInfo &pixelMapInfo);
+        const PixelMapParams &param);
+    std::shared_ptr<PixelMap> FetchFrameBase(int64_t timeUs, int32_t option, const PixelMapParams &param,
+        int32_t scaleMode);
+    FetchFrameResult FetchFrameBase(int64_t timeUs, int32_t option, const PixelMapParams &param, int64_t timeoutMs,
+        int32_t scaleMode);
+    int32_t CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &SurfaceBuffer, std::shared_ptr<PixelMap> pixelMap,
+        const PixelMapInfo &pixelMapInfo);
     int32_t SaveDataToFile(const std::string &fileName, const char *data, const size_t &totalSize);
     void InitDumpFlag();
     int32_t DumpPixelMap(bool isDump, std::shared_ptr<PixelMap> pixelMap, const std::string &fileName);

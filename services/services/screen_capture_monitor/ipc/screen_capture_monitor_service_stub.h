@@ -49,7 +49,6 @@ private:
     int32_t IsSystemScreenRecorder(MessageParcel &data, MessageParcel &reply);
     int32_t IsSystemScreenRecorderWorking(MessageParcel &data, MessageParcel &reply);
 
-    std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer_ = nullptr;
     using screenCaptureMonitorStubFunc =
         int32_t(ScreenCaptureMonitorServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, screenCaptureMonitorStubFunc> screenCaptureMonitorStubFuncs_;

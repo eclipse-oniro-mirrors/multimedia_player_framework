@@ -94,6 +94,8 @@ enum CaptureMode : int32_t {
 
 enum AVScreenCaptureStateCode {
     /* Screen capture state INVALID */
+    SCREEN_CAPTURE_STATE_INVALID = -1,
+    /* Deprecated, use SCREEN_CAPTURE_STATE_INVALID */
     SCREEN_CAPTURE_STATE_INVLID = -1,
     /* Screen capture started by user */
     SCREEN_CAPTURE_STATE_STARTED = 0,

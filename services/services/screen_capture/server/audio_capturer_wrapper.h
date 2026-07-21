@@ -55,7 +55,8 @@ enum AudioCapturerWrapperState : int32_t {
 
 class AudioCapturerWrapper {
 public:
-    explicit AudioCapturerWrapper(AudioCaptureInfo &audioInfo, std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
+    explicit AudioCapturerWrapper(AudioCaptureInfo &audioInfo,
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
         std::string &&name, const ScreenCaptureContentFilter &filter)
         : screenCaptureCb_(screenCaptureCb), audioInfo_(audioInfo), threadName_(std::move(name)), contentFilter_(filter)
     {
@@ -135,7 +136,7 @@ private:
 class MicAudioCapturerWrapper : public AudioCapturerWrapper {
 public:
     explicit MicAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
         const ScreenCaptureContentFilter &filter)
         : AudioCapturerWrapper(audioInfo, screenCaptureCb, std::move(name),
         filter) {}

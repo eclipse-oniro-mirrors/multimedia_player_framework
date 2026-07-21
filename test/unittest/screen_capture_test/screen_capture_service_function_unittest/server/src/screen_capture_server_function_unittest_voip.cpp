@@ -151,7 +151,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_005, TestSize
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
     screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_);
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
-        screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->screenCaptureCb_,
+        screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->cbProxy_,
         std::string("InnerAudioCapture_voip_005"), screenCaptureServer_->contentFilter_);
     SetWrapperBuilder(screenCaptureServer_->innerAudioCapture_);
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_UNKNOWN;

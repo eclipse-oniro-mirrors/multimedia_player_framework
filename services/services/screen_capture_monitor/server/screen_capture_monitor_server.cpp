@@ -1,17 +1,17 @@
 /*
-* Copyright (C) 2024 Huawei Device Co., Ltd.
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-* http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "screen_capture_monitor_server.h"
 #include "map"
@@ -25,21 +25,15 @@
 #include "screen_capture_server.h"
 
 namespace {
-static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServer"};
 }
 
 namespace OHOS {
 namespace Media {
-std::shared_ptr<ScreenCaptureMonitorServer> screenCaptureMonitorServer = nullptr;
-std::shared_ptr<ScreenCaptureMonitorServer> ScreenCaptureMonitorServer::GetInstance()
+ScreenCaptureMonitorServer &ScreenCaptureMonitorServer::GetInstance()
 {
-    if (!screenCaptureMonitorServer) {
-        screenCaptureMonitorServer = std::make_shared<ScreenCaptureMonitorServer>();
-        int32_t ret = screenCaptureMonitorServer->Init();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init ScreenCaptureMonitorServer");
-    }
-    return screenCaptureMonitorServer;
+    static ScreenCaptureMonitorServer instance;
+    return instance;
 }
 
 ScreenCaptureMonitorServer::ScreenCaptureMonitorServer()
@@ -53,16 +47,10 @@ ScreenCaptureMonitorServer::~ScreenCaptureMonitorServer()
     Release();
 }
 
-int32_t ScreenCaptureMonitorServer::Init()
-{
-    MediaTrace trace("ScreenCaptureMonitorServer::Init");
-    return MSERR_OK;
-}
-
 int32_t ScreenCaptureMonitorServer::Release()
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer:0x%{public}06" PRIXPTR " Release S", FAKE_POINTER(this));
-    std::lock_guard<std::mutex> lockCb(mutexCb_);
+    std::lock_guard<std::mutex> lock(mutex_);
     screenCaptureMonitorCbSet_.clear();
     return MSERR_OK;
 }
@@ -72,7 +60,7 @@ std::list<int32_t> ScreenCaptureMonitorServer::IsScreenCaptureWorking()
     MEDIA_LOGI("ScreenCaptureMonitorServer:0x%{public}06" PRIXPTR " IsScreenCaptureWorking S", FAKE_POINTER(this));
     std::list<int32_t> pidList{};
     OHOS::Media::ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList);
-    for (auto pid: pidList) {
+    for (auto pid : pidList) {
         MEDIA_LOGD("ScreenCaptureMonitorServer::IsScreenCaptureWorking pid %{public}d", pid);
     }
     return pidList;
@@ -115,9 +103,13 @@ void ScreenCaptureMonitorServer::UnregisterScreenCaptureMonitorListener(
 
 int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureStarted(int32_t pid)
 {
-    std::lock_guard<std::mutex> lockCb(mutexCb_);
     MEDIA_LOGI("ScreenCaptureMonitorServer::CallOnScreenCaptureStarted S");
-    for (const auto& value : screenCaptureMonitorCbSet_) {
+    std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> cbSet;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        cbSet = screenCaptureMonitorCbSet_;
+    }
+    for (const auto &value : cbSet) {
         if (value != nullptr) {
             value->OnScreenCaptureStarted(pid);
         }
@@ -127,9 +119,13 @@ int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureStarted(int32_t pid)
 
 int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureFinished(int32_t pid)
 {
-    std::lock_guard<std::mutex> lockCb(mutexCb_);
     MEDIA_LOGI("ScreenCaptureMonitorServer::CallOnScreenCaptureFinished S");
-    for (const auto& value : screenCaptureMonitorCbSet_) {
+    std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> cbSet;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        cbSet = screenCaptureMonitorCbSet_;
+    }
+    for (const auto &value : cbSet) {
         if (value != nullptr) {
             value->OnScreenCaptureFinished(pid);
         }
@@ -140,6 +136,7 @@ int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureFinished(int32_t pid)
 void ScreenCaptureMonitorServer::SetSystemScreenRecorderStatus(bool started)
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer::SetSystemScreenRecorderStatus S, state: %{public}d", started);
+    std::lock_guard<std::mutex> lock(mutex_);
     isSystemScreenRecorderWorking_ = started;
 }
 
@@ -158,6 +155,7 @@ bool ScreenCaptureMonitorServer::IsSystemScreenRecorder(int32_t pid)
 bool ScreenCaptureMonitorServer::IsSystemScreenRecorderWorking()
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer::IsSystemScreenRecorderWorking S");
+    std::lock_guard<std::mutex> lock(mutex_);
     return isSystemScreenRecorderWorking_;
 }
 } // namespace Media

@@ -25,6 +25,23 @@
 namespace OHOS {
 namespace Media {
 
+class ScreenCaptureCallbackProxy : public ScreenCaptureCallBack, public NoCopyable {
+public:
+    void SetCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback);
+    void Reset();
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
+    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
+    void OnVideoBufferAvailable(bool isReady) override;
+    void OnStateChange(AVScreenCaptureStateCode stateCode) override;
+    void OnDisplaySelected(uint64_t displayId) override;
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
+    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override;
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override;
+private:
+    std::shared_mutex mutex_;
+    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+};
+
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {
 public:
@@ -103,7 +120,7 @@ public:
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
     int32_t RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
-    int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) override;
+    int32_t ExcludePickerWindows(const std::vector<int32_t> &windowIDsVec) override;
     int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
@@ -154,10 +171,7 @@ public:
     void ChangeMirrorScreenForSet();
     int32_t GetAppPid();
     int32_t GetAppUid();
-    void NotifyStateChange(AVScreenCaptureStateCode stateCode);
-    void NotifyDisplaySelected(uint64_t displayId);
     void NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
-    void NotifyUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
     void NotifyprivacyProtect();
     int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
     void SetSCServerSaUid(int32_t saUid);
@@ -336,7 +350,7 @@ private:
     mutable std::shared_mutex appMissionIdslock_;
     mutable std::condition_variable_any appMissionIdsCondVar_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
-    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    std::shared_ptr<ScreenCaptureCallbackProxy> cbProxy_ = nullptr;
     bool canvasRotation_ = false;
     bool showCursor_ = true;
     std::atomic<bool> isMicrophoneSwitchTurnOn_{true};

@@ -541,7 +541,7 @@ int32_t ScreenCaptureServiceProxy::RemoveWhiteListWindows(const std::vector<uint
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
+int32_t ScreenCaptureServiceProxy::ExcludePickerWindows(const std::vector<int32_t> &windowIDsVec)
 {
     MessageParcel data;
     MessageParcel reply;
