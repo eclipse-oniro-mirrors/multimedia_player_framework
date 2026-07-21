@@ -151,7 +151,7 @@ VEFError GraphicsRenderEngineImpl::UnInit()
 VEFError GraphicsRenderEngineImpl::StopRender()
 {
     MEDIA_LOGI("StopRender engine");
-    if (ready_) {
+    if (ready_ && renderThread_ != nullptr) {
         renderThread_->ClearTaskQueue();
         auto task =
             std::make_shared<RenderTask<>>([this]() { this->ReleaseThread(); }, COMMON_TASK_TAG, RequestTaskId());
