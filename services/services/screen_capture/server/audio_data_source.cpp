@@ -349,7 +349,7 @@ AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncInnerMode(uint32
         audioBufferQ_.emplace_back(innerAudioBuffer);
         SetAudioFirstFramePts(innerAudioBuffer->timestamp);
         lastWriteType_.store(AVScreenCaptureMixBufferType::INNER);
-        screenCaptureServer_->ReleaseInnerAudioBuffer();
+        innerCapture->ReleaseAudioBuffer();
         innerAudioBuffer = nullptr;
         return AudioDataSourceReadAtActionState::OK;
     }
