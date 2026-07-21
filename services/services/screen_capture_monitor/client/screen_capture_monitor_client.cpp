@@ -94,6 +94,8 @@ int32_t ScreenCaptureMonitorClient::CloseListenerObject()
 {
     listenerStubIPCExist_ = false;
     MEDIA_LOGD("CloseListenerObject");
+    CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorProxy_ != nullptr, MSERR_NO_MEMORY,
+        "ScreenCaptureMonitor service does not exist.");
     return screenCaptureMonitorProxy_->CloseListenerObject();
 }
 
