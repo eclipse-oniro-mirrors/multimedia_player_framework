@@ -420,8 +420,8 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
         auto keyNameIt = AVMETA_KEY_TO_X_MAP.find(it->first);
-        if (keyNameIt == AVMETA_KEY_TO_X_MAP.end() || keyNameIt == AV_KEY_LOCATION_LONGITUDE ||
-            keyNameIt == AV_KEY_LOCATION_LATITUDE) {
+        if (keyNameIt == AVMETA_KEY_TO_X_MAP.end() || it->first == AV_KEY_LOCATION_LONGITUDE ||
+            it->first == AV_KEY_LOCATION_LATITUDE) {
             it++;
             continue;
         }
