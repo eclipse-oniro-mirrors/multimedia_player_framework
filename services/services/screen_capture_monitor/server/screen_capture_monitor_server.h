@@ -50,7 +50,8 @@ public:
     bool IsSystemScreenRecorderWorking() override;
 
 private:
-    int32_t Init();
+    ScreenCaptureMonitorServer();
+    ~ScreenCaptureMonitorServer();
 
     std::mutex mutex_;
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorCbSet_;
