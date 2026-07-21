@@ -1035,8 +1035,8 @@ int32_t AVScreenCaptureRecorderImpl::CreateWatermarkBuffer(std::shared_ptr<Pixel
     int32_t pixelMapWidth, int32_t pixelMapHeight, std::shared_ptr<OHOS::Media::AVBuffer> &buffer)
 {
     int64_t dataSize64 = static_cast<int64_t>(pixelMapHeight) * pixelMap->GetRowStride();
-    CHECK_AND_RETURN_RET_LOG(dataSize64 > 0 && dataSize64 <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL,
-        "Invalid data size");
+    CHECK_AND_RETURN_RET_LOG(dataSize64 > 0 && dataSize64 <= static_cast<int64_t>(MAX_WATERMARK_SIZE),
+        MSERR_INVALID_VAL, "Invalid data size");
     int32_t dataSize = static_cast<int32_t>(dataSize64);
 
     std::vector<uint8_t> dataBuffer(dataSize);
