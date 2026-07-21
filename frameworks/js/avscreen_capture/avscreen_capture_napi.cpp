@@ -1540,8 +1540,8 @@ int32_t AVScreenCaptureNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
         "Invalid pixel format");
 
     int64_t dataSize64 = static_cast<int64_t>(pixelMap->GetHeight()) * pixelMap->GetRowStride();
-    CHECK_AND_RETURN_RET_LOG(dataSize64 > 0 && dataSize64 <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL,
-        "Invalid data size");
+    CHECK_AND_RETURN_RET_LOG(dataSize64 > 0 && dataSize64 <= static_cast<int64_t>(MAX_WATERMARK_SIZE),
+        MSERR_INVALID_VAL, "Invalid data size");
     int32_t dataSize = static_cast<int32_t>(dataSize64);
 
     std::vector<uint8_t> dataBuffer(dataSize);
