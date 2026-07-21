@@ -628,6 +628,7 @@ void HiRecorderImpl::ClearAllConfiguration()
     isWatermarkSupported_ = false;
     hasWatermark_ = false;
     codecMimeType_ = "";
+    CloseFd();
     if (audioEncFormat_) {
         audioEncFormat_->Clear();
     }
