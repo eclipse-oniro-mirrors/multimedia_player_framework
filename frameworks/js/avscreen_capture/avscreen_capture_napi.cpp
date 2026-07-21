@@ -18,6 +18,7 @@
 #include "common_napi.h"
 #include "media_dfx.h"
 #include "media_log.h"
+#include "scope_guard.h"
 #ifndef CROSS_PLATFORM
 #include "display_manager.h"
 #include "media_errors.h"
@@ -117,12 +118,14 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
-    AVScreenCaptureNapi *jsScreenCapture = new(std::nothrow) AVScreenCaptureNapi();
+    AVScreenCaptureNapi *jsScreenCapture = new (std::nothrow) AVScreenCaptureNapi();
     CHECK_AND_RETURN_RET_LOG(jsScreenCapture != nullptr, result, "failed to new AVScreenCaptureNapi");
+    ON_SCOPE_EXIT(0) {
+        delete jsScreenCapture;
+    };
     jsScreenCapture->env_ = env;
     jsScreenCapture->screenCapture_ = ScreenCaptureFactory::CreateScreenCapture();
     if (jsScreenCapture->screenCapture_ == nullptr) {
-        delete jsScreenCapture;
         MEDIA_LOGE("failed to CreateScreenCapture");
         return result;
     }
@@ -132,20 +135,19 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
 
     jsScreenCapture->screenCaptureCb_ = std::make_shared<AVScreenCaptureCallback>(env);
     if (jsScreenCapture->screenCaptureCb_ == nullptr) {
-        delete jsScreenCapture;
         MEDIA_LOGE("failed to CreateScreenCaptureCb");
         return result;
     }
 
     (void)jsScreenCapture->screenCapture_->SetScreenCaptureCallback(jsScreenCapture->screenCaptureCb_);
 
-    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsScreenCapture),
-                       AVScreenCaptureNapi::Destructor, nullptr, nullptr);
+    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsScreenCapture), AVScreenCaptureNapi::Destructor,
+        nullptr, nullptr);
     if (status != napi_ok) {
-        delete jsScreenCapture;
         MEDIA_LOGE("Failed to wrap native instance");
         return result;
     }
+    CANCEL_SCOPE_EXIT_GUARD(0);
 
     MEDIA_LOGI("Constructor success");
     return jsThis;
@@ -276,6 +278,7 @@ napi_value AVScreenCaptureNapi::JsReportAVScreenCaptureUserChoice(napi_env env, 
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
     if (asyncCtx->controller_ == nullptr) {
         ThrowCustomError(env, MSERR_EXT_API9_NO_MEMORY, "failed to create controller");
+        return result;
     }
     asyncCtx->controller_->ReportAVScreenCaptureUserChoice(sessionId, choice);
 
@@ -283,7 +286,11 @@ napi_value AVScreenCaptureNapi::JsReportAVScreenCaptureUserChoice(napi_env env, 
     napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, AsyncJsReportAVScreenCaptureUserChoice,
         MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    ON_SCOPE_EXIT(0) {
+        napi_delete_async_work(env, asyncCtx->work);
+    };
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    CANCEL_SCOPE_EXIT_GUARD(0);
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
@@ -308,32 +315,35 @@ napi_value AVScreenCaptureNapi::JsGetAVScreenCaptureConfigurableParameters(napi_
     MEDIA_LOGI("argCount %{public}zu", argCount);
     if (argCount < maxParam) {
         ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "parameter missing");
+        return result;
     }
     napi_valuetype valueType = napi_undefined;
     if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_number) {
         ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
+        return result;
     }
     int32_t sessionId;
     status = napi_get_value_int32(env, args[0], &sessionId);
     if (status != napi_ok) {
         ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "invalid parameter type");
+        return result;
     }
     if (!SystemPermission()) {
         ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "permission denied");
+        return result;
     }
     std::string resultStr = "";
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
     if (asyncCtx->controller_ == nullptr) {
         ThrowCustomError(env, MSERR_EXT_API9_PERMISSION_DENIED, "failed to create controller");
+        return result;
     }
     int32_t res = asyncCtx->controller_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
     if (res != MSERR_OK) {
         ThrowCustomError(env, MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
+        return result;
     }
     napi_create_string_utf8(env, resultStr.c_str(), NAPI_AUTO_LENGTH, &result);
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    asyncCtx.release();
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
     return result;
 }
@@ -395,24 +405,7 @@ napi_value AVScreenCaptureNapi::JsInit(napi_env env, napi_callback_info info)
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
     }
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-        }
-        MEDIA_LOGI("The js thread of init finishes execution and returns");
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-    asyncCtx.release();
-
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
     return result;
 }
 
@@ -519,22 +512,7 @@ napi_value AVScreenCaptureNapi::JsSkipPrivacyMode(napi_env env, napi_callback_in
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->task_ = AVScreenCaptureNapi::GetSkipPrivacyModeTask(asyncCtx, windowIDsVec);
     (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-        }
-        MEDIA_LOGI("The js thread of init finishes execution and returns");
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-    asyncCtx.release();
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
     return result;
 }
 
@@ -575,24 +553,7 @@ napi_value AVScreenCaptureNapi::JsSetMicrophoneEnabled(napi_env env, napi_callba
     asyncCtx->task_ = AVScreenCaptureNapi::GetSetMicrophoneEnableTask(asyncCtx, enable);
     (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-        }
-        MEDIA_LOGI("The js thread of init finishes execution and returns");
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-    asyncCtx.release();
-
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
     return result;
 }
 
@@ -631,24 +592,7 @@ napi_value AVScreenCaptureNapi::JsSetContentAutoRotation(napi_env env, napi_call
     asyncCtx->task_ = AVScreenCaptureNapi::GetSetContentAutoRotationTask(asyncCtx, canvasRotation);
     (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
 
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-        }
-        MEDIA_LOGI("The js thread of init finishes execution and returns");
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-    asyncCtx.release();
-
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
     return result;
 }
 
@@ -682,24 +626,38 @@ napi_value AVScreenCaptureNapi::JsExcludePickerWindows(napi_env env, napi_callba
     asyncCtx->task_ = AVScreenCaptureNapi::GetExcludePickerWindowsTask(asyncCtx, windowIDsVec);
 
     (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+    QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
+    return result;
+}
+
+void AVScreenCaptureNapi::AsyncJsTaskExecute(napi_env env, void *data)
+{
+    AVScreenCaptureAsyncContext *asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            asyncCtx->SignError(result.Value().first, result.Value().second);
+        }
+    }
+    MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
+}
+
+void AVScreenCaptureNapi::QueueAsyncWork(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env,
+    const std::string &opt, napi_async_execute_callback executeCb)
+{
+    asyncCtx->opt_ = opt;
     napi_value resource = nullptr;
     napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-        }
-        MEDIA_LOGI("The js thread of ExcludePickerWindows finishes execution and returns");
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-
-    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    NAPI_CALL_RETURN_VOID(env, napi_create_async_work(env, nullptr, resource, executeCb,
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    ON_SCOPE_EXIT(0) {
+        napi_delete_async_work(env, asyncCtx->work);
+    };
+    NAPI_CALL_RETURN_VOID(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    CANCEL_SCOPE_EXIT_GUARD(0);
     asyncCtx.release();
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
-    return result;
 }
 
 napi_value AVScreenCaptureNapi::JsSetPickerMode(napi_env env, napi_callback_info info)
@@ -736,23 +694,7 @@ napi_value AVScreenCaptureNapi::JsSetPickerMode(napi_env env, napi_callback_info
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->task_ = AVScreenCaptureNapi::GetSetPickerModeTask(asyncCtx, static_cast<PickerMode>(mode));
     (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
-    napi_value resource = nullptr;
-    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
-    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
-        AVScreenCaptureAsyncContext* asyncCtx = reinterpret_cast<AVScreenCaptureAsyncContext *>(data);
-        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-        }
-        MEDIA_LOGI("The js thread of SetPickerMode finishes execution and returns");
-    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
-
-    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
-    asyncCtx.release();
-    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
     return result;
 }
 
@@ -1405,7 +1347,12 @@ napi_value AVScreenCaptureNapi::ExecuteByPromise(napi_env env, napi_callback_inf
         }
         MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+
+    ON_SCOPE_EXIT(0) {
+        napi_delete_async_work(env, asyncCtx->work);
+    };
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    CANCEL_SCOPE_EXIT_GUARD(0);
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());
@@ -1614,7 +1561,11 @@ napi_value AVScreenCaptureNapi::JsAddWatermark(napi_env env, napi_callback_info 
         }
         MEDIA_LOGI("The js thread of AddWatermark finishes execution and returns");
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    ON_SCOPE_EXIT(0) {
+        napi_delete_async_work(env, asyncCtx->work);
+    };
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    CANCEL_SCOPE_EXIT_GUARD(0);
     asyncCtx.release();
 
     MEDIA_LOGI("Js %{public}s End", opt.c_str());

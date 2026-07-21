@@ -678,34 +678,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, capture_file_params_invalid_008, TestS
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetMissionIds_001, TestSize.Level2)
-{
-    SetInvalidConfig();
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->GetMissionIds(screenCaptureServer_->missionIds_), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetMissionIds_002, TestSize.Level2)
-{
-    SetInvalidConfig();
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs.push_back(1);
-    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs.push_back(2);
-    ASSERT_EQ(screenCaptureServer_->GetMissionIds(screenCaptureServer_->missionIds_), MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
 {
     SetInvalidConfig();
@@ -3405,11 +3377,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioEncParam_001, TestSize.Level
     ASSERT_NE(screenCaptureServer_->CheckAudioEncParam(audioEncInfo_4), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, RefreshResConfig_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, InitResourceManager_001, TestSize.Level2)
 {
-    screenCaptureServer_->RefreshResConfig();
-    screenCaptureServer_->resConfig_ = Global::Resource::CreateResConfig();
-    screenCaptureServer_->RefreshResConfig();
+    screenCaptureServer_->resourceManager_ = nullptr;
+    screenCaptureServer_->resConfig_ = nullptr;
+    screenCaptureServer_->InitResourceManager();
+    ASSERT_NE(screenCaptureServer_->resourceManager_, nullptr);
+    ASSERT_NE(screenCaptureServer_->resConfig_, nullptr);
+    screenCaptureServer_->InitResourceManager();
+    ASSERT_NE(screenCaptureServer_->resourceManager_, nullptr);
     ASSERT_NE(screenCaptureServer_->resConfig_, nullptr);
 }
 

@@ -15,6 +15,7 @@
 
 #include "native_avscreen_capture.h"
 
+#include <atomic>
 #include <mutex>
 #include <queue>
 #include <shared_mutex>
@@ -61,7 +62,7 @@ struct ScreenCaptureObject : public OH_AVScreenCapture {
 
     const std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<NativeScreenCaptureCallback> callback_ = nullptr;
-    bool isStart = false;
+    std::atomic<bool> isStart{false};
 };
 
 struct ScreenCaptureUserSelectionObject : public OH_AVScreenCapture_UserSelectionInfo {

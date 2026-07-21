@@ -101,6 +101,7 @@ public:
     int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled) override;
     int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled) override;
     int32_t StopScreenCapture() override;
+    int32_t StopAndRelease(AVScreenCaptureStateCode state);
     int32_t PresentPicker() override;
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
@@ -184,8 +185,6 @@ public:
     bool IsMicrophoneSwitchTurnOn();
     int32_t AudioRendererStateUpdate(
         const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
-    void SetWindowIdList(uint64_t windowId);
-    std::vector<int32_t> GetWindowIdList();
     void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
     void SetDefaultDisplayIdOfWindows();
     bool IsCaptureScreen(uint64_t displayId);
@@ -234,13 +233,14 @@ private:
     int32_t SkipPrivacyModeInner();
     int32_t SetScreenScaleMode();
     void InitAppInfo();
+    void ConvertTaskIdsToMissionIds();
+    void SetupCaptureListeners();
     void CloseFd();
     void ReleaseInner();
     void GetDumpFlag();
     void GetSystemUIFlag();
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
-    int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
     int32_t SetupVirtualScreenMirror(const sptr<Rosen::Display> &defaultDisplay,
         std::vector<ScreenId> &mirrorIds);
     DMError CreateMirror(const std::vector<uint64_t> &displayIds, std::vector<ScreenId> &mirrorIds);
@@ -306,7 +306,6 @@ private:
     void RegisterScreenConnectListener();
     uint64_t GetDisplayIdOfWindows(uint64_t displayId);
     std::string GetStringByResourceName(const char* name);
-    void RefreshResConfig();
     void InitResourceManager();
     void SetSystemScreenRecorderStatus(bool status);
     bool DestroyPopWindow();
@@ -315,7 +314,7 @@ private:
     int32_t RegisterAppLifecycleListener(const std::string &bundleName, int32_t appIndex,
         const std::string& appInstanceKey = "");
     int32_t UnRegisterAppLifecycleListener();
-    int32_t RegisterWindowLifecycleListener(std::vector<int32_t> windowIdList);
+    int32_t RegisterWindowLifecycleListener();
     int32_t UnRegisterWindowLifecycleListener();
     int32_t RegisterWindowInfoChangedListener();
     int32_t UnRegisterWindowInfoChangedListener();
@@ -341,15 +340,12 @@ private:
     void StopCaptureOnError(const std::string &reportMsg);
 private:
     std::mutex mutex_;
-    std::mutex cbMutex_;
-    std::mutex innerMutex_;
-    std::mutex inCallMutex_;
-    std::mutex displayScreenIdsMutex_;
-    std::shared_mutex windowIdListMutex_;
-    mutable std::shared_mutex rw_lock_;
+    std::mutex resMutex_;
+    mutable std::shared_mutex captureIdsMutex_;
     mutable std::shared_mutex appMissionIdslock_;
     mutable std::condition_variable_any appMissionIdsCondVar_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
+    TaskQueue taskQue_{"SCServer"};
     std::shared_ptr<ScreenCaptureCallbackProxy> cbProxy_ = nullptr;
     bool canvasRotation_ = false;
     bool showCursor_ = true;
@@ -400,7 +396,7 @@ private:
     std::vector<uint64_t> missionIds_;
     std::vector<uint64_t> appMissionIds_ = {};
     std::vector<uint64_t> appMissionIdsForGround_ = {};
-    std::vector<int32_t> windowIdList_ = {};
+    int32_t interestWindowId_ = -1;
     std::atomic<uint64_t> focusAppMissionId_ = INVALID_FOCUS_MISSION_ID;
     std::atomic<bool> isGetAppMissionId_ = true;
     std::atomic<ScreenId> curWindowInDisplayId_{SCREEN_ID_INVALID};
@@ -449,7 +445,6 @@ private:
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
     std::shared_ptr<ScreenCaptureSubscriber> subscriber_ = nullptr;
-    int32_t watermarkCount_ = 0;
 
     /* used for customize picker */
     std::vector<int32_t> excludedWindowIDsVec_;
