@@ -19,8 +19,6 @@
 #include "media_errors.h"
 #include "avsharedmemory_ipc.h"
 #include "media_utils.h"
-#include "tokenid_kit.h"
-#include "accesstoken_kit.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureControllerStub"};
@@ -155,23 +153,6 @@ int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(Me
     reply.WriteInt32(ret);
     reply.WriteString(resultStr);
     return MSERR_OK;
-}
-
-bool ScreenCaptureControllerStub::IsSystemApp()
-{
-    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
-    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
-    return isSystemApp;
-}
-
-bool ScreenCaptureControllerStub::HasSystemPermission()
-{
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL) {
-        return true;
-    }
-    return IsSystemApp();
 }
 } // namespace Media
 } // namespace OHOS

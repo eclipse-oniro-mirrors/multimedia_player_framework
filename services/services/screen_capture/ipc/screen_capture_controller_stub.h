@@ -39,8 +39,6 @@ private:
     int32_t ReportAVScreenCaptureUserChoice(MessageParcel &data, MessageParcel &reply);
     int32_t GetAVScreenCaptureConfigurableParameters(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
-    bool HasSystemPermission();
-    bool IsSystemApp();
 
     std::mutex mutex_;
     std::shared_ptr<IScreenCaptureController> screenCaptureControllerServer_ = nullptr;

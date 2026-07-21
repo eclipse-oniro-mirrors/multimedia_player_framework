@@ -23,8 +23,6 @@
 #include "hitrace/tracechain.h"
 #include "media_utils.h"
 #include "screen_capture_server.h"
-#include "tokenid_kit.h"
-#include "access_token.h"
 
 namespace {
 static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
@@ -161,23 +159,6 @@ bool ScreenCaptureMonitorServer::IsSystemScreenRecorderWorking()
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer::IsSystemScreenRecorderWorking S");
     return isSystemScreenRecorderWorking_;
-}
-
-bool ScreenCaptureMonitorServer::IsSystemApp()
-{
-    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
-    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
-    return isSystemApp;
-}
-
-bool ScreenCaptureMonitorServer::HasSystemPermission()
-{
-    auto tokenId = IPCSkeleton::GetCallingTokenID();
-    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL) {
-        return true;
-    }
-    return IsSystemApp();
 }
 } // namespace Media
 } // namespace OHOS
