@@ -14,6 +14,8 @@
  */
 
 #include "avmetadatahelper_service_proxy.h"
+#include <charconv>
+#include <string_view>
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
@@ -23,6 +25,44 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA,
                                                "AVMetadataHelperServiceProxy"};
+constexpr std::string_view FD_URI_PREFIX = "fd://";
+constexpr std::string_view OFFSET_KEY = "?offset=";
+constexpr std::string_view SIZE_KEY = "&size=";
+
+struct FdUriInfo {
+    int32_t fd = -1;
+    int64_t offset = 0;
+    int64_t size = 0;
+};
+
+template<typename T>
+bool ParseInteger(std::string_view value, T &result)
+{
+    CHECK_AND_RETURN_RET(!value.empty(), false);
+    auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+    return ec == std::errc{} && ptr == value.data() + value.size();
+}
+
+bool ParseFdUri(std::string_view uri, FdUriInfo &fdUriInfo)
+{
+    CHECK_AND_RETURN_RET(uri.compare(0, FD_URI_PREFIX.size(), FD_URI_PREFIX) == 0, false);
+    uri.remove_prefix(FD_URI_PREFIX.size());
+
+    size_t offsetPos = uri.find(OFFSET_KEY);
+    if (offsetPos == std::string_view::npos) {
+        return ParseInteger(uri, fdUriInfo.fd) && fdUriInfo.fd > 0;
+    }
+
+    size_t sizePos = uri.find(SIZE_KEY, offsetPos + OFFSET_KEY.size());
+    CHECK_AND_RETURN_RET(sizePos != std::string_view::npos, false);
+    std::string_view fdValue = uri.substr(0, offsetPos);
+    std::string_view offsetValue = uri.substr(offsetPos + OFFSET_KEY.size(),
+        sizePos - offsetPos - OFFSET_KEY.size());
+    std::string_view sizeValue = uri.substr(sizePos + SIZE_KEY.size());
+    return ParseInteger(fdValue, fdUriInfo.fd) && ParseInteger(offsetValue, fdUriInfo.offset) &&
+        ParseInteger(sizeValue, fdUriInfo.size) && fdUriInfo.fd > 0 && fdUriInfo.offset >= 0 &&
+        fdUriInfo.size >= -1;
+}
 }
 
 namespace OHOS {
@@ -58,6 +98,12 @@ int32_t AVMetadataHelperServiceProxy::DestroyStub()
 
 int32_t AVMetadataHelperServiceProxy::SetSource(const std::string &uri, int32_t usage)
 {
+    if (uri.compare(0, FD_URI_PREFIX.size(), FD_URI_PREFIX) == 0) {
+        FdUriInfo fdUriInfo;
+        CHECK_AND_RETURN_RET_LOG(ParseFdUri(uri, fdUriInfo), MSERR_INVALID_VAL, "Invalid fd uri");
+        return SetSource(fdUriInfo.fd, fdUriInfo.offset, fdUriInfo.size, usage);
+    }
+
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -547,4 +593,3 @@ int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(uint64_t time, uint32_
 }
 } // namespace Media
 } // namespace OHOS
-
