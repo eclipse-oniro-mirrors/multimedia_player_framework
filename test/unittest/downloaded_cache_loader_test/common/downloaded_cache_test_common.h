@@ -136,7 +136,8 @@ void CreateTestMappingFile(const std::string& cacheDir,
 
 void CreateTestMappingFileWithChecksum(const std::string& cacheDir,
     const std::vector<std::pair<std::string, std::string>>& entries,
-    uint32_t checksumOverride)
+    uint32_t checksumOverride,
+    uint64_t fileSize = 1024)
 {
     std::string mappingPath = cacheDir + "/" + TEST_MAPPING_FILE;
 
@@ -157,6 +158,21 @@ void CreateTestMappingFileWithChecksum(const std::string& cacheDir,
     file.write(reinterpret_cast<const char*>(&header.entryCount), 4);
     file.write(reinterpret_cast<const char*>(header.reserved), 8);
     file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
+
+    WriteDefaultPlaybackParamData(file);
+
+    for (const auto& entry : entries) {
+        auto hash = SHA256Hasher::GenerateHash(entry.first);
+        uint32_t pathLength = static_cast<uint32_t>(entry.second.size());
+        uint64_t size = fileSize;
+        uint8_t reserved[8] = {0};
+
+        file.write(reinterpret_cast<const char*>(hash.data()), SHA256_LEN);
+        file.write(reinterpret_cast<const char*>(&pathLength), 4);
+        file.write(reinterpret_cast<const char*>(&size), 8);
+        file.write(reinterpret_cast<const char*>(reserved), 8);
+        file.write(entry.second.c_str(), entry.second.size());
+    }
     file.close();
 }
 

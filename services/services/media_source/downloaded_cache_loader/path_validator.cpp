@@ -32,6 +32,11 @@ bool PathValidator::Validate(const std::string& rootPath, const std::string& rel
         return false;
     }
 
+    if (relativePath.empty()) {
+        MEDIA_LOGE("Relative path is empty");
+        return false;
+    }
+
     if (relativePath.length() > MAX_PATH_LENGTH) {
         MEDIA_LOGE("Path exceeds max length: %{public}zu", relativePath.length());
         return false;

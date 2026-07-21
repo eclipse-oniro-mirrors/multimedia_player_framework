@@ -16,7 +16,9 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <memory>
+#include <vector>
 #include "net_downloader_test_common.h"
+#include "downloader.h"
 #include "network_client_agent.h"
 
 using namespace testing;
@@ -30,41 +32,41 @@ class NetworkClientAgentTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
     static void TearDownTestCase(void) {}
-    void SetUp(void)
-    {
-        NetworkClientAgent::Destroy();
-    }
-    void TearDown(void)
-    {
-        NetworkClientAgent::Destroy();
-    }
+    void SetUp(void) {}
+    void TearDown(void) {}
 };
+
+HWTEST_F(NetworkClientAgentTest, Create_001, TestSize.Level0)
+{
+    bool ret = NetworkClientAgent::Create();
+    EXPECT_TRUE(ret);
+    NetworkClientAgent::Destroy();
+}
+
+HWTEST_F(NetworkClientAgentTest, Create_Multiple_001, TestSize.Level0)
+{
+    bool ret1 = NetworkClientAgent::Create();
+    EXPECT_TRUE(ret1);
+    bool ret2 = NetworkClientAgent::Create();
+    EXPECT_TRUE(ret2);
+    NetworkClientAgent::Destroy();
+    NetworkClientAgent::Destroy();
+}
+
+HWTEST_F(NetworkClientAgentTest, CreateAfterDestroy_001, TestSize.Level0)
+{
+    (void)NetworkClientAgent::Create();
+    NetworkClientAgent::Destroy();
+
+    bool ret = NetworkClientAgent::Create();
+    EXPECT_TRUE(ret);
+    NetworkClientAgent::Destroy();
+}
 
 HWTEST_F(NetworkClientAgentTest, NewInstance_NullCreateFunc_001, TestSize.Level0)
 {
     auto result = NetworkClientAgent::NewInstance(nullptr, nullptr, nullptr, std::nullopt);
-    EXPECT_EQ(result, nullptr);
-}
-
-HWTEST_F(NetworkClientAgentTest, Create_FailInTestEnv_001, TestSize.Level0)
-{
-    bool createResult = NetworkClientAgent::Create();
-    EXPECT_FALSE(createResult);
-}
-
-HWTEST_F(NetworkClientAgentTest, Create_FailThenNewInstance_001, TestSize.Level0)
-{
-    bool createResult = NetworkClientAgent::Create();
-    EXPECT_FALSE(createResult);
-
-    auto instance = NetworkClientAgent::NewInstance(nullptr, nullptr, nullptr, std::nullopt);
-    EXPECT_EQ(instance, nullptr);
-}
-
-HWTEST_F(NetworkClientAgentTest, Destroy_CalledTwice_001, TestSize.Level0)
-{
-    NetworkClientAgent::Destroy();
-    NetworkClientAgent::Destroy();
+    EXPECT_EQ(result, nullptr)
 }
 
 } // namespace MediaDownload

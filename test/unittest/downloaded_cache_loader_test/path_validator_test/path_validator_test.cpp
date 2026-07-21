@@ -111,7 +111,7 @@ HWTEST_F(PathValidatorTest, EmptyRelativePath_001, TestSize.Level0)
 {
     std::string relativePath = "";
     bool result = PathValidator::Validate(testCacheDir_, relativePath);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
 }
 
 HWTEST_F(PathValidatorTest, SingleDot_001, TestSize.Level0)
@@ -284,7 +284,7 @@ HWTEST_F(PathValidatorTest, ExactRootMatch_001, TestSize.Level0)
 {
     std::string relativePath = "";
     bool result = PathValidator::Validate(testCacheDir_, relativePath);
-    EXPECT_TRUE(result);
+    EXPECT_FALSE(result);
 }
 
 HWTEST_F(PathValidatorTest, SiblingWithCommonPrefix_001, TestSize.Level0)
