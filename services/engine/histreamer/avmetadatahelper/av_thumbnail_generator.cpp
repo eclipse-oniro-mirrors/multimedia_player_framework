@@ -1004,8 +1004,8 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
 void AVThumbnailGenerator::ConfigureReadSample(uint32_t readSampleTimeoutMs, ReadSampleMode readSampleMode)
 {
     CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "Configure failed, mediaDemuxer_ is nullptr");
-    mediaDemuxer_->SetReadSampleMode(ReadSampleMode::READ_SAMPLE_ASYNC);
-    mediaDemuxer_->SetReadSampleTimeout(MAX_WAIT_TIME_SECOND * S_TO_MS);
+    mediaDemuxer_->SetReadSampleMode(readSampleMode);
+    mediaDemuxer_->SetReadSampleTimeout(readSampleTimeoutMs);
 }
 
 void AVThumbnailGenerator::ConvertToAVSharedMemory()
