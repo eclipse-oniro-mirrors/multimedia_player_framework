@@ -2460,7 +2460,7 @@ uint32_t OH_AVSeiMessage_GetSeiCount(OH_AVSeiMessageArray *message)
 OH_AVFormat *OH_AVSeiMessage_GetSei(OH_AVSeiMessageArray *message, uint32_t index)
 {
     CHECK_AND_RETURN_RET_LOG(message != nullptr, nullptr, "input message is nullptr");
-    struct SeiMessageArray *messageObj = dynamic_cast<SeiMessageArray *>(message);
+    struct SeiMessageArray *messageObj = reinterpret_cast<SeiMessageArray *>(message);
     CHECK_AND_RETURN_RET_LOG(messageObj != nullptr, nullptr, "messageObj is nullptr");
     CHECK_AND_RETURN_RET_LOG(index < messageObj->payloadGroup_.size(), nullptr, "input index is invalid");
 
