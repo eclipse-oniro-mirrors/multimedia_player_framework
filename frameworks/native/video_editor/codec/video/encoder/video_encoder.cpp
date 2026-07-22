@@ -35,12 +35,17 @@ VideoEncoder::VideoEncoder(uint64_t id, const OnNewOutputDataCallBack& cb) : onN
 VideoEncoder::~VideoEncoder()
 {
     MEDIA_LOGD("[%{public}s] destruct.", logTag_.c_str());
-    encoderMutex_.lock();
-    if (encoder_) {
-        OH_VideoEncoder_Destroy(encoder_);
-        encoder_ = nullptr;
+    if (encoder_ != nullptr && codecState_) {
+        codecState_ = false;
+        OH_VideoEncoder_Stop(encoder_);
     }
-    encoderMutex_.unlock();
+    {
+        std::lock_guard<ffrt::mutex> lk(encoderMutex_);
+        if (encoder_) {
+            OH_VideoEncoder_Destroy(encoder_);
+            encoder_ = nullptr;
+        }
+    }
     if (nativeWindow_) {
         OH_NativeWindow_DestroyNativeWindow(nativeWindow_);
         nativeWindow_ = nullptr;
@@ -68,10 +73,9 @@ void VideoEncoder::CodecOnNewOutputData(OH_AVCodec* codec, uint32_t index, OH_AV
     auto encoder = static_cast<VideoEncoder*>(userData);
     MEDIA_LOGD("[%{public}s] CodecOnNewOutputData index: %{public}d.", encoder->logTag_.c_str(), index);
     encoder->WriteFrame(data, attr);
-    { // 此处codec其实就是VideoEncoder::encoder_对象，两个是同一个对象，加锁.
-        std::lock_guard<ffrt::mutex> lk(encoder->encoderMutex_);
-        OH_VideoEncoder_FreeOutputData(codec, index);
-    }
+    // 不持有encoderMutex_: OH_VideoEncoder_Stop/Flush/Destroy会等待回调完成，
+    // 若回调也持有encoderMutex_则会死锁。FreeOutputData本身是线程安全的IPC调用。
+    OH_VideoEncoder_FreeOutputData(codec, index);
 }
 
 void VideoEncoder::CodecOnStreamChanged(OH_AVCodec* codec, OH_AVFormat* format, void* userData)
@@ -193,10 +197,17 @@ VEFError VideoEncoder::Start()
 
 VEFError VideoEncoder::Stop()
 {
-    std::lock_guard<ffrt::mutex> lk(encoderMutex_);
+    std::unique_lock<ffrt::mutex> lk(encoderMutex_);
     MEDIA_LOGI("[%{public}s] stop encoder.", logTag_.c_str());
     codecState_ = false;
-    OH_AVErrCode ret = OH_VideoEncoder_Stop(encoder_);
+    auto handle = encoder_;
+    if (handle == nullptr) {
+        MEDIA_LOGW("[%{public}s] stop encoder skipped, encoder is nullptr.", logTag_.c_str());
+        return VEFError::ERR_OK;
+    }
+    lk.unlock();
+    OH_AVErrCode ret = OH_VideoEncoder_Stop(handle);
+    lk.lock();
     if (ret != AV_ERR_OK) {
         MEDIA_LOGE("[%{public}s] stop encoder failed, OH_VideoEncoder_Stop return: %{public}d.", logTag_.c_str(), ret);
         return VEFError::ERR_INTERNAL_ERROR;
@@ -218,14 +229,21 @@ VEFError VideoEncoder::SendEos()
 
 VEFError VideoEncoder::Flush()
 {
-    std::lock_guard<ffrt::mutex> lk(encoderMutex_);
+    std::unique_lock<ffrt::mutex> lk(encoderMutex_);
     MEDIA_LOGI("[%{public}s] finish, flush encoder.", logTag_.c_str());
-    OH_AVErrCode ret = OH_VideoEncoder_Flush(encoder_);
+    auto handle = encoder_;
+    if (handle == nullptr) {
+        MEDIA_LOGW("[%{public}s] flush encoder skipped, encoder is nullptr.", logTag_.c_str());
+        return VEFError::ERR_OK;
+    }
+    lk.unlock();
+    OH_AVErrCode ret = OH_VideoEncoder_Flush(handle);
+    lk.lock();
     if (ret != AV_ERR_OK) {
         MEDIA_LOGE("[%{public}s] OH_VideoEncoder_Flush return: %{public}d.", logTag_.c_str(), ret);
         return VEFError::ERR_INTERNAL_ERROR;
     }
-    MEDIA_LOGD("[%{public}s] notify eos encoder finish.", logTag_.c_str());
+    MEDIA_LOGD("[%{public}s] flush encoder finish.", logTag_.c_str());
     return VEFError::ERR_OK;
 }
 
