@@ -669,8 +669,10 @@ bool CommonNapi::AddArrayProperty(napi_env env, napi_value obj, const std::strin
 
     for (uint32_t i = 0; i < vec.size(); i++) {
         napi_value number = nullptr;
-        (void)napi_create_int32(env, vec.at(i), &number);
-        (void)napi_set_element(env, array, i, number);
+        status = napi_create_int32(env, vec.at(i), &number);
+        CHECK_AND_RETURN_RET(status == napi_ok, false);
+        status = napi_set_element(env, array, i, number);
+        CHECK_AND_RETURN_RET(status == napi_ok, false);
     }
 
     napi_value nameStr = nullptr;
@@ -806,8 +808,10 @@ bool CommonNapi::AddArrayInt(napi_env env, napi_value &array, const std::vector<
 
     for (uint32_t i = 0; i < vec.size(); i++) {
         napi_value number = nullptr;
-        (void)napi_create_int32(env, vec.at(i), &number);
-        (void)napi_set_element(env, array, i, number);
+        status = napi_create_int32(env, vec.at(i), &number);
+        CHECK_AND_RETURN_RET(status == napi_ok, false);
+        status = napi_set_element(env, array, i, number);
+        CHECK_AND_RETURN_RET(status == napi_ok, false);
     }
 
     return true;
