@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdlib>
+#include <ctime>
 #include <string>
 #include <fstream>
 #include <sstream>
@@ -91,11 +92,10 @@ private:
         auto now = std::chrono::system_clock::now();
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
         std::time_t t = std::chrono::system_clock::to_time_t(now);
-        auto tmPtr = std::localtime(&t);
-        if (tmPtr == nullptr) {
+        std::tm tmInfo {};
+        if (localtime_r(&t, &tmInfo) == nullptr) {
             return "0000-00-00 00_00_00";
         }
-        std::tm tmInfo = *tmPtr;
 
         std::stringstream ss;
         int millSecondWidth = 3;

@@ -600,7 +600,6 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
     if (fetchRes != MSERR_OK) {
         ThrowError(env, MSERR_EXT_API9_SERVICE_DIED, "Service died.");
     }
-    asyncCtx.release();
     return result;
 }
 
@@ -655,7 +654,6 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout(napi_env env
     if (fetchRes != MSERR_OK) {
         ThrowError(env, MSERR_EXT_API9_SERVICE_DIED, "Service died.");
     }
-    asyncCtx.release();
     return result;
 }
 

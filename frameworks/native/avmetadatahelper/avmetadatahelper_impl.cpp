@@ -70,6 +70,7 @@ static std::map<Scene, long> SCENE_CODE_MAP = { { Scene::AV_META_SCENE_CLONE, 1 
                                                 { Scene::AV_META_SCENE_BATCH_HANDLE, 2 } };
 static std::map<Scene, int64_t> SCENE_TIMESTAMP_MAP = { { Scene::AV_META_SCENE_CLONE, 0 },
                                                         { Scene::AV_META_SCENE_BATCH_HANDLE, 0 } };
+static std::mutex SCENE_TIMESTAMP_MUTEX;
 /*
  * CM_ColorSpaceType from
  * {@link ${system_general}/drivers/interface/display/graphic/common/v1_0/CMColorSpace.idl}
@@ -473,7 +474,8 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
         MEDIA_LOGW("cant find colorSpace");
         return Status::ERROR_UNKNOWN;
     }
-    CHECK_AND_RETURN_RET_LOG(!colorSpaceInfoVec.empty(), Status::ERROR_UNKNOWN, "colorSpaceInfoVec is empty");
+    CHECK_AND_RETURN_RET_LOG(colorSpaceInfoVec.size()*sizeof(uint8_t) >= sizeof(CM_ColorSpaceInfo), Status::ERROR_UNKNOWN,
+        "colorSpaceInfoVec size is invalid");
     auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
     CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
     auto colorSpaceInfo = outColor[0];
@@ -510,7 +512,8 @@ Status AVMetadataHelperImpl::GetColorSpaceWithDefaultValue(sptr<SurfaceBuffer> &
         MEDIA_LOGW("cant find colorSpace");
         return Status::ERROR_UNKNOWN;
     }
-    CHECK_AND_RETURN_RET_LOG(!colorSpaceInfoVec.empty(), Status::ERROR_UNKNOWN, "colorSpaceInfoVec is empty");
+    CHECK_AND_RETURN_RET_LOG(colorSpaceInfoVec.size()*sizeof(uint8_t) >= sizeof(CM_ColorSpaceInfo), Status::ERROR_UNKNOWN,
+        "colorSpaceInfoVec size is invalid");
     auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
     CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
     auto colorSpaceInfo = outColor[0];
@@ -765,14 +768,17 @@ void AVMetadataHelperImpl::ReportSceneCode(Scene scene)
         return;
     }
     auto sceneCode = SCENE_CODE_MAP[scene];
-    auto lastTsp = SCENE_TIMESTAMP_MAP[scene];
     auto now =
         std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch());
-    auto duration = now - std::chrono::milliseconds(lastTsp);
-    if (duration < std::chrono::milliseconds(SCENE_CODE_EFFECTIVE_DURATION_MS)) {
-        return;
+    {
+        std::lock_guard<std::mutex> lock(SCENE_TIMESTAMP_MUTEX);
+        auto lastTsp = SCENE_TIMESTAMP_MAP[scene];
+        auto duration = now - std::chrono::milliseconds(lastTsp);
+        if (duration < std::chrono::milliseconds(SCENE_CODE_EFFECTIVE_DURATION_MS)) {
+            return;
+        }
+        SCENE_TIMESTAMP_MAP[scene] = now.count();
     }
-    SCENE_TIMESTAMP_MAP[scene] = now.count();
     MEDIA_LOGI("Report scene code %{public}ld", sceneCode);
     int32_t ret = HiSysEventWrite(
         PERFORMANCE_STATS, "CPU_SCENE_ENTRY", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, "PACKAGE_NAME",
@@ -1080,8 +1086,8 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, i
                                    .dstHeight = param.dstHeight,
                                    .colorFormat = param.colorFormat };
     auto frameBuffer = avMetadataHelperService->FetchFrameYuv(timeUs, option, config);
-    CHECK_AND_RETURN_RET(frameBuffer != nullptr && frameBuffer->memory_ != nullptr, nullptr);
     concurrentWorkCount_--;
+    CHECK_AND_RETURN_RET(frameBuffer != nullptr && frameBuffer->memory_ != nullptr, nullptr);
 
     return ProcessPixelMap(frameBuffer, param, scaleMode);
 }
@@ -1100,10 +1106,10 @@ FetchFrameResult AVMetadataHelperImpl::FetchFrameBase(int64_t timeUs, int32_t op
                                    .dstHeight = param.dstHeight,
                                    .colorFormat = param.colorFormat };
     auto result = avMetadataHelperService->FetchFrameYuvWithTimeout(timeUs, option, config, timeoutMs);
+    concurrentWorkCount_--;
     CHECK_AND_RETURN_RET(!result.isTimeout, FetchFrameResult(nullptr, nullptr, true));
     CHECK_AND_RETURN_RET(result.avbuffer != nullptr && result.avbuffer->memory_ != nullptr,
         FetchFrameResult(nullptr, nullptr, false));
-    concurrentWorkCount_--;
 
     auto pixelMap = ProcessPixelMap(result.avbuffer, param, scaleMode);
     return FetchFrameResult(nullptr, pixelMap, false);
