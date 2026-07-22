@@ -21,8 +21,8 @@
 #include "media_errors.h"
 #include "ipc_skeleton.h"
 #include "media_permission.h"
-#include "accesstoken_kit.h"
 #include "media_dfx.h"
+#include "media_utils.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServiceStub"};
@@ -55,7 +55,7 @@ ScreenCaptureMonitorServiceStub::~ScreenCaptureMonitorServiceStub()
 
 int32_t ScreenCaptureMonitorServiceStub::Init()
 {
-    CHECK_AND_RETURN_RET_LOG(ScreenCaptureMonitorServer::GetInstance().HasSystemPermission(), MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(HasSystemPermission(), MSERR_INVALID_OPERATION,
         "is not system app failed to init ScreenCaptureMonitorServer");
     screenCaptureMonitorStubFuncs_[SET_LISTENER_OBJ] = &ScreenCaptureMonitorServiceStub::SetListenerObject;
     screenCaptureMonitorStubFuncs_[IS_SCREEN_CAPTURE_WORKING] =

@@ -111,13 +111,8 @@ int32_t ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice(int32_t ses
     MEDIA_LOGI("ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice start 2");
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
         "screen capture controller server is nullptr");
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    std::string appName = GetClientBundleName(appUid);
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName) != 0) {
-        MEDIA_LOGE("ScreenCaptureControllerStub called by app name %{public}s", appName.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(HasSystemPermission(), MSERR_INVALID_OPERATION,
+        "is not system app failed to init ScreenCaptureMonitorServer");
     return screenCaptureControllerServer_->ReportAVScreenCaptureUserChoice(sessionId, choice);
 }
 
@@ -139,13 +134,8 @@ int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(in
     MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start");
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
         "screen capture controller server is nullptr");
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    std::string appName = GetClientBundleName(appUid);
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName) != 0) {
-        MEDIA_LOGE("ScreenCaptureControllerStub called by app name %{public}s", appName.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(HasSystemPermission(), MSERR_INVALID_OPERATION,
+        "is not system app failed to init ScreenCaptureMonitorServer");
     return screenCaptureControllerServer_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
 }
 
@@ -164,7 +154,5 @@ int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(Me
     reply.WriteString(resultStr);
     return MSERR_OK;
 }
-
-
 } // namespace Media
 } // namespace OHOS

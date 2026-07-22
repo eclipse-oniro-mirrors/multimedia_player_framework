@@ -1034,8 +1034,10 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::AddWatermarkT
 int32_t AVScreenCaptureRecorderImpl::CreateWatermarkBuffer(std::shared_ptr<PixelMap> &pixelMap,
     int32_t pixelMapWidth, int32_t pixelMapHeight, std::shared_ptr<OHOS::Media::AVBuffer> &buffer)
 {
-    int32_t dataSize = pixelMapHeight * pixelMap->GetRowStride();
-    CHECK_AND_RETURN_RET_LOG(dataSize > 0 && dataSize <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL, "Invalid data size");
+    int64_t dataSize64 = static_cast<int64_t>(pixelMapHeight) * pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(dataSize64 > 0 && dataSize64 <= static_cast<int64_t>(MAX_WATERMARK_SIZE),
+        MSERR_INVALID_VAL, "Invalid data size");
+    int32_t dataSize = static_cast<int32_t>(dataSize64);
 
     std::vector<uint8_t> dataBuffer(dataSize);
     errno_t err = memcpy_s(dataBuffer.data(), dataSize, pixelMap->GetPixels(), dataSize);
@@ -1073,7 +1075,9 @@ int32_t AVScreenCaptureRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pix
         MSERR_INVALID_VAL, "Invalid pixelMap width");
     CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapHeight <= AVSCREENCAPTURE_WATERMARK_MAX_LENGTH,
         MSERR_INVALID_VAL, "Invalid pixelMap height");
-    CHECK_AND_RETURN_RET_LOG(pixelMapHeight <= MAX_WATERMARK_SIZE / pixelMap->GetRowStride(),
+    int32_t rowStride = pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(rowStride > 0, MSERR_INVALID_VAL, "Invalid row stride");
+    CHECK_AND_RETURN_RET_LOG(pixelMapHeight <= MAX_WATERMARK_SIZE / rowStride,
         MSERR_INVALID_VAL, "Invalid data size");
 
     std::shared_ptr<OHOS::Media::AVBuffer> buffer = nullptr;
