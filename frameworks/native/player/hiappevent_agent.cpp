@@ -55,6 +55,9 @@ HiAppEventAgent::HiAppEventAgent()
 HiAppEventAgent::~HiAppEventAgent()
 {
 #ifdef SUPPORT_HIAPPEVENT
+    if (hiAppEventTask_ != nullptr) {
+        hiAppEventTask_->Stop();
+    }
     hiAppEventTask_.reset();
 #endif
 }
