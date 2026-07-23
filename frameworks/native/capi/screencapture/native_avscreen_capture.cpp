@@ -1276,7 +1276,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
     }
     CHECK_AND_RETURN_RET_LOG(vec.size() >= 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
     int32_t ret = screenCaptureObj->screenCapture_->SkipPrivacyMode(vec);
-    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNKNOWN_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
         "SkipPrivacyMode failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SkipPrivacyMode failed!");
