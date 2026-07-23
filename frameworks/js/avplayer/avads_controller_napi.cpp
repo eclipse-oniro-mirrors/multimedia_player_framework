@@ -40,6 +40,16 @@ namespace {
         }
         napi_reject_deferred(env, deferred, error);
     }
+
+    void ThrowErrorWithCode(napi_env env, int32_t code, const std::string &msg)
+    {
+        napi_value error = nullptr;
+        napi_status status = CommonNapi::CreateError(env, code, msg, error);
+        if (status == napi_ok && error != nullptr) {
+            napi_throw(env, error);
+        }
+    }
+
 }
 
 thread_local napi_ref AVAdsControllerNapi::constructor_ = nullptr;
@@ -419,26 +429,26 @@ napi_value AVAdsControllerNapi::JsRemoveAdsMediaSource(napi_env env, napi_callba
 
     std::shared_ptr<Player> playerInstance = controller->GetPlayerInstance();
     if (playerInstance == nullptr) {
-        CommonNapi::ThrowError(env, ERR_ADS_PARAM_INVALID, "controller is released");
+        ThrowErrorWithCode(env, ERR_ADS_PARAM_INVALID, "controller is released");
         return result;
     }
 
     if (argc < 1) {
-        CommonNapi::ThrowError(env, ERR_ADS_PARAM_INVALID, "Invalid arguments");
+        ThrowErrorWithCode(env, ERR_ADS_PARAM_INVALID, "Invalid arguments");
         return result;
     }
 
     napi_valuetype type = napi_undefined;
     status = napi_typeof(env, argv[0], &type);
     if (status != napi_ok || type != napi_string) {
-        CommonNapi::ThrowError(env, ERR_ADS_PARAM_INVALID, "Argument must be string");
+        ThrowErrorWithCode(env, ERR_ADS_PARAM_INVALID, "Argument must be string");
         return result;
     }
 
     std::string adId = CommonNapi::GetStringArgument(env, argv[0]);
     int32_t ret = playerInstance->RemoveAdsMediaSource(adId);
     if (ret != MSERR_OK) {
-        CommonNapi::ThrowError(env, ERR_ADS_PARAM_INVALID, "removeAdsMediaSource failed");
+        ThrowErrorWithCode(env, ERR_ADS_PARAM_INVALID, "removeAdsMediaSource failed");
     }
 
     return result;
