@@ -35,26 +35,33 @@ AVAdsControllerImpl::AVAdsControllerImpl()
 }
 
 AVAdsControllerImpl::AVAdsControllerImpl(AVPlayerImpl *player)
+    : player_(player)
 {
-    player_ = player;
+    if (player_ != nullptr) {
+        playerInstance_ = player_->GetPlayerInstance();
+    }
     MEDIA_LOGI("AVAdsControllerImpl Constructor with player");
 }
 
 AVAdsControllerImpl::~AVAdsControllerImpl()
 {
+    Release();
     MEDIA_LOGI("AVAdsControllerImpl Destructor");
 }
 
 void AVAdsControllerImpl::SetPlayer(AVPlayerImpl *player)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     player_ = player;
+    if (player_ != nullptr) {
+        playerInstance_ = player_->GetPlayerInstance();
+    } else {
+        playerInstance_ = nullptr;
+    }
 }
 
-AVPlayerImpl *AVAdsControllerImpl::GetPlayer() const
+std::shared_ptr<OHOS::Media::Player> AVAdsControllerImpl::GetPlayerInstance() const
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    return player_;
+    return playerInstance_;
 }
 
 string AVAdsControllerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, int32_t startMs)
@@ -63,26 +70,34 @@ string AVAdsControllerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::wea
     MEDIA_LOGI("AddAdsMediaSourceSync In");
 
     string invalidId {};
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
+    if (player_ == nullptr) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "controller is released");
+        return invalidId;
+    }
+    if (playerInstance_ == nullptr) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "player instance is null");
+        return invalidId;
+    }
+    OHOS::Media::TaskQueue *taskQueue = player_->GetTaskQueue();
+    if (taskQueue == nullptr) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "task queue is null");
         return invalidId;
     }
 
     std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceImpl::GetMediaSource(src);
     if (srcTmp == nullptr) {
-        set_business_error(MSERR_EXT_API9_INVALID_PARAMETER, "get MediaSource argument failed!");
+        set_business_error(ERR_ADS_PARAM_INVALID, "get MediaSource argument failed!");
         return invalidId;
     }
     std::shared_ptr<AVMediaSource> mediaSource = AVPlayerImpl::GetAVMediaSource(src, srcTmp);
     if (mediaSource == nullptr) {
-        set_business_error(MSERR_EXT_API9_INVALID_PARAMETER, "create mediaSource failed!");
+        set_business_error(ERR_ADS_PARAM_INVALID, "create mediaSource failed!");
         return invalidId;
     }
 
     std::string outId;
     std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-    context->asyncTask = AddAdsMediaSourceTask(mediaSource, startMs, outId);
+    context->asyncTask = AddAdsMediaSourceTask(playerInstance_, taskQueue, mediaSource, startMs, outId);
     context->CheckTaskResult();
     if (!context->errFlag) {
         MEDIA_LOGI("AddAdsMediaSourceSync Out, id: %{public}s", outId.c_str());
@@ -96,16 +111,16 @@ void AVAdsControllerImpl::RemoveAdsMediaSource(::taihe::string_view id)
     MediaTrace trace("AVAdsControllerImpl::removeAdsMediaSource");
     MEDIA_LOGI("RemoveAdsMediaSource In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
+    if (playerInstance_ == nullptr) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "controller is released");
         return;
     }
 
     std::string idStr(id);
-    std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-    context->asyncTask = RemoveAdsMediaSourceTask(idStr);
-    context->CheckTaskResult();
+    int32_t ret = playerInstance_->RemoveAdsMediaSource(idStr);
+    if (ret != MSERR_OK) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "removeAdsMediaSource failed");
+    }
     MEDIA_LOGI("RemoveAdsMediaSource Out");
 }
 
@@ -114,19 +129,20 @@ void AVAdsControllerImpl::SkipCurrentAdsMediaSource()
     MediaTrace trace("AVAdsControllerImpl::skipCurrentAdsMediaSource");
     MEDIA_LOGI("SkipCurrentAdsMediaSource In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
+    if (player_ == nullptr) {
+        MEDIA_LOGE("controller is released");
         return;
     }
-    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        player->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to skip");
+    if (player_->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released, unsupport to skip");
+        return;
+    }
+    if (playerInstance_ == nullptr) {
+        MEDIA_LOGE("player instance is null");
         return;
     }
 
-    std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-    context->asyncTask = SkipCurrentAdsMediaSourceTask();
-    context->CheckTaskResult();
+    playerInstance_->SkipCurrentAdsMediaSource();
     MEDIA_LOGI("SkipCurrentAdsMediaSource Out");
 }
 
@@ -135,15 +151,12 @@ void AVAdsControllerImpl::DisableAllAdsMediaSource()
     MediaTrace trace("AVAdsControllerImpl::disableAllAdsMediaSource");
     MEDIA_LOGI("DisableAllAdsMediaSource In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
+    if (playerInstance_ == nullptr) {
+        MEDIA_LOGE("controller is released");
         return;
     }
 
-    std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
-    context->asyncTask = DisableAllAdsMediaSourceTask();
-    context->CheckTaskResult();
+    playerInstance_->DisableAllAdsMediaSource();
     MEDIA_LOGI("DisableAllAdsMediaSource Out");
 }
 
@@ -153,24 +166,22 @@ void AVAdsControllerImpl::OnAdsEventListenerLoadingError(
     MediaTrace trace("AVAdsControllerImpl::OnAdsEventListenerLoadingError");
     MEDIA_LOGD("OnAdsEventListenerLoadingError In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
-        return;
-    }
-
-    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        player->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
-        return;
-    }
-
     ani_env *env = taihe::get_env();
     CHECK_AND_RETURN_LOG(env != nullptr, "Failed to get ani_env");
     std::shared_ptr<taihe::callback<void(::taihe::string_view, uintptr_t)>> taiheCallback =
         std::make_shared<taihe::callback<void(::taihe::string_view, uintptr_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR, autoRef);
+
+    if (player_ == nullptr) {
+        MEDIA_LOGE("controller is released");
+        return;
+    }
+    if (player_->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released, unsupport to on event");
+        return;
+    }
+    player_->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR, autoRef);
     MEDIA_LOGI("OnAdsEventListenerLoadingError success");
 }
 
@@ -180,11 +191,9 @@ void AVAdsControllerImpl::OffAdsEventListenerLoadingError(
     MediaTrace trace("AVAdsControllerImpl::OffAdsEventListenerLoadingError");
     MEDIA_LOGD("OffAdsEventListenerLoadingError In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr || player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        return;
+    if (player_ != nullptr) {
+        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
     }
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
     MEDIA_LOGI("OffAdsEventListenerLoadingError End");
 }
 
@@ -193,24 +202,22 @@ void AVAdsControllerImpl::OnAdsListenerAdsStarted(callback_view<void(::taihe::st
     MediaTrace trace("AVAdsControllerImpl::OnAdsListenerAdsStarted");
     MEDIA_LOGD("OnAdsListenerAdsStarted In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
-        return;
-    }
-
-    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        player->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
-        return;
-    }
-
     ani_env *env = taihe::get_env();
     CHECK_AND_RETURN_LOG(env != nullptr, "Failed to get ani_env");
     std::shared_ptr<taihe::callback<void(::taihe::string_view, int64_t)>> taiheCallback =
         std::make_shared<taihe::callback<void(::taihe::string_view, int64_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED, autoRef);
+
+    if (player_ == nullptr) {
+        MEDIA_LOGE("controller is released");
+        return;
+    }
+    if (player_->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released, unsupport to on event");
+        return;
+    }
+    player_->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED, autoRef);
     MEDIA_LOGI("OnAdsListenerAdsStarted success");
 }
 
@@ -220,11 +227,9 @@ void AVAdsControllerImpl::OffAdsListenerAdsStarted(
     MediaTrace trace("AVAdsControllerImpl::OffAdsListenerAdsStarted");
     MEDIA_LOGD("OffAdsListenerAdsStarted In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr || player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        return;
+    if (player_ != nullptr) {
+        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
     }
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
     MEDIA_LOGI("OffAdsListenerAdsStarted End");
 }
 
@@ -233,24 +238,22 @@ void AVAdsControllerImpl::OnAdsListenerAdsSkipped(callback_view<void(::taihe::st
     MediaTrace trace("AVAdsControllerImpl::OnAdsListenerAdsSkipped");
     MEDIA_LOGD("OnAdsListenerAdsSkipped In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
-        return;
-    }
-
-    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        player->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
-        return;
-    }
-
     ani_env *env = taihe::get_env();
     CHECK_AND_RETURN_LOG(env != nullptr, "Failed to get ani_env");
     std::shared_ptr<taihe::callback<void(::taihe::string_view)>> taiheCallback =
         std::make_shared<taihe::callback<void(::taihe::string_view)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED, autoRef);
+
+    if (player_ == nullptr) {
+        MEDIA_LOGE("controller is released");
+        return;
+    }
+    if (player_->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released, unsupport to on event");
+        return;
+    }
+    player_->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED, autoRef);
     MEDIA_LOGI("OnAdsListenerAdsSkipped success");
 }
 
@@ -260,11 +263,9 @@ void AVAdsControllerImpl::OffAdsListenerAdsSkipped(
     MediaTrace trace("AVAdsControllerImpl::OffAdsListenerAdsSkipped");
     MEDIA_LOGD("OffAdsListenerAdsSkipped In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr || player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        return;
+    if (player_ != nullptr) {
+        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
     }
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
     MEDIA_LOGI("OffAdsListenerAdsSkipped End");
 }
 
@@ -273,24 +274,22 @@ void AVAdsControllerImpl::OnAdsListenerAdsCompleted(callback_view<void(::taihe::
     MediaTrace trace("AVAdsControllerImpl::OnAdsListenerAdsCompleted");
     MEDIA_LOGD("OnAdsListenerAdsCompleted In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr) {
-        set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "controller is released");
-        return;
-    }
-
-    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        player->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is released, unsupport to on event");
-        return;
-    }
-
     ani_env *env = taihe::get_env();
     CHECK_AND_RETURN_LOG(env != nullptr, "Failed to get ani_env");
     std::shared_ptr<taihe::callback<void(::taihe::string_view)>> taiheCallback =
         std::make_shared<taihe::callback<void(::taihe::string_view)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, cacheCallback);
-    player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED, autoRef);
+
+    if (player_ == nullptr) {
+        MEDIA_LOGE("controller is released");
+        return;
+    }
+    if (player_->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released, unsupport to on event");
+        return;
+    }
+    player_->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED, autoRef);
     MEDIA_LOGI("OnAdsListenerAdsCompleted success");
 }
 
@@ -300,11 +299,9 @@ void AVAdsControllerImpl::OffAdsListenerAdsCompleted(
     MediaTrace trace("AVAdsControllerImpl::OffAdsListenerAdsCompleted");
     MEDIA_LOGD("OffAdsListenerAdsCompleted In");
 
-    AVPlayerImpl *player = GetPlayer();
-    if (player == nullptr || player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        return;
+    if (player_ != nullptr) {
+        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
     }
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
     MEDIA_LOGI("OffAdsListenerAdsCompleted End");
 }
 
@@ -313,91 +310,33 @@ void AVAdsControllerImpl::Release()
     MediaTrace trace("AVAdsControllerImpl::Release");
     MEDIA_LOGI("AVAdsController Release In");
 
-    std::shared_ptr<OHOS::Media::Player> playerInstance;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (player_ == nullptr) {
-            return;
-        }
-        playerInstance = player_->GetPlayerInstance();
-        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
-        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
-        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
-        player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
-        player_ = nullptr;
+    if (player_ == nullptr) {
+        return;
     }
+    player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+    player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
+    player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
+    player_->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
 
-    if (playerInstance != nullptr) {
-        playerInstance->DisableAllAdsMediaSource();
+    if (playerInstance_ != nullptr) {
+        playerInstance_->DisableAllAdsMediaSource();
     }
+    player_ = nullptr;
+    playerInstance_ = nullptr;
     MEDIA_LOGI("AVAdsController Release Out");
 }
 
 std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::AddAdsMediaSourceTask(
+    const std::shared_ptr<OHOS::Media::Player> &playerInstance, OHOS::Media::TaskQueue *taskQueue,
     const std::shared_ptr<AVMediaSource> &mediaSource, int32_t startMs, std::string &outId)
 {
-    AVPlayerImpl *player = GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
-    std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
     CHECK_AND_RETURN_RET_LOG(playerInstance != nullptr, nullptr, "player instance is null");
-    auto taskQueue = player->GetTaskQueue();
     CHECK_AND_RETURN_RET_LOG(taskQueue != nullptr, nullptr, "task queue is null");
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, mediaSource, startMs, &outId]() {
         int32_t ret = playerInstance->AddAdsMediaSource(mediaSource, startMs, outId);
         if (ret != MSERR_OK) {
             return AdsTaskRet(ERR_ADS_PARAM_INVALID, "addAdsMediaSource failed");
         }
-        return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-    (void)taskQueue->EnqueueTask(task);
-    return task;
-}
-
-std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::RemoveAdsMediaSourceTask(const std::string &id)
-{
-    AVPlayerImpl *player = GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
-    std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
-    CHECK_AND_RETURN_RET_LOG(playerInstance != nullptr, nullptr, "player instance is null");
-    auto taskQueue = player->GetTaskQueue();
-    CHECK_AND_RETURN_RET_LOG(taskQueue != nullptr, nullptr, "task queue is null");
-    auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, id]() {
-        int32_t ret = playerInstance->RemoveAdsMediaSource(id);
-        if (ret != MSERR_OK) {
-            return AdsTaskRet(ERR_ADS_PARAM_INVALID, "removeAdsMediaSource failed");
-        }
-        return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-    (void)taskQueue->EnqueueTask(task);
-    return task;
-}
-
-std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::SkipCurrentAdsMediaSourceTask()
-{
-    AVPlayerImpl *player = GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
-    std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
-    CHECK_AND_RETURN_RET_LOG(playerInstance != nullptr, nullptr, "player instance is null");
-    auto taskQueue = player->GetTaskQueue();
-    CHECK_AND_RETURN_RET_LOG(taskQueue != nullptr, nullptr, "task queue is null");
-    auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance]() {
-        playerInstance->SkipCurrentAdsMediaSource();
-        return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
-    });
-    (void)taskQueue->EnqueueTask(task);
-    return task;
-}
-
-std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::DisableAllAdsMediaSourceTask()
-{
-    AVPlayerImpl *player = GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, nullptr, "controller is released");
-    std::shared_ptr<OHOS::Media::Player> playerInstance = player->GetPlayerInstance();
-    CHECK_AND_RETURN_RET_LOG(playerInstance != nullptr, nullptr, "player instance is null");
-    auto taskQueue = player->GetTaskQueue();
-    CHECK_AND_RETURN_RET_LOG(taskQueue != nullptr, nullptr, "task queue is null");
-    auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance]() {
-        playerInstance->DisableAllAdsMediaSource();
         return AdsTaskRet(MSERR_EXT_API9_OK, "Success");
     });
     (void)taskQueue->EnqueueTask(task);

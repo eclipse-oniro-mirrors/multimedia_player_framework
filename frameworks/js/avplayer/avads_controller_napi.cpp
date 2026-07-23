@@ -32,6 +32,7 @@ namespace {
 
     void RejectPromise(napi_env env, napi_deferred deferred, int32_t code, const std::string &msg)
     {
+        CHECK_AND_RETURN_LOG(deferred != nullptr, "deferred is nullptr, cannot reject promise");
         napi_value error = nullptr;
         napi_status status = CommonNapi::CreateError(env, code, msg, error);
         if (status != napi_ok || error == nullptr) {
@@ -55,34 +56,62 @@ AVAdsControllerNapi::~AVAdsControllerNapi()
 
 void AVAdsControllerNapi::SetPlayer(napi_env env, napi_value playerObj)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     AVPlayerNapi *player = nullptr;
     napi_status status = napi_unwrap(env, playerObj, reinterpret_cast<void **>(&player));
-    if (status != napi_ok || player == nullptr) {
-        MEDIA_LOGE("Failed to unwrap player object");
-        return;
-    }
-    player_ = player;
-    status = napi_create_reference(env, playerObj, 1, &playerRef_);
-    if (status != napi_ok) {
-        MEDIA_LOGE("Failed to create player reference");
-        player_ = nullptr;
-    }
-}
-
-void AVAdsControllerNapi::ClearPlayer(napi_env env)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_LOG(status == napi_ok && player != nullptr, "Failed to unwrap player object");
+    playerInstance_ = player->GetPlayerInstance();
     if (playerRef_ != nullptr) {
         napi_delete_reference(env, playerRef_);
         playerRef_ = nullptr;
     }
-    player_ = nullptr;
+    status = napi_create_reference(env, playerObj, 1, &playerRef_);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to create player reference");
+        playerInstance_ = nullptr;
+    }
 }
 
-AVPlayerNapi *AVAdsControllerNapi::GetPlayer() const
+std::shared_ptr<Player> AVAdsControllerNapi::GetPlayerInstance() const
 {
-    return player_;
+    return playerInstance_;
+}
+
+AVPlayerNapi *AVAdsControllerNapi::GetPlayerNapi(napi_env env) const
+{
+    CHECK_AND_RETURN_RET_LOG(playerRef_ != nullptr, nullptr, "playerRef_ is nullptr");
+    napi_value playerObj = nullptr;
+    napi_status status = napi_get_reference_value(env, playerRef_, &playerObj);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && playerObj != nullptr, nullptr, "napi_get_reference_value failed");
+    AVPlayerNapi *player = nullptr;
+    status = napi_unwrap(env, playerObj, reinterpret_cast<void **>(&player));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "napi_unwrap failed");
+    return player;
+}
+
+void AVAdsControllerNapi::ReleasePlayer(napi_env env)
+{
+    if (playerInstance_ != nullptr) {
+        playerInstance_->DisableAllAdsMediaSource();
+    }
+    AVPlayerNapi *player = nullptr;
+    if (playerRef_ != nullptr) {
+        napi_value playerObj = nullptr;
+        napi_status status = napi_get_reference_value(env, playerRef_, &playerObj);
+        if (status == napi_ok && playerObj != nullptr) {
+            status = napi_unwrap(env, playerObj, reinterpret_cast<void **>(&player));
+        }
+    }
+    if (player != nullptr) {
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
+    }
+    if (playerRef_ != nullptr) {
+        napi_delete_reference(env, playerRef_);
+        playerRef_ = nullptr;
+    }
+    playerInstance_ = nullptr;
 }
 
 napi_value AVAdsControllerNapi::Init(napi_env env, napi_value exports)
@@ -116,7 +145,12 @@ napi_value AVAdsControllerNapi::Init(napi_env env, napi_value exports)
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function createAVAdsController");
+    if (status != napi_ok) {
+        napi_delete_reference(env, constructor_);
+        constructor_ = nullptr;
+        MEDIA_LOGE("Failed to define static function createAVAdsController");
+        return nullptr;
+    }
 
     return exports;
 }
@@ -142,41 +176,57 @@ napi_value AVAdsControllerNapi::CreateInstance(napi_env env, napi_value playerOb
 napi_value AVAdsControllerNapi::JsCreateAVAdsController(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVAdsControllerNapi::createAVAdsController");
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
     MEDIA_LOGI("JsCreateAVAdsController In");
+
+    napi_deferred deferred = nullptr;
+    napi_value promise = nullptr;
+    napi_status status = napi_create_promise(env, &deferred, &promise);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && deferred != nullptr, nullptr, "Failed to create promise");
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
     napi_value jsThis = nullptr;
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
-
-    if (argCount < 1) {
-        napi_throw_error(env, nullptr, "Invalid arguments, expected 1 (AVPlayer)");
-        return result;
+    status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    if (status != napi_ok) {
+        MEDIA_LOGE("failed to napi_get_cb_info");
+        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID, "failed to napi_get_cb_info");
+        return promise;
     }
 
-    napi_valuetype type;
+    if (argCount < 1) {
+        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID, "Invalid arguments, expected 1 (AVPlayer)");
+        return promise;
+    }
+
+    napi_valuetype type = napi_undefined;
     status = napi_typeof(env, args[0], &type);
     if (status != napi_ok || type != napi_object) {
-        napi_throw_error(env, nullptr, "First argument must be AVPlayer");
-        return result;
+        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID, "First argument must be AVPlayer");
+        return promise;
     }
 
     AVPlayerNapi *jsPlayer = nullptr;
     status = napi_unwrap(env, args[0], reinterpret_cast<void **>(&jsPlayer));
     if (status != napi_ok || jsPlayer == nullptr) {
-        napi_throw_error(env, nullptr, "Failed to unwrap AVPlayer");
-        return result;
+        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID,
+            "The player object corresponding to player does not exist or is invalid");
+        return promise;
     }
 
     if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        napi_throw_error(env, nullptr, "Player is released, cannot create ads controller");
-        return result;
+        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID,
+            "The player object corresponding to player does not exist or is invalid");
+        return promise;
     }
 
-    return CreateInstance(env, args[0]);
+    napi_value instance = CreateInstance(env, args[0]);
+    if (instance == nullptr) {
+        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID, "Failed to create AVAdsController");
+        return promise;
+    }
+
+    napi_resolve_deferred(env, deferred, instance);
+    return promise;
 }
 
 napi_value AVAdsControllerNapi::Constructor(napi_env env, napi_callback_info info)
@@ -207,7 +257,7 @@ void AVAdsControllerNapi::Destructor(napi_env env, void *nativeObject, void *fin
     (void)finalize;
     auto *controller = reinterpret_cast<AVAdsControllerNapi *>(nativeObject);
     if (controller != nullptr) {
-        controller->ClearPlayer(env);
+        controller->ReleasePlayer(env);
         delete controller;
     }
 }
@@ -217,14 +267,10 @@ void AVAdsControllerNapi::ExecuteAdsTask(napi_env env, void *data)
     (void)env;
     auto ctx = reinterpret_cast<AdsAsyncContext *>(data);
     CHECK_AND_RETURN_LOG(ctx != nullptr, "context is nullptr");
-
-    if (ctx->errFlag) {
-        return;
-    }
-
+    CHECK_AND_RETURN_LOG(!ctx->errFlag, "errFlag is error");
     auto player = ctx->player;
     if (player == nullptr) {
-        ctx->SignError(MSERR_INVALID_OPERATION, "player is nullptr");
+        ctx->SignError(ERR_ADS_PARAM_INVALID, "player is nullptr");
         return;
     }
 
@@ -235,18 +281,6 @@ void AVAdsControllerNapi::ExecuteAdsTask(napi_env env, void *data)
             if (ret != MSERR_OK) {
                 ctx->SignError(ERR_ADS_PARAM_INVALID, "addAdsMediaSource failed");
             }
-            break;
-        case AdsAsyncContext::OpType::REMOVE:
-            ret = player->RemoveAdsMediaSource(ctx->adId);
-            if (ret != MSERR_OK) {
-                ctx->SignError(ERR_ADS_PARAM_INVALID, "removeAdsMediaSource failed");
-            }
-            break;
-        case AdsAsyncContext::OpType::SKIP:
-            player->SkipCurrentAdsMediaSource();
-            break;
-        case AdsAsyncContext::OpType::DISABLE_ALL:
-            player->DisableAllAdsMediaSource();
             break;
         default:
             ctx->SignError(ERR_ADS_PARAM_INVALID, "unknown opType");
@@ -260,22 +294,27 @@ void AVAdsControllerNapi::CompleteAdsTask(napi_env env, napi_status status, void
     CHECK_AND_RETURN_LOG(ctx != nullptr, "context is nullptr");
 
     if (status != napi_ok) {
-        ctx->SignError(MSERR_EXT_UNKNOWN, "async work status != napi_ok");
+        ctx->SignError(ERR_ADS_PARAM_INVALID, "async work status != napi_ok");
     }
 
-    if (!ctx->errFlag) {
-        napi_value result = nullptr;
-        if (ctx->opType == AdsAsyncContext::OpType::ADD) {
-            napi_create_string_utf8(env, ctx->outId.c_str(), ctx->outId.length(), &result);
-        } else {
-            napi_get_undefined(env, &result);
-        }
-        napi_resolve_deferred(env, ctx->deferred, result);
-    } else {
+    if (ctx->deferred == nullptr) {
+        napi_delete_async_work(env, ctx->work);
+        delete ctx;
+        return;
+    }
+
+    if (ctx->errFlag) {
         RejectPromise(env, ctx->deferred, ctx->errCode, ctx->errMessage);
+    } else {
+        napi_value result = nullptr;
+        napi_status strStatus = napi_create_string_utf8(env, ctx->outId.c_str(), ctx->outId.length(), &result);
+        if (strStatus != napi_ok) {
+            RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Failed to create result string");
+        } else {
+            napi_resolve_deferred(env, ctx->deferred, result);
+        }
     }
     ctx->deferred = nullptr;
-
     napi_delete_async_work(env, ctx->work);
     delete ctx;
 }
@@ -283,19 +322,24 @@ void AVAdsControllerNapi::CompleteAdsTask(napi_env env, napi_status status, void
 bool AVAdsControllerNapi::QueueAdsAsyncWork(napi_env env, AdsAsyncContext *ctx, const std::string &name)
 {
     napi_value resource = nullptr;
-    napi_create_string_utf8(env, name.c_str(), NAPI_AUTO_LENGTH, &resource);
-    napi_status status = napi_create_async_work(env, nullptr, resource, ExecuteAdsTask, CompleteAdsTask,
+    napi_status status = napi_create_string_utf8(env, name.c_str(), NAPI_AUTO_LENGTH, &resource);
+    if (status != napi_ok) {
+        MEDIA_LOGE("Failed to create async work resource string");
+        RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Failed to create async work resource string");
+        return false;
+    }
+    status = napi_create_async_work(env, nullptr, resource, ExecuteAdsTask, CompleteAdsTask,
         static_cast<void *>(ctx), &ctx->work);
     if (status != napi_ok) {
         MEDIA_LOGE("Failed to create async work");
-        RejectPromise(env, ctx->deferred, MSERR_EXT_UNKNOWN, "Failed to create async work");
+        RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Failed to create async work");
         return false;
     }
     status = napi_queue_async_work_with_qos(env, ctx->work, napi_qos_user_initiated);
     if (status != napi_ok) {
         MEDIA_LOGE("Failed to queue async work");
         napi_delete_async_work(env, ctx->work);
-        RejectPromise(env, ctx->deferred, MSERR_EXT_UNKNOWN, "Failed to queue async work");
+        RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Failed to queue async work");
         return false;
     }
     return true;
@@ -318,21 +362,20 @@ napi_value AVAdsControllerNapi::JsAddAdsMediaSource(napi_env env, napi_callback_
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-
     auto ctx = new (std::nothrow) AdsAsyncContext(env);
     CHECK_AND_RETURN_RET_LOG(ctx != nullptr, result, "Failed to allocate AdsAsyncContext");
     ON_SCOPE_EXIT(0) { delete ctx; };
     ctx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
-    if (ctx->deferred == nullptr) {
-        MEDIA_LOGE("Failed to create promise");
+    CHECK_AND_RETURN_RET_LOG(ctx->deferred != nullptr, result, "Failed to create promise");
+
+    ctx->player = controller->GetPlayerInstance();
+    if (ctx->player == nullptr) {
+        RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Player is null");
         return result;
     }
-    ctx->player = player->GetPlayerInstance();
     ctx->opType = AdsAsyncContext::OpType::ADD;
 
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     status = napi_typeof(env, argv[1], &type);
     if (argc < MIN_REQUIRED_ARGS || ctx->player == nullptr || status != napi_ok || type != napi_number) {
         RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Invalid arguments");
@@ -374,38 +417,30 @@ napi_value AVAdsControllerNapi::JsRemoveAdsMediaSource(napi_env env, napi_callba
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-
-    auto ctx = new (std::nothrow) AdsAsyncContext(env);
-    CHECK_AND_RETURN_RET_LOG(ctx != nullptr, result, "Failed to allocate AdsAsyncContext");
-    ON_SCOPE_EXIT(0) { delete ctx; };
-    ctx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
-    if (ctx->deferred == nullptr) {
-        MEDIA_LOGE("Failed to create promise");
-        return result;
-    }
-    ctx->player = player->GetPlayerInstance();
-    ctx->opType = AdsAsyncContext::OpType::REMOVE;
-
-    if (argc < 1 || ctx->player == nullptr) {
-        RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Invalid arguments");
+    std::shared_ptr<Player> playerInstance = controller->GetPlayerInstance();
+    if (playerInstance == nullptr) {
+        CommonNapi::ThrowError(env, ERR_ADS_PARAM_INVALID, "controller is released");
         return result;
     }
 
-    napi_valuetype type;
+    if (argc < 1) {
+        CommonNapi::ThrowError(env, ERR_ADS_PARAM_INVALID, "Invalid arguments");
+        return result;
+    }
+
+    napi_valuetype type = napi_undefined;
     status = napi_typeof(env, argv[0], &type);
     if (status != napi_ok || type != napi_string) {
-        RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Argument must be string");
+        CommonNapi::ThrowError(env, ERR_ADS_PARAM_INVALID, "Argument must be string");
         return result;
     }
 
-    ctx->adId = CommonNapi::GetStringArgument(env, argv[0]);
-
-    if (!QueueAdsAsyncWork(env, ctx, "JsRemoveAdsMediaSource")) {
-        return result;
+    std::string adId = CommonNapi::GetStringArgument(env, argv[0]);
+    int32_t ret = playerInstance->RemoveAdsMediaSource(adId);
+    if (ret != MSERR_OK) {
+        CommonNapi::ThrowError(env, ERR_ADS_PARAM_INVALID, "removeAdsMediaSource failed");
     }
-    CANCEL_SCOPE_EXIT_GUARD(0);
+
     return result;
 }
 
@@ -424,29 +459,19 @@ napi_value AVAdsControllerNapi::JsSkipCurrentAdsMediaSource(napi_env env, napi_c
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-
-    auto ctx = new (std::nothrow) AdsAsyncContext(env);
-    CHECK_AND_RETURN_RET_LOG(ctx != nullptr, result, "Failed to allocate AdsAsyncContext");
-    ON_SCOPE_EXIT(0) { delete ctx; };
-    ctx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
-    if (ctx->deferred == nullptr) {
-        MEDIA_LOGE("Failed to create promise");
-        return result;
-    }
-    ctx->player = player->GetPlayerInstance();
-    ctx->opType = AdsAsyncContext::OpType::SKIP;
-
-    if (ctx->player == nullptr) {
-        RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Player instance is null");
+    AVPlayerNapi *player = controller->GetPlayerNapi(env);
+    std::shared_ptr<Player> playerInstance = controller->GetPlayerInstance();
+    if (player == nullptr || playerInstance == nullptr) {
+        MEDIA_LOGE("controller is released");
         return result;
     }
 
-    if (!QueueAdsAsyncWork(env, ctx, "JsSkipCurrentAdsMediaSource")) {
+    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released, unsupport to skip");
         return result;
     }
-    CANCEL_SCOPE_EXIT_GUARD(0);
+
+    playerInstance->SkipCurrentAdsMediaSource();
     return result;
 }
 
@@ -465,29 +490,13 @@ napi_value AVAdsControllerNapi::JsDisableAllAdsMediaSource(napi_env env, napi_ca
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-
-    auto ctx = new (std::nothrow) AdsAsyncContext(env);
-    CHECK_AND_RETURN_RET_LOG(ctx != nullptr, result, "Failed to allocate AdsAsyncContext");
-    ON_SCOPE_EXIT(0) { delete ctx; };
-    ctx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
-    if (ctx->deferred == nullptr) {
-        MEDIA_LOGE("Failed to create promise");
-        return result;
-    }
-    ctx->player = player->GetPlayerInstance();
-    ctx->opType = AdsAsyncContext::OpType::DISABLE_ALL;
-
-    if (ctx->player == nullptr) {
-        RejectPromise(env, ctx->deferred, ERR_ADS_PARAM_INVALID, "Player instance is null");
+    std::shared_ptr<Player> playerInstance = controller->GetPlayerInstance();
+    if (playerInstance == nullptr) {
+        MEDIA_LOGE("controller is released");
         return result;
     }
 
-    if (!QueueAdsAsyncWork(env, ctx, "JsDisableAllAdsMediaSource")) {
-        return result;
-    }
-    CANCEL_SCOPE_EXIT_GUARD(0);
+    playerInstance->DisableAllAdsMediaSource();
     return result;
 }
 
@@ -506,16 +515,7 @@ napi_value AVAdsControllerNapi::JsRelease(napi_env env, napi_callback_info info)
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
-    AVPlayerNapi *player = controller->GetPlayer();
-    if (player != nullptr && player->GetPlayerInstance() != nullptr) {
-        player->GetPlayerInstance()->DisableAllAdsMediaSource();
-        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
-        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
-        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
-        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
-    }
-
-    controller->ClearPlayer(env);
+    controller->ReleasePlayer(env);
 
     return result;
 }
@@ -537,22 +537,30 @@ napi_value AVAdsControllerNapi::JsOnAdsEventListenerLoadingError(napi_env env, n
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
+    AVPlayerNapi *player = controller->GetPlayerNapi(env);
     if (argc < 1) {
-        napi_throw_error(env, nullptr, "Invalid arguments, expected 1");
+        MEDIA_LOGE("Invalid arguments, expected 1");
         return result;
     }
 
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     status = napi_typeof(env, argv[0], &type);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && type == napi_function, result, "Argument must be function");
+    if (status != napi_ok || type != napi_function) {
+        MEDIA_LOGE("Argument must be function");
+        return result;
+    }
+
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released");
+        return result;
+    }
 
     napi_ref ref = nullptr;
     status = napi_create_reference(env, argv[0], 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
     player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR, autoRef);
 
     MEDIA_LOGI("JsOnAdsEventListenerLoadingError registered successfully");
@@ -574,9 +582,10 @@ napi_value AVAdsControllerNapi::JsOffAdsEventListenerLoadingError(napi_env env, 
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+    AVPlayerNapi *player = controller->GetPlayerNapi(env);
+    if (player != nullptr) {
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_LOADING_ERROR);
+    }
 
     MEDIA_LOGI("JsOffAdsEventListenerLoadingError success");
     return result;
@@ -599,22 +608,30 @@ napi_value AVAdsControllerNapi::JsOnAdsListenerAdsStarted(napi_env env, napi_cal
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
+    AVPlayerNapi *player = controller->GetPlayerNapi(env);
     if (argc < 1) {
-        napi_throw_error(env, nullptr, "Invalid arguments, expected 1");
+        MEDIA_LOGE("Invalid arguments, expected 1");
         return result;
     }
 
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     status = napi_typeof(env, argv[0], &type);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && type == napi_function, result, "Argument must be function");
+    if (status != napi_ok || type != napi_function) {
+        MEDIA_LOGE("Argument must be function");
+        return result;
+    }
+
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released");
+        return result;
+    }
 
     napi_ref ref = nullptr;
     status = napi_create_reference(env, argv[0], 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
     player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED, autoRef);
 
     MEDIA_LOGI("JsOnAdsListenerAdsStarted registered successfully");
@@ -636,9 +653,10 @@ napi_value AVAdsControllerNapi::JsOffAdsListenerAdsStarted(napi_env env, napi_ca
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
+    AVPlayerNapi *player = controller->GetPlayerNapi(env);
+    if (player != nullptr) {
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_STARTED);
+    }
 
     MEDIA_LOGI("JsOffAdsListenerAdsStarted success");
     return result;
@@ -661,22 +679,30 @@ napi_value AVAdsControllerNapi::JsOnAdsListenerAdsSkipped(napi_env env, napi_cal
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
+    AVPlayerNapi *player = controller->GetPlayerNapi(env);
     if (argc < 1) {
-        napi_throw_error(env, nullptr, "Invalid arguments, expected 1");
+        MEDIA_LOGE("Invalid arguments, expected 1");
         return result;
     }
 
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     status = napi_typeof(env, argv[0], &type);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && type == napi_function, result, "Argument must be function");
+    if (status != napi_ok || type != napi_function) {
+        MEDIA_LOGE("Argument must be function");
+        return result;
+    }
+
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released");
+        return result;
+    }
 
     napi_ref ref = nullptr;
     status = napi_create_reference(env, argv[0], 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
     player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED, autoRef);
 
     MEDIA_LOGI("JsOnAdsListenerAdsSkipped registered successfully");
@@ -698,9 +724,10 @@ napi_value AVAdsControllerNapi::JsOffAdsListenerAdsSkipped(napi_env env, napi_ca
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
+    AVPlayerNapi *player = controller->GetPlayerNapi(env);
+    if (player != nullptr) {
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_SKIPPED);
+    }
 
     MEDIA_LOGI("JsOffAdsListenerAdsSkipped success");
     return result;
@@ -723,22 +750,30 @@ napi_value AVAdsControllerNapi::JsOnAdsListenerAdsCompleted(napi_env env, napi_c
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
+    AVPlayerNapi *player = controller->GetPlayerNapi(env);
     if (argc < 1) {
-        napi_throw_error(env, nullptr, "Invalid arguments, expected 1");
+        MEDIA_LOGE("Invalid arguments, expected 1");
         return result;
     }
 
-    napi_valuetype type;
+    napi_valuetype type = napi_undefined;
     status = napi_typeof(env, argv[0], &type);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && type == napi_function, result, "Argument must be function");
+    if (status != napi_ok || type != napi_function) {
+        MEDIA_LOGE("Argument must be function");
+        return result;
+    }
+
+    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
+    if (player->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("current state is released");
+        return result;
+    }
 
     napi_ref ref = nullptr;
     status = napi_create_reference(env, argv[0], 1, &ref);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
 
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
     player->SaveCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED, autoRef);
 
     MEDIA_LOGI("JsOnAdsListenerAdsCompleted registered successfully");
@@ -760,9 +795,10 @@ napi_value AVAdsControllerNapi::JsOffAdsListenerAdsCompleted(napi_env env, napi_
     status = napi_unwrap(env, thisArg, reinterpret_cast<void **>(&controller));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && controller != nullptr, result, "Failed to unwrap controller");
 
-    AVPlayerNapi *player = controller->GetPlayer();
-    CHECK_AND_RETURN_RET_LOG(player != nullptr, result, "Player is null");
-    player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
+    AVPlayerNapi *player = controller->GetPlayerNapi(env);
+    if (player != nullptr) {
+        player->ClearCallbackReference(AVPlayerEvent::EVENT_ADS_COMPLETED);
+    }
 
     MEDIA_LOGI("JsOffAdsListenerAdsCompleted success");
     return result;

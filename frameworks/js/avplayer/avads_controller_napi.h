@@ -17,7 +17,6 @@
 #define AVADS_CONTROLLER_NAPI_H
 
 #include <memory>
-#include <mutex>
 #include <string>
 
 #include "napi/native_api.h"
@@ -59,8 +58,9 @@ public:
     ~AVAdsControllerNapi();
 
     void SetPlayer(napi_env env, napi_value playerObj);
-    void ClearPlayer(napi_env env);
-    AVPlayerNapi *GetPlayer() const;
+    std::shared_ptr<Player> GetPlayerInstance() const;
+    AVPlayerNapi *GetPlayerNapi(napi_env env) const;
+    void ReleasePlayer(napi_env env);
 
 private:
     static napi_value Constructor(napi_env env, napi_callback_info info);
@@ -87,8 +87,7 @@ private:
 
     static thread_local napi_ref constructor_;
     napi_ref playerRef_ = nullptr;
-    AVPlayerNapi *player_ = nullptr;
-    mutable std::mutex mutex_;
+    std::shared_ptr<Player> playerInstance_ = nullptr;
 };
 
 } // namespace Media
