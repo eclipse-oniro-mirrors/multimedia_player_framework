@@ -50,6 +50,7 @@ constexpr int32_t RATE_UV = 2;
 constexpr int32_t SHIFT_BITS_P010_2_NV12 = 8;
 constexpr double VIDEO_FRAME_RATE = 2000.0;
 constexpr int32_t MAX_WAIT_TIME_SECOND = 3;
+constexpr int32_t S_TO_MS = 1000;
 constexpr uint32_t REQUEST_BUFFER_TIMEOUT = 0; // Requesting buffer overtimes 0ms means no retry
 constexpr uint32_t ERROR_AGAIN_SLEEP_TIME_US = 1000;
 const std::string AV_THUMBNAIL_GENERATOR_INPUT_BUFFER_QUEUE_NAME = "AVThumbnailGeneratorInputBufferQueue";
@@ -631,6 +632,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    ConfigureReadSample(MAX_WAIT_TIME_SECOND * S_TO_MS);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
     {
@@ -721,6 +723,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
         return mpeg4EosBuffer;
     }
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    ConfigureReadSample(MAX_WAIT_TIME_SECOND * S_TO_MS);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     DfxReport("AVImageGenerator call");
     bool fetchFrameRes = false;
@@ -779,6 +782,7 @@ FetchFrameResult AVThumbnailGenerator::FetchFrameYuvWithTimeout(int64_t timeUs, 
         return FetchFrameResult(mpeg4EosBuffer, nullptr, false);
     }
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, FetchFrameResult(nullptr, nullptr, false), "Seek fail");
+    ConfigureReadSample(timeoutMs - seekTimeCostMs);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, FetchFrameResult(nullptr, nullptr, false),
         "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
@@ -822,6 +826,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, i
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    ConfigureReadSample(MAX_WAIT_TIME_SECOND * S_TO_MS);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
     {
@@ -872,6 +877,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvsWithTimeout(int64_
         return nullptr;
     }
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    ConfigureReadSample(timeoutMs - seekTimeCostMs);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
     {
@@ -993,6 +999,13 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
     seekTimeCostMs = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
     MEDIA_LOGI("SeekToTime cost: %{public}" PRId64 "ms", seekTimeCostMs);
     return res;
+}
+
+void AVThumbnailGenerator::ConfigureReadSample(uint32_t readSampleTimeoutMs, ReadSampleMode readSampleMode)
+{
+    CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "Configure failed, mediaDemuxer_ is nullptr");
+    mediaDemuxer_->SetReadSampleMode(readSampleMode);
+    mediaDemuxer_->SetReadSampleTimeout(readSampleTimeoutMs);
 }
 
 void AVThumbnailGenerator::ConvertToAVSharedMemory()

@@ -51,6 +51,11 @@ enum class DemuxerCallerType : int32_t {
     TRANSCODER,
 };
 
+enum ReadSampleMode : uint8_t {
+    READ_SAMPLE_SYNC = 0,
+    READ_SAMPLE_ASYNC = 1
+};
+
 class MediaDemuxer {
 public:
     virtual ~MediaDemuxer() = default;
@@ -132,6 +137,8 @@ public:
     virtual void SetCacheLimit(uint32_t limitSize);
     virtual void SetEnableOnlineFdCache(bool isEnableFdCache);
     virtual void WaitForBufferingEnd();
+    virtual void SetReadSampleMode(ReadSampleMode readSampleMode);
+    virtual void SetReadSampleTimeout(uint32_t timeoutMs);
 };
 } // namespace Media
 } // namespace OHOS
