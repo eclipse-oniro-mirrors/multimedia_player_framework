@@ -23,14 +23,14 @@
 #include "system_ability_definition.h"
 
 namespace {
-static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
+static constexpr const char* SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "MediaDatashareObserver"};
-static const int32_t MEDIA_SERVICE_SA_ID = 3002;
-static const std::string SETTINGS_DATA_BASE_URI =
+static constexpr int32_t MEDIA_SERVICE_SA_ID = 3002;
+static constexpr const char* SETTINGS_DATA_BASE_URI =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
-static const std::string SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
-static const std::string SETTINGS_DATA_FIELD_KEYWORD = "KEYWORD";
-static const std::string SETTINGS_DATA_FIELD_VALUE = "VALUE";
+static constexpr const char* SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
+static constexpr const char* SETTINGS_DATA_FIELD_KEYWORD = "KEYWORD";
+static constexpr const char* SETTINGS_DATA_FIELD_VALUE = "VALUE";
 }
 
 namespace OHOS {
