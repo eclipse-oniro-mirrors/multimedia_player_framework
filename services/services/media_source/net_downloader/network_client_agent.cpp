@@ -97,6 +97,7 @@ std::shared_ptr<Plugins::HttpPlugin::NetworkClient> NetworkClientAgent::NewInsta
     void *userParam,
     std::optional<uint32_t> connectTimeoutMs)
 {
+    std::lock_guard<std::mutex> lock(loadMutex_);
     if (createFunc_ == nullptr) {
         MEDIA_LOGE("create func is nullptr");
         return nullptr;

@@ -108,6 +108,7 @@ void CacheReader::Read(int64_t uuid, int64_t requestedOffset, int64_t requestedL
 
 void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (isClosed_.load()) {
         return;
     }

@@ -118,6 +118,11 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
     const CacheMappingEntry& entry = it->second;
     std::string relativePath = entry.filePath;
 
+    if (!PathValidator::Validate(cacheDir_, relativePath)) {
+        MEDIA_LOGE("GetMediaCache: path validation failed for %{public}s", relativePath.c_str());
+        return "";
+    }
+
     std::string path = cacheDir_ + "/" + relativePath;
 
     return path;
@@ -136,10 +141,16 @@ bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaD
     MEDIA_LOGI("0x%{public}06" PRIXPTR " search meta entry: %{public}s", FAKE_POINTER(this), hashIndex.c_str());
     const CacheMappingEntry& entry = it->second;
 
+    if (!PathValidator::Validate(cacheDir_, entry.filePath)) {
+        MEDIA_LOGE("GetCacheMetaData: path validation failed for %{public}s", entry.filePath.c_str());
+        return false;
+    }
+
+    std::string fullPath = cacheDir_ + "/" + entry.filePath;
+
     metadata.url = url;
     metadata.size = static_cast<int64_t>(entry.header.fileSize);
     if (metadata.size == 0) {
-        std::string fullPath = cacheDir_ + "/" + entry.filePath;
         struct stat st;
         if (stat(fullPath.c_str(), &st) == 0 && st.st_size > 0) {
             metadata.size = static_cast<int64_t>(st.st_size);

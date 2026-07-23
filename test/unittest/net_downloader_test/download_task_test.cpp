@@ -783,6 +783,40 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_NonManifestEdgeCase_MPD_001, TestSiz
     
     (void)task->Cancel();
 }
+HWTEST_F(DownloadTaskTest, Constructor_PathTraversal_OutputPathCleared_001, TestSize.Level0)
+{
+    DownloadTaskInfo info;
+    info.taskId = 200;
+    info.url = TEST_MEDIA_URL;
+    info.outputPath = testDir_ + "/../../etc/passwd";
+    info.header = {};
+
+    DownloadConfig config;
+    auto callback = std::make_shared<StubDownloadTaskCallback>();
+
+    auto task = std::make_shared<DownloadTask>(info, config, callback);
+    (void)task->Start();
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+    DownloadState state = task->GetState();
+    EXPECT_TRUE(state == DOWNLOAD_FAILED || state == DOWNLOAD_CANCELED);
+
+    (void)task->Cancel();
+}
+
+HWTEST_F(DownloadTaskTest, GetFileSize_PathTraversal_001, TestSize.Level0)
+{
+    std::string traversalPath = testDir_ + "/../../etc/passwd";
+    int64_t size = DownloadTask::GetFileSize(traversalPath);
+    EXPECT_EQ(size, 0);
+}
+
+HWTEST_F(DownloadTaskTest, GetFileSize_EmptyPath_001, TestSize.Level0)
+{
+    int64_t size = DownloadTask::GetFileSize("");
+    EXPECT_EQ(size, 0);
+}
+
 } // namespace MediaDownload
 } // namespace Media
 } // namespace OHOS

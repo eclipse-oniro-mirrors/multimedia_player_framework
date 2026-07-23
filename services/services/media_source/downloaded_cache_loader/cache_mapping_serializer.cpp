@@ -22,6 +22,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DownloadedCacheMappingSerializer"};
+constexpr uint32_t MAX_PLAYBACK_PARAM_DATA_LENGTH = 10 * 1024 * 1024;
 }
 
 namespace OHOS {
@@ -154,6 +155,12 @@ bool CacheMappingDeserializer::ReadEntry(std::ifstream& file, CacheMappingEntry&
         return false;
     }
 
+    if (entry.header.pathLength > PathValidator::MAX_PATH_LENGTH) {
+        MEDIA_LOGE("pathLength too large: %{public}u, max: %{public}zu",
+            entry.header.pathLength, PathValidator::MAX_PATH_LENGTH);
+        return false;
+    }
+
     entry.filePath.resize(entry.header.pathLength);
     file.read(&entry.filePath[0], entry.header.pathLength);
 
@@ -223,6 +230,12 @@ bool CacheMappingDeserializer::ReadPlaybackParamData(std::ifstream& file, std::v
     file.read(reinterpret_cast<char*>(&playbackParamDataLength), sizeof(playbackParamDataLength));
     if (!file) {
         MEDIA_LOGE("Failed to read playback param data length from file");
+        return false;
+    }
+
+    if (playbackParamDataLength > MAX_PLAYBACK_PARAM_DATA_LENGTH) {
+        MEDIA_LOGE("playbackParamDataLength too large: %{public}u, max: %{public}u",
+            playbackParamDataLength, MAX_PLAYBACK_PARAM_DATA_LENGTH);
         return false;
     }
 
