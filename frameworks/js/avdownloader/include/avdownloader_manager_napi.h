@@ -20,6 +20,7 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <mutex>
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "av_downloader_manager.h"
@@ -62,6 +63,7 @@ private:
 
     std::string GenerateTaskId();
     std::string GetTaskCacheDir(const std::string &taskId);
+    void DeleteRef(napi_ref &ref);
     void TriggerStatusCallback(const std::string &taskId, AVDownloadTaskState state);
     void TriggerProgressCallback(const std::string &taskId, double progress);
 
@@ -72,10 +74,9 @@ private:
     int32_t requestTimeoutMs_ = 30000;
     std::map<std::string, std::string> taskIdToUrl_;
     std::map<std::string, std::string> taskIdToCacheDir_;
-    std::map<std::string, int32_t> taskIdToStatus_;
-    std::map<std::string, double> taskIdToProgress_;
     napi_ref statusChangeCallback_ = nullptr;
     napi_ref progressChangeCallback_ = nullptr;
+    std::mutex cbMutex_;
 
     static thread_local napi_ref constructor_;
 };

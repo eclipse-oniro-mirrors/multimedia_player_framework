@@ -104,7 +104,7 @@ class __attribute__((visibility("default"))) AVDownloaderManagerImpl : public AV
     public std::enable_shared_from_this<AVDownloaderManagerImpl> {
 public:
     AVDownloaderManagerImpl();
-    ~AVDownloaderManagerImpl() = default;
+    ~AVDownloaderManagerImpl();
 
     int32_t SetAllowCellularAccess(bool allow) override;
     int32_t SetRequestTimeout(int32_t timeoutMs) override;
@@ -123,7 +123,9 @@ public:
     int32_t Release() override;
 
     void NotifyStatusChange(const std::string &taskId, AVDownloadTaskState state);
+    void NotifyStatusChangeLocked(const std::string &taskId, AVDownloadTaskState state);
     void NotifyProgressChange(const std::string &taskId, double progress);
+    void NotifyProgressChangeLocked(const std::string &taskId, double progress);
     static AVDownloadTaskState ConvertToAVDownloadTaskState(MediaDownload::DownloadState state);
     std::string GetFilePath(const std::string& rootDir, const std::string& url);
     void ProcessNextPendingTask();
@@ -132,15 +134,15 @@ public:
     std::map<std::string, std::shared_ptr<MediaDownload::Downloader>> downloaderMap_;
     std::queue<std::pair<std::string, std::string>> pendingTaskQueue_;      // Downloader队列
     std::unique_ptr<MediaDownload::MessageQueue> messageQueue_;     // 消息队列
-    int32_t requestTimeoutMs_ = 30000;
-    bool allowCellularAccess_ = false;
+    std::atomic<int32_t> requestTimeoutMs_ {30000};
+    std::atomic<bool> allowCellularAccess_ {false};
     std::atomic<int32_t> activeDownloaderCount_ {0};
 protected:
     virtual MediaSourceUtils::NetConnType GetNetworkType();
 private:
     std::string GetDefaultCacheDir(const std::string& url);
     void HandleMessage(const MediaDownload::Message &msg);
-    void HandleTaskAdded(std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::string taskId, std::string url,
+    void HandleTaskAdded(std::string taskId, std::string url,
         std::shared_ptr<MediaDownload::Downloader> downloader, std::string filePath);
     void StartNetworkListening();
     void StopNetworkListening();
@@ -153,6 +155,7 @@ private:
     std::string defaultCacheDir_;
     std::shared_ptr<DownloadTaskCallback> taskCallback_;
     bool networkListeningStarted_ = false;
+    std::atomic<bool> released_ {false};
 
     friend class AVDownloaderManagerTest;
 };
