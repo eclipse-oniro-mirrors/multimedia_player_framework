@@ -101,7 +101,7 @@ int32_t UpdateSettingsValue(const std::string &key, const std::string &value)
     MEDIA_LOGI("UpdateSettingsValue start key: %{public}s", key.c_str());
     auto dataShareHelper = CreateDataShareHelper();
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, MSERR_INVALID_VAL, "dataShareHelper is nullptr");
-    Uri uri(SETTINGS_DATA_BASE_URI + "&key=" + key);
+    Uri uri(std::string(SETTINGS_DATA_BASE_URI) + "&key=" + key);
     DataShare::DataSharePredicates predicates;
     predicates.EqualTo(SETTINGS_DATA_FIELD_KEYWORD, key);
     DataShare::DataShareValuesBucket bucket;
