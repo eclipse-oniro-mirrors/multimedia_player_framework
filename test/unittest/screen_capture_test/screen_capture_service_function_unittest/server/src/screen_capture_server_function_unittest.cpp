@@ -83,9 +83,6 @@ void ScreenCaptureServerFunctionTest::SetMockBuilder(std::shared_ptr<ScreenCaptu
             std::string &&name, const ScreenCaptureContentFilter &filter) -> std::shared_ptr<AudioCapturerWrapper> {
             return CreateTestWrapper(audioInfo, name, true, true);
         });
-    EXPECT_CALL(*mockCommonService, SubscribeCommonEvent(_)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*mockCommonService, UnSubscribeCommonEvent(_)).WillRepeatedly(Return(true));
-    EXPECT_CALL(*mockCommonService, PublishCommonEvent(_, _)).WillRepeatedly(Return(true));
 
     server->providers_ = std::move(mockProviders);
 }
@@ -1310,39 +1307,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, TryNotificationOnPostStartScreenCaptur
 }
 #endif
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMix_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
-    screenCaptureServer_->IsMicrophoneSwitchTurnOn();
-    screenCaptureServer_->IsSCRecorderFileWithVideo();
-    screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
-    screenCaptureServer_->GetAudioCapture(CaptureRole::MIC);
-    screenCaptureServer_->IsStopAcquireAudioBufferFlag();
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
-    screenCaptureServer_->audioSource_->IsInWaitMicSyncState();
-    screenCaptureServer_->audioSource_->SetVideoFirstFramePts(0);
-    screenCaptureServer_->audioSource_->SetAudioFirstFramePts(0);
-    const int bufferSize = 10;
-    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
-    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
-    std::shared_ptr<AudioBuffer> innerAudioBuffer = std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0,
-        SOURCE_DEFAULT);
-    std::shared_ptr<AudioBuffer> micAudioBuffer = std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0,
-        SOURCE_DEFAULT);
-    std::shared_ptr<AVBuffer> buffer;
-    AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAt(buffer, bufferSize);
-    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->audioSource_->type_ = AVScreenCaptureMixMode::INVALID_MODE;
-    ret = screenCaptureServer_->audioSource_->ReadAt(buffer, bufferSize);
-    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
-    screenCaptureServer_->audioSource_->screenCaptureServer_ = nullptr;
-    ret = screenCaptureServer_->audioSource_->ReadAt(buffer, bufferSize);
-    ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMix_002, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
@@ -1397,6 +1361,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMicMode_001, TestSize.Level2)
     auto wrapper =
         CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture", false);
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
+    screenCaptureServer_->audioSource_->SetMicCapture(wrapper);
     AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtMicMode(bufferSize);
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
     MEDIA_LOGI("ReadAtMicMode ret: %{public}d", static_cast<int32_t>(ret));
@@ -1404,6 +1369,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMicMode_001, TestSize.Level2)
     ret = screenCaptureServer_->audioSource_->ReadAtMicMode(bufferSize);
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
     screenCaptureServer_->micAudioCapture_ = nullptr;
+    screenCaptureServer_->audioSource_->SetMicCapture(nullptr);
     ret = screenCaptureServer_->audioSource_->ReadAtMicMode(bufferSize);
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::INVALID);
 }
@@ -1432,6 +1398,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMicMode_002, TestSize.Level2)
         CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture", false);
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     wrapper->availBuffers_.push_back(micAudioBuffer);
+    screenCaptureServer_->audioSource_->SetMicCapture(wrapper);
     AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtMicMode(bufferSize);
     MEDIA_LOGI("ReadAtMicMode ret: %{public}d", static_cast<int32_t>(ret));
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
@@ -1457,6 +1424,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtInnerMode_001, TestSize.Level2)
     auto wrapper =
         CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_innerAudioCapture", true);
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
+    screenCaptureServer_->audioSource_->SetInnerCapture(wrapper);
     AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtInnerMode(bufferSize);
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
     MEDIA_LOGI("ReadAtInnerMode ret: %{public}d", static_cast<int32_t>(ret));
@@ -1464,6 +1432,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtInnerMode_001, TestSize.Level2)
     ret = screenCaptureServer_->audioSource_->ReadAtInnerMode(bufferSize);
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::RETRY_SKIP);
     screenCaptureServer_->innerAudioCapture_ = nullptr;
+    screenCaptureServer_->audioSource_->SetInnerCapture(nullptr);
     ret = screenCaptureServer_->audioSource_->ReadAtInnerMode(bufferSize);
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::INVALID);
 }
@@ -1489,6 +1458,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtInnerMode_002, TestSize.Level2)
     std::shared_ptr<AudioBuffer> innerAudioBuffer =
         std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0, SOURCE_DEFAULT);
     SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
+    screenCaptureServer_->audioSource_->SetInnerCapture(screenCaptureServer_->innerAudioCapture_);
     AudioDataSourceReadAtActionState ret = screenCaptureServer_->audioSource_->ReadAtInnerMode(bufferSize);
     MEDIA_LOGI("ReadAtInnerMode ret: %{public}d", static_cast<int32_t>(ret));
     ASSERT_EQ(ret, AudioDataSourceReadAtActionState::OK);
@@ -1985,20 +1955,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_LostFrameNum, TestSize
     ASSERT_EQ(lostNum, 0);
 }
 
-// Test AudioDataSource::FillLostBuffer
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_FillLostBuffer, TestSize.Level2)
-{
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
-    const int64_t lostNum = 5;
-    const int64_t timestamp = 100000000;
-    const uint32_t bufferSize = 1024;
-    size_t queueSizeBefore = screenCaptureServer_->audioSource_->audioBufferQ_.size();
-    screenCaptureServer_->audioSource_->FillLostBuffer(lostNum, timestamp, bufferSize);
-    size_t queueSizeAfter = screenCaptureServer_->audioSource_->audioBufferQ_.size();
-    ASSERT_EQ(queueSizeAfter - queueSizeBefore, static_cast<size_t>(lostNum));
-}
-
 // Test AudioDataSource::HandlePastMicBuffer
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_HandlePastMicBuffer, TestSize.Level2)
 {
@@ -2049,11 +2005,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_SetMixAudioTypeLog, Te
     screenCaptureServer_->audioSource_->audioType_ = AVScreenCaptureMixBufferType::INNER;
     screenCaptureServer_->audioSource_->lastWriteType_ = AVScreenCaptureMixBufferType::MIC;
     screenCaptureServer_->audioSource_->audioTypeSize_ = 10;
-    screenCaptureServer_->audioSource_->SetMixAudioTypeLog();
+    screenCaptureServer_->audioSource_->SetMixAudioTypeLog(AVScreenCaptureMixBufferType::MIC);
     ASSERT_EQ(screenCaptureServer_->audioSource_->audioType_.load(), AVScreenCaptureMixBufferType::MIC);
     ASSERT_EQ(screenCaptureServer_->audioSource_->audioTypeSize_.load(), 1);
     // Call again with same type
-    screenCaptureServer_->audioSource_->SetMixAudioTypeLog();
+    screenCaptureServer_->audioSource_->SetMixAudioTypeLog(AVScreenCaptureMixBufferType::MIC);
     ASSERT_EQ(screenCaptureServer_->audioSource_->audioTypeSize_.load(), 2);
 }
 
@@ -2730,7 +2686,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_002, TestSize.Level2)
     auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         screenCaptureServer_->Release();
-        screenCaptureServer_ = nullptr;
         ASSERT_EQ(obcb->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER), true);
     }
 }
@@ -2781,7 +2736,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ObserverCbTelCallStateUpdated_003, Tes
     auto obcb = std::make_unique<ScreenCaptureObserverCallBack>(screenCaptureServer_);
     if (obcb) {
         screenCaptureServer_->Release();
-        screenCaptureServer_ = nullptr;
         ASSERT_EQ(obcb->TelCallStateUpdated(false), true);
     }
 }
@@ -2928,17 +2882,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterServerCallbacks_002, TestSize.
     InCallObserver::GetInstance().OnCallStateUpdated(false);
     int ret = screenCaptureServer_->RegisterServerCallbacks();
     ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, RegisterServerCallbacks_003, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureConfig_.strategy.keepCaptureDuringCall = false;
-    InCallObserver::GetInstance().OnCallStateUpdated(true);
-    int ret = screenCaptureServer_->RegisterServerCallbacks();
-    ASSERT_EQ(ret, MSERR_OK);
-    InCallObserver::GetInstance().OnCallStateUpdated(false);
 }
 #endif
 
@@ -3522,7 +3465,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_004, TestSize.Level2)
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_001, TestSize.Level2)
 {
-    ScreenId virtualScreenId = 1;
+    Rosen::ScreenId virtualScreenId = 1;
     bool systemPrivacyProtectionSwitch = true;
     bool appPrivacyProtectionSwitch = false;
     screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
@@ -3535,7 +3478,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_002, TestSize.Level2)
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
-    ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
+    Rosen::ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
     bool systemPrivacyProtectionSwitch = true;
     bool appPrivacyProtectionSwitch = true;
     screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
@@ -3550,7 +3493,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_003, TestSize.Level2)
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
-    ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
+    Rosen::ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
     bool systemPrivacyProtectionSwitch = false;
     bool appPrivacyProtectionSwitch = false;
     screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
@@ -3565,7 +3508,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrivacyProtected_004, TestSize.Level2)
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
-    ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
+    Rosen::ScreenId virtualScreenId = screenCaptureServer_->virtualScreenId_;
     bool systemPrivacyProtectionSwitch = false;
     bool appPrivacyProtectionSwitch = true;
     screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
@@ -4018,7 +3961,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleSetDisplayIdAndMissionId_001, Te
 HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_001, TestSize.Level2)
 {
     auto defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
-    std::vector<ScreenId> mirrorIds{0};
+    std::vector<Rosen::ScreenId> mirrorIds{0};
     screenCaptureServer_->captureConfig_.captureMode = CAPTURE_SPECIFIED_SCREEN;
     EXPECT_EQ(screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds),
         MSERR_UNKNOWN);
@@ -4027,7 +3970,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_001, TestSize
 HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_002, TestSize.Level2)
 {
     auto defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
-    std::vector<ScreenId> mirrorIds{0};
+    std::vector<Rosen::ScreenId> mirrorIds{0};
     screenCaptureServer_->displayIds_ = {0};
     screenCaptureServer_->captureConfig_.captureMode = CAPTURE_SPECIFIED_SCREEN;
     EXPECT_EQ(screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds),
@@ -4037,7 +3980,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_002, TestSize
 HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_003, TestSize.Level2)
 {
     auto defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
-    std::vector<ScreenId> mirrorIds{0};
+    std::vector<Rosen::ScreenId> mirrorIds{0};
     screenCaptureServer_->displayIds_ = {333};
     screenCaptureServer_->captureConfig_.captureMode = CAPTURE_SPECIFIED_SCREEN;
     EXPECT_EQ(screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds),
@@ -4216,75 +4159,17 @@ HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_008, TestSize.Level2
 HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_001, TestSize.Level0)
 {
     std::vector<uint64_t> displayIds;
-    std::vector<ScreenId> mirrorIds;
-    DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
-    EXPECT_EQ(ret, DMError::DM_ERROR_INVALID_PARAM);
+    std::vector<Rosen::ScreenId> mirrorIds;
+    Rosen::DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
+    EXPECT_EQ(ret, Rosen::DMError::DM_ERROR_INVALID_PARAM);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_002, TestSize.Level0)
 {
     std::vector<uint64_t> displayIds{0, 1};
-    std::vector<ScreenId> mirrorIds;
-    DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
-    EXPECT_EQ(ret, DMError::DM_ERROR_INVALID_PARAM);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_003, TestSize.Level1)
-{
-    std::vector<uint64_t> displayIds{0};
-    std::vector<ScreenId> mirrorIds;
-    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
-    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_)).WillOnce(testing::Return(DMError::DM_OK));
-    DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
-    EXPECT_NE(ret, DMError::DM_ERROR_INVALID_PARAM);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_WithRotation_001, TestSize.Level1)
-{
-    std::vector<uint64_t> displayIds{0};
-    std::vector<ScreenId> mirrorIds;
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::PAUSED;
-    screenCaptureServer_->canvasRotation_ = false;
-    screenCaptureServer_->targetRotation_ = Rosen::Rotation::ROTATION_90;
-    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
-    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_, Rosen::Rotation::ROTATION_90))
-        .WillOnce(testing::Return(DMError::DM_OK));
-    DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
-    EXPECT_NE(ret, DMError::DM_ERROR_INVALID_PARAM);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_CaptureWindow_001, TestSize.Level1)
-{
-    sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
-    if (defaultDisplay == nullptr) {
-        GTEST_SKIP() << "GetDefaultDisplaySync returned null, skip";
-    }
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->virtualScreenId_ = 0;
-    std::vector<ScreenId> mirrorIds;
-    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
-    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_)).WillOnce(testing::Return(DMError::DM_OK));
-    int32_t ret = screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds);
-    EXPECT_NE(ret, MSERR_UNKNOWN);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirror_Resume_001, TestSize.Level0)
-{
-    screenCaptureServer_->virtualScreenId_ = 0;
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::PAUSED;
-    screenCaptureServer_->canvasRotation_ = false;
-    screenCaptureServer_->targetRotation_ = Rosen::Rotation::ROTATION_90;
-    screenCaptureServer_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
-    if (defaultDisplay == nullptr) {
-        GTEST_SKIP() << "GetDefaultDisplaySync returned null, skip";
-    }
-    std::vector<ScreenId> mirrorIds;
-    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
-    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_, Rosen::Rotation::ROTATION_90))
-        .WillOnce(testing::Return(DMError::DM_OK));
-    int32_t ret = screenCaptureServer_->MakeVirtualScreenMirror();
-    EXPECT_EQ(ret, MSERR_OK);
+    std::vector<Rosen::ScreenId> mirrorIds;
+    Rosen::DMError ret = screenCaptureServer_->CreateMirror(displayIds, mirrorIds);
+    EXPECT_EQ(ret, Rosen::DMError::DM_ERROR_INVALID_PARAM);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_EmptyDisplayIds_001, TestSize.Level0)
@@ -4295,7 +4180,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_EmptyDisplayI
     if (defaultDisplay == nullptr) {
         GTEST_SKIP() << "GetDefaultDisplaySync returned null, skip";
     }
-    std::vector<ScreenId> mirrorIds;
+    std::vector<Rosen::ScreenId> mirrorIds;
     std::vector<Rosen::DisplayId> allDisplayIds = Rosen::DisplayManager::GetInstance().GetAllDisplayIds();
     if (allDisplayIds.empty()) {
         GTEST_SKIP() << "GetAllDisplayIds returned empty, skip";
@@ -4304,71 +4189,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_EmptyDisplayI
     EXPECT_NE(ret, MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_CaptureHomeScreen_001, TestSize.Level1)
-{
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
-    screenCaptureServer_->virtualScreenId_ = 0;
-    sptr<Rosen::Display> defaultDisplay = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
-    if (defaultDisplay == nullptr) {
-        GTEST_SKIP() << "GetDefaultDisplaySync returned null, skip";
-    }
-    std::vector<ScreenId> mirrorIds;
-    auto *screenMock = static_cast<MockScreenManagerProvider *>(screenCaptureServer_->providers_->screenManager.get());
-    EXPECT_CALL(*screenMock, MakeMirror(testing::_, testing::_, testing::_)).WillOnce(testing::Return(DMError::DM_OK));
-    int32_t ret = screenCaptureServer_->SetupVirtualScreenMirror(defaultDisplay, mirrorIds);
-    EXPECT_EQ(ret, MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirror_InvalidScreenId_001, TestSize.Level0)
 {
     screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
     int32_t ret = screenCaptureServer_->MakeVirtualScreenMirror();
     EXPECT_EQ(ret, MSERR_UNKNOWN);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_MakeMirror3_001, TestSize.Level1)
-{
-    auto providers = CreateDefaultProviders();
-    ScreenId mirrorGroup = 0;
-    std::vector<ScreenId> mirrorIds;
-    DMError ret = providers->screenManager->MakeMirror(SCREEN_ID_INVALID, mirrorIds, mirrorGroup);
-    EXPECT_NE(ret, DMError::DM_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_MakeMirror4_001, TestSize.Level1)
-{
-    auto providers = CreateDefaultProviders();
-    ScreenId mirrorGroup = 0;
-    std::vector<ScreenId> mirrorIds;
-    DMError ret = providers->screenManager->MakeMirror(SCREEN_ID_INVALID, mirrorIds, mirrorGroup,
-        Rosen::Rotation::ROTATION_0);
-    EXPECT_NE(ret, DMError::DM_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_MakeMirrorForRecord_001, TestSize.Level1)
-{
-    auto providers = CreateDefaultProviders();
-    std::vector<ScreenId> mainScreenIds{SCREEN_ID_INVALID};
-    std::vector<ScreenId> mirrorIds;
-    ScreenId mirrorGroup = 0;
-    DMError ret = providers->screenManager->MakeMirrorForRecord(mainScreenIds, mirrorIds, mirrorGroup);
-    EXPECT_NE(ret, DMError::DM_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_StopMirror_001, TestSize.Level1)
-{
-    auto providers = CreateDefaultProviders();
-    std::vector<ScreenId> mirrorIds{SCREEN_ID_INVALID};
-    DMError ret = providers->screenManager->StopMirror(mirrorIds);
-    EXPECT_EQ(ret, DMError::DM_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ScreenManagerProvider_CreateVirtualScreen_001, TestSize.Level1)
-{
-    auto providers = CreateDefaultProviders();
-    Rosen::VirtualScreenOption option;
-    ScreenId ret = providers->screenManager->CreateVirtualScreen(option);
-    EXPECT_NE(ret, SCREEN_ID_INVALID);
 }
 } // namespace Media
 } // namespace OHOS

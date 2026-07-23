@@ -21,23 +21,6 @@
 #include <dm_common.h>
 #include <screen.h>
 
-namespace OHOS::Rosen {
-class DisplayManager;
-class ScreenManager;
-class WindowManager;
-class SessionManagerLite;
-} // namespace OHOS::Rosen
-
-namespace OHOS::AudioStandard {
-class AudioStreamManager;
-}
-
-namespace OHOS::EventFwk {
-class CommonEventSubscriber;
-class CommonEventData;
-class CommonEventPublishInfo;
-} // namespace OHOS::EventFwk
-
 namespace OHOS::Media {
 
 class AudioCapturerWrapper;
@@ -45,62 +28,15 @@ struct AudioCaptureInfo;
 class ScreenCaptureCallBack;
 struct ScreenCaptureContentFilter;
 
-class IDisplayManagerProvider {
-public:
-    virtual ~IDisplayManagerProvider() = default;
-    virtual Rosen::DisplayManager &GetInstance() = 0;
-};
-
-class IScreenManagerProvider {
-public:
-    virtual ~IScreenManagerProvider() = default;
-    virtual Rosen::ScreenManager &GetInstance() = 0;
-    virtual Rosen::DMError MakeMirror(Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
-        Rosen::ScreenId &screenGroupId) = 0;
-    virtual Rosen::DMError MakeMirror(Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
-        Rosen::ScreenId &screenGroupId, Rosen::Rotation rotation) = 0;
-    virtual Rosen::DMError MakeMirrorForRecord(const std::vector<Rosen::ScreenId> &mainScreenIds,
-        std::vector<Rosen::ScreenId> &mirrorScreenIds, Rosen::ScreenId &screenGroupId) = 0;
-    virtual Rosen::DMError StopMirror(const std::vector<Rosen::ScreenId> &mirrorScreenIds) = 0;
-    virtual Rosen::ScreenId CreateVirtualScreen(const Rosen::VirtualScreenOption &option) = 0;
-};
-
-class IWindowManagerProvider {
-public:
-    virtual ~IWindowManagerProvider() = default;
-    virtual Rosen::WindowManager &GetInstance() = 0;
-};
-
-class ISessionManagerLiteProvider {
-public:
-    virtual ~ISessionManagerLiteProvider() = default;
-    virtual Rosen::SessionManagerLite &GetInstance() = 0;
-};
-
-class IAudioStreamManagerProvider {
-public:
-    virtual ~IAudioStreamManagerProvider() = default;
-    virtual AudioStandard::AudioStreamManager *GetInstance() = 0;
-};
-
 class ICommonServiceProvider {
 public:
     virtual ~ICommonServiceProvider() = default;
-    virtual bool SubscribeCommonEvent(std::shared_ptr<EventFwk::CommonEventSubscriber> subscriber) = 0;
-    virtual bool UnSubscribeCommonEvent(std::shared_ptr<EventFwk::CommonEventSubscriber> subscriber) = 0;
-    virtual bool PublishCommonEvent(const EventFwk::CommonEventData &data,
-        const EventFwk::CommonEventPublishInfo &publishInfo) = 0;
     virtual std::shared_ptr<AudioCapturerWrapper> CreateAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
         const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
         const ScreenCaptureContentFilter &filter) = 0;
 };
 
 struct ExternalServiceProviders {
-    std::unique_ptr<IDisplayManagerProvider> displayManager;
-    std::unique_ptr<IScreenManagerProvider> screenManager;
-    std::unique_ptr<IWindowManagerProvider> windowManager;
-    std::unique_ptr<ISessionManagerLiteProvider> sessionManagerLite;
-    std::unique_ptr<IAudioStreamManagerProvider> audioStreamManager;
     std::unique_ptr<ICommonServiceProvider> commonService;
 };
 

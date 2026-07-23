@@ -800,6 +800,9 @@ int32_t ScreenCaptureServiceStub::SetCaptureAreaHighlight(MessageParcel &data, M
     config.lineThickness = data.ReadUint32();
     config.lineColor = data.ReadUint32();
     config.mode = static_cast<ScreenCaptureHighlightMode>(data.ReadInt32());
+    CHECK_AND_RETURN_RET_LOG(config.mode >= ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED &&
+            config.mode < ScreenCaptureHighlightMode::HIGHLIGHT_MODE_INVALID,
+        MSERR_INVALID_VAL, "invalid highlight mode: %{public}d", static_cast<int32_t>(config.mode));
     int32_t ret = SetCaptureAreaHighlight(config);
     reply.WriteInt32(ret);
     return MSERR_OK;
@@ -817,6 +820,12 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(MessageParcel &data, 
     strategy.pickerPopUp = static_cast<AVScreenCapturePickerPopUp>(data.ReadInt32());
     strategy.fillMode = static_cast<AVScreenCaptureFillMode>(data.ReadInt32());
     strategy.enablePause = data.ReadBool();
+    CHECK_AND_RETURN_RET_LOG(strategy.pickerPopUp >= AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DEFAULT &&
+            strategy.pickerPopUp <= AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE,
+        MSERR_INVALID_VAL, "invalid picker pop up: %{public}d", static_cast<int32_t>(strategy.pickerPopUp));
+    CHECK_AND_RETURN_RET_LOG(strategy.fillMode >= AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO &&
+            strategy.fillMode <= AVScreenCaptureFillMode::SCALE_TO_FILL,
+        MSERR_INVALID_VAL, "invalid fill mode: %{public}d", static_cast<int32_t>(strategy.fillMode));
     int32_t ret = SetScreenCaptureStrategy(strategy);
     reply.WriteInt32(ret);
     return MSERR_OK;

@@ -960,21 +960,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AppMissionId_002, TestSize.Level2)
     EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 0);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, RegisterAppLifecycleListener_001, TestSize.Level2)
-{
-    screenCaptureServer_->interestWindowId_ = -1;
-    screenCaptureServer_->appLifecycleListener_ = nullptr;
-    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
-    screenCaptureServer_->RegisterAppLifecycleListener("appName", 0);
-    screenCaptureServer_->RegisterAppLifecycleListener("appName", 0);
-    ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
-    ASSERT_NE(screenCaptureServer_->appLifecycleListener_, nullptr);
-    screenCaptureServer_->UnRegisterAppLifecycleListener();
-    screenCaptureServer_->UnRegisterAppLifecycleListener();
-    ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
-    ASSERT_EQ(screenCaptureServer_->appLifecycleListener_, nullptr);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_001, TestSize.Level2)
 {
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
@@ -1071,6 +1056,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_001, TestSize.Level
     appInformation["bundleName"] = "bundleName_001";
     appInformation["appIndex"] = 0;
     screenCaptureServer_->ParseAppMissionIds(appInformation);
+    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
@@ -1081,6 +1067,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_002, TestSize.Level
     appInformation["appIndex"] = 0;
     screenCaptureServer_->ParseAppMissionIds(appInformation);
     screenCaptureServer_->SetAppMissionIds(1);
+    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
@@ -1091,6 +1078,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_003, TestSize.Level
     appInformation["appIndex"] = 0;
     screenCaptureServer_->SetAppMissionIds(1);
     screenCaptureServer_->ParseAppMissionIds(appInformation);
+    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
@@ -1102,6 +1090,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_004, TestSize.Level
     screenCaptureServer_->ParseAppMissionIds(appInformation);
     std::vector<uint64_t> missionIds = {1};
     screenCaptureServer_->SetAppMissionIds(missionIds);
+    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 

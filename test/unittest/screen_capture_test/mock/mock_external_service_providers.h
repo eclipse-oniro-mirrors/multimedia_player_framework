@@ -18,60 +18,12 @@
 
 #include <gmock/gmock.h>
 #include <memory>
-#include <audio_stream_manager.h>
-#include <display_manager.h>
-#include <screen_manager.h>
-#include <window_manager.h>
-#include <session_manager_lite.h>
 #include "external_service_providers.h"
 
 namespace OHOS::Media {
 
-class MockDisplayManagerProvider : public IDisplayManagerProvider {
-public:
-    MOCK_METHOD(Rosen::DisplayManager &, GetInstance, (), (override));
-};
-
-class MockScreenManagerProvider : public IScreenManagerProvider {
-public:
-    MOCK_METHOD(Rosen::ScreenManager &, GetInstance, (), (override));
-    MOCK_METHOD(Rosen::DMError, MakeMirror,
-        (Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
-            Rosen::ScreenId &screenGroupId),
-        (override));
-    MOCK_METHOD(Rosen::DMError, MakeMirror,
-        (Rosen::ScreenId mainScreenId, const std::vector<Rosen::ScreenId> &mirrorScreenId,
-            Rosen::ScreenId &screenGroupId, Rosen::Rotation rotation),
-        (override));
-    MOCK_METHOD(Rosen::DMError, MakeMirrorForRecord,
-        (const std::vector<Rosen::ScreenId> &mainScreenIds, std::vector<Rosen::ScreenId> &mirrorScreenIds,
-            Rosen::ScreenId &screenGroupId),
-        (override));
-    MOCK_METHOD(Rosen::DMError, StopMirror, (const std::vector<Rosen::ScreenId> &mirrorScreenIds), (override));
-    MOCK_METHOD(Rosen::ScreenId, CreateVirtualScreen, (const Rosen::VirtualScreenOption &option), (override));
-};
-
-class MockWindowManagerProvider : public IWindowManagerProvider {
-public:
-    MOCK_METHOD(Rosen::WindowManager &, GetInstance, (), (override));
-};
-
-class MockSessionManagerLiteProvider : public ISessionManagerLiteProvider {
-public:
-    MOCK_METHOD(Rosen::SessionManagerLite &, GetInstance, (), (override));
-};
-
-class MockAudioStreamManagerProvider : public IAudioStreamManagerProvider {
-public:
-    MOCK_METHOD(AudioStandard::AudioStreamManager *, GetInstance, (), (override));
-};
-
 class MockCommonServiceProvider : public ICommonServiceProvider {
 public:
-    MOCK_METHOD(bool, SubscribeCommonEvent, (std::shared_ptr<EventFwk::CommonEventSubscriber>), (override));
-    MOCK_METHOD(bool, UnSubscribeCommonEvent, (std::shared_ptr<EventFwk::CommonEventSubscriber>), (override));
-    MOCK_METHOD(bool, PublishCommonEvent, (const EventFwk::CommonEventData &, const EventFwk::CommonEventPublishInfo &),
-        (override));
     MOCK_METHOD(std::shared_ptr<AudioCapturerWrapper>, CreateAudioCapturerWrapper,
         (AudioCaptureInfo &, const std::shared_ptr<ScreenCaptureCallBack> &, std::string &&,
             const ScreenCaptureContentFilter &),

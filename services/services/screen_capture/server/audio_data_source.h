@@ -36,7 +36,8 @@ enum class AVScreenCaptureMixBufferType : int32_t {
     MIX = 0,
     MIC = 1,
     INNER = 2,
-    INVALID = 3
+    SILENT = 3,
+    INVALID = 4,
 };
 
 class AudioDataSource : public IAudioDataSource {
@@ -48,7 +49,7 @@ class AudioDataSource : public IAudioDataSource {
     public:
         CacheBuffer() = delete;
         explicit CacheBuffer(const std::shared_ptr<AudioBuffer> &buf);
-        CacheBuffer(std::unique_ptr<uint8_t[]> &buf, const int64_t &timestamp);
+        CacheBuffer(std::unique_ptr<uint8_t[]> buf, const int64_t &timestamp);
         int64_t timestamp{0};
         void WriteTo(const std::shared_ptr<AVMemory> &avMem, const uint32_t &len);
     };
@@ -92,7 +93,7 @@ private:
         char *mixData, int channels);
     void ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    void SetMixAudioTypeLog();
+    void SetMixAudioTypeLog(AVScreenCaptureMixBufferType bufferType);
     AudioDataSourceReadAtActionState ReadAudioBuffer(const uint32_t &length);
     AudioDataSourceReadAtActionState WriteInnerAudio(uint32_t length, std::shared_ptr<AudioBuffer> &innerAudioBuffer);
     AudioDataSourceReadAtActionState WriteMicAudio(uint32_t length, std::shared_ptr<AudioBuffer> &micAudioBuffer);
@@ -112,9 +113,9 @@ private:
     AudioDataSourceReadAtActionState VideoAudioSyncInnerMode(uint32_t length, int64_t timeWindow,
         std::shared_ptr<AudioBuffer> &innerAudioBuffer);
     int32_t LostFrameNum(const int64_t &timestamp);
-    void FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize);
     int64_t writedFrameTime_{0};
-    std::deque<CacheBuffer> audioBufferQ_;
+    std::unique_ptr<CacheBuffer> cacheBuffer_;
+    std::vector<uint8_t> zeroBuffer_;
     int32_t appPid_{0};
     std::atomic<uint32_t> audioRendererState_{0};
     std::atomic<int64_t> firstAudioFramePts_{-1};
@@ -144,7 +145,6 @@ private:
     static constexpr int64_t SEC_TO_NS = 1000000000;                     // 1s
     static constexpr int64_t MAX_MIC_BEFORE_INNER_TIME_IN_NS = 40000000; // 40ms
     static constexpr int32_t FILL_AUDIO_FRAME_DURATION_IN_NS = 20000000; // 20ms
-    static constexpr int32_t FILL_LOST_FRAME_COUNT_THRESHOLD = 5;
 };
 } // namespace OHOS::Media
 #endif

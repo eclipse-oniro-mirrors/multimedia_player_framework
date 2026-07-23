@@ -334,9 +334,8 @@ bool AudioDataSourceFuzzer::FuzzGetSize()
     int64_t sizeResult = 0;
     uint8_t eventType = GetData<uint8_t>() % 2;
     if (eventType == 0) {
-        auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
-        if (innerCapture) {
-            innerCapture->ReleaseAudioBuffer();
+        if (screenCaptureServer_->innerAudioCapture_) {
+            screenCaptureServer_->innerAudioCapture_->ReleaseAudioBuffer();
         }
     }
     audioDataSource->GetSize(sizeResult);

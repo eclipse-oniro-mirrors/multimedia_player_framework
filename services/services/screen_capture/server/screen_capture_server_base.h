@@ -89,11 +89,6 @@ enum VideoPermissionState : int32_t {
     STOP_VIDEO = 1
 };
 
-enum class CaptureRole : int32_t {
-    INNER = 0,
-    MIC = 1,
-};
-
 enum AVScreenCaptureState : int32_t {
     CREATED = 0,
     POPUP_WINDOW = 1,

@@ -139,7 +139,6 @@ public:
     void SetSessionId(int32_t sessionId);
     void GetAndSetAppVersion();
     bool CheckAppVersionForUnsupport(DMError result);
-    int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
     std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> GetWantAgent(const std::string& callingLabel,
         int32_t sessionId);
@@ -180,7 +179,6 @@ public:
     DataType GetSCServerDataType();
     bool IsState(uint32_t cap) const;
     bool IsSCRecorderFileWithVideo();
-    std::shared_ptr<AudioCapturerWrapper> GetAudioCapture(CaptureRole role);
     bool IsStopAcquireAudioBufferFlag();
     bool IsMicrophoneSwitchTurnOn();
     int32_t AudioRendererStateUpdate(
@@ -192,6 +190,7 @@ public:
     uint64_t GetCurDisplayId();
 
 private:
+    int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t RegisterServerCallbacks();
     int32_t OnStartScreenCapture(bool isSkipPrivacyWindow = false);
@@ -203,11 +202,11 @@ private:
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
     int32_t InitRecorderMix();
     int32_t InitRecorderInner();
+    int32_t InitRecorderMic();
     int32_t InitRecorder();
     OutlineShape ConvertToOutlineShape(ScreenCaptureHighlightMode mode);
     void UpdateHighlightOutline(bool isStarted);
-    void SetHighlightConfigForWindowManager(bool isStarted,
-        Rosen::OutlineParams &outlineParams);
+    void SetHighlightConfigForWindowManager(bool isStarted, Rosen::OutlineParams &outlineParams);
     bool IsSetHighlightConfig();
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
@@ -262,6 +261,7 @@ private:
     int32_t StartAuthWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
     ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
+    int32_t ReportAVScreenCaptureUserChoiceImpl(const std::string &content);
     int32_t HandlePopupWindowCase(Json::Value& root, const std::string &content);
     int32_t HandleStreamDataCase(Json::Value& root, const std::string &content);
     int32_t HandlePresentPickerWindowCase(Json::Value& root, const std::string &content);
@@ -341,7 +341,6 @@ private:
 private:
     std::mutex mutex_;
     std::mutex resMutex_;
-    mutable std::shared_mutex captureIdsMutex_;
     mutable std::shared_mutex appMissionIdslock_;
     mutable std::condition_variable_any appMissionIdsCondVar_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
@@ -355,8 +354,8 @@ private:
     bool checkBoxSelected_ = false;
     bool showShareSystemAudioBox_ = false;
     bool isInnerAudioBoxSelected_ = true;
-    bool appPrivacyProtectionSwitch_ = true;
-    bool systemPrivacyProtectionSwitch_ = true;
+    std::atomic<bool> appPrivacyProtectionSwitch_{true};
+    std::atomic<bool> systemPrivacyProtectionSwitch_{true};
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
     std::atomic<bool> stopAcquireAudioBufferFromAudio_ = false;
@@ -430,7 +429,6 @@ private:
 
     /* used for CAPTURE FILE */
     std::shared_ptr<IRecorderService> recorder_ = nullptr;
-    std::string url_;
     OutputFormatType fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     int32_t outputFd_ = -1;
     int32_t audioSourceId_ = 0;
