@@ -49,7 +49,6 @@ namespace {
             napi_throw(env, error);
         }
     }
-
 }
 
 thread_local napi_ref AVAdsControllerNapi::constructor_ = nullptr;
