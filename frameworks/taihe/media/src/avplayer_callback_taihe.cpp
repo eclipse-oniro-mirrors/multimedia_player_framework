@@ -1484,9 +1484,6 @@ void AVPlayerCallback::OnDrmInfoUpdatedCb(const int32_t extra, const Format &inf
     CHECK_AND_RETURN_LOG(drmInfoAddr != nullptr && size > 0, "get drminfo buffer failed");
     infoBody.GetIntValue(std::string(PlayerKeys::PLAYER_DRM_INFO_COUNT), infoCount);
     CHECK_AND_RETURN_LOG(infoCount > 0, "get drminfo count is illegal");
-    CHECK_AND_RETURN_LOG(infoCount * static_cast<int32_t>(sizeof(DrmInfoItem)) <= static_cast<int32_t>(size),
-        "infoCount is inconsistent with buffer size, infoCount: %{public}d, size: %{public}zu",
-        infoCount, size);
 
     std::multimap<std::string, std::vector<uint8_t>> drmInfoMap;
     int32_t ret = SetDrmInfoData(drmInfoAddr, infoCount, drmInfoMap);
