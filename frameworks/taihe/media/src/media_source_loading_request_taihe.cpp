@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #include "media_source_loading_request_taihe.h"
 #include "media_log.h"
 #include "media_dfx.h"
