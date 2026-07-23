@@ -30,6 +30,31 @@ constexpr int32_t ERR_OPERATION_NOT_PERMIT = 5400102;
 
 namespace OHOS {
 namespace Media {
+namespace {
+std::string StateToString(AVDownloadTaskState state)
+{
+    switch (state) {
+        case AVDownloadTaskState::INIT:      return "init";
+        case AVDownloadTaskState::QUEUED:    return "queued";
+        case AVDownloadTaskState::RUNNING:   return "running";
+        case AVDownloadTaskState::COMPLETED: return "completed";
+        case AVDownloadTaskState::PAUSED:    return "paused";
+        case AVDownloadTaskState::REMOVING:  return "removing";
+        case AVDownloadTaskState::ERROR:     return "error";
+        default:                              return "init";
+    }
+}
+
+napi_value FailInit(napi_env env, napi_ref &ref, const char *msg)
+{
+    MEDIA_LOGE("%{public}s", msg);
+    if (ref != nullptr) {
+        napi_delete_reference(env, ref);
+        ref = nullptr;
+    }
+    return nullptr;
+}
+}
 
 thread_local napi_ref AVDownloaderManagerNapi::constructor_ = nullptr;
 
@@ -47,8 +72,8 @@ AVDownloaderManagerNapi::AVDownloaderManagerNapi()
 AVDownloaderManagerNapi::~AVDownloaderManagerNapi()
 {
     MEDIA_LOGD("AVDownloaderManagerNapi Instances destroy");
-    DeleteRef(statusChangeCallback_);
-    DeleteRef(progressChangeCallback_);
+    statusChangeCallback_.reset();
+    progressChangeCallback_.reset();
     if (downloaderManager_) {
         downloaderManager_->Release();
         downloaderManager_.reset();
@@ -58,14 +83,6 @@ AVDownloaderManagerNapi::~AVDownloaderManagerNapi()
 std::string AVDownloaderManagerNapi::GenerateTaskId()
 {
     return std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
-}
-
-void AVDownloaderManagerNapi::DeleteRef(napi_ref &ref)
-{
-    if (ref != nullptr) {
-        napi_delete_reference(env_, ref);
-        ref = nullptr;
-    }
 }
 
 std::string AVDownloaderManagerNapi::GetTaskCacheDir(const std::string &taskId)
@@ -100,51 +117,41 @@ void AVDownloaderManagerNapi::OnProgressChange(const std::string &taskId, double
 
 void AVDownloaderManagerNapi::TriggerStatusCallback(const std::string &taskId, AVDownloadTaskState state)
 {
-    std::lock_guard<std::mutex> lock(cbMutex_);
-    if (statusChangeCallback_ == nullptr) {
-        return;
+    std::shared_ptr<AutoRef> cbHolder;
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        if (statusChangeCallback_ == nullptr) {
+            return;
+        }
+        cbHolder = statusChangeCallback_;
     }
 
-    auto self = selfRef_;
-    napi_ref cbRef = statusChangeCallback_;
-    napi_env env = env_;
-    auto task = [self, cbRef, env, taskId, state]() {
+    napi_env env = cbHolder->env_;
+    auto task = [cbHolder, taskId, state]() {
         std::string request = "TriggerStatusCallback";
         MEDIA_LOGI("JsCallBack %{public}s, start", request.c_str());
 
         do {
-            std::shared_ptr<AutoRef> ref = std::make_shared<AutoRef>(env, cbRef, false);
-            CHECK_AND_BREAK_LOG(ref != nullptr, "AutoRef is nullptr");
+            CHECK_AND_BREAK_LOG(cbHolder != nullptr && cbHolder->cb_ != nullptr, "callback ref is nullptr");
 
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(ref->env_, &scope);
+            napi_open_handle_scope(cbHolder->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "scope is nullptr");
             ON_SCOPE_EXIT(0) {
-                napi_close_handle_scope(ref->env_, scope);
+                napi_close_handle_scope(cbHolder->env_, scope);
             };
 
             napi_value jsCallback = nullptr;
-            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            napi_status nstatus = napi_get_reference_value(cbHolder->env_, cbHolder->cb_, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "get reference value fail");
 
             napi_value args[2] = { nullptr };
-            napi_create_string_utf8(ref->env_, taskId.c_str(), NAPI_AUTO_LENGTH, &args[0]);
-
-            std::string stateStr;
-            switch (state) {
-                case AVDownloadTaskState::INIT: stateStr = "init"; break;
-                case AVDownloadTaskState::QUEUED: stateStr = "queued"; break;
-                case AVDownloadTaskState::RUNNING: stateStr = "running"; break;
-                case AVDownloadTaskState::COMPLETED: stateStr = "completed"; break;
-                case AVDownloadTaskState::PAUSED: stateStr = "paused"; break;
-                case AVDownloadTaskState::REMOVING: stateStr = "removing"; break;
-                case AVDownloadTaskState::ERROR: stateStr = "error"; break;
-                default: stateStr = "init"; break;
-            }
-            napi_create_string_utf8(ref->env_, stateStr.c_str(), NAPI_AUTO_LENGTH, &args[1]);
+            napi_create_string_utf8(cbHolder->env_, taskId.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+            std::string stateStr = StateToString(state);
+            napi_create_string_utf8(cbHolder->env_, stateStr.c_str(), NAPI_AUTO_LENGTH, &args[1]);
 
             napi_value result = nullptr;
-            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 2, args, &result);
+            nstatus = napi_call_function(cbHolder->env_, nullptr, jsCallback, 2, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "fail to napi call function");
         } while (0);
     };
@@ -157,39 +164,40 @@ void AVDownloaderManagerNapi::TriggerStatusCallback(const std::string &taskId, A
 
 void AVDownloaderManagerNapi::TriggerProgressCallback(const std::string &taskId, double progress)
 {
-    std::lock_guard<std::mutex> lock(cbMutex_);
-    if (progressChangeCallback_ == nullptr) {
-        return;
+    std::shared_ptr<AutoRef> cbHolder;
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        if (progressChangeCallback_ == nullptr) {
+            return;
+        }
+        cbHolder = progressChangeCallback_;
     }
 
-    auto self = selfRef_;
-    napi_ref cbRef = progressChangeCallback_;
-    napi_env env = env_;
-    auto task = [self, cbRef, env, taskId, progress]() {
+    napi_env env = cbHolder->env_;
+    auto task = [cbHolder, taskId, progress]() {
         std::string request = "TriggerProgressCallback";
         MEDIA_LOGI("JsCallBack %{public}s, start", request.c_str());
 
         do {
-            std::shared_ptr<AutoRef> ref = std::make_shared<AutoRef>(env, cbRef, false);
-            CHECK_AND_BREAK_LOG(ref != nullptr, "AutoRef is nullptr");
+            CHECK_AND_BREAK_LOG(cbHolder != nullptr && cbHolder->cb_ != nullptr, "callback ref is nullptr");
 
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(ref->env_, &scope);
+            napi_open_handle_scope(cbHolder->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "scope is nullptr");
             ON_SCOPE_EXIT(0) {
-                napi_close_handle_scope(ref->env_, scope);
+                napi_close_handle_scope(cbHolder->env_, scope);
             };
 
             napi_value jsCallback = nullptr;
-            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            napi_status nstatus = napi_get_reference_value(cbHolder->env_, cbHolder->cb_, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "get reference value fail");
 
             napi_value args[2] = { nullptr };
-            napi_create_string_utf8(ref->env_, taskId.c_str(), NAPI_AUTO_LENGTH, &args[0]);
-            napi_create_double(ref->env_, progress, &args[1]);
+            napi_create_string_utf8(cbHolder->env_, taskId.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+            napi_create_double(cbHolder->env_, progress, &args[1]);
 
             napi_value result = nullptr;
-            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 2, args, &result);
+            nstatus = napi_call_function(cbHolder->env_, nullptr, jsCallback, 2, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "fail to napi call function");
         } while (0);
     };
@@ -229,28 +237,17 @@ napi_value AVDownloaderManagerNapi::Init(napi_env env, napi_value exports)
     napi_status status = napi_define_class(env, "AVDownloaderManager", NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     if (status != napi_ok) {
-        MEDIA_LOGE("failed to define class");
-        if (constructor_ != nullptr) {
-            napi_delete_reference(env, constructor_);
-            constructor_ = nullptr;
-        }
-        return nullptr;
+        return FailInit(env, constructor_, "failed to define class");
     }
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     if (status != napi_ok) {
-        MEDIA_LOGE("failed to define static properties");
-        napi_delete_reference(env, constructor_);
-        constructor_ = nullptr;
-        return nullptr;
+        return FailInit(env, constructor_, "failed to define static properties");
     }
 
     status = napi_set_named_property(env, exports, "AVDownloaderManager", constructor);
     if (status != napi_ok) {
-        MEDIA_LOGE("failed to set named property");
-        napi_delete_reference(env, constructor_);
-        constructor_ = nullptr;
-        return nullptr;
+        return FailInit(env, constructor_, "failed to set named property");
     }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
@@ -268,7 +265,6 @@ napi_value AVDownloaderManagerNapi::Constructor(napi_env env, napi_callback_info
     AVDownloaderManagerNapi *manager = new (std::nothrow) AVDownloaderManagerNapi();
     CHECK_AND_RETURN_RET_LOG(manager != nullptr, nullptr, "failed to new object");
 
-    manager->env_ = env;
     status = napi_wrap(env, thisArg, manager, Destructor, nullptr, nullptr);
     if (status != napi_ok) {
         MEDIA_LOGE("failed to wrap");
@@ -696,16 +692,7 @@ napi_value AVDownloaderManagerNapi::GetTaskStatus(napi_env env, napi_callback_in
                     return nullptr;
                 }
             }
-            switch (state) {
-                case AVDownloadTaskState::INIT: stateStr = "init"; break;
-                case AVDownloadTaskState::QUEUED: stateStr = "queued"; break;
-                case AVDownloadTaskState::RUNNING: stateStr = "running"; break;
-                case AVDownloadTaskState::COMPLETED: stateStr = "completed"; break;
-                case AVDownloadTaskState::PAUSED: stateStr = "paused"; break;
-                case AVDownloadTaskState::REMOVING: stateStr = "removing"; break;
-                case AVDownloadTaskState::ERROR: stateStr = "error"; break;
-                default: stateStr = "init"; break;
-            }
+            stateStr = StateToString(state);
         }
     }
 
@@ -779,8 +766,12 @@ napi_value AVDownloaderManagerNapi::OnStatusChange(napi_env env, napi_callback_i
 
     {
         std::lock_guard<std::mutex> lock(manager->cbMutex_);
-        manager->DeleteRef(manager->statusChangeCallback_);
-        napi_create_reference(env, args[0], 1, &manager->statusChangeCallback_);
+        napi_ref ref = nullptr;
+        if (napi_create_reference(env, args[0], 1, &ref) == napi_ok && ref != nullptr) {
+            manager->statusChangeCallback_ = std::make_shared<AutoRef>(env, ref, true);
+        } else {
+            manager->statusChangeCallback_.reset();
+        }
     }
 
     napi_value result = nullptr;
@@ -809,8 +800,12 @@ napi_value AVDownloaderManagerNapi::OnProgressChange(napi_env env, napi_callback
 
     {
         std::lock_guard<std::mutex> lock(manager->cbMutex_);
-        manager->DeleteRef(manager->progressChangeCallback_);
-        napi_create_reference(env, args[0], 1, &manager->progressChangeCallback_);
+        napi_ref ref = nullptr;
+        if (napi_create_reference(env, args[0], 1, &ref) == napi_ok && ref != nullptr) {
+            manager->progressChangeCallback_ = std::make_shared<AutoRef>(env, ref, true);
+        } else {
+            manager->progressChangeCallback_.reset();
+        }
     }
 
     napi_value result = nullptr;
@@ -836,11 +831,11 @@ napi_value AVDownloaderManagerNapi::OffStatusChange(napi_env env, napi_callback_
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
             std::lock_guard<std::mutex> lock(manager->cbMutex_);
-            manager->DeleteRef(manager->statusChangeCallback_);
+            manager->statusChangeCallback_.reset();
         }
     } else {
         std::lock_guard<std::mutex> lock(manager->cbMutex_);
-        manager->DeleteRef(manager->statusChangeCallback_);
+        manager->statusChangeCallback_.reset();
     }
 
     napi_value result = nullptr;
@@ -866,11 +861,11 @@ napi_value AVDownloaderManagerNapi::OffProgressChange(napi_env env, napi_callbac
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
             std::lock_guard<std::mutex> lock(manager->cbMutex_);
-            manager->DeleteRef(manager->progressChangeCallback_);
+            manager->progressChangeCallback_.reset();
         }
     } else {
         std::lock_guard<std::mutex> lock(manager->cbMutex_);
-        manager->DeleteRef(manager->progressChangeCallback_);
+        manager->progressChangeCallback_.reset();
     }
 
     napi_value result = nullptr;
@@ -892,8 +887,8 @@ napi_value AVDownloaderManagerNapi::Release(napi_env env, napi_callback_info inf
 
     {
         std::lock_guard<std::mutex> lock(manager->cbMutex_);
-        manager->DeleteRef(manager->statusChangeCallback_);
-        manager->DeleteRef(manager->progressChangeCallback_);
+        manager->statusChangeCallback_.reset();
+        manager->progressChangeCallback_.reset();
     }
     if (manager->downloaderManager_) {
         manager->downloaderManager_->Release();

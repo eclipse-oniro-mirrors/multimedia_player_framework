@@ -28,6 +28,8 @@
 namespace OHOS {
 namespace Media {
 
+struct AutoRef;
+
 class AVDownloaderManagerNapi : public AVDownloaderManagerCallback {
 public:
     static napi_value Init(napi_env env, napi_value exports);
@@ -63,19 +65,17 @@ private:
 
     std::string GenerateTaskId();
     std::string GetTaskCacheDir(const std::string &taskId);
-    void DeleteRef(napi_ref &ref);
     void TriggerStatusCallback(const std::string &taskId, AVDownloadTaskState state);
     void TriggerProgressCallback(const std::string &taskId, double progress);
 
     std::shared_ptr<AVDownloaderManager> downloaderManager_;
     std::shared_ptr<AVDownloaderManagerNapi> selfRef_;
-    napi_env env_ = nullptr;
     bool allowCellularAccess_ = false;
     int32_t requestTimeoutMs_ = 30000;
     std::map<std::string, std::string> taskIdToUrl_;
     std::map<std::string, std::string> taskIdToCacheDir_;
-    napi_ref statusChangeCallback_ = nullptr;
-    napi_ref progressChangeCallback_ = nullptr;
+    std::shared_ptr<AutoRef> statusChangeCallback_;
+    std::shared_ptr<AutoRef> progressChangeCallback_;
     std::mutex cbMutex_;
 
     static thread_local napi_ref constructor_;
