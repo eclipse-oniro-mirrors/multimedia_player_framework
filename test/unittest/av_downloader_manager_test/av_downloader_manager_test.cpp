@@ -979,5 +979,288 @@ HWTEST_F(AVDownloaderManagerTest, GetFilePath_EmptyFilename_001, TestSize.Level0
     EXPECT_FALSE(fileNamePart.empty());
 }
 
+HWTEST_F(AVDownloaderManagerTest, Release_WithPopulatedMap_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto mockDownloader = std::make_shared<MockDownloader>();
+    EXPECT_CALL(*mockDownloader, Cancel()).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, Release()).WillOnce(Return(MSERR_OK));
+    manager->downloaderMap_["task1"] = mockDownloader;
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task1";
+    manager->taskMap_["task1"] = taskInfo;
+
+    auto result = manager->Release();
+    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_TRUE(manager->downloaderMap_.empty());
+    EXPECT_TRUE(manager->taskMap_.empty());
+}
+
+HWTEST_F(AVDownloaderManagerTest, Release_WithNullDownloaderEntry_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    manager->downloaderMap_["null_task"] = nullptr;
+    auto result = manager->Release();
+    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_TRUE(manager->downloaderMap_.empty());
+}
+
+HWTEST_F(AVDownloaderManagerTest, Release_MessageQueueNull_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    manager->messageQueue_.reset();
+    auto result = manager->Release();
+    EXPECT_EQ(result, MSERR_OK);
+}
+
+HWTEST_F(AVDownloaderManagerTest, Destructor_ReleasesDownloaders_001, TestSize.Level0)
+{
+    auto mockDownloader = std::make_shared<MockDownloader>();
+    EXPECT_CALL(*mockDownloader, Cancel()).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, Release()).WillOnce(Return(MSERR_OK));
+    {
+        auto manager = std::make_shared<AVDownloaderManagerImpl>();
+        ASSERT_NE(manager, nullptr);
+        manager->downloaderMap_["task1"] = mockDownloader;
+    }
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyStatusChange_TaskInMap_UpdatesState_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnStatusChange("task1", AVDownloadTaskState::RUNNING)).Times(1);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task1";
+    taskInfo->state = AVDownloadTaskState::INIT;
+    manager->taskMap_["task1"] = taskInfo;
+
+    manager->NotifyStatusChange("task1", AVDownloadTaskState::RUNNING);
+    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::RUNNING);
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyStatusChange_NoCallback_StillUpdatesState_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task1";
+    taskInfo->state = AVDownloadTaskState::INIT;
+    manager->taskMap_["task1"] = taskInfo;
+
+    manager->NotifyStatusChange("task1", AVDownloadTaskState::PAUSED);
+    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::PAUSED);
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyProgressChange_TaskInMap_UpdatesProgress_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnProgressChange("task1", 75.0)).Times(1);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task1";
+    taskInfo->progress = 0.0;
+    manager->taskMap_["task1"] = taskInfo;
+
+    manager->NotifyProgressChange("task1", 75.0);
+    EXPECT_DOUBLE_EQ(taskInfo->progress, 75.0);
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyProgressChange_NoCallback_StillUpdatesProgress_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task1";
+    taskInfo->progress = 0.0;
+    manager->taskMap_["task1"] = taskInfo;
+
+    manager->NotifyProgressChange("task1", 42.5);
+    EXPECT_DOUBLE_EQ(taskInfo->progress, 42.5);
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyStatusChangeLocked_TaskInMap_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnStatusChange("task1", AVDownloadTaskState::RUNNING)).Times(1);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task1";
+    taskInfo->state = AVDownloadTaskState::INIT;
+    manager->taskMap_["task1"] = taskInfo;
+
+    manager->NotifyStatusChangeLocked("task1", AVDownloadTaskState::RUNNING);
+    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::RUNNING);
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyStatusChangeLocked_TaskNotInMap_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnStatusChange("unknown", AVDownloadTaskState::COMPLETED)).Times(1);
+
+    manager->NotifyStatusChangeLocked("unknown", AVDownloadTaskState::COMPLETED);
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyStatusChangeLocked_NoCallback_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task1";
+    taskInfo->state = AVDownloadTaskState::INIT;
+    manager->taskMap_["task1"] = taskInfo;
+
+    manager->NotifyStatusChangeLocked("task1", AVDownloadTaskState::PAUSED);
+    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::PAUSED);
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyProgressChangeLocked_TaskInMap_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnProgressChange("task1", 80.0)).Times(1);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task1";
+    taskInfo->progress = 0.0;
+    manager->taskMap_["task1"] = taskInfo;
+
+    manager->NotifyProgressChangeLocked("task1", 80.0);
+    EXPECT_DOUBLE_EQ(taskInfo->progress, 80.0);
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyProgressChangeLocked_TaskNotInMap_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnProgressChange("unknown", 12.0)).Times(1);
+
+    manager->NotifyProgressChangeLocked("unknown", 12.0);
+}
+
+HWTEST_F(AVDownloaderManagerTest, NotifyProgressChangeLocked_NoCallback_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task1";
+    taskInfo->progress = 0.0;
+    manager->taskMap_["task1"] = taskInfo;
+
+    manager->NotifyProgressChangeLocked("task1", 33.0);
+    EXPECT_DOUBLE_EQ(taskInfo->progress, 33.0);
+}
+
+HWTEST_F(AVDownloaderManagerTest, HandleTaskAdded_MaxReached_Queued_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    manager->activeDownloaderCount_ = 3;
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnStatusChange("ht_task", AVDownloadTaskState::QUEUED)).Times(1);
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "ht_task";
+    taskInfo->state = AVDownloadTaskState::INIT;
+    manager->taskMap_["ht_task"] = taskInfo;
+
+    manager->HandleTaskAdded("ht_task", "http://example.com/x.mp4", nullptr, "/cache/x.mp4");
+
+    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::QUEUED);
+    EXPECT_FALSE(manager->pendingTaskQueue_.empty());
+    EXPECT_EQ(manager->activeDownloaderCount_.load(), 3);
+}
+
+HWTEST_F(AVDownloaderManagerTest, HandleTaskAdded_StartSuccess_Running_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnStatusChange("ht_task", AVDownloadTaskState::RUNNING)).Times(1);
+    auto mockDownloader = std::make_shared<MockDownloader>();
+    EXPECT_CALL(*mockDownloader, AddFileTask(_, _, _)).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, SetDownloadCallback(_)).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, SetConfig(_)).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, Start()).WillOnce(Return(MSERR_OK));
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "ht_task";
+    taskInfo->state = AVDownloadTaskState::INIT;
+    manager->taskMap_["ht_task"] = taskInfo;
+
+    manager->HandleTaskAdded("ht_task", "http://example.com/x.mp4", mockDownloader, "/cache/x.mp4");
+
+    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::RUNNING);
+    EXPECT_EQ(manager->activeDownloaderCount_.load(), 1);
+}
+
+HWTEST_F(AVDownloaderManagerTest, HandleTaskAdded_StartFailed_Error_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnStatusChange("ht_task", AVDownloadTaskState::ERROR)).Times(1);
+    auto mockDownloader = std::make_shared<MockDownloader>();
+    EXPECT_CALL(*mockDownloader, AddFileTask(_, _, _)).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, SetDownloadCallback(_)).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, SetConfig(_)).WillOnce(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, Start()).WillOnce(Return(MSERR_INVALID_OPERATION));
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "ht_task";
+    taskInfo->state = AVDownloadTaskState::INIT;
+    manager->taskMap_["ht_task"] = taskInfo;
+
+    manager->HandleTaskAdded("ht_task", "http://example.com/x.mp4", mockDownloader, "/cache/x.mp4");
+
+    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::ERROR);
+    EXPECT_EQ(manager->activeDownloaderCount_.load(), 0);
+}
+
+HWTEST_F(AVDownloaderManagerTest, HandleTaskAdded_SecondCall_ReusesTaskCallback_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<MockAVDownloaderManagerCallback>();
+    (void)manager->SetManagerCallback(callback);
+    EXPECT_CALL(*callback, OnStatusChange("ht_task1", AVDownloadTaskState::RUNNING)).Times(1);
+    EXPECT_CALL(*callback, OnStatusChange("ht_task2", AVDownloadTaskState::RUNNING)).Times(1);
+    auto mockDownloader = std::make_shared<MockDownloader>();
+    EXPECT_CALL(*mockDownloader, AddFileTask(_, _, _)).Times(2).WillRepeatedly(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, SetDownloadCallback(_)).Times(2).WillRepeatedly(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(2).WillRepeatedly(Return(MSERR_OK));
+    EXPECT_CALL(*mockDownloader, Start()).Times(2).WillRepeatedly(Return(MSERR_OK));
+    auto taskInfo1 = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo1->taskId = "ht_task1";
+    taskInfo1->state = AVDownloadTaskState::INIT;
+    manager->taskMap_["ht_task1"] = taskInfo1;
+    auto taskInfo2 = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo2->taskId = "ht_task2";
+    taskInfo2->state = AVDownloadTaskState::INIT;
+    manager->taskMap_["ht_task2"] = taskInfo2;
+
+    manager->HandleTaskAdded("ht_task1", "http://example.com/a.mp4", mockDownloader, "/cache/a.mp4");
+    manager->HandleTaskAdded("ht_task2", "http://example.com/b.mp4", mockDownloader, "/cache/b.mp4");
+
+    EXPECT_EQ(taskInfo1->state, AVDownloadTaskState::RUNNING);
+    EXPECT_EQ(taskInfo2->state, AVDownloadTaskState::RUNNING);
+    EXPECT_EQ(manager->activeDownloaderCount_.load(), 2);
+}
+
 } // namespace Media
 } // namespace OHOS
