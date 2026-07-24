@@ -200,7 +200,7 @@ VEFError AudioEncoder::Stop()
     auto handle = encoder_;
     if (handle == nullptr) {
         MEDIA_LOGW("[%{public}s] stop encoder skipped, encoder is nullptr.", logTag_.c_str());
-        return VEFError::ERR_OK;
+        return VEFError::ERR_INTERNAL_ERROR;
     }
     lk.unlock();
     OH_AVErrCode ret = OH_AudioEncoder_Stop(handle);
@@ -220,7 +220,7 @@ VEFError AudioEncoder::Flush()
     auto handle = encoder_;
     if (handle == nullptr) {
         MEDIA_LOGW("[%{public}s] flush encoder skipped, encoder is nullptr.", logTag_.c_str());
-        return VEFError::ERR_OK;
+        return VEFError::ERR_INTERNAL_ERROR;
     }
     lk.unlock();
     OH_AVErrCode ret = OH_AudioEncoder_Flush(handle);

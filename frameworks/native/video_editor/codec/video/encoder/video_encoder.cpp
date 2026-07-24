@@ -203,7 +203,7 @@ VEFError VideoEncoder::Stop()
     auto handle = encoder_;
     if (handle == nullptr) {
         MEDIA_LOGW("[%{public}s] stop encoder skipped, encoder is nullptr.", logTag_.c_str());
-        return VEFError::ERR_OK;
+        return VEFError::ERR_INTERNAL_ERROR;
     }
     lk.unlock();
     OH_AVErrCode ret = OH_VideoEncoder_Stop(handle);
@@ -234,7 +234,7 @@ VEFError VideoEncoder::Flush()
     auto handle = encoder_;
     if (handle == nullptr) {
         MEDIA_LOGW("[%{public}s] flush encoder skipped, encoder is nullptr.", logTag_.c_str());
-        return VEFError::ERR_OK;
+        return VEFError::ERR_INTERNAL_ERROR;
     }
     lk.unlock();
     OH_AVErrCode ret = OH_VideoEncoder_Flush(handle);
