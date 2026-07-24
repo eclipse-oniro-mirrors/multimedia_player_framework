@@ -395,5 +395,123 @@ HWTEST_F(RecorderServiceStubTest, AddWatermark_LargeDimensions, TestSize.Level2)
     int32_t ret = recorderServiceStub_->AddWatermark(data, reply);
     EXPECT_NE(ret, MSERR_OK);
 }
+
+/**
+ * @tc.name: OnRemoteRequest_Denied_SetAudioSource
+ * @tc.desc: OnRemoteRequest with PERMISSION_DENIED and code == SET_AUDIO_SOURCE
+ *           Covers line 227 TRUE branch + line 229 TRUE (audioSourceType_ reset)
+ *           AUDIO_INNER always makes CheckPermission return PERMISSION_DENIED
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Denied_SetAudioSource, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
+    ASSERT_NE(stub, nullptr);
+    stub->recorderServer_ = nullptr;
+
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+    data.WriteInt32(static_cast<int32_t>(AudioSourceType::AUDIO_INNER));
+
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_AUDIO_SOURCE, data, reply, option);
+    EXPECT_EQ(ret, MSERR_EXT_API9_NO_PERMISSION);
+    EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_SOURCE_INVALID);
+}
+
+/**
+ * @tc.name: OnRemoteRequest_Denied_OtherAudioRequest
+ * @tc.desc: OnRemoteRequest with PERMISSION_DENIED and code != SET_AUDIO_SOURCE
+ *           Covers line 227 TRUE branch + line 229 FALSE (audioSourceType_ NOT reset)
+ *           Set audioSourceType_ = AUDIO_INNER directly so CheckPermission returns DENIED
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Denied_OtherAudioRequest, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
+    ASSERT_NE(stub, nullptr);
+    stub->recorderServer_ = nullptr;
+    stub->audioSourceType_ = AudioSourceType::AUDIO_INNER;
+
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_AUDIO_ENCODER, data, reply, option);
+    EXPECT_EQ(ret, MSERR_EXT_API9_NO_PERMISSION);
+    EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_INNER);
+}
+
+/**
+ * @tc.name: OnRemoteRequest_Granted_CommonNoAudioCheck
+ * @tc.desc: OnRemoteRequest with PERMISSION_GRANTED via COMMON_REQUEST without audio check
+ *           Covers line 227 FALSE branch (permissionResult != PERMISSION_DENIED)
+ *           needAudioPermissionCheck=false by default, COMMON_REQUEST assigns GRANTED directly
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Granted_CommonNoAudioCheck, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
+    ASSERT_NE(stub, nullptr);
+    stub->recorderServer_ = nullptr;
+
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+    data.WriteInt32(static_cast<int32_t>(OutputFormatType::FORMAT_MPEG_4));
+
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_OUTPUT_FORMAT, data, reply, option);
+    EXPECT_NE(ret, MSERR_EXT_API9_NO_PERMISSION);
+}
+
+/**
+ * @tc.name: OnRemoteRequest_Denied_CommonWithAudioCheck
+ * @tc.desc: OnRemoteRequest with PERMISSION_DENIED via COMMON_REQUEST with needAudioPermissionCheck=true
+ *           Covers line 227 TRUE branch + line 229 FALSE (audioSourceType_ NOT reset)
+ *           Different path from test 2: COMMON_REQUEST calls CheckPermission when needAudioPermissionCheck=true
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Denied_CommonWithAudioCheck, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
+    ASSERT_NE(stub, nullptr);
+    stub->recorderServer_ = nullptr;
+    stub->audioSourceType_ = AudioSourceType::AUDIO_INNER;
+    stub->needAudioPermissionCheck = true;
+
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::PREPARE, data, reply, option);
+    EXPECT_EQ(ret, MSERR_EXT_API9_NO_PERMISSION);
+    EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_INNER);
+}
+
+/**
+ * @tc.name: OnRemoteRequest_Granted_NonAudioNonCommon
+ * @tc.desc: OnRemoteRequest with PERMISSION_GRANTED via else branch (neither AUDIO nor COMMON request)
+ *           Covers line 227 FALSE branch through a different path
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Granted_NonAudioNonCommon, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = RecorderServiceStub::Create();
+    ASSERT_NE(stub, nullptr);
+    stub->recorderServer_ = nullptr;
+
+    MessageParcel data, reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+    data.WriteInt32(static_cast<int32_t>(VideoSourceType::VIDEO_SOURCE_SURFACE_ES));
+
+    int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_VIDEO_SOURCE, data, reply, option);
+    EXPECT_NE(ret, MSERR_EXT_API9_NO_PERMISSION);
+}
 } // namespace Media
 } // namespace OHOS

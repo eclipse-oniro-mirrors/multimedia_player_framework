@@ -110,6 +110,7 @@ private:
     void ConfigureVidEnableBFrame(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
+    void ConfigureOutFd(const RecorderParam &recParam);
     Status HandleStopOperation();
     void ClearAllConfiguration();
     int32_t PrepareAudioCapture();
@@ -185,7 +186,7 @@ private:
     bool enableStableQualityMode_ = false;
     bool enableBFrame_ = false;
 
-    Mutex stateMutex_ {};
+    std::mutex stateMutex_;
     ConditionVariable cond_ {};
 
     sptr<Surface> producerSurface_{nullptr};

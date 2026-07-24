@@ -20,6 +20,7 @@
 #include <accesstoken_kit.h>
 #include "media_errors.h"
 #include "media_log.h"
+#include "recorder_utils.h"
 
 using namespace OHOS;
 using namespace OHOS::Media;
@@ -1694,6 +1695,102 @@ HWTEST_F(RecorderServerUnitTest, recorder_video_GetMetaSurface, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
     recorderServer_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetMetaSurface_001
+ * @tc.desc: GetMetaSurface with non-meta sourceId, IsMeta returns false
+ *           Covers branch: outer condition A=false (hirecorder_impl.cpp line 411-415)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetMetaSurface_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+
+    const int32_t VIDEO_SOURCE_ID = SourceIdGenerator::GenerateVideoSourceId(0);
+    OHOS::sptr<OHOS::Surface> surface = recorderServer_->GetMetaSurface(VIDEO_SOURCE_ID);
+    EXPECT_TRUE(surface == nullptr);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetMetaSurface_002
+ * @tc.desc: GetMetaSurface with meta sourceId but type out of range (>= BUTT)
+ *           Covers branch: outer condition A=true, B=false (hirecorder_impl.cpp line 411-415)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_002, TestSize.Level2)
+{
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetMetaSurface_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+
+    const int32_t OUT_OF_RANGE_META_ID = SourceIdGenerator::GenerateMetaSourceId(1);
+    OHOS::sptr<OHOS::Surface> surface = recorderServer_->GetMetaSurface(OUT_OF_RANGE_META_ID);
+    EXPECT_TRUE(surface == nullptr);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetMetaSurface_003
+ * @tc.desc: GetMetaSurface with valid meta sourceId but metaDataFilters_ empty
+ *           (SetMetaSource not called, find returns end())
+ *           Covers branch: inner condition C=false (hirecorder_impl.cpp line 415)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_003, TestSize.Level2)
+{
+    g_videoRecorderConfig.metaSourceType = VIDEO_META_SOURCE_INVALID;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetMetaSurface_003.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+
+    const int32_t VALID_META_ID_NOT_IN_MAP = SourceIdGenerator::GenerateMetaSourceId(0);
+    OHOS::sptr<OHOS::Surface> surface = recorderServer_->GetMetaSurface(VALID_META_ID_NOT_IN_MAP);
+    EXPECT_TRUE(surface == nullptr);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetMetaSurface_004
+ * @tc.desc: GetMetaSurface with zero and negative sourceId, IsMeta returns false
+ *           Covers branch: outer condition A=false via sourceId<=0 (hirecorder_impl.cpp line 411-415)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_004, TestSize.Level2)
+{
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetMetaSurface_004.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+
+    OHOS::sptr<OHOS::Surface> surface = recorderServer_->GetMetaSurface(0);
+    EXPECT_TRUE(surface == nullptr);
+
+    surface = recorderServer_->GetMetaSurface(-1);
+    EXPECT_TRUE(surface == nullptr);
+
     EXPECT_EQ(MSERR_OK, recorderServer_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
