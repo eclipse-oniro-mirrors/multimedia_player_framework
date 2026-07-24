@@ -37,7 +37,7 @@ public:
     AVAdsControllerImpl(AVPlayerImpl *player);
     ~AVAdsControllerImpl();
     void SetPlayer(AVPlayerImpl *player);
-    AVPlayerImpl *GetPlayer() const;
+    std::shared_ptr<OHOS::Media::Player> GetPlayerInstance() const;
 
     string AddAdsMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, int32_t startMs);
     void RemoveAdsMediaSource(::taihe::string_view id);
@@ -61,13 +61,12 @@ public:
 
 private:
     std::shared_ptr<TaskHandler<AdsTaskRet>> AddAdsMediaSourceTask(
+        const std::shared_ptr<OHOS::Media::Player> &playerInstance,
+        OHOS::Media::TaskQueue *taskQueue,
         const std::shared_ptr<AVMediaSource> &mediaSource, int32_t startMs, std::string &outId);
-    std::shared_ptr<TaskHandler<AdsTaskRet>> RemoveAdsMediaSourceTask(const std::string &id);
-    std::shared_ptr<TaskHandler<AdsTaskRet>> SkipCurrentAdsMediaSourceTask();
-    std::shared_ptr<TaskHandler<AdsTaskRet>> DisableAllAdsMediaSourceTask();
 
     AVPlayerImpl *player_ = nullptr;
-    mutable std::mutex mutex_;
+    std::shared_ptr<OHOS::Media::Player> playerInstance_ = nullptr;
 };
 
 optional<AVAdsController> CreateAVAdsControllerSync(::ohos::multimedia::media::weak::AVPlayer avplayer);
