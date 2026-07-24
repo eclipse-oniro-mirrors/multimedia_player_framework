@@ -171,8 +171,6 @@ public:
     void Release() override;
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
-    TaskQueue taskQueObserverCb_;
-    std::mutex mutex_;
 };
 
 class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {

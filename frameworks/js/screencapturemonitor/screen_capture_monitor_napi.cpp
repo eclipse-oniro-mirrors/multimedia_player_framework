@@ -16,6 +16,7 @@
 #include "screen_capture_monitor_napi.h"
 #include "media_dfx.h"
 #include "media_log.h"
+#include "scope_guard.h"
 #include <refbase.h>
 #include "media_errors.h"
 #include "recorder_napi_utils.h"
@@ -90,22 +91,28 @@ napi_value ScreenCaptureMonitorNapi::Constructor(napi_env env, napi_callback_inf
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
-    ScreenCaptureMonitorNapi *jsMonitor = new(std::nothrow) ScreenCaptureMonitorNapi();
+    ScreenCaptureMonitorNapi *jsMonitor = new (std::nothrow) ScreenCaptureMonitorNapi();
     CHECK_AND_RETURN_RET_LOG(jsMonitor != nullptr, result, "failed to new ScreenCaptureMonitorNapi");
+    ON_SCOPE_EXIT(0) {
+        delete jsMonitor;
+    };
 
     jsMonitor->env_ = env;
 
-    sptr<ScreenCaptureMonitorCallback> monitorCb(new ScreenCaptureMonitorCallback(env));
-    jsMonitor->monitorCb_ = monitorCb;
-    CHECK_AND_RETURN_RET_LOG(jsMonitor->monitorCb_ != nullptr, result, "failed to CreateRecorderCb");
+    jsMonitor->monitorCb_ = sptr<ScreenCaptureMonitorCallback>::MakeSptr(env);
+    if (jsMonitor->monitorCb_ == nullptr) {
+        MEDIA_LOGE("failed to CreateRecorderCb");
+        return result;
+    }
     ScreenCaptureMonitor::GetInstance()->RegisterScreenCaptureMonitorListener(jsMonitor->monitorCb_);
-    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsMonitor),
-                       ScreenCaptureMonitorNapi::Destructor, nullptr, nullptr);
+    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsMonitor), ScreenCaptureMonitorNapi::Destructor,
+        nullptr, nullptr);
     if (status != napi_ok) {
-        delete jsMonitor;
+        ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(jsMonitor->monitorCb_);
         MEDIA_LOGE("Failed to wrap native instance");
         return result;
     }
+    CANCEL_SCOPE_EXIT_GUARD(0);
 
     MEDIA_LOGI("Js Constructor End");
 
@@ -158,6 +165,7 @@ napi_value ScreenCaptureMonitorNapi::JsGetScreenCaptureMonitor(napi_env env, nap
     auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncCtx.get(), napi_eprio_immediate);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+        return result;
     }
     asyncCtx.release();
 

@@ -60,8 +60,40 @@ public:
     }
     virtual ~AudioDataSource();
 
+    AudioDataSourceReadAtActionState ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length) override;
+    int32_t GetSize(int64_t &size) override;
+    void SetVideoFirstFramePts(int64_t firstFramePts) override;
+    int32_t RegisterAudioRendererEventListener(const int32_t clientPid,
+        const std::shared_ptr<AudioRendererStateChangeCallback> &callback);
+    int32_t UnregisterAudioRendererEventListener(const int32_t clientPid);
+    void SetAppPid(int32_t appid);
+    int32_t GetAppPid();
+    uint32_t GetAudioRendererState();
+    void SetAudioRendererState(uint32_t state);
+    bool IsInWaitMicSyncState();
+    void Pause();
+    void Resume();
+    void SetInnerCapture(std::shared_ptr<AudioCapturerWrapper> capture);
+    void SetMicCapture(std::shared_ptr<AudioCapturerWrapper> capture);
+
+private:
+    int64_t GetCurrentTimeNs();
     int64_t GetFirstAudioTime(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
         std::shared_ptr<AudioBuffer> &micAudioBuffer);
+    void SetAudioFirstFramePts(int64_t firstFramePts);
+    AudioDataSourceReadAtActionState MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+        std::shared_ptr<AudioBuffer> &micAudioBuffer);
+    void HandlePastMicBuffer(std::shared_ptr<AudioBuffer> &micAudioBuffer);
+    void HandleSwitchToSpeakerOptimise(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+        std::shared_ptr<AudioBuffer> &micAudioBuffer);
+    void HandleBufferTimeStamp(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+        std::shared_ptr<AudioBuffer> &micAudioBuffer);
+    void MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer,
+        char *mixData, int channels);
+    void ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
+        std::shared_ptr<AudioBuffer> &micAudioBuffer);
+    void SetMixAudioTypeLog();
+    AudioDataSourceReadAtActionState ReadAudioBuffer(const uint32_t &length);
     AudioDataSourceReadAtActionState WriteInnerAudio(uint32_t length, std::shared_ptr<AudioBuffer> &innerAudioBuffer);
     AudioDataSourceReadAtActionState WriteMicAudio(uint32_t length, std::shared_ptr<AudioBuffer> &micAudioBuffer);
     AudioDataSourceReadAtActionState WriteMixAudio(uint32_t length, std::shared_ptr<AudioBuffer> &innerAudioBuffer,
@@ -77,38 +109,8 @@ public:
     AudioDataSourceReadAtActionState ReadAtMixMode(uint32_t length);
     AudioDataSourceReadAtActionState ReadAtMicMode(uint32_t length);
     AudioDataSourceReadAtActionState ReadAtInnerMode(uint32_t length);
-    AudioDataSourceReadAtActionState ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length) override;
     AudioDataSourceReadAtActionState VideoAudioSyncInnerMode(uint32_t length, int64_t timeWindow,
         std::shared_ptr<AudioBuffer> &innerAudioBuffer);
-    int32_t GetSize(int64_t &size) override;
-    int32_t RegisterAudioRendererEventListener(const int32_t clientPid,
-        const std::shared_ptr<AudioRendererStateChangeCallback> &callback);
-    int32_t UnregisterAudioRendererEventListener(const int32_t clientPid);
-    void SetAppPid(int32_t appid);
-    int32_t GetAppPid();
-    uint32_t GetAudioRendererState();
-    void SetAudioRendererState(uint32_t state);
-    bool IsInWaitMicSyncState();
-    void SetVideoFirstFramePts(int64_t firstFramePts) override;
-    void SetAudioFirstFramePts(int64_t firstFramePts);
-    AudioDataSourceReadAtActionState MixModeBufferWrite(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
-        std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    void HandlePastMicBuffer(std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    void HandleSwitchToSpeakerOptimise(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
-        std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    void HandleBufferTimeStamp(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
-        std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    void Pause();
-    void Resume();
-
-private:
-    int64_t GetCurrentTimeNs();
-    void MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer,
-        char *mixData, int channels);
-    void ReleaseAudioBuffer(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
-        std::shared_ptr<AudioBuffer> &micAudioBuffer);
-    void SetMixAudioTypeLog();
-    AudioDataSourceReadAtActionState ReadAudioBuffer(const uint32_t &length);
     int32_t LostFrameNum(const int64_t &timestamp);
     void FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize);
     int64_t writedFrameTime_{0};
@@ -127,6 +129,9 @@ private:
     std::atomic<bool> isInWaitMicSyncState_{false};
     AVScreenCaptureMixMode type_;
     ScreenCaptureServer *screenCaptureServer_;
+    std::shared_ptr<AudioCapturerWrapper> innerCapture_;
+    std::shared_ptr<AudioCapturerWrapper> micCapture_;
+    std::mutex mutex_;
     std::atomic<int64_t> pauseStartTime_{0};
     std::atomic<int64_t> pauseDuration_{0};
 
