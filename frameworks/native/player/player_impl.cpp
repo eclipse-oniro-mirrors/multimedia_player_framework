@@ -151,6 +151,7 @@ int32_t PlayerImpl::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
 {
     ScopedTimer timer("SetSource dataSrc", OVERTIME_WARNING_MS);
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(dataSrc)", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "failed to create data source");
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSource(dataSrc), "SetSource dataSrc", false, TIME_OUT_SECOND);
@@ -432,12 +433,12 @@ void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
     if (type == INFO_TYPE_SEEKDONE) {
         MEDIA_LOGI("HandleSeekDoneInfo entered");
         CHECK_AND_RETURN_LOG(playerService_ != nullptr, "player service does not exist..");
+        std::unique_lock<std::recursive_mutex> lock(recMutex_);
         if (extra == -1) {
             MEDIA_LOGI("seek error, need reset seek variables");
             ResetSeekVariables();
             return;
         }
-        std::unique_lock<std::recursive_mutex> lock(recMutex_);
         if (mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) {
             MEDIA_LOGI("Start seek again (%{public}" PRId64 ", %{public}d)", mCurrentPosition, mCurrentSeekMode);
             mSeekPosition = mCurrentPosition;
