@@ -2560,6 +2560,18 @@ std::shared_ptr<AVMediaSource> AVPlayerNapi::GetAVMediaSource(napi_env env, napi
             MEDIA_LOGE("invalid parameters, please check parameter fileSize");
             return nullptr;
         }
+        if (srcTmp->dataSrc.callback == nullptr) {
+            MEDIA_LOGE("invalid parameters, dataSrc callback is nullptr");
+            return nullptr;
+        }
+        napi_value callbackValue = nullptr;
+        napi_status status = napi_get_reference_value(env, srcTmp->dataSrc.callback, &callbackValue);
+        napi_valuetype valueType = napi_undefined;
+        if (status != napi_ok || napi_typeof(env, callbackValue, &valueType) != napi_ok
+            || valueType != napi_function) {
+            MEDIA_LOGE("invalid parameters, dataSrc callback should be function");
+            return nullptr;
+        }
         auto dataSrcCb = std::make_shared<MediaDataSourceCallback>(env, srcTmp->dataSrc.fileSize);
         CHECK_AND_RETURN_RET_LOG(dataSrcCb != nullptr, nullptr, "create MediaDataSourceCallback failed!");
  
