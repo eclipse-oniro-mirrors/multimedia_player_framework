@@ -65,7 +65,11 @@ protected:
         return simulatedNetworkType_;
     }
 public:
-    MediaSourceUtils::NetConnType simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_WIFI;
+    MediaSourceUtils::NetConnType simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_WIFI;\
+    bool TestIsNetworkAllowDownload(MediaSourceUtils::NetConnType newType)
+    {
+        return IsNetworkAllowDownload(newType);
+    }
 };
 
 class AVDownloaderManagerTest : public testing::Test {
