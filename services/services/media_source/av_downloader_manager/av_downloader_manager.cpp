@@ -76,7 +76,7 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
         if (!taskInfo->mappingFileCreated) {
             GenerateMappingFile(taskInfo);
         }
-        ProcessDownloadFinish(downloaderId, manager, downloaderIter);
+        ProcessDownloadFinish(downloaderId, manager);
         return;
     }
 
@@ -105,8 +105,7 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
 }
 
 void DownloadTaskCallback::ProcessDownloadFinish(uint64_t downloaderId,
-    std::shared_ptr<AVDownloaderManagerImpl> manager, std::map<std::string,
-    std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter)
+    std::shared_ptr<AVDownloaderManagerImpl> manager)
 {
     MEDIA_LOGI("TaskId: %{public}" PRIu64 ", all files downloaded, task completed", downloaderId);
     manager->NotifyStatusChange(std::to_string(downloaderId), AVDownloadTaskState::COMPLETED);
@@ -116,7 +115,7 @@ void DownloadTaskCallback::ProcessDownloadFinish(uint64_t downloaderId,
         downloaderId, manager->activeDownloaderCount_.load());
     MediaDownload::Message releaseMsg;
     releaseMsg.type = MediaDownload::MSG_RELEASE_DOWNLOADER;
-    releaseMsg.downloader = downloaderIter->second;
+    releaseMsg.downloaderId = downloaderId;
     manager->messageQueue_->PostMessage(releaseMsg);
     MEDIA_LOGI("TaskId: %{public}" PRIu64 ", release message posted", downloaderId);
     MediaDownload::Message nextMsg;
@@ -339,7 +338,7 @@ void DownloadTaskCallback::OnFailed(uint64_t downloaderId, MediaDownload::Downlo
     if (downloaderIter != manager->downloaderMap_.end()) {
         MediaDownload::Message msg;
         msg.type = MediaDownload::MSG_RELEASE_DOWNLOADER;
-        msg.downloader = downloaderIter->second;
+        msg.downloaderId = downloaderId;
         manager->messageQueue_->PostMessage(msg);
         MEDIA_LOGI("TaskId: %{public}" PRIu64 ", release message posted on failed", downloaderId);
     }
@@ -978,9 +977,14 @@ void AVDownloaderManagerImpl::HandleMessage(const MediaDownload::Message &msg)
 {
     switch (msg.type) {
         case MediaDownload::MSG_RELEASE_DOWNLOADER:
-            if (msg.downloader != nullptr) {
-                MEDIA_LOGI("HandleMessage: releasing downloader");
-                msg.downloader->Release();
+            {
+                std::string taskId = std::to_string(msg.downloaderId);
+                MEDIA_LOGI("HandleMessage: releasing downloader: %{public}s", taskId.c_str());
+                std::lock_guard<std::mutex> lock(mapMutex_);
+                auto iter = downloaderMap_.find(taskId);
+                if (iter != downloaderMap_.end() && iter->second != nullptr) {
+                    iter->second->Release();
+                }
             }
             break;
         case MediaDownload::MSG_PROCESS_NEXT_TASK:

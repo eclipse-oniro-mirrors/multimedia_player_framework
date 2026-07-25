@@ -83,8 +83,7 @@ public:
     void OnFileCompleted(uint64_t downloaderId, const std::string &url, int64_t fileSize) override;
 
 private:
-    void ProcessDownloadFinish(uint64_t downloaderId, std::shared_ptr<AVDownloaderManagerImpl> manager,
-        std::map<std::string, std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter);
+    void ProcessDownloadFinish(uint64_t downloaderId, std::shared_ptr<AVDownloaderManagerImpl> manager);
     void ParseFiles(uint64_t downloaderId, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
         std::vector<DownloadFileInfo> &filesToAdd, std::shared_ptr<AVDownloaderManagerImpl> manager);
     void GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo);

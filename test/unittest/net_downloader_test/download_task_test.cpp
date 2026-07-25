@@ -262,24 +262,6 @@ HWTEST_F(DownloadTaskTest, GetProgress_TotalSizeNeg_001, TestSize.Level0)
     EXPECT_EQ(progress.progressPercent, 0);
 }
 
-HWTEST_F(DownloadTaskTest, GetFileSize_ExistingFile_001, TestSize.Level0)
-{
-    std::string testFile = testDir_ + "/size_test.txt";
-    std::ofstream ofs(testFile);
-    ofs << "test content";
-    ofs.close();
-
-    int64_t size = DownloadTask::GetFileSize(testFile);
-    EXPECT_GT(size, 0);
-}
-
-HWTEST_F(DownloadTaskTest, GetFileSize_NonExistingFile_001, TestSize.Level0)
-{
-    std::string nonExistingFile = testDir_ + "/nonexistent_file.txt";
-    int64_t size = DownloadTask::GetFileSize(nonExistingFile);
-    EXPECT_EQ(size, 0);
-}
-
 HWTEST_F(DownloadTaskTest, Start_PreparingState_001, TestSize.Level0)
 {
     DownloadTaskInfo info;
@@ -597,7 +579,7 @@ HWTEST_F(DownloadTaskTest, Start_Http416_ParseError_001, TestSize.Level0)
     g_httpServer->SetCustom416Response("");
 }
 
-HWTEST_F(DownloadTaskTest, GetStartPosition_M3U8Manifest_001, TestSize.Level0)
+HWTEST_F(DownloadTaskTest, Start_M3U8Manifest_001, TestSize.Level0)
 {
     std::string manifestUrl = "http://127.0.0.1:46666/test.m3u8";
     DownloadTaskInfo info;
@@ -620,7 +602,7 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_M3U8Manifest_001, TestSize.Level0)
     (void)task->Cancel();
 }
 
-HWTEST_F(DownloadTaskTest, GetStartPosition_MPDManifest_001, TestSize.Level0)
+HWTEST_F(DownloadTaskTest, Start_MPDManifest_001, TestSize.Level0)
 {
     std::string manifestUrl = "http://127.0.0.1:46666/test.mpd";
     DownloadTaskInfo info;
@@ -643,7 +625,7 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_MPDManifest_001, TestSize.Level0)
     (void)task->Cancel();
 }
 
-HWTEST_F(DownloadTaskTest, GetStartPosition_NormalFile_001, TestSize.Level0)
+HWTEST_F(DownloadTaskTest, Start_NormalFile_001, TestSize.Level0)
 {
     DownloadTaskInfo info;
     info.taskId = 102;
@@ -665,7 +647,7 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_NormalFile_001, TestSize.Level0)
     (void)task->Cancel();
 }
 
-HWTEST_F(DownloadTaskTest, GetStartPosition_NormalFile_WithExistingFile_001, TestSize.Level0)
+HWTEST_F(DownloadTaskTest, Start_NormalFile_WithExistingFile_001, TestSize.Level0)
 {
     std::string existingFile = testDir_ + "/existing_file.mp4";
     {
@@ -700,7 +682,7 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_NormalFile_WithExistingFile_001, Tes
     EXPECT_GT(newStat.st_size, originalSize);
 }
 
-HWTEST_F(DownloadTaskTest, GetStartPosition_ResumeScenario_001, TestSize.Level0)
+HWTEST_F(DownloadTaskTest, Start_ResumeScenario_001, TestSize.Level0)
 {
     DownloadTaskInfo info;
     info.taskId = 104;
@@ -738,7 +720,7 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_ResumeScenario_001, TestSize.Level0)
     (void)task->Cancel();
 }
 
-HWTEST_F(DownloadTaskTest, GetStartPosition_NonManifestEdgeCase_M3U8_001, TestSize.Level0)
+HWTEST_F(DownloadTaskTest, Start_NonManifestEdgeCase_M3U8_001, TestSize.Level0)
 {
     std::string trickyUrl = "http://127.0.0.1:46666/file.abc.m3u8";
     DownloadTaskInfo info;
@@ -761,7 +743,7 @@ HWTEST_F(DownloadTaskTest, GetStartPosition_NonManifestEdgeCase_M3U8_001, TestSi
     (void)task->Cancel();
 }
 
-HWTEST_F(DownloadTaskTest, GetStartPosition_NonManifestEdgeCase_MPD_001, TestSize.Level0)
+HWTEST_F(DownloadTaskTest, Start_NonManifestEdgeCase_MPD_001, TestSize.Level0)
 {
     std::string trickyUrl = "http://127.0.0.1:46666/file.test.mpd";
     DownloadTaskInfo info;
@@ -802,19 +784,6 @@ HWTEST_F(DownloadTaskTest, Constructor_PathTraversal_OutputPathCleared_001, Test
     EXPECT_TRUE(state == DOWNLOAD_FAILED || state == DOWNLOAD_CANCELED);
 
     (void)task->Cancel();
-}
-
-HWTEST_F(DownloadTaskTest, GetFileSize_PathTraversal_001, TestSize.Level0)
-{
-    std::string traversalPath = testDir_ + "/../../etc/passwd";
-    int64_t size = DownloadTask::GetFileSize(traversalPath);
-    EXPECT_EQ(size, 0);
-}
-
-HWTEST_F(DownloadTaskTest, GetFileSize_EmptyPath_001, TestSize.Level0)
-{
-    int64_t size = DownloadTask::GetFileSize("");
-    EXPECT_EQ(size, 0);
 }
 
 } // namespace MediaDownload

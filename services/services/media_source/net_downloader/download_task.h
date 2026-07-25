@@ -69,21 +69,15 @@ private:
     void StartProgressThread(std::thread& progressThread, std::atomic<bool>& progressRunning,
         std::mutex& progressMutex, std::condition_variable& progressCv);
     void StopProgressThread(std::thread& progressThread, std::atomic<bool>& progressRunning,
-        std::condition_variable& progressCv);
+        std::mutex& progressMutex, std::condition_variable& progressCv);
     void CheckDownloadResult(bool success);
-    bool HandleDownloadCompleted(bool success);
-    bool HandleDownloadPaused();
-    bool HandleDownloadCanceled();
-    void HandleDownloadFailed();
     void NotifyFinish();
     void InitClient();
     void ExecuteDownload();
-    int64_t GetStartPosition();
     void ReleaseClient();
     void HandleError(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg);
     int64_t CalculateSpeed();
     void UpdateProgress();
-    static int64_t GetFileSize(const std::string &path);
 
     void RunProgressThread(std::atomic<bool>& progressRunning,
         std::mutex& progressMutex, std::condition_variable& progressCv);

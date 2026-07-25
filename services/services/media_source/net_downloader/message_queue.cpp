@@ -40,7 +40,8 @@ constexpr int32_t MAX_QUEUE_SIZE = 100;
 }
 
 MessageQueue::MessageQueue()
-    : running_(false)
+    : running_(false),
+      generation_(0)
 {
     MEDIA_LOGI("MessageQueue created");
 }
@@ -53,37 +54,42 @@ MessageQueue::~MessageQueue()
 
 void MessageQueue::Start(MessageHandler handler)
 {
-    std::lock_guard<std::mutex> lock(startStopMutex_);
+    std::lock_guard<std::mutex> lock(lifecycleMutex_);
     if (running_.load()) {
         MEDIA_LOGW("MessageQueue already running");
         return;
     }
 
     handler_ = std::move(handler);
+    auto gen = generation_.fetch_add(1) + 1;
     running_.store(true);
-    thread_ = std::thread(&MessageQueue::Run, this);
+    thread_ = std::thread(&MessageQueue::Run, this, gen);
 
-    MEDIA_LOGI("MessageQueue started");
+    MEDIA_LOGI("MessageQueue started, generation=%{public}" PRIu64, gen);
 }
 
 void MessageQueue::Stop()
 {
-    std::lock_guard<std::mutex> lock(startStopMutex_);
-    if (!running_.load()) {
-        return;
-    }
-
-    running_.store(false);
-    cv_.notify_all();
-
-    if (thread_.joinable()) {
-        thread_.join();
-    }
-
+    std::thread localThread;
     {
-        std::lock_guard<std::mutex> queueLock(mutex_);
-        while (!queue_.empty()) {
-            queue_.pop();
+        std::lock_guard<std::mutex> lock(lifecycleMutex_);
+        if (running_.load()) {
+            running_.store(false);
+            generation_.fetch_add(1);
+            cv_.notify_all();
+        }
+        localThread = std::move(thread_);
+        {
+            std::lock_guard<std::mutex> queueLock(queueMutex_);
+            queue_.clear();
+        }
+    }
+
+    if (localThread.joinable()) {
+        if (std::this_thread::get_id() != localThread.get_id()) {
+            localThread.join();
+        } else {
+            localThread.detach();
         }
     }
 
@@ -92,7 +98,7 @@ void MessageQueue::Stop()
 
 void MessageQueue::PostMessage(const Message &msg)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::lock_guard<std::mutex> lock(queueMutex_);
 
     if (!running_.load()) {
         MEDIA_LOGW("PostMessage failed: queue not running, type=%{public}d", msg.type);
@@ -100,27 +106,44 @@ void MessageQueue::PostMessage(const Message &msg)
     }
 
     if (queue_.size() >= MAX_QUEUE_SIZE) {
-        MEDIA_LOGW("PostMessage: queue full, dropping oldest message, type=%{public}d", msg.type);
-        queue_.pop();
+        auto it = std::find_if(queue_.begin(), queue_.end(), [](const Message &m) {
+            return m.type == MSG_PROGRESS;
+        });
+        if (it != queue_.end()) {
+            MEDIA_LOGW("PostMessage: queue full, dropping MSG_PROGRESS, newMsg=%{public}d", msg.type);
+            queue_.erase(it);
+        } else {
+            MEDIA_LOGW("PostMessage: queue full, no MSG_PROGRESS, dropping oldest type=%{public}d",
+                queue_.front().type);
+            queue_.pop_front();
+        }
     }
 
-    queue_.push(msg);
+    queue_.push_back(msg);
     cv_.notify_one();
 
     MEDIA_LOGI("PostMessage: type=%{public}d", msg.type);
 }
 
-void MessageQueue::Run()
+void MessageQueue::Run(uint64_t myGeneration)
 {
-    MEDIA_LOGI("MessageQueue thread started");
+    MEDIA_LOGI("MessageQueue thread started, generation=%{public}" PRIu64, myGeneration);
 
-    while (running_.load()) {
+    MessageHandler handler;
+    {
+        std::lock_guard<std::mutex> lock(lifecycleMutex_);
+        handler = handler_;
+    }
+
+    while (running_.load() && generation_.load() == myGeneration) {
         Message msg;
         {
-            std::unique_lock<std::mutex> lock(mutex_);
-            cv_.wait(lock, [this] { return !queue_.empty() || !running_.load(); });
+            std::unique_lock<std::mutex> lock(queueMutex_);
+            cv_.wait(lock, [this, myGeneration] {
+                return !queue_.empty() || !running_.load() || generation_.load() != myGeneration;
+            });
 
-            if (!running_.load()) {
+            if (!running_.load() || generation_.load() != myGeneration) {
                 break;
             }
 
@@ -129,36 +152,16 @@ void MessageQueue::Run()
             }
 
             msg = queue_.front();
-            queue_.pop();
+            queue_.pop_front();
         }
 
-        if (handler_ != nullptr) {
+        if (handler) {
             MEDIA_LOGI("MessageQueue handle type=%{public}d", msg.type);
-            handler_(msg);
+            handler(msg);
         }
     }
 
-    MEDIA_LOGI("MessageQueue thread ended");
-}
-
-void MessageQueue::ProcessMessages()
-{
-    while (running_.load()) {
-        Message msg;
-        {
-            std::unique_lock<std::mutex> lock(mutex_);
-            if (queue_.empty()) {
-                return;
-            }
-            msg = queue_.front();
-            queue_.pop();
-        }
-
-        if (handler_ != nullptr) {
-            MEDIA_LOGI("MessageQueue ProcessMessages type=%{public}d", msg.type);
-            handler_(msg);
-        }
-    }
+    MEDIA_LOGI("MessageQueue thread ended, generation=%{public}" PRIu64, myGeneration);
 }
 
 } // namespace MediaDownload

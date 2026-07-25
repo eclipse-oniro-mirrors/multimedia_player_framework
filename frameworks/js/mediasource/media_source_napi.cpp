@@ -326,7 +326,7 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithStreamData(napi_env env, napi
 
 napi_value MediaSourceNapi::JsCreateMediaSourceWithDirectory(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsCreateMediaSourceWithDirectory In");
+    MEDIA_LOGI("JsCreateMediaSourceWithDirectory In");
     size_t argCount = 1;
     napi_value args[1] = { nullptr };
     napi_value jsMediaSource = nullptr;
@@ -355,7 +355,13 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithDirectory(napi_env env, napi_
         ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "failed to get constructor");
         return nullptr;
     }
-    napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
+
+    status = napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
+    if (status != napi_ok) {
+        MEDIA_LOGE("JsCreateMediaSourceWithDirectory napi new instance fail");
+        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "failed to create new napi instance");
+        return nullptr;
+    }
 
     std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
     if (mediaSource == nullptr) {
@@ -365,7 +371,7 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithDirectory(napi_env env, napi_
     }
     mediaSource->directoryPath = directoryPath;
     mediaSource->SetID(AVMediaSourceTmp::GenerateUniqueId());
-    MEDIA_LOGD("JsCreateMediaSourceWithDirectory path=%{public}s", mediaSource->directoryPath.c_str());
+    MEDIA_LOGI("JsCreateMediaSourceWithDirectory path=%{private}s", mediaSource->directoryPath.c_str());
     return jsMediaSource;
 }
 
