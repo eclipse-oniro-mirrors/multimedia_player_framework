@@ -967,6 +967,18 @@ HWTEST_F(AVDownloaderManagerTest, GetFilePath_TraversalFilename_001, TestSize.Le
     EXPECT_FALSE(result.empty());
 }
 
+HWTEST_F(AVDownloaderManagerTest, GetFilePath_EmptyFilename_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto result = manager->GetFilePath("/data/storage/el2/base/cache/test",
+        "http://example.com/");
+    EXPECT_FALSE(result.empty());
+    size_t lastSlash = result.find_last_of('/');
+    std::string fileNamePart = result.substr(lastSlash + 1);
+    EXPECT_FALSE(fileNamePart.empty());
+}
+
 HWTEST_F(AVDownloaderManagerTest, Release_FirstRelease_ClearsMaps_001, TestSize.Level0)
 {
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
