@@ -24,12 +24,37 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVDownloaderManager"};
-constexpr int32_t ERR_PARAM_OUT_OF_RANGE = 5400108;
-constexpr int32_t ERR_OPERATION_NOT_PERMIT = 5400102;
+constexpr int32_t ERR_AVD_PARAM_OUT_OF_RANGE = 5400108;
+constexpr int32_t ERR_AVD_OPERATION_NOT_PERMIT = 5400102;
 }
 
 namespace OHOS {
 namespace Media {
+namespace {
+std::string StateToString(AVDownloadTaskState state)
+{
+    switch (state) {
+        case AVDownloadTaskState::INIT:      return "init";
+        case AVDownloadTaskState::QUEUED:    return "queued";
+        case AVDownloadTaskState::RUNNING:   return "running";
+        case AVDownloadTaskState::COMPLETED: return "completed";
+        case AVDownloadTaskState::PAUSED:    return "paused";
+        case AVDownloadTaskState::REMOVING:  return "removing";
+        case AVDownloadTaskState::ERROR:     return "error";
+        default:                              return "init";
+    }
+}
+
+napi_value FailInit(napi_env env, napi_ref &ref, const char *msg)
+{
+    MEDIA_LOGE("%{public}s", msg);
+    if (ref != nullptr) {
+        napi_delete_reference(env, ref);
+        ref = nullptr;
+    }
+    return nullptr;
+}
+}
 
 thread_local napi_ref AVDownloaderManagerNapi::constructor_ = nullptr;
 
@@ -47,6 +72,12 @@ AVDownloaderManagerNapi::AVDownloaderManagerNapi()
 AVDownloaderManagerNapi::~AVDownloaderManagerNapi()
 {
     MEDIA_LOGD("AVDownloaderManagerNapi Instances destroy");
+    statusChangeCallback_.reset();
+    progressChangeCallback_.reset();
+    if (downloaderManager_) {
+        downloaderManager_->Release();
+        downloaderManager_.reset();
+    }
 }
 
 std::string AVDownloaderManagerNapi::GenerateTaskId()
@@ -74,7 +105,6 @@ void AVDownloaderManagerNapi::ThrowError(napi_env env, int32_t code, const std::
 void AVDownloaderManagerNapi::OnStatusChange(const std::string &taskId, AVDownloadTaskState state)
 {
     MEDIA_LOGI("AVDownloaderManagerNapi::OnStatusChange taskId: %{public}s, state: %{public}d", taskId.c_str(), state);
-    taskIdToStatus_[taskId] = static_cast<int32_t>(state);
     TriggerStatusCallback(taskId, state);
 }
 
@@ -82,58 +112,51 @@ void AVDownloaderManagerNapi::OnProgressChange(const std::string &taskId, double
 {
     MEDIA_LOGI("AVDownloaderManagerNapi::OnProgressChange taskId: %{public}s, progress: %{public}f",
         taskId.c_str(), progress);
-    taskIdToProgress_[taskId] = progress;
     TriggerProgressCallback(taskId, progress);
 }
 
 void AVDownloaderManagerNapi::TriggerStatusCallback(const std::string &taskId, AVDownloadTaskState state)
 {
-    if (statusChangeCallback_ == nullptr) {
-        return;
+    std::shared_ptr<AutoRef> cbHolder;
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        if (statusChangeCallback_ == nullptr) {
+            return;
+        }
+        cbHolder = statusChangeCallback_;
     }
 
-    auto task = [this, taskId, state]() {
+    napi_env env = cbHolder->env_;
+    auto task = [cbHolder, taskId, state]() {
         std::string request = "TriggerStatusCallback";
         MEDIA_LOGI("JsCallBack %{public}s, start", request.c_str());
-        
+
         do {
-            std::shared_ptr<AutoRef> ref = std::make_shared<AutoRef>(env_, statusChangeCallback_, false);
-            CHECK_AND_BREAK_LOG(ref != nullptr, "AutoRef is nullptr");
+            CHECK_AND_BREAK_LOG(cbHolder != nullptr && cbHolder->cb_ != nullptr, "callback ref is nullptr");
 
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(ref->env_, &scope);
+            napi_open_handle_scope(cbHolder->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "scope is nullptr");
             ON_SCOPE_EXIT(0) {
-                napi_close_handle_scope(ref->env_, scope);
+                napi_close_handle_scope(cbHolder->env_, scope);
             };
 
             napi_value jsCallback = nullptr;
-            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            napi_status nstatus = napi_get_reference_value(cbHolder->env_, cbHolder->cb_, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "get reference value fail");
 
             napi_value args[2] = { nullptr };
-            napi_create_string_utf8(ref->env_, taskId.c_str(), NAPI_AUTO_LENGTH, &args[0]);
-
-            std::string stateStr;
-            switch (state) {
-                case AVDownloadTaskState::INIT: stateStr = "init"; break;
-                case AVDownloadTaskState::QUEUED: stateStr = "queued"; break;
-                case AVDownloadTaskState::RUNNING: stateStr = "running"; break;
-                case AVDownloadTaskState::COMPLETED: stateStr = "completed"; break;
-                case AVDownloadTaskState::PAUSED: stateStr = "paused"; break;
-                case AVDownloadTaskState::REMOVING: stateStr = "removing"; break;
-                case AVDownloadTaskState::ERROR: stateStr = "error"; break;
-                default: stateStr = "init"; break;
-            }
-            napi_create_string_utf8(ref->env_, stateStr.c_str(), NAPI_AUTO_LENGTH, &args[1]);
+            napi_create_string_utf8(cbHolder->env_, taskId.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+            std::string stateStr = StateToString(state);
+            napi_create_string_utf8(cbHolder->env_, stateStr.c_str(), NAPI_AUTO_LENGTH, &args[1]);
 
             napi_value result = nullptr;
-            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 2, args, &result);
+            nstatus = napi_call_function(cbHolder->env_, nullptr, jsCallback, 2, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "fail to napi call function");
         } while (0);
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high, "AVDownloaderManagerNapi::TriggerStatusCallback");
+    auto ret = napi_send_event(env, task, napi_eprio_high, "AVDownloaderManagerNapi::TriggerStatusCallback");
     if (ret != napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
     }
@@ -141,40 +164,45 @@ void AVDownloaderManagerNapi::TriggerStatusCallback(const std::string &taskId, A
 
 void AVDownloaderManagerNapi::TriggerProgressCallback(const std::string &taskId, double progress)
 {
-    if (progressChangeCallback_ == nullptr) {
-        return;
+    std::shared_ptr<AutoRef> cbHolder;
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        if (progressChangeCallback_ == nullptr) {
+            return;
+        }
+        cbHolder = progressChangeCallback_;
     }
 
-    auto task = [this, taskId, progress]() {
+    napi_env env = cbHolder->env_;
+    auto task = [cbHolder, taskId, progress]() {
         std::string request = "TriggerProgressCallback";
         MEDIA_LOGI("JsCallBack %{public}s, start", request.c_str());
 
         do {
-            std::shared_ptr<AutoRef> ref = std::make_shared<AutoRef>(env_, progressChangeCallback_, false);
-            CHECK_AND_BREAK_LOG(ref != nullptr, "AutoRef is nullptr");
+            CHECK_AND_BREAK_LOG(cbHolder != nullptr && cbHolder->cb_ != nullptr, "callback ref is nullptr");
 
             napi_handle_scope scope = nullptr;
-            napi_open_handle_scope(ref->env_, &scope);
+            napi_open_handle_scope(cbHolder->env_, &scope);
             CHECK_AND_BREAK_LOG(scope != nullptr, "scope is nullptr");
             ON_SCOPE_EXIT(0) {
-                napi_close_handle_scope(ref->env_, scope);
+                napi_close_handle_scope(cbHolder->env_, scope);
             };
 
             napi_value jsCallback = nullptr;
-            napi_status nstatus = napi_get_reference_value(ref->env_, ref->cb_, &jsCallback);
+            napi_status nstatus = napi_get_reference_value(cbHolder->env_, cbHolder->cb_, &jsCallback);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok && jsCallback != nullptr, "get reference value fail");
 
             napi_value args[2] = { nullptr };
-            napi_create_string_utf8(ref->env_, taskId.c_str(), NAPI_AUTO_LENGTH, &args[0]);
-            napi_create_double(ref->env_, progress, &args[1]);
+            napi_create_string_utf8(cbHolder->env_, taskId.c_str(), NAPI_AUTO_LENGTH, &args[0]);
+            napi_create_double(cbHolder->env_, progress, &args[1]);
 
             napi_value result = nullptr;
-            nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 2, args, &result);
+            nstatus = napi_call_function(cbHolder->env_, nullptr, jsCallback, 2, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "fail to napi call function");
         } while (0);
     };
 
-    auto ret = napi_send_event(env_, task, napi_eprio_high, "AVDownloaderManagerNapi::TriggerProgressCallback");
+    auto ret = napi_send_event(env, task, napi_eprio_high, "AVDownloaderManagerNapi::TriggerProgressCallback");
     if (ret != napi_ok) {
         MEDIA_LOGE("Failed to SendEvent, ret = %{public}d", ret);
     }
@@ -208,13 +236,19 @@ napi_value AVDownloaderManagerNapi::Init(napi_env env, napi_value exports)
     napi_value constructor = nullptr;
     napi_status status = napi_define_class(env, "AVDownloaderManager", NAPI_AUTO_LENGTH, Constructor, nullptr,
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to define class");
+    if (status != napi_ok) {
+        return FailInit(env, constructor_, "failed to define class");
+    }
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to define static properties");
+    if (status != napi_ok) {
+        return FailInit(env, constructor_, "failed to define static properties");
+    }
 
     status = napi_set_named_property(env, exports, "AVDownloaderManager", constructor);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to set named property");
+    if (status != napi_ok) {
+        return FailInit(env, constructor_, "failed to set named property");
+    }
 
     status = napi_create_reference(env, constructor, 1, &constructor_);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to create reference");
@@ -231,9 +265,12 @@ napi_value AVDownloaderManagerNapi::Constructor(napi_env env, napi_callback_info
     AVDownloaderManagerNapi *manager = new (std::nothrow) AVDownloaderManagerNapi();
     CHECK_AND_RETURN_RET_LOG(manager != nullptr, nullptr, "failed to new object");
 
-    manager->env_ = env;
     status = napi_wrap(env, thisArg, manager, Destructor, nullptr, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to wrap");
+    if (status != napi_ok) {
+        MEDIA_LOGE("failed to wrap");
+        delete manager;
+        return nullptr;
+    }
 
     return thisArg;
 }
@@ -243,6 +280,7 @@ void AVDownloaderManagerNapi::Destructor(napi_env env, void *nativeObject, void 
     (void)env;
     (void)finalize;
     AVDownloaderManagerNapi *manager = static_cast<AVDownloaderManagerNapi *>(nativeObject);
+    manager->selfRef_.reset();
     delete manager;
 }
 
@@ -333,14 +371,14 @@ napi_value AVDownloaderManagerNapi::AddAVDownloadTask(napi_env env, napi_callbac
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || argCount < 1) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to get cb info");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to get cb info");
         return nullptr;
     }
 
     AVDownloaderManagerNapi *manager = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&manager));
     if (status != napi_ok || manager == nullptr) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to unwrap");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to unwrap");
         return nullptr;
     }
 
@@ -349,7 +387,7 @@ napi_value AVDownloaderManagerNapi::AddAVDownloadTask(napi_env env, napi_callbac
         MEDIA_LOGI("check args: argCount >= 1");
         srcTmp = MediaSourceNapi::GetMediaSource(env, args[0]);
         if (srcTmp == nullptr) {
-            ThrowError(env, ERR_OPERATION_NOT_PERMIT, "Invalid parameter: media source is null");
+            ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Invalid parameter: media source is null");
             return nullptr;
         }
     }
@@ -357,7 +395,7 @@ napi_value AVDownloaderManagerNapi::AddAVDownloadTask(napi_env env, napi_callbac
     std::string taskId;
     MEDIA_LOGI("check args: downloaderManager_: %{public}d", manager->downloaderManager_ == nullptr);
     if (!manager->downloaderManager_) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: downloader manager not available");
         return nullptr;
     }
     if (srcTmp) {
@@ -365,7 +403,7 @@ napi_value AVDownloaderManagerNapi::AddAVDownloadTask(napi_env env, napi_callbac
         auto pluginSource = std::make_shared<Plugins::MediaSource>(srcTmp->url, srcTmp->header);
         taskId = manager->downloaderManager_->AddDownloadTask(pluginSource);
         if (taskId.empty()) {
-            ThrowError(env, ERR_OPERATION_NOT_PERMIT, "Operation not allowed: failed to add download task");
+            ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed: failed to add download task");
             return nullptr;
         }
         manager->taskIdToUrl_[taskId] = srcTmp->url;
@@ -385,14 +423,14 @@ napi_value AVDownloaderManagerNapi::RemoveDownloadTask(napi_env env, napi_callba
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to get cb info");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to get cb info");
         return nullptr;
     }
 
     AVDownloaderManagerNapi *manager = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&manager));
     if (status != napi_ok || manager == nullptr) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to unwrap");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to unwrap");
         return nullptr;
     }
 
@@ -401,22 +439,24 @@ napi_value AVDownloaderManagerNapi::RemoveDownloadTask(napi_env env, napi_callba
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
             char taskId[256] = {0};
             size_t length = 0;
-            napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            if (nstatus != napi_ok || length == 0) {
+                ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
+                return nullptr;
+            }
             if (manager->taskIdToUrl_.find(taskId) == manager->taskIdToUrl_.end()) {
-                ThrowError(env, ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
+                ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
                 return nullptr;
             }
             if (manager->downloaderManager_) {
                 int32_t errCode = manager->downloaderManager_->RemoveDownloadTask(taskId);
                 if (errCode != MSERR_OK) {
-                    ThrowError(env, ERR_OPERATION_NOT_PERMIT, "Operation not allowed");
+                    ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed");
                     return nullptr;
                 }
             }
             manager->taskIdToUrl_.erase(taskId);
             manager->taskIdToCacheDir_.erase(taskId);
-            manager->taskIdToStatus_.erase(taskId);
-            manager->taskIdToProgress_.erase(taskId);
         }
     } else {
         if (manager->downloaderManager_) {
@@ -424,15 +464,13 @@ napi_value AVDownloaderManagerNapi::RemoveDownloadTask(napi_env env, napi_callba
             for (const auto &tid : tasks) {
                 int32_t errCode = manager->downloaderManager_->RemoveDownloadTask(tid);
                 if (errCode != MSERR_OK) {
-                    ThrowError(env, ERR_OPERATION_NOT_PERMIT, "Operation not allowed");
+                    ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed");
                     return nullptr;
                 }
             }
         }
         manager->taskIdToUrl_.clear();
         manager->taskIdToCacheDir_.clear();
-        manager->taskIdToStatus_.clear();
-        manager->taskIdToProgress_.clear();
     }
 
     napi_value result = nullptr;
@@ -449,14 +487,14 @@ napi_value AVDownloaderManagerNapi::PauseDownloadTask(napi_env env, napi_callbac
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to get cb info");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to get cb info");
         return nullptr;
     }
 
     AVDownloaderManagerNapi *manager = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&manager));
     if (status != napi_ok || manager == nullptr) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to unwrap");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to unwrap");
         return nullptr;
     }
 
@@ -465,15 +503,19 @@ napi_value AVDownloaderManagerNapi::PauseDownloadTask(napi_env env, napi_callbac
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
             char taskId[256] = {0};
             size_t length = 0;
-            napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            if (nstatus != napi_ok || length == 0) {
+                ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
+                return nullptr;
+            }
             if (manager->taskIdToUrl_.find(taskId) == manager->taskIdToUrl_.end()) {
-                ThrowError(env, ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
+                ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
                 return nullptr;
             }
             if (manager->downloaderManager_) {
                 int32_t errCode = manager->downloaderManager_->PauseDownloadTask(taskId);
                 if (errCode != MSERR_OK) {
-                    ThrowError(env, ERR_OPERATION_NOT_PERMIT, "Operation not allowed");
+                    ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed");
                     return nullptr;
                 }
             }
@@ -494,14 +536,14 @@ napi_value AVDownloaderManagerNapi::ResumeDownloadTask(napi_env env, napi_callba
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to get cb info");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to get cb info");
         return nullptr;
     }
 
     AVDownloaderManagerNapi *manager = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&manager));
     if (status != napi_ok || manager == nullptr) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to unwrap");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to unwrap");
         return nullptr;
     }
 
@@ -510,15 +552,19 @@ napi_value AVDownloaderManagerNapi::ResumeDownloadTask(napi_env env, napi_callba
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
             char taskId[256] = {0};
             size_t length = 0;
-            napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            if (nstatus != napi_ok || length == 0) {
+                ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
+                return nullptr;
+            }
             if (manager->taskIdToUrl_.find(taskId) == manager->taskIdToUrl_.end()) {
-                ThrowError(env, ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
+                ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
                 return nullptr;
             }
             if (manager->downloaderManager_) {
                 int32_t errCode = manager->downloaderManager_->ResumeDownloadTask(taskId);
                 if (errCode != MSERR_OK) {
-                    ThrowError(env, ERR_OPERATION_NOT_PERMIT, "Operation not allowed");
+                    ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Operation not allowed");
                     return nullptr;
                 }
             }
@@ -569,29 +615,33 @@ napi_value AVDownloaderManagerNapi::GetTaskCacheDirectory(napi_env env, napi_cal
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || argCount < 1) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to get cb info");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to get cb info");
         return nullptr;
     }
 
     AVDownloaderManagerNapi *manager = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&manager));
     if (status != napi_ok || manager == nullptr) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to unwrap");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to unwrap");
         return nullptr;
     }
 
     napi_valuetype valueType = napi_undefined;
     if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "Invalid parameter: taskId must be string");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Invalid parameter: taskId must be string");
         return nullptr;
     }
 
     char taskId[256] = {0};
     size_t length = 0;
-    napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+    napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+    if (nstatus != napi_ok || length == 0) {
+        ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
+        return nullptr;
+    }
 
     if (manager->taskIdToUrl_.find(taskId) == manager->taskIdToUrl_.end()) {
-        ThrowError(env, ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
+        ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
         return nullptr;
     }
 
@@ -611,14 +661,14 @@ napi_value AVDownloaderManagerNapi::GetTaskStatus(napi_env env, napi_callback_in
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || argCount < 1) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to get cb info");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to get cb info");
         return nullptr;
     }
 
     AVDownloaderManagerNapi *manager = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&manager));
     if (status != napi_ok || manager == nullptr) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to unwrap");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to unwrap");
         return nullptr;
     }
 
@@ -628,26 +678,21 @@ napi_value AVDownloaderManagerNapi::GetTaskStatus(napi_env env, napi_callback_in
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
             char taskId[256] = {0};
             size_t length = 0;
-            napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            if (nstatus != napi_ok || length == 0) {
+                ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
+                return nullptr;
+            }
 
             AVDownloadTaskState state = AVDownloadTaskState::INIT;
             if (manager->downloaderManager_) {
                 state = manager->downloaderManager_->GetTaskStatus(taskId);
                 if (state == AVDownloadTaskState::ERROR) {
-                    ThrowError(env, ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
+                    ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
                     return nullptr;
                 }
             }
-            switch (state) {
-                case AVDownloadTaskState::INIT: stateStr = "init"; break;
-                case AVDownloadTaskState::QUEUED: stateStr = "queued"; break;
-                case AVDownloadTaskState::RUNNING: stateStr = "running"; break;
-                case AVDownloadTaskState::COMPLETED: stateStr = "completed"; break;
-                case AVDownloadTaskState::PAUSED: stateStr = "paused"; break;
-                case AVDownloadTaskState::REMOVING: stateStr = "removing"; break;
-                case AVDownloadTaskState::ERROR: stateStr = "error"; break;
-                default: stateStr = "init"; break;
-            }
+            stateStr = StateToString(state);
         }
     }
 
@@ -665,14 +710,14 @@ napi_value AVDownloaderManagerNapi::GetTaskProgress(napi_env env, napi_callback_
     napi_value jsThis = nullptr;
     napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
     if (status != napi_ok || argCount < 1) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to get cb info");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to get cb info");
         return nullptr;
     }
 
     AVDownloaderManagerNapi *manager = nullptr;
     status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&manager));
     if (status != napi_ok || manager == nullptr) {
-        ThrowError(env, ERR_OPERATION_NOT_PERMIT, "failed to unwrap");
+        ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "failed to unwrap");
         return nullptr;
     }
 
@@ -682,9 +727,13 @@ napi_value AVDownloaderManagerNapi::GetTaskProgress(napi_env env, napi_callback_
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
             char taskId[256] = {0};
             size_t length = 0;
-            napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
+            if (nstatus != napi_ok || length == 0) {
+                ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
+                return nullptr;
+            }
             if (manager->taskIdToUrl_.find(taskId) == manager->taskIdToUrl_.end()) {
-                ThrowError(env, ERR_PARAM_OUT_OF_RANGE, "Task ID not found");
+                ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Task ID not found");
                 return nullptr;
             }
             progress = manager->downloaderManager_->GetTaskProgress(taskId);
@@ -715,7 +764,15 @@ napi_value AVDownloaderManagerNapi::OnStatusChange(napi_env env, napi_callback_i
         return nullptr;
     }
 
-    napi_create_reference(env, args[0], 1, &manager->statusChangeCallback_);
+    {
+        std::lock_guard<std::mutex> lock(manager->cbMutex_);
+        napi_ref ref = nullptr;
+        if (napi_create_reference(env, args[0], 1, &ref) == napi_ok && ref != nullptr) {
+            manager->statusChangeCallback_ = std::make_shared<AutoRef>(env, ref, true);
+        } else {
+            manager->statusChangeCallback_.reset();
+        }
+    }
 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -741,7 +798,15 @@ napi_value AVDownloaderManagerNapi::OnProgressChange(napi_env env, napi_callback
         return nullptr;
     }
 
-    napi_create_reference(env, args[0], 1, &manager->progressChangeCallback_);
+    {
+        std::lock_guard<std::mutex> lock(manager->cbMutex_);
+        napi_ref ref = nullptr;
+        if (napi_create_reference(env, args[0], 1, &ref) == napi_ok && ref != nullptr) {
+            manager->progressChangeCallback_ = std::make_shared<AutoRef>(env, ref, true);
+        } else {
+            manager->progressChangeCallback_.reset();
+        }
+    }
 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);
@@ -765,10 +830,12 @@ napi_value AVDownloaderManagerNapi::OffStatusChange(napi_env env, napi_callback_
     if (argCount >= 1) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
-            manager->statusChangeCallback_ = nullptr;
+            std::lock_guard<std::mutex> lock(manager->cbMutex_);
+            manager->statusChangeCallback_.reset();
         }
     } else {
-        manager->statusChangeCallback_ = nullptr;
+        std::lock_guard<std::mutex> lock(manager->cbMutex_);
+        manager->statusChangeCallback_.reset();
     }
 
     napi_value result = nullptr;
@@ -793,10 +860,12 @@ napi_value AVDownloaderManagerNapi::OffProgressChange(napi_env env, napi_callbac
     if (argCount >= 1) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_function) {
-            manager->progressChangeCallback_ = nullptr;
+            std::lock_guard<std::mutex> lock(manager->cbMutex_);
+            manager->progressChangeCallback_.reset();
         }
     } else {
-        manager->progressChangeCallback_ = nullptr;
+        std::lock_guard<std::mutex> lock(manager->cbMutex_);
+        manager->progressChangeCallback_.reset();
     }
 
     napi_value result = nullptr;
@@ -816,15 +885,16 @@ napi_value AVDownloaderManagerNapi::Release(napi_env env, napi_callback_info inf
     status = napi_unwrap(env, jsThis, reinterpret_cast<void**>(&manager));
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && manager != nullptr, nullptr, "failed to unwrap");
 
+    {
+        std::lock_guard<std::mutex> lock(manager->cbMutex_);
+        manager->statusChangeCallback_.reset();
+        manager->progressChangeCallback_.reset();
+    }
     if (manager->downloaderManager_) {
         manager->downloaderManager_->Release();
     }
     manager->taskIdToUrl_.clear();
     manager->taskIdToCacheDir_.clear();
-    manager->taskIdToStatus_.clear();
-    manager->taskIdToProgress_.clear();
-    manager->statusChangeCallback_ = nullptr;
-    manager->progressChangeCallback_ = nullptr;
 
     napi_value result = nullptr;
     napi_get_undefined(env, &result);

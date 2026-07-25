@@ -275,8 +275,8 @@ void DownloadTaskCallback::SubmitRemainingTasks(std::shared_ptr<MediaDownload::D
     std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::shared_ptr<AVDownloaderManagerImpl> manager)
 {
     MediaDownload::DownloadConfig config;
-    config.timeoutMs = manager->requestTimeoutMs_;
-    config.allowMobileData = manager->allowCellularAccess_;
+    config.timeoutMs = manager->requestTimeoutMs_.load();
+    config.allowMobileData = manager->allowCellularAccess_.load();
     config.allowWifi = true;
     for (const auto& fileInfo : taskInfo->fileList) {
         if (fileInfo.downloaded) {
@@ -485,6 +485,12 @@ AVDownloaderManagerImpl::AVDownloaderManagerImpl()
     StartNetworkListening();
 }
 
+AVDownloaderManagerImpl::~AVDownloaderManagerImpl()
+{
+    MEDIA_LOGI("~AVDownloaderManagerImpl");
+    Release();
+}
+
 std::string AVDownloaderManagerImpl::GetDefaultCacheDir(const std::string& url)
 {
     std::string baseDir = "/data/storage/el2/base/cache/avplayer_downloaded_cache/";
@@ -521,14 +527,14 @@ std::string AVDownloaderManagerImpl::GetFilePath(const std::string& rootDir, con
 int32_t AVDownloaderManagerImpl::SetAllowCellularAccess(bool allow)
 {
     MEDIA_LOGI("SetAllowCellularAccess: %{public}d", allow);
-    allowCellularAccess_ = allow;
+    allowCellularAccess_.store(allow);
     return MSERR_OK;
 }
 
 int32_t AVDownloaderManagerImpl::SetRequestTimeout(int32_t timeoutMs)
 {
     MEDIA_LOGI("SetRequestTimeout: %{public}d", timeoutMs);
-    requestTimeoutMs_ = timeoutMs;
+    requestTimeoutMs_.store(timeoutMs);
     return MSERR_OK;
 }
 
@@ -557,7 +563,7 @@ std::string AVDownloaderManagerImpl::AddDownloadTask(std::shared_ptr<Plugins::Me
 
     taskMap_[taskId] = taskInfo;
     downloaderMap_[taskId] = downloader;
-    HandleTaskAdded(taskInfo, taskId, url, downloader, filePath);
+    HandleTaskAdded(taskId, url, downloader, filePath);
 
     MEDIA_LOGI("AddDownloadTask success: taskId=%{public}s, url=%{public}s, state=%{public}d",
         taskId.c_str(), url.c_str(), static_cast<int>(taskInfo->state));
@@ -589,13 +595,11 @@ std::string AVDownloaderManagerImpl::FindExistingTask(const std::string& url)
             MEDIA_LOGI("AddDownloadTask: activeDownloaderCount_=%{public}d >= MAX=%{public}d, queuing paused task",
                 activeDownloaderCount_.load(), MAX_DOWNLOADER_COUNT);
             pendingTaskQueue_.push({pair.second->url, pair.first});
-            pair.second->state = AVDownloadTaskState::QUEUED;
-            NotifyStatusChange(pair.first, AVDownloadTaskState::QUEUED);
+            NotifyStatusChangeLocked(pair.first, AVDownloadTaskState::QUEUED);
             return pair.first;
         }
         downloaderIter->second->Resume();
-        pair.second->state = AVDownloadTaskState::RUNNING;
-        NotifyStatusChange(pair.first, AVDownloadTaskState::RUNNING);
+        NotifyStatusChangeLocked(pair.first, AVDownloadTaskState::RUNNING);
         activeDownloaderCount_.fetch_add(1);
         return pair.first;
     }
@@ -637,19 +641,18 @@ AVDownloaderManagerImpl::CreateNewDownloaderAndTask(std::shared_ptr<Plugins::Med
     return {taskId, taskInfo, downloader, filePath};
 }
  
-void AVDownloaderManagerImpl::HandleTaskAdded(std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::string taskId,
+void AVDownloaderManagerImpl::HandleTaskAdded(std::string taskId,
     std::string url, std::shared_ptr<MediaDownload::Downloader> downloader, std::string filePath)
 {
     if (activeDownloaderCount_.load() >= MAX_DOWNLOADER_COUNT) {
         MEDIA_LOGI("AddDownloadTask: activeDownloaderCount_=%{public}d >= MAX=%{public}d, pending task",
             activeDownloaderCount_.load(), MAX_DOWNLOADER_COUNT);
         pendingTaskQueue_.push({url, taskId});
-        taskInfo->state = AVDownloadTaskState::QUEUED;
-        NotifyStatusChange(taskId, taskInfo->state);
+        NotifyStatusChangeLocked(taskId, AVDownloadTaskState::QUEUED);
     } else {
         MediaDownload::DownloadConfig config;
-        config.timeoutMs = requestTimeoutMs_;
-        config.allowMobileData = allowCellularAccess_;
+        config.timeoutMs = requestTimeoutMs_.load();
+        config.allowMobileData = allowCellularAccess_.load();
         config.allowWifi = true;
         downloader->AddFileTask(url, filePath, config);
         if (taskCallback_ == nullptr) {
@@ -661,12 +664,11 @@ void AVDownloaderManagerImpl::HandleTaskAdded(std::shared_ptr<AVDownloadTaskInfo
         auto ret = downloader->Start();
         if (ret != MSERR_OK) {
             MEDIA_LOGE("Downloader Start failed, ret: %{public}d", ret);
-            taskInfo->state = AVDownloadTaskState::ERROR;
+            NotifyStatusChangeLocked(taskId, AVDownloadTaskState::ERROR);
         } else {
-            taskInfo->state = AVDownloadTaskState::RUNNING;
             activeDownloaderCount_.fetch_add(1);
+            NotifyStatusChangeLocked(taskId, AVDownloadTaskState::RUNNING);
         }
-        NotifyStatusChange(taskId, taskInfo->state);
     }
 }
 
@@ -691,7 +693,6 @@ int32_t AVDownloaderManagerImpl::RemoveDownloadTask(const std::string &taskId)
     }
 
     if (taskIter != taskMap_.end()) {
-        taskIter->second->state = AVDownloadTaskState::REMOVING;
         taskMap_.erase(taskIter);
     }
 
@@ -704,7 +705,7 @@ int32_t AVDownloaderManagerImpl::RemoveDownloadTask(const std::string &taskId)
         messageQueue_->PostMessage(nextMsg);
     }
 
-    NotifyStatusChange(taskId, AVDownloadTaskState::REMOVING);
+    NotifyStatusChangeLocked(taskId, AVDownloadTaskState::REMOVING);
     return MSERR_OK;
 }
 
@@ -728,8 +729,7 @@ int32_t AVDownloaderManagerImpl::PauseDownloadTask(const std::string &taskId)
     auto ret = downloaderIter->second->Pause();
     if (ret == MSERR_OK) {
         if (taskIter != taskMap_.end()) {
-            taskIter->second->state = AVDownloadTaskState::PAUSED;
-            NotifyStatusChange(taskId, AVDownloadTaskState::PAUSED);
+            NotifyStatusChangeLocked(taskId, AVDownloadTaskState::PAUSED);
         }
         if (wasRunning) {
             activeDownloaderCount_.fetch_sub(1);
@@ -770,8 +770,7 @@ int32_t AVDownloaderManagerImpl::ResumeDownloadTask(const std::string &taskId)
     if (ret == MSERR_OK) {
         auto taskIter = taskMap_.find(taskId);
         if (taskIter != taskMap_.end()) {
-            taskIter->second->state = AVDownloadTaskState::RUNNING;
-            NotifyStatusChange(taskId, AVDownloadTaskState::RUNNING);
+            NotifyStatusChangeLocked(taskId, AVDownloadTaskState::RUNNING);
             activeDownloaderCount_.fetch_add(1);
             MEDIA_LOGI("ResumeDownloadTask: activeDownloaderCount_ incremented to %{public}d",
                 activeDownloaderCount_.load());
@@ -878,7 +877,13 @@ int32_t AVDownloaderManagerImpl::SetManagerCallback(const std::weak_ptr<AVDownlo
 int32_t AVDownloaderManagerImpl::Release()
 {
     MEDIA_LOGI("Release");
+    if (released_.exchange(true)) {
+        return MSERR_OK;
+    }
     StopNetworkListening();
+    if (messageQueue_) {
+        messageQueue_->Stop();
+    }
     std::lock_guard<std::mutex> lock(mapMutex_);
 
     for (auto &pair : downloaderMap_) {
@@ -897,9 +902,12 @@ int32_t AVDownloaderManagerImpl::Release()
 void AVDownloaderManagerImpl::NotifyStatusChange(const std::string &taskId, AVDownloadTaskState state)
 {
     MEDIA_LOGI("NotifyStatusChange: %{public}s, Task state: %{public}d", taskId.c_str(), state);
-    auto taskIter = taskMap_.find(taskId);
-    if (taskIter != taskMap_.end()) {
-        taskIter->second->state = state;
+    {
+        std::lock_guard<std::mutex> lock(mapMutex_);
+        auto taskIter = taskMap_.find(taskId);
+        if (taskIter != taskMap_.end()) {
+            taskIter->second->state = state;
+        }
     }
     std::lock_guard<std::mutex> lock(cbMutex_);
     auto callback = callback_.lock();
@@ -909,17 +917,50 @@ void AVDownloaderManagerImpl::NotifyStatusChange(const std::string &taskId, AVDo
     }
 }
 
+void AVDownloaderManagerImpl::NotifyStatusChangeLocked(const std::string &taskId, AVDownloadTaskState state)
+{
+    MEDIA_LOGI("NotifyStatusChangeLocked: %{public}s, Task state: %{public}d", taskId.c_str(), state);
+    auto taskIter = taskMap_.find(taskId);
+    if (taskIter != taskMap_.end()) {
+        taskIter->second->state = state;
+    }
+    std::lock_guard<std::mutex> lock(cbMutex_);
+    auto callback = callback_.lock();
+    if (callback != nullptr) {
+        MEDIA_LOGI("NotifyStatusChangeLocked: %{public}s, callback not null", taskId.c_str());
+        callback->OnStatusChange(taskId, state);
+    }
+}
+
 void AVDownloaderManagerImpl::NotifyProgressChange(const std::string &taskId, double progress)
 {
-    MEDIA_LOGI("NotifyProgressChange: %{public}s, Task state: %{public}f", taskId.c_str(), progress);
+    MEDIA_LOGI("NotifyProgressChange: %{public}s, progress: %{public}f", taskId.c_str(), progress);
+    {
+        std::lock_guard<std::mutex> lock(mapMutex_);
+        auto taskIter = taskMap_.find(taskId);
+        if (taskIter != taskMap_.end()) {
+            taskIter->second->progress = progress;
+        }
+    }
     std::lock_guard<std::mutex> lock(cbMutex_);
+    auto callback = callback_.lock();
+    if (callback != nullptr) {
+        MEDIA_LOGI("NotifyProgressChange: %{public}s, callback not null", taskId.c_str());
+        callback->OnProgressChange(taskId, progress);
+    }
+}
+
+void AVDownloaderManagerImpl::NotifyProgressChangeLocked(const std::string &taskId, double progress)
+{
+    MEDIA_LOGI("NotifyProgressChangeLocked: %{public}s, progress: %{public}f", taskId.c_str(), progress);
     auto taskIter = taskMap_.find(taskId);
     if (taskIter != taskMap_.end()) {
         taskIter->second->progress = progress;
     }
+    std::lock_guard<std::mutex> lock(cbMutex_);
     auto callback = callback_.lock();
     if (callback != nullptr) {
-        MEDIA_LOGI("NotifyProgressChange: %{public}s, callback not null", taskId.c_str());
+        MEDIA_LOGI("NotifyProgressChangeLocked: %{public}s, callback not null", taskId.c_str());
         callback->OnProgressChange(taskId, progress);
     }
 }
@@ -958,8 +999,8 @@ void AVDownloaderManagerImpl::ProcessNextPendingTask()
     auto& taskInfo = taskIter->second;
 
     MediaDownload::DownloadConfig config;
-    config.timeoutMs = requestTimeoutMs_;
-    config.allowMobileData = allowCellularAccess_;
+    config.timeoutMs = requestTimeoutMs_.load();
+    config.allowMobileData = allowCellularAccess_.load();
     config.allowWifi = true;
     downloader->AddFileTask(taskInfo->url, taskInfo->currentFilePath, config);
 
@@ -1046,7 +1087,7 @@ bool AVDownloaderManagerImpl::IsNetworkAllowDownload(MediaSourceUtils::NetConnTy
         return false;
     }
 
-    if (allowCellularAccess_ && newType == MediaSourceUtils::NetConnType::NET_CONN_CELLULAR) {
+    if (allowCellularAccess_.load() && newType == MediaSourceUtils::NetConnType::NET_CONN_CELLULAR) {
         MEDIA_LOGI("IsNetworkAllowDownload: Mobile data network allowed");
         return true;
     }

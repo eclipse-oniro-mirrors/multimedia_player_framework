@@ -20,12 +20,15 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <mutex>
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "av_downloader_manager.h"
 
 namespace OHOS {
 namespace Media {
+
+struct AutoRef;
 
 class AVDownloaderManagerNapi : public AVDownloaderManagerCallback {
 public:
@@ -67,15 +70,13 @@ private:
 
     std::shared_ptr<AVDownloaderManager> downloaderManager_;
     std::shared_ptr<AVDownloaderManagerNapi> selfRef_;
-    napi_env env_ = nullptr;
     bool allowCellularAccess_ = false;
     int32_t requestTimeoutMs_ = 30000;
     std::map<std::string, std::string> taskIdToUrl_;
     std::map<std::string, std::string> taskIdToCacheDir_;
-    std::map<std::string, int32_t> taskIdToStatus_;
-    std::map<std::string, double> taskIdToProgress_;
-    napi_ref statusChangeCallback_ = nullptr;
-    napi_ref progressChangeCallback_ = nullptr;
+    std::shared_ptr<AutoRef> statusChangeCallback_;
+    std::shared_ptr<AutoRef> progressChangeCallback_;
+    std::mutex cbMutex_;
 
     static thread_local napi_ref constructor_;
 };
