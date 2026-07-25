@@ -918,7 +918,7 @@ napi_value AVPlayerNapi::JsSeek(napi_env env, napi_callback_info info)
         bool isExitSeekContinuous = time == -1 && mode == SEEK_CONTINUOUS_TS_ENUM_NUM;
         if (isNegativeTime && !isExitSeekContinuous) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER,
-                "invalid parameters, please check seek time:" + std::to_string(isNegativeTime));
+                "invalid parameters, please check seek time, negative time is not allowed.");
             return result;
         }
     }
