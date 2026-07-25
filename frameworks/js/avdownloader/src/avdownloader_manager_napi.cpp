@@ -24,8 +24,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVDownloaderManager"};
-constexpr int32_t ERR_PARAM_OUT_OF_RANGE = 5400108;
-constexpr int32_t ERR_OPERATION_NOT_PERMIT = 5400102;
+constexpr int32_t ERR_AVD_PARAM_OUT_OF_RANGE = 5400108;
+constexpr int32_t ERR_AVD_OPERATION_NOT_PERMIT = 5400102;
 }
 
 namespace OHOS {
