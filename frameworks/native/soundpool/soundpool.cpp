@@ -409,12 +409,14 @@ int32_t SoundPool::Release()
 {
     MEDIA_LOGI("SoundPool::Release");
     
-    int32_t playSucceed = playSucceed_.exchange(0, std::memory_order_relaxed);
-    int32_t loadSucceed = loadSucceed_.exchange(0, std::memory_order_relaxed);
-    int32_t playFailed = playFailed_.exchange(0, std::memory_order_relaxed);
-    int32_t loadFailed = loadFailed_.exchange(0, std::memory_order_relaxed);
+    const int32_t playSucceed = playSucceed_.exchange(0, std::memory_order_relaxed);
+    const int32_t loadSucceed = loadSucceed_.exchange(0, std::memory_order_relaxed);
+    const int32_t playFailed = playFailed_.exchange(0, std::memory_order_relaxed);
+    const int32_t loadFailed = loadFailed_.exchange(0, std::memory_order_relaxed);
 
-    AsyncCall([playSucceed, loadSucceed, playFailed, loadFailed]() {
+    const int32_t appUid = IPCSkeleton::GetCallingUid();
+
+    AsyncCall([playSucceed, loadSucceed, playFailed, loadFailed, appUid]() {
         Json json;
         json[DFX_API_LOAD][DFX_MSG_SUCCEED] = loadSucceed;
         json[DFX_API_LOAD][DFX_MSG_FAILED] = loadFailed;
@@ -422,9 +424,9 @@ int32_t SoundPool::Release()
         json[DFX_API_PLAY][DFX_MSG_FAILED] = playFailed;
         std::string jsonString = json.dump();
 
-        const int32_t appUid = IPCSkeleton::GetCallingUid();
         const std::string appName = GetClientBundleName(appUid);
 
+        MEDIA_LOGI("SoundPool::Release on app %{public}s", appName.c_str());
         HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA,
             "MEDIAKIT_STATISTICS",
             OHOS::HiviewDFX::HiSysEvent::EventType::STATISTIC,
