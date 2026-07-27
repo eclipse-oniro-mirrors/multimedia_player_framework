@@ -474,8 +474,8 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
         MEDIA_LOGW("cant find colorSpace");
         return Status::ERROR_UNKNOWN;
     }
-    CHECK_AND_RETURN_RET_LOG(colorSpaceInfoVec.size()*sizeof(uint8_t) >= sizeof(CM_ColorSpaceInfo), Status::ERROR_UNKNOWN,
-        "colorSpaceInfoVec size is invalid");
+    CHECK_AND_RETURN_RET_LOG(colorSpaceInfoVec.size()*sizeof(uint8_t) >= sizeof(CM_ColorSpaceInfo),
+        Status::ERROR_UNKNOWN, "colorSpaceInfoVec size is invalid");
     auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
     CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
     auto colorSpaceInfo = outColor[0];
@@ -512,8 +512,8 @@ Status AVMetadataHelperImpl::GetColorSpaceWithDefaultValue(sptr<SurfaceBuffer> &
         MEDIA_LOGW("cant find colorSpace");
         return Status::ERROR_UNKNOWN;
     }
-    CHECK_AND_RETURN_RET_LOG(colorSpaceInfoVec.size()*sizeof(uint8_t) >= sizeof(CM_ColorSpaceInfo), Status::ERROR_UNKNOWN,
-        "colorSpaceInfoVec size is invalid");
+    CHECK_AND_RETURN_RET_LOG(colorSpaceInfoVec.size()*sizeof(uint8_t) >= sizeof(CM_ColorSpaceInfo),
+        Status::ERROR_UNKNOWN, "colorSpaceInfoVec size is invalid");
     auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
     CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
     auto colorSpaceInfo = outColor[0];
