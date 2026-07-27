@@ -22,6 +22,7 @@
 #include "event_handler.h"
 #include "soundPool.proj.hpp"
 
+#include <memory> // using weak_from_this
 #include <optional>
 
 namespace ANI {
@@ -36,7 +37,8 @@ namespace SoundPoolEvent {
     const std::string EVENT_ERROR_OCCURRED = "errorOccurred";
 }
 
-class SoundPoolCallBackTaihe : public OHOS::Media::ISoundPoolCallback {
+class SoundPoolCallBackTaihe :
+    public OHOS::Media::ISoundPoolCallback, public std::enable_shared_from_this<SoundPoolCallBackTaihe> {
 public:
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &name);
