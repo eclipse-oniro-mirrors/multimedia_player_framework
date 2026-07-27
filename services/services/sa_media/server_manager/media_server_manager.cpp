@@ -68,6 +68,10 @@ constexpr uint32_t MAX_TIMES = 15;
 constexpr uint32_t DELAY_TIME = 200;
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
 const std::string MEDIA_SERVICE_LIBNAME = "libmedia_service.z.so"; // madvise library name
+#ifdef SUPPORT_MEDIA_MADVISE
+constexpr uint32_t MADVISE_INTERVAL_MS = 4 * 60 * 1000; // 4 minutes in ms
+constexpr int32_t MADVISE_MAX_CALLS = 10; // 10 calls in 40 minutes
+#endif
 }
 
 namespace OHOS {
@@ -210,7 +214,7 @@ MediaServerManager::MediaServerManager()
         std::lock_guard<std::mutex> lock(mutex_);
         CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
 #ifdef SUPPORT_MEDIA_MADVISE
-    HandleMadviseLibraries();
+        StartMadviseTask();
 #endif
         SetCritical(false);
     });
@@ -226,6 +230,11 @@ MediaServerManager::~MediaServerManager()
     if (memoryReportTask) {
         memoryReportTask->Stop();
     }
+#ifdef SUPPORT_MEDIA_MADVISE
+    if (madviseTask_) {
+        madviseTask_->Stop();
+    }
+#endif
     playerPidMem_.clear();
     dumperTbl_.clear();
     recorderStubMap_.clear();
@@ -287,6 +296,10 @@ int32_t MediaServerManager::ResetAllProxy()
 sptr<IRemoteObject> MediaServerManager::CreateStubObject(StubType type)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+
+#ifdef SUPPORT_MEDIA_MADVISE
+    StopMadviseTask();
+#endif
 
     auto res = CreateStubObjectByType(type);
 
@@ -900,7 +913,7 @@ void MediaServerManager::DestroyStubObject(StubType type, sptr<IRemoteObject> ob
 #endif
     CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
 #ifdef SUPPORT_MEDIA_MADVISE
-    HandleMadviseLibraries();
+    StartMadviseTask();
 #endif
     SetCritical(false);
 }
@@ -911,6 +924,49 @@ void MediaServerManager::HandleMadviseLibraries()
     CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
     MEDIA_LOGI("HandleMadviseLibraries start.");
     MediaMadviseUtils::MediaMadviseSingleLibrary(MEDIA_SERVICE_LIBNAME);
+}
+
+void MediaServerManager::StartMadviseTask()
+{
+    if (madviseTask_ == nullptr) {
+        madviseTask_ = std::make_unique<Task>("madviseTask", "",
+            TaskType::SINGLETON, TaskPriority::NORMAL, true);
+        madviseTask_->RegisterJob([this]() {
+            return this->MadviseTaskCallback();
+        });
+        madviseCallCount_ = 0;
+    }
+    if (madviseTask_ && !madviseTask_->IsTaskRunning()) {
+        MEDIA_LOGI("StartMadviseTask: starting madvise task");
+        madviseTask_->Start();
+    }
+}
+
+void MediaServerManager::StopMadviseTask()
+{
+    if (madviseTask_ && madviseTask_->IsTaskRunning()) {
+        MEDIA_LOGI("StopMadviseTask: stopping madvise task, called %{public}d times", madviseCallCount_.load());
+        madviseTask_->StopAsync();
+    }
+}
+
+uint32_t MediaServerManager::MadviseTaskCallback()
+{
+    if (!GetStubMapCountIsEmpty()) {
+        MEDIA_LOGI("MadviseTaskCallback: stub not empty, stop");
+        return 0;
+    }
+
+    madviseCallCount_++;
+    if (madviseCallCount_ > MADVISE_MAX_CALLS) {
+        MEDIA_LOGI("MadviseTaskCallback: reached max calls (%{public}d), stop", MADVISE_MAX_CALLS);
+        return 0;
+    }
+
+    MEDIA_LOGI("MadviseTaskCallback: call %{public}d/%{public}d", madviseCallCount_.load(), MADVISE_MAX_CALLS);
+    HandleMadviseLibraries();
+
+    return MADVISE_INTERVAL_MS;
 }
 #endif
 
