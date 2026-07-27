@@ -145,7 +145,7 @@ private:
     int32_t DumpPixelMap(bool isDump, std::shared_ptr<PixelMap> pixelMap, const std::string &fileName);
     int32_t DumpAVBuffer(bool isDump, const std::shared_ptr<AVBuffer> &frameBuffer, const std::string &fileName);
 
-    bool IsFileUrl(const std::string& uri);
+    bool IsFileUri(const std::string& uri);
     int32_t GetRealPath(const std::string& uri, std::string& realUriPath);
     int32_t ParseFileName(const std::string& uri, std::string& fileName);
     int32_t CheckFileStat(const std::string& fileName);
