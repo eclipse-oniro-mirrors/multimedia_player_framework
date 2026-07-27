@@ -47,6 +47,7 @@ void HelperDataSourceJsCallback::WaitResult()
                 MEDIA_LOGW("Reset, ReadAt has been cancel!");
             } else {
                 MEDIA_LOGW("timeout 100ms!");
+                isExit_ = true;
             }
         }
     }
@@ -97,10 +98,15 @@ int32_t HelperDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &
                              "Failed to SendEvent, ret = %{public}d", ret);
     CANCEL_SCOPE_EXIT_GUARD(1);
     cb_->WaitResult();
-    CHECK_AND_RETURN_RET_LOG(static_cast<int64_t>(cb_->readSize_) <= static_cast<int64_t>(length),
+    int32_t readSize = 0;
+    {
+        std::lock_guard<std::mutex> lock(cb_->mutexCond_);
+        readSize = cb_->readSize_;
+    }
+    CHECK_AND_RETURN_RET_LOG(static_cast<int64_t>(readSize) <= static_cast<int64_t>(length),
         SOURCE_ERROR_IO, "Read size exceeds requested length");
     MEDIA_LOGD("HelperDataSourceCallback ReadAt out");
-    return cb_->readSize_;
+    return readSize;
 }
 
 napi_status HelperDataSourceCallback::UvWork(HelperDataSourceJsCallbackWraper *cbWrap)

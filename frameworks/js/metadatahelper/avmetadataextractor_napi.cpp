@@ -133,6 +133,7 @@ napi_value AVMetadataExtractorNapi::Constructor(napi_env env, napi_callback_info
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(extractor),
         AVMetadataExtractorNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
+        extractor->helper_->Release();
         delete extractor;
         MEDIA_LOGE("Failed to wrap native instance");
         return result;
