@@ -406,3 +406,5 @@ optional<ohos::multimedia::media::AVDownloaderManager> CreateAVDownloaderManager
 } // namespace ANI::Media
 
 TH_EXPORT_CPP_API_CreateAVDownloaderManagerSync(ANI::Media::CreateAVDownloaderManagerSync);
+TH_EXPORT_CPP_API_CreateAVDownloaderManagerWithAsyncCallback(ANI::Media::CreateAVDownloaderManagerSync);
+TH_EXPORT_CPP_API_CreateAVDownloaderManagerRetPromise(ANI::Media::CreateAVDownloaderManagerSync);
