@@ -469,7 +469,8 @@ int32_t AVMetadataHelperServer::FetchFrameYuvs(const std::vector<int64_t>& timeU
                                    .colorFormat = param.colorFormat };
     const uint64_t taskCancelGeneration = cancelGeneration_.load();
 
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config, param, taskCancelGeneration] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config,
+        param, taskCancelGeneration] {
         MediaTrace trace("AVMetadataHelperServer::FetchFrameAtTime_task");
         std::shared_ptr<AVBuffer> err(AVBuffer::CreateAVBuffer());
         std::shared_ptr<AVBuffer> frameBuffer_ = nullptr;
@@ -522,8 +523,8 @@ int32_t AVMetadataHelperServer::FetchFrameYuvsWithTimeout(const std::vector<int6
                                    .colorFormat = param.colorFormat };
     const uint64_t taskCancelGeneration = cancelGeneration_.load();
 
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config, param, timeoutMs,
-        taskCancelGeneration] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config, param,
+        timeoutMs, taskCancelGeneration] {
         MediaTrace trace("AVMetadataHelperServer::FetchFrameYuvsWithTimeout_task");
         std::shared_ptr<AVBuffer> err(AVBuffer::CreateAVBuffer());
         std::shared_ptr<AVBuffer> frameBuffer_ = nullptr;
