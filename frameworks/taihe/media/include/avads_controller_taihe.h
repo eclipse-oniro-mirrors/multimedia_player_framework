@@ -40,6 +40,7 @@ public:
     std::shared_ptr<OHOS::Media::Player> GetPlayerInstance() const;
 
     string AddAdsMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, int32_t startMs);
+    string AddAdsMediaSourceRetPromise(::ohos::multimedia::media::weak::MediaSource src, int32_t startMs);
     void RemoveAdsMediaSource(::taihe::string_view id);
     void SkipCurrentAdsMediaSource();
     void DisableAllAdsMediaSource();

@@ -106,6 +106,48 @@ string AVAdsControllerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::wea
     return invalidId;
 }
 
+string AVAdsControllerImpl::AddAdsMediaSourceRetPromise(::ohos::multimedia::media::weak::MediaSource src, int32_t startMs)
+{
+    MediaTrace trace("AVAdsControllerImpl::addAdsMediaSource");
+    MEDIA_LOGI("AddAdsMediaSourceRetPromise In");
+
+    string invalidId {};
+    if (player_ == nullptr) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "controller is released");
+        return invalidId;
+    }
+    if (playerInstance_ == nullptr) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "player instance is null");
+        return invalidId;
+    }
+    OHOS::Media::TaskQueue *taskQueue = player_->GetTaskQueue();
+    if (taskQueue == nullptr) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "task queue is null");
+        return invalidId;
+    }
+
+    std::shared_ptr<AVMediaSourceTmp> srcTmp = MediaSourceImpl::GetMediaSource(src);
+    if (srcTmp == nullptr) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "get MediaSource argument failed!");
+        return invalidId;
+    }
+    std::shared_ptr<AVMediaSource> mediaSource = AVPlayerImpl::GetAVMediaSource(src, srcTmp);
+    if (mediaSource == nullptr) {
+        set_business_error(ERR_ADS_PARAM_INVALID, "create mediaSource failed!");
+        return invalidId;
+    }
+
+    std::string outId;
+    std::shared_ptr<AVPlayerContext> context = std::make_shared<AVPlayerContext>();
+    context->asyncTask = AddAdsMediaSourceTask(playerInstance_, taskQueue, mediaSource, startMs, outId);
+    context->CheckTaskResult();
+    if (!context->errFlag) {
+        MEDIA_LOGI("AddAdsMediaSourceRetPromise Out, id: %{public}s", outId.c_str());
+        return string(outId);
+    }
+    return invalidId;
+}
+
 void AVAdsControllerImpl::RemoveAdsMediaSource(::taihe::string_view id)
 {
     MediaTrace trace("AVAdsControllerImpl::removeAdsMediaSource");
@@ -369,3 +411,4 @@ optional<AVAdsController> CreateAVAdsControllerSync(::ohos::multimedia::media::w
 }
 }
 TH_EXPORT_CPP_API_CreateAVAdsControllerSync(CreateAVAdsControllerSync);
+TH_EXPORT_CPP_API_CreateAVAdsControllerRetPromise(CreateAVAdsControllerSync);
