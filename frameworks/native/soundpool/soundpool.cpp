@@ -239,7 +239,7 @@ int32_t SoundPool::Play(int32_t soundID, const PlayParams &playParameters)
         streamID = streamIdManager_->Play(soundParser, playParameters);
         MEDIA_LOGI("SoundPool::Play end, streamID is %{public}d", streamID);
         CHECK_AND_BREAK(streamID >= 0);
-        IncreaseStatistic(loadSucceed_);
+        IncreaseStatistic(playSucceed_);
         return streamID;
     } while (false);
     IncreaseStatistic(playFailed_);
