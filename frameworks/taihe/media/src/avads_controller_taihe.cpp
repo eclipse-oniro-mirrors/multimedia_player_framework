@@ -106,7 +106,8 @@ string AVAdsControllerImpl::AddAdsMediaSourceSync(::ohos::multimedia::media::wea
     return invalidId;
 }
 
-string AVAdsControllerImpl::AddAdsMediaSourceRetPromise(::ohos::multimedia::media::weak::MediaSource src, int32_t startMs)
+string AVAdsControllerImpl::AddAdsMediaSourceRetPromise(
+    ::ohos::multimedia::media::weak::MediaSource src, int32_t startMs)
 {
     MediaTrace trace("AVAdsControllerImpl::addAdsMediaSource");
     MEDIA_LOGI("AddAdsMediaSourceRetPromise In");
