@@ -15,6 +15,7 @@
 #ifndef AVADS_CONTROLLER_TAIHE_H
 #define AVADS_CONTROLLER_TAIHE_H
 
+#include <optional>
 #include "common_taihe.h"
 #include "ohos.multimedia.media.proj.hpp"
 #include "ohos.multimedia.media.impl.hpp"
@@ -34,9 +35,8 @@ class AVPlayerImpl;
 class AVAdsControllerImpl {
 public:
     AVAdsControllerImpl();
-    AVAdsControllerImpl(AVPlayerImpl *player);
+    AVAdsControllerImpl(::ohos::multimedia::media::weak::AVPlayer avplayer);
     ~AVAdsControllerImpl();
-    void SetPlayer(AVPlayerImpl *player);
     std::shared_ptr<OHOS::Media::Player> GetPlayerInstance() const;
 
     string AddAdsMediaSourceSync(::ohos::multimedia::media::weak::MediaSource src, int32_t startMs);
@@ -66,6 +66,7 @@ private:
         OHOS::Media::TaskQueue *taskQueue,
         const std::shared_ptr<AVMediaSource> &mediaSource, int32_t startMs, std::string &outId);
 
+    std::optional<AVPlayer> playerHolder_;
     AVPlayerImpl *player_ = nullptr;
     std::shared_ptr<OHOS::Media::Player> playerInstance_ = nullptr;
 };

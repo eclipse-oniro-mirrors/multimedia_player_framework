@@ -34,9 +34,12 @@ AVAdsControllerImpl::AVAdsControllerImpl()
     MEDIA_LOGI("AVAdsControllerImpl Constructor");
 }
 
-AVAdsControllerImpl::AVAdsControllerImpl(AVPlayerImpl *player)
-    : player_(player)
+AVAdsControllerImpl::AVAdsControllerImpl(::ohos::multimedia::media::weak::AVPlayer avplayer)
 {
+    if (!avplayer.is_error()) {
+        playerHolder_.emplace(avplayer);
+        player_ = reinterpret_cast<AVPlayerImpl *>(avplayer->GetImplPtr());
+    }
     if (player_ != nullptr) {
         playerInstance_ = player_->GetPlayerInstance();
     }
@@ -47,16 +50,6 @@ AVAdsControllerImpl::~AVAdsControllerImpl()
 {
     Release();
     MEDIA_LOGI("AVAdsControllerImpl Destructor");
-}
-
-void AVAdsControllerImpl::SetPlayer(AVPlayerImpl *player)
-{
-    player_ = player;
-    if (player_ != nullptr) {
-        playerInstance_ = player_->GetPlayerInstance();
-    } else {
-        playerInstance_ = nullptr;
-    }
 }
 
 std::shared_ptr<OHOS::Media::Player> AVAdsControllerImpl::GetPlayerInstance() const
@@ -364,6 +357,7 @@ void AVAdsControllerImpl::Release()
     if (playerInstance_ != nullptr) {
         playerInstance_->DisableAllAdsMediaSource();
     }
+    playerHolder_.reset();
     player_ = nullptr;
     playerInstance_ = nullptr;
     MEDIA_LOGI("AVAdsController Release Out");
@@ -400,7 +394,7 @@ optional<AVAdsController> CreateAVAdsControllerSync(::ohos::multimedia::media::w
         return optional<AVAdsController>(std::nullopt);
     }
 
-    auto res = make_holder<AVAdsControllerImpl, AVAdsController>(playerImpl);
+    auto res = make_holder<AVAdsControllerImpl, AVAdsController>(avplayer);
     if (taihe::has_error()) {
         MEDIA_LOGE("Create AVAdsController failed!");
         taihe::reset_error();
