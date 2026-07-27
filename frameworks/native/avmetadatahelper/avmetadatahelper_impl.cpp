@@ -1230,12 +1230,12 @@ int32_t AVMetadataHelperImpl::GetRealPath(const std::string& uri, std::string& r
         tempUriPath = uri;
     }
     if (tempUriPath.find("..") != std::string::npos) {
-        MEDIA_LOG_E("invalid uri. The uri (%{private}s) path may be invalid.", tempUriPath.c_str());
+        MEDIA_LOGE("The uri (%{private}s) path may be invalid.", tempUriPath.c_str());
         return MSERR_FILE_ACCESS_FAILED;
     }
     bool ret = PathToRealPath(tempUriPath, realUriPath);
     if (!ret) {
-        MEDIA_LOG_E("invalid uri. The uri (%{private}s) path may be invalid.", url.c_str());
+        MEDIA_LOGE("The uri (%{private}s) path may be invalid.", url.c_str());
         return MSERR_OPEN_FILE_FAILED;
     }
     if (access(realUriPath.c_str(), R_OK) != 0) {
@@ -1247,29 +1247,29 @@ int32_t AVMetadataHelperImpl::GetRealPath(const std::string& uri, std::string& r
 int32_t AVMetadataHelperImpl::ParseFileName(const std::string& uri, std::string& fileName)
 {
     if (uri.empty()) {
-        MEDIA_LOG_E("uri is empty");
+        MEDIA_LOGE("uri is empty");
         return MSERR_INVALID_VAL;
     }
     if (uri.find("file:/") != std::string::npos) {
         if (uri.find('#') != std::string::npos) {
-            MEDIA_LOG_E("Invalid file uri format");
+            MEDIA_LOGE("Invalid file uri format");
             return MSERR_INVALID_VAL;
         }
         auto pos = uri.find("file:");
         if (pos == std::string::npos) {
-            MEDIA_LOG_E("Invalid file uri format");
+            MEDIA_LOGE("Invalid file uri format");
             return MSERR_INVALID_VAL;
         }
         size_t sizeOfProtocolHeader = 5;  // size of "file:"
-        size_t sizeBeforeRealPath = 2;  // size of "///"
+        size_t sizeBeforeRealPath = 2;  // size of "//"
         pos += sizeOfProtocolHeader;
         if (uri.find("///", pos) != std::string::npos) {
-            pos += 2;
+            pos += sizeBeforeRealPath;
         } else if (uri.find("//", pos) != std::string::npos) {
-            pos += 2;
+            pos += sizeBeforeRealPath;
             pos = uri.find('/', pos);  // skip host name
             if (pos == std::string::npos) {
-                MEDIA_LOG_E("Invalid file uri format");
+                MEDIA_LOGE("Invalid file uri format");
                 return MSERR_INVALID_VAL;
             }
             pos++;
@@ -1278,7 +1278,7 @@ int32_t AVMetadataHelperImpl::ParseFileName(const std::string& uri, std::string&
     } else {
         fileName = uri;
     }
-    MEDIA_LOG_D("fileName is %{public}s ", fileName.c_str());
+    MEDIA_LOGD("fileName is %{public}s ", fileName.c_str());
     return MSERR_OK;
 }
 
@@ -1286,15 +1286,15 @@ int32_t AVMetadataHelperImpl::CheckFileStat(const std::string& fileName)
 {
     struct stat fileStat;
     if (stat(fileName.c_str(), &fileStat) < 0) {
-        MEDIA_LOG_E("Check stat failed");
+        MEDIA_LOGE("Check stat failed");
         return MSERR_INVALID_VAL;
     }
     if (S_ISDIR(fileStat.st_mode)) {
-        MEDIA_LOG_E("S_ISDIR failed");
+        MEDIA_LOGE("S_ISDIR failed");
         return MSERR_INVALID_VAL;
     }
     if (S_ISSOCK(fileStat.st_mode)) {
-        MEDIA_LOG_E("S_ISSOCK failed");
+        MEDIA_LOGE("S_ISSOCK failed");
         return MSERR_INVALID_VAL;
     }
     return MSERR_OK;
@@ -1303,12 +1303,12 @@ int32_t AVMetadataHelperImpl::CheckFileStat(const std::string& fileName)
 int32_t AVMetadataHelperImpl::GetFileSize(const std::string& fileName, int64_t &size)
 {
     if (fileName.empty()) {
-        MEDIA_LOG_E("fileName is empty");
+        MEDIA_LOGE("fileName is empty");
         return MSERR_INVALID_VAL
     }
     struc stat fileStatus {};
     if (stat(fileName.c_str(), &fileStatus) != 0) {
-        MEDIA_LOG_E("Get stat failed");
+        MEDIA_LOGE("Get stat failed");
         return MSERR_INVALID_VAL;
     }
     size = static_cast<int64_t>(fileStatus.st_size);
@@ -1317,8 +1317,8 @@ int32_t AVMetadataHelperImpl::GetFileSize(const std::string& fileName, int64_t &
 
 int32_t AVMetadataHelperImpl::OpenFile(const std::string& fileName, int32_t& fd, int64_t &size)
 {
-    MEDIA_LOG_D("IN");
-    int32_t ret = CheckFileStat();
+    MEDIA_LOGD("IN");
+    int32_t ret = CheckFileStat(fileName);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckFileStat failed");
     fd = open(fileName_.c_str(), O_RDONLY);
     CHECK_AND_RETURN_RET_LOG(fd != -1, MSERR_INVALID_VAL, "fopen failed");
