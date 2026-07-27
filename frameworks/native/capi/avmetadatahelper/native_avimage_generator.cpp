@@ -81,13 +81,18 @@ OH_AVErrCode OH_AVImageGenerator_FetchFrameByTime(OH_AVImageGenerator* generator
 
     CHECK_AND_RETURN_RET_LOG(generatorObj->state_ == HelperState::HELPER_STATE_RUNNABLE,
                              AV_ERR_OPERATE_NOT_PERMIT, "Current state is not runnable, can't fetchFrame.");
+
+    int32_t option = static_cast<int32_t>(options);
+    CHECK_AND_RETURN_RET_LOG(option >= static_cast<int32_t>(OH_AVIMAGE_GENERATOR_QUERY_NEXT_SYNC) &&
+                             option <= static_cast<int32_t>(OH_AVIMAGE_GENERATOR_QUERY_CLOSEST),
+                             AV_ERR_INVALID_VAL, "input options is invalid");
     
     PixelMapParams param = {
         .dstWidth = DEFAULT_WIDTH,
         .dstHeight = DEFAULT_HEIGHT,
         .colorFormat = PixelFormat::UNKNOWN,
     };
-    auto pixelMapInner = generatorObj->aVMetadataHelper_->FetchFrameYuv(timeUs, static_cast<int32_t>(options), param);
+    auto pixelMapInner = generatorObj->aVMetadataHelper_->FetchFrameYuv(timeUs, option, param);
     CHECK_AND_RETURN_RET_LOG(pixelMapInner != nullptr, AV_ERR_UNSUPPORTED_FORMAT, "aVImageGenerator FetchFrame failed");
 
     *pixelMap = new(std::nothrow) OH_PixelmapNative(pixelMapInner);
