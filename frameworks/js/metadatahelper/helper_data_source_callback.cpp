@@ -47,7 +47,6 @@ void HelperDataSourceJsCallback::WaitResult()
                 MEDIA_LOGW("Reset, ReadAt has been cancel!");
             } else {
                 MEDIA_LOGW("timeout 100ms!");
-                isExit_ = true;
             }
         }
     }
