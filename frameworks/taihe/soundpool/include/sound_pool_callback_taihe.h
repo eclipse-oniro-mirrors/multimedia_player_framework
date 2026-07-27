@@ -21,6 +21,9 @@
 #include "media_ani_common.h"
 #include "event_handler.h"
 #include "soundPool.proj.hpp"
+
+#include <optional>
+
 namespace ANI {
 namespace Media {
 using namespace OHOS::Media;
@@ -47,7 +50,6 @@ public:
         ERROR_TYPE errorType, int32_t soundId, int32_t streamId) const;
     ani_status ToAniEnum(ani_env *env, ERROR_TYPE errorType, ani_enum_item &aniEnumItem) const;
     ani_object IntToAniObject(ani_env *env, int32_t value) const;
-    uintptr_t GetUndefined(ani_env* env) const;
     std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 protected:
     void OnLoadCompleted(int32_t soundId) override;
@@ -75,6 +77,7 @@ private:
     void OnTaiheErrorOccurredCallBack(SoundPoolTaiheCallBack *jsCb) const;
     void OnTaiheloadCompletedCallBack(SoundPoolTaiheCallBack *jsCb) const;
     void OnTaiheplayCompletedCallBack(SoundPoolTaiheCallBack *jsCb) const;
+    std::optional<uintptr_t> GetUndefined(ani_env* env) const;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
 };
