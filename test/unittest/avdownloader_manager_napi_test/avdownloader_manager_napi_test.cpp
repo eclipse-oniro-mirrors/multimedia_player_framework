@@ -126,24 +126,6 @@ HWTEST_F(AVDownloaderManagerNapiTest, GetTaskCacheDir_ManagerFallback_001, TestS
     delete napi;
 }
 
-HWTEST_F(AVDownloaderManagerNapiTest, GenerateTaskId_NotEmpty_001, TestSize.Level0)
-{
-    auto napi = new AVDownloaderManagerNapi();
-    napi->env_ = nullptr;
-    auto mock = std::make_shared<MockAVDownloaderManager>();
-    EXPECT_CALL(*mock, SetManagerCallback(_)).WillOnce(Return(0));
-    napi->downloaderManager_ = mock;
-
-    std::string taskId1 = napi->GenerateTaskId();
-    EXPECT_FALSE(taskId1.empty());
-
-    std::string taskId2 = napi->GenerateTaskId();
-    EXPECT_FALSE(taskId2.empty());
-
-    napi->downloaderManager_ = nullptr;
-    delete napi;
-}
-
 HWTEST_F(AVDownloaderManagerNapiTest, SetAllowCellularAccess_DelegatesToManager_001, TestSize.Level0)
 {
     auto napi = new AVDownloaderManagerNapi();

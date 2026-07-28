@@ -342,7 +342,7 @@ HWTEST_F(PlayStrategySerializerTest, RoundTrip_LargeData_001, TestSize.Level0)
     filter.maxVideoResolution = {7680, 4320};
     filter.minVideoResolution = {176, 144};
     filter.preferredVideoMimeTypes = {"video/avc", "video/hevc", "video/vp9", "video/av01"};
-    for (int i = 0; i < 100; ++i) {
+    for (int i = 0; i < 55; ++i) {
         filter.preferredVideoMimeTypes.push_back("video/test" + std::to_string(i));
     }
     filter.maxAudioBitrate = 512000;

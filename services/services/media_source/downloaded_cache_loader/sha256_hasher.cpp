@@ -17,7 +17,6 @@
 #include <openssl/sha.h>
 #include <iomanip>
 #include <sstream>
-#include <algorithm>
 
 namespace OHOS {
 namespace Media {
@@ -36,7 +35,13 @@ std::array<uint8_t, 32> SHA256Hasher::GenerateHash(const std::string& url)
 bool SHA256Hasher::CompareHash(const std::array<uint8_t, 32>& hash1,
     const std::array<uint8_t, 32>& hash2)
 {
-    return std::equal(hash1.begin(), hash1.end(), hash2.begin());
+    // Constant-time comparison: XOR-OR reduction prevents short-circuit exit,
+    // eliminating timing side-channel leakage.
+    uint8_t diff = 0;
+    for (size_t i = 0; i < 32; ++i) {
+        diff |= hash1[i] ^ hash2[i];
+    }
+    return diff == 0;
 }
 
 std::string SHA256Hasher::HashToString(const std::array<uint8_t, 32>& hash)

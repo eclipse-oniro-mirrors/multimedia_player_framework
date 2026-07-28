@@ -18,11 +18,13 @@
 #include "media_log.h"
 #include <fstream>
 #include <cstring>
+#include <cinttypes>
 #include <zlib.h>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DownloadedCacheMappingSerializer"};
 constexpr uint32_t MAX_PLAYBACK_PARAM_DATA_LENGTH = 10 * 1024 * 1024;
+constexpr uint32_t MAX_ENTRY_COUNT = 10000;
 }
 
 namespace OHOS {
@@ -80,6 +82,12 @@ bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingE
         return false;
     }
 
+    if (entry.header.pathLength != static_cast<uint32_t>(entry.filePath.size())) {
+        MEDIA_LOGE("WriteEntry: pathLength=%{public}u mismatch with filePath.size()=%{public}zu",
+            entry.header.pathLength, entry.filePath.size());
+        return false;
+    }
+
     file.write(reinterpret_cast<const char*>(entry.header.urlHash), sizeof(entry.header.urlHash));
     file.write(reinterpret_cast<const char*>(&entry.header.pathLength), sizeof(entry.header.pathLength));
     file.write(reinterpret_cast<const char*>(&entry.header.fileSize), sizeof(entry.header.fileSize));
@@ -97,6 +105,14 @@ bool CacheMappingSerializer::WriteEntry(std::ofstream& file, const CacheMappingE
 bool CacheMappingSerializer::UpdateFileSize(const std::string &filePath, std::streamoff fileSizeOffset,
     uint64_t fileSize)
 {
+    if (filePath.empty()) {
+        MEDIA_LOGE("UpdateFileSize: filePath is empty");
+        return false;
+    }
+    if (fileSizeOffset < 0) {
+        MEDIA_LOGE("UpdateFileSize: invalid offset %{public}" PRId64, static_cast<int64_t>(fileSizeOffset));
+        return false;
+    }
     std::fstream f(filePath, std::ios::in | std::ios::out | std::ios::binary);
     if (!f.is_open()) {
         MEDIA_LOGE("UpdateFileSize: failed to open mapping file");
@@ -107,12 +123,27 @@ bool CacheMappingSerializer::UpdateFileSize(const std::string &filePath, std::st
         MEDIA_LOGE("UpdateFileSize: failed to seek to offset");
         return false;
     }
+    // Verify offset is within current file size to prevent silent hole creation
+    auto currentPos = f.tellp();
+    f.seekg(0, std::ios::end);
+    auto fileSizeOnDisk = f.tellg();
+    f.seekp(currentPos, std::ios::beg);
+    if (fileSizeOffset + static_cast<std::streamoff>(sizeof(fileSize)) > fileSizeOnDisk) {
+        MEDIA_LOGE("UpdateFileSize: offset+size exceeds file size, offset=%{public}" PRId64
+            ", fileSizeOnDisk=%{public}" PRId64, static_cast<int64_t>(fileSizeOffset),
+            static_cast<int64_t>(fileSizeOnDisk));
+        return false;
+    }
     f.write(reinterpret_cast<const char*>(&fileSize), sizeof(fileSize));
     if (!f) {
         MEDIA_LOGE("UpdateFileSize: failed to write fileSize");
         return false;
     }
     f.close();
+    if (!f) {
+        MEDIA_LOGE("UpdateFileSize: close/flush failed");
+        return false;
+    }
     return true;
 }
 
@@ -196,6 +227,12 @@ bool CacheMappingDeserializer::ValidateHeader(const CacheMappingHeader& header)
         return false;
     }
 
+    if (header.entryCount > MAX_ENTRY_COUNT) {
+        MEDIA_LOGE("entryCount too large: %{public}u, max: %{public}u",
+            header.entryCount, MAX_ENTRY_COUNT);
+        return false;
+    }
+
     return true;
 }
 
@@ -204,6 +241,11 @@ bool CacheMappingSerializer::WritePlaybackParamData(std::ofstream& file, const u
 {
     if (!file.is_open()) {
         MEDIA_LOGE("File stream is not open");
+        return false;
+    }
+
+    if (playbackParamDataLength > 0 && playbackParamData == nullptr) {
+        MEDIA_LOGE("WritePlaybackParamData: length=%{public}u but data is nullptr", playbackParamDataLength);
         return false;
     }
 

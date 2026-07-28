@@ -47,6 +47,11 @@ public:
 private:
     void RespondHeader(int64_t uuid);
     void HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength);
+    bool ReadCacheFile(int64_t requestedOffset, int64_t requestedLength,
+        std::shared_ptr<AVSharedMemoryBase> &buffer, int64_t &actualReadLength);
+    void RespondCacheData(int64_t uuid, int64_t requestedOffset, int64_t requestedLength,
+        int64_t actualReadLength, const std::shared_ptr<AVSharedMemoryBase> &buffer,
+        std::shared_ptr<LoadingRequest> &reqToFinish, int32_t &finishErrorCode, bool &shouldFinish);
 
     std::string url_;
     std::string urlDir_;
@@ -60,6 +65,7 @@ private:
     std::atomic<bool> isClosed_ {false};
     std::mutex mutex_;
     std::atomic<bool> isHeaderResponded_ {false};
+    std::atomic<bool> headerFailed_ {false};
 };
 } // namespace DownloadedCache
 } // namespace Media

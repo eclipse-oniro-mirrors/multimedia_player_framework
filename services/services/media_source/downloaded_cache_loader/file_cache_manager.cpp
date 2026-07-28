@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cinttypes>
 #include "file_cache_manager.h"
 #include "cache_mapping_format.h"
 #include "common/log.h"
@@ -36,9 +37,9 @@ DownloadedFileCacheManager::DownloadedFileCacheManager(const std::string& cacheD
 {
 }
 
-int32_t DownloadedFileCacheManager::Read(const std::string& path, void* buffer, int64_t offset, int64_t size)
+int32_t DownloadedFileCacheManager::ReadFileData(const std::string& path, void* buffer, int64_t offset,
+    int64_t size)
 {
-    FALSE_RETURN_V_MSG_E(IsValidPath(path), -1, "invalid path");
     int fd = open(path.c_str(), O_RDONLY);
     if (fd == -1) {
         MEDIA_LOG_W("ReadCacheData open file error");
@@ -51,23 +52,53 @@ int32_t DownloadedFileCacheManager::Read(const std::string& path, void* buffer, 
         MEDIA_LOG_E("ReadCacheData GetFileSize error");
         return -1;
     }
-
-    if (buf.st_size < offset + size) {
-        MEDIA_LOG_W("buffer size is not enough");
+    if (buf.st_size < 0 || offset > buf.st_size - size) {
+        MEDIA_LOG_W("Read: offset+size exceeds file size, offset=%{public}" PRId64
+            ", size=%{public}" PRId64 ", fileSize=%{public}" PRId64, offset, size,
+            static_cast<int64_t>(buf.st_size));
+        close(fd);
+        return -1;
     }
-
     if (lseek(fd, offset, SEEK_SET) == -1) {
         close(fd);
         MEDIA_LOG_E("ReadCacheData lseek error");
         return -1;
     }
 
-    int readSize = read(fd, buffer, size);
+    int64_t totalRead = 0;
+    while (totalRead < size) {
+        ssize_t bytesRead = read(fd, static_cast<uint8_t*>(buffer) + totalRead, size - totalRead);
+        if (bytesRead < 0) {
+            MEDIA_LOG_E("ReadCacheData read error, bytesRead=%{public}" PRId64, static_cast<int64_t>(bytesRead));
+            close(fd);
+            return -1;
+        }
+        if (bytesRead == 0) {
+            break;
+        }
+        totalRead += bytesRead;
+    }
     close(fd);
-    if (readSize < size) {
-        MEDIA_LOG_W("ReadCacheData read error");
+    if (totalRead < size) {
+        MEDIA_LOG_W("ReadCacheData partial read: requested=%{public}" PRId64 ", actual=%{public}" PRId64,
+            size, totalRead);
+        return -1;
     }
     return 0;
+}
+
+int32_t DownloadedFileCacheManager::Read(const std::string& path, void* buffer, int64_t offset, int64_t size)
+{
+    FALSE_RETURN_V_MSG_E(IsValidPath(path), -1, "invalid path");
+    if (buffer == nullptr) {
+        MEDIA_LOG_E("Read: buffer is nullptr");
+        return -1;
+    }
+    if (offset < 0 || size <= 0) {
+        MEDIA_LOG_E("Read: invalid offset=%{public}" PRId64 " or size=%{public}" PRId64, offset, size);
+        return -1;
+    }
+    return ReadFileData(path, buffer, offset, size);
 }
 
 int64_t DownloadedFileCacheManager::GetSize(const std::string& path)
@@ -98,10 +129,14 @@ bool DownloadedFileCacheManager::IsValidPath(const std::string& inputPath)
 
     std::string relativePath;
     if (inputPath.length() > cacheDir_.length() && inputPath.compare(0, cacheDir_.length(), cacheDir_) == 0) {
-        relativePath = inputPath.substr(cacheDir_.length());
-        if (!relativePath.empty() && relativePath[0] == FILE_SEPARATOR) {
-            relativePath = relativePath.substr(1);
+        // Verify path separator boundary: cacheDir_ must be followed by '/' or '\'
+        if (inputPath[cacheDir_.length()] != FILE_SEPARATOR) {
+            MEDIA_LOG_E("path boundary check failed: not a subdirectory of cacheDir");
+            return false;
         }
+        relativePath = inputPath.substr(cacheDir_.length() + 1);
+    } else if (inputPath == cacheDir_) {
+        return true;
     } else {
         MEDIA_LOG_E("path is not under the expected dir");
         return false;

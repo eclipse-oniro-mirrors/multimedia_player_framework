@@ -20,17 +20,20 @@
 #include "media_source_napi.h"
 #include "scope_guard.h"
 #include <cstdint>
-#include <chrono>
-
-namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVDownloaderManager"};
-constexpr int32_t ERR_AVD_PARAM_OUT_OF_RANGE = 5400108;
-constexpr int32_t ERR_AVD_OPERATION_NOT_PERMIT = 5400102;
-}
 
 namespace OHOS {
 namespace Media {
 namespace {
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVDownloaderManager"};
+constexpr int32_t ERR_AVD_PARAM_OUT_OF_RANGE = 5400108;
+constexpr int32_t ERR_AVD_OPERATION_NOT_PERMIT = 5400102;
+constexpr size_t MAX_TASK_ID_LENGTH = 4096;
+
+std::string GetTaskIdArgument(napi_env env, napi_value value)
+{
+    return CommonNapi::GetStringArgument(env, value, MAX_TASK_ID_LENGTH);
+}
+
 std::string StateToString(AVDownloadTaskState state)
 {
     switch (state) {
@@ -72,17 +75,15 @@ AVDownloaderManagerNapi::AVDownloaderManagerNapi()
 AVDownloaderManagerNapi::~AVDownloaderManagerNapi()
 {
     MEDIA_LOGD("AVDownloaderManagerNapi Instances destroy");
-    statusChangeCallback_.reset();
-    progressChangeCallback_.reset();
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        statusChangeCallback_.reset();
+        progressChangeCallback_.reset();
+    }
     if (downloaderManager_) {
         downloaderManager_->Release();
         downloaderManager_.reset();
     }
-}
-
-std::string AVDownloaderManagerNapi::GenerateTaskId()
-{
-    return std::to_string(std::chrono::system_clock::now().time_since_epoch().count());
 }
 
 std::string AVDownloaderManagerNapi::GetTaskCacheDir(const std::string &taskId)
@@ -279,6 +280,9 @@ void AVDownloaderManagerNapi::Destructor(napi_env env, void *nativeObject, void 
 {
     (void)env;
     (void)finalize;
+    if (nativeObject == nullptr) {
+        return;
+    }
     AVDownloaderManagerNapi *manager = static_cast<AVDownloaderManagerNapi *>(nativeObject);
     manager->selfRef_.reset();
     delete manager;
@@ -351,7 +355,15 @@ napi_value AVDownloaderManagerNapi::SetRequestTimeout(napi_env env, napi_callbac
     }
 
     int32_t timeout = 0;
-    napi_get_value_int32(env, args[0], &timeout);
+    napi_status nstatus = napi_get_value_int32(env, args[0], &timeout);
+    if (nstatus != napi_ok) {
+        ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid timeout value");
+        return nullptr;
+    }
+    if (timeout < 0) {
+        ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Timeout must be non-negative");
+        return nullptr;
+    }
     manager->requestTimeoutMs_ = timeout;
     if (manager->downloaderManager_) {
         manager->downloaderManager_->SetRequestTimeout(timeout);
@@ -437,10 +449,8 @@ napi_value AVDownloaderManagerNapi::RemoveDownloadTask(napi_env env, napi_callba
     if (argCount >= 1) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
-            char taskId[256] = {0};
-            size_t length = 0;
-            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
-            if (nstatus != napi_ok || length == 0) {
+            std::string taskId = GetTaskIdArgument(env, args[0]);
+            if (taskId.empty()) {
                 ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
                 return nullptr;
             }
@@ -457,6 +467,9 @@ napi_value AVDownloaderManagerNapi::RemoveDownloadTask(napi_env env, napi_callba
             }
             manager->taskIdToUrl_.erase(taskId);
             manager->taskIdToCacheDir_.erase(taskId);
+        } else {
+            ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Invalid parameter: taskId must be string");
+            return nullptr;
         }
     } else {
         if (manager->downloaderManager_) {
@@ -501,10 +514,8 @@ napi_value AVDownloaderManagerNapi::PauseDownloadTask(napi_env env, napi_callbac
     if (argCount >= 1) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
-            char taskId[256] = {0};
-            size_t length = 0;
-            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
-            if (nstatus != napi_ok || length == 0) {
+            std::string taskId = GetTaskIdArgument(env, args[0]);
+            if (taskId.empty()) {
                 ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
                 return nullptr;
             }
@@ -519,6 +530,9 @@ napi_value AVDownloaderManagerNapi::PauseDownloadTask(napi_env env, napi_callbac
                     return nullptr;
                 }
             }
+        } else {
+            ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Invalid parameter: taskId must be string");
+            return nullptr;
         }
     }
 
@@ -550,10 +564,8 @@ napi_value AVDownloaderManagerNapi::ResumeDownloadTask(napi_env env, napi_callba
     if (argCount >= 1) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
-            char taskId[256] = {0};
-            size_t length = 0;
-            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
-            if (nstatus != napi_ok || length == 0) {
+            std::string taskId = GetTaskIdArgument(env, args[0]);
+            if (taskId.empty()) {
                 ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
                 return nullptr;
             }
@@ -568,6 +580,9 @@ napi_value AVDownloaderManagerNapi::ResumeDownloadTask(napi_env env, napi_callba
                     return nullptr;
                 }
             }
+        } else {
+            ThrowError(env, ERR_AVD_OPERATION_NOT_PERMIT, "Invalid parameter: taskId must be string");
+            return nullptr;
         }
     }
 
@@ -589,7 +604,11 @@ napi_value AVDownloaderManagerNapi::GetDownloadTasks(napi_env env, napi_callback
     CHECK_AND_RETURN_RET_LOG(status == napi_ok && manager != nullptr, nullptr, "failed to unwrap");
 
     napi_value result = nullptr;
-    napi_create_array(env, &result);
+    napi_status nstatus = napi_create_array(env, &result);
+    if (nstatus != napi_ok || result == nullptr) {
+        MEDIA_LOGE("napi_create_array failed");
+        return nullptr;
+    }
 
     std::vector<std::string> taskIds;
     if (manager->downloaderManager_) {
@@ -599,7 +618,10 @@ napi_value AVDownloaderManagerNapi::GetDownloadTasks(napi_env env, napi_callback
     uint32_t index = 0;
     for (const auto &taskId : taskIds) {
         napi_value taskIdVal = nullptr;
-        napi_create_string_utf8(env, taskId.c_str(), NAPI_AUTO_LENGTH, &taskIdVal);
+        nstatus = napi_create_string_utf8(env, taskId.c_str(), NAPI_AUTO_LENGTH, &taskIdVal);
+        if (nstatus != napi_ok || taskIdVal == nullptr) {
+            continue;
+        }
         napi_set_element(env, result, index++, taskIdVal);
     }
 
@@ -632,10 +654,8 @@ napi_value AVDownloaderManagerNapi::GetTaskCacheDirectory(napi_env env, napi_cal
         return nullptr;
     }
 
-    char taskId[256] = {0};
-    size_t length = 0;
-    napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
-    if (nstatus != napi_ok || length == 0) {
+    std::string taskId = GetTaskIdArgument(env, args[0]);
+    if (taskId.empty()) {
         ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
         return nullptr;
     }
@@ -676,10 +696,8 @@ napi_value AVDownloaderManagerNapi::GetTaskStatus(napi_env env, napi_callback_in
     if (argCount >= 1) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
-            char taskId[256] = {0};
-            size_t length = 0;
-            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
-            if (nstatus != napi_ok || length == 0) {
+            std::string taskId = GetTaskIdArgument(env, args[0]);
+            if (taskId.empty()) {
                 ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
                 return nullptr;
             }
@@ -725,10 +743,8 @@ napi_value AVDownloaderManagerNapi::GetTaskProgress(napi_env env, napi_callback_
     if (argCount >= 1 && manager->downloaderManager_) {
         napi_valuetype valueType = napi_undefined;
         if (napi_typeof(env, args[0], &valueType) == napi_ok && valueType == napi_string) {
-            char taskId[256] = {0};
-            size_t length = 0;
-            napi_status nstatus = napi_get_value_string_utf8(env, args[0], taskId, sizeof(taskId), &length);
-            if (nstatus != napi_ok || length == 0) {
+            std::string taskId = GetTaskIdArgument(env, args[0]);
+            if (taskId.empty()) {
                 ThrowError(env, ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid taskId");
                 return nullptr;
             }

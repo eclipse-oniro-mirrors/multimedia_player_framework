@@ -63,7 +63,6 @@ private:
     AVDownloaderManagerNapi();
     ~AVDownloaderManagerNapi();
 
-    std::string GenerateTaskId();
     std::string GetTaskCacheDir(const std::string &taskId);
     void TriggerStatusCallback(const std::string &taskId, AVDownloadTaskState state);
     void TriggerProgressCallback(const std::string &taskId, double progress);
