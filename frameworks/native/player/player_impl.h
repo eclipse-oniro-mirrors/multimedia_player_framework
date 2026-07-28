@@ -154,6 +154,12 @@ private:
     void NotifyPlaybackContentChange();
     MediaSourceIterator FindSourceInList(const std::string &id);
     int32_t DealWithSwitchingOpt();
+    bool IsFileUrl(const std::string &url) const;
+    int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
+    int32_t ParseFileName(const std::string& uri, std::string &fileName);
+    int32_t OpenFile(const std::string& fileName);
+    int32_t CheckFileStat(const std::string& fileName);
+    size_t GetFileSize(const std::string& fileName);rn
     std::recursive_mutex recMutex_;
     int64_t mCurrentPosition = INT64_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;

@@ -174,7 +174,7 @@ int32_t PlayerImpl::SetSource(const std::string &url)
         int32_t ret = ParseFileName(uri, fileName);
         CHECK_AND_RETURN_RET_NOLOG(result == MSERR_OK, MSERR_INVALID_VAL);
         return OpenFile(fileName);
-        
+
     }
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSource(url), "SetSource url", false, TIME_OUT_SECOND);
@@ -1682,7 +1682,7 @@ int32_t PlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPath
     return MSERR_OK;
 }
 
-int32_t FileSourcePlugin::ParseFileName(const std::string& uri, std::string &fileName)
+int32_t PlayerImpl::ParseFileName(const std::string& uri, std::string &fileName)
 {
     if (uri.empty()) {
         MEDIA_LOGE("uri is empty");
@@ -1717,7 +1717,7 @@ int32_t FileSourcePlugin::ParseFileName(const std::string& uri, std::string &fil
     return MSERR_OK;
 }
 
-int32_t FileSourcePlugin::OpenFile(const std::string& fileName)
+int32_t PlayerImpl::OpenFile(const std::string& fileName)
 {
     MEDIA_LOGD("IN");
     int32_t ret = CheckFileStat(fileName);
@@ -1734,7 +1734,7 @@ int32_t FileSourcePlugin::OpenFile(const std::string& fileName)
     return ret;
 }
 
-int32_t FileSourcePlugin::CheckFileStat(const std::string& fileName)
+int32_t PlayerImpl::CheckFileStat(const std::string& fileName)
 {
     struct stat fileStat;
     if (stat(fileName.c_str(), &fileStat) < 0) {
@@ -1749,7 +1749,7 @@ int32_t FileSourcePlugin::CheckFileStat(const std::string& fileName)
     return MSERR_OK;
 }
 
-size_t GetFileSize(const std::string& fileName)
+size_t PlayerImpl::GetFileSize(const std::string& fileName)
 {
     size_t fileSize = 0;
     if (!fileName.empty()) {

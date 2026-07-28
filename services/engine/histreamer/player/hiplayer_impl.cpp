@@ -517,15 +517,7 @@ int32_t HiPlayerImpl::SetSource(const std::string& uri)
     url_ = uri;
     PlayerDfxSourceType sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN;
     if (IsFileUrl(uri)) {
-        std::string realUriPath;
-        int32_t result = GetRealPath(uri, realUriPath);
-        if (result != MSERR_OK) {
-            CollectionErrorInfo(result, "SetSource error: GetRealPath error");
-            return result;
-        }
-        url_ = "file://" + realUriPath;
-        sourceType = PlayerDfxSourceType::DFX_SOURCE_TYPE_URL_FILE;
-        SetPerfRecEnabled(true);
+        return MSERR_FILE_ACCESS_FAILED;
     }
     if (IsNetworkUrl(uri)) {
         isNetWorkPlay_ = true;
