@@ -367,8 +367,8 @@ int32_t AudioCapturerWrapper::AddBufferFrom(int64_t timeWindow, int64_t bufferSi
     using namespace std::chrono_literals;
     std::unique_lock<std::mutex> lock(bufferMutex_);
     CHECK_AND_RETURN_RET(IsRecording(), MSERR_OK);
-    CHECK_AND_RETURN_RET_LOG(bufferSize > 0 && bufferSize < MAX_AUDIO_BUFFER_LEN, MSERR_UNKNOWN,
-        "bufferSize invalid %{public}" PRId64, bufferSize);
+    CHECK_AND_RETURN_RET_LOG(bufferSize > 0 && bufferSize < MAX_AUDIO_BUFFER_LEN && timeWindow > 0, MSERR_UNKNOWN,
+        "invalid value. bufferSize %{public}" PRId64 "timeWindow %{public}" PRId64, bufferSize, timeWindow);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " AddBufferFrom S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     int32_t diffCount = timeWindow / AUDIO_CAPTURE_READ_FRAME_TIME;
     MEDIA_LOGI("Audio late, add buffer diffCount: %{public}d", diffCount);
@@ -474,7 +474,8 @@ int32_t AudioCapturerWrapper::ReleaseAudioBuffer()
     std::unique_lock<std::mutex> lock(bufferMutex_);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Release Buffer S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
     CHECK_AND_RETURN_RET_LOG(IsRecording(), MSERR_UNKNOWN, "ReleaseAudioBuffer failed, not running");
-    CHECK_AND_RETURN_RET_LOG(!availBuffers_.empty(), MSERR_UNKNOWN, "ReleaseAudioBuffer failed, no frame to release");
+    CHECK_AND_RETURN_RET_LOG(!availBuffers_.empty() && availBuffers_.front() != nullptr, MSERR_UNKNOWN,
+        "ReleaseAudioBuffer failed, no frame to release");
     MEDIA_LOGD("0x%{public}06" PRIXPTR " ABuffer release name:%{public}s time: %{public}" PRId64,
         FAKE_POINTER(this), threadName_.c_str(), availBuffers_.front()->timestamp);
     availBuffers_.pop_front();

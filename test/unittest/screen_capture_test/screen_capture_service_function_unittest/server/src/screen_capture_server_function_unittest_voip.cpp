@@ -198,6 +198,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_003, TestSize.Leve
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(true), MSERR_OK);
+    auto waitTask = std::make_shared<TaskHandler<void>>([]() {});
+    screenCaptureServer_->taskQue_.EnqueueTask(waitTask);
+    waitTask->GetResult();
     EXPECT_EQ(screenCaptureServer_->isInTelCall_.load(), false);
     EXPECT_NE(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
 }
@@ -270,8 +273,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_SyncAudioCaptures,
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->captureConfig_.strategy.keepCaptureDuringCall = true;
     ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(true), MSERR_OK);
+    auto waitTask1 = std::make_shared<TaskHandler<void>>([]() {});
+    screenCaptureServer_->taskQue_.EnqueueTask(waitTask1);
+    waitTask1->GetResult();
     ASSERT_EQ(screenCaptureServer_->isInTelCall_.load(), true);
     ASSERT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
+    auto waitTask2 = std::make_shared<TaskHandler<void>>([]() {});
+    screenCaptureServer_->taskQue_.EnqueueTask(waitTask2);
+    waitTask2->GetResult();
     ASSERT_EQ(screenCaptureServer_->isInTelCall_.load(), false);
 }
 

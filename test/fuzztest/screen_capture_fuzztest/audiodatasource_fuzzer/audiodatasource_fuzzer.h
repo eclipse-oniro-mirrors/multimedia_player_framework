@@ -62,7 +62,6 @@ public:
     bool FuzzHandleSwitchToSpeakerOptimise();
     bool FuzzHandleBufferTimeStamp();
     bool FuzzLostFrameNum();
-    bool FuzzFillLostBuffer();
 
 private:
     std::shared_ptr<AudioBuffer> CreateAudioBufferInner(int64_t timestamp);

@@ -334,9 +334,8 @@ bool AudioDataSourceFuzzer::FuzzGetSize()
     int64_t sizeResult = 0;
     uint8_t eventType = GetData<uint8_t>() % 2;
     if (eventType == 0) {
-        auto innerCapture = screenCaptureServer_->GetAudioCapture(CaptureRole::INNER);
-        if (innerCapture) {
-            innerCapture->ReleaseAudioBuffer();
+        if (screenCaptureServer_->innerAudioCapture_) {
+            screenCaptureServer_->innerAudioCapture_->ReleaseAudioBuffer();
         }
     }
     audioDataSource->GetSize(sizeResult);
@@ -536,20 +535,6 @@ bool AudioDataSourceFuzzer::FuzzLostFrameNum()
     return true;
 }
 
-bool AudioDataSourceFuzzer::FuzzFillLostBuffer()
-{
-    Init();
-    std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
-
-    int64_t lostNum = GetData<int64_t>() % 100;
-    int64_t timestamp = GetData<int64_t>() % 1000000;
-    uint32_t bufferSize = GetData<uint32_t>() % 1024;
-    audioDataSource->FillLostBuffer(lostNum, timestamp, bufferSize);
-    Release();
-    return true;
-}
-
 bool FuzzAudioDataSourceCase(uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(int64_t)) {
@@ -587,7 +572,6 @@ bool FuzzAudioDataSourceCase(uint8_t *data, size_t size)
     testAudioDataSource.FuzzHandleSwitchToSpeakerOptimise();
     testAudioDataSource.FuzzHandleBufferTimeStamp();
     testAudioDataSource.FuzzLostFrameNum();
-    testAudioDataSource.FuzzFillLostBuffer();
     return true;
 }
 
