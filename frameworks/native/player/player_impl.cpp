@@ -1758,5 +1758,566 @@ size_t PlayerImpl::GetFileSize(const std::string& fileName)
     }
     return fileSize;
 }
+
+int32_t PlayerImpl::SetSource(int32_t fd, int64_t offset, int64_t size)
+{
+    ScopedTimer timer("SetSource fd", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetSource in(fd)", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = SetSourceTask(fd, offset, size), "SetSource fd", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::SetSourceTask(int32_t fd, int64_t offset, int64_t size)
+{
+    int32_t ret = MSERR_OK;
+    FdsanFd reopenFd = FdUtils::ReOpenFd(fd);
+    if (reopenFd.Get() >= 0) {
+        MEDIA_LOGI("SetSourceTask: reopen success");
+        ret = playerService_->SetSource(reopenFd.Get(), offset, size);
+    } else {
+        ret = playerService_->SetSource(fd, offset, size);
+    }
+    CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, ret);
+    int32_t dupFd = dup(fd);
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " SetSourceTask dupFd", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(dupFd >= 0, ret, "Dup failed with err.");
+    if (!fdsanFd_) {
+        fdsanFd_ = std::make_unique<FdsanFd>(dupFd);
+    } else {
+        fdsanFd_->Reset(dupFd);
+    }
+    return ret;
+}
+
+int32_t PlayerImpl::AddSubSource(const std::string &url)
+{
+    ScopedTimer timer("AddSubSource url", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{private}06" PRIXPTR " AddSubSource in(url): %{private}s",
+        FAKE_POINTER(this), url.c_str());
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->AddSubSource(url), "AddSubSource url", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::AddSubSource(int32_t fd, int64_t offset, int64_t size)
+{
+    ScopedTimer timer("AddSubSource fd", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " AddSubSource in(fd)", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->AddSubSource(fd, offset, size), "AddSubSource fd", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::Play()
+{
+    ScopedTimer timer("Play", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Play in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->Play(), "Play", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::SetPlayRange(int64_t start, int64_t end)
+{
+    ScopedTimer timer("SetPlayRange", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRange in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->SetPlayRange(start, end), "SetPlayRange", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::SetPlayRangeWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    ScopedTimer timer("SetPlayRangeWithMode", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetPlayRangeWithMode in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(
+        ret = playerService_->SetPlayRangeWithMode(start, end, mode), "SetPlayRangeWithMode", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::SetPlayRangeUsWithMode(int64_t start, int64_t end, PlayerSeekMode mode)
+{
+    const int64_t msToUs = 1000;
+    const int64_t complementNum = 999;
+    return SetPlayRangeWithMode(start / msToUs, (end + complementNum) / msToUs, mode);
+}
+
+int32_t PlayerImpl::Prepare()
+{
+    ScopedTimer timer("Prepare", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->Prepare(), "Prepare", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::SetRenderFirstFrame(bool display)
+{
+    ScopedTimer timer("SetRenderFirstFrame", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetRenderFirstFrame in, display %{public}d",
+         FAKE_POINTER(this), display);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->SetRenderFirstFrame(display), "SetRenderFirstFrame", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::PrepareAsync()
+{
+    ScopedTimer timer("PrepareAsync", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " PrepareAsync in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->PrepareAsync(), "PrepareAsync", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::Pause()
+{
+    ScopedTimer timer("Pause", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Pause in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        // If pause is called during switch mediaSource.
+        if (IsInListMode() && isSwitchingItem_) {
+            MEDIA_LOGD("Pause called during switch mediaSource, deal with after switch mediaSource.");
+            CHECK_AND_RETURN_RET_LOG(!isListStopped_, MSERR_INVALID_OPERATION, "pause called after stop not allow.");
+            isListPaused_ = true;
+            return ret;
+        }
+    }
+    LISTENER(ret = playerService_->Pause(), "Pause", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::Stop()
+{
+    ScopedTimer timer("Stop", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Stop in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        // If stop is called during switch mediaSource.
+        if (IsInListMode() && isSwitchingItem_) {
+            MEDIA_LOGD("Stop called during switch mediaSource, deal with after switch mediaSource.");
+            isListStopped_ = true;
+            return MSERR_OK;
+        }
+    }
+    ResetSeekVariables();
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->Stop(), "Stop", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::Reset()
+{
+    ScopedTimer timer("Reset", RESET_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    ResetSeekVariables();
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->Reset(), "Reset", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::Release()
+{
+    ScopedTimer timer("Release", RELEASE_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    LISTENER((void)playerService_->Release(), "Release", false, TIME_OUT_SECOND);
+    (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+    playerService_ = nullptr;
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::ReleaseSync()
+{
+    ScopedTimer timer("ReleaseSync", RELEASE_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " ReleaseSync in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    LISTENER((void)playerService_->ReleaseSync(), "ReleaseSync", false, TIME_OUT_SECOND);
+    (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+    playerService_ = nullptr;
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::SetVolumeMode(int32_t mode)
+{
+    ScopedTimer timer("SetVolumeMode", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl::SetVolumeMode mode = %{public}d", mode);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->SetVolumeMode(mode), "SetVolumeMode", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::SetVolume(float leftVolume, float rightVolume)
+{
+    ScopedTimer timer("SetVolume", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetVolume(%{public}f, %{public}f) in",
+        FAKE_POINTER(this), leftVolume, rightVolume);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->SetVolume(leftVolume, rightVolume), "SetVolume", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::Seek(int64_t mSeconds, PlayerSeekMode mode)
+{
+    ScopedTimer timer("Seek", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Seek in, seek to %{public}" PRId64 " ms, mode is %{public}d",
+        FAKE_POINTER(this), mSeconds, mode);
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+
+    std::unique_lock<std::recursive_mutex> lock(recMutex_);
+    // SEEK_CONTINOUS is usually called in batches, and will not report seek done event.
+    if (mode == PlayerSeekMode::SEEK_CONTINOUS) {
+        int32_t ret = MSERR_OK;
+        ret = playerService_->Seek(mSeconds, mode);
+        return ret;
+    }
+    mCurrentPosition = mSeconds;
+    mCurrentSeekMode = mode;
+    if ((mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) && !isSeeking_) {
+        MEDIA_LOGI("Start seek once.");
+        isSeeking_ = true;
+        mSeekPosition = mSeconds;
+        mSeekMode = mode;
+        int32_t retCode = MSERR_OK;
+        LISTENER(retCode = playerService_->Seek(mSeconds, mode), "SetVolume", false, TIME_OUT_SECOND);
+        if (retCode != MSERR_OK) {
+            ResetSeekVariables();
+        }
+        MEDIA_LOGI("Start seek once end");
+        return retCode;
+    } else {
+        MEDIA_LOGE("Seeking not completed, need wait the lastest seek end, then seek again.");
+    }
+    MEDIA_LOGI("Seeking task end. %{public}" PRId64 " ms, mode is %{public}d", mSeconds, mode);
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::SeekToDefaultPosition()
+{
+    ScopedTimer timer("SeekToDefaultPosition", OVERTIME_WARNING_MS);
+    MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SeekToDefaultPosition in", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    LISTENER(return playerService_->SeekToDefaultPosition(), "SeekToDefaultPosition", false, TIME_OUT_SECOND);
+}
+
+void PlayerImpl::HandleSeekDoneInfo(PlayerOnInfoType type, int32_t extra)
+{
+    if (type == INFO_TYPE_SEEKDONE) {
+        MEDIA_LOGI("HandleSeekDoneInfo entered");
+        CHECK_AND_RETURN_LOG(playerService_ != nullptr, "player service does not exist..");
+        if (extra == -1) {
+            MEDIA_LOGI("seek error, need reset seek variables");
+            ResetSeekVariables();
+            return;
+        }
+        std::unique_lock<std::recursive_mutex> lock(recMutex_);
+        if (mSeekPosition != mCurrentPosition || mSeekMode != mCurrentSeekMode) {
+            MEDIA_LOGI("Start seek again (%{public}" PRId64 ", %{public}d)", mCurrentPosition, mCurrentSeekMode);
+            mSeekPosition = mCurrentPosition;
+            mSeekMode = mCurrentSeekMode;
+            playerService_->Seek(mCurrentPosition, mCurrentSeekMode);
+        } else {
+            MEDIA_LOGI("All seeks complete - return to regularly scheduled program");
+            ResetSeekVariables();
+        }
+        MEDIA_LOGI("HandleSeekDoneInfo end seekTo(%{public}" PRId64 ", %{public}d)", mCurrentPosition, mCurrentSeekMode);
+    }
+}
+
+PlayerImpl::MediaSourceIterator PlayerImpl::FindSourceInList(const std::string &id)
+{
+    return std::find_if(itemList_.begin(), itemList_.end(),
+        [&id](const auto &item) {
+            return item.first == id;
+        });
+}
+
+int32_t PlayerImpl::DealWithSwitchingOpt()
+{
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    if (isListPaused_) {
+        MEDIA_LOGD("Pause player when switching item.");
+        isListPaused_ = false;
+        LISTENER(ret = playerService_->Pause(), "Pause", false, TIME_OUT_SECOND);
+    }
+    if (isListStopped_) {
+        MEDIA_LOGD("Stop player when switching item.");
+        ResetSeekVariables();
+        isListStopped_ = false;
+        LISTENER(ret = playerService_->Stop(), "Stop", false, TIME_OUT_SECOND);
+    }
+    return ret;
+}
+
+void PlayerImpl::HandleListStateInfo(PlayerStates state, bool &shouldUpdateState, int32_t &extra)
+{
+    if (state == PLAYER_PLAYBACK_COMPLETE) {
+        bool shouldSwitch = false;
+        CHECK_AND_RETURN_LOG(itemList_.size() <=
+            static_cast<std::size_t>(std::numeric_limits<int32_t>::max()),
+            "itemList_ is invalid");
+        int32_t count = static_cast<int32_t>(itemList_.size());
+        auto currentIt = FindSourceInList(curSrcId_);
+        CHECK_AND_RETURN_LOG(currentIt != itemList_.end(), "current source id not found in list");
+        bool isLast = (count > 0 && currentIt == std::prev(itemList_.end()));
+        if (listLoopMode_ != PLAYLIST_LOOP_MODE_NONE || !isLast) {
+            shouldUpdateState = false;
+            shouldSwitch = true;
+        } else {
+            listState_ = PLAYER_PLAYBACK_COMPLETE;
+        }
+        if (shouldSwitch) {
+            MediaSourceIterator nextIt = SelectNextIndex(true);
+            if (nextIt != itemList_.end()) {
+                auto ret = SwitchToIndex(nextIt);
+                CHECK_AND_RETURN_LOG(ret == MSERR_OK, "switch mediaSource failed when handle list state info");
+            }
+        }
+    } else if (isSwitchingItem_) {
+        if (state == PLAYER_IDLE) {
+            MEDIA_LOGD("Switching item, current state is %{public}d, wait for PLAYER_STARTED", state);
+            shouldUpdateState = false;
+            NotifyPlaybackContentChange();
+        } else if (state == PLAYER_INITIALIZED || state == PLAYER_PREPARED) {
+            MEDIA_LOGD("Switching item, current state is %{public}d, wait for PLAYER_STARTED", state);
+            shouldUpdateState = false;
+        } else if (state == PLAYER_STARTED) {
+            listState_ = PLAYER_STARTED;
+            isSwitchingItem_ = false;
+            shouldUpdateState = isSwitchUpdate_ ? true : false;
+            isSwitchUpdate_ = isSwitchUpdate_ ? false : isSwitchUpdate_;
+            auto ret = DealWithSwitchingOpt();
+            CHECK_AND_RETURN_LOG(ret == MSERR_OK, "switch mediaSource failed when handle user interrupt option");
+        } else if (state == PLAYER_STATE_ERROR) {
+            listState_ = state;
+        }
+    } else {
+        listState_ = state;
+        extra = static_cast<int32_t>(listState_);
+    }
+}
+
+void PlayerImpl::HandleListEOSInfo(bool &notifyEOS)
+{
+    // Only in no loop mode and playback complete state, the EOS callback will be reported to upper.
+    if (listState_ == PLAYER_PLAYBACK_COMPLETE && listLoopMode_ == PLAYLIST_LOOP_MODE_NONE) {
+        MEDIA_LOGD("EOS of last item, wait for state change to switch item");
+    } else {
+        notifyEOS = false;
+    }
+}
+
+void PlayerImpl::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
+{
+    HandleSeekDoneInfo(type, extra);
+    std::shared_ptr<PlayerCallback> callback;
+    {
+        std::unique_lock<std::mutex> lock(cbMutex_);
+        callback = callback_;
+    }
+
+    CHECK_AND_RETURN_LOG(callback != nullptr, "callback is nullptr.");
+
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        if (type == INFO_TYPE_STATE_CHANGE && IsInListMode()) {
+            PlayerStates state = static_cast<PlayerStates>(extra);
+            bool shouldUpdateState = true;
+            HandleListStateInfo(state, shouldUpdateState, extra);
+            if (!shouldUpdateState) {
+                MEDIA_LOGD("State change to %{public}d, but not update to upper layer", state);
+                return;
+            }
+        }
+        if (type == INFO_TYPE_EOS && IsInListMode()) {
+            bool notifyEOS = true;
+            HandleListEOSInfo(notifyEOS);
+            if (!notifyEOS) {
+                MEDIA_LOGD("Receive EOS, but not notify upper layer");
+                return;
+            }
+        }
+    }
+
+    if (type == INFO_TYPE_SEEKDONE) {
+        if (extra == -1) {
+            MEDIA_LOGI("seek done error callback, no need report");
+            return;
+        }
+        if (!isSeeking_) {
+            callback->OnInfo(type, extra, infoBody);
+        } else {
+            MEDIA_LOGD("Is seeking to (%{public}" PRId64 ", %{public}d), not update now", mCurrentPosition, mCurrentSeekMode);
+        }
+    } else {
+        callback->OnInfo(type, extra, infoBody);
+    }
+}
+
+bool PlayerImpl::IsInListMode() const
+{
+    return !itemList_.empty();
+}
+
+bool PlayerImpl::ShouldLoopCurrent() const
+{
+    return listLoopMode_ == PLAYLIST_LOOP_MODE_ONE;
+}
+
+bool PlayerImpl::ShouldShuffle() const
+{
+    return listLoopMode_ == PLAYLIST_LOOP_MODE_SHUFFLE;
+}
+
+void PlayerImpl::RestoreLoopIfNeeded(bool wasInListMode, bool loop)
+{
+    if (wasInListMode) {
+        (void)SetLooping(loop);
+    }
+}
+
+int32_t PlayerImpl::AddPlaybackMediaSource(const std::shared_ptr<AVMediaSource> &mediaSource, const std::string &srcId,
+    std::string &generateSrcId)
+{
+    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
+
+    generateSrcId = mediaSource->GetID();
+    bool isFirstAdd = false;
+    bool isListHead = false;
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        auto it = FindSourceInList(srcId);
+        if (!srcId.empty() && (it == itemList_.end())) {
+            MEDIA_LOGD("invalid srcId");
+            return MSERR_PARAM_OUT_OF_RANGE;
+        }
+
+        isFirstAdd = !IsInListMode();
+        isListHead = (it == itemList_.begin());
+    }
+
+    if (isFirstAdd) {
+        MEDIA_LOGD("PlayerImpl::AddPlaybackMediaSource first add, set mediaSource to service");
+        int32_t ret = SetMediaSource(mediaSource, AVPlayStrategy());
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("PlayerImpl::AddPlaybackMediaSource first add failed, ret=%{public}d", ret);
+            return ret;
+        }
+        std::lock_guard<std::mutex> lock(listMutex_);
+        itemList_.push_back(std::make_pair(generateSrcId, mediaSource));
+        if (itemList_.size() == 1) {
+            curSrcId_ = generateSrcId;
+            listState_ = PLAYER_INITIALIZED;
+        }
+        return MSERR_OK;
+    } else if (isListHead && (listState_ == PLAYER_INITIALIZED || listState_ == PLAYER_PREPARED)) {
+        MEDIA_LOGD("PlayerImpl::AddPlaybackMediaSource insert to begin, set mediaSource to service");
+        itemList_.insert(itemList_.begin(), std::make_pair(generateSrcId, mediaSource));
+        int32_t ret = SwitchSetMediaSource(itemList_.begin());
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("PlayerImpl::AddPlaybackMediaSource insert to begin failed, ret=%{public}d", ret);
+            return ret;
+        }
+        return MSERR_OK;
+    } else {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        auto it = FindSourceInList(srcId);
+        itemList_.insert(it, std::make_pair(generateSrcId, mediaSource));
+    }
+    return MSERR_OK;
+}
+
+void PlayerImpl::SelectAndSwitchAfterRemove(bool isLast, MediaSourceIterator nextIt)
+{
+    auto selectIt = isLast ? itemList_.begin() : nextIt;
+    if (ShouldShuffle()) {
+        std::uniform_int_distribution<int32_t> dist(0, itemList_.size() - 1);
+        int32_t idx = dist(g_shuffleRng);
+        selectIt = itemList_.begin() + idx;
+    }
+    if (listState_ == PLAYER_STARTED) {
+        (void)SwitchToIndex(selectIt);
+    } else {
+        (void)SwitchSetMediaSource(selectIt);
+    }
+}
+
+int32_t PlayerImpl::RemovePlaybackMediaSource(std::string srcId)
+{
+    std::lock_guard<std::mutex> lock(listMutex_);
+
+    auto it = FindSourceInList(srcId);
+    if (it == itemList_.end()) {
+        return MSERR_PARAM_OUT_OF_RANGE;
+    }
+
+    bool isLast = (it == std::prev(itemList_.end()));
+    bool isCurrent = (srcId == curSrcId_);
+    bool isListHead = (it == itemList_.begin());
+
+    auto nextIt = itemList_.erase(it);
+    if (itemList_.empty()) {
+        curSrcId_.clear();
+        listState_ = PLAYER_IDLE;
+        isSwitchUpdate_ = false;
+        isSwitchingItem_ = false;
+        listLoopMode_ = PLAYLIST_LOOP_MODE_ALL;
+        Reset();
+        return MSERR_OK;
+    } else if (isListHead && (listState_ == PLAYER_INITIALIZED || listState_ == PLAYER_PREPARED)) {
+        int32_t ret = SwitchSetMediaSource(itemList_.begin());
+        if (ret != MSERR_OK) {
+            MEDIA_LOGE("PlayerImpl::RemovePlaybackMediaSource set mediaSource to service failed, ret=%{public}d", ret);
+            return ret;
+        }
+        return MSERR_OK;
+    }
+
+    if (isCurrent) {
+        if (isLast && listLoopMode_ == PLAYLIST_LOOP_MODE_NONE) {
+            MEDIA_LOGD("already the last item and not in loop mode, after remove, not switch to next");
+            SwitchSetMediaSource(itemList_.begin());
+            return MSERR_PARAM_OUT_OF_RANGE;
+        }
+        SelectAndSwitchAfterRemove(isLast, nextIt);
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::ClearPlaybackList()
+{
+    {
+        std::lock_guard<std::mutex> lock(listMutex_);
+        itemList_.clear();
+        curSrcId_ = "";
+        listState_ = PLAYER_IDLE;
+        isSwitchUpdate_ = false;
+        isSwitchingItem_ = false;
+        listLoopMode_ = PLAYLIST_LOOP_MODE_ALL;
+        int32_t ret = Reset();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "[%{public}s] Reset failed", __func__);
+    }
+    return MSERR_OK;
+}
 } // namespace Media
 } // namespace OHOS
