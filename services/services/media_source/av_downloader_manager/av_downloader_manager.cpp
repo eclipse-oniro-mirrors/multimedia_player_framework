@@ -498,26 +498,31 @@ void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const Medi
         if (readLen < sniffSize) {
             break;
         }
-        auto protocol = SourceParseAgent::SniffStreamProtocol(buffer.data(), readLen);
-        taskInfo->detectedProtocol = protocol;
-        taskInfo->protocolSniffed = true;
-        taskInfo->currentFilePath = currentFilePath;
-        if (protocol == Plugins::HttpPlugin::StreamProtocolType::HLS ||
-            protocol == Plugins::HttpPlugin::StreamProtocolType::DASH) {    // HLS or Dash
-            if (!taskInfo->fileList.empty()) {
-                taskInfo->fileList.front().needParse = true;
-                MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol is HLS/DASH, needParse", downloaderId);
-            }
-        }
-        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol: %{public}d", downloaderId, static_cast<int>(protocol));
+        ApplySniffedProtocol(downloaderId, buffer.data(), readLen, currentFilePath, taskInfo);
     } while (0);
     SourceParseAgent::Destroy();
-    // HTTP单文件场景：嗅探完成且非HLS/DASH时，提前创建mapping文件
     if (taskInfo->protocolSniffed && !taskInfo->mappingFileCreated &&
         taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::HLS &&
         taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::DASH) {
         GenerateMappingFile(taskInfo);
     }
+}
+
+void DownloadTaskCallback::ApplySniffedProtocol(uint64_t downloaderId, const uint8_t* data, size_t size,
+    const std::string& filePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo)
+{
+    auto protocol = SourceParseAgent::SniffStreamProtocol(data, size);
+    taskInfo->detectedProtocol = protocol;
+    taskInfo->protocolSniffed = true;
+    taskInfo->currentFilePath = filePath;
+    if (protocol == Plugins::HttpPlugin::StreamProtocolType::HLS ||
+        protocol == Plugins::HttpPlugin::StreamProtocolType::DASH) {
+        if (!taskInfo->fileList.empty()) {
+            taskInfo->fileList.front().needParse = true;
+            MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol is HLS/DASH, needParse", downloaderId);
+        }
+    }
+    MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol: %{public}d", downloaderId, static_cast<int>(protocol));
 }
 
 std::shared_ptr<AVDownloaderManager> AVDownloaderManagerFactory::Create()
