@@ -630,8 +630,8 @@ napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
 
     if (jsRecorder->CheckStateMachine(opt) == MSERR_OK) {
         std::map<std::string, std::string> recordMeta;
-        CommonNapi::GetPropertyMap(env, args[0], recordMeta);
-        CHECK_AND_RETURN_RET_LOG(recordMeta.size() != 0, result, "recordMeta has no data");
+        bool getMapRet = CommonNapi::GetPropertyMap(env, args[0], recordMeta);
+        CHECK_AND_RETURN_RET_LOG(getMapRet && recordMeta.size() != 0, result, "recordMeta has no data");
 
         asyncCtx->task_ = std::make_shared<TaskHandler<RetInfo>>([jsRecorder, recordMeta]() {
             int32_t ret = jsRecorder->SetMetadata(recordMeta);
@@ -1839,6 +1839,7 @@ int32_t AVRecorderNapi::GetEncoderInfo(std::vector<EncoderCapabilityData> &encod
 
 int32_t AVRecorderNapi::IsWatermarkSupported(bool &isWatermarkSupported)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
 }
 
@@ -1868,7 +1869,8 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
         .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
-    surfaceBuffer->Alloc(bufferConfig);
+    ret = surfaceBuffer->Alloc(bufferConfig);
+    CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_NO_MEMORY, "surfaceBuffer Alloc failed");
 
     MEDIA_LOGD("surface size %{public}d, surface stride %{public}d",
         surfaceBuffer->GetSize(), surfaceBuffer->GetStride());
@@ -1890,7 +1892,6 @@ int32_t AVRecorderNapi::SetMetadata(const std::map<std::string, std::string> &re
 {
     std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
     for (auto &meta : recordMeta) {
-        MEDIA_LOGI("recordMeta tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
         userMeta->SetData(meta.first, meta.second);
     }
     return recorder_->SetUserMeta(userMeta);
@@ -2673,6 +2674,7 @@ void AVRecorderNapi::StateCallback(const std::string &state)
 
 void AVRecorderNapi::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
+    std::lock_guard<std::mutex> lock(eventCbMutex_);
     eventCbMap_[callbackName] = ref;
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
@@ -2681,10 +2683,11 @@ void AVRecorderNapi::SetCallbackReference(const std::string &callbackName, std::
 
 void AVRecorderNapi::CancelCallbackReference(const std::string &callbackName)
 {
+    std::lock_guard<std::mutex> lock(eventCbMutex_);
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
     napiCb->CancelCallbackReference(callbackName);
-    eventCbMap_[callbackName] = nullptr;
+    eventCbMap_.erase(callbackName);
 }
 
 void AVRecorderNapi::CancelCallback()
@@ -2922,7 +2925,7 @@ napi_status MediaJsAVRecorderConfig::GetJsResult(napi_env env, napi_value &resul
         setRet = CommonNapi::SetPropertyString(env, profile, "fileFormat", fileFormat);
         CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     }
-    napi_set_named_property(env, result, "profile", profile);
+    CHECK_AND_RETURN_RET((ret = napi_set_named_property(env, result, "profile", profile)) == napi_ok, ret);
     return ret;
 }
 
@@ -2981,7 +2984,8 @@ napi_status MediaJsAVRecorderConfig::locationToSet(napi_env env, napi_value &loc
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     setRet = CommonNapi::SetPropertyDouble(env, location, "longitude", value_->location.longitude);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    napi_set_named_property(env, result, "location", location);
+    CHECK_AND_RETURN_RET(napi_set_named_property(env, result, "location", location)== napi_ok,
+        napi_generic_failure);
     return napi_ok;
 }
 
@@ -2990,9 +2994,7 @@ napi_status MediaJsEncoderInfo::GetJsResult(napi_env env, napi_value &result)
     napi_status ret = napi_ok;
 
     size_t size = encoderInfo_.size();
-    napi_create_array_with_length(env, size, &result);
-
-    CHECK_AND_RETURN_RET((ret = napi_create_array(env, &result)) == napi_ok, ret);
+    CHECK_AND_RETURN_RET((ret = napi_create_array_with_length(env, size, &result)) == napi_ok, ret);
 
     napi_value audioEncoder;
     napi_value vidoeEncoder;

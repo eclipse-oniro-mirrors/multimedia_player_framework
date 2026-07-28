@@ -441,6 +441,7 @@ private:
     std::shared_ptr<Recorder> recorder_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
+    std::mutex eventCbMutex_;
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvRecorderTaskqFunc> taskQFuncs_;
     std::map<MetaSourceType, int32_t> metaSourceIDMap_;

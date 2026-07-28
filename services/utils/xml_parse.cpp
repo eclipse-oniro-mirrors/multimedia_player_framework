@@ -48,6 +48,7 @@ void XmlParser::Destroy()
 {
     if (mDoc_ != nullptr) {
         xmlFreeDoc(mDoc_);
+        mDoc_ = nullptr;
     }
     return;
 }
