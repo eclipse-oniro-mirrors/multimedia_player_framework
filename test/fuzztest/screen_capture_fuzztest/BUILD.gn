@@ -1,0 +1,86 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+
+###############################################################################
+
+group("screen_capture_fuzztest") {
+  testonly = true
+  deps = [
+    "audiodatasource_fuzzer:AudioDataSourceFuzzTest",
+    "avscreencaptureservicestub_fuzzer:AvScreenCaptureServiceStubFuzzTest",
+    "screencaptureacquireaudiobuffer_fuzzer:ScreenCaptureAcquireAudioBufferFuzzTest",
+    "screencaptureacquirevideobuffer_fuzzer:ScreenCaptureAcquireVideoBufferFuzzTest",
+    "screencaptureaddsaconcurrent_fuzzer:ScreenCaptureAddSaConcurrentFuzzTest",
+    "screencaptureaddwhitelistwindows_fuzzer:ScreenCaptureAddWhiteListWindowsFuzzTest",
+    "screencaptureaudiobitratefile_fuzzer:ScreenCaptureAudioBitRateFileFuzzTest",
+    "screencaptureaudiocapturerwrapper_fuzzer:ScreenCaptureAudioCapturerWrapperFuzzTest",
+    "screencaptureaudiochannels_fuzzer:ScreenCaptureAudioChannelsFuzzTest",
+    "screencaptureaudiocodecformatfile_fuzzer:ScreenCaptureAudioCodecFormatFileFuzzTest",
+    "screencaptureaudiosamplerate_fuzzer:ScreenCaptureAudioSampleRateFuzzTest",
+    "screencaptureaudiosourcetype_fuzzer:ScreenCaptureAudioSourceTypeFuzzTest",
+    "screencapturecapturemode_fuzzer:ScreenCaptureCaptureModeFuzzTest",
+    "screencapturecontrollerservicestub_fuzzer:ScreenCaptureControllerServiceStubFuzzTest",
+    "screencapturedatatype_fuzzer:ScreenCaptureDataTypeFuzzTest",
+    "screencapturefileformatfile_fuzzer:ScreenCaptureFileFormatFileFuzzTest",
+    "screencapturekeyboardprivacyprotected_fuzzer:ScreenCaptureKeyboardPrivacyProtectedFuzzTest",
+    "screencapturemonitorservice_fuzzer:ScreenCaptureMonitorServiceFuzzTest",
+    "screencapturemonitorservicestub_fuzzer:ScreenCaptureMonitorServiceStubFuzzTest",
+    "screencapturemultidisplayid_fuzzer:ScreenCaptureMultiDisplayIdNdkFuzzTest",
+    "screencapturendkacquireaudiobuffer_fuzzer:ScreenCaptureNdkAcquireAudioBufferFuzzTest",
+    "screencapturendkacquirevideobuffer_fuzzer:ScreenCaptureNdkAcquireVideoBufferFuzzTest",
+    "screencapturendkaudiobitratefile_fuzzer:ScreenCaptureNdkAudioBitRateFileFuzzTest",
+    "screencapturendkaudiochannels_fuzzer:ScreenCaptureNdkAudioChannelsFuzzTest",
+    "screencapturendkaudiocodecformatfile_fuzzer:ScreenCaptureNdkAudioCodecFormatFileFuzzTest",
+    "screencapturendkaudiosamplerate_fuzzer:ScreenCaptureNdkAudioSampleRateFuzzTest",
+    "screencapturendkaudiosourcetype_fuzzer:ScreenCaptureNdkAudioSourceTypeFuzzTest",
+    "screencapturendkcapturemode_fuzzer:ScreenCaptureNdkCaptureModeFuzzTest",
+    "screencapturendkdatatype_fuzzer:ScreenCaptureNdkDataTypeFuzzTest",
+    "screencapturendkfileformatfile_fuzzer:ScreenCaptureNdkFileFormatFileFuzzTest",
+    "screencapturendkresizecanvas_fuzzer:ScreenCaptureNdkResizeCanvasFuzzTest",
+    "screencapturendksetareahighlight_fuzzer:ScreenCaptureNdkSetAreaHighlightFuzzTest",
+    "screencapturendksetcanvasrotation_fuzzer:ScreenCaptureNdkSetCanvasRotationFuzzTest",
+    "screencapturendksetmaxframerate_fuzzer:ScreenCaptureNdkSetMaxFrameRateFuzzTest",
+    "screencapturendksetmicrophoneenabled_fuzzer:ScreenCaptureNdkSetMicrophoneEnabledFuzzTest",
+    "screencapturendkshowcursor_fuzzer:ScreenCaptureNdkShowCursorFuzzTest",
+    "screencapturendkskipprivacymode_fuzzer:ScreenCaptureNdkSkipPrivacyModeFuzzTest",
+    "screencapturendkurlfile_fuzzer:ScreenCaptureNdkUrlFileFuzzTest",
+    "screencapturendkvideobitratefile_fuzzer:ScreenCaptureNdkVideoBitRateFileFuzzTest",
+    "screencapturendkvideocodecfile_fuzzer:ScreenCaptureNdkVideoCodecFileFuzzTest",
+    "screencapturendkvideoframeheight_fuzzer:ScreenCaptureNdkVideoFrameHeightFuzzTest",
+    "screencapturendkvideoframeratefile_fuzzer:ScreenCaptureNdkVideoFrameRateFileFuzzTest",
+    "screencapturendkvideoframewidth_fuzzer:ScreenCaptureNdkVideoFrameWidthFuzzTest",
+    "screencapturendkvideosourcetype_fuzzer:ScreenCaptureNdkVideoSourceTypeFuzzTest",
+    "screencaptureremovewhitelistwindows_fuzzer:ScreenCaptureRemoveWhiteListWindowsFuzzTest",
+    "screencaptureresizecanvas_fuzzer:ScreenCaptureResizeCanvasFuzzTest",
+    "screencapturesaappinfo_fuzzer:ScreenCaptureSaAppInfoFuzzTest",
+    "screencaptureserverstartcase_fuzzer:ScreenCaptureServerStartCaseFuzzTest",
+    "screencaptureservicestub_fuzzer:ScreenCaptureServiceStubFuzzTest",
+    "screencapturesetareahighlight_fuzzer:ScreenCaptureSetAreaHighlightFuzzTest",
+    "screencapturesetcanvasrotation_fuzzer:ScreenCaptureSetCanvasRotationFuzzTest",
+    "screencapturesetmaxframerate_fuzzer:ScreenCaptureSetMaxFrameRateFuzzTest",
+    "screencapturesetmicrophoneenabled_fuzzer:ScreenCaptureSetMicrophoneEnabledFuzzTest",
+    "screencaptureshowcursor_fuzzer:ScreenCaptureShowCursorFuzzTest",
+    "screencaptureskipprivacymode_fuzzer:ScreenCaptureSkipPrivacyModeFuzzTest",
+    "screencaptureupdatesurface_fuzzer:ScreenCaptureUpdateSurfaceFuzzTest",
+    "screencaptureurlfile_fuzzer:ScreenCaptureUrlFileFuzzTest",
+    "screencapturevideobitratefile_fuzzer:ScreenCaptureVideoBitRateFileFuzzTest",
+    "screencapturevideocodecfile_fuzzer:ScreenCaptureVideoCodecFileFuzzTest",
+    "screencapturevideoframeheight_fuzzer:ScreenCaptureVideoFrameHeightFuzzTest",
+    "screencapturevideoframeratefile_fuzzer:ScreenCaptureVideoFrameRateFileFuzzTest",
+    "screencapturevideoframewidth_fuzzer:ScreenCaptureVideoFrameWidthFuzzTest",
+    "screencapturevideosourcetype_fuzzer:ScreenCaptureVideoSourceTypeFuzzTest",
+  ]
+}
+###############################################################################
