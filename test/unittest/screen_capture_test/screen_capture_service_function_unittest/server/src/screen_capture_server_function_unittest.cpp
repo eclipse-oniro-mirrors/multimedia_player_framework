@@ -17,6 +17,7 @@
 #include <sys/stat.h>
 #include <gtest/gtest.h>
 #include "screen_capture_server_function_unittest.h"
+#include "screen_capture_server_manager.h"
 #include "mock/mock_audio_capturer.h"
 #include "mock/mock_external_service_providers.h"
 #include "ui_extension_ability_connection.h"
@@ -1171,8 +1172,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_002, TestSize.L
     sleep(RECORDER_TIME);
 
     auto notificationSubscriber = NotificationSubscriber();
-    if (screenCaptureServerInner->serverMap_.begin() != screenCaptureServerInner->serverMap_.end()) {
-        int32_t notificationId = screenCaptureServerInner->serverMap_.begin()->first;
+    if (ScreenCaptureServerManager::GetInstance().serverMap_.begin() !=
+        ScreenCaptureServerManager::GetInstance().serverMap_.end()) {
+        int32_t notificationId = ScreenCaptureServerManager::GetInstance().serverMap_.begin()->first;
         OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption =
             new(std::nothrow) OHOS::Notification::NotificationButtonOption();
         buttonOption->SetButtonName(BUTTON_NAME_STOP);
@@ -1206,8 +1208,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_003, TestSize.L
     sleep(RECORDER_TIME);
 
     auto notificationSubscriber = NotificationSubscriber();
-    if (screenCaptureServerInner->serverMap_.begin() != screenCaptureServerInner->serverMap_.end()) {
-        int32_t notificationId = screenCaptureServerInner->serverMap_.begin()->first;
+    if (ScreenCaptureServerManager::GetInstance().serverMap_.begin() !=
+        ScreenCaptureServerManager::GetInstance().serverMap_.end()) {
+        int32_t notificationId = ScreenCaptureServerManager::GetInstance().serverMap_.begin()->first;
         OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption =
             new(std::nothrow) OHOS::Notification::NotificationButtonOption();
         buttonOption->SetButtonName("null");
@@ -1243,7 +1246,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_004, TestSize.L
     sleep(RECORDER_TIME);
 
     auto notificationSubscriber = NotificationSubscriber();
-    int32_t invalidNotificationId = ScreenCaptureServer::maxSessionId_ + 1;
+    int32_t invalidNotificationId = ScreenCaptureServerManager::GetInstance().maxSessionId_ + 1;
     OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption =
         new(std::nothrow) OHOS::Notification::NotificationButtonOption();
     buttonOption->SetButtonName("null");
@@ -3194,47 +3197,22 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabled_001, TestSize.Lev
     EXPECT_EQ(screenCaptureServer_->isMicrophoneSwitchTurnOn_, true);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_001, TestSize.Level2)
-{
-    screenCaptureServer_->appName_ =
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionbundlename"];
-    screenCaptureServer_->SetSystemScreenRecorderStatus(false);
-    ASSERT_EQ(ScreenCaptureServer::systemScreenRecorderPid_, -1);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_002, TestSize.Level2)
-{
-    screenCaptureServer_->isSystemRecorder_.store(true);
-    screenCaptureServer_->appInfo_.appPid = 15000;
-    screenCaptureServer_->SetSystemScreenRecorderStatus(true);
-    ASSERT_EQ(ScreenCaptureServer::systemScreenRecorderPid_, 15000);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, SetSystemScreenRecorderStatus_003, TestSize.Level2)
-{
-    ScreenCaptureServer::systemScreenRecorderPid_ = -1;
-    screenCaptureServer_->isSystemRecorder_.store(true);
-    screenCaptureServer_->appInfo_.appPid = 15000;
-    screenCaptureServer_->SetSystemScreenRecorderStatus(false);
-    ASSERT_EQ(ScreenCaptureServer::systemScreenRecorderPid_, -1);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_001, TestSize.Level2)
 {
     auto& screenCaptureMonitorServer = ScreenCaptureMonitorServer::GetInstance();
     HasSystemPermission();
     screenCaptureMonitorServer.RegisterScreenCaptureMonitorListener(nullptr);
     screenCaptureMonitorServer.UnregisterScreenCaptureMonitorListener(nullptr);
-    ScreenCaptureServer::systemScreenRecorderPid_ = -1;
+    screenCaptureMonitorServer.SetSystemScreenRecorderPid(-1);
     bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(15000);
     ASSERT_EQ(ret, false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_002, TestSize.Level2)
 {
-    screenCaptureServer_->SetSystemScreenRecorderStatus(false);
+    auto& screenCaptureMonitorServer = ScreenCaptureMonitorServer::GetInstance();
+    screenCaptureMonitorServer.SetSystemScreenRecorderPid(-1);
     ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
-    ScreenCaptureServer::systemScreenRecorderPid_ = -1;
     bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(-1);
     ASSERT_EQ(ret, false);
 }

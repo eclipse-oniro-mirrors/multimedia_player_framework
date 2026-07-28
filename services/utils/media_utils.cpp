@@ -450,14 +450,16 @@ bool __attribute__((visibility("default"))) IsSystemApp()
     return isSystemApp;
 }
 
-bool __attribute__((visibility("default"))) HasSystemPermission()
+bool __attribute__((visibility("default"))) IsSACalling()
 {
     auto tokenId = IPCSkeleton::GetCallingTokenID();
     auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
-    if (tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL) {
-        return true;
-    }
-    return IsSystemApp();
+    return tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL;
+}
+
+bool __attribute__((visibility("default"))) HasSystemPermission()
+{
+    return IsSACalling() || IsSystemApp();
 }
 
 sptr<IRemoteObject> __attribute__((visibility("default"))) GetMediaService()
