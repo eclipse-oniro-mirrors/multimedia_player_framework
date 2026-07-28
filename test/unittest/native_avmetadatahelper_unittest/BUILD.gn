@@ -80,6 +80,7 @@ ohos_unittest("avmetadata_unittest") {
     "../../../services/services/media_source/downloaded_cache_loader/path_validator.cpp",
     "../../../services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
     "../../../services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+    "../../../services/services/media_source/utils/path_utils.cpp",
     "../../../services/services/media_source/ipc/media_source_loader_stub.cpp",
     "../../../services/services/media_source/ipc/media_source_loading_request_proxy.cpp",
     "../../../services/services/media_source/loader/cache_manager.cpp",

@@ -17,6 +17,7 @@
 #include <functional>
 #include <iomanip>
 #include <sstream>
+#include <climits>
 
 #include "cache_reader.h"
 #include "common/log.h"
@@ -38,8 +39,12 @@ CacheReader::CacheReader(int64_t uuid, const std::shared_ptr<LoadingRequest>& re
     std::shared_ptr<DownloadedCacheManager> cacheManager)
     : uuid_(uuid), request_(request), readTask_(readTask),
       cacheManager_(cacheManager),
-      fileCacheManager_(std::make_shared<DownloadedFileCacheManager>(cacheManager->GetCacheDir())),
+      fileCacheManager_(cacheManager ? std::make_shared<DownloadedFileCacheManager>(
+          cacheManager->GetCacheDir()) : nullptr),
       isClosed_(false), isHeaderResponded_(false) {
+    if (cacheManager_ == nullptr) {
+        MEDIA_LOG_E("CacheReader: cacheManager is nullptr");
+    }
 }
 
 CacheReader::~CacheReader()
@@ -49,22 +54,32 @@ CacheReader::~CacheReader()
 int64_t CacheReader::Open(std::shared_ptr<LoadingRequest>& request)
 {
     FALSE_RETURN_V_MSG_E(request != nullptr, -1, "request is nullptr");
-    std::lock_guard<std::mutex> lock(mutex_);
-    request_ = request;
-    url_ = request->GetUrl();
+    std::shared_ptr<LoadingRequest> reqToFinish;
+    int32_t finishErrorCode = 0;
 
-    auto urlStr = cacheManager_->GetMediaCache(url_);
-    if (urlStr.empty()) {
-        MEDIA_LOG_E("Cache not found for url: %{public}s", url_.c_str());
-        request_->FinishLoading(uuid_, LOADING_ERROR_NOT_READY);
-        return -1;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        request_ = request;
+        url_ = request->GetUrl();
+
+        auto urlStr = cacheManager_->GetMediaCache(url_);
+        if (urlStr.empty()) {
+            MEDIA_LOG_E("Cache not found for url: %{public}s", url_.c_str());
+            reqToFinish = request_;
+            finishErrorCode = LOADING_ERROR_NOT_READY;
+        } else {
+            urlDir_ = urlStr;
+
+            if (!cacheManager_->GetCacheMetaData(url_, metadata_)) {
+                MEDIA_LOG_E("Failed to get cache metadata for url: %{public}s", url_.c_str());
+                reqToFinish = request_;
+                finishErrorCode = LOADING_ERROR_NOT_READY;
+            }
+        }
     }
 
-    urlDir_ = urlStr;
-
-    if (!cacheManager_->GetCacheMetaData(url_, metadata_)) {
-        MEDIA_LOG_E("Failed to get cache metadata for url: %{public}s", url_.c_str());
-        request_->FinishLoading(uuid_, LOADING_ERROR_NOT_READY);
+    if (reqToFinish != nullptr) {
+        reqToFinish->FinishLoading(uuid_, finishErrorCode);
         return -1;
     }
 
@@ -73,18 +88,28 @@ int64_t CacheReader::Open(std::shared_ptr<LoadingRequest>& request)
 
 void CacheReader::RespondHeader(int64_t uuid)
 {
-    if (isHeaderResponded_.load()) {
+    if (isHeaderResponded_.exchange(true)) {
         return;
     }
-    isHeaderResponded_.store(true);
 
     if (isClosed_.load()) {
         return;
     }
-    auto headers = cacheManager_->BuildHttpHeaders(url_, fileCacheManager_->GetSize(urlDir_));
+    if (request_ == nullptr) {
+        MEDIA_LOG_E("RespondHeader: request_ is nullptr");
+        headerFailed_.store(true);
+        return;
+    }
+    int64_t fileSize = fileCacheManager_ ? fileCacheManager_->GetSize(urlDir_) : -1;
+    if (fileSize < 0) {
+        MEDIA_LOG_E("RespondHeader: invalid file size=%{public}" PRId64, fileSize);
+        headerFailed_.store(true);
+        return;
+    }
+    auto headers = cacheManager_->BuildHttpHeaders(url_, fileSize);
     if (headers.empty()) {
         MEDIA_LOG_E("Failed to build HTTP headers for url: %{public}s", url_.c_str());
-        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
+        headerFailed_.store(true);
         return;
     }
 
@@ -106,64 +131,101 @@ void CacheReader::Read(int64_t uuid, int64_t requestedOffset, int64_t requestedL
     });
 }
 
-void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength)
+bool CacheReader::ReadCacheFile(int64_t requestedOffset, int64_t requestedLength,
+    std::shared_ptr<AVSharedMemoryBase> &buffer, CacheReadResult &result)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (isClosed_.load()) {
-        return;
-    }
-
-    RespondHeader(uuid);
-
-    if (requestedLength == 0) {
-        MEDIA_LOG_W("RequestedLength is zero, finish it.");
-        request_->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
-        return;
-    }
-
-    int64_t fileSize = fileCacheManager_->GetSize(urlDir_);
+    int64_t fileSize = fileCacheManager_ ? fileCacheManager_->GetSize(urlDir_) : -1;
     if (fileSize < 0) {
         MEDIA_LOG_E("Failed to get cache file size: %{public}s", urlDir_.c_str());
-        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
-        return;
+        return false;
     }
-
     int64_t actualRequestedLength = (requestedLength <= 0) ? fileSize : requestedLength;
     if (requestedOffset >= fileSize) {
         MEDIA_LOG_E("Requested offset exceeds file size");
-        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
-        return;
+        return false;
     }
-
-    int64_t actualReadLength = std::min(actualRequestedLength, fileSize - requestedOffset);
+    result.actualReadLength = std::min(actualRequestedLength, fileSize - requestedOffset);
+    constexpr int64_t MAX_READ_LENGTH = static_cast<int64_t>(INT32_MAX);
+    if (result.actualReadLength > MAX_READ_LENGTH) {
+        result.actualReadLength = MAX_READ_LENGTH;
+    }
 
     MEDIA_LOG_I("Read from file offset: " PUBLIC_LOG_D64 ", length: " PUBLIC_LOG_D64,
-        requestedOffset, actualReadLength);
+        requestedOffset, result.actualReadLength);
 
-    auto buffer = std::make_shared<AVSharedMemoryBase>(
-        static_cast<int32_t>(actualReadLength), AVSharedMemory::FLAGS_READ_WRITE, "userBuffer");
-    buffer->Init();
-
-    if (fileCacheManager_->Read(urlDir_, buffer->GetBase(), requestedOffset, actualReadLength) != 0) {
+    int32_t bufSize = static_cast<int32_t>(result.actualReadLength);
+    buffer = std::make_shared<AVSharedMemoryBase>(bufSize, AVSharedMemory::FLAGS_READ_WRITE, "userBuffer");
+    if (buffer->Init() != 0 || buffer->GetBase() == nullptr) {
+        MEDIA_LOG_E("Failed to init shared memory buffer");
+        return false;
+    }
+    if (fileCacheManager_->Read(urlDir_, buffer->GetBase(), requestedOffset, result.actualReadLength) != 0) {
         MEDIA_LOG_E("Failed to read cache file: %{public}s", urlDir_.c_str());
-        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
+        return false;
+    }
+    return true;
+}
+
+void CacheReader::RespondCacheData(int64_t uuid, int64_t requestedOffset, int64_t requestedLength,
+    const std::shared_ptr<AVSharedMemoryBase> &buffer, CacheReadResult &result)
+{
+    if (request_ == nullptr) {
+        MEDIA_LOG_E("HandleCacheRequest: request_ is nullptr");
+        result.shouldFinish = true;
         return;
     }
-
     MEDIA_LOG_I("RespondData offset: " PUBLIC_LOG_D64 ", readLen: " PUBLIC_LOG_D64,
-        requestedOffset, actualReadLength);
-
+        requestedOffset, result.actualReadLength);
     auto ret = request_->RespondData(uuid, requestedOffset, buffer);
     if (ret < 0) {
         MEDIA_LOG_E("RespondData failed");
-        request_->FinishLoading(uuid, LOADING_ERROR_NOT_READY);
-        return;
+        result.reqToFinish = request_;
+        result.finishErrorCode = LOADING_ERROR_NOT_READY;
+        result.shouldFinish = true;
+    } else if (requestedLength == -1 || result.actualReadLength != requestedLength) {
+        MEDIA_LOG_I("RespondData whole file complete, offset: " PUBLIC_LOG_D64
+            ", request: " PUBLIC_LOG_D64 ", readLen: " PUBLIC_LOG_D64,
+            requestedOffset, requestedLength, result.actualReadLength);
+        result.reqToFinish = request_;
+        result.finishErrorCode = LOADING_ERROR_SUCCESS;
+        result.shouldFinish = true;
+    }
+}
+
+void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength)
+{
+    CacheReadResult result;
+
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (isClosed_.load()) {
+            return;
+        }
+        RespondHeader(uuid);
+
+        if (headerFailed_.load()) {
+            result.reqToFinish = request_;
+            result.finishErrorCode = LOADING_ERROR_NOT_READY;
+            result.shouldFinish = true;
+        } else if (requestedLength == 0) {
+            MEDIA_LOG_W("RequestedLength is zero, finish it.");
+            result.reqToFinish = request_;
+            result.finishErrorCode = LOADING_ERROR_SUCCESS;
+            result.shouldFinish = true;
+        } else {
+            std::shared_ptr<AVSharedMemoryBase> buffer;
+            if (!ReadCacheFile(requestedOffset, requestedLength, buffer, result)) {
+                result.reqToFinish = request_;
+                result.finishErrorCode = LOADING_ERROR_NOT_READY;
+                result.shouldFinish = true;
+            } else {
+                RespondCacheData(uuid, requestedOffset, requestedLength, buffer, result);
+            }
+        }
     }
 
-    if (requestedLength == -1 || actualReadLength != requestedLength) {
-        MEDIA_LOG_I("RespondData whole file complete, offset: " PUBLIC_LOG_D64 ", request: " PUBLIC_LOG_D64
-            ", readLen: " PUBLIC_LOG_D64, requestedOffset, requestedLength, actualReadLength);
-        request_->FinishLoading(uuid, LOADING_ERROR_SUCCESS);
+    if (result.shouldFinish && result.reqToFinish != nullptr) {
+        result.reqToFinish->FinishLoading(uuid, result.finishErrorCode);
     }
 }
 

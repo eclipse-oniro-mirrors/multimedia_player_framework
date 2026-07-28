@@ -17,6 +17,7 @@
 #include "media_source.h"
 #include "media_log.h"
 #include <cstring>
+#include <cinttypes>
 
 #ifndef MEDIA_LOGD
 #define MEDIA_LOGD MEDIA_LOG_D
@@ -33,6 +34,8 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "PlayStrategySerializer" };
+constexpr uint32_t MAX_MIME_COUNT = 64;
+constexpr size_t MAX_FILE_SIZE = 10 * 1024 * 1024;
 }
 
 namespace OHOS {
@@ -66,20 +69,28 @@ void WriteBool(std::vector<uint8_t>& buffer, bool value)
 
 void WriteString(std::vector<uint8_t>& buffer, const std::string& str)
 {
+    if (str.size() > UINT32_MAX) {
+        MEDIA_LOGE("WriteString: string too long, truncated");
+    }
     uint32_t len = static_cast<uint32_t>(str.size());
     WriteUint32(buffer, len);
     if (len > 0) {
-        buffer.insert(buffer.end(), str.begin(), str.end());
+        buffer.insert(buffer.end(), str.begin(), str.begin() + len);
     }
 }
 
 uint32_t ReadUint32(const std::vector<uint8_t>& buffer, size_t& offset)
 {
+    if (offset + sizeof(uint32_t) > buffer.size()) {
+        MEDIA_LOGE("ReadUint32: offset %{public}zu out of bounds, size=%{public}zu", offset, buffer.size());
+        offset = buffer.size();
+        return 0;
+    }
     uint32_t value = 0;
     errno_t ret = memcpy_s(&value, sizeof(uint32_t), buffer.data() + offset, sizeof(uint32_t));
     if (ret != EOK) {
         MEDIA_LOGE("ReadUint32 memcpy_s failed");
-        offset += sizeof(uint32_t);
+        offset = buffer.size();
         return 0;
     }
     offset += sizeof(uint32_t);
@@ -88,11 +99,16 @@ uint32_t ReadUint32(const std::vector<uint8_t>& buffer, size_t& offset)
 
 int32_t ReadInt32(const std::vector<uint8_t>& buffer, size_t& offset)
 {
+    if (offset + sizeof(int32_t) > buffer.size()) {
+        MEDIA_LOGE("ReadInt32: offset %{public}zu out of bounds, size=%{public}zu", offset, buffer.size());
+        offset = buffer.size();
+        return 0;
+    }
     int32_t value = 0;
     errno_t ret = memcpy_s(&value, sizeof(int32_t), buffer.data() + offset, sizeof(int32_t));
     if (ret != EOK) {
         MEDIA_LOGE("ReadInt32 memcpy_s failed");
-        offset += sizeof(int32_t);
+        offset = buffer.size();
         return 0;
     }
     offset += sizeof(int32_t);
@@ -101,11 +117,16 @@ int32_t ReadInt32(const std::vector<uint8_t>& buffer, size_t& offset)
 
 double ReadDouble(const std::vector<uint8_t>& buffer, size_t& offset)
 {
+    if (offset + sizeof(double) > buffer.size()) {
+        MEDIA_LOGE("ReadDouble: offset %{public}zu out of bounds, size=%{public}zu", offset, buffer.size());
+        offset = buffer.size();
+        return 0;
+    }
     double value = 0;
     errno_t ret = memcpy_s(&value, sizeof(double), buffer.data() + offset, sizeof(double));
     if (ret != EOK) {
         MEDIA_LOGE("ReadDouble memcpy_s failed");
-        offset += sizeof(double);
+        offset = buffer.size();
         return 0;
     }
     offset += sizeof(double);
@@ -114,6 +135,11 @@ double ReadDouble(const std::vector<uint8_t>& buffer, size_t& offset)
 
 bool ReadBool(const std::vector<uint8_t>& buffer, size_t& offset)
 {
+    if (offset >= buffer.size()) {
+        MEDIA_LOGE("ReadBool: offset %{public}zu out of bounds, size=%{public}zu", offset, buffer.size());
+        offset = buffer.size();
+        return false;
+    }
     uint8_t value = buffer[offset];
     offset += sizeof(uint8_t);
     return value != 0;
@@ -123,6 +149,12 @@ std::string ReadString(const std::vector<uint8_t>& buffer, size_t& offset)
 {
     uint32_t len = ReadUint32(buffer, offset);
     if (len == 0) {
+        return "";
+    }
+    if (offset + len > buffer.size()) {
+        MEDIA_LOGE("ReadString: offset %{public}zu + len %{public}u out of bounds, size=%{public}zu",
+            offset, len, buffer.size());
+        offset = buffer.size();
         return "";
     }
     std::string str(buffer.begin() + offset, buffer.begin() + offset + len);
@@ -184,6 +216,63 @@ size_t CalculateTrackSelectionFilterSize(const Plugins::TrackSelectionFilter& fi
     return size;
 }
 
+void PlayStrategySerializer::SerializePlayStrategy(const Plugins::PlayStrategy& strategy,
+    std::vector<uint8_t>& output)
+{
+    WriteUint32(output, strategy.width);
+    WriteUint32(output, strategy.height);
+    WriteUint32(output, strategy.duration);
+    WriteBool(output, strategy.preferHDR);
+    WriteString(output, strategy.audioLanguage);
+    WriteString(output, strategy.subtitleLanguage);
+    WriteDouble(output, strategy.bufferDurationForPlaying);
+    WriteDouble(output, strategy.thresholdForAutoQuickPlay);
+}
+
+bool PlayStrategySerializer::WriteStringList(std::vector<uint8_t>& output,
+    const std::vector<std::string>& list, const char* fieldName)
+{
+    if (list.size() > MAX_MIME_COUNT) {
+        MEDIA_LOGE("%{public}s too large: %{public}zu", fieldName, list.size());
+        return false;
+    }
+    WriteUint32(output, static_cast<uint32_t>(list.size()));
+    for (const auto& item : list) {
+        WriteString(output, item);
+    }
+    return true;
+}
+
+bool PlayStrategySerializer::SerializeTrackSelectionFilter(const Plugins::TrackSelectionFilter& filter,
+    std::vector<uint8_t>& output)
+{
+    WriteInt32(output, filter.maxVideoBitrate);
+    WriteInt32(output, filter.minVideoBitrate);
+    WriteInt32(output, filter.maxVideoFrameRate);
+    WriteInt32(output, filter.minVideoFrameRate);
+    WriteInt32(output, filter.maxVideoResolution.first);
+    WriteInt32(output, filter.maxVideoResolution.second);
+    WriteInt32(output, filter.minVideoResolution.first);
+    WriteInt32(output, filter.minVideoResolution.second);
+    if (!WriteStringList(output, filter.preferredVideoMimeTypes, "preferredVideoMimeTypes")) {
+        return false;
+    }
+
+    WriteInt32(output, filter.maxAudioBitrate);
+    WriteInt32(output, filter.minAudioBitrate);
+    WriteInt32(output, filter.maxAudioChannels);
+    if (!WriteStringList(output, filter.preferredAudioMimeTypes, "preferredAudioMimeTypes")) {
+        return false;
+    }
+    if (!WriteStringList(output, filter.preferredAudioLanguages, "preferredAudioLanguages")) {
+        return false;
+    }
+    if (!WriteStringList(output, filter.preferredSubtitleLanguages, "preferredSubtitleLanguages")) {
+        return false;
+    }
+    return true;
+}
+
 bool PlayStrategySerializer::Serialize(const std::string& rootUrl,
                                        const Plugins::PlayStrategy& strategy,
                                        const Plugins::TrackSelectionFilter& filter,
@@ -194,49 +283,74 @@ bool PlayStrategySerializer::Serialize(const std::string& rootUrl,
     output.reserve(totalSize);
 
     WriteString(output, rootUrl);
-    WriteUint32(output, strategy.width);
-    WriteUint32(output, strategy.height);
-    WriteUint32(output, strategy.duration);
-    WriteBool(output, strategy.preferHDR);
-    WriteString(output, strategy.audioLanguage);
-    WriteString(output, strategy.subtitleLanguage);
-    WriteDouble(output, strategy.bufferDurationForPlaying);
-    WriteDouble(output, strategy.thresholdForAutoQuickPlay);
+    SerializePlayStrategy(strategy, output);
+    return SerializeTrackSelectionFilter(filter, output);
+}
 
-    WriteInt32(output, filter.maxVideoBitrate);
-    WriteInt32(output, filter.minVideoBitrate);
-    WriteInt32(output, filter.maxVideoFrameRate);
-    WriteInt32(output, filter.minVideoFrameRate);
-    WriteInt32(output, filter.maxVideoResolution.first);
-    WriteInt32(output, filter.maxVideoResolution.second);
-    WriteInt32(output, filter.minVideoResolution.first);
-    WriteInt32(output, filter.minVideoResolution.second);
+bool PlayStrategySerializer::DeserializePlayStrategy(const std::vector<uint8_t>& input, size_t& offset,
+    Plugins::PlayStrategy& strategy)
+{
+    strategy.width = ReadUint32(input, offset);
+    strategy.height = ReadUint32(input, offset);
+    strategy.duration = ReadUint32(input, offset);
+    strategy.preferHDR = ReadBool(input, offset);
+    strategy.audioLanguage = ReadString(input, offset);
+    strategy.subtitleLanguage = ReadString(input, offset);
+    strategy.bufferDurationForPlaying = ReadDouble(input, offset);
+    strategy.thresholdForAutoQuickPlay = ReadDouble(input, offset);
+    return offset <= input.size();
+}
 
-    WriteUint32(output, static_cast<uint32_t>(filter.preferredVideoMimeTypes.size()));
-    for (const auto& mime : filter.preferredVideoMimeTypes) {
-        WriteString(output, mime);
+bool PlayStrategySerializer::ReadStringList(const std::vector<uint8_t>& input, size_t& offset,
+    std::vector<std::string>& list, const char* fieldName)
+{
+    uint32_t count = ReadUint32(input, offset);
+    if (count > MAX_MIME_COUNT) {
+        MEDIA_LOGE("%{public}s count too large: %{public}u", fieldName, count);
+        return false;
     }
-
-    WriteInt32(output, filter.maxAudioBitrate);
-    WriteInt32(output, filter.minAudioBitrate);
-    WriteInt32(output, filter.maxAudioChannels);
-
-    WriteUint32(output, static_cast<uint32_t>(filter.preferredAudioMimeTypes.size()));
-    for (const auto& mime : filter.preferredAudioMimeTypes) {
-        WriteString(output, mime);
+    list.resize(count);
+    for (uint32_t i = 0; i < count; ++i) {
+        list[i] = ReadString(input, offset);
     }
-
-    WriteUint32(output, static_cast<uint32_t>(filter.preferredAudioLanguages.size()));
-    for (const auto& lang : filter.preferredAudioLanguages) {
-        WriteString(output, lang);
-    }
-
-    WriteUint32(output, static_cast<uint32_t>(filter.preferredSubtitleLanguages.size()));
-    for (const auto& lang : filter.preferredSubtitleLanguages) {
-        WriteString(output, lang);
-    }
-
     return true;
+}
+
+bool PlayStrategySerializer::DeserializeTrackSelectionFilter(const std::vector<uint8_t>& input,
+    size_t& offset, Plugins::TrackSelectionFilter& filter)
+{
+    filter.maxVideoBitrate = ReadInt32(input, offset);
+    filter.minVideoBitrate = ReadInt32(input, offset);
+    filter.maxVideoFrameRate = ReadInt32(input, offset);
+    filter.minVideoFrameRate = ReadInt32(input, offset);
+    filter.maxVideoResolution.first = ReadInt32(input, offset);
+    filter.maxVideoResolution.second = ReadInt32(input, offset);
+    filter.minVideoResolution.first = ReadInt32(input, offset);
+    filter.minVideoResolution.second = ReadInt32(input, offset);
+    if (offset > input.size()) {
+        return false;
+    }
+
+    if (!ReadStringList(input, offset, filter.preferredVideoMimeTypes, "preferredVideoMimeTypes")) {
+        return false;
+    }
+    filter.maxAudioBitrate = ReadInt32(input, offset);
+    filter.minAudioBitrate = ReadInt32(input, offset);
+    filter.maxAudioChannels = ReadInt32(input, offset);
+    if (offset > input.size()) {
+        return false;
+    }
+
+    if (!ReadStringList(input, offset, filter.preferredAudioMimeTypes, "preferredAudioMimeTypes")) {
+        return false;
+    }
+    if (!ReadStringList(input, offset, filter.preferredAudioLanguages, "preferredAudioLanguages")) {
+        return false;
+    }
+    if (!ReadStringList(input, offset, filter.preferredSubtitleLanguages, "preferredSubtitleLanguages")) {
+        return false;
+    }
+    return offset <= input.size();
 }
 
 bool PlayStrategySerializer::Deserialize(const std::vector<uint8_t>& input,
@@ -250,54 +364,19 @@ bool PlayStrategySerializer::Deserialize(const std::vector<uint8_t>& input,
     }
 
     size_t offset = 0;
-
     rootUrl = ReadString(input, offset);
-    strategy.width = ReadUint32(input, offset);
-    strategy.height = ReadUint32(input, offset);
-    strategy.duration = ReadUint32(input, offset);
-    strategy.preferHDR = ReadBool(input, offset);
-    strategy.audioLanguage = ReadString(input, offset);
-    strategy.subtitleLanguage = ReadString(input, offset);
-    strategy.bufferDurationForPlaying = ReadDouble(input, offset);
-    strategy.thresholdForAutoQuickPlay = ReadDouble(input, offset);
-
-    filter.maxVideoBitrate = ReadInt32(input, offset);
-    filter.minVideoBitrate = ReadInt32(input, offset);
-    filter.maxVideoFrameRate = ReadInt32(input, offset);
-    filter.minVideoFrameRate = ReadInt32(input, offset);
-    filter.maxVideoResolution.first = ReadInt32(input, offset);
-    filter.maxVideoResolution.second = ReadInt32(input, offset);
-    filter.minVideoResolution.first = ReadInt32(input, offset);
-    filter.minVideoResolution.second = ReadInt32(input, offset);
-
-    uint32_t videoMimeCount = ReadUint32(input, offset);
-    filter.preferredVideoMimeTypes.resize(videoMimeCount);
-    for (uint32_t i = 0; i < videoMimeCount; ++i) {
-        filter.preferredVideoMimeTypes[i] = ReadString(input, offset);
+    if (offset > input.size()) {
+        MEDIA_LOGE("Deserialize: buffer overflow at offset %{public}zu, size=%{public}zu", offset, input.size());
+        return false;
     }
-
-    filter.maxAudioBitrate = ReadInt32(input, offset);
-    filter.minAudioBitrate = ReadInt32(input, offset);
-    filter.maxAudioChannels = ReadInt32(input, offset);
-
-    uint32_t audioMimeCount = ReadUint32(input, offset);
-    filter.preferredAudioMimeTypes.resize(audioMimeCount);
-    for (uint32_t i = 0; i < audioMimeCount; ++i) {
-        filter.preferredAudioMimeTypes[i] = ReadString(input, offset);
+    if (!DeserializePlayStrategy(input, offset, strategy)) {
+        MEDIA_LOGE("DeserializePlayStrategy failed");
+        return false;
     }
-
-    uint32_t audioLangCount = ReadUint32(input, offset);
-    filter.preferredAudioLanguages.resize(audioLangCount);
-    for (uint32_t i = 0; i < audioLangCount; ++i) {
-        filter.preferredAudioLanguages[i] = ReadString(input, offset);
+    if (!DeserializeTrackSelectionFilter(input, offset, filter)) {
+        MEDIA_LOGE("DeserializeTrackSelectionFilter failed");
+        return false;
     }
-
-    uint32_t subtitleLangCount = ReadUint32(input, offset);
-    filter.preferredSubtitleLanguages.resize(subtitleLangCount);
-    for (uint32_t i = 0; i < subtitleLangCount; ++i) {
-        filter.preferredSubtitleLanguages[i] = ReadString(input, offset);
-    }
-
     return true;
 }
 
@@ -334,14 +413,22 @@ bool PlayStrategySerializer::ReadFromFile(std::ifstream& file,
         MEDIA_LOGE("File stream is not open");
         return false;
     }
-    
+
+    file.seekg(0, std::ios::end);
+    auto fileSize = file.tellg();
+    file.seekg(0, std::ios::beg);
+    if (fileSize < 0 || static_cast<size_t>(fileSize) > MAX_FILE_SIZE) {
+        MEDIA_LOGE("ReadFromFile: invalid or too large file size=%{public}" PRId64, static_cast<int64_t>(fileSize));
+        return false;
+    }
+
     std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(file)),
                                  std::istreambuf_iterator<char>());
     if (buffer.empty()) {
         MEDIA_LOGE("File is empty");
         return false;
     }
-    
+
     return Deserialize(buffer, rootUrl, strategy, filter);
 }
 

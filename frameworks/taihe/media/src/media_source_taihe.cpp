@@ -198,6 +198,10 @@ optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithDirectoryS
 
 std::shared_ptr<AVMediaSourceTmp> MediaSourceImpl::GetMediaSource(weak::MediaSource mediaSource)
 {
+    if (mediaSource.is_error()) {
+        MEDIA_LOGE("GetMediaSource: mediaSource weak reference is invalid");
+        return nullptr;
+    }
     MediaSourceImpl* mediaSourceImpl = reinterpret_cast<MediaSourceImpl*>(mediaSource->GetImplPtr());
     if (mediaSourceImpl == nullptr) {
         MEDIA_LOGE("Failed to get MediaSourceImpl");
@@ -213,6 +217,10 @@ std::shared_ptr<AVMediaSourceTmp> MediaSourceImpl::GetMediaSource(MediaSourceImp
 
 std::shared_ptr<MediaSourceLoaderCallback> MediaSourceImpl::GetSourceLoader(weak::MediaSource mediaSource)
 {
+    if (mediaSource.is_error()) {
+        MEDIA_LOGE("GetSourceLoader: mediaSource weak reference is invalid");
+        return nullptr;
+    }
     MediaSourceImpl* mediaSourceImpl = reinterpret_cast<MediaSourceImpl*>(mediaSource->GetImplPtr());
     if (mediaSourceImpl == nullptr) {
         MEDIA_LOGE("Failed to get MediaSourceImpl");

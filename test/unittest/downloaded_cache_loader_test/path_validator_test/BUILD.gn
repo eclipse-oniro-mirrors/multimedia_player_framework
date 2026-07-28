@@ -32,6 +32,7 @@ ohos_unittest("downloaded_path_validator_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils",
   ]
 
   cflags = [
@@ -73,6 +74,7 @@ ohos_unittest("downloaded_path_validator_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils/path_utils.cpp",
     "path_validator_test.cpp",
   ]
 }

@@ -32,6 +32,7 @@ public:
 
 private:
     bool IsValidPath(const std::string& inputPath);
+    int32_t ReadFileData(const std::string& path, void* buffer, int64_t offset, int64_t size);
 
     std::string cacheDir_;
 };
