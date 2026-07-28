@@ -459,5 +459,15 @@ bool __attribute__((visibility("default"))) HasSystemPermission()
     }
     return IsSystemApp();
 }
+
+sptr<IRemoteObject> __attribute__((visibility("default"))) GetMediaService()
+{
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        MEDIA_LOG_E("GetSystemAbilityManager failed");
+        return nullptr;
+    }
+    return samgr->GetSystemAbility(3002); // MEDIA_SERVICE_SA_ID
+}
 }  // namespace Media
 }  // namespace OHOS

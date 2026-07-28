@@ -340,7 +340,7 @@ private:
     void StopCaptureOnError(const std::string &reportMsg);
 private:
     std::mutex mutex_;
-    std::mutex resMutex_;
+    std::mutex captureIdsMutex_;
     mutable std::shared_mutex appMissionIdslock_;
     mutable std::condition_variable_any appMissionIdsCondVar_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;

@@ -15,16 +15,12 @@
 
 #include "media_datashare_observer.h"
 #include "media_utils.h"
-#include "media_log.h"
 #include "datashare_helper.h"
 #include "uri.h"
-#include "iservice_registry.h"
-#include "system_ability_definition.h"
 
 namespace {
 static constexpr const char* SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "MediaDatashareObserver"};
-static constexpr int32_t MEDIA_SERVICE_SA_ID = 3002;
 static constexpr const char* SETTINGS_DATA_BASE_URI =
     "datashare:///com.ohos.settingsdata/entry/settingsdata/SETTINGSDATA?Proxy=true";
 static constexpr const char* SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
@@ -97,11 +93,9 @@ void MediaDatashareObserverRegister::UnSubscribe()
 
 std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelper()
 {
-    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-    CHECK_AND_RETURN_RET_LOG(samgr != nullptr, nullptr, "GetSystemAbilityManager failed");
-    sptr<IRemoteObject> remoteObj = samgr->GetSystemAbility(MEDIA_SERVICE_SA_ID);
-    CHECK_AND_RETURN_RET_LOG(remoteObj != nullptr, nullptr, "GetSystemAbility service failed");
-    return DataShare::DataShareHelper::Creator(remoteObj, SETTINGS_DATA_BASE_URI, SETTINGS_DATA_EXT_URI);
+    auto mediaService = GetMediaService();
+    CHECK_AND_RETURN_RET_LOG(mediaService != nullptr, nullptr, "GetMediaService failed");
+    return DataShare::DataShareHelper::Creator(mediaService, SETTINGS_DATA_BASE_URI, SETTINGS_DATA_EXT_URI);
 }
 
 int32_t UpdateSettingsValue(const std::string &key, const std::string &value)

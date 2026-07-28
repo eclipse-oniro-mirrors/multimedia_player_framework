@@ -101,7 +101,6 @@ static const std::string TIMEOUT_SCREENOFF_DISABLE_LOCK = "ohos.permission.TIMEO
 #endif
 static const int32_t SVG_HEIGHT = 80;
 static const int32_t SVG_WIDTH = 80;
-static const int32_t MEDIA_SERVICE_SA_ID = 3002;
 static const uint32_t MIN_LINE_WIDTH = 1;
 static const uint32_t MAX_LINE_WIDTH = 8;
 static const uint32_t MAX_LINE_COLOR_RGB = 0xffffff;
@@ -520,6 +519,7 @@ void ScreenCaptureServer::OnDMPrivateWindowChange(bool hasPrivate)
 
 bool ScreenCaptureServer::IsCaptureScreen(uint64_t displayId)
 {
+    std::lock_guard<std::mutex> lock(captureIdsMutex_);
     return std::find(displayScreenIds_.begin(), displayScreenIds_.end(), displayId) != displayScreenIds_.end();
 }
 
@@ -587,7 +587,7 @@ int32_t ScreenCaptureServer::RegisterAppLifecycleListener(const std::string &bun
         MEDIA_LOGD("RegisterAppLifecycleListener lifecycleListenerDeathRecipient_ is nullptr");
         auto task = [weakThis = weak_from_this()] (const wptr<IRemoteObject>& remote) {
             auto SCServer = weakThis.lock();
-            CHECK_AND_RETURN_NOLOG(!SCServer);
+            CHECK_AND_RETURN_NOLOG(SCServer);
             SCServer->OnSceneSessionManagerDied(remote);
         };
         lifecycleListenerDeathRecipient_ = sptr<SCDeathRecipientListener>::MakeSptr(task);
@@ -1468,12 +1468,14 @@ void ScreenCaptureServer::SetDisplayId(std::vector<uint64_t> &&displayIds)
 
 void ScreenCaptureServer::SetDisplayScreenId(uint64_t displayId)
 {
+    std::lock_guard<std::mutex> lock(captureIdsMutex_);
     displayScreenIds_.clear();
     displayScreenIds_.emplace_back(displayId);
 }
 
 void ScreenCaptureServer::SetDisplayScreenId(std::vector<uint64_t> &&displayIds)
 {
+    std::lock_guard<std::mutex> lock(captureIdsMutex_);
     displayScreenIds_ = std::move(displayIds);
 }
 
@@ -2415,13 +2417,12 @@ void ScreenCaptureServer::UpdateHighlightOutline(bool isStarted)
         Rosen::OutlineParams outlineParams;
         outlineParams.type_ = OutlineType::OUTLINE_FOR_WINDOW;
         SetHighlightConfigForWindowManager(isStarted, outlineParams);
-        auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
-        sptr<IRemoteObject> media_server = samgr->GetSystemAbility(MEDIA_SERVICE_SA_ID);
-        if (media_server == nullptr) {
+        auto mediaService = GetMediaService();
+        if (mediaService == nullptr) {
             MEDIA_LOGE("Get media service failed");
             return;
         }
-        Rosen::WMError res = Rosen::WindowManager::GetInstance().UpdateOutline(media_server, outlineParams);
+        Rosen::WMError res = Rosen::WindowManager::GetInstance().UpdateOutline(mediaService, outlineParams);
         if (res == Rosen::WMError::WM_OK) {
             MEDIA_LOGI("UpdateHighlightOutline sussess");
         } else {
@@ -2507,10 +2508,15 @@ void ScreenCaptureServer::RegisterPrivateWindowListener()
 
 void ScreenCaptureServer::RegisterScreenConnectListener()
 {
-    CHECK_AND_RETURN_LOG(!displayScreenIds_.empty(), "RegisterScreenConnectListener empty screenId");
+    std::vector<uint64_t> screenIds;
+    {
+        std::lock_guard<std::mutex> lock(captureIdsMutex_);
+        CHECK_AND_RETURN_LOG(!displayScreenIds_.empty(), "RegisterScreenConnectListener empty screenId");
+        screenIds = displayScreenIds_;
+    }
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer(shared_from_this());
-    screenConnectListener_ = sptr<ScreenConnectListenerForSC>::MakeSptr(displayScreenIds_, screenCaptureServer);
-    MEDIA_LOGI("RegisterScreenConnectListener screenId: %{public}" PRIu64, displayScreenIds_.front());
+    screenConnectListener_ = sptr<ScreenConnectListenerForSC>::MakeSptr(screenIds, screenCaptureServer);
+    MEDIA_LOGI("RegisterScreenConnectListener screenId: %{public}" PRIu64, screenIds.front());
     Rosen::ScreenManager::GetInstance().RegisterScreenListener(screenConnectListener_);
 }
 
@@ -2526,8 +2532,15 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     SetSystemScreenRecorderStatus(true);
     ScreenCaptureMonitorServer::GetInstance().CallOnScreenCaptureStarted(appInfo_.appPid);
     cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
-    if (!displayScreenIds_.empty() && displayScreenIds_.front() != SCREEN_ID_INVALID) {
-        cbProxy_->OnDisplaySelected(displayScreenIds_.front());
+    uint64_t selectedDisplayId = SCREEN_ID_INVALID;
+    {
+        std::lock_guard<std::mutex> lock(captureIdsMutex_);
+        if (!displayScreenIds_.empty() && displayScreenIds_.front() != SCREEN_ID_INVALID) {
+            selectedDisplayId = displayScreenIds_.front();
+        }
+    }
+    if (selectedDisplayId != SCREEN_ID_INVALID) {
+        cbProxy_->OnDisplaySelected(selectedDisplayId);
     }
 }
 
@@ -3239,7 +3252,6 @@ int32_t ScreenCaptureServer::StartNotification()
 std::string ScreenCaptureServer::GetStringByResourceName(const char* name)
 {
     std::string resourceContext;
-    std::lock_guard<std::mutex> lock(resMutex_);
     CHECK_AND_RETURN_RET_LOG(resourceManager_ != nullptr, resourceContext, "resourceManager is null");
     if (strcmp(name, NOTIFICATION_SCREEN_RECORDING_TITLE_ID) == 0 ||
         strcmp(name, NOTIFICATION_SCREEN_RECORDING_PRIVACY_ON_ID) == 0 ||
@@ -3258,7 +3270,6 @@ void ScreenCaptureServer::InitResourceManager()
     UErrorCode status = U_ZERO_ERROR;
     icu::Locale locale = icu::Locale::forLanguageTag(language, status);
     TRUE_LOG(status != U_ZERO_ERROR, MEDIA_LOGE, "forLanguageTag failed, errCode:%{public}d", status);
-    std::lock_guard<std::mutex> lock(resMutex_);
     if (resourceManager_ == nullptr) {
         resourceManager_ = Global::Resource::GetSystemResourceManagerNoSandBox();
     }
