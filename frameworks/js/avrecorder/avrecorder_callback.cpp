@@ -405,7 +405,6 @@ napi_status AudioCaptureChangeInfoJsCallback::SetAudioCapturerInfo(napi_env env,
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     setRet = CommonNapi::SetPropertyInt32(env, captureInfo, "capturerFlags", value_.capturerInfo.capturerFlags);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    napi_set_named_property(env, result, "capturerInfo", captureInfo);
     CHECK_AND_RETURN_RET(napi_set_named_property(env, result, "capturerInfo", captureInfo) == napi_ok,
         napi_generic_failure);
     return napi_ok;
