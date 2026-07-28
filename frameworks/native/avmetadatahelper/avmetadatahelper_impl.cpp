@@ -1322,7 +1322,7 @@ int32_t AVMetadataHelperImpl::OpenFile(const std::string& fileName, int32_t& fd,
     int32_t ret = CheckFileStat(fileName);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckFileStat failed");
     fd = open(fileName.c_str(), O_RDONLY);
-    CHECK_AND_RETURN_RET_LOG(fd != -1, MSERR_INVALID_VAL, "fopen failed");
+    CHECK_AND_RETURN_RET_LOG(fd != -1, MSERR_INVALID_VAL, "open file failed");
     if (GetFileSize(fileName, size) != MSERR_OK) {
         close(fd);
         fd = -1;
