@@ -81,10 +81,11 @@ NetworkClient::NetworkClient(const std::string &url, const std::map<std::string,
 
 NetworkClient::~NetworkClient()
 {
+    CloseOutputFd();
     MEDIA_LOGI("NetworkClient destroyed");
 }
 
-int32_t NetworkClient::SetOutputPath(const std::string &path, int64_t existingSize)
+int32_t NetworkClient::SetOutputPath(const std::string &path, int64_t resumePos, int64_t &startPos)
 {
     if (ctx_ == nullptr) {
         return DOWNLOAD_ERROR_INTERNAL;
@@ -105,20 +106,31 @@ int32_t NetworkClient::SetOutputPath(const std::string &path, int64_t existingSi
     }
 
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-
-    if (existingSize > 0) {
-        MEDIA_LOGI("SetOutputPath: resuming from %{public}" PRId64, existingSize);
-        ctx_->outputFd = open(normalizedPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, mode);
-    } else {
-        ctx_->outputFd = open(normalizedPath.c_str(), O_WRONLY | O_CREAT | O_TRUNC, mode);
-    }
+    ctx_->outputFd = open(normalizedPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, mode);
 
     if (ctx_->outputFd < 0) {
         MEDIA_LOGE("SetOutputPath failed: open failed, errno=%{public}d", errno);
         return DOWNLOAD_ERROR_FILE_IO;
     }
 
-    MEDIA_LOGI("SetOutputPath: %{public}s, existingSize=%{public}" PRId64, normalizedPath.c_str(), existingSize);
+    struct stat st;
+    int64_t fileSize = 0;
+    if (fstat(ctx_->outputFd, &st) == 0) {
+        fileSize = st.st_size;
+    }
+
+    if (resumePos > 0 && resumePos != fileSize) {
+        MEDIA_LOGW("SetOutputPath: resumePos=%{public}" PRId64 " != file size=%{public}" PRId64
+            ", using file size", resumePos, fileSize);
+    }
+
+    startPos = fileSize;
+
+    if (fileSize == 0) {
+        ftruncate(ctx_->outputFd, 0);
+    }
+
+    MEDIA_LOGI("SetOutputPath: %{public}s, startPos=%{public}" PRId64, normalizedPath.c_str(), startPos);
     return DOWNLOAD_RET_OK;
 }
 
@@ -137,6 +149,10 @@ bool NetworkClient::IsValidUrl(const std::string &url)
 
 size_t NetworkClient::RxHeaderCallback(void* buffer, size_t size, size_t nitems, void* userParam)
 {
+    if (nitems != 0 && size > SIZE_MAX / nitems) {
+        MEDIA_LOGE("RxHeaderCallback: integer overflow detected, size=%{public}zu, nitems=%{public}zu", size, nitems);
+        return 0;
+    }
     if (buffer == nullptr || userParam == nullptr) {
         return size * nitems;
     }
@@ -147,7 +163,6 @@ size_t NetworkClient::RxHeaderCallback(void* buffer, size_t size, size_t nitems,
     std::string headerStr(static_cast<const char*>(buffer), dataLen);
 
     MEDIA_LOGI("RxHeaderCallback: header length=%{public}zu", dataLen);
-    std::lock_guard<std::mutex> lock(ctx->mutex);
     ParseHttpStatusCode(ctx, headerStr);
     size_t pos = 0;
     size_t newlinePos = 0;
@@ -184,9 +199,7 @@ size_t NetworkClient::RxHeaderCallback(void* buffer, size_t size, size_t nitems,
         pos = newlinePos + 1;
     }
 
-    ctx->isHeaderReceived.store(true);
-    ctx->cv.notify_one();
-    return size * nitems;
+    return dataLen;
 }
 
 void NetworkClient::ParseHttpStatusCode(DownloadContext* ctx, const std::string& headerStr)
@@ -208,6 +221,10 @@ void NetworkClient::ParseHttpStatusCode(DownloadContext* ctx, const std::string&
 
 size_t NetworkClient::RxBodyCallback(void* buffer, size_t size, size_t nitems, void* userParam)
 {
+    if (nitems != 0 && size > SIZE_MAX / nitems) {
+        MEDIA_LOGE("RxBodyCallback: integer overflow detected, size=%{public}zu, nitems=%{public}zu", size, nitems);
+        return 0;
+    }
     if (buffer == nullptr || userParam == nullptr) {
         return size * nitems;
     }
@@ -379,6 +396,7 @@ int32_t NetworkClient::DoDownload(int64_t startPos)
         return DOWNLOAD_ERROR_NETWORK;
     }
 
+    SetClientImpl(clientImpl);
     connected_.store(true);
 
     auto sourceInfo = BuildRequestInfo(startPos);
@@ -388,6 +406,7 @@ int32_t NetworkClient::DoDownload(int64_t startPos)
     };
 
     auto status = clientImpl->RequestData(startPos, -1, sourceInfo, handleResponseCb);
+    SetClientImpl(nullptr);
     clientImpl->Deinit();
     clientImpl->Close(false);
     CloseOutputFd();
@@ -422,8 +441,6 @@ void NetworkClient::HandleResponse(const int32_t clientCode, const int32_t serve
     MEDIA_LOGI("Response callback: clientCode=%{public}d, serverCode=%{public}d, status=%{public}d",
         clientCode, serverCode, static_cast<int>(ret));
 
-    std::lock_guard<std::mutex> lock(ctx_->mutex);
-
     if (serverCode == HTTP_RANGE_NOT_SATISFIABLE && startPos_ > 0) {
         ProcessHttp416RangeNotSatisfiable();
     } else if (ret == Status::OK) {
@@ -437,8 +454,6 @@ void NetworkClient::HandleResponse(const int32_t clientCode, const int32_t serve
     } else {
         ProcessStatusError(ret);
     }
-
-    ctx_->cv.notify_one();
 }
 
 void NetworkClient::ProcessHttpSuccess(int32_t clientCode)
@@ -471,16 +486,7 @@ void NetworkClient::ProcessHttp416RangeNotSatisfiable()
 
 void NetworkClient::Handle416WithoutContentRange()
 {
-    MEDIA_LOGW("416 response: no Content-Range header");
-
-    if (startPos_ > 0) {
-        MEDIA_LOGI("416 without Content-Range: assuming download complete, local size: %{public}" PRId64, startPos_);
-        ctx_->requestSuccess.store(true);
-        ctx_->totalSize.store(startPos_);
-        return;
-    }
-
-    MEDIA_LOGE("416 without Content-Range on first download, resource may be unavailable");
+    MEDIA_LOGE("416 response: no Content-Range header, cannot verify download completeness");
     ctx_->requestSuccess.store(false);
     if (errorCallback_) {
         errorCallback_(DOWNLOAD_ERROR_NETWORK, HTTP_RANGE_NOT_SATISFIABLE);
@@ -586,6 +592,16 @@ void NetworkClient::Cancel()
     MEDIA_LOGI("Cancel called");
     std::lock_guard<std::mutex> lock(pauseMutex_);
     paused_.store(true); // set true to notify rxbodycb
+}
+
+void NetworkClient::ForceClose()
+{
+    MEDIA_LOGI("ForceClose called");
+    auto impl = GetClientImpl();
+    if (impl) {
+        impl->Close(true);
+        impl->Deinit();
+    }
 }
 
 void NetworkClient::SetProgressCallback(ProgressCallback cb)
