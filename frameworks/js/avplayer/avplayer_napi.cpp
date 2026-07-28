@@ -1,4 +1,4 @@
-/*
+ /*
  * Copyright (C) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1088,7 +1088,7 @@ napi_value AVPlayerNapi::JsSetSpeed(napi_env env, napi_callback_info info)
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     {
-        std::lock_guard<std::mutex> lock(syncMutex_);
+        std::lock_guard<std::mutex> lock(jsPlayer->syncMutex_);
         if (jsPlayer->IsLiveSource() && jsPlayer->player_ != nullptr && !jsPlayer->player_->IsLiveSeek()) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_UNSUPPORT_CAPABILITY, "The stream is live stream, not support speed");
             return result;
@@ -1142,7 +1142,7 @@ napi_value AVPlayerNapi::JsSetPlaybackRate(napi_env env, napi_callback_info info
     CHECK_AND_RETURN_RET_LOG(jsPlayer != nullptr, result, "failed to GetJsInstanceWithParameter");
 
     {
-        std::lock_guard<std::mutex> lock(syncMutex_);
+        std::lock_guard<std::mutex> lock(jsPlayer->syncMutex_);
         if (jsPlayer->IsLiveSource() && jsPlayer->player_ != nullptr && !jsPlayer->player_->IsLiveSeek()) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "The stream is live stream, not support rate");
             return result;
@@ -1177,7 +1177,7 @@ napi_value AVPlayerNapi::JsSetPlaybackRate(napi_env env, napi_callback_info info
     MEDIA_LOGD("0x%{public}06" PRIXPTR " JsSetRate EnqueueTask In", FAKE_POINTER(jsPlayer));
 
     {
-        std::lock_guard<std::mutex> lock(syncMutex_);
+        std::lock_guard<std::mutex> lock(jsPlayer->syncMutex_);
         if (jsPlayer->player_ != nullptr) {
             (void)jsPlayer->taskQue_->EnqueueTask(task);
         }
@@ -2671,7 +2671,7 @@ void AVPlayerNapi::SetDataSource(AVPlayerNapi *jsPlayer)
     MEDIA_LOGI("SetDataSource while setStateChange_ %{public}d", jsPlayer->hasSetStateChangeCb_);
     if (jsPlayer->hasSetStateChangeCb_) {
         {
-            std::lock_guard<std::mutex> lock(syncMutex_);
+            std::lock_guard<std::mutex> lock(jsPlayer->syncMutex_);
             if (jsPlayer->player_ != nullptr) {
                 if (jsPlayer->player_->SetSource(jsPlayer->dataSrcCb_) != MSERR_OK) {
                     jsPlayer->OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "player SetSource DataSrc failed");
@@ -2952,7 +2952,7 @@ napi_value AVPlayerNapi::JsGetPlaylistLoopMode(napi_env env, napi_callback_info 
 
     int32_t mode = jsPlayer->playlistLoopMode_;
     {
-        std::lock_guard<std::mutex> lock(syncMutex_);
+        std::lock_guard<std::mutex> lock(jsPlayer->syncMutex_);
         if (jsPlayer->player_ != nullptr) {
             mode = static_cast<int32_t>(jsPlayer->player_->GetPlaylistLoopMode());
             jsPlayer->playlistLoopMode_ = mode;
@@ -3797,7 +3797,7 @@ napi_value AVPlayerNapi::JsGetCurrentTime(napi_env env, napi_callback_info info)
     int32_t currentTime = -1;
     if (jsPlayer->IsControllable()) {
         {
-            std::lock_guard<std::mutex> lock(syncMutex_);
+            std::lock_guard<std::mutex> lock(jsPlayer->syncMutex_);
             if (!jsPlayer->reportMediaProgressCallbackflag_ && jsPlayer->player_ != nullptr) {
                 auto ret = jsPlayer->player_->GetCurrentTime(currentTime);
                 currentTime = ret == MSERR_OK ? currentTime : -1;
@@ -4510,7 +4510,7 @@ void AVPlayerNapi::SeiMessageCallbackOn(AVPlayerNapi *jsPlayer, std::string call
         seiMessageCallbackflag_ = true;
     }
 
-    std::lock_guard<std::mutex> lock(syncMutex_);
+    std::lock_guard<std::mutex> lock(jsPlayer->syncMutex_);
     if (jsPlayer->player_ != nullptr && seiMessageCallbackflag_) {
         MEDIA_LOGI("seiMessageCallbackflag_ = %{public}d", seiMessageCallbackflag_);
         (void)jsPlayer->player_->SetSeiMessageCbStatus(seiMessageCallbackflag_, payloadTypes);
@@ -5055,7 +5055,7 @@ napi_value AVPlayerNapi::JsIsSeekContinuousSupported(napi_env env, napi_callback
         CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "napi_get_boolean failed");
         return result;
     }
-    std::lock_guard<std::mutex> lock(syncMutex_);
+    std::lock_guard<std::mutex> lock(jsPlayer->syncMutex_);
     if (jsPlayer->player_ != nullptr) {
         isSeekContinuousSupported = jsPlayer->player_->IsSeekContinuousSupported();
         status = napi_get_boolean(env, isSeekContinuousSupported, &result);
