@@ -158,25 +158,34 @@ bool DownloadTaskCallback::ReadFileToBuffer(const std::string &filePath, std::ve
         return false;
     }
     if (fseek(fp, 0, SEEK_END) != 0) {
-        fclose(fp);
+        if (fclose(fp) != 0) {
+            MEDIA_LOGE("fclose failed after fseek SEEK_END failed");
+        }
         MEDIA_LOGE("fseek SEEK_END failed");
         return false;
     }
     long fileSize = ftell(fp);
     if (fseek(fp, 0, SEEK_SET) != 0) {
-        fclose(fp);
+        if (fclose(fp) != 0) {
+            MEDIA_LOGE("fclose failed after fseek SEEK_SET failed");
+        }
         MEDIA_LOGE("fseek SEEK_SET failed");
         return false;
     }
     constexpr long MAX_PARSE_FILE_SIZE = 64 * 1024 * 1024; // 64MB
     if (fileSize <= 0 || fileSize > MAX_PARSE_FILE_SIZE) {
-        fclose(fp);
+        if (fclose(fp) != 0) {
+            MEDIA_LOGE("fclose failed after file size check");
+        }
         MEDIA_LOGE("file size invalid or too large: %{public}ld", fileSize);
         return false;
     }
     buffer.resize(fileSize);
     size_t readLen = fread(buffer.data(), 1, fileSize, fp);
-    fclose(fp);
+    if (fclose(fp) != 0) {
+        MEDIA_LOGE("fclose failed after fread");
+        return false;
+    }
     if (readLen != static_cast<size_t>(fileSize)) {
         MEDIA_LOGE("failed to read full file");
         return false;
@@ -481,7 +490,10 @@ void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const Medi
         }
         std::vector<uint8_t> buffer(sniffSize);
         size_t readLen = fread(buffer.data(), 1, sniffSize, fp);
-        fclose(fp);
+        if (fclose(fp) != 0) {
+            MEDIA_LOGE("TaskId: %{public}" PRIu64 ", fclose failed after fread", downloaderId);
+            break;
+        }
         MEDIA_LOGI("readLen: %{public}zu", readLen);
         if (readLen < sniffSize) {
             break;

@@ -327,7 +327,9 @@ bool PlayStrategySerializer::DeserializeTrackSelectionFilter(const std::vector<u
     filter.maxVideoResolution.second = ReadInt32(input, offset);
     filter.minVideoResolution.first = ReadInt32(input, offset);
     filter.minVideoResolution.second = ReadInt32(input, offset);
-    if (offset > input.size()) return false;
+    if (offset > input.size()) {
+        return false;
+    }
 
     if (!ReadStringList(input, offset, filter.preferredVideoMimeTypes, "preferredVideoMimeTypes")) {
         return false;
@@ -335,7 +337,9 @@ bool PlayStrategySerializer::DeserializeTrackSelectionFilter(const std::vector<u
     filter.maxAudioBitrate = ReadInt32(input, offset);
     filter.minAudioBitrate = ReadInt32(input, offset);
     filter.maxAudioChannels = ReadInt32(input, offset);
-    if (offset > input.size()) return false;
+    if (offset > input.size()) {
+        return false;
+    }
 
     if (!ReadStringList(input, offset, filter.preferredAudioMimeTypes, "preferredAudioMimeTypes")) {
         return false;

@@ -132,7 +132,7 @@ void CacheReader::Read(int64_t uuid, int64_t requestedOffset, int64_t requestedL
 }
 
 bool CacheReader::ReadCacheFile(int64_t requestedOffset, int64_t requestedLength,
-    std::shared_ptr<AVSharedMemoryBase> &buffer, int64_t &actualReadLength)
+    std::shared_ptr<AVSharedMemoryBase> &buffer, CacheReadResult &result)
 {
     int64_t fileSize = fileCacheManager_ ? fileCacheManager_->GetSize(urlDir_) : -1;
     if (fileSize < 0) {
@@ -144,22 +144,22 @@ bool CacheReader::ReadCacheFile(int64_t requestedOffset, int64_t requestedLength
         MEDIA_LOG_E("Requested offset exceeds file size");
         return false;
     }
-    actualReadLength = std::min(actualRequestedLength, fileSize - requestedOffset);
+    result.actualReadLength = std::min(actualRequestedLength, fileSize - requestedOffset);
     constexpr int64_t MAX_READ_LENGTH = static_cast<int64_t>(INT32_MAX);
-    if (actualReadLength > MAX_READ_LENGTH) {
-        actualReadLength = MAX_READ_LENGTH;
+    if (result.actualReadLength > MAX_READ_LENGTH) {
+        result.actualReadLength = MAX_READ_LENGTH;
     }
 
     MEDIA_LOG_I("Read from file offset: " PUBLIC_LOG_D64 ", length: " PUBLIC_LOG_D64,
-        requestedOffset, actualReadLength);
+        requestedOffset, result.actualReadLength);
 
-    int32_t bufSize = static_cast<int32_t>(actualReadLength);
+    int32_t bufSize = static_cast<int32_t>(result.actualReadLength);
     buffer = std::make_shared<AVSharedMemoryBase>(bufSize, AVSharedMemory::FLAGS_READ_WRITE, "userBuffer");
     if (buffer->Init() != 0 || buffer->GetBase() == nullptr) {
         MEDIA_LOG_E("Failed to init shared memory buffer");
         return false;
     }
-    if (fileCacheManager_->Read(urlDir_, buffer->GetBase(), requestedOffset, actualReadLength) != 0) {
+    if (fileCacheManager_->Read(urlDir_, buffer->GetBase(), requestedOffset, result.actualReadLength) != 0) {
         MEDIA_LOG_E("Failed to read cache file: %{public}s", urlDir_.c_str());
         return false;
     }
@@ -167,37 +167,34 @@ bool CacheReader::ReadCacheFile(int64_t requestedOffset, int64_t requestedLength
 }
 
 void CacheReader::RespondCacheData(int64_t uuid, int64_t requestedOffset, int64_t requestedLength,
-    int64_t actualReadLength, const std::shared_ptr<AVSharedMemoryBase> &buffer,
-    std::shared_ptr<LoadingRequest> &reqToFinish, int32_t &finishErrorCode, bool &shouldFinish)
+    const std::shared_ptr<AVSharedMemoryBase> &buffer, CacheReadResult &result)
 {
     if (request_ == nullptr) {
         MEDIA_LOG_E("HandleCacheRequest: request_ is nullptr");
-        shouldFinish = true;
+        result.shouldFinish = true;
         return;
     }
     MEDIA_LOG_I("RespondData offset: " PUBLIC_LOG_D64 ", readLen: " PUBLIC_LOG_D64,
-        requestedOffset, actualReadLength);
+        requestedOffset, result.actualReadLength);
     auto ret = request_->RespondData(uuid, requestedOffset, buffer);
     if (ret < 0) {
         MEDIA_LOG_E("RespondData failed");
-        reqToFinish = request_;
-        finishErrorCode = LOADING_ERROR_NOT_READY;
-        shouldFinish = true;
-    } else if (requestedLength == -1 || actualReadLength != requestedLength) {
+        result.reqToFinish = request_;
+        result.finishErrorCode = LOADING_ERROR_NOT_READY;
+        result.shouldFinish = true;
+    } else if (requestedLength == -1 || result.actualReadLength != requestedLength) {
         MEDIA_LOG_I("RespondData whole file complete, offset: " PUBLIC_LOG_D64
             ", request: " PUBLIC_LOG_D64 ", readLen: " PUBLIC_LOG_D64,
-            requestedOffset, requestedLength, actualReadLength);
-        reqToFinish = request_;
-        finishErrorCode = LOADING_ERROR_SUCCESS;
-        shouldFinish = true;
+            requestedOffset, requestedLength, result.actualReadLength);
+        result.reqToFinish = request_;
+        result.finishErrorCode = LOADING_ERROR_SUCCESS;
+        result.shouldFinish = true;
     }
 }
 
 void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength)
 {
-    std::shared_ptr<LoadingRequest> reqToFinish;
-    int32_t finishErrorCode = 0;
-    bool shouldFinish = false;
+    CacheReadResult result;
 
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -207,30 +204,28 @@ void CacheReader::HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int6
         RespondHeader(uuid);
 
         if (headerFailed_.load()) {
-            reqToFinish = request_;
-            finishErrorCode = LOADING_ERROR_NOT_READY;
-            shouldFinish = true;
+            result.reqToFinish = request_;
+            result.finishErrorCode = LOADING_ERROR_NOT_READY;
+            result.shouldFinish = true;
         } else if (requestedLength == 0) {
             MEDIA_LOG_W("RequestedLength is zero, finish it.");
-            reqToFinish = request_;
-            finishErrorCode = LOADING_ERROR_SUCCESS;
-            shouldFinish = true;
+            result.reqToFinish = request_;
+            result.finishErrorCode = LOADING_ERROR_SUCCESS;
+            result.shouldFinish = true;
         } else {
             std::shared_ptr<AVSharedMemoryBase> buffer;
-            int64_t actualReadLength = 0;
-            if (!ReadCacheFile(requestedOffset, requestedLength, buffer, actualReadLength)) {
-                reqToFinish = request_;
-                finishErrorCode = LOADING_ERROR_NOT_READY;
-                shouldFinish = true;
+            if (!ReadCacheFile(requestedOffset, requestedLength, buffer, result)) {
+                result.reqToFinish = request_;
+                result.finishErrorCode = LOADING_ERROR_NOT_READY;
+                result.shouldFinish = true;
             } else {
-                RespondCacheData(uuid, requestedOffset, requestedLength, actualReadLength,
-                    buffer, reqToFinish, finishErrorCode, shouldFinish);
+                RespondCacheData(uuid, requestedOffset, requestedLength, buffer, result);
             }
         }
     }
 
-    if (shouldFinish && reqToFinish != nullptr) {
-        reqToFinish->FinishLoading(uuid, finishErrorCode);
+    if (result.shouldFinish && result.reqToFinish != nullptr) {
+        result.reqToFinish->FinishLoading(uuid, result.finishErrorCode);
     }
 }
 

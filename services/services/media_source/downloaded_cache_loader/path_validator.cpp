@@ -23,6 +23,7 @@ namespace Media {
 namespace DownloadedCache {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DownloadedCachePathValidator"};
+constexpr unsigned char FIRST_PRINTABLE_ASCII = 32;
 }
 
 struct NormalizeResult {
@@ -125,7 +126,7 @@ bool PathValidator::ContainsIllegalCharacters(const std::string& path)
 {
     for (char c : path) {
         auto uc = static_cast<unsigned char>(c);
-        if (uc < 32 && uc != 0x09 && uc != 0x0A && uc != 0x0D) {
+        if (uc < FIRST_PRINTABLE_ASCII && uc != 0x09 && uc != 0x0A && uc != 0x0D) {
             MEDIA_LOGE("Path contains control character: 0x%{public}02X", static_cast<uint8_t>(c));
             return true;
         }

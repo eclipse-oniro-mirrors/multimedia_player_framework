@@ -32,6 +32,13 @@ namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
 
+struct CacheReadResult {
+    int64_t actualReadLength = 0;
+    std::shared_ptr<LoadingRequest> reqToFinish;
+    int32_t finishErrorCode = 0;
+    bool shouldFinish = false;
+};
+
 class CacheReader : public LoaderCallback, public std::enable_shared_from_this<CacheReader> {
 public:
     CacheReader(int64_t uuid, const std::shared_ptr<LoadingRequest>& request,
@@ -48,10 +55,9 @@ private:
     void RespondHeader(int64_t uuid);
     void HandleCacheRequest(int64_t uuid, int64_t requestedOffset, int64_t requestedLength);
     bool ReadCacheFile(int64_t requestedOffset, int64_t requestedLength,
-        std::shared_ptr<AVSharedMemoryBase> &buffer, int64_t &actualReadLength);
+        std::shared_ptr<AVSharedMemoryBase> &buffer, CacheReadResult &result);
     void RespondCacheData(int64_t uuid, int64_t requestedOffset, int64_t requestedLength,
-        int64_t actualReadLength, const std::shared_ptr<AVSharedMemoryBase> &buffer,
-        std::shared_ptr<LoadingRequest> &reqToFinish, int32_t &finishErrorCode, bool &shouldFinish);
+        const std::shared_ptr<AVSharedMemoryBase> &buffer, CacheReadResult &result);
 
     std::string url_;
     std::string urlDir_;

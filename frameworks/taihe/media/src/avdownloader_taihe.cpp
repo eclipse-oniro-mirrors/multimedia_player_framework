@@ -68,7 +68,7 @@ void AVDownloaderManagerImpl::SetRequestTimeout(int32_t expired)
 {
     MEDIA_LOGI("SetRequestTimeout In, expired: %{public}d", expired);
     if (expired < 0) {
-        set_business_error(ERR_AVD_PARAM_OUT_OF_RANGE, "Invalid parameter: timeout must be non-negative");
+        set_business_error(ERR_PARAM_OUT_OF_RANGE, "Invalid parameter: timeout must be non-negative");
         return;
     }
     std::shared_ptr<OHOS::Media::AVDownloaderManager> manager;

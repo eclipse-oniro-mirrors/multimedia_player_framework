@@ -38,7 +38,7 @@ bool SHA256Hasher::CompareHash(const std::array<uint8_t, 32>& hash1,
     // Constant-time comparison: XOR-OR reduction prevents short-circuit exit,
     // eliminating timing side-channel leakage.
     uint8_t diff = 0;
-    for (size_t i = 0; i < 32; ++i) {
+    for (size_t i = 0; i < hash1.size(); ++i) {
         diff |= hash1[i] ^ hash2[i];
     }
     return diff == 0;
