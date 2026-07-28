@@ -63,6 +63,7 @@ RecorderClient::~RecorderClient()
 
 void RecorderClient::MediaServerDied()
 {
+    MEDIA_LOGE("RecorderClient::MediaServerDied");
     {
         std::lock_guard<std::mutex> lock(mutex_);
         recorderProxy_ = nullptr;

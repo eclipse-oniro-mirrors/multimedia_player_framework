@@ -163,24 +163,34 @@ public:
     void OnStateChange(OH_AVRecorder_State state, OH_AVRecorder_StateChangeReason reason)
     {
         MEDIA_LOGI("OnStateChange() is called, state: %{public}d", state);
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        CHECK_AND_RETURN(recorder_ != nullptr);
+        OH_AVRecorder *recorder = nullptr;
+        std::shared_ptr<NativeRecorderStateChangeCallback> callback;
+        {
+            std::shared_lock<std::shared_mutex> lock(mutex_);
+            recorder = recorder_;
+            callback = stateChangeCallback_;
+        }
+        CHECK_AND_RETURN(recorder != nullptr);
 
-        if (stateChangeCallback_ != nullptr) {
-            stateChangeCallback_->OnStateChange(recorder_, state, reason);
-            return;
+        if (callback != nullptr) {
+            callback->OnStateChange(recorder, state, reason);
         }
     }
 
     void OnError(RecorderErrorType errorType, int32_t errorCode) override
     {
         MEDIA_LOGE("OnError() is called, errorType: %{public}d, errorCode: %{public}d", errorType, errorCode);
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        CHECK_AND_RETURN(recorder_ != nullptr);
+        OH_AVRecorder *recorder = nullptr;
+        std::shared_ptr<NativeRecorderErrorCallback> callback;
+        {
+            std::shared_lock<std::shared_mutex> lock(mutex_);
+            recorder = recorder_;
+            callback = errorCallback_;
+        }
+        CHECK_AND_RETURN(recorder != nullptr);
 
-        if (errorCallback_ != nullptr) {
-            errorCallback_->OnError(recorder_, errorCode, "error occurred!");
-            return;
+        if (callback != nullptr) {
+            callback->OnError(recorder, errorCode, "error occurred!");
         }
     }
 
@@ -188,12 +198,17 @@ public:
     void OnPhotoAssertAvailable(const std::string &uri) override
     {
         MEDIA_LOGI("OnPhotoAssertAvailable() is called, uri: %{public}s", uri.c_str());
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        CHECK_AND_RETURN(recorder_ != nullptr);
- 
-        if (uriCallback_ != nullptr) {
-            uriCallback_->OnUri(recorder_, uri);
-            return;
+        OH_AVRecorder *recorder = nullptr;
+        std::shared_ptr<NativeRecorderUriCallback> callback;
+        {
+            std::shared_lock<std::shared_mutex> lock(mutex_);
+            recorder = recorder_;
+            callback = uriCallback_;
+        }
+        CHECK_AND_RETURN(recorder != nullptr);
+
+        if (callback != nullptr) {
+            callback->OnUri(recorder, uri);
         }
     }
 #endif
@@ -835,6 +850,7 @@ OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(info != nullptr, AV_ERR_INVALID_VAL, "input info is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(length != nullptr, AV_ERR_INVALID_VAL, "input length is nullptr!");
 
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");

@@ -631,7 +631,6 @@ void HiRecorderImpl::ClearAllConfiguration()
     isWatermarkSupported_ = false;
     hasWatermark_ = false;
     codecMimeType_ = "";
-    CloseFd();
     if (audioEncFormat_) {
         audioEncFormat_->Clear();
     }
@@ -660,6 +659,8 @@ void HiRecorderImpl::ClearAllConfiguration()
         }
         RemoveFilterAction(iter.second);
     }
+
+    CloseFd();
 }
 
 int32_t HiRecorderImpl::Stop(bool isDrainAll)
@@ -1237,6 +1238,7 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureOutFd(const RecorderParam &recParam)
 {
+    CloseFd();
     OutFd outFd = static_cast<const OutFd&>(recParam);
     fd_ = dup(outFd.fd);
     muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
@@ -1338,6 +1340,10 @@ std::vector<EncoderCapabilityData> HiRecorderImpl::ConvertEncoderInfo(
 {
     std::vector<EncoderCapabilityData> encoderInfoVector;
     for (int32_t i = 0; i < (int32_t)capData.size(); i++) {
+        if (capData[i] == nullptr) {
+            MEDIA_LOG_W("capData[%{public}d] is nullptr, skip", i);
+            continue;
+        }
         EncoderCapabilityData encoderInfo;
         if (capData[i]->codecType == MediaAVCodec::AVCodecType::AVCODEC_TYPE_VIDEO_ENCODER) {
             encoderInfo = ConvertVideoEncoderInfo(capData[i]);
