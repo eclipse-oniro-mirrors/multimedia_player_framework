@@ -174,7 +174,6 @@ int32_t PlayerImpl::SetSource(const std::string &url)
         int32_t ret = ParseFileName(uri, fileName);
         CHECK_AND_RETURN_RET_NOLOG(result == MSERR_OK, MSERR_INVALID_VAL);
         return OpenFile(fileName);
-
     }
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSource(url), "SetSource url", false, TIME_OUT_SECOND);
@@ -1702,7 +1701,6 @@ int32_t PlayerImpl::ParseFileName(const std::string& uri, std::string &fileName)
         if (uri.find("///", pos) != std::string::npos) {
             pos += 2; // 2: offset
         } else if (uri.find("//", pos) != std::string::npos) {
-            pos += 2;                 // 2: offset
             pos = uri.find('/', pos); // skip host name
             if (pos == std::string::npos) {
                 MEDIA_LOGE("Invalid file uri format");
