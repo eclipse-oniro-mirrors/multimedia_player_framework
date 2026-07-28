@@ -798,7 +798,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         std::string fileName = "";
         ret = ParseFileName(fileUri, fileName);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ParseFileName failed");
-        int32_t fd = 0;
+        int32_t fd = -1;
         int64_t size = -1;
         ret = OpenFile(fileName, fd, size);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OpenFile failed");
@@ -806,6 +806,7 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
         int32_t res = avMetadataHelperService_->SetSource(fd, 0, size, usage);
         concurrentWorkCount_--;
+        close(fd);
         return res;
     }
 
@@ -1300,7 +1301,7 @@ int32_t AVMetadataHelperImpl::CheckFileStat(const std::string& fileName)
     return MSERR_OK;
 }
 
-int32_t AVMetadataHelperImpl::GetFileSize(const std::string& fileName, int64_t &size)
+int32_t AVMetadataHelperImpl::GetFileSize(const std::string& fileName, int64_t& size)
 {
     if (fileName.empty()) {
         MEDIA_LOGE("fileName is empty");
@@ -1315,15 +1316,19 @@ int32_t AVMetadataHelperImpl::GetFileSize(const std::string& fileName, int64_t &
     return MSERR_OK;
 }
 
-int32_t AVMetadataHelperImpl::OpenFile(const std::string& fileName, int32_t& fd, int64_t &size)
+int32_t AVMetadataHelperImpl::OpenFile(const std::string& fileName, int32_t& fd, int64_t& size)
 {
     MEDIA_LOGD("IN");
     int32_t ret = CheckFileStat(fileName);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckFileStat failed");
     fd = open(fileName.c_str(), O_RDONLY);
     CHECK_AND_RETURN_RET_LOG(fd != -1, MSERR_INVALID_VAL, "fopen failed");
-    ret = GetFileSize(fileName, size);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetFileSize failed");
+    if (GetFileSize(fileName, size) != MSERR_OK) {
+        close(fd);
+        fd = -1;
+        MEDIA_LOGE("GetFileSize failed");
+        return MSERR_INVALID_VAL;
+    }
     return MSERR_OK;
 }
 } // namespace Media
