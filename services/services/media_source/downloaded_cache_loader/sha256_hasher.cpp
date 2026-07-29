@@ -26,8 +26,12 @@ std::array<uint8_t, 32> SHA256Hasher::GenerateHash(const std::string& url)
 {
     std::array<uint8_t, 32> hash = {}; // 32 bytes hash
 
-    SHA256(reinterpret_cast<const unsigned char*>(url.c_str()), url.size(),
+    unsigned char* ret = SHA256(reinterpret_cast<const unsigned char*>(url.c_str()), url.size(),
         reinterpret_cast<unsigned char*>(hash.data()));
+    if (ret == nullptr) {
+        MEDIA_LOG("SHA256 hash generation failed");
+        return {};
+    }
 
     return hash;
 }

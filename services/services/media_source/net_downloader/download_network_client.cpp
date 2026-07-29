@@ -386,7 +386,7 @@ Plugins::HttpPlugin::RequestInfo NetworkClient::BuildRequestInfo(int64_t startPo
 
 int32_t NetworkClient::DoDownload(int64_t startPos)
 {
-    MEDIA_LOGI("DoDownload start, url=%{public}s, startPos=%{public}" PRId64, url_.c_str(), startPos);
+    MEDIA_LOGI("DoDownload start, url=%{private}s, startPos=%{public}" PRId64, url_.c_str(), startPos);
 
     InitDownloadContext(startPos);
 

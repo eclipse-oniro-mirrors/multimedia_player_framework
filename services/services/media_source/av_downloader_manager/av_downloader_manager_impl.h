@@ -87,7 +87,7 @@ private:
     void ParseFiles(uint64_t downloaderId, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
         std::vector<DownloadFileInfo> &filesToAdd, std::shared_ptr<AVDownloaderManagerImpl> manager);
     void GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo);
-    void WriteMappingEntries(std::ofstream& f, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
+    uint32_t WriteMappingEntries(std::ofstream& f, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
         std::streamoff baseOffset);
     void ParseSingleFile(uint64_t downloaderId, DownloadFileInfo &fileInfo,
         std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::vector<DownloadFileInfo> &filesToAdd,
