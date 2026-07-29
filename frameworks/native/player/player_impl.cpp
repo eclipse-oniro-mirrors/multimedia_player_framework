@@ -1726,7 +1726,7 @@ int32_t PlayerImpl::OpenFile(const std::string& fileName)
     if (!fdsanFd_) {
         fdsanFd_ = std::make_unique(FdsanFd)(fd);
     } else {
-        fdsanFd_->Reset(fd_);
+        fdsanFd_->Reset(fd);
     }
     LISTENER(ret = playerService_->SetSource(fd, 0, fileSize), "setSource url", false, TIME_OUT_SECOND);
     return ret;
