@@ -14,7 +14,6 @@
 */
 
 #include "media_datashare_observer.h"
-#include "media_log.h"
 #include "media_utils.h"
 #include "media_log.h"
 #include "datashare_helper.h"
@@ -31,20 +30,32 @@ static constexpr const char* SETTINGS_DATA_BASE_URI =
 static constexpr const char* SETTINGS_DATA_EXT_URI = "datashare:///com.ohos.settingsdata.DataAbility";
 static constexpr const char* SETTINGS_DATA_FIELD_KEYWORD = "KEYWORD";
 static constexpr const char* SETTINGS_DATA_FIELD_VALUE = "VALUE";
+static constexpr int32_t UPDATE_SETTINGS_RETRY_COUNT = 10;
 }
 
 namespace OHOS {
 namespace Media {
+
+void MediaDatashareObserver::UpdateSettingsValueAsync()
+{
+    future_ = std::async(std::launch::async, []() {
+        for (int32_t i = 0; i < UPDATE_SETTINGS_RETRY_COUNT; i++) {
+            int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
+            MEDIA_LOGI("UpdateSettingsValue retry %{public}d, ret=%{public}d", i + 1, ret);
+            CHECK_AND_BREAK(ret == MSERR_INVALID_VAL);
+        }
+    });
+}
+
 void MediaDatashareObserver::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     auto const &want = data.GetWant();
     std::string action = want.GetAction();
     MEDIA_LOGI("MediaDatashareObserver::OnReceiveEvent action: %{public}s", action.c_str());
-    CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY
-        || action == EventFwk::CommonEventSupport::COMMON_EVENT_BOOT_COMPLETED);
+    CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent");
-    int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
-    MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent update result: %{public}d", ret);
+    UpdateSettingsValueAsync();
+    MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent update end");
 }
 
 MediaDatashareObserverRegister &MediaDatashareObserverRegister::GetInstance()
@@ -56,16 +67,13 @@ MediaDatashareObserverRegister &MediaDatashareObserverRegister::GetInstance()
 MediaDatashareObserverRegister::~MediaDatashareObserverRegister()
 {
     MEDIA_LOGI("MediaDatashareObserverRegister::~MediaDatashareObserverRegister");
-    UnSubscribe();
 }
 
 bool MediaDatashareObserverRegister::Subscribe()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(datashareObserver_ != nullptr, true, "MediaDatashareObserverRegister already subscribed");
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
-    matchingSkills.AddEvent(EventFwk::CommonEventSupport::COMMON_EVENT_BOOT_COMPLETED);
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
     auto *tempObserver = new (std::nothrow) MediaDatashareObserver(subscribeInfo);
     CHECK_AND_RETURN_RET_LOG(tempObserver != nullptr, false,
@@ -113,7 +121,7 @@ int32_t UpdateSettingsValue(const std::string &key, const std::string &value)
     MEDIA_LOGI("UpdateSettingsValue update %{public}d", updateResult);
     dataShareHelper->NotifyChange(uri);
     dataShareHelper->Release();
-    return updateResult;
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS

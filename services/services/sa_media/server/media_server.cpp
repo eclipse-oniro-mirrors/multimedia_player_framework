@@ -55,17 +55,11 @@ REGISTER_SYSTEM_ABILITY_BY_ID(MediaServer, PLAYER_DISTRIBUTED_SERVICE_ID, true)
 MediaServer::MediaServer(int32_t systemAbilityId, bool runOnCreate)
     : SystemAbility(systemAbilityId, runOnCreate)
 {
-#ifdef SUPPORT_SCREEN_CAPTURE
-    MediaDatashareObserverRegister::GetInstance().Subscribe();
-#endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
 
 MediaServer::~MediaServer()
 {
-#ifdef SUPPORT_SCREEN_CAPTURE
-    MediaDatashareObserverRegister::GetInstance().UnSubscribe();
-#endif
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -85,6 +79,9 @@ void MediaServer::OnStart()
     MEDIA_LOGD("InCallObserver init OnStart");
     InCallObserver::GetInstance();
 #endif
+#ifdef SUPPORT_SCREEN_CAPTURE
+    MediaDatashareObserverRegister::GetInstance().Subscribe();
+#endif
 }
 
 void MediaServer::OnStop()
@@ -92,6 +89,9 @@ void MediaServer::OnStop()
     MEDIA_LOGD("MediaServer OnStop");
     Memory::MemMgrClient::GetInstance().NotifyProcessStatus(getpid(),
         SYSTEM_PROCESS_TYPE, SYSTEM_STATUS_STOP, OHOS::PLAYER_DISTRIBUTED_SERVICE_ID);
+#ifdef SUPPORT_SCREEN_CAPTURE
+    MediaDatashareObserverRegister::GetInstance().UnSubscribe();
+#endif
 }
 
 int32_t MediaServer::FreezeStubForPids(const std::set<int32_t> &pidList, bool isProxy)
