@@ -349,7 +349,7 @@ private:
     bool canvasRotation_ = false;
     bool showCursor_ = true;
     std::atomic<bool> isMicrophoneSwitchTurnOn_{true};
-    bool isPrivacyAuthorityEnabled_ = false;
+    std::atomic<bool> isPrivacyAuthorityEnabled_{false};
     bool showSensitiveCheckBox_ = false;
     bool checkBoxSelected_ = false;
     bool showShareSystemAudioBox_ = false;
@@ -376,7 +376,7 @@ private:
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
     bool isScreenCaptureAuthority_ = false;
-    bool isPresentPickerPopWindow_ = false;
+    std::atomic<bool> isPresentPickerPopWindow_{false};
     std::string appName_ = "";
     std::atomic<bool> isSystemRecorder_ = {false};
     AVScreenCaptureConfig captureConfig_;
@@ -415,14 +415,14 @@ private:
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
     sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
     sptr<ScreenManager::IRecordDisplayListener> recordDisplayListener_ = nullptr;
-    bool isRegionCapture_ = false;
+    std::atomic<bool> isRegionCapture_{false};
     uint64_t regionDisplayId_ = 0;
     OHOS::Rect regionArea_ = {0, 0, 0, 0};
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
     sptr<OHOS::Surface> surface_ = nullptr;
-    bool isSurfaceMode_ = false;
+    std::atomic<bool> isSurfaceMode_{false};
     std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;
     std::shared_ptr<AudioCapturerWrapper> micAudioCapture_;
     std::mutex audioMutex_;
@@ -447,7 +447,7 @@ private:
     /* used for customize picker */
     std::vector<int32_t> excludedWindowIDsVec_;
     PickerMode pickerMode_ = PickerMode::SCREEN_AND_WINDOW;
-    bool isPickerModePopUp_ = false;
+    std::atomic<bool> isPickerModePopUp_{false};
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
 #endif
