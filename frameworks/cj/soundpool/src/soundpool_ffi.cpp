@@ -96,7 +96,7 @@ extern "C"
             MEDIA_LOGE("[CJSoundPool] instance is nullptr!");
             return ERR_INVALID_INSTANCE_CODE;
         }
-        return cjSoundPool->SetLoop(streamID, priority);
+        return cjSoundPool->SetPriority(streamID, priority);
     }
 
     int32_t FfiSoundPoolSetRate(int64_t id, int32_t streamID, int32_t rate)

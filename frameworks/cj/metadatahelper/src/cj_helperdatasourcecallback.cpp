@@ -28,9 +28,12 @@ const std::string HELPER_READAT_CALLBACK_NAME = "readAt";
 
 HelperDataSourceCJCallback::~HelperDataSourceCJCallback()
 {
-    isExit_ = true;
-    cond_.notify_all();
-    memory_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutexCond_);
+        isExit_ = true;
+        cond_.notify_all();
+        memory_ = nullptr;
+    }
 }
 
 void HelperDataSourceCJCallback::WaitResult()
@@ -98,6 +101,11 @@ int32_t CJHelperDataSourceCallback::GetSize(int64_t &size)
 
 int32_t CJHelperDataSourceCallback::GetCallbackId(int64_t &id)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
+    auto iter = funcMap_.find(HELPER_READAT_CALLBACK_NAME);
+    if (iter != funcMap_.end()) {
+        id = iter->second.first;
+    }
     return MSERR_OK;
 }
 

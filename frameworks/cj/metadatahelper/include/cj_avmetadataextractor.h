@@ -18,6 +18,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include "avmetadatahelper.h"
 #include "cj_common_ffi.h"
 #include "cj_helperdatasourcecallback.h"
@@ -49,6 +50,7 @@ private:
     CAVFileDescriptor fileDescriptor_ = { .fd = 0, .offset = 0, .length = -1 };
     CAVDataSrcDescriptor dataSrcDescriptor_ = { .fileSize = 0, .callback = 0 };
     std::atomic<HelperState> state_ = HelperState::HELPER_STATE_IDLE;
+    std::mutex mutex_;
 };
 
 } // namespace Media
