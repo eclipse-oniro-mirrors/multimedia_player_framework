@@ -892,17 +892,21 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     const char *const apiShortName = apiFullName + apiCalled.length();
 
     if (status != napi_ok || !ref) {
-        HISTOGRAM_BOOLEAN(apiFullName, false);
-        MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiShortName);
         MEDIA_LOGE("failed to create reference!");
+        #ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
+            HISTOGRAM_BOOLEAN(apiFullName, false);
+            MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiShortName);
+        #endif
         return result;
     }
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     soundPoolNapi->SetCallbackReference(callbackName, autoRef);
 
     MEDIA_LOGI("JsSetOnCallback callbackName: %{public}s success", callbackName.c_str());
-    HISTOGRAM_BOOLEAN(apiFullName, true);
-    MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiShortName);
+    #ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
+        HISTOGRAM_BOOLEAN(apiFullName, true);
+        MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiShortName);
+    #endif
     return result;
 }
 
