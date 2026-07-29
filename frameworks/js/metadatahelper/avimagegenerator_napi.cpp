@@ -323,7 +323,6 @@ napi_value AVImageGeneratorNapi::VerifyTheParameters(napi_env env, napi_callback
     promiseCtx = std::make_unique<AVImageGeneratorAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(promiseCtx != nullptr, nullptr, "promiseCtx is null");
     promiseCtx->innerHelper_ = napi->helper_;
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
 
     napi_valuetype valueType = napi_undefined;
     bool notParamValid = argCount < argOutputSizeIndex;
@@ -350,6 +349,7 @@ napi_value AVImageGeneratorNapi::VerifyTheParameters(napi_env env, napi_callback
         return nullptr;
     }
 
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     return result;
 }
 
