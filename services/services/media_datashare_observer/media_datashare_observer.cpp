@@ -121,7 +121,7 @@ int32_t UpdateSettingsValue(const std::string &key, const std::string &value)
     MEDIA_LOGI("UpdateSettingsValue update %{public}d", updateResult);
     dataShareHelper->NotifyChange(uri);
     dataShareHelper->Release();
-    return updateResult;
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS
