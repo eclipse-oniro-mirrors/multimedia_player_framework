@@ -1010,6 +1010,7 @@ void AVThumbnailGenerator::ConfigureReadSample(uint32_t readSampleTimeoutMs, Rea
 
 void AVThumbnailGenerator::ConvertToAVSharedMemory()
 {
+    CHECK_AND_RETURN_LOG(avBuffer_ != nullptr && avBuffer_->memory_ != nullptr, "avBuffer_ or memory_ is nullptr");
     auto surfaceBuffer = avBuffer_->memory_->GetSurfaceBuffer();
     if (surfaceBuffer != nullptr) {
         auto ret = GetYuvDataAlignStride(surfaceBuffer);
@@ -1152,6 +1153,38 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAvBufferFromFCodec()
     return targetAvBuffer;
 }
 
+int32_t AVThumbnailGenerator::CalculateTotalBytesOfAVSharedMemory(size_t baseSize, int32_t width, int32_t height,
+    float bytesPerPixel, int32_t& outputSize)
+{
+    if (width < 0 || height < 0 || bytesPerPixel < 0) {
+        MEDIA_LOGE("Invalid parameters: width=%{public}d|height=%{public}d|bytesPerPixel=%{public}d", width, height,
+            bytesPerPixel);
+        return MSERR_INVALID_VAL;
+    }
+    
+    int32_t pixelCount = 0;
+    if (__builtin_mul_overflow(width, height, &pixelCount)) {
+        MEDIA_LOGE("width * height overflow: width=%{public}d|height=%{public}d", width, height);
+        return MSERR_INVALID_VAL;
+    }
+    
+    if (pixelCount > static_cast<int32_t>(INT32_MAX / bytesPerPixel)) {
+        MEDIA_LOGE("yPlaneSize * bytesPerPixel overflow: pixelCount=%{public}d", pixelCount);
+        return MSERR_INVALID_VAL;
+    }
+    int32_t bytesOfTotalPixel = static_cast<int32_t>(pixelCount * bytesPerPixel);
+    
+    int32_t totalBytes = 0;
+    if (__builtin_add_overflow(baseSize, bytesOfTotalPixel, &totalBytes)) {
+        MEDIA_LOGE("baseSize + bytesOfTotalPixel overflow: baseSize=%{public}zu|bytesOfTotalPixel=%{public}d",
+            baseSize, bytesOfTotalPixel);
+        return MSERR_INVALID_VAL;
+    }
+    
+    outputSize = totalBytes;
+    return MSERR_OK;
+}
+
 int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer)
 {
     int32_t width = surfaceBuffer->GetWidth();
@@ -1164,10 +1197,12 @@ int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &s
     }
     MEDIA_LOGD("GetYuvDataAlignStride stride:%{public}d, strideWidth:%{public}d, outputHeight:%{public}d", stride,
                stride, outputHeight);
-
-    fetchedFrameAtTime_ =
-        std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + width * height * BYTES_PER_PIXEL_YUV,
-            AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
+    
+    int32_t totalBytes = 0;
+    CHECK_AND_RETURN_RET_NOLOG(CalculateTotalBytesOfAVSharedMemory(sizeof(OutputFrame), width, height,
+        BYTES_PER_PIXEL_YUV, totalBytes) == MSERR_OK, MSERR_INVALID_VAL);
+    fetchedFrameAtTime_ = std::make_shared<AVSharedMemoryBase>(totalBytes, AVSharedMemory::Flags::FLAGS_READ_WRITE,
+        "FetchedFrameMemory");
     auto ret = fetchedFrameAtTime_->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Create AVSharedmemory failed, ret:%{public}d", ret);
     uint8_t *dstPtr = static_cast<uint8_t *>(fetchedFrameAtTime_->GetBase() + sizeof(OutputFrame));

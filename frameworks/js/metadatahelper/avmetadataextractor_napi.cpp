@@ -86,14 +86,14 @@ napi_value AVMetadataExtractorNapi::Init(napi_env env, napi_value exports)
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVMetadataHelper class");
 
-    status = napi_create_reference(env, constructor, 1, &constructor_);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
-
     status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
+
+    status = napi_create_reference(env, constructor, 1, &constructor_);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
 
     MEDIA_LOGD("AVMetadataExtractorNapi Init success");
     return exports;
@@ -303,7 +303,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
 
     napi_value result = nullptr;
-    napi_create_object(env, &result);
+    CHECK_AND_RETURN_LOG(napi_create_object(env, &result) == napi_ok, "napi_create_object failed");
     if (status != napi_ok || promiseCtx->errCode != napi_ok) {
         promiseCtx->status = promiseCtx->errCode == napi_ok ? MSERR_INVALID_VAL : promiseCtx->errCode;
         MEDIA_LOGI("Resolve meta data failed");
@@ -602,6 +602,7 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
     if (fetchRes != MSERR_OK) {
         ThrowError(env, MSERR_EXT_API9_SERVICE_DIED, "Service died.");
     }
+    asyncCtx.release();
     return result;
 }
 
@@ -656,6 +657,7 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout(napi_env env
     if (fetchRes != MSERR_OK) {
         ThrowError(env, MSERR_EXT_API9_SERVICE_DIED, "Service died.");
     }
+    asyncCtx.release();
     return result;
 }
 

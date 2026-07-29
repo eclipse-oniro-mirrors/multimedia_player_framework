@@ -474,7 +474,7 @@ Status AVMetadataHelperImpl::GetColorSpace(sptr<SurfaceBuffer> &surfaceBuffer, P
         MEDIA_LOGW("cant find colorSpace");
         return Status::ERROR_UNKNOWN;
     }
-    CHECK_AND_RETURN_RET_LOG(colorSpaceInfoVec.size()*sizeof(uint8_t) >= sizeof(CM_ColorSpaceInfo),
+    CHECK_AND_RETURN_RET_LOG(colorSpaceInfoVec.size() * sizeof(uint8_t) >= sizeof(CM_ColorSpaceInfo),
         Status::ERROR_UNKNOWN, "colorSpaceInfoVec size is invalid");
     auto outColor = reinterpret_cast<CM_ColorSpaceInfo *>(colorSpaceInfoVec.data());
     CHECK_AND_RETURN_RET_LOG(outColor != nullptr, Status::ERROR_UNKNOWN, "colorSpaceInfoVec init failed");
@@ -597,7 +597,12 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelmapWithSDR(sptr<Surfa
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelmapWithHDR(sptr<SurfaceBuffer> &surfaceBuffer,
     const PixelMapInfo &pixelMapInfo, InitializationOptions &options, Status isColorSpaceInfoObtained)
 {
-    int32_t colorLength = pixelMapInfo.width * pixelMapInfo.height * PIXEL_SIZE_HDR_YUV;
+    int32_t colorLength = 0;
+    if (__builtin_mul_overflow(pixelMapInfo.width, pixelMapInfo.height, &colorLength) ||
+        __builtin_mul_overflow(colorLength, PIXEL_SIZE_HDR_YUV, &colorLength)) {
+        MEDIA_LOGE("overflow");
+        return nullptr;
+    }
     std::shared_ptr<PixelMap> pixelMap = PixelMap::Create(
         reinterpret_cast<const uint32_t *>(surfaceBuffer->GetVirAddr()), static_cast<uint32_t>(colorLength), options);
     CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create pixelMap with address failed");

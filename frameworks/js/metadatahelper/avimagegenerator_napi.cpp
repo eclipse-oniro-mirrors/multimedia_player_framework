@@ -77,14 +77,14 @@ napi_value AVImageGeneratorNapi::Init(napi_env env, napi_value exports)
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVImageGenerator class");
 
-    status = napi_create_reference(env, constructor, 1, &constructor_);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
-
     status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
+
+    status = napi_create_reference(env, constructor, 1, &constructor_);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
 
     MEDIA_LOGD("AVImageGeneratorNapi Init success");
     return exports;

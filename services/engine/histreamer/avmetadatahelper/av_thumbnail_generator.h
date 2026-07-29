@@ -115,6 +115,8 @@ private:
     void ConvertToAVSharedMemory();
     void ConvertP010ToNV12(const sptr<SurfaceBuffer> &surfaceBuffer, uint8_t *dstNV12, int32_t strideWidth,
         int32_t strideHeight);
+    int32_t CalculateTotalBytesOfAVSharedMemory(size_t baseSize, int32_t width, int32_t height, float bytesPerPixel,
+        int32_t& outputSize);
     int32_t GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer);
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime);
     Status SeekToTime(int64_t timeMs, Plugins::SeekMode option, int64_t realSeekTime, int64_t &seekTimeCostMs);
