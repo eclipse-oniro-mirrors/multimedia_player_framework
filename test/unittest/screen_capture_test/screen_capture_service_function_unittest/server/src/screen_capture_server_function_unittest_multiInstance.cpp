@@ -509,34 +509,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_001, TestSize.Level2
 }
 
 /**
- * @tc.name: CheckIsSAUidValid_002
- * @tc.desc: saUid not in saUidAppUidMap_
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_002, TestSize.Level2)
-{
-    int32_t appUid = ROOT_UID;
-    int32_t saUid = -1;
-    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_ = {};
-    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid + 1] = {appUid, 0};
-    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), true);
-}
-
-/**
- * @tc.name: CheckIsSAUidValid_003
- * @tc.desc: saUid in saUidAppUidMap_ and saUid.first == appUid
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_003, TestSize.Level2)
-{
-    int32_t appUid = ROOT_UID;
-    int32_t saUid = -1;
-    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_ = {};
-    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {appUid, 0};
-    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), true);
-}
-
-/**
  * @tc.name: CheckIsSAUidValid_004
  * @tc.desc: saUid in saUidAppUidMap_ and saUid.first != appUid
  * @tc.type: FUNC

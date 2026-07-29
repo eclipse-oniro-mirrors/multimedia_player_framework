@@ -70,6 +70,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_003, T
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
+    screenCaptureServer_->isGetAppMissionId_ = false;
     std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
 }
@@ -117,6 +118,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_006, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
+    screenCaptureServer_->isGetAppMissionId_ = false;
     std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
     ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
 }
