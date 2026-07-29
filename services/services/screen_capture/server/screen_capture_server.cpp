@@ -2120,7 +2120,7 @@ int32_t ScreenCaptureServer::CheckCaptureStreamParams()
     CheckVideoCapInfo(captureConfig_.videoInfo.videoCapInfo);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " CheckCaptureStreamParams start, isSurfaceMode:%{public}s,"
         " videoCapInfo.state:%{public}d, innerCapInfo.state:%{public}d.", FAKE_POINTER(this),
-        isSurfaceMode_ ? "true" : "false", captureConfig_.videoInfo.videoCapInfo.state,
+        isSurfaceMode_.load() ? "true" : "false", captureConfig_.videoInfo.videoCapInfo.state,
         captureConfig_.audioInfo.innerCapInfo.state);
     if (captureConfig_.audioInfo.micCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         isMicrophoneSwitchTurnOn_ = false;
@@ -2794,7 +2794,8 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
             auto wmRet = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
             isPickerModePopUp_ = (wmRet != Rosen::WMError::WM_OK || infos.empty() ||
                 infos.front() == nullptr || infos.front()->windowMetaInfo.pid != appInfo_.appPid);
-            MEDIA_LOGI("list window info ret:%{public}d, isPickerModePopUp:%{public}d", wmRet, isPickerModePopUp_);
+            MEDIA_LOGI("list window info ret:%{public}d, isPickerModePopUp:%{public}d", wmRet,
+                isPickerModePopUp_.load());
         }
     }
 #endif
@@ -2965,7 +2966,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
 {
     MEDIA_LOGI("StartScreenCaptureInner S, appUid:%{public}d, appPid:%{public}d, isPrivacyAuthorityEnabled:%{public}d"
         ", isSurfaceMode:%{public}d, dataType:%{public}d", appInfo_.appUid, appInfo_.appPid, isPrivacyAuthorityEnabled,
-        isSurfaceMode_, captureConfig_.dataType);
+        isSurfaceMode_.load(), captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
 
     int32_t ret = RegisterServerCallbacks();
@@ -3478,7 +3479,7 @@ int32_t ScreenCaptureServer::StartStreamVideoCapture()
     MediaTrace trace("ScreenCaptureServer::StartStreamVideoCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamVideoCapture start, state:%{public}d, "
         "dataType:%{public}d, isSurfaceMode:%{public}s.", FAKE_POINTER(this),
-        captureConfig_.videoInfo.videoCapInfo.state, captureConfig_.dataType, isSurfaceMode_ ? "true" : "false");
+        captureConfig_.videoInfo.videoCapInfo.state, captureConfig_.dataType, isSurfaceMode_.load() ? "true" : "false");
     if (captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
         MEDIA_LOGI("StartStreamVideoCapture is ignored");
         return MSERR_OK;
@@ -3495,7 +3496,7 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
 {
     MediaTrace trace("ScreenCaptureServer::StartStreamHomeVideoCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamHomeVideoCapture start, "
-        "isSurfaceMode: %{public}s.", FAKE_POINTER(this), isSurfaceMode_ ? "true" : "false");
+        "isSurfaceMode: %{public}s.", FAKE_POINTER(this), isSurfaceMode_.load() ? "true" : "false");
     std::string virtualScreenName = "screen_capture";
     if (isSurfaceMode_) {
         int32_t ret = CreateVirtualScreen(virtualScreenName, surface_);
