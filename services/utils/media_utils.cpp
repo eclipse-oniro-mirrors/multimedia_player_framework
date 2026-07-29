@@ -469,7 +469,8 @@ sptr<IRemoteObject> __attribute__((visibility("default"))) GetMediaService()
         MEDIA_LOG_E("GetSystemAbilityManager failed");
         return nullptr;
     }
-    return samgr->GetSystemAbility(3002); // MEDIA_SERVICE_SA_ID
+    constexpr int32_t mediaServiceSAId = 3002;
+    return samgr->GetSystemAbility(mediaServiceSAId);
 }
 }  // namespace Media
 }  // namespace OHOS

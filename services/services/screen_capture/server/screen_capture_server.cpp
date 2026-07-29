@@ -800,6 +800,7 @@ int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &ap
     std::lock_guard<std::mutex> lock(mutex_);
     if (!ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appInfo.appUid)) {
         MEDIA_LOGE("SetAndCheckSaLimit failed, saUid-appUid exists.");
+        saUid_ = -1;
         return MSERR_INVALID_OPERATION;
     }
     appInfo_.appUid = appInfo.appUid;

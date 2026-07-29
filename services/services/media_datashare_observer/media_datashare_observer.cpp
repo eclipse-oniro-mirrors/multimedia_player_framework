@@ -15,6 +15,7 @@
 
 #include "media_datashare_observer.h"
 #include "media_utils.h"
+#include "media_log.h"
 #include "datashare_helper.h"
 #include "uri.h"
 

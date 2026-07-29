@@ -348,7 +348,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_017, T
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_018, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->captureConfig_.strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
+    screenCaptureServer_->captureConfig_.strategy
+        .pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->isPresentPickerPopWindow_ = true;
     std::string choice = R"({"choice":"false"})";
     ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
