@@ -1157,8 +1157,7 @@ int32_t AVThumbnailGenerator::CalculateTotalBytesOfAVSharedMemory(size_t baseSiz
     float bytesPerPixel, int32_t& outputSize)
 {
     if (width < 0 || height < 0 || bytesPerPixel < 0) {
-        MEDIA_LOGE("Invalid parameters: width=%{public}d|height=%{public}d|bytesPerPixel=%{public}d", width, height,
-            bytesPerPixel);
+        MEDIA_LOGE("Invalid parameters: width=%{public}d|height=%{public}d", width, height);
         return MSERR_INVALID_VAL;
     }
     
