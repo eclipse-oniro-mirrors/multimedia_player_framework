@@ -60,6 +60,7 @@ do {                                                                            
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundPoolNapi"};
+#ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
     static const std::unordered_map<std::string, std::string> CALLBACK_NAME_TO_API_TYPE {
         { OHOS::Media::SoundPoolEvent::EVENT_LOAD_COMPLETED,               "onLoadComplete" },
         { OHOS::Media::SoundPoolEvent::EVENT_PLAY_FINISHED,                "onPlayFinished" },
@@ -67,6 +68,7 @@ namespace {
         { OHOS::Media::SoundPoolEvent::EVENT_ERROR,                        "onError" },
         { OHOS::Media::SoundPoolEvent::EVENT_ERROR_OCCURRED,               "onErrorOccurred" }
     };
+#endif
 }
 
 namespace OHOS {
@@ -886,29 +888,29 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
 
     napi_ref ref = nullptr;
     napi_status status = napi_create_reference(env, args[1], 1, &ref);
-    #ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
-        const std::string apiPerfix = "MediaKit.ArkTS.SoundPool.APICall.";
-        const std::string apiCalled = apiPerfix + CALLBACK_NAME_TO_API_TYPE.at(callbackName);
-        const char *const apiFullName = apiCalled.c_str();
-        const char *const apiShortName = apiFullName + apiCalled.length();
-    #endif
+#ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
+    const std::string apiPerfix = "MediaKit.ArkTS.SoundPool.APICall.";
+    const std::string apiCalled = apiPerfix + CALLBACK_NAME_TO_API_TYPE.at(callbackName);
+    const char *const apiFullName = apiCalled.c_str();
+    const char *const apiShortName = apiFullName + apiCalled.length();
+#endif
 
     if (status != napi_ok || !ref) {
         MEDIA_LOGE("failed to create reference!");
-        #ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
-            HISTOGRAM_BOOLEAN(apiFullName, false);
-            MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiShortName);
-        #endif
+#ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
+        HISTOGRAM_BOOLEAN(apiFullName, false);
+        MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiShortName);
+#endif
         return result;
     }
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     soundPoolNapi->SetCallbackReference(callbackName, autoRef);
 
     MEDIA_LOGI("JsSetOnCallback callbackName: %{public}s success", callbackName.c_str());
-    #ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
-        HISTOGRAM_BOOLEAN(apiFullName, true);
-        MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiShortName);
-    #endif
+#ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
+    HISTOGRAM_BOOLEAN(apiFullName, true);
+    MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiShortName);
+#endif
     return result;
 }
 
