@@ -104,6 +104,8 @@ CArrFloat Convert2CArrFloat(const std::vector<float> &arr);
 CSubtitleInfo Convert2CSubtitleInfo(std::string text, int32_t pts, int32_t duration);
 CMediaDescription Convert2CMediaDescription(const Format trackInfo);
 CArrCMediaDescription Convert2CArrCMediaDescription(const std::vector<Format> trackInfo);
+void FreeCMediaDescription(CMediaDescription &desc);
+void FreeCArrCMediaDescription(CArrCMediaDescription &arr);
 } // namespace Media
 } // namespace OHOS
 

@@ -195,8 +195,9 @@ private:
     int32_t height_ = 0;
     int32_t position_ = -1;
     int32_t duration_ = -1;
-    bool isLiveStream_ = false;
+    std::atomic<bool> isLiveStream_ = false;
     std::multimap<std::string, std::vector<uint8_t>> localDrmInfos_;
+    std::mutex drmMutex_;
     std::mutex syncMutex_;
 };
 

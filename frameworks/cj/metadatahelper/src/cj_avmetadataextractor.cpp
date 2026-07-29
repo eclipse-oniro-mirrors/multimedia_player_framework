@@ -33,6 +33,7 @@ bool CreateCString(std::string value, char** result)
     if (memcpy_s(*result, (value.size() + 1) * sizeof(char), value.c_str(), value.size()) != 0) {
         MEDIA_LOGE("Failed to create string.");
         free(*result);
+        *result = nullptr;
         return false;
     }
     (*result)[value.size()] = 0;
@@ -46,7 +47,7 @@ bool CreateMapPair(std::string key, std::string value, char** keyPtr, char** val
     ret = CreateCString(value, valuePtr);
     if (ret == false) {
         free(*keyPtr);
-        keyPtr = nullptr;
+        *keyPtr = nullptr;
     }
     return ret;
 }
@@ -120,6 +121,7 @@ bool CreateLocation(std::shared_ptr<Meta>& meta, CLocation& loc, std::string key
 
 bool SetHdrType(std::shared_ptr<Meta>& meta, std::string key, CAVMetadata& result)
 {
+    CHECK_AND_RETURN_RET_LOG(meta != nullptr, false, "meta is nullptr");
     bool ret = true;
     int32_t value;
     ret = meta->GetData(key, value);
@@ -154,6 +156,7 @@ char** CAVMetadataGetStrValue(CAVMetadata& data, const std::string key)
 
 bool SetMetadata(std::shared_ptr<Meta>& meta, std::string key, CAVMetadata& result)
 {
+    CHECK_AND_RETURN_RET_LOG(meta != nullptr, false, "meta is nullptr");
     bool ret = true;
     std::string sValue;
     ret = meta->GetData(key, sValue);
@@ -243,6 +246,7 @@ int32_t CJAVMetadataExtractorImpl::FetchMetadata(CAVMetadata* data)
     if (data == nullptr) {
         return MSERR_INVALID_VAL;
     }
+    std::lock_guard<std::mutex> lock(mutex_);
     InitAVMetadata(data);
     if (state_ != HelperState::HELPER_STATE_RUNNABLE) {
         MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
@@ -253,6 +257,10 @@ int32_t CJAVMetadataExtractorImpl::FetchMetadata(CAVMetadata* data)
         return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
     }
     auto metadata = helper_->GetAVMetadata();
+    if (metadata == nullptr) {
+        MEDIA_LOGE("GetAVMetadata returned nullptr, metadata unavailable");
+        return MSERR_EXT_API9_UNSUPPORT_FORMAT;
+    }
     for (const auto &key : g_Metadata) {
         if (metadata->Find(key) == metadata->end()) {
             MEDIA_LOGE("failed to find key: %{public}s", key.c_str());
@@ -284,6 +292,7 @@ int32_t CJAVMetadataExtractorImpl::FetchMetadata(CAVMetadata* data)
 
 int64_t CJAVMetadataExtractorImpl::FetchAlbumCover()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (state_ != HelperState::HELPER_STATE_RUNNABLE) {
         MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
         return 0;
@@ -307,6 +316,7 @@ int64_t CJAVMetadataExtractorImpl::FetchAlbumCover()
 
 int32_t CJAVMetadataExtractorImpl::SetAVFileDescriptor(CAVFileDescriptor file)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (state_ != HelperState::HELPER_STATE_IDLE) {
         MEDIA_LOGE("Has set source once, unsupport set again.");
         return MSERR_OK;
@@ -327,6 +337,7 @@ int32_t CJAVMetadataExtractorImpl::SetAVFileDescriptor(CAVFileDescriptor file)
 
 int32_t CJAVMetadataExtractorImpl::GetAVFileDescriptor(CAVFileDescriptor* file)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (file == nullptr) {
         return MSERR_INVALID_VAL;
     }
@@ -338,6 +349,7 @@ int32_t CJAVMetadataExtractorImpl::GetAVFileDescriptor(CAVFileDescriptor* file)
 
 int32_t CJAVMetadataExtractorImpl::SetAVDataSrcDescriptor(CAVDataSrcDescriptor data)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (state_ != HelperState::HELPER_STATE_IDLE) {
         MEDIA_LOGE("Has set source once, unsupport set again.");
         return MSERR_OK;
@@ -366,6 +378,7 @@ int32_t CJAVMetadataExtractorImpl::SetAVDataSrcDescriptor(CAVDataSrcDescriptor d
 
 int32_t CJAVMetadataExtractorImpl::GetAVDataSrcDescriptor(CAVDataSrcDescriptor* data)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (data == nullptr) {
         return MSERR_INVALID_VAL;
     }
@@ -379,6 +392,7 @@ int32_t CJAVMetadataExtractorImpl::GetAVDataSrcDescriptor(CAVDataSrcDescriptor* 
 
 RetDataI64 CJAVMetadataExtractorImpl::FetchFrameByTime(int64_t timeUs, int32_t option, const CPixelMapParams& param)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (state_ != HelperState::HELPER_STATE_RUNNABLE) {
         MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
         return {.code = MSERR_EXT_API9_OPERATE_NOT_PERMIT, .data = 0};
@@ -403,6 +417,7 @@ RetDataI64 CJAVMetadataExtractorImpl::FetchFrameByTime(int64_t timeUs, int32_t o
 
 void CJAVMetadataExtractorImpl::Release()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (state_ == HelperState::HELPER_STATE_RELEASED) {
         MEDIA_LOGE("Has released once, can't release again.");
         return;

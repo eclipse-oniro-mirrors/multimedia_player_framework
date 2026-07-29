@@ -162,7 +162,12 @@ int32_t CjAVRecorder::CheckStateMachine(const std::string &opt)
     auto napiCb = std::static_pointer_cast<CJAVRecorderCallback>(recorderCb_);
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
     std::string curState = napiCb->GetState();
-    std::vector<std::string> allowedOpt = STATE_CTRL_LIST.at(curState);
+    auto iter = STATE_CTRL_LIST.find(curState);
+    if (iter == STATE_CTRL_LIST.end()) {
+        MEDIA_LOGE("Invalid state: %{public}s", curState.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+    std::vector<std::string> allowedOpt = iter->second;
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
         return MSERR_INVALID_OPERATION;
@@ -722,7 +727,7 @@ void CjAVRecorder::UpdateRotation(int32_t rotation, int32_t *errCode)
     }
 
     if (CheckStateMachine(opt) == MSERR_OK) {
-        recorder_->SetOrientationHint(config_->rotation);
+        recorder_->SetOrientationHint(rotation);
     } else {
         ret = GetRetInfo(MSERR_INVALID_OPERATION, "UpdateRotation", "", "CheckStateMachine failed");
         *errCode = ret.first;

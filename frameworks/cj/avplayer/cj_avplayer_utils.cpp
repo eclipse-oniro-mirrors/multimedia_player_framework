@@ -188,6 +188,46 @@ void GetPlayerSampleRate(char **key, CValueType *value, const Format trackInfo, 
     }
 }
 
+void GetPlayerSampleDepth(char **key, CValueType *value, const Format trackInfo, int64_t &count)
+{
+    int32_t sampleDepth = -1;
+    if (trackInfo.GetIntValue("sample_depth", sampleDepth)) {
+        key[count] = MallocCString("sample_depth");
+        value[count] = CValueType{.number = sampleDepth, .dou = 0.0, .str = nullptr};
+        count++;
+    }
+}
+
+void GetPlayerLanguage(char **key, CValueType *value, const Format trackInfo, int64_t &count)
+{
+    std::string language;
+    if (trackInfo.GetStringValue("language", language)) {
+        key[count] = MallocCString("language");
+        value[count] = CValueType{.number = 0, .dou = 0.0, .str = MallocCString(language)};
+        count++;
+    }
+}
+
+void GetPlayerTrackName(char **key, CValueType *value, const Format trackInfo, int64_t &count)
+{
+    std::string trackName;
+    if (trackInfo.GetStringValue("track_name", trackName)) {
+        key[count] = MallocCString("track_name");
+        value[count] = CValueType{.number = 0, .dou = 0.0, .str = MallocCString(trackName)};
+        count++;
+    }
+}
+
+void GetPlayerHdrType(char **key, CValueType *value, const Format trackInfo, int64_t &count)
+{
+    std::string hdrType;
+    if (trackInfo.GetStringValue("hdr_type", hdrType)) {
+        key[count] = MallocCString("hdr_type");
+        value[count] = CValueType{.number = 0, .dou = 0.0, .str = MallocCString(hdrType)};
+        count++;
+    }
+}
+
 CMediaDescription Convert2CMediaDescription(const Format trackInfo)
 {
     CMediaDescription result = CMediaDescription{0};
@@ -209,30 +249,10 @@ CMediaDescription Convert2CMediaDescription(const Format trackInfo)
     GetPlayerFramerate(key, value, trackInfo, count);
     GetPlayerChannels(key, value, trackInfo, count);
     GetPlayerSampleRate(key, value, trackInfo, count);
-    int32_t sampleDepth = -1;
-    if (trackInfo.GetIntValue("sample_depth", sampleDepth)) {
-        key[count] = MallocCString("sample_depth");
-        value[count] = CValueType{.number = sampleDepth, .dou = 0.0, .str = nullptr};
-        count++;
-    }
-    std::string language;
-    if (trackInfo.GetStringValue("language", language)) {
-        key[count] = MallocCString("language");
-        value[count] = CValueType{.number = 0, .dou = 0.0, .str = MallocCString(language)};
-        count++;
-    }
-    std::string trackName;
-    if (trackInfo.GetStringValue("track_name", trackName)) {
-        key[count] = MallocCString("track_name");
-        value[count] = CValueType{.number = 0, .dou = 0.0, .str = MallocCString(trackName)};
-        count++;
-    }
-    std::string hdrType;
-    if (trackInfo.GetStringValue("hdr_type", hdrType)) {
-        key[count] = MallocCString("hdr_type");
-        value[count] = CValueType{.number = 0, .dou = 0.0, .str = MallocCString(hdrType)};
-        count++;
-    }
+    GetPlayerSampleDepth(key, value, trackInfo, count);
+    GetPlayerLanguage(key, value, trackInfo, count);
+    GetPlayerTrackName(key, value, trackInfo, count);
+    GetPlayerHdrType(key, value, trackInfo, count);
     result.key = key;
     result.value = value;
     result.size = count;
@@ -252,6 +272,39 @@ CArrCMediaDescription Convert2CArrCMediaDescription(const std::vector<Format> tr
         head[i] = Convert2CMediaDescription(trackInfo[i]);
     }
     return CArrCMediaDescription{.head = head, .size = trackInfo.size()};
+}
+
+void FreeCMediaDescription(CMediaDescription &desc)
+{
+    if (desc.key == nullptr && desc.value == nullptr) {
+        return;
+    }
+    if (desc.key != nullptr && desc.value != nullptr) {
+        for (int64_t i = 0; i < desc.size; i++) {
+            free(desc.key[i]);
+            desc.key[i] = nullptr;
+            free(desc.value[i].str);
+            desc.value[i].str = nullptr;
+        }
+    }
+    free(desc.key);
+    desc.key = nullptr;
+    free(desc.value);
+    desc.value = nullptr;
+    desc.size = 0;
+}
+
+void FreeCArrCMediaDescription(CArrCMediaDescription &arr)
+{
+    if (arr.head == nullptr) {
+        return;
+    }
+    for (int64_t i = 0; i < arr.size; i++) {
+        FreeCMediaDescription(arr.head[i]);
+    }
+    free(arr.head);
+    arr.head = nullptr;
+    arr.size = 0;
 }
 } // namespace Media
 } // namespace OHOS

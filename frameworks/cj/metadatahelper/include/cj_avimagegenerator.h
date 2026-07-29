@@ -17,6 +17,7 @@
 #define CJ_AVIMAGEGENERATOR_H
 
 #include <cstdint>
+#include <mutex>
 #include "avmetadatahelper.h"
 #include "ffi_remote_data.h"
 #include "media_core.h"
@@ -38,6 +39,7 @@ private:
     std::shared_ptr<AVMetadataHelper> helper_ = nullptr;
     CAVFileDescriptor fileDescriptor_ = { .fd = 0, .offset = 0, .length = -1 };
     std::atomic<HelperState> state_ = HelperState::HELPER_STATE_IDLE;
+    std::mutex mutex_;
 };
 
 } // namespace Media
