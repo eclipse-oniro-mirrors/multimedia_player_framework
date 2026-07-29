@@ -22,6 +22,8 @@
 #include "tokenid_kit.h"
 #endif
 
+#include <unordered_map>
+
 #ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
 #include "histogram_plugin_macros.h"
 #define DFX_API_CALL(apiName, result)                                                 \
@@ -49,9 +51,22 @@ do {                                                                            
 } ((cond)))
 
 #include "media_log.h"
+#undef LOG_TAG
+#define LOG_TAG LABEL.tag
+#undef LOG_DOMAIN
+#define LOG_DOMAIN LABEL.domain
+#undef LOG_TYPE
+#define LOG_TYPE LABEL.type
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundPoolNapi"};
+    static const std::unordered_map<std::string, std::string> CALLBACK_NAME_TO_API_TYPE {
+        { OHOS::Media::SoundPoolEvent::EVENT_LOAD_COMPLETED,               "onLoadComplete" },
+        { OHOS::Media::SoundPoolEvent::EVENT_PLAY_FINISHED,                "onPlayFinished" },
+        { OHOS::Media::SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID, "onPlayFinished" },
+        { OHOS::Media::SoundPoolEvent::EVENT_ERROR,                        "onError" },
+        { OHOS::Media::SoundPoolEvent::EVENT_ERROR_OCCURRED,               "onErrorOccurred" }
+    };
 }
 
 namespace OHOS {
@@ -850,15 +865,13 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     size_t argCount = 2;
     napi_value args[2] = { nullptr, nullptr };
     SoundPoolNapi *soundPoolNapi = SoundPoolNapi::GetJsInstanceAndArgs(env, info, argCount, args);
-    CHECK_AND_RETURN_RET_LOG(
-        DFX_REPORT_BEFORE_CHECK_RETURN(on, soundPoolNapi != nullptr), result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(soundPoolNapi, result, "Failed to retrieve instance");
 
     napi_valuetype valueType0 = napi_undefined;
     napi_valuetype valueType1 = napi_undefined;
     if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
         napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
-        DFX_API_CALL_FAIL(on);
         return result;
     }
 
@@ -868,21 +881,28 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
         callbackName != SoundPoolEvent::EVENT_PLAY_FINISHED_WITH_STREAM_ID &&
         callbackName != SoundPoolEvent::EVENT_ERROR && callbackName != SoundPoolEvent::EVENT_ERROR_OCCURRED) {
         soundPoolNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
-        DFX_API_CALL_FAIL(on);
         return result;
     }
 
     napi_ref ref = nullptr;
     napi_status status = napi_create_reference(env, args[1], 1, &ref);
-    CHECK_AND_RETURN_RET_LOG(
-        DFX_REPORT_BEFORE_CHECK_RETURN(on, status == napi_ok && ref != nullptr),
-        result, "failed to create reference!");
+    const std::string apiPerfix = "MediaKit.ArkTS.SoundPool.APICall.";
+    const std::string apiCalled = apiPerfix + CALLBACK_NAME_TO_API_TYPE.at(callbackName);
+    const char *const apiFullName = apiCalled.c_str();
+    const char *const apiShortName = apiFullName + apiCalled.length();
 
+    if (status != napi_ok || !ref) {
+        HISTOGRAM_BOOLEAN(apiFullName, false);
+        MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiShortName);
+        MEDIA_LOGE("failed to create reference!");
+        return result;
+    }
     std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
     soundPoolNapi->SetCallbackReference(callbackName, autoRef);
 
-    MEDIA_LOGI("JsSetOnCallback callbackName: %{public}s success", callbackName.c_str());
-    DFX_API_CALL_SUCC(on);
+    MEDIA_LOGI("JsSetOnCallback callbackName: %{public}s success", apiShortName);
+    HISTOGRAM_BOOLEAN(apiFullName, true);
+    MEDIA_LOGI("DFX_API_CALL opt %{public}s synced.", apiCalled.c_str());
     return result;
 }
 
