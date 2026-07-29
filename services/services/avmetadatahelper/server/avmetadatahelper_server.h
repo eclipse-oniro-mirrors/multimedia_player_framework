@@ -97,7 +97,7 @@ private:
     static constexpr float INVALID_VALUE = 2.0f;
 
     std::shared_ptr<HelperCallback> helperCb_ = nullptr;
-    HelperStates currState_ = HelperStates::HELPER_IDLE;
+    std::atomic<HelperStates> currState_ = HelperStates::HELPER_IDLE;
     std::mutex mutexCb_;
 };
 } // namespace Media

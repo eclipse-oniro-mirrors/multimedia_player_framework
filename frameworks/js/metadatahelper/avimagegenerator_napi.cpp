@@ -163,6 +163,18 @@ napi_value AVImageGeneratorNapi::JsCreateAVImageGenerator(napi_env env, napi_cal
     auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncContext.get(), napi_eprio_high);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+        if (asyncContext->callbackRef != nullptr) {
+            (void)napi_delete_reference(env, asyncContext->callbackRef);
+            asyncContext->callbackRef = nullptr;
+        }
+        if (asyncContext->deferred != nullptr) {
+            napi_value error = nullptr;
+            (void)CommonNapi::CreateError(env, MSERR_EXT_UNKNOWN, "Failed to send completion event.", error);
+            if (error != nullptr) {
+                (void)napi_reject_deferred(env, asyncContext->deferred, error);
+            }
+            asyncContext->deferred = nullptr;
+        }
     } else {
         asyncContext.release();
     }
@@ -411,8 +423,28 @@ void AVImageGeneratorNapi::CommonCallbackRoutine(napi_env env, AVImageGeneratorA
     napi_get_undefined(env, &result[1]);
 
     napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env, &scope);
-    CHECK_AND_RETURN(scope != nullptr && asyncContext != nullptr);
+    napi_status status = napi_open_handle_scope(env, &scope);
+    if (status != napi_ok || scope == nullptr) {
+        if (asyncContext->deferred != nullptr) {
+            napi_value error = nullptr;
+            (void)CommonNapi::CreateError(env, MSERR_EXT_UNKNOWN, "Failed to open handle scope.", error);
+            if (error != nullptr) {
+                (void)napi_reject_deferred(env, asyncContext->deferred, error);
+            }
+            asyncContext->deferred = nullptr;
+        }
+        if (asyncContext->callbackRef != nullptr) {
+            (void)napi_delete_reference(env, asyncContext->callbackRef);
+            asyncContext->callbackRef = nullptr;
+        }
+        if (asyncContext->work != nullptr) {
+            (void)napi_delete_async_work(env, asyncContext->work);
+            asyncContext->work = nullptr;
+        }
+        delete asyncContext;
+        asyncContext = nullptr;
+        return;
+    }
     if (asyncContext->status == ERR_OK) {
         result[1] = valueParam;
     }

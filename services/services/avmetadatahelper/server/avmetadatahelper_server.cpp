@@ -74,18 +74,21 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     MediaTrace trace("AVMetadataHelperServer::SetSource_uri");
     MEDIA_LOGD("Current uri is : %{private}s %{public}u", uri.c_str(), usage);
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty");
-    int32_t setSourceRes = MSERR_OK;
-    std::atomic<bool> isInitEngineEnd = false;
+    struct AsyncResult {
+        int32_t setSourceRes = MSERR_OK;
+        std::atomic<bool> isInitEngineEnd = false;
+    };
+    auto asyncResult = std::make_shared<AsyncResult>();
 
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, usage, uri, &isInitEngineEnd, &setSourceRes] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, usage, uri, asyncResult] {
         MediaTrace trace("AVMetadataHelperServer::SetSource_uri_task");
         {
             std::unique_lock<std::mutex> lock(mutex_);
             uriHelper_ = std::make_unique<UriHelper>(uri);
             int32_t res = CheckSourceByUriHelper();
-            isInitEngineEnd = true;
+            asyncResult->isInitEngineEnd = true;
             if (res != MSERR_OK) {
-                setSourceRes = res;
+                asyncResult->setSourceRes = res;
                 ipcReturnCond_.notify_all();
                 return res;
             }
@@ -101,11 +104,11 @@ int32_t AVMetadataHelperServer::SetSource(const std::string &uri, int32_t usage)
     });
     CHECK_AND_RETURN_RET_LOG(task != nullptr, MSERR_NO_MEMORY, "Failed to create task");
     taskQue_.EnqueueTask(task);
-    ipcReturnCond_.wait(lock, [this, &isInitEngineEnd] {
-        return isInitEngineEnd.load() || isInterrupted_.load();
+    ipcReturnCond_.wait(lock, [this, asyncResult] {
+        return asyncResult->isInitEngineEnd.load() || isInterrupted_.load();
     });
     CHECK_AND_RETURN_RET_LOG(isInterrupted_.load() == false, MSERR_INVALID_OPERATION, "SetSource interrupted");
-    return setSourceRes;
+    return asyncResult->setSourceRes;
 }
 
 int32_t AVMetadataHelperServer::SetAVMetadataCaller(AVMetadataCaller caller)
@@ -123,17 +126,20 @@ int32_t AVMetadataHelperServer::SetUrlSource(const std::string &uri, const std::
     std::unique_lock<std::mutex> lock(mutex_);
     MEDIA_LOGD("Current uri is : %{private}s", uri.c_str());
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty");
-    int32_t setSourceRes = MSERR_OK;
-    std::atomic<bool> isInitEngineEnd = false;
+    struct AsyncResult {
+        int32_t setSourceRes = MSERR_OK;
+        std::atomic<bool> isInitEngineEnd = false;
+    };
+    auto asyncResult = std::make_shared<AsyncResult>();
 
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, header, uri, &isInitEngineEnd, &setSourceRes] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, header, uri, asyncResult] {
         MediaTrace trace("AVMetadataHelperServer::SetUrlSource_task");
         {
             std::unique_lock<std::mutex> lock(mutex_);
             int32_t res = InitEngine(uri);
-            isInitEngineEnd = true;
+            asyncResult->isInitEngineEnd = true;
             if (res != MSERR_OK) {
-                setSourceRes = res;
+                asyncResult->setSourceRes = res;
                 ipcReturnCond_.notify_all();
                 return res;
             }
@@ -150,11 +156,11 @@ int32_t AVMetadataHelperServer::SetUrlSource(const std::string &uri, const std::
     });
     CHECK_AND_RETURN_RET_LOG(task != nullptr, MSERR_NO_MEMORY, "Failed to create task");
     taskQue_.EnqueueTask(task);
-    ipcReturnCond_.wait(lock, [this, &isInitEngineEnd] {
-        return isInitEngineEnd.load() || isInterrupted_.load();
+    ipcReturnCond_.wait(lock, [this, asyncResult] {
+        return asyncResult->isInitEngineEnd.load() || isInterrupted_.load();
     });
     CHECK_AND_RETURN_RET_LOG(isInterrupted_.load() == false, MSERR_INVALID_OPERATION, "SetUrlSource interrupted");
-    return setSourceRes;
+    return asyncResult->setSourceRes;
 }
 
 int32_t AVMetadataHelperServer::CheckSourceByUriHelper()
@@ -175,19 +181,22 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     MediaTrace trace("AVMetadataHelperServer::SetSource_fd");
     MEDIA_LOGD("Current is fd source, offset: %{public}" PRIi64 ", size: %{public}" PRIi64 " usage: %{public}u",
                offset, size, usage);
-    int32_t setSourceRes = MSERR_OK;
-    std::atomic<bool> isInitEngineEnd = false;
+    struct AsyncResult {
+        int32_t setSourceRes = MSERR_OK;
+        std::atomic<bool> isInitEngineEnd = false;
+    };
+    auto asyncResult = std::make_shared<AsyncResult>();
 
     auto task = std::make_shared<TaskHandler<int32_t>>([this, fd, offset, size,
-                                                        usage, &isInitEngineEnd, &setSourceRes] {
+                                                        usage, asyncResult] {
         MediaTrace trace("AVMetadataHelperServer::SetSource_fd_task");
         {
             std::unique_lock<std::mutex> lock(mutex_);
             uriHelper_ = std::make_unique<UriHelper>(fd, offset, size);
             int32_t res = CheckSourceByUriHelper();
-            isInitEngineEnd = true;
+            asyncResult->isInitEngineEnd = true;
             if (res != MSERR_OK) {
-                setSourceRes = res;
+                asyncResult->setSourceRes = res;
                 ipcReturnCond_.notify_all();
                 return res;
             }
@@ -204,11 +213,11 @@ int32_t AVMetadataHelperServer::SetSource(int32_t fd, int64_t offset, int64_t si
     });
     CHECK_AND_RETURN_RET_LOG(task != nullptr, MSERR_NO_MEMORY, "Failed to create task");
     taskQue_.EnqueueTask(task);
-    ipcReturnCond_.wait(lock, [this, &isInitEngineEnd] {
-        return isInitEngineEnd.load() || isInterrupted_.load();
+    ipcReturnCond_.wait(lock, [this, asyncResult] {
+        return asyncResult->isInitEngineEnd.load() || isInterrupted_.load();
     });
     CHECK_AND_RETURN_RET_LOG(isInterrupted_.load() == false, MSERR_INVALID_OPERATION, "SetSource interrupted");
-    return setSourceRes;
+    return asyncResult->setSourceRes;
 }
 
 int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource> &dataSrc)
@@ -218,17 +227,20 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
     MEDIA_LOGD("AVMetadataHelperServer SetSource");
     CHECK_AND_RETURN_RET_LOG(dataSrc != nullptr, MSERR_INVALID_VAL, "data source is nullptr");
     dataSrc_ = dataSrc;
-    int32_t setSourceRes = MSERR_OK;
-    std::atomic<bool> isInitEngineEnd = false;
+    struct AsyncResult {
+        int32_t setSourceRes = MSERR_OK;
+        std::atomic<bool> isInitEngineEnd = false;
+    };
+    auto asyncResult = std::make_shared<AsyncResult>();
     
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, dataSrc, &isInitEngineEnd, &setSourceRes] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, dataSrc, asyncResult] {
         MediaTrace trace("AVMetadataHelperServer::SetSource dataSrc_task");
         {
             std::unique_lock<std::mutex> lock(mutex_);
             int32_t res = InitEngine("media data source");
-            isInitEngineEnd = true;
+            asyncResult->isInitEngineEnd = true;
             if (res != MSERR_OK) {
-                setSourceRes = res;
+                asyncResult->setSourceRes = res;
                 ipcReturnCond_.notify_all();
                 return res;
             }
@@ -251,11 +263,11 @@ int32_t AVMetadataHelperServer::SetSource(const std::shared_ptr<IMediaDataSource
     });
     CHECK_AND_RETURN_RET_LOG(task != nullptr, MSERR_NO_MEMORY, "Failed to create task");
     taskQue_.EnqueueTask(task);
-    ipcReturnCond_.wait(lock, [this, &isInitEngineEnd] {
-        return isInitEngineEnd.load() || isInterrupted_.load();
+    ipcReturnCond_.wait(lock, [this, asyncResult] {
+        return asyncResult->isInitEngineEnd.load() || isInterrupted_.load();
     });
     CHECK_AND_RETURN_RET_LOG(isInterrupted_.load() == false, MSERR_INVALID_OPERATION, "SetSource interrupted");
-    return setSourceRes;
+    return asyncResult->setSourceRes;
 }
 
 int32_t AVMetadataHelperServer::InitEngine(const std::string &uri)
