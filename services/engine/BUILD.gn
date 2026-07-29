@@ -18,7 +18,6 @@ group("media_engine_package") {
   deps = []
   if (player_framework_support_histreamer) {
     deps += [
-      "common:media_engine_common",
       "histreamer:media_engine_histreamer_package",
     ]
   }
