@@ -3232,7 +3232,7 @@ int32_t ScreenCaptureServer::StartPrivacyWindow(const std::string &cmdStr)
     ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
         nullptr, -1);
     MEDIA_LOGI("StartPrivacyWindow ret=%{public}d", ret);
-    return ret;
+    return ret == ERR_OK ? MSERR_OK : MSERR_UNKNOWN;
 }
 
 int32_t ScreenCaptureServer::StartAuthWindow()
