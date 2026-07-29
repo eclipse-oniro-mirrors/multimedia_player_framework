@@ -41,8 +41,8 @@ void MediaDatashareObserver::UpdateSettingsValueAsync()
     future_ = std::async(std::launch::async, []() {
         for (int32_t i = 0; i < UPDATE_SETTINGS_RETRY_COUNT; i++) {
             int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
-            CHECK_AND_CONTINUE(ret == MSERR_INVALID_VAL);
             MEDIA_LOGI("UpdateSettingsValue retry %{public}d, ret=%{public}d", i + 1, ret);
+            CHECK_AND_BREAK_LOG(ret == MSERR_INVALID_VAL);
         }
     });
 }
