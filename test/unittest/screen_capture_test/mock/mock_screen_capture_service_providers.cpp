@@ -13,15 +13,25 @@
  * limitations under the License.
  */
 
-#include "mock_external_service_providers.h"
+#include "mock_screen_capture_service_providers.h"
+#include "recorder_server.h"
+#include "screen_capture_monitor_server.h"
 
 namespace OHOS::Media {
 
-std::unique_ptr<ExternalServiceProviders> CreateMockProviders()
+IInnerScreenCaptureMonitorService &MockScreenCaptureServiceProviders::GetScreenCaptureMonitor()
 {
-    auto providers = std::make_unique<ExternalServiceProviders>();
-    providers->commonService = std::make_unique<MockCommonServiceProvider>();
-    return providers;
+    return ScreenCaptureMonitorServer::GetInstance();
+}
+
+std::shared_ptr<IRecorderService> MockScreenCaptureServiceProviders::CreateRecorder()
+{
+    return RecorderServer::Create();
+}
+
+std::unique_ptr<IScreenCaptureServiceProviders> CreateMockProviders()
+{
+    return std::make_unique<MockScreenCaptureServiceProviders>();
 }
 
 } // namespace OHOS::Media

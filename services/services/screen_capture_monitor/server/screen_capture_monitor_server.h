@@ -29,11 +29,11 @@
 
 namespace OHOS {
 namespace Media {
-class ScreenCaptureMonitorServer : public IScreenCaptureMonitorService, public NoCopyable {
+class ScreenCaptureMonitorServer : public IInnerScreenCaptureMonitorService, public NoCopyable {
 public:
     static ScreenCaptureMonitorServer &GetInstance();
 
-    // IScreenCaptureMonitorService override
+    // IInnerScreenCaptureMonitorService override
     std::list<int32_t> IsScreenCaptureWorking() override;
 
     void SetScreenCaptureMonitorCallback(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
@@ -43,10 +43,10 @@ public:
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
     void UnregisterScreenCaptureMonitorListener(
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) override;
-    int32_t CallOnScreenCaptureStarted(int32_t pid);
-    int32_t CallOnScreenCaptureFinished(int32_t pid);
+    int32_t CallOnScreenCaptureStarted(int32_t pid) override;
+    int32_t CallOnScreenCaptureFinished(int32_t pid) override;
     int32_t Release();
-    void SetSystemScreenRecorderPid(int32_t pid);
+    void SetSystemScreenRecorderPid(int32_t pid) override;
     bool IsSystemScreenRecorder(int32_t pid) override;
     bool IsSystemScreenRecorderWorking() override;
 

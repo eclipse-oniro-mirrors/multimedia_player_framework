@@ -23,9 +23,6 @@
 #include "mem_mgr_proxy.h"
 #include "media_datashare_observer.h"
 #include "audio_background_adapter.h"
-#ifdef SUPPORT_CALL
-#include "incall_observer.h"
-#endif
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaServer"};
@@ -75,10 +72,6 @@ void MediaServer::OnStart()
     MEDIA_LOGD("MediaServer OnStart res=%{public}d", res);
     AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
     AddSystemAbilityListener(AUDIO_POLICY_SERVICE_ID);
-#ifdef SUPPORT_CALL
-    MEDIA_LOGD("InCallObserver init OnStart");
-    InCallObserver::GetInstance();
-#endif
 #ifdef SUPPORT_SCREEN_CAPTURE
     MediaDatashareObserverRegister::GetInstance().Subscribe();
 #endif
@@ -99,7 +92,7 @@ int32_t MediaServer::FreezeStubForPids(const std::set<int32_t> &pidList, bool is
     int32_t size = static_cast<int32_t>(pidList.size());
     MEDIA_LOGI("received Freeze Notification, pidSize = %{public}d, isProxy = %{public}d",
                size, isProxy);
-    
+
     for (auto pid : pidList) {
         MEDIA_LOGI("received Freeze Pid, pid = %{public}d, isProxy = %{public}d",
             pid, isProxy);

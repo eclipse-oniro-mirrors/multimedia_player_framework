@@ -42,6 +42,7 @@
 #include "hitrace/tracechain.h"
 #include "locale_config.h"
 #include "parameter.h"
+#include <list>
 #include <unordered_map>
 #include <algorithm>
 #include <display_manager.h>
@@ -54,7 +55,8 @@
 #include <v1_0/buffer_handle_meta_key_type.h>
 #include "session_manager_lite.h"
 #include "window_manager_lite.h"
-#include "external_service_providers.h"
+#include "screen_capture_service_providers.h"
+#include "i_screen_capture_monitor_service.h"
 #include "want_agent_info.h"
 #include "want_agent_helper.h"
 #include "common_event_manager.h"
@@ -1990,7 +1992,7 @@ int32_t ScreenCaptureServer::StartInnerAudioCapture()
             std::string threadName = captureConfig_.dataType == DataType::ORIGINAL_STREAM
                 ? GenerateThreadNameByPrefix("OS_SInnAd")
                 : GenerateThreadNameByPrefix("OS_FInnAd");
-            innerAudioCapture_ = providers_->commonService->CreateAudioCapturerWrapper(
+            innerAudioCapture_ = providers_->CreateAudioCapturerWrapper(
                 captureConfig_.audioInfo.innerCapInfo, cbProxy_, std::move(threadName), contentFilter_);
             CHECK_AND_RETURN_RET_LOG(innerAudioCapture_ != nullptr, MSERR_UNKNOWN, "CreateInnerAudioCapture failed");
         }
@@ -2217,9 +2219,9 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
     ResSchedReportData(value, payload);
     captureState_ = AVScreenCaptureState::STARTED;
     if (isSystemRecorder_.load()) {
-        ScreenCaptureMonitorServer::GetInstance().SetSystemScreenRecorderPid(appInfo_.appPid);
+        providers_->GetScreenCaptureMonitor().SetSystemScreenRecorderPid(appInfo_.appPid);
     }
-    ScreenCaptureMonitorServer::GetInstance().CallOnScreenCaptureStarted(appInfo_.appPid);
+    providers_->GetScreenCaptureMonitor().CallOnScreenCaptureStarted(appInfo_.appPid);
     cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED);
     uint64_t selectedDisplayId = SCREEN_ID_INVALID;
     {
@@ -2235,7 +2237,7 @@ void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
 
 bool ScreenCaptureServer::IsFirstStartPidInstance(int32_t pid)
 {
-    std::list<int32_t> pidList = ScreenCaptureMonitorServer::GetInstance().IsScreenCaptureWorking();
+    std::list<int32_t> pidList = providers_->GetScreenCaptureMonitor().IsScreenCaptureWorking();
     bool isFirst = find(pidList.begin(), pidList.end(), pid) == pidList.end();
     MEDIA_LOGD("IsFirstStartPidInstance pid: %{public}d, isFirst: %{public}d", pid, isFirst);
     return isFirst;
@@ -2590,7 +2592,7 @@ int32_t ScreenCaptureServer::InitRecorder()
     MEDIA_LOGI("InitRecorder start");
     MediaTrace trace("ScreenCaptureServer::InitRecorder");
     if (!recorder_) {
-        recorder_ = Media::RecorderServer::Create();
+        recorder_ = providers_->CreateRecorder();
         CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN, "init Recoder failed");
     }
     ON_SCOPE_EXIT(0) {
@@ -4197,7 +4199,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture(bool isVoip)
                 ? GenerateThreadNameByPrefix("OS_SMicAd")
                 : GenerateThreadNameByPrefix("OS_FMicAd");
             ScreenCaptureContentFilter contentFilterMic;
-            micAudioCapture_ = providers_->commonService->CreateAudioCapturerWrapper(
+            micAudioCapture_ = providers_->CreateAudioCapturerWrapper(
                 captureConfig_.audioInfo.micCapInfo, cbProxy_, std::move(threadName), contentFilterMic);
             CHECK_AND_RETURN_RET_LOG(micAudioCapture_ != nullptr, MSERR_UNKNOWN, "CreateMicAudioCapture failed");
         }
@@ -4370,7 +4372,7 @@ void ScreenCaptureServer::StopScreenCaptureInnerUnBind()
 void ScreenCaptureServer::StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode)
 {
     DestroyPopWindow();
-    ScreenCaptureMonitorServer::GetInstance().CallOnScreenCaptureFinished(appInfo_.appPid);
+    providers_->GetScreenCaptureMonitor().CallOnScreenCaptureFinished(appInfo_.appPid);
     cbProxy_->OnStateChange(stateCode);
     isSurfaceMode_ = false;
     surface_ = nullptr;
@@ -4430,7 +4432,7 @@ bool ScreenCaptureServer::DestroyPopWindow()
 
 bool ScreenCaptureServer::IsLastStartedPidInstance(int32_t pid)
 {
-    std::list<int32_t> pidList = ScreenCaptureMonitorServer::GetInstance().IsScreenCaptureWorking();
+    std::list<int32_t> pidList = providers_->GetScreenCaptureMonitor().IsScreenCaptureWorking();
     bool isLast = find(pidList.begin(), pidList.end(), pid) == pidList.end();
     MEDIA_LOGD("IsLastStartedPidInstance pid: %{public}d, isLast: %{public}d", pid, isLast);
     return isLast;
@@ -4453,7 +4455,7 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     SetTimeoutScreenoffDisableLock(true);
 #endif
     UpdateHighlightOutline(false);
-    ScreenCaptureMonitorServer::GetInstance().CallOnScreenCaptureFinished(appInfo_.appPid);
+    providers_->GetScreenCaptureMonitor().CallOnScreenCaptureFinished(appInfo_.appPid);
     cbProxy_->OnStateChange(stateCode);
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     if (isPrivacyAuthorityEnabled_ && !isSystemRecorder_.load() && !isScreenCaptureAuthority_) {
@@ -4876,7 +4878,7 @@ int32_t ScreenCaptureServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBu
     CHECK_AND_RETURN_RET_LOG(captureConfig_.dataType == DataType::CAPTURE_FILE, MSERR_UNKNOWN,
         "dataType is not CAPTURE_FILE. dataType: %{public}d", captureConfig_.dataType);
     if (!recorder_) {
-        recorder_ = Media::RecorderServer::Create();
+        recorder_ = providers_->CreateRecorder();
     }
     CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_UNKNOWN_CREAT_RECORDER, "Create Recoder failed");
     auto ret = recorder_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
