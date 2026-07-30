@@ -159,7 +159,7 @@ private:
     int32_t ParseFileName(const std::string& uri, std::string &fileName);
     int32_t OpenFile(const std::string& fileName);
     int32_t CheckFileStat(const std::string& fileName);
-    size_t GetFileSize(const std::string& fileName);
+    int64_t GetFileSize(const std::string& fileName);
     std::recursive_mutex recMutex_;
     int64_t mCurrentPosition = INT64_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
