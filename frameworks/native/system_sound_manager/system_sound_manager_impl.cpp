@@ -73,7 +73,7 @@ const int32_t MAX_VECTOR_LENGTH = 1024;
 const off_t MAX_FILE_SIZE_200M = 200 * 1024 * 1024;
 const int32_t PARAM1 = 1;
 const int32_t PARAM2 = 2;
-const int32_t TONE_BIT_BASE = 1;
+const uint32_t TONE_BIT_BASE = 1;
 #ifdef SUPPORT_VIBRATOR
 const int OPERATION_ERROR = -4;
 #endif
@@ -240,18 +240,18 @@ std::string SystemSoundManagerImpl::BuildVibrateLibraryUri(bool isProxy) const
         std::to_string(SystemSoundManagerUtils::GetCurrentUserId()) : VIBRATE_PATH_URI;
 }
 
-int32_t SystemSoundManagerImpl::RingtoneTypeToBitMask(RingtoneType ringtoneType) const
+uint32_t SystemSoundManagerImpl::RingtoneTypeToBitMask(RingtoneType ringtoneType) const
 {
     return TONE_BIT_BASE << (static_cast<int32_t>(ringtoneType) - RINGTONE_TYPE_SIM_CARD_0);
 }
 
-int32_t SystemSoundManagerImpl::SystemToneTypeToBitMask(SystemToneType systemToneType) const
+uint32_t SystemSoundManagerImpl::SystemToneTypeToBitMask(SystemToneType systemToneType) const
 {
     return TONE_BIT_BASE << (static_cast<int32_t>(systemToneType) - SYSTEM_TONE_TYPE_SIM_CARD_0);
 }
 
 ToneAttrs SystemSoundManagerImpl::QueryToneAttrsByType(const DatabaseTool &databaseTool,
-    const std::string &typeColumnName, int32_t targetToneType, SourceType sourceType, int32_t defaultCategory)
+    const std::string &typeColumnName, uint32_t targetToneType, SourceType sourceType, int32_t defaultCategory)
 {
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, defaultCategory };
     CHECK_AND_RETURN_RET_LOG(databaseTool.isInitialized && databaseTool.dataShareHelper != nullptr, toneAttrs,
@@ -280,8 +280,8 @@ ToneAttrs SystemSoundManagerImpl::QueryToneAttrsByType(const DatabaseTool &datab
 
     unique_ptr<RingtoneAsset> asset = results->GetFirstObject();
     while (asset != nullptr) {
-        int32_t typeValue = typeColumnName == RINGTONE_COLUMN_RING_TONE_TYPE ?
-            asset->GetRingtoneType() : asset->GetShottoneType();
+        uint32_t typeValue = typeColumnName == RINGTONE_COLUMN_RING_TONE_TYPE ?
+            static_cast<uint32_t>(asset->GetRingtoneType()) : static_cast<uint32_t>(asset->GetShottoneType());
         if (typeValue & targetToneType) {
             toneAttrs.SetUri(asset->GetPath());
             toneAttrs.SetTitle(asset->GetTitle());
@@ -317,7 +317,7 @@ int32_t SystemSoundManagerImpl::ClearNotificationToneType(
 int32_t SystemSoundManagerImpl::ClearBitFromToneTypeColumn(
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     const std::string &typeColumnName, const std::string &sourceTypeColumnName,
-    int32_t targetToneType, SourceType sourceType)
+    uint32_t targetToneType, SourceType sourceType)
 {
     int32_t result = 0;
     DataShare::DatashareBusinessError businessError;
@@ -331,13 +331,13 @@ int32_t SystemSoundManagerImpl::ClearBitFromToneTypeColumn(
 
     unique_ptr<RingtoneAsset> asset = results->GetFirstObject();
     while (asset != nullptr) {
-        int32_t oldType;
+        uint32_t oldType;
         if (typeColumnName == RINGTONE_COLUMN_RING_TONE_TYPE) {
-            oldType = asset->GetRingtoneType();
+            oldType = static_cast<uint32_t>(asset->GetRingtoneType());
         } else {
-            oldType = asset->GetShottoneType();
+            oldType = static_cast<uint32_t>(asset->GetShottoneType());
         }
-        int32_t remaining = oldType & ~targetToneType;
+        uint32_t remaining = oldType & ~targetToneType;
 
         DataSharePredicates updatePredicates;
         DataShareValuesBucket updateValuesBucket;
@@ -348,7 +348,7 @@ int32_t SystemSoundManagerImpl::ClearBitFromToneTypeColumn(
             updateValuesBucket.Put(typeColumnName, RING_TONE_TYPE_NOT);
             updateValuesBucket.Put(sourceTypeColumnName, SOURCE_TYPE_INVALID);
         } else {
-            updateValuesBucket.Put(typeColumnName, remaining);
+            updateValuesBucket.Put(typeColumnName, static_cast<int32_t>(remaining));
         }
         result += dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
         asset = results->GetNextObject();
@@ -415,18 +415,18 @@ int32_t SystemSoundManagerImpl::UpdateToneTypeUri(std::shared_ptr<DataShare::Dat
         params.targetToneType, SOURCE_TYPE_CUSTOMISED);
 
     // Step 2: Set new target type on the target tone
-    int32_t finalType = params.targetToneType | params.storedToneType;
+    uint32_t finalType = params.targetToneType | params.storedToneType;
     DataSharePredicates updatePredicates;
     DataShareValuesBucket updateValuesBucket;
     updatePredicates.SetWhereClause(RINGTONE_COLUMN_TONE_ID + " = ? ");
     updatePredicates.SetWhereArgs({to_string(params.toneId)});
-    updateValuesBucket.Put(params.typeColumnName, finalType);
+    updateValuesBucket.Put(params.typeColumnName, static_cast<int32_t>(finalType));
     updateValuesBucket.Put(params.sourceTypeColumnName, SOURCE_TYPE_CUSTOMISED);
     return dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
 }
 
 int32_t SystemSoundManagerImpl::UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-    const int32_t &toneId, RingtoneType ringtoneType, const int32_t &storedToneType)
+    const int32_t &toneId, RingtoneType ringtoneType, const uint32_t &storedToneType)
 {
     UpdateToneTypeParams params = {
         toneId,
@@ -453,8 +453,9 @@ int32_t SystemSoundManagerImpl::SetToneUriInternal(std::shared_ptr<DataShare::Da
 
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
     if (ringtoneAsset != nullptr) {
-        int32_t storedToneType = (params.toneTypeQuery == TONE_TYPE_RINGTONE) ?
-            ringtoneAsset->GetRingtoneType() : ringtoneAsset->GetShottoneType();
+        uint32_t storedToneType = (params.toneTypeQuery == TONE_TYPE_RINGTONE) ?
+            static_cast<uint32_t>(ringtoneAsset->GetRingtoneType()) :
+            static_cast<uint32_t>(ringtoneAsset->GetShottoneType());
 
         int32_t toneId = ringtoneAsset->GetId();
         int32_t changedRows = 0;
@@ -502,7 +503,7 @@ int32_t SystemSoundManagerImpl::SetNoRingToneUri(std::shared_ptr<DataShare::Data
 {
     MEDIA_LOGI("Set no audio uri for ringtone type %{public}d", ringtoneType);
     int32_t result = 0;
-    int32_t targetToneType = RingtoneTypeToBitMask(ringtoneType);
+    uint32_t targetToneType = RingtoneTypeToBitMask(ringtoneType);
     result += ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_RING_TONE_TYPE,
         RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE, targetToneType, SOURCE_TYPE_CUSTOMISED);
     result += ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_RING_TONE_TYPE,
@@ -616,7 +617,7 @@ ToneAttrs SystemSoundManagerImpl::GetRingtoneAttrs(const DatabaseTool &databaseT
         return toneAttrs;
     }
 
-    int32_t targetToneType = RingtoneTypeToBitMask(ringtoneType);
+    uint32_t targetToneType = RingtoneTypeToBitMask(ringtoneType);
     toneAttrs = QueryToneAttrsByType(databaseTool, RINGTONE_COLUMN_RING_TONE_TYPE,
         targetToneType, SOURCE_TYPE_CUSTOMISED, TONE_CATEGORY_RINGTONE);
     if (toneAttrs.GetUri().empty()) {
@@ -707,7 +708,7 @@ std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
 }
 
 int32_t SystemSoundManagerImpl::UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-    const int32_t &toneId, SystemToneType systemToneType, const int32_t &storedToneType)
+    const int32_t &toneId, SystemToneType systemToneType, const uint32_t &storedToneType)
 {
     UpdateToneTypeParams params = {
         toneId,
@@ -742,7 +743,7 @@ int32_t SystemSoundManagerImpl::SetNoSystemToneUri(std::shared_ptr<DataShare::Da
         result += ClearNotificationToneType(dataShareHelper, SOURCE_TYPE_CUSTOMISED);
         result += ClearNotificationToneType(dataShareHelper, SOURCE_TYPE_PRESET);
     } else {
-        int32_t targetToneType = SystemToneTypeToBitMask(systemToneType);
+        uint32_t targetToneType = SystemToneTypeToBitMask(systemToneType);
         result += ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_SHOT_TONE_TYPE,
             RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE, targetToneType, SOURCE_TYPE_CUSTOMISED);
         result += ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_SHOT_TONE_TYPE,
@@ -822,7 +823,7 @@ ToneAttrs SystemSoundManagerImpl::GetSystemToneAttrs(const DatabaseTool &databas
                 to_string(NOTIFICATION_TONE_TYPE), SOURCE_TYPE_PRESET);
         }
     } else {
-        int32_t targetToneType = SystemToneTypeToBitMask(systemToneType);
+        uint32_t targetToneType = SystemToneTypeToBitMask(systemToneType);
         toneAttrs = QueryToneAttrsByType(databaseTool, RINGTONE_COLUMN_SHOT_TONE_TYPE,
             targetToneType, SOURCE_TYPE_CUSTOMISED, category);
         if (toneAttrs.GetUri().empty()) {

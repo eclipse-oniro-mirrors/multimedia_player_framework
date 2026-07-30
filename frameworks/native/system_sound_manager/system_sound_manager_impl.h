@@ -62,8 +62,8 @@ struct UpdateToneTypeParams {
     int32_t toneId;
     std::string typeColumnName;
     std::string sourceTypeColumnName;
-    int32_t targetToneType;
-    int32_t storedToneType;
+    uint32_t targetToneType;
+    uint32_t storedToneType;
 };
 
 struct SetToneUriParams {
@@ -186,10 +186,10 @@ private:
     void GetCustomizedTone(const std::shared_ptr<ToneAttrs> &toneAttrs);
     void InitMap();
     ToneAttrs QueryToneAttrsByType(const DatabaseTool &databaseTool, const std::string &typeColumnName,
-        int32_t targetToneTypeBit, SourceType sourceType, int32_t defaultCategory);
+        uint32_t targetToneTypeBit, SourceType sourceType, int32_t defaultCategory);
     int32_t ClearBitFromToneTypeColumn(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &typeColumnName, const std::string &sourceTypeColumnName,
-        int32_t targetToneTypeBit, SourceType sourceType);
+        uint32_t targetToneTypeBit, SourceType sourceType);
     int32_t SetNoRingToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         RingtoneType ringtoneType);
 
@@ -200,14 +200,14 @@ private:
         const UpdateToneTypeParams &params);
 
     int32_t UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
-        RingtoneType ringtoneType, const int32_t &storedToneType);
+        RingtoneType ringtoneType, const uint32_t &storedToneType);
 
     int32_t SetToneUriInternal(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &uri, const SetToneUriParams &params);
 
     ToneAttrs GetAlarmToneAttrs(const DatabaseTool &databaseTool);
     int32_t UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
-        SystemToneType systemToneType, const int32_t &storedToneType);
+        SystemToneType systemToneType, const uint32_t &storedToneType);
     int32_t OpenToneUri(const DatabaseTool &databaseTool, const std::string &uri, int32_t toneType);
     int32_t OpenToneFile(const DatabaseTool &databaseTool,
         const std::string &uri, int32_t toneType, int32_t toneId);
@@ -298,8 +298,8 @@ private:
     std::vector<std::shared_ptr<ToneAttrs>> alarmtoneAttrsArray_;
     std::string BuildRingtoneLibraryUri(bool isProxy) const;
     std::string BuildVibrateLibraryUri(bool isProxy) const;
-    int32_t RingtoneTypeToBitMask(RingtoneType ringtoneType) const;
-    int32_t SystemToneTypeToBitMask(SystemToneType systemToneType) const;
+    uint32_t RingtoneTypeToBitMask(RingtoneType ringtoneType) const;
+    uint32_t SystemToneTypeToBitMask(SystemToneType systemToneType) const;
 };
 
 class RingerModeCallbackImpl : public AudioStandard::AudioRingerModeCallback {
