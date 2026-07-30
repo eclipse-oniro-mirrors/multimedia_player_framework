@@ -19,6 +19,7 @@
 #include "call_manager_client.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_telephony_listener.h"
 #include "hisysevent.h"
 #include "telephony_observer_client.h"
 #include "telephony_types.h"
@@ -144,26 +145,19 @@ bool InCallObserver::RegisterObserver()
 {
     MEDIA_LOGI("InCallObserver Register InCall Listener");
     std::unique_lock<std::mutex> lock(mutex_);
-    bool ret = false;
-    auto telephonyObserver_ = std::make_unique<MediaTelephonyListener>().release();
-    auto observerRes = TelephonyObserverClient::GetInstance().AddStateObserver(telephonyObserver_, -1,
+    auto telephonyObserver = sptr<MediaTelephonyListener>::MakeSptr();
+    auto ret = TelephonyObserverClient::GetInstance().AddStateObserver(telephonyObserver, -1,
         TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE, true);
-    if (observerRes == OHOS::Telephony::TELEPHONY_SUCCESS) {
-        ret = true;
-        mediaTelephonyListeners_.push_back(telephonyObserver_);
-    } else {
-        MEDIA_LOGI("InCallObserver Register Listener observer ret:%{public}d", observerRes);
-    }
-    return ret;
+    CHECK_AND_RETURN_RET_LOG(ret == OHOS::Telephony::TELEPHONY_SUCCESS, false,
+        "InCallObserver Register Listener observer ret:%{public}d", ret);
+    return true;
 }
 
 void InCallObserver::UnRegisterObserver()
 {
     MEDIA_LOGI("UnRegister InCall Listener");
     std::unique_lock<std::mutex> lock(mutex_);
-    TelephonyObserverClient::GetInstance().RemoveStateObserver(-1,
-        TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE);
-    mediaTelephonyListeners_.clear();
+    TelephonyObserverClient::GetInstance().RemoveStateObserver(-1, TelephonyObserverBroker::OBSERVER_MASK_CALL_STATE);
 }
-}
-}
+} // namespace Media
+} // namespace OHOS

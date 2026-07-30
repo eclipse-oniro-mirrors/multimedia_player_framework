@@ -42,8 +42,8 @@ MediaTelephonyListener::~MediaTelephonyListener()
 
 bool MediaTelephonyListener::HasCallFromTel()
 {
-    std::shared_ptr<OHOS::Telephony::CallManagerClient> callManagerClientPtr =
-        DelayedSingleton<OHOS::Telephony::CallManagerClient>::GetInstance();
+    auto callManagerClientPtr = DelayedSingleton<OHOS::Telephony::CallManagerClient>::GetInstance();
+    CHECK_AND_RETURN_RET_LOG(callManagerClientPtr != nullptr, false, "callManagerClientPtr is nullptr");
     callManagerClientPtr->Init(OHOS::TELEPHONY_CALL_MANAGER_SYS_ABILITY_ID);
     bool hasCall = callManagerClientPtr->HasCall(false); // not include voip call
     MEDIA_LOGI("SC MediaTelephonyListener hasCall: %{public}d", hasCall);

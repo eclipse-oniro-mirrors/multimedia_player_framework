@@ -1389,7 +1389,6 @@ void ScreenCaptureServer::SetMediaKitReport(const std::string &apiCall)
     metaInfoJson["audioBitrate"] =  captureConfig_.audioInfo.audioEncInfo.audioBitrate;
     metaInfoJson["audioCodecformat"] =  captureConfig_.audioInfo.audioEncInfo.audioCodecformat;
     metaInfoJson["audioEncState"] =  captureConfig_.audioInfo.audioEncInfo.state;
-    metaInfoJson["recorderUrl"] =  captureConfig_.recorderInfo.url;
     metaInfoJson["recorderFileFormat"] =  captureConfig_.recorderInfo.fileFormat;
     metaInfoJson["enableDeviceLevelCapture"] =  captureConfig_.strategy.enableDeviceLevelCapture;
     metaInfoJson["keepCaptureDuringCall"] =  captureConfig_.strategy.keepCaptureDuringCall;

@@ -131,7 +131,7 @@ int32_t ScreenCaptureServiceProxy::SetRecorderInfo(RecorderInfo recorderInfo)
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    token = data.WriteString(recorderInfo.url) && data.WriteString(recorderInfo.fileFormat);
+    token = data.WriteString(recorderInfo.fileFormat);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write recorderInfo!");
 
     int error = Remote()->SendRequest(SET_RECORDER_INFO, data, reply, option);
