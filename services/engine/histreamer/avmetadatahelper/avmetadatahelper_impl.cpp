@@ -57,7 +57,7 @@ AVMetadataHelperImpl::~AVMetadataHelperImpl()
 int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
 {
     UriHelper uriHelper(uri);
-    if (uriHelper.UriType() != UriHelper::URI_TYPE_FILE && uriHelper.UriType() != UriHelper::URI_TYPE_FD) {
+    if (uriHelper.UriType() != UriHelper::URI_TYPE_FD) {
         MEDIA_LOGE("Unsupported uri type : %{private}s", uri.c_str());
         return MSERR_UNSUPPORT;
     }
