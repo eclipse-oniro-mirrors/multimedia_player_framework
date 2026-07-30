@@ -627,6 +627,7 @@ void AVMetadataExtractorImpl::FetchFramesByTimes(array_view<int64_t> timesUs,
     callback_view<void(::ohos::multimedia::media::FrameInfo const& frameInfo,
     optional_view<uintptr_t> err)> callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::JsFetchFramesAtTimes");
     MEDIA_LOGI("JsFetchFramesAtTimes in");
     AVMetadataExtractorImpl *taihe = this;
