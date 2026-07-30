@@ -73,9 +73,10 @@ void VideoEncoder::CodecOnNewOutputData(OH_AVCodec* codec, uint32_t index, OH_AV
     auto encoder = static_cast<VideoEncoder*>(userData);
     MEDIA_LOGD("[%{public}s] CodecOnNewOutputData index: %{public}d.", encoder->logTag_.c_str(), index);
     encoder->WriteFrame(data, attr);
-    // 不持有encoderMutex_: OH_VideoEncoder_Stop/Flush/Destroy会等待回调完成，
-    // 若回调也持有encoderMutex_则会死锁。FreeOutputData本身是线程安全的IPC调用。
-    OH_VideoEncoder_FreeOutputData(codec, index);
+    { // 此处codec其实就是VideoEncoder::encoder_对象，两个是同一个对象，加锁.
+        std::lock_guard<ffrt::mutex> lk(encoder->encoderMutex_);
+        OH_VideoEncoder_FreeOutputData(codec, index);
+    }
 }
 
 void VideoEncoder::CodecOnStreamChanged(OH_AVCodec* codec, OH_AVFormat* format, void* userData)
