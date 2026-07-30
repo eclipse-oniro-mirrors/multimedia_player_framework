@@ -20,7 +20,7 @@
 #include "ui_extension_ability_connection.h"
 #include "audio_data_source.h"
 #include "window_life_cycle_listener.h"
-#include "external_service_providers.h"
+#include "screen_capture_service_providers.h"
 
 namespace OHOS {
 namespace Media {
@@ -45,46 +45,7 @@ private:
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {
 public:
-    static std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> serverMap_;
-    static std::map<int32_t, std::pair<int32_t, int32_t>> saUidAppUidMap_;
-    static const int32_t maxSessionId_;
-    static const int32_t maxAppLimit_;
-    static UniqueIDGenerator gIdGenerator_;
-    static std::list<int32_t> startedSessionIDList_;
-    static const int32_t maxSessionPerUid_;
-    static const int32_t maxSCServerDataTypePerUid_;
-    static std::shared_mutex mutexServerMapRWGlobal_;
-    static std::shared_mutex mutexListRWGlobal_;
-    static std::shared_mutex mutexSaAppInfoMapGlobal_;
-    static std::atomic<int32_t> systemScreenRecorderPid_;
-
     static std::shared_ptr<IScreenCaptureService> Create();
-    static bool IsSAServiceCalling();
-    static bool CanScreenCaptureInstanceBeCreate(int32_t appUid);
-    static std::shared_ptr<IScreenCaptureService> CreateScreenCaptureNewInstance();
-    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content);
-    static int32_t GetRunningScreenCaptureInstancePid(std::list<int32_t> &pidList);
-    static int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr);
-    static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
-    static void GetValueFromJson(Json::Value &root, const std::string &content, std::string key, bool &value);
-    static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<ScreenCaptureServer> server);
-    static void RemoveScreenCaptureServerMap(int32_t sessionId);
-    static bool CheckScreenCaptureSessionIdLimit(int32_t curAppUid);
-    static bool CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, DataType dataType);
-    static void CountScreenCaptureAppNum(std::set<int32_t>& appSet);
-    static bool CheckScreenCaptureAppLimit(int32_t curAppUid);
-    static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerById(int32_t id);
-    static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id);
-    static std::list<int32_t> GetStartedScreenCaptureServerPidList();
-    static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid);
-    static size_t AddStartedSessionIdList(int32_t value);
-    static size_t RemoveStartedSessionIdList(int32_t value);
-    static std::list<int32_t> GetAllStartedSessionIdList();
-    static void AddSaAppInfoMap(int32_t saUid, int32_t curAppUid);
-    static void RemoveSaAppInfoMap(int32_t saUid);
-    static bool CheckSaUid(int32_t saUid, int32_t appUid);
-    static bool IsSaUidValid(int32_t saUid, int32_t appUid);
-    static bool CheckPidIsScreenRecorder(int32_t pid);
     ScreenCaptureServer();
     ~ScreenCaptureServer();
 
@@ -136,6 +97,8 @@ public:
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
         int32_t &watermarkCount) override;
 
+    int32_t ReportAVScreenCaptureUserChoice(const std::string &content);
+    int32_t GetAVScreenCaptureConfigurableParameters(std::string &resultStr);
     void SetSessionId(int32_t sessionId);
     void GetAndSetAppVersion();
     bool CheckAppVersionForUnsupport(DMError result);
@@ -169,14 +132,8 @@ public:
     void ChangeMirrorScreen();
     void ChangeMirrorScreenForRemove();
     void ChangeMirrorScreenForSet();
-    int32_t GetAppPid();
-    int32_t GetAppUid();
     void NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
     void NotifyprivacyProtect();
-    int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
-    void SetSCServerSaUid(int32_t saUid);
-    int32_t GetSCServerSaUid();
-    DataType GetSCServerDataType();
     bool IsState(uint32_t cap) const;
     bool IsSCRecorderFileWithVideo();
     bool IsStopAcquireAudioBufferFlag();
@@ -261,7 +218,6 @@ private:
     int32_t StartAuthWindow();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
     ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
-    int32_t ReportAVScreenCaptureUserChoiceImpl(const std::string &content);
     int32_t HandlePopupWindowCase(Json::Value& root, const std::string &content);
     int32_t HandleStreamDataCase(Json::Value& root, const std::string &content);
     int32_t HandlePresentPickerWindowCase(Json::Value& root, const std::string &content);
@@ -307,7 +263,6 @@ private:
     uint64_t GetDisplayIdOfWindows(uint64_t displayId);
     std::string GetStringByResourceName(const char* name);
     void InitResourceManager();
-    void SetSystemScreenRecorderStatus(bool status);
     bool DestroyPopWindow();
     bool DestroyPrivacySheet();
     void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
@@ -340,7 +295,7 @@ private:
     void StopCaptureOnError(const std::string &reportMsg);
 private:
     std::mutex mutex_;
-    std::mutex resMutex_;
+    std::mutex captureIdsMutex_;
     mutable std::shared_mutex appMissionIdslock_;
     mutable std::condition_variable_any appMissionIdsCondVar_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
@@ -409,7 +364,7 @@ private:
     int64_t startTime_ = 0;
     bool isTimePaused_ = false;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
-    std::unique_ptr<ExternalServiceProviders> providers_ = CreateDefaultProviders();
+    std::unique_ptr<IScreenCaptureServiceProviders> providers_ = CreateDefaultProviders();
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCWindowLifecycleListener> appLifecycleListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
@@ -463,6 +418,8 @@ private:
     static int32_t CheckVideoEncInfo(VideoEncInfo &videoEncInfo);
     static int32_t CheckCaptureMode(CaptureMode captureMode);
     static int32_t CheckDataType(DataType dataType);
+    static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
+    static void GetValueFromJson(Json::Value &root, const std::string &content, std::string key, bool &value);
 
 private:
     static constexpr int32_t ROOT_UID = 0;

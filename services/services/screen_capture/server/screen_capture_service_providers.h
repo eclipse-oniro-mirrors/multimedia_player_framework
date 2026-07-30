@@ -13,13 +13,10 @@
  * limitations under the License.
  */
 
-#ifndef EXTERNAL_SERVICE_WRAPPERS_H
-#define EXTERNAL_SERVICE_WRAPPERS_H
+#ifndef SCREEN_CAPTURE_SERVICE_PROVIDERS_H
+#define SCREEN_CAPTURE_SERVICE_PROVIDERS_H
 
 #include <memory>
-#include <vector>
-#include <dm_common.h>
-#include <screen.h>
 
 namespace OHOS::Media {
 
@@ -27,21 +24,21 @@ class AudioCapturerWrapper;
 struct AudioCaptureInfo;
 class ScreenCaptureCallBack;
 struct ScreenCaptureContentFilter;
+class IInnerScreenCaptureMonitorService;
+class IRecorderService;
 
-class ICommonServiceProvider {
+class IScreenCaptureServiceProviders {
 public:
-    virtual ~ICommonServiceProvider() = default;
+    virtual ~IScreenCaptureServiceProviders() = default;
     virtual std::shared_ptr<AudioCapturerWrapper> CreateAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
         const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
         const ScreenCaptureContentFilter &filter) = 0;
+    virtual IInnerScreenCaptureMonitorService &GetScreenCaptureMonitor() = 0;
+    virtual std::shared_ptr<IRecorderService> CreateRecorder() = 0;
 };
 
-struct ExternalServiceProviders {
-    std::unique_ptr<ICommonServiceProvider> commonService;
-};
-
-std::unique_ptr<ExternalServiceProviders> CreateDefaultProviders();
+std::unique_ptr<IScreenCaptureServiceProviders> CreateDefaultProviders();
 
 } // namespace OHOS::Media
 
-#endif // EXTERNAL_SERVICE_WRAPPERS_H
+#endif // SCREEN_CAPTURE_SERVICE_PROVIDERS_H

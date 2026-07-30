@@ -27,7 +27,7 @@
 #include "screen_capture_listener_callback.h"
 #include "screen_capture_server.h"
 #include "mock/mock_audio_capturer.h"
-#include "mock/mock_external_service_providers.h"
+#include "mock/mock_screen_capture_service_providers.h"
 #include "gtest/gtest.h"
 
 namespace OHOS {
