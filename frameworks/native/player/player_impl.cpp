@@ -1693,10 +1693,6 @@ int32_t PlayerImpl::ParseFileName(const std::string& uri, std::string &fileName)
             return MSERR_INVALID_VAL;
         }
         auto pos = uri.find("file:");
-        if (pos == std::string::npos) {
-            MEDIA_LOGE("Invalid file uri format");
-            return MSERR_INVALID_VAL;
-        }
         pos += 5; // 5: offset
         if (uri.find("///", pos) != std::string::npos) {
             pos += 2; // 2: offset
@@ -1722,7 +1718,7 @@ int32_t PlayerImpl::OpenFile(const std::string& fileName)
     CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, ret);
     int fd = open(fileName.c_str(), O_RDONLY);
     CHECK_AND_RETURN_RET_NOLOG(fd != -1, MSERR_INVALID_VAL);
-    int32_t fileSize = static_cast(GetFileSize(fileName));
+    int64_t fileSize = static_cast<int64_t>(GetFileSize(fileName));
     if (!fdsanFd_) {
         fdsanFd_ = std::make_unique(FdsanFd)(fd);
     } else {
