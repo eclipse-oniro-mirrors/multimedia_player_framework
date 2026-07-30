@@ -158,6 +158,7 @@ VEFError GraphicsRenderEngineImpl::StopRender()
         renderThread_->AddTask(task);
         task->Wait();
     }
+    ready_ = false;
     return VEFError::ERR_OK;
 }
 
