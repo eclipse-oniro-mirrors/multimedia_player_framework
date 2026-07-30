@@ -1720,7 +1720,7 @@ int32_t PlayerImpl::OpenFile(const std::string& fileName)
     CHECK_AND_RETURN_RET_NOLOG(fd != -1, MSERR_INVALID_VAL);
     int64_t fileSize = GetFileSize(fileName);
     if (!fdsanFd_) {
-        fdsanFd_ = std::make_unique(FdsanFd)(fd);
+        fdsanFd_ = std::make_unique<FdsanFd>(fd);
     } else {
         fdsanFd_->Reset(fd);
     }
