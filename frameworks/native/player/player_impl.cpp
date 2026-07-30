@@ -171,7 +171,7 @@ int32_t PlayerImpl::SetSource(const std::string &url)
         CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "SetSource error: GetRealPath error");
         std::string uri = "file://" + realUriPath;
         std::string fileName;
-        int32_t ret = ParseFileName(uri, fileName);
+        int32_t result = ParseFileName(uri, fileName);
         CHECK_AND_RETURN_RET_NOLOG(result == MSERR_OK, MSERR_INVALID_VAL);
         return OpenFile(fileName);
     }
