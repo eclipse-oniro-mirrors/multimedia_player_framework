@@ -889,10 +889,11 @@ napi_value SoundPoolNapi::JsSetOnCallback(napi_env env, napi_callback_info info)
     napi_ref ref = nullptr;
     napi_status status = napi_create_reference(env, args[1], 1, &ref);
 #ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
-    const std::string apiPerfix = "MediaKit.ArkTS.SoundPool.APICall.";
-    const std::string apiCalled = apiPerfix + CALLBACK_NAME_TO_API_TYPE.at(callbackName);
+    const std::string apiPrefix = "MediaKit.ArkTS.SoundPool.APICall.";
+    const std::string apiTypeName = CALLBACK_NAME_TO_API_TYPE.at(callbackName);
+    const std::string apiCalled = apiPrefix + apiTypeName;
     const char *const apiFullName = apiCalled.c_str();
-    const char *const apiShortName = apiFullName + apiCalled.length();
+    const char *const apiShortName = apiTypeName.c_str();
 #endif
 
     if (status != napi_ok || !ref) {
