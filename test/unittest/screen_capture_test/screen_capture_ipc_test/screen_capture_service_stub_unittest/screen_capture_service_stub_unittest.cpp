@@ -14,6 +14,7 @@
  */
 
 #include "screen_capture_service_stub_unittest.h"
+#include "token_setproc.h"
 #include "media_errors.h"
 #include "media_log.h"
 
@@ -62,7 +63,7 @@ HWTEST_F(ScreenCaptureServiceStubTest, DestoyServiceStub_001, TestSize.Level1)
 {
     sptr<ScreenCaptureServiceStub> screenCaptureServiceStub = ScreenCaptureServiceStub::Create();
     ASSERT_NE(screenCaptureServiceStub, nullptr);
-    screenCaptureServiceStub->screenCaptureServer_ = nullptr;
+    screenCaptureServiceStub->screenCaptureServer_.reset();
     int ret = screenCaptureServiceStub->DestroyStub();
     EXPECT_EQ(ret, 0);
     screenCaptureServiceStub = nullptr;

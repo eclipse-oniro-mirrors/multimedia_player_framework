@@ -48,9 +48,9 @@
 #include "notification_constant.h"
 #include "notification_slot.h"
 #ifdef SUPPORT_CALL
-#include "incall_observer.h"
+#include "incall_observer_callback.h"
 #endif
-#include "account_observer.h"
+#include "account_observer_callback.h"
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
 #include "json/json.h"

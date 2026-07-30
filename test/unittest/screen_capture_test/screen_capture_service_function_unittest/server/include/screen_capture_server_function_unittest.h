@@ -30,6 +30,42 @@
 #include "mock/mock_screen_capture_service_providers.h"
 #include "gtest/gtest.h"
 
+extern "C" {
+OHOS::Media::IScreenCaptureService *CreateScreenCaptureServer(OHOS::Media::IScreenCaptureServiceProviders *providers);
+void DestroyScreenCaptureServer(OHOS::Media::IScreenCaptureService *server);
+}
+
+struct ScreenCaptureServerDeleter {
+    void operator()(OHOS::Media::ScreenCaptureServer *p) const
+    {
+        DestroyScreenCaptureServer(static_cast<OHOS::Media::IScreenCaptureService *>(p));
+    }
+};
+
+using ScreenCaptureServerPtr = std::unique_ptr<OHOS::Media::ScreenCaptureServer, ScreenCaptureServerDeleter>;
+
+inline ScreenCaptureServerPtr MakeScreenCaptureServer()
+{
+    auto providers = OHOS::Media::CreateMockProviders();
+    auto *raw = static_cast<OHOS::Media::ScreenCaptureServer *>(
+        CreateScreenCaptureServer(providers.release()));
+    return ScreenCaptureServerPtr(raw, ScreenCaptureServerDeleter());
+}
+
+inline std::shared_ptr<OHOS::Media::ScreenCaptureServer> MakeScreenCaptureServerShared()
+{
+    return std::make_shared<OHOS::Media::ScreenCaptureServer>(OHOS::Media::CreateMockProviders());
+}
+
+inline std::shared_ptr<OHOS::Media::ScreenCaptureServer> MakeScreenCaptureServerViaCreate()
+{
+    auto service = OHOS::Media::ScreenCaptureServer::Create(OHOS::Media::CreateMockProviders());
+    if (service) {
+        return std::static_pointer_cast<OHOS::Media::ScreenCaptureServer>(service);
+    }
+    return nullptr;
+}
+
 namespace OHOS {
 namespace Media {
 namespace ScreenCaptureTestParam {
@@ -39,6 +75,7 @@ class ScreenCaptureServerFunctionTest : public testing::Test {
 public:
     virtual void SetUp();
     virtual void TearDown();
+    void SetMockBuilder(ScreenCaptureServer *server);
     int32_t SetInvalidConfig();
     std::shared_ptr<AVBuffer> CreateWatermarkBuffer();
     int32_t SetValidConfig();
@@ -54,26 +91,24 @@ public:
     int32_t StartStreamAudioCapture();
     void SetSCInnerAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> innerAudioBuffer);
     void SetSCMicAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> micAudioBuffer);
-    std::shared_ptr<AudioCapturerWrapper> CreateTestWrapper(
-        AudioCaptureInfo &audioInfo, const std::string &name, bool isInner = true, bool expectStart = true);
-    void SetWrapperBuilder(std::shared_ptr<AudioCapturerWrapper> wrapper, bool expectStart = true);
+    std::shared_ptr<AudioCapturerWrapper> CreateTestWrapper(AudioCaptureInfo &audioInfo, const std::string &name,
+        bool isInner = true);
     void SetupAudioDataSource(AVScreenCaptureMixMode mode);
-    void SetMockBuilder(std::shared_ptr<ScreenCaptureServer> server);
 
 protected:
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
+    ScreenCaptureServerPtr screenCaptureServer_;
     AVScreenCaptureConfig config_;
     int32_t outputFd_ = -1;
+
 private:
-    const std::string ScreenRecorderBundleName =
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
-    Security::AccessToken::HapInfoParams info_ = {
-        .userID = 100, // 100 UserID
+    const std::string ScreenRecorderBundleName = GetScreenCaptureSystemParam()
+        ["const.multimedia.screencapture.screenrecorderbundlename"];
+    Security::AccessToken::HapInfoParams info_ = {.userID = 100, // 100 UserID
         .bundleName = "com.ohos.test.screencapturetdd",
         .instIndex = 0, // 0 index
         .appIDDesc = "com.ohos.test.screencapturetdd",
-        .isSystemApp = true
-    };
+        .isSystemApp = true};
+    // clang-format off
     Security::AccessToken::HapPolicyParams policy_ = {
         .apl = Security::AccessToken::APL_SYSTEM_BASIC,
         .domain = "test.domain.screencapturetdd",
@@ -123,18 +158,22 @@ private:
             }
         }
     };
+    // clang-format on
 };
 
 class StandardScreenCaptureServerUnittestCallback : public IStandardScreenCaptureListener {
 public:
     virtual ~StandardScreenCaptureServerUnittestCallback() = default;
-    sptr<IRemoteObject> AsObject() { return nullptr; };
+    sptr<IRemoteObject> AsObject()
+    {
+        return nullptr;
+    };
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) {};
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {};
     void OnVideoBufferAvailable(bool isReady) {};
     void OnStateChange(AVScreenCaptureStateCode stateCode) {};
     void OnDisplaySelected(uint64_t displayId) {};
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) {};
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area) {};
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) {};
     void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) {};
 };
@@ -142,18 +181,20 @@ public:
 class ScreenCaptureServerUnittestCallbackMock : public ScreenCaptureListenerCallback {
 public:
     explicit ScreenCaptureServerUnittestCallbackMock(const sptr<IStandardScreenCaptureListener> &listener)
-        : ScreenCaptureListenerCallback(listener) {}
+        : ScreenCaptureListenerCallback(listener)
+    {
+    }
     virtual ~ScreenCaptureServerUnittestCallbackMock() = default;
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode);
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type);
     void OnVideoBufferAvailable(bool isReady);
     void OnStateChange(AVScreenCaptureStateCode stateCode);
     void OnDisplaySelected(uint64_t displayId);
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area);
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
     void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect);
     void Stop();
 };
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS
 #endif

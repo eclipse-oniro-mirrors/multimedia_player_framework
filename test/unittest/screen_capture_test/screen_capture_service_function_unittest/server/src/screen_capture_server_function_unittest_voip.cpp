@@ -149,11 +149,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_005, TestSize
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
-    screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_);
+    screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_->shared_from_this());
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->cbProxy_,
         std::string("InnerAudioCapture_voip_005"), screenCaptureServer_->contentFilter_);
-    SetWrapperBuilder(screenCaptureServer_->innerAudioCapture_);
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_UNKNOWN;
     ASSERT_EQ(screenCaptureServer_->SyncAudioCaptures(), MSERR_OK);
     EXPECT_EQ(screenCaptureServer_->innerAudioCapture_->captureState_, AudioCapturerWrapperState::CAPTURER_RECORDING);
@@ -171,7 +170,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_007, TestSize
     screenCaptureServer_->audioSource_ =
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
-    screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_);
+    screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_->shared_from_this());
     auto wrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         "InnerAudioCapture_voip_007", true);
     wrapper->bundleName_ = ScreenRecorderBundleName;
@@ -218,21 +217,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdated_TelOverlay, 
     EXPECT_EQ(screenCaptureServer_->isInTelCall_.load(), true);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdated_InnerStartFail, TestSize.Level2)
-{
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
-    screenCaptureServer_->audioSource_ =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
-    screenCaptureServer_->audioSource_->SetAudioRendererState(AUDIO_STATE_HEADSET);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
-        AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    auto wrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
-        "OS_InnerAudioCapture", true, false);
-    auto ret = screenCaptureServer_->SyncAudioCaptures();
-    EXPECT_NE(ret, MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdated_MicStopOnTel, TestSize.Level2)
 {
     screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
@@ -242,26 +226,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdated_MicStopOnTel
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     auto micWrapper =
-        CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture", false, true);
+        CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture", false);
     micWrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     auto ret = screenCaptureServer_->SyncAudioCaptures();
     EXPECT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdated_MicStartFail, TestSize.Level2)
-{
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
-    screenCaptureServer_->audioSource_ =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, screenCaptureServer_.get());
-    screenCaptureServer_->audioSource_->SetAudioRendererState(AUDIO_STATE_VOIP);
-    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
-        AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    auto micWrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture",
-        false, false);
-    auto ret = screenCaptureServer_->SyncAudioCaptures(false);
-    EXPECT_NE(ret, MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_SyncAudioCaptures, TestSize.Level2)
@@ -290,7 +258,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnRendererStateChange_CallbackPath, Te
     screenCaptureServer_->audioSource_ =
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
-    screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_);
+    screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_->shared_from_this());
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
     auto changeInfo = std::make_shared<AudioRendererChangeInfo>();

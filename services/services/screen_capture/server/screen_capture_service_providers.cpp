@@ -14,21 +14,18 @@
  */
 
 #include "screen_capture_service_providers.h"
-#include "audio_capturer_wrapper.h"
+#include "media_datashare_observer.h"
 #include "recorder_server.h"
 #include "screen_capture_monitor_server.h"
+#include "account_observer.h"
+#ifdef SUPPORT_CALL
+#include "incall_observer.h"
+#endif
 
 namespace OHOS::Media {
 
 class ScreenCaptureServiceProvidersImpl : public IScreenCaptureServiceProviders {
 public:
-    std::shared_ptr<AudioCapturerWrapper> CreateAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
-        const ScreenCaptureContentFilter &filter) override
-    {
-        return std::make_shared<AudioCapturerWrapper>(audioInfo, screenCaptureCb, std::move(name), filter);
-    }
-
     IInnerScreenCaptureMonitorService &GetScreenCaptureMonitor() override
     {
         return ScreenCaptureMonitorServer::GetInstance();
@@ -37,6 +34,23 @@ public:
     std::shared_ptr<IRecorderService> CreateRecorder() override
     {
         return RecorderServer::Create();
+    }
+
+    int32_t UpdateSettingsValue(const std::string &key, const std::string &value) override
+    {
+        return OHOS::Media::UpdateSettingsValue(key, value);
+    }
+
+#ifdef SUPPORT_CALL
+    InCallObserver &GetInCallObserver() override
+    {
+        return InCallObserver::GetInstance();
+    }
+#endif
+
+    AccountObserver &GetAccountObserver() override
+    {
+        return AccountObserver::GetInstance();
     }
 };
 

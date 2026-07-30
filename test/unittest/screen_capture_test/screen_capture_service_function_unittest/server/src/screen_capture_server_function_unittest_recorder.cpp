@@ -89,10 +89,8 @@ void ScreenCaptureServerUnittestCallbackMock::Stop()
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_001, TestSize.Level2)
 {
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
-    SetMockBuilder(screenCaptureServerInner);
+    auto screenCaptureServerInner = MakeScreenCaptureServer();
+    SetMockBuilder(screenCaptureServerInner.get());
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_recorder_001.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
@@ -121,10 +119,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_001, TestSize.Le
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_002, TestSize.Level2)
 {
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
-    SetMockBuilder(screenCaptureServerInner);
+    auto screenCaptureServerInner = MakeScreenCaptureServer();
+    SetMockBuilder(screenCaptureServerInner.get());
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_recorder_002.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
@@ -150,10 +146,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_002, TestSize.Le
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Level2)
 {
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
-    SetMockBuilder(screenCaptureServerInner);
+    auto screenCaptureServerInner = MakeScreenCaptureServer();
+    SetMockBuilder(screenCaptureServerInner.get());
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_recorder_003.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
@@ -199,10 +193,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_005, TestSize.Le
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureStream_001, TestSize.Level2)
 {
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
-    SetMockBuilder(screenCaptureServerInner);
+    auto screenCaptureServerInner = MakeScreenCaptureServer();
+    SetMockBuilder(screenCaptureServerInner.get());
     RecorderInfo recorderInfo{};
     SetValidConfigFile(recorderInfo);
     config_.dataType = DataType::ORIGINAL_STREAM;

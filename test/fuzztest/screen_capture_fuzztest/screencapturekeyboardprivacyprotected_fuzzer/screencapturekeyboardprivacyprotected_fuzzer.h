@@ -12,10 +12,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #ifndef SCREENCAPTUREKEYBOARDPRIVACYPROTECTED_FUZZER
 #define SCREENCAPTUREKEYBOARDPRIVACYPROTECTED_FUZZER
- 
+
 #include <fcntl.h>
 #include <securec.h>
 #include <unistd.h>
@@ -23,13 +23,18 @@
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
+#include <memory>
 #include "test_screen_capture.h"
-#include "i_standard_screen_capture_service.h"
-#include "i_screen_capture_service.h"
 #include "screen_capture_server.h"
- 
+#include "screen_capture_service_providers.h"
+
+inline std::shared_ptr<OHOS::Media::ScreenCaptureServer> MakeScreenCaptureServerShared()
+{
+    return std::make_shared<OHOS::Media::ScreenCaptureServer>(OHOS::Media::CreateDefaultProviders());
+}
+
 #define FUZZ_PROJECT_NAME "screencapturekeyboardprivacyprotected_fuzzer"
- 
+
 namespace OHOS {
 namespace Media {
 class ScreenCaptureKeyboardPrivacyProtectedFuzzer : public TestScreenCapture {
@@ -38,7 +43,7 @@ public:
     ~ScreenCaptureKeyboardPrivacyProtectedFuzzer();
     bool ScreenCaptureKeyboardPrivacyProtected(uint8_t *data, size_t size);
     std::shared_ptr<TestScreenCapture> screenCapture = nullptr;
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServer_ = nullptr;
+    std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
 } // namespace Media
 bool ScreenCaptureKeyboardPrivacyProtected(uint8_t *data, size_t size);

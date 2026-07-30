@@ -16,8 +16,13 @@
 #include "ability_connection.h"
 #include "ability_manager_client.h"
 #include "screen_capture_server.h"
+#include "audio_capturer_wrapper.h"
 #include "screen_capture.h"
 #include "screen_capture_server_manager.h"
+#include "account_observer.h"
+#ifdef SUPPORT_CALL
+#include "incall_observer.h"
+#endif
 #include "ui_extension_ability_connection.h"
 #include "extension_manager_client.h"
 #include "image_source.h"
@@ -31,7 +36,6 @@
 #include "media_dfx.h"
 #include "scope_guard.h"
 #include "screen_cap_buffer_consumer_listener.h"
-#include "screen_capture_listener_proxy.h"
 #include "system_ability_definition.h"
 #include "res_type.h"
 #include "res_sched_client.h"
@@ -61,7 +65,6 @@
 #include "want_agent_helper.h"
 #include "common_event_manager.h"
 #include "screen_capture_record_display_listener.h"
-#include "media_datashare_observer.h"
 #ifdef PC_STANDARD
 #include "power_mgr_client.h"
 #include <parameters.h>
@@ -70,6 +73,9 @@
 namespace {
 const std::string DUMP_PATH = "/data/media/screen_capture.bin";
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureServer"};
+
+std::mutex g_serverMapMutex;
+std::map<OHOS::Media::IScreenCaptureService*, std::shared_ptr<OHOS::Media::IScreenCaptureService>> g_serverMap;
 }
 
 namespace OHOS {
@@ -779,15 +785,16 @@ void SCWindowInfoChangedListener::OnWindowInfoChanged(
     }
 }
 
-std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create()
+std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create(
+    std::unique_ptr<IScreenCaptureServiceProviders> providers)
 {
     MEDIA_LOGI("ScreenCaptureServer Create start.");
     auto& mgr = ScreenCaptureServerManager::GetInstance();
     int32_t id = mgr.GetNewSessionId();
     CHECK_AND_RETURN_RET_LOG(id != -1, nullptr, "GetNewSessionId failed.");
-    auto server = std::make_shared<ScreenCaptureServer>();
+    auto server = std::make_shared<ScreenCaptureServer>(std::move(providers));
     CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "Failed to create ScreenCaptureServer.");
-    server->SetSessionId(id);
+    server->sessionId_ = id;
     server->GetAndSetAppVersion();
     mgr.RegisterServer(id, server, server->appInfo_.appUid);
     return std::static_pointer_cast<IScreenCaptureService>(server);
@@ -1401,7 +1408,8 @@ void ScreenCaptureServer::SetMediaKitReport(const std::string &apiCall)
     event.MediaKitStatistics("AVScreenCapture", appName_, instanceIdStr, apiCall, events);
 }
 
-ScreenCaptureServer::ScreenCaptureServer()
+ScreenCaptureServer::ScreenCaptureServer(std::unique_ptr<IScreenCaptureServiceProviders> providers)
+    : providers_(std::move(providers))
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " ScreenCaptureServer Instances create", FAKE_POINTER(this));
     cbProxy_ = std::make_shared<ScreenCaptureCallbackProxy>();
@@ -1417,12 +1425,6 @@ ScreenCaptureServer::~ScreenCaptureServer()
     ReleaseInner();
     CloseFd();
     taskQue_.Stop();
-}
-
-void ScreenCaptureServer::SetSessionId(int32_t sessionId)
-{
-    sessionId_ = sessionId;
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " sessionId: %{public}d", FAKE_POINTER(this), sessionId_);
 }
 
 void ScreenCaptureServer::GetAndSetAppVersion()
@@ -1958,7 +1960,6 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
     // Should callback be running in seperate thread?
     MEDIA_LOGI("OnReceiveUserPrivacyAuthority start, isAllowed:%{public}d, state:%{public}d",
         isAllowed, captureState_.load());
-
     if (!IsState(CAP_POPUP)) {
         MEDIA_LOGE("OnReceiveUserPrivacyAuthority failed, capture is not POPUP_WINDOW");
         cbProxy_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
@@ -1993,7 +1994,7 @@ int32_t ScreenCaptureServer::StartInnerAudioCapture()
             std::string threadName = captureConfig_.dataType == DataType::ORIGINAL_STREAM
                 ? GenerateThreadNameByPrefix("OS_SInnAd")
                 : GenerateThreadNameByPrefix("OS_FInnAd");
-            innerAudioCapture_ = providers_->CreateAudioCapturerWrapper(
+            innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
                 captureConfig_.audioInfo.innerCapInfo, cbProxy_, std::move(threadName), contentFilter_);
             CHECK_AND_RETURN_RET_LOG(innerAudioCapture_ != nullptr, MSERR_UNKNOWN, "CreateInnerAudioCapture failed");
         }
@@ -2748,7 +2749,7 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
     std::weak_ptr<ScreenCaptureServer> wpScreenCaptureServer(shared_from_this());
     screenCaptureObserverCb_ = std::make_shared<ScreenCaptureObserverCallBack>(wpScreenCaptureServer);
 #ifdef SUPPORT_CALL
-    if (!captureConfig_.strategy.keepCaptureDuringCall && InCallObserver::GetInstance().IsInCall(true)) {
+    if (!captureConfig_.strategy.keepCaptureDuringCall && providers_->GetInCallObserver().IsInCall(true)) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
         cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
         FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
@@ -2756,9 +2757,9 @@ int32_t ScreenCaptureServer::RegisterServerCallbacks()
         return MSERR_UNSUPPORT_INCALL;
     }
     MEDIA_LOGI("ScreenCaptureServer Start RegisterScreenCaptureCallBack");
-    InCallObserver::GetInstance().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
+    providers_->GetInCallObserver().RegisterInCallObserverCallBack(screenCaptureObserverCb_);
 #endif
-    AccountObserver::GetInstance().RegisterAccountObserverCallBack(screenCaptureObserverCb_);
+    providers_->GetAccountObserver().RegisterAccountObserverCallBack(screenCaptureObserverCb_);
     return MSERR_OK;
 }
 
@@ -4188,7 +4189,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture(bool isVoip)
     CHECK_AND_RETURN_RET(!(micAudioCapture_ && micAudioCapture_->IsRecording()), MSERR_OK);
 #ifdef SUPPORT_CALL
     uint32_t audioRendererState = audioSource_ ? audioSource_->GetAudioRendererState() : 0;
-    if ((audioRendererState & AUDIO_STATE_TEL) || InCallObserver::GetInstance().IsInCall(true)) {
+    if ((audioRendererState & AUDIO_STATE_TEL) || providers_->GetInCallObserver().IsInCall(true)) {
         MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip starting micAudioCapture", FAKE_POINTER(this));
         cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
         return MSERR_OK;
@@ -4200,7 +4201,7 @@ int32_t ScreenCaptureServer::StartMicAudioCapture(bool isVoip)
                 ? GenerateThreadNameByPrefix("OS_SMicAd")
                 : GenerateThreadNameByPrefix("OS_FMicAd");
             ScreenCaptureContentFilter contentFilterMic;
-            micAudioCapture_ = providers_->CreateAudioCapturerWrapper(
+            micAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
                 captureConfig_.audioInfo.micCapInfo, cbProxy_, std::move(threadName), contentFilterMic);
             CHECK_AND_RETURN_RET_LOG(micAudioCapture_ != nullptr, MSERR_UNKNOWN, "CreateMicAudioCapture failed");
         }
@@ -4343,9 +4344,9 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
     PostStopScreenCapture(stateCode);
 #ifdef SUPPORT_CALL
-    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(screenCaptureObserverCb_);
+    providers_->GetInCallObserver().UnregisterInCallObserverCallBack(screenCaptureObserverCb_);
 #endif
-    AccountObserver::GetInstance().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
+    providers_->GetAccountObserver().UnregisterAccountObserverCallBack(screenCaptureObserverCb_);
     StopScreenCaptureInnerUnBind();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
@@ -4519,7 +4520,7 @@ void ScreenCaptureServer::ReleaseInner()
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
                 FAKE_POINTER(this), sessionId_);
             if (isSystemRecorder_.load()) {
-                UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
+                providers_->UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
             }
         }
         skipPrivacyWindowIDsVec_.clear();
@@ -4895,5 +4896,34 @@ void ScreenCaptureServer::StopCaptureOnError(const std::string &reportMsg)
         AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
     StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID);
 }
+
+extern "C" {
+__attribute__((visibility("default"))) OHOS::Media::IScreenCaptureService *CreateScreenCaptureServer(
+    OHOS::Media::IScreenCaptureServiceProviders *providers)
+{
+    std::unique_ptr<OHOS::Media::IScreenCaptureServiceProviders> providersOwner(providers);
+    if (providers == nullptr) {
+        return nullptr;
+    }
+    auto service = ScreenCaptureServer::Create(std::move(providersOwner));
+    if (service == nullptr) {
+        return nullptr;
+    }
+    auto *ptr = static_cast<ScreenCaptureServer *>(service.get());
+    std::lock_guard<std::mutex> lock(g_serverMapMutex);
+    g_serverMap[ptr] = std::move(service);
+    return ptr;
+}
+
+__attribute__((visibility("default"))) void DestroyScreenCaptureServer(OHOS::Media::IScreenCaptureService *server)
+{
+    if (server == nullptr) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(g_serverMapMutex);
+    g_serverMap.erase(server);
+}
+}
+
 } // namespace Media
 } // namespace OHOS

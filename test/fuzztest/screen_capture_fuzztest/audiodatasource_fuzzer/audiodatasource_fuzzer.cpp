@@ -27,7 +27,6 @@
 #include "screen_capture_server.h"
 #include "test_template.h"
 #include "media_log.h"
-#include "screen_capture_server_base.h"
 
 using namespace std;
 using namespace OHOS;
@@ -81,11 +80,10 @@ void SetConfig(AVScreenCaptureConfig &config)
 
 void AudioDataSourceFuzzer::Init()
 {
-    std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
-    if (tempServer_ == nullptr) {
+    screenCaptureServer_ = MakeScreenCaptureServerShared();
+    if (!screenCaptureServer_) {
         return;
     }
-    screenCaptureServer_ = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
     AVScreenCaptureConfig config;
     SetConfig(config);
     screenCaptureServer_->InitAudioCap(config.audioInfo.innerCapInfo);
@@ -95,7 +93,10 @@ void AudioDataSourceFuzzer::Init()
 
 void AudioDataSourceFuzzer::Release()
 {
-    screenCaptureServer_->Release();
+    if (screenCaptureServer_) {
+        screenCaptureServer_->Release();
+        screenCaptureServer_ = nullptr;
+    }
 }
 
 std::shared_ptr<AudioBuffer> AudioDataSourceFuzzer::CreateAudioBufferInner(int64_t timestamp)
