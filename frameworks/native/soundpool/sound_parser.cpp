@@ -328,7 +328,7 @@ int32_t SoundDecoderCallback::DealBufferRawFile()
         AVSharedMemory::Flags::FLAGS_READ_WRITE, INPUT_BUFFER);
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_OPERATION, "Create AVSharedMemoryBase failed");
     int32_t ret = buffer->Init();
-    CHECK_AND_RETURN_RET_LOG(bret == AVCodecServiceErrCode::AVCS_ERR_OK, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(ret == AVCodecServiceErrCode::AVCS_ERR_OK, MSERR_INVALID_OPERATION,
         "Init AVSharedMemoryBase failed, ret is %{public}d", ret);
 
     if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
@@ -359,7 +359,6 @@ int32_t SoundDecoderCallback::DealBufferRawFile()
         }
     }
     currentSoundBufferSize_ += size;
-    audioDec_->QueueInputBuffer(index, sampleInfo, bufferFlag);
     return MSERR_OK;
 }
 
