@@ -384,6 +384,7 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 sptr<Surface> HiRecorderImpl::GetSurfaceFromWaterMarkFilter()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From WaterMarkFilter.");
+    FALSE_RETURN_V_MSG_E(filter != nullptr, nullptr, "filter is nullptr");
     auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
     producerSurface_ = filter->GetInputSurface();
     return producerSurface_;
@@ -392,6 +393,7 @@ sptr<Surface> HiRecorderImpl::GetSurfaceFromWaterMarkFilter()
 sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoEncoder()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From VideoEncoder.");
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, nullptr, "videoEncoderFilter_ is nullptr");
     producerSurface_ = videoEncoderFilter_->GetInputSurface();
     return producerSurface_;
 }
@@ -399,6 +401,7 @@ sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoEncoder()
 sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoCapture()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From VideoCapture.");
+    FALSE_RETURN_V_MSG_E(videoCaptureFilter_ != nullptr, nullptr, "videoCaptureFilter_ is nullptr");
     producerSurface_ = videoCaptureFilter_->GetInputSurface();
     return producerSurface_;
 }
@@ -513,6 +516,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
 {
     MEDIA_LOG_I("HiRecorderImpl PrepareVideoEncoder enter.");
     if (videoEncoderFilter_) {
+        FALSE_RETURN_V_MSG_E(videoEncFormat_ != nullptr, MSERR_UNKNOWN, "videoEncFormat is nullptr");
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
         }
@@ -563,6 +567,7 @@ int32_t HiRecorderImpl::Start()
     int32_t ret = MSERR_OK;
     if (hasWatermark_) {
         ret = TransRecorderStatus(SetVideoEncoderSurface());
+        FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "SetVideoEncoderSurface fail");
     }
     if (curState_ == StateId::PAUSE) {
         ret = TransRecorderStatus(pipeline_->Resume());
@@ -769,6 +774,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
     Pipeline::StreamType outType)
 {
     MEDIA_LOG_I("OnCallback enter.");
+    FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_NULL_POINTER, "filter is nullptr");
     FALSE_RETURN_V(cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED, Status::OK);
     switch (outType) {
         case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
