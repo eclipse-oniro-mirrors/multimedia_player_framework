@@ -1206,7 +1206,6 @@ void AVRecorderImpl::GetVideoEncoderInfo(EncoderCapabilityData encoderCapData,
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetEncoderInfoTask(
     const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
-    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, &encoderInfo = asyncCtx->encoderInfo_]() {
         const std::string &option = AVRecordergOpt::GET_ENCODER_INFO;
         MEDIA_LOGI("%{public}s Start", option.c_str());
@@ -1231,6 +1230,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetEncoderInfoTask(
 
 int32_t AVRecorderImpl::GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return recorder_->GetAvailableEncoder(encoderInfo);
 }
 
@@ -1569,6 +1569,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetMaxAmplitudeTask(
 
 int32_t AVRecorderImpl::GetMaxAmplitude(int32_t &maxAmplitude)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return recorder_->GetMaxAmplitude(maxAmplitude);
 }
 
