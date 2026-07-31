@@ -82,12 +82,12 @@ public:
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t ReCombineCacheData();
+    int32_t SpliceFullPcmInRawFile();
     bool SetAudioSharedMemory();
     std::shared_ptr<AudioStandard::AudioSharedMemory> GetAudioSharedMemory();
     int32_t Release();
 
 private:
-    int32_t SpliceFullPcmInRawFile();
     int32_t DealBufferRawFile();
 
     int32_t soundID_ = 0;
