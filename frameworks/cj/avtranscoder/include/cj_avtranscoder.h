@@ -112,7 +112,7 @@ private:
     bool hasConfiged_ = false;
     
     struct AVFileDescriptor fdSrc_;
-    int32_t fdDst_;
+    int32_t fdDst_ = -1;
 
     int32_t GetReturnRet(int32_t errCode);
     int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);

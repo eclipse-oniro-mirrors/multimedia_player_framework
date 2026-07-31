@@ -19,6 +19,7 @@
 #include "uri_helper.h"
 #include "media_dfx.h"
 #include "screen_capture_server.h"
+#include "screen_capture_server_manager.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureControllerServer"};
@@ -30,12 +31,12 @@ namespace Media {
 std::shared_ptr<IScreenCaptureController> ScreenCaptureControllerServer::Create()
 {
     MEDIA_LOGI("ScreenCaptureControllerServer::Create() start");
-    std::shared_ptr<ScreenCaptureControllerServer> controllerServerTemp =
-        std::make_shared<ScreenCaptureControllerServer>();
+    std::shared_ptr<ScreenCaptureControllerServer>
+        controllerServerTemp = std::make_shared<ScreenCaptureControllerServer>();
     CHECK_AND_RETURN_RET_LOG(controllerServerTemp != nullptr, nullptr, "Failed to new ScreenCaptureControllerServer");
 
-    std::shared_ptr<IScreenCaptureController> controllerServer =
-        std::static_pointer_cast<OHOS::Media::IScreenCaptureController>(controllerServerTemp);
+    std::shared_ptr<IScreenCaptureController>
+        controllerServer = std::static_pointer_cast<OHOS::Media::IScreenCaptureController>(controllerServerTemp);
     return controllerServer;
 }
 
@@ -51,17 +52,21 @@ ScreenCaptureControllerServer::~ScreenCaptureControllerServer()
 
 int32_t ScreenCaptureControllerServer::ReportAVScreenCaptureUserChoice(int32_t sessionId, std::string choice)
 {
-    MEDIA_LOGI("ScreenCaptureControllerServer::ReportAVScreenCaptureUserChoice start");
-    int32_t ret = ScreenCaptureServer::ReportAVScreenCaptureUserChoice(sessionId, choice);
-    return ret;
+    MEDIA_LOGI("ReportAVScreenCaptureUserChoice sessionId: %{public}d", sessionId);
+    auto server = ScreenCaptureServerManager::GetInstance().GetScreenCaptureServerById(sessionId).lock();
+    CHECK_AND_RETURN_RET_LOG(server != nullptr, MSERR_UNKNOWN,
+        "ReportAVScreenCaptureUserChoice failed to get instance, sessionId: %{public}d", sessionId);
+    return server->ReportAVScreenCaptureUserChoice(choice);
 }
 
 int32_t ScreenCaptureControllerServer::GetAVScreenCaptureConfigurableParameters(int32_t sessionId,
     std::string &resultStr)
 {
-    MEDIA_LOGD("ScreenCaptureControllerServer::GetAVScreenCaptureConfigurableParameters start");
-    int32_t ret = ScreenCaptureServer::GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
-    return ret;
+    MEDIA_LOGD("GetAVScreenCaptureConfigurableParameters sessionId: %{public}d", sessionId);
+    auto server = ScreenCaptureServerManager::GetInstance().GetScreenCaptureServerById(sessionId).lock();
+    CHECK_AND_RETURN_RET_LOG(server != nullptr, MSERR_UNKNOWN,
+        "GetAVScreenCaptureConfigurableParameters failed to get instance, sessionId: %{public}d", sessionId);
+    return server->GetAVScreenCaptureConfigurableParameters(resultStr);
 }
 } // namespace Media
 } // namespace OHOS

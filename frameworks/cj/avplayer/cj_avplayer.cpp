@@ -58,6 +58,7 @@ CJAVPlayer::CJAVPlayer()
 
 CJAVPlayer::~CJAVPlayer()
 {
+    Release();
 }
 
 bool CJAVPlayer::Constructor()
@@ -107,6 +108,7 @@ void CJAVPlayer::NotifyIsLiveStream()
 void CJAVPlayer::NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos)
 {
     MEDIA_LOGD("NotifyDrmInfoUpdated");
+    std::lock_guard<std::mutex> lock(drmMutex_);
     for (auto &newItem : infos) {
         auto pos = localDrmInfos_.equal_range(newItem.first);
         if (pos.first == pos.second && pos.first == localDrmInfos_.end()) {
@@ -709,6 +711,7 @@ int32_t CJAVPlayer::OnStateChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(char *stateStr, int32_t reason)>(callbackId);
     playerCb_->stateChangeCallback = [lambda = CJLambda::Create(cFunc)](std::string &stateStr, int32_t reason) -> void {
         auto cstr = MallocCString(stateStr);
@@ -725,6 +728,7 @@ int32_t CJAVPlayer::OffStateChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->stateChangeCallbackId == callbackId) {
         playerCb_->stateChangeCallbackId = INVALID_ID;
         playerCb_->stateChangeCallback = nullptr;
@@ -737,6 +741,7 @@ int32_t CJAVPlayer::OffStateChangeAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->stateChangeCallbackId = INVALID_ID;
     playerCb_->stateChangeCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -747,9 +752,10 @@ int32_t CJAVPlayer::OnError(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t errorCode, const char *errorMsg)>(callbackId);
     playerCb_->errorCallback = [lambda = CJLambda::Create(cFunc)](int32_t errorCode,
-                                                                  const std::string &errorMsg) -> void {
+                                                                   const std::string &errorMsg) -> void {
         auto cstr = MallocCString(errorMsg);
         lambda(errorCode, cstr);
         free(cstr);
@@ -763,6 +769,7 @@ int32_t CJAVPlayer::OffError(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->errorCallbackId == callbackId) {
         playerCb_->errorCallbackId = INVALID_ID;
         playerCb_->errorCallback = nullptr;
@@ -775,6 +782,7 @@ int32_t CJAVPlayer::OffErrorAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->errorCallbackId = INVALID_ID;
     playerCb_->errorCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -785,6 +793,7 @@ int32_t CJAVPlayer::OnSeekDone(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t currentPositon)>(callbackId);
     playerCb_->seekDoneCallback = [lambda = CJLambda::Create(cFunc)](int32_t currentPositon) -> void {
         lambda(currentPositon);
@@ -798,6 +807,7 @@ int32_t CJAVPlayer::OffSeekDone(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->seekDoneCallbackId == callbackId) {
         playerCb_->seekDoneCallbackId = INVALID_ID;
         playerCb_->seekDoneCallback = nullptr;
@@ -810,6 +820,7 @@ int32_t CJAVPlayer::OffSeekDoneAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->seekDoneCallbackId = INVALID_ID;
     playerCb_->seekDoneCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -820,6 +831,7 @@ int32_t CJAVPlayer::OnSpeedDone(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t speedMode)>(callbackId);
     playerCb_->speedDoneCallback = [lambda = CJLambda::Create(cFunc)](int32_t speedMode) -> void { lambda(speedMode); };
     playerCb_->speedDoneCallbackId = callbackId;
@@ -831,6 +843,7 @@ int32_t CJAVPlayer::OffSpeedDone(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->speedDoneCallbackId == callbackId) {
         playerCb_->speedDoneCallbackId = INVALID_ID;
         playerCb_->speedDoneCallback = nullptr;
@@ -843,6 +856,7 @@ int32_t CJAVPlayer::OffSpeedDoneAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->speedDoneCallbackId = INVALID_ID;
     playerCb_->speedDoneCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -853,6 +867,7 @@ int32_t CJAVPlayer::OnBitRateDone(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t bitRate)>(callbackId);
     playerCb_->bitRateDoneCallback = [lambda = CJLambda::Create(cFunc)](int32_t bitRate) -> void { lambda(bitRate); };
     playerCb_->bitRateDoneCallbackId = callbackId;
@@ -864,6 +879,7 @@ int32_t CJAVPlayer::OffBitRateDone(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->bitRateDoneCallbackId == callbackId) {
         playerCb_->bitRateDoneCallbackId = INVALID_ID;
         playerCb_->bitRateDoneCallback = nullptr;
@@ -876,6 +892,7 @@ int32_t CJAVPlayer::OffBitRateDoneAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->bitRateDoneCallbackId = INVALID_ID;
     playerCb_->bitRateDoneCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -886,6 +903,7 @@ int32_t CJAVPlayer::OnAvailableBitrates(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(CArrI32 bitrateVec)>(callbackId);
     playerCb_->availableBitratesCallback = [lambda = CJLambda::Create(cFunc)](std::vector<int32_t> bitrateVec) -> void {
         auto carr = Convert2CArrI32(bitrateVec);
@@ -901,6 +919,7 @@ int32_t CJAVPlayer::OffAvailableBitrates(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->availableBitratesCallbackId == callbackId) {
         playerCb_->availableBitratesCallbackId = INVALID_ID;
         playerCb_->availableBitratesCallback = nullptr;
@@ -913,6 +932,7 @@ int32_t CJAVPlayer::OffAvailableBitratesAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->availableBitratesCallbackId = INVALID_ID;
     playerCb_->availableBitratesCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -923,6 +943,7 @@ int32_t CJAVPlayer::OnMediaKeySystemInfoUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(CArrCMediaKeySystemInfo drmInfoMap)>(callbackId);
     playerCb_->mediaKeySystemInfoUpdateCallback =
         [lambda = CJLambda::Create(cFunc)](CArrCMediaKeySystemInfo drmInfoMap) -> void {
@@ -937,6 +958,7 @@ int32_t CJAVPlayer::OffMediaKeySystemInfoUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->mediaKeySystemInfoUpdateCallbackId == callbackId) {
         playerCb_->mediaKeySystemInfoUpdateCallbackId = INVALID_ID;
         playerCb_->mediaKeySystemInfoUpdateCallback = nullptr;
@@ -949,6 +971,7 @@ int32_t CJAVPlayer::OffMediaKeySystemInfoUpdateAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->mediaKeySystemInfoUpdateCallbackId = INVALID_ID;
     playerCb_->mediaKeySystemInfoUpdateCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -959,6 +982,7 @@ int32_t CJAVPlayer::OnVolumeChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(float volumeLevel)>(callbackId);
     playerCb_->volumeChangeCallback = [lambda = CJLambda::Create(cFunc)](float volumeLevel) -> void {
         lambda(volumeLevel);
@@ -972,6 +996,7 @@ int32_t CJAVPlayer::OffVolumeChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->volumeChangeCallbackId == callbackId) {
         playerCb_->volumeChangeCallbackId = INVALID_ID;
         playerCb_->volumeChangeCallback = nullptr;
@@ -984,6 +1009,7 @@ int32_t CJAVPlayer::OffVolumeChangeAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->volumeChangeCallbackId = INVALID_ID;
     playerCb_->volumeChangeCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -994,6 +1020,7 @@ int32_t CJAVPlayer::OnEndOfStream(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)()>(callbackId);
     playerCb_->endOfStreamCallback = [lambda = CJLambda::Create(cFunc)]() -> void { lambda(); };
     playerCb_->endOfStreamCallbackId = callbackId;
@@ -1005,6 +1032,7 @@ int32_t CJAVPlayer::OffEndOfStream(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->endOfStreamCallbackId == callbackId) {
         playerCb_->endOfStreamCallbackId = INVALID_ID;
         playerCb_->endOfStreamCallback = nullptr;
@@ -1017,6 +1045,7 @@ int32_t CJAVPlayer::OffEndOfStreamAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->endOfStreamCallbackId = INVALID_ID;
     playerCb_->endOfStreamCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1027,6 +1056,7 @@ int32_t CJAVPlayer::OnTimeUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t position)>(callbackId);
     playerCb_->timeUpdateCallback = [lambda = CJLambda::Create(cFunc)](int32_t position) -> void { lambda(position); };
     playerCb_->timeUpdateCallbackId = callbackId;
@@ -1038,6 +1068,7 @@ int32_t CJAVPlayer::OffTimeUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->timeUpdateCallbackId == callbackId) {
         playerCb_->timeUpdateCallbackId = INVALID_ID;
         playerCb_->timeUpdateCallback = nullptr;
@@ -1050,6 +1081,7 @@ int32_t CJAVPlayer::OffTimeUpdateAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->timeUpdateCallbackId = INVALID_ID;
     playerCb_->timeUpdateCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1060,6 +1092,7 @@ int32_t CJAVPlayer::OnDurationUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t duration)>(callbackId);
     playerCb_->durationUpdateCallback = [lambda = CJLambda::Create(cFunc)](int32_t duration) -> void {
         lambda(duration);
@@ -1073,6 +1106,7 @@ int32_t CJAVPlayer::OffDurationUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->durationUpdateCallbackId == callbackId) {
         playerCb_->durationUpdateCallbackId = INVALID_ID;
         playerCb_->durationUpdateCallback = nullptr;
@@ -1085,6 +1119,7 @@ int32_t CJAVPlayer::OffDurationUpdateAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->durationUpdateCallbackId = INVALID_ID;
     playerCb_->durationUpdateCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1095,6 +1130,7 @@ int32_t CJAVPlayer::OnBufferingUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t bufferingType, int32_t val)>(callbackId);
     playerCb_->bufferingUpdateCallback =
         [lambda = CJLambda::Create(cFunc)](int32_t bufferingType, int32_t val) -> void { lambda(bufferingType, val); };
@@ -1107,6 +1143,7 @@ int32_t CJAVPlayer::OffBufferingUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->bufferingUpdateCallbackId == callbackId) {
         playerCb_->bufferingUpdateCallbackId = INVALID_ID;
         playerCb_->bufferingUpdateCallback = nullptr;
@@ -1119,6 +1156,7 @@ int32_t CJAVPlayer::OffBufferingUpdateAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->bufferingUpdateCallbackId = INVALID_ID;
     playerCb_->bufferingUpdateCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1129,6 +1167,7 @@ int32_t CJAVPlayer::OnStartRenderFrame(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)()>(callbackId);
     playerCb_->startRenderFrameCallback = [lambda = CJLambda::Create(cFunc)]() -> void { lambda(); };
     playerCb_->startRenderFrameCallbackId = callbackId;
@@ -1140,6 +1179,7 @@ int32_t CJAVPlayer::OffStartRenderFrame(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->startRenderFrameCallbackId == callbackId) {
         playerCb_->startRenderFrameCallbackId = INVALID_ID;
         playerCb_->startRenderFrameCallback = nullptr;
@@ -1152,6 +1192,7 @@ int32_t CJAVPlayer::OffStartRenderFrameAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->startRenderFrameCallbackId = INVALID_ID;
     playerCb_->startRenderFrameCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1162,6 +1203,7 @@ int32_t CJAVPlayer::OnVideoSizeChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t width, int32_t height)>(callbackId);
     playerCb_->videoSizeChangeCallback = [lambda = CJLambda::Create(cFunc)](int32_t width, int32_t height) -> void {
         lambda(width, height);
@@ -1175,6 +1217,7 @@ int32_t CJAVPlayer::OffVideoSizeChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->videoSizeChangeCallbackId == callbackId) {
         playerCb_->videoSizeChangeCallbackId = INVALID_ID;
         playerCb_->videoSizeChangeCallback = nullptr;
@@ -1187,6 +1230,7 @@ int32_t CJAVPlayer::OffVideoSizeChangeAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->videoSizeChangeCallbackId = INVALID_ID;
     playerCb_->videoSizeChangeCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1197,6 +1241,7 @@ int32_t CJAVPlayer::OnAudioInterrupt(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t eventType, int32_t forceType, int32_t hintType)>(callbackId);
     playerCb_->audioInterruptCallback = [lambda = CJLambda::Create(cFunc)](int32_t eventType, int32_t forceType,
                                                                            int32_t hintType) -> void {
@@ -1211,6 +1256,7 @@ int32_t CJAVPlayer::OffAudioInterrupt(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->audioInterruptCallbackId == callbackId) {
         playerCb_->audioInterruptCallbackId = INVALID_ID;
         playerCb_->audioInterruptCallback = nullptr;
@@ -1223,6 +1269,7 @@ int32_t CJAVPlayer::OffAudioInterruptAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->audioInterruptCallbackId = INVALID_ID;
     playerCb_->audioInterruptCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1233,6 +1280,7 @@ int32_t CJAVPlayer::OnAudioDeviceChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(AudioStandard::CAudioStreamDeviceChangeInfo info)>(callbackId);
     playerCb_->audioDeviceChangeCallback =
         [lambda = CJLambda::Create(cFunc)](AudioStandard::AudioDeviceDescriptor deviceInfo, int32_t reason) -> void {
@@ -1240,6 +1288,7 @@ int32_t CJAVPlayer::OnAudioDeviceChange(int64_t callbackId)
         int32_t errCode = SUCCESS_CODE;
         AudioStandard::Convert2CArrDeviceDescriptorByDeviceInfo(arr, deviceInfo, &errCode);
         if (errCode != SUCCESS_CODE) {
+            FreeCArrDeviceDescriptor(arr);
             return;
         }
         lambda(AudioStandard::CAudioStreamDeviceChangeInfo{.changeReason = reason, .deviceDescriptors = arr});
@@ -1254,6 +1303,7 @@ int32_t CJAVPlayer::OffAudioDeviceChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->audioDeviceChangeCallbackId == callbackId) {
         playerCb_->audioDeviceChangeCallbackId = INVALID_ID;
         playerCb_->audioDeviceChangeCallback = nullptr;
@@ -1266,6 +1316,7 @@ int32_t CJAVPlayer::OffAudioDeviceChangeAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->audioDeviceChangeCallbackId = INVALID_ID;
     playerCb_->audioDeviceChangeCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1276,6 +1327,7 @@ int32_t CJAVPlayer::OnSubtitleUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(CSubtitleInfo info)>(callbackId);
     playerCb_->subtitleUpdateCallback = [lambda = CJLambda::Create(cFunc)](std::string text, int32_t pts,
                                                                            int32_t duration) -> void {
@@ -1292,6 +1344,7 @@ int32_t CJAVPlayer::OffSubtitleUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->subtitleUpdateCallbackId == callbackId) {
         playerCb_->subtitleUpdateCallbackId = INVALID_ID;
         playerCb_->subtitleUpdateCallback = nullptr;
@@ -1304,6 +1357,7 @@ int32_t CJAVPlayer::OffSubtitleUpdateAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->subtitleUpdateCallbackId = INVALID_ID;
     playerCb_->subtitleUpdateCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1314,6 +1368,7 @@ int32_t CJAVPlayer::OnTrackChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(int32_t index, bool isSelect)>(callbackId);
     playerCb_->trackChangeCallback = [lambda = CJLambda::Create(cFunc)](int32_t index, int32_t isSelect) -> void {
         lambda(index, static_cast<bool>(isSelect));
@@ -1327,6 +1382,7 @@ int32_t CJAVPlayer::OffTrackChange(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->trackChangeCallbackId == callbackId) {
         playerCb_->trackChangeCallbackId = INVALID_ID;
         playerCb_->trackChangeCallback = nullptr;
@@ -1339,6 +1395,7 @@ int32_t CJAVPlayer::OffTrackChangeAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->trackChangeCallbackId = INVALID_ID;
     playerCb_->trackChangeCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1349,10 +1406,11 @@ int32_t CJAVPlayer::OnTrackInfoUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(CArrCMediaDescription trackInfo)>(callbackId);
     playerCb_->trackInfoUpdateCallback = [lambda = CJLambda::Create(cFunc)](CArrCMediaDescription trackInfo) -> void {
         lambda(trackInfo);
-        free(trackInfo.head);
+        FreeCArrCMediaDescription(trackInfo);
     };
     playerCb_->trackInfoUpdateCallbackId = callbackId;
     return MSERR_EXT_API9_OK;
@@ -1363,6 +1421,7 @@ int32_t CJAVPlayer::OffTrackInfoUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->trackInfoUpdateCallbackId == callbackId) {
         playerCb_->trackInfoUpdateCallbackId = INVALID_ID;
         playerCb_->trackInfoUpdateCallback = nullptr;
@@ -1375,6 +1434,7 @@ int32_t CJAVPlayer::OffTrackInfoUpdateAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->trackInfoUpdateCallbackId = INVALID_ID;
     playerCb_->trackInfoUpdateCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1385,6 +1445,7 @@ int32_t CJAVPlayer::OnAmplitudeUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     auto cFunc = reinterpret_cast<void (*)(CArrFloat arr)>(callbackId);
     playerCb_->amplitudeUpdateCallback = [lambda =
                                               CJLambda::Create(cFunc)](std::vector<float> MaxAmplitudeVec) -> void {
@@ -1401,6 +1462,7 @@ int32_t CJAVPlayer::OffAmplitudeUpdate(int64_t callbackId)
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     if (playerCb_->amplitudeUpdateCallbackId == callbackId) {
         playerCb_->amplitudeUpdateCallbackId = INVALID_ID;
         playerCb_->amplitudeUpdateCallback = nullptr;
@@ -1413,6 +1475,7 @@ int32_t CJAVPlayer::OffAmplitudeUpdateAll()
     if (playerCb_ == nullptr) {
         return MSERR_EXT_API9_NO_MEMORY;
     }
+    std::lock_guard<std::mutex> lock(playerCb_->mutex_);
     playerCb_->amplitudeUpdateCallbackId = INVALID_ID;
     playerCb_->amplitudeUpdateCallback = nullptr;
     return MSERR_EXT_API9_OK;
@@ -1485,7 +1548,7 @@ void CJAVPlayer::EnqueueNetworkTask(const std::string url)
     std::unique_lock<std::recursive_mutex> lock(taskMutex_);
     auto state = GetCurrentState();
     if (state != AVPlayerState::STATE_IDLE) {
-        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
+        QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set url");
         return;
     }
     if (player_ != nullptr) {
@@ -1502,7 +1565,7 @@ void CJAVPlayer::EnqueueFdTask(const int32_t fd)
     std::unique_lock<std::recursive_mutex> lock(taskMutex_);
     auto state = GetCurrentState();
     if (state != AVPlayerState::STATE_IDLE) {
-        OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
+        QueueOnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "current state is not idle, unsupport set source fd");
         return;
     }
     if (player_ != nullptr) {
@@ -1604,10 +1667,10 @@ int32_t CJAVPlayer::SetPlaybackStrategy(AVPlayStrategy strategy)
         MEDIA_LOGE("only support mute media type audio now");
         return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
     } else {
-        AVPlayStrategy playStrategy;
         std::string state = GetCurrentState();
         if (state == AVPlayerState::STATE_INITIALIZED || state == AVPlayerState::STATE_STOPPED) {
-            int32_t ret = player_->SetPlaybackStrategy(playStrategy);
+            CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
+            int32_t ret = player_->SetPlaybackStrategy(strategy);
             if (ret != MSERR_OK) {
                 MEDIA_LOGE("failed to set playback strategy");
                 return MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(ret));
@@ -1631,6 +1694,7 @@ int32_t CJAVPlayer::SetMediaMuted(int32_t mediaType, bool muted)
     }
     auto state = GetCurrentState();
     if (state == AVPlayerState::STATE_INITIALIZED || IsControllable()) {
+        CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
         int32_t ret = player_->SetMediaMuted(static_cast<MediaType>(mediaType), muted);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("failed to set muted");
@@ -1645,28 +1709,29 @@ int32_t CJAVPlayer::SetMediaMuted(int32_t mediaType, bool muted)
 
 int32_t CJAVPlayer::GetSelectedTracks(std::vector<int32_t> &trackIndex)
 {
-    if (IsControllable()) {
-        int32_t videoIndex = -1;
-        (void)player_->GetCurrentTrack(MediaType::MEDIA_TYPE_VID, videoIndex);
-        if (videoIndex != -1) {
-            trackIndex.push_back(videoIndex);
-        }
-
-        int32_t audioIndex = -1;
-        (void)player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, audioIndex);
-        if (audioIndex != -1) {
-            trackIndex.push_back(audioIndex);
-        }
-
-        int32_t subtitleIndex = -1;
-        (void)player_->GetCurrentTrack(MediaType::MEDIA_TYPE_SUBTITLE, subtitleIndex);
-        if (subtitleIndex != -1) {
-            trackIndex.push_back(subtitleIndex);
-        }
-        return MSERR_EXT_API9_OK;
+    if (!IsControllable()) {
+        MEDIA_LOGE("current state unsupport get current selections");
+        return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
     }
-    MEDIA_LOGE("current state unsupport get current selections");
-    return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
+    int32_t videoIndex = -1;
+    (void)player_->GetCurrentTrack(MediaType::MEDIA_TYPE_VID, videoIndex);
+    if (videoIndex != -1) {
+        trackIndex.push_back(videoIndex);
+    }
+
+    int32_t audioIndex = -1;
+    (void)player_->GetCurrentTrack(MediaType::MEDIA_TYPE_AUD, audioIndex);
+    if (audioIndex != -1) {
+        trackIndex.push_back(audioIndex);
+    }
+
+    int32_t subtitleIndex = -1;
+    (void)player_->GetCurrentTrack(MediaType::MEDIA_TYPE_SUBTITLE, subtitleIndex);
+    if (subtitleIndex != -1) {
+        trackIndex.push_back(subtitleIndex);
+    }
+    return MSERR_EXT_API9_OK;
 }
 
 PlayerSwitchMode TransferSwitchMode(int32_t mode)
@@ -1696,6 +1761,7 @@ int32_t CJAVPlayer::SelectTrack(int32_t index, int32_t mode)
         MEDIA_LOGE("current state is not prepared/playing/paused/completed, unsupport selectTrack operation");
         return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
     }
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
     return player_->SelectTrack(index, TransferSwitchMode(mode));
 }
 
@@ -1710,11 +1776,13 @@ int32_t CJAVPlayer::DeselectTrack(int32_t index)
                   "current state is not prepared/playing/paused/completed, unsupport deselecttrack operation");
         return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
     }
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
     return player_->DeselectTrack(index);
 }
 
 std::multimap<std::string, std::vector<uint8_t>> CJAVPlayer::GetMediaKeySystemInfos()
 {
+    std::lock_guard<std::mutex> lock(drmMutex_);
     return localDrmInfos_;
 }
 
@@ -1730,7 +1798,7 @@ void CJAVPlayer::SetSpeed(int32_t speed)
                   "current state is not prepared/playing/paused/completed, unsupport speed operation");
         return;
     }
-
+    CHECK_AND_RETURN_LOG(player_ != nullptr, "player_ is nullptr");
     (void)player_->SetPlaybackSpeed(static_cast<PlaybackRateMode>(speed));
 }
 
@@ -1745,6 +1813,7 @@ void CJAVPlayer::SetBitrate(int32_t bitrate)
                   "current state is not prepared/playing/paused/completed, unsupport select bitrate operation");
         return;
     }
+    CHECK_AND_RETURN_LOG(player_ != nullptr, "player_ is nullptr");
     (void)player_->SelectBitRate(static_cast<uint32_t>(bitrate));
 }
 
@@ -1790,8 +1859,8 @@ int32_t CJAVPlayer::AddSubtitleFromUrl(std::string url)
 {
     MEDIA_LOGI("input url is %{private}s!", url.c_str());
     CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
-    bool isFd = (url.find("fd://") != std::string::npos) ? true : false;
-    bool isNetwork = (url.find("http") != std::string::npos) ? true : false;
+    bool isFd = (url.rfind("fd://", 0) == 0);
+    bool isNetwork = (url.rfind("http", 0) == 0);
     if (isNetwork) {
         if (player_->AddSubSource(url) != MSERR_OK) {
             OnErrorCb(MSERR_EXT_API9_INVALID_PARAMETER, "failed to AddSubtitleNetworkSource");
@@ -1821,23 +1890,25 @@ int32_t CJAVPlayer::AddSubtitleFromUrl(std::string url)
 
 int32_t CJAVPlayer::GetPlaybackInfo(Format &format)
 {
-    if (IsControllable()) {
-        return player_->GetPlaybackInfo(format);
+    if (!IsControllable()) {
+        MEDIA_LOGE("current state unsupport get playback info");
+        return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
     }
-    MEDIA_LOGE("current state unsupport get playback info");
-    return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
+    return player_->GetPlaybackInfo(format);
 }
 
 int32_t CJAVPlayer::GetTrackDescription(std::vector<Format> &trackInfos)
 {
-    if (IsControllable()) {
-        (void)player_->GetVideoTrackInfo(trackInfos);
-        (void)player_->GetAudioTrackInfo(trackInfos);
-        (void)player_->GetSubtitleTrackInfo(trackInfos);
-        return MSERR_EXT_API9_OK;
+    if (!IsControllable()) {
+        MEDIA_LOGE("current state unsupport get track description");
+        return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
     }
-    MEDIA_LOGE("current state unsupport get track description");
-    return MSERR_EXT_API9_OPERATE_NOT_PERMIT;
+    CHECK_AND_RETURN_RET_LOG(player_ != nullptr, MSERR_EXT_API9_OPERATE_NOT_PERMIT, "player_ is nullptr");
+    (void)player_->GetVideoTrackInfo(trackInfos);
+    (void)player_->GetAudioTrackInfo(trackInfos);
+    (void)player_->GetSubtitleTrackInfo(trackInfos);
+    return MSERR_EXT_API9_OK;
 }
 
 bool CJAVPlayer::HandleParameter(CAudioRendererInfo info)

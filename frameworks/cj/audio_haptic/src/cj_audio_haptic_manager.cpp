@@ -26,7 +26,12 @@ namespace OHOS {
 namespace Media {
 
 CjAudioHapticManager::CjAudioHapticManager()
-    : audioHapticMgrClient_(AudioHapticManagerFactory::CreateAudioHapticManager()) {}
+    : audioHapticMgrClient_(AudioHapticManagerFactory::CreateAudioHapticManager())
+{
+    if (audioHapticMgrClient_ == nullptr) {
+        MEDIA_LOGE("Failed to create AudioHapticManager instance");
+    }
+}
 
 CjAudioHapticManager::~CjAudioHapticManager() = default;
 
@@ -35,12 +40,16 @@ int32_t CjAudioHapticManager::RegisterSource(const char* audioUri, const char* h
     if (!audioUri || !hapticUri) {
         return ERR_INVALID_ARG;
     }
+    CHECK_AND_RETURN_RET_LOG(audioHapticMgrClient_ != nullptr, ERR_OPERATE_NOT_ALLOWED,
+        "audioHapticMgrClient_ is nullptr");
     resId = audioHapticMgrClient_->RegisterSource(audioUri, hapticUri);
     return SUCCESS;
 }
 
 int32_t CjAudioHapticManager::UnregisterSource(int32_t id)
 {
+    CHECK_AND_RETURN_RET_LOG(audioHapticMgrClient_ != nullptr, ERR_OPERATE_NOT_ALLOWED,
+        "audioHapticMgrClient_ is nullptr");
     return audioHapticMgrClient_->UnregisterSource(id);
 }
 
@@ -50,6 +59,8 @@ int32_t CjAudioHapticManager::SetAudioLatencyMode(int32_t id, int32_t latencyMod
         MEDIA_LOGE("SetAudioLatencyMode: the value of latencyMode is invalid");
         return ERR_INVALID_ARG;
     }
+    CHECK_AND_RETURN_RET_LOG(audioHapticMgrClient_ != nullptr, ERR_OPERATE_NOT_ALLOWED,
+        "audioHapticMgrClient_ is nullptr");
 
     int32_t ret = audioHapticMgrClient_->SetAudioLatencyMode(id, static_cast<AudioLatencyMode>(latencyMode));
     if (ret != SUCCESS) {
@@ -74,10 +85,12 @@ bool CjAudioHapticManager::IsLegalAudioLatencyMode(int32_t latencyMode)
 
 int32_t CjAudioHapticManager::SetStreamUsage(int32_t id, int32_t streamUsage)
 {
-    if (!IsLegalAudioStreamUsage (streamUsage)) {
+    if (!IsLegalAudioStreamUsage(streamUsage)) {
         MEDIA_LOGE("SetStreamUsage: the value of streamUsage is invalid");
         return ERR_INVALID_ARG;
     }
+    CHECK_AND_RETURN_RET_LOG(audioHapticMgrClient_ != nullptr, ERR_OPERATE_NOT_ALLOWED,
+        "audioHapticMgrClient_ is nullptr");
     int32_t ret = audioHapticMgrClient_->SetStreamUsage(id, static_cast<AudioStandard::StreamUsage>(streamUsage));
     if (ret != SUCCESS) {
         MEDIA_LOGE("SetStreamUsage: Failed to set audio stream usage");
@@ -114,6 +127,8 @@ bool CjAudioHapticManager::IsLegalAudioStreamUsage(int32_t streamUsage)
 
 int64_t CjAudioHapticManager::CreatePlayer(int32_t id, bool muteAudio, bool muteHaptics, int32_t &errCode)
 {
+    CHECK_AND_RETURN_RET_LOG(audioHapticMgrClient_ != nullptr, INVALID_OBJ,
+        "audioHapticMgrClient_ is nullptr");
     std::shared_ptr<AudioHapticPlayer> audioHapticPlayer =
         audioHapticMgrClient_->CreatePlayer(id, AudioHapticPlayerOptions {muteAudio, muteHaptics});
     if (audioHapticPlayer != nullptr) {

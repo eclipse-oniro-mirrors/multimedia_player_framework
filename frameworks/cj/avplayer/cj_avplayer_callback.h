@@ -48,8 +48,10 @@ public:
     virtual void NotifyIsLiveStream() = 0;
     virtual void NotifyDrmInfoUpdated(const std::multimap<std::string, std::vector<uint8_t>> &infos) = 0;
 };
+class CJAVPlayer;
 using OnInfoFunc = std::function<void(const int32_t, const Format &)>;
 class CJAVPlayerCallback : public PlayerCallback {
+    friend class CJAVPlayer;
 public:
     explicit CJAVPlayerCallback(CJAVPlayerNotify *listener);
     virtual ~CJAVPlayerCallback();

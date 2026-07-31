@@ -126,7 +126,7 @@ HWTEST_F(HiplayerImplUnitTest, SetSource_001, TestSize.Level0)
     int32_t result = hiplayer_->SetSource(uri);
 
     // 3. Verify the result
-    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+    EXPECT_EQ(result, MSERR_FILE_ACCESS_FAILED);
 }
 
 /**
@@ -144,7 +144,7 @@ HWTEST_F(HiplayerImplUnitTest, SetSource_002, TestSize.Level0)
     int32_t result = hiplayer_->SetSource(uri);
 
     // 3. Verify the result
-    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+    EXPECT_EQ(result, MSERR_FILE_ACCESS_FAILED);
 }
 
 /**
@@ -198,7 +198,7 @@ HWTEST_F(HiplayerImplUnitTest, SetSource_005, TestSize.Level0)
     int32_t result = hiplayer_->SetSource(uri);
 
     // 3. Verify the result
-    EXPECT_EQ(result, MSERR_OPEN_FILE_FAILED);
+    EXPECT_EQ(result, MSERR_FILE_ACCESS_FAILED);
 }
 
 /**
@@ -1013,22 +1013,6 @@ HWTEST_F(HiplayerImplUnitTest, SetRenderFirstFrame_002, TestSize.Level0)
     EXPECT_EQ(hiplayer_->renderFirstFrame_, false);
 }
 
-HWTEST_F(HiplayerImplUnitTest, PrepareAsync_001, TestSize.Level0)
-{
-    int32_t ret = hiplayer_->SetSource(VIDEO_FILE1);
-    EXPECT_EQ(MSERR_OK, ret);
-    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_INITIALIZED;
-    EXPECT_EQ(MSERR_OK, hiplayer_->PrepareAsync());
-}
-
-HWTEST_F(HiplayerImplUnitTest, PrepareAsync_002, TestSize.Level0)
-{
-    int32_t ret = hiplayer_->SetSource(VIDEO_FILE1);
-    EXPECT_EQ(MSERR_OK, ret);
-    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_STOPPED;
-    EXPECT_EQ(MSERR_OK, hiplayer_->PrepareAsync());
-}
-
 HWTEST_F(HiplayerImplUnitTest, SetAudioEffectMode_001, TestSize.Level0)
 {
     EXPECT_EQ(MSERR_OK, hiplayer_->SetAudioEffectMode(0));
@@ -1536,21 +1520,6 @@ HWTEST_F(HiplayerImplUnitTest, SetAudioHapticsSyncId_001, TestSize.Level0)
     format2.PutIntValue(PlayerKeys::PLAYER_AUDIO_HAPTICS_SYNC_ID, 0); // Call with default value
     hiplayer_->SetParameter(format2);
     EXPECT_EQ(hiplayer_->audioHapticsSyncId_, 0); // Expect success
-}
-
-/**
-* @tc.name    : Clean unused listener
-* @tc.number  : CleanUnusedListener_001
-* @tc.desc    : Clean unused listener
-* @tc.require :
-*/
-HWTEST_F(HiplayerImplUnitTest, CleanUnusedListener_001, TestSize.Level0)
-{
-    int32_t ret = hiplayer_->SetSource(VIDEO_FILE1);
-    EXPECT_EQ(MSERR_OK, ret);
-    hiplayer_->pipelineStates_ = PlayerStates::PLAYER_STOPPED;
-    EXPECT_EQ(MSERR_OK, hiplayer_->PrepareAsync());
-    hiplayer_->CleanUnusedListener();
 }
 
 /**

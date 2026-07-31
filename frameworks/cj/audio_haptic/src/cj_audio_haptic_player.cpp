@@ -60,19 +60,26 @@ void CjAudioHapticPlayerCallback::RemoveCallbackReference(const std::string &cal
 
 void CjAudioHapticPlayerCallback::OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent)
 {
-    std::lock_guard<std::mutex> lock(cbMutex_);
-    MEDIA_LOGI("OnInterrupt: hintType: %{public}d ", interruptEvent.hintType);
-    CHECK_AND_RETURN_LOG(audioInterruptCb_ != nullptr, "Cannot find the reference of interrupt callback");
-    audioInterruptCb_(interruptEvent.eventType, interruptEvent.forceType, interruptEvent.hintType);
+    std::function<void(int32_t, int32_t, int32_t)> cb;
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        MEDIA_LOGI("OnInterrupt: hintType: %{public}d ", interruptEvent.hintType);
+        CHECK_AND_RETURN_LOG(audioInterruptCb_ != nullptr, "Cannot find the reference of interrupt callback");
+        cb = audioInterruptCb_;
+    }
+    cb(interruptEvent.eventType, interruptEvent.forceType, interruptEvent.hintType);
     return;
 }
 
 void CjAudioHapticPlayerCallback::OnEndOfStream(void)
 {
-    std::lock_guard<std::mutex> lock(cbMutex_);
-    CHECK_AND_RETURN_LOG(endOfStreamCb_ != nullptr, "Cannot find the reference of endOfStream callback");
-
-    endOfStreamCb_();
+    std::function<void()> cb;
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        CHECK_AND_RETURN_LOG(endOfStreamCb_ != nullptr, "Cannot find the reference of endOfStream callback");
+        cb = endOfStreamCb_;
+    }
+    cb();
     return;
 }
 
@@ -93,7 +100,7 @@ int32_t CjAudioHapticPlayer::IsMuted(int32_t type, bool &ret)
     if (!IsLegalAudioHapticType(type)) {
         return ERR_INVALID_ARG;
     }
-
+    CHECK_AND_RETURN_RET_LOG(audioHapticPlayer_ != nullptr, ERR_IO_ERROR, "audioHapticPlayer_ is nullptr");
     ret = audioHapticPlayer_->IsMuted(static_cast<AudioHapticType>(type));
     return SUCCESS;
 }
@@ -113,17 +120,22 @@ bool CjAudioHapticPlayer::IsLegalAudioHapticType(int32_t audioHapticType)
 
 int32_t CjAudioHapticPlayer::Start()
 {
+    CHECK_AND_RETURN_RET_LOG(audioHapticPlayer_ != nullptr, ERR_IO_ERROR, "audioHapticPlayer_ is nullptr");
     return audioHapticPlayer_->Start();
 }
 
 int32_t CjAudioHapticPlayer::Stop()
 {
+    CHECK_AND_RETURN_RET_LOG(audioHapticPlayer_ != nullptr, ERR_IO_ERROR, "audioHapticPlayer_ is nullptr");
     return audioHapticPlayer_->Stop();
 }
 
 int32_t CjAudioHapticPlayer::Release()
 {
-    return audioHapticPlayer_->Release();
+    CHECK_AND_RETURN_RET_LOG(audioHapticPlayer_ != nullptr, ERR_IO_ERROR, "audioHapticPlayer_ is nullptr");
+    int32_t ret = audioHapticPlayer_->Release();
+    audioHapticPlayer_ = nullptr;
+    return ret;
 }
 
 int32_t CjAudioHapticPlayer::On(const char* type, int64_t callbackId)

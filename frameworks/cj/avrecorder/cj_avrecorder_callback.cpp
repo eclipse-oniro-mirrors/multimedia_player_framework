@@ -83,15 +83,19 @@ void CJAVRecorderCallback::UnRegister(const int32_t type)
 
 void CJAVRecorderCallback::ExecuteStateCallback(CStateChangeHandler &handler)
 {
+    std::function<void(CStateChangeHandler)> cb;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         currentState_ = handler.state;
+        if (!onStateChange) {
+            MEDIA_LOGE("onStateChange is null");
+            free(handler.state);
+            handler.state = nullptr;
+            return;
+        }
+        cb = onStateChange;
     }
-    if (!onStateChange) {
-        MEDIA_LOGE("onStateChange is null");
-        return;
-    }
-    onStateChange(handler);
+    cb(handler);
     free(handler.state);
     handler.state = nullptr;
 }
@@ -99,9 +103,14 @@ void CJAVRecorderCallback::ExecuteStateCallback(CStateChangeHandler &handler)
 void CJAVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
 {
     MEDIA_LOGI("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
-    if (!onError) {
-        MEDIA_LOGE("onError is null");
-        return;
+    std::function<void(CErrorInfo)> cb;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!onError) {
+            MEDIA_LOGE("onError is null");
+            return;
+        }
+        cb = onError;
     }
     CErrorInfo errorInfo {};
     if (errCode == MSERR_DATA_SOURCE_IO_ERROR) {
@@ -123,11 +132,19 @@ void CJAVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
         errorInfo.code = MSERR_EXT_API9_IO;
         errorInfo.msg = MallocCString("IO error happened.");
     }
-    onError(errorInfo);
+    if (errorInfo.msg == nullptr) {
+        MEDIA_LOGE("MallocCString failed for errorInfo.msg");
+        return;
+    }
+    cb(errorInfo);
     free(errorInfo.msg);
     errorInfo.msg = nullptr;
     CStateChangeHandler handler {};
     handler.state = MallocCString(CjAVRecorderState::STATE_ERROR);
+    if (handler.state == nullptr) {
+        MEDIA_LOGE("MallocCString failed for state ERROR");
+        return;
+    }
     handler.reason = static_cast<int32_t>(StateChangeReason::BACKGROUND);
     ExecuteStateCallback(handler);
 }
@@ -139,6 +156,10 @@ void CJAVRecorderCallback::OnInfo(int32_t type, int32_t extra)
         MEDIA_LOGI("OnInfo() type = MAX_DURATION_REACHED, type: %{public}d, extra: %{public}d", type, extra);
         CStateChangeHandler handler {};
         handler.state = MallocCString(CjAVRecorderState::STATE_STOPPED);
+        if (handler.state == nullptr) {
+            MEDIA_LOGE("MallocCString failed for state STOPPED");
+            return;
+        }
         handler.reason = static_cast<int32_t>(StateChangeReason::BACKGROUND);
         ExecuteStateCallback(handler);
     }
@@ -146,33 +167,42 @@ void CJAVRecorderCallback::OnInfo(int32_t type, int32_t extra)
 
 void CJAVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
-    if (!onAudioCapturerChange) {
-        MEDIA_LOGE("onAudioCapturerChange is null");
-        return;
+    std::function<void(CAudioCapturerChangeInfo)> cb;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!onAudioCapturerChange) {
+            MEDIA_LOGE("onAudioCapturerChange is null");
+            return;
+        }
+        cb = onAudioCapturerChange;
     }
     CAudioCapturerChangeInfo cInfo {};
     if (!ConvertToCAudioCapturerChangeInfo(cInfo, audioRecorderChangeInfo)) {
         FreeCArrDeviceDescriptor(cInfo.deviceDescriptors);
         return;
     }
-    onAudioCapturerChange(cInfo);
+    cb(cInfo);
     FreeCArrDeviceDescriptor(cInfo.deviceDescriptors);
 }
 
 void CJAVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
 {
-    if (!onPhotoAssertAvailable) {
-        MEDIA_LOGE("onPhotoAssertAvailable is null");
-        return;
+    std::function<void(int64_t)> cb;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!onPhotoAssertAvailable) {
+            MEDIA_LOGE("onPhotoAssertAvailable is null");
+            return;
+        }
+        cb = onPhotoAssertAvailable;
     }
-
     if (uri.empty()) {
         MEDIA_LOGE("uri is empty");
         return;
     }
 #ifdef SUPPORT_RECORDER_CREATE_FILE
     auto id = CreatePhotoAssetImpl(uri, CAMERA_SHOT_TYPE);
-    onPhotoAssertAvailable(id);
+    cb(id);
 #endif
 }
 
@@ -325,6 +355,16 @@ bool ConvertToCDeviceInfo(CDeviceDescriptor* device, const DeviceInfo& deviceInf
     device->displayName = MallocCString(deviceInfo.displayName);
     device->address = MallocCString(deviceInfo.macAddress);
     device->name = MallocCString(deviceInfo.deviceName);
+    if (device->displayName == nullptr || device->address == nullptr || device->name == nullptr) {
+        MEDIA_LOGE("MallocCString failed for device string fields");
+        free(device->displayName);
+        device->displayName = nullptr;
+        free(device->address);
+        device->address = nullptr;
+        free(device->name);
+        device->name = nullptr;
+        return false;
+    }
 
     if (!InitDeviceRates(device, deviceInfo)) {
         return false;

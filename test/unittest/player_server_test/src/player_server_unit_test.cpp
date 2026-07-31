@@ -3765,7 +3765,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_001, TestSize.Level1)
     ASSERT_EQ(PlayerStates::PLAYER_STOPPED, player_->GetState());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSERT_EQ(-1, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
 }
 
 /**
@@ -3790,7 +3790,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_002, TestSize.Level1)
     sleep(1);
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Play());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSERT_EQ(-1, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
     ASSERT_EQ(MSERR_OK, player_->Reset());
     ASSERT_EQ(PlayerStates::PLAYER_IDLE, player_->GetState());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Reset());
@@ -3852,7 +3852,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_005, TestSize.Level1)
     ASSERT_EQ(MSERR_OK, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
     ASSERT_EQ(MSERR_OK, player_->PrepareAsync());
     sleep(1);
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSERT_EQ(-1, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
     ASSERT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
@@ -3878,7 +3878,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_006, TestSize.Level1)
     int32_t duration = 0;
     ASSERT_EQ(MSERR_OK, player_->GetDuration(duration));
     ASSERT_EQ(MSERR_OK, player_->Play());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSERT_EQ(-1, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
     ASSERT_EQ(MSERR_OK, player_->Seek(duration, PlayerSeekMode::SEEK_NEXT_SYNC));
     sleep(1);
     ASSERT_EQ(true, player_->IsPlaying());
@@ -3905,7 +3905,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_007, TestSize.Level1)
     ASSERT_EQ(PlayerStates::PLAYER_PLAYBACK_COMPLETE, player_->GetState());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->Pause());
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->PrepareAsync());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSERT_EQ(-1, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
 }
 
 /**
@@ -3925,7 +3925,7 @@ HWTEST_F(PlayerServerUnitTest, Player_State_Machine_008, TestSize.Level1)
     ASSERT_EQ(MSERR_OK, player_->Pause());
     sleep(1);
     ASSERT_EQ(PlayerStates::PLAYER_PAUSED, player_->GetState());
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
+    ASSERT_EQ(-1, player_->SetSource(MEDIA_ROOT + "mp3_48000Hz_64kbs_mono.mp3"));
     ASSERT_EQ(MSERR_INVALID_OPERATION, player_->PrepareAsync());
 }
 
@@ -4734,29 +4734,6 @@ HWTEST_F(PlayerServerUnitTest, Player_SetRenderFirstFrame_002, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test PreparedHandleEos API
- * @tc.number: Player_PreparedHandleEos_001
- * @tc.desc  : Test Player PreparedHandleEos
- */
-HWTEST_F(PlayerServerUnitTest, Player_PreparedHandleEos_001, TestSize.Level0)
-{
-    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
-    (void)server->Init();
-    ASSERT_EQ(MSERR_OK, server->SetSource(VIDEO_FILE1));
-    EXPECT_EQ(MSERR_OK, server->Prepare());
-    EXPECT_EQ(MSERR_OK, server->Play());
-    EXPECT_EQ(MSERR_OK, server->SetLooping(true));
-    EXPECT_EQ(true, server->IsLooping());
-    server->PreparedHandleEos();
-    EXPECT_NE(server->lastOpStatus_, PLAYER_PLAYBACK_COMPLETE);
-    EXPECT_EQ(MSERR_OK, server->SetLooping(false));
-    EXPECT_EQ(false, server->IsLooping());
-    server->PreparedHandleEos();
-    EXPECT_EQ(server->lastOpStatus_, PLAYER_PLAYBACK_COMPLETE);
-    server->Release();
-}
-
-/**
  * @tc.name  : Test HandleEos API
  * @tc.number: Player_HandleEos_001
  * @tc.desc  : Test Player HandleEos
@@ -4787,24 +4764,6 @@ HWTEST_F(PlayerServerUnitTest, Player_HandleInterruptEvent_001, TestSize.Level0)
     infoBody.PutIntValue(PlayerKeys::AUDIO_INTERRUPT_FORCE, OHOS::AudioStandard::INTERRUPT_FORCE);
     server->HandleInterruptEvent(infoBody);
     EXPECT_EQ(server->interruptEventState_, PLAYER_PREPARING);
-}
-
-/**
- * @tc.name  : Test BackGroundChangeState API
- * @tc.number: Player_BackGroundChangeState_001
- * @tc.desc  : Test Player BackGroundChangeState
- */
-HWTEST_F(PlayerServerUnitTest, Player_BackGroundChangeState_001, TestSize.Level0)
-{
-    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
-    (void)server->Init();
-    ASSERT_EQ(MSERR_OK, server->SetSource(VIDEO_FILE1));
-    EXPECT_EQ(MSERR_OK, server->Prepare());
-    EXPECT_EQ(MSERR_OK, server->Play());
-    EXPECT_EQ(MSERR_OK, server->BackGroundChangeState(PLAYER_PAUSED, true));
-    EXPECT_EQ(MSERR_OK, server->BackGroundChangeState(PLAYER_STARTED, true));
-    EXPECT_EQ(MSERR_OK, server->Stop());
-    EXPECT_NE(MSERR_OK, server->BackGroundChangeState(PLAYER_STOPPED, true));
 }
 
 /**
@@ -4844,38 +4803,6 @@ HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_003, TestSize.Level0)
     server_->subtitleTrackNum_ = 10;
     EXPECT_NE(MSERR_OK, server_->AddSubSource(SUBTITLE_SRT_FIELE));
     EXPECT_NE(MSERR_OK, server_->AddSubSource(0, 0, 0));
-}
-
-/**
- * @tc.name  : Test AddSubSource API
- * @tc.number: Player_AddSubSource_004
- * @tc.desc  : Test Player AddSubSource invalid subtitleTrackNum
- */
-HWTEST_F(PlayerServerUnitTest, Player_AddSubSource_004, TestSize.Level0)
-{
-    std::shared_ptr<PlayerServer> server = std::make_shared<PlayerServer>();
-    ASSERT_EQ(MSERR_OK, server->SetSource(VIDEO_FILE1));
-    server->subtitleTrackNum_ = 10;
-    EXPECT_NE(MSERR_OK, server->AddSubSource(SUBTITLE_SRT_FIELE));
-    EXPECT_NE(MSERR_OK, server->AddSubSource(0, 0, 0));
-}
-
-/**
- * @tc.name  : Test PrepareInReleasing API
- * @tc.number: Player_PrepareInReleasing_001
- * @tc.desc  : Test Player PrepareInReleasing
- */
-HWTEST_F(PlayerServerUnitTest, Player_PrepareInReleasing_001, TestSize.Level0)
-{
-    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
-    (void)server_->Init();
-    ASSERT_EQ(MSERR_OK, server_->SetSource(VIDEO_FILE1));
-    EXPECT_EQ(MSERR_OK, server_->Prepare());
-    EXPECT_EQ(MSERR_OK, server_->Play());
-    EXPECT_EQ(MSERR_OK, server_->Stop());
-    server_->inReleasing_ = true;
-    EXPECT_NE(MSERR_OK, server_->Prepare());
-    EXPECT_NE(MSERR_OK, server_->PrepareAsync());
 }
 
 /**

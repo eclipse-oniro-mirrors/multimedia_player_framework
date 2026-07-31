@@ -47,6 +47,7 @@ sptr<CJAVImageGeneratorImpl> CJAVImageGeneratorImpl::Create()
 
 int64_t CJAVImageGeneratorImpl::FetchFrameAtTime(int64_t timeUs, int32_t option, CPixelMapParams param)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (state_ != HelperState::HELPER_STATE_RUNNABLE) {
         MEDIA_LOGE("Current state is not runnable, can't fetchFrame.");
         return 0;
@@ -66,6 +67,7 @@ int64_t CJAVImageGeneratorImpl::FetchFrameAtTime(int64_t timeUs, int32_t option,
 
 int32_t CJAVImageGeneratorImpl::SetAVFileDescriptor(CAVFileDescriptor file)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     fileDescriptor_.fd = file.fd;
     fileDescriptor_.offset = file.offset;
     fileDescriptor_.length = file.length;
@@ -82,6 +84,7 @@ int32_t CJAVImageGeneratorImpl::SetAVFileDescriptor(CAVFileDescriptor file)
 
 int32_t CJAVImageGeneratorImpl::GetAVFileDescriptor(CAVFileDescriptor* data)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (data == nullptr) {
         return MSERR_INVALID_VAL;
     }
@@ -93,6 +96,7 @@ int32_t CJAVImageGeneratorImpl::GetAVFileDescriptor(CAVFileDescriptor* data)
 
 void CJAVImageGeneratorImpl::Release()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (state_ == HelperState::HELPER_STATE_RELEASED) {
         MEDIA_LOGE("Has released once, can't release again.");
         return;

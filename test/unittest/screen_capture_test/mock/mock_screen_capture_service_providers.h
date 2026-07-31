@@ -13,25 +13,27 @@
  * limitations under the License.
  */
 
-#ifndef MOCK_EXTERNAL_SERVICE_PROVIDERS_H
-#define MOCK_EXTERNAL_SERVICE_PROVIDERS_H
+#ifndef MOCK_SCREEN_CAPTURE_SERVICE_PROVIDERS_H
+#define MOCK_SCREEN_CAPTURE_SERVICE_PROVIDERS_H
 
 #include <gmock/gmock.h>
 #include <memory>
-#include "external_service_providers.h"
+#include "screen_capture_service_providers.h"
 
 namespace OHOS::Media {
 
-class MockCommonServiceProvider : public ICommonServiceProvider {
+class MockScreenCaptureServiceProviders : public IScreenCaptureServiceProviders {
 public:
     MOCK_METHOD(std::shared_ptr<AudioCapturerWrapper>, CreateAudioCapturerWrapper,
         (AudioCaptureInfo &, const std::shared_ptr<ScreenCaptureCallBack> &, std::string &&,
             const ScreenCaptureContentFilter &),
         (override));
+    IInnerScreenCaptureMonitorService &GetScreenCaptureMonitor() override;
+    std::shared_ptr<IRecorderService> CreateRecorder() override;
 };
 
-std::unique_ptr<ExternalServiceProviders> CreateMockProviders();
+std::unique_ptr<IScreenCaptureServiceProviders> CreateMockProviders();
 
 } // namespace OHOS::Media
 
-#endif // MOCK_EXTERNAL_SERVICE_PROVIDERS_H
+#endif // MOCK_SCREEN_CAPTURE_SERVICE_PROVIDERS_H

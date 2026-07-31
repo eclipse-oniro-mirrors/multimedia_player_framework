@@ -74,6 +74,7 @@ private:
     void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
     void setHelper(const std::shared_ptr<OHOS::Media::AVMetadataHelper> &helper);
     std::shared_ptr<OHOS::Media::HelperCallback> helperCb_ = nullptr;
+    std::mutex mutex_;
 };
 } // namespace ANI::Media
 #endif // AVMETADATAEXTRACTOR_TAIHE_H

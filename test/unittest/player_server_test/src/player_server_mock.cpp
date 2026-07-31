@@ -396,7 +396,7 @@ int32_t PlayerServerMock::SetSource(const std::string url)
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(player_ != nullptr, -1, "player_ == nullptr");
     std::unique_lock<std::mutex> lock(mutex_);
-    int32_t ret = player_->SetSource(url);
+    int32_t ret = SetSource(url, 0, 0);
     return ret;
 }
 

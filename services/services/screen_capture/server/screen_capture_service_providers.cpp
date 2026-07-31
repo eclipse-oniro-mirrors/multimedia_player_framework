@@ -13,12 +13,14 @@
  * limitations under the License.
  */
 
-#include "external_service_providers.h"
+#include "screen_capture_service_providers.h"
 #include "audio_capturer_wrapper.h"
+#include "recorder_server.h"
+#include "screen_capture_monitor_server.h"
 
 namespace OHOS::Media {
 
-class CommonServiceProviderImpl : public ICommonServiceProvider {
+class ScreenCaptureServiceProvidersImpl : public IScreenCaptureServiceProviders {
 public:
     std::shared_ptr<AudioCapturerWrapper> CreateAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
         const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
@@ -26,12 +28,20 @@ public:
     {
         return std::make_shared<AudioCapturerWrapper>(audioInfo, screenCaptureCb, std::move(name), filter);
     }
+
+    IInnerScreenCaptureMonitorService &GetScreenCaptureMonitor() override
+    {
+        return ScreenCaptureMonitorServer::GetInstance();
+    }
+
+    std::shared_ptr<IRecorderService> CreateRecorder() override
+    {
+        return RecorderServer::Create();
+    }
 };
 
-std::unique_ptr<ExternalServiceProviders> CreateDefaultProviders()
+std::unique_ptr<IScreenCaptureServiceProviders> CreateDefaultProviders()
 {
-    auto wrappers = std::make_unique<ExternalServiceProviders>();
-    wrappers->commonService = std::make_unique<CommonServiceProviderImpl>();
-    return wrappers;
+    return std::make_unique<ScreenCaptureServiceProvidersImpl>();
 }
 } // namespace OHOS::Media
