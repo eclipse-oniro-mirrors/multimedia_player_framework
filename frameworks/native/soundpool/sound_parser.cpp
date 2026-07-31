@@ -27,7 +27,6 @@ namespace {
     static const std::string AUDIO_RAW_MIMETYPE_INFO = "audio/raw";
     static const std::string AUDIO_MPEG_MIMETYPE_INFO = "audio/mpeg";
     static constexpr int32_t MAX_CODEC_BUFFER_SIZE = 5 * 1024 * 1024;
-    const std::string INPUT_BUFFER = "inputBuffer";
     const uint32_t SINGLE_BUFFER_SIZE_OF_RAWFILE = 8192;
 }
 
@@ -325,7 +324,7 @@ int32_t SoundDecoderCallback::DealBufferRawFile()
     MediaAVCodec::AVCodecBufferFlag bufferFlag = MediaAVCodec::AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_NONE;
     MediaAVCodec::AVCodecBufferInfo sampleInfo;
     std::shared_ptr<AVSharedMemoryBase> buffer = std::make_shared<AVSharedMemoryBase>(SINGLE_BUFFER_SIZE_OF_RAWFILE,
-        AVSharedMemory::Flags::FLAGS_READ_WRITE, INPUT_BUFFER);
+        AVSharedMemory::Flags::FLAGS_READ_WRITE, "inputBuffer");
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_OPERATION, "Create AVSharedMemoryBase failed");
     int32_t ret = buffer->Init();
     CHECK_AND_RETURN_RET_LOG(ret == AVCodecServiceErrCode::AVCS_ERR_OK, MSERR_INVALID_OPERATION,
