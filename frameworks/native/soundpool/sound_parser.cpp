@@ -17,7 +17,7 @@
 #include <fcntl.h>
 #include <functional>
 
-#include "avsharedmomorybase.h"
+#include "avsharedmemorybase.h"
 #include "isoundpool.h"
 #include "sound_parser.h"
 
