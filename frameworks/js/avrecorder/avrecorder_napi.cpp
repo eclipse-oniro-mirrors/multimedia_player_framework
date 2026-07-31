@@ -564,6 +564,7 @@ int32_t AVRecorderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
 {
 #ifndef CROSS_PLATFORM
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     int32_t pixelMapWidth = pixelMap->GetWidth();
     int32_t pixelMapHeight = pixelMap->GetHeight();
     int32_t pixelMapRowStride = pixelMap->GetRowStride();
@@ -1671,6 +1672,8 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWatermarkTask(
 
 RetInfo AVRecorderNapi::GetInputSurface()
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr,
+        GetRetInfo(MSERR_INVALID_OPERATION, "GetInputSurface", ""), "recorder_ is nullptr!");
     CHECK_AND_RETURN_RET_LOG(withVideo_, GetRetInfo(MSERR_INVALID_OPERATION, "GetInputSurface", "",
         "The VideoSourceType is not configured. Please do not call getInputSurface"), "No video recording");
 
@@ -1701,12 +1704,13 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetInputMetaSurface(
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        CHECK_AND_RETURN_RET_LOG(napi->metaSourceIDMap_.find(type) != napi->metaSourceIDMap_.end(),
+        auto metaIt = napi->metaSourceIDMap_.find(type);
+        CHECK_AND_RETURN_RET_LOG(metaIt != napi->metaSourceIDMap_.end(),
             GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "no meta source type"),
             "failed to find meta type");
         if (napi->metaSurface_ == nullptr) {
             MEDIA_LOGI("The meta source type is %{public}d", static_cast<int32_t>(type));
-            napi->metaSurface_ = napi->recorder_->GetMetaSurface(napi->metaSourceIDMap_.at(type));
+            napi->metaSurface_ = napi->recorder_->GetMetaSurface(metaIt->second);
             CHECK_AND_RETURN_RET_LOG(napi->metaSurface_ != nullptr,
                 GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", ""), "failed to GetInputMetaSurface");
  
@@ -1822,17 +1826,20 @@ int32_t AVRecorderNapi::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &c
 
 int32_t AVRecorderNapi::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     int32_t ret = recorder_->GetCurrentCapturerChangeInfo(changeInfo);
     return ret;
 }
 
 int32_t AVRecorderNapi::GetMaxAmplitude(int32_t &maxAmplitude)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     return recorder_->GetMaxAmplitude(maxAmplitude);
 }
 
 int32_t AVRecorderNapi::GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     int32_t ret = recorder_->GetAvailableEncoder(encoderInfo);
     return ret;
 }
@@ -1857,6 +1864,7 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     std::shared_ptr<Meta> avBufferConfig = std::make_shared<Meta>();
     int32_t ret = ConfigAVBufferMeta(pixelMap, watermarkConfig, avBufferConfig);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "ConfigAVBufferMeta is failed");
@@ -1890,6 +1898,7 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
 
 int32_t AVRecorderNapi::SetMetadata(const std::map<std::string, std::string> &recordMeta)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
     for (auto &meta : recordMeta) {
         userMeta->SetData(meta.first, meta.second);
@@ -1956,7 +1965,10 @@ int32_t AVRecorderNapi::CheckStateMachine(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
     std::string curState = napiCb->GetState();
-    std::vector<std::string> allowedOpt = stateCtrlList.at(curState);
+    auto stateIt = stateCtrlList.find(curState);
+    CHECK_AND_RETURN_RET_LOG(stateIt != stateCtrlList.end(), MSERR_INVALID_OPERATION,
+        "invalid state: %{public}s", curState.c_str());
+    const std::vector<std::string> &allowedOpt = stateIt->second;
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
         return MSERR_INVALID_OPERATION;
@@ -1995,7 +2007,10 @@ int32_t AVRecorderNapi::CheckRepeatOperation(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
     std::string curState = napiCb->GetState();
-    std::vector<std::string> repeatOpt = stateCtrl.at(curState);
+    auto stateIt = stateCtrl.find(curState);
+    CHECK_AND_RETURN_RET_LOG(stateIt != stateCtrl.end(), MSERR_INVALID_OPERATION,
+        "invalid state: %{public}s", curState.c_str());
+    const std::vector<std::string> &repeatOpt = stateIt->second;
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
         MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!", curState.c_str(), opt.c_str());
         return MSERR_INVALID_OPERATION;
@@ -2460,6 +2475,7 @@ bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncC
 
 RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
 {
+    CHECK_AND_RETURN_RET(recorder_ != nullptr, GetRetInfo(MSERR_INVALID_OPERATION, "SetProfile", ""));
     int32_t ret;
     AVRecorderProfile &profile = config->profile;
 
@@ -2584,6 +2600,7 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
 
 RetInfo AVRecorderNapi::ConfigureUrl(std::shared_ptr<AVRecorderConfig> config)
 {
+    CHECK_AND_RETURN_RET(recorder_ != nullptr, GetRetInfo(MSERR_INVALID_OPERATION, "ConfigureUrl", ""));
     int32_t ret;
     if (config->fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE) {
         ret = recorder_->SetFileGenerationMode(config->fileGenerationMode);

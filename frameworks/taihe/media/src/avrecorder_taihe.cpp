@@ -186,10 +186,10 @@ int32_t AVRecorderImpl::CheckRepeatOperation(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(taiheCb != nullptr, MSERR_INVALID_OPERATION, "taiheCb is nullptr!");
 
     std::string curState = taiheCb->GetState();
-    if (stateCtrl.find(curState) == stateCtrl.end()) {
-        MEDIA_LOGI("Invalid state: %{public}s.", curState.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
+    auto stateIt = stateCtrl.find(curState);
+    CHECK_AND_RETURN_RET_LOG(stateIt != stateCtrl.end(), MSERR_INVALID_OPERATION,
+        "invalid state: %{public}s", curState.c_str());
+    const std::vector<std::string> &repeatOpt = stateIt->second;
     std::vector<std::string> repeatOpt = stateCtrl.at(curState);
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
         MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!", curState.c_str(), opt.c_str());
@@ -760,11 +760,10 @@ int32_t AVRecorderImpl::CheckStateMachine(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(recorderCb != nullptr, MSERR_INVALID_OPERATION, "taiheCb is nullptr!");
 
     std::string curState = recorderCb->GetState();
-    if (stateCtrlList.find(curState) == stateCtrlList.end()) {
-        MEDIA_LOGI("Invalid state: %{public}s.", curState.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
-    std::vector<std::string> allowedOpt = stateCtrlList.at(curState);
+    auto stateIt = stateCtrlList.find(curState);
+    CHECK_AND_RETURN_RET_LOG(stateIt != stateCtrlList.end(), MSERR_INVALID_OPERATION,
+        "invalid state: %{public}s", curState.c_str());
+    const std::vector<std::string> &allowedOpt = stateIt->second;
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
         return MSERR_INVALID_OPERATION;
@@ -1298,12 +1297,14 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetInputMetaSurface(
 
         CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        CHECK_AND_RETURN_RET_LOG(taihe->metaSourceIDMap_.find(type) != taihe->metaSourceIDMap_.end(),
+
+        auto metaIt = taihe->metaSourceIDMap_.find(type);
+        CHECK_AND_RETURN_RET_LOG(metaIt != taihe->metaSourceIDMap_.end(),
             GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "no meta source type"),
             "failed to find meta type");
         if (taihe->metaSurface_ == nullptr) {
             MEDIA_LOGI("The meta source type is %{public}d", static_cast<int32_t>(type));
-            taihe->metaSurface_ = taihe->recorder_->GetMetaSurface(taihe->metaSourceIDMap_.at(type));
+            taihe->metaSurface_ = taihe->recorder_->GetMetaSurface(metaIt->second);
             CHECK_AND_RETURN_RET_LOG(taihe->metaSurface_ != nullptr,
                 GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", ""), "failed to GetInputMetaSurface");
 
@@ -2255,19 +2256,19 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::AddWatermarkTask(
         &watermarkConfig = asyncCtx->watermarkConfiguration_, &watermarkCount = asyncCtx->addWatermarkCount_]() {
         const std::string &option = AVRecordergOpt::ADD_WATERMARK;
         MEDIA_LOGI("%{public}s Start", option.c_str());
- 
+
         CHECK_AND_RETURN_RET(taihe != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
         CHECK_AND_RETURN_RET(pixelMap != nullptr,
             GetRetInfo(MSERR_INVALID_VAL, option, ""));
- 
+
         CHECK_AND_RETURN_RET(watermarkConfig != nullptr,
             GetRetInfo(MSERR_INVALID_VAL, option, ""));
- 
+
         CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
- 
+
         int32_t ret = taihe->AddWatermark(pixelMap, watermarkConfig, watermarkCount);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, "AddWatermarkTask", ""),
             "AddWatermarkTask failed");

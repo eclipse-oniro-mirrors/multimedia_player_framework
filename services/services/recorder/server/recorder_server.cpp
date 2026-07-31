@@ -121,6 +121,7 @@ int32_t RecorderServer::Init()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     CHECK_AND_RETURN_RET_LOG(result.Value() == MSERR_OK, result.Value(), "Result failed");
 
     status_ = REC_INITIALIZED;
@@ -182,6 +183,7 @@ int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -201,6 +203,7 @@ int32_t RecorderServer::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encod
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -221,6 +224,7 @@ int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t he
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -240,6 +244,7 @@ int32_t RecorderServer::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -259,6 +264,7 @@ int32_t RecorderServer::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -278,6 +284,7 @@ int32_t RecorderServer::SetVideoIsHdr(int32_t sourceId, bool isHdr)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -297,6 +304,7 @@ int32_t RecorderServer::SetVideoEnableTemporalScale(int32_t sourceId, bool enabl
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -316,6 +324,7 @@ int32_t RecorderServer::SetVideoEnableStableQualityMode(int32_t sourceId, bool e
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
  
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -335,6 +344,7 @@ int32_t RecorderServer::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
  
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -356,6 +366,7 @@ int32_t RecorderServer::SetMetaSource(MetaSourceType source, int32_t &sourceId)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -378,6 +389,7 @@ int32_t RecorderServer::SetMetaMimeType(int32_t sourceId, const std::string_view
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -399,6 +411,7 @@ int32_t RecorderServer::SetMetaTimedKey(int32_t sourceId, const std::string_view
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -419,6 +432,7 @@ int32_t RecorderServer::SetMetaSourceTrackMime(int32_t sourceId, const std::stri
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -437,6 +451,7 @@ int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -455,6 +470,7 @@ sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -473,6 +489,7 @@ sptr<OHOS::Surface> RecorderServer::GetMetaSurface(int32_t sourceId)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -494,6 +511,7 @@ int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -510,6 +528,7 @@ int32_t RecorderServer::SetAudioDataSource(const std::shared_ptr<IAudioDataSourc
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -532,6 +551,7 @@ int32_t RecorderServer::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encod
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -552,6 +572,7 @@ int32_t RecorderServer::SetAudioSampleRate(int32_t sourceId, int32_t rate)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -571,6 +592,7 @@ int32_t RecorderServer::SetAudioChannels(int32_t sourceId, int32_t num)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -593,6 +615,7 @@ int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRat
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -612,6 +635,7 @@ int32_t RecorderServer::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfi
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -658,6 +682,7 @@ int32_t RecorderServer::SetUserCustomInfo(Meta &userCustomInfo)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -676,6 +701,7 @@ int32_t RecorderServer::SetGenre(std::string &genre)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -695,6 +721,7 @@ int32_t RecorderServer::SetMaxDuration(int32_t duration)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -713,6 +740,7 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED);
     return ret;
@@ -734,6 +762,7 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -757,6 +786,7 @@ int32_t RecorderServer::SetFileGenerationMode(FileGenerationMode mode)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 #endif
     return MSERR_INVALID_OPERATION;
@@ -776,6 +806,7 @@ int32_t RecorderServer::SetNextOutputFile(int32_t fd)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -795,6 +826,7 @@ int32_t RecorderServer::SetMaxFileSize(int64_t size)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -859,6 +891,7 @@ int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallba
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -882,6 +915,7 @@ int32_t RecorderServer::Prepare()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PREPARED : REC_ERROR);
     SetMediaKitReport(status_);
@@ -915,6 +949,7 @@ int32_t RecorderServer::Start()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
     if (status_ == REC_RECORDING) {
@@ -943,6 +978,7 @@ int32_t RecorderServer::Pause()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_PAUSED : REC_ERROR);
     SetMediaKitReport(status_);
@@ -967,6 +1003,7 @@ int32_t RecorderServer::Resume()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
     SetMediaKitReport(status_);
@@ -988,6 +1025,7 @@ int32_t RecorderServer::Stop(bool block)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     ret = result.Value();
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop out ret: %{public}d", FAKE_POINTER(this), ret);
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
@@ -1022,6 +1060,7 @@ int32_t RecorderServer::Reset()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     ret = result.Value();
     status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
     if (status_ == REC_INITIALIZED) {
@@ -1146,6 +1185,7 @@ int32_t RecorderServer::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &ch
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -1160,6 +1200,7 @@ int32_t RecorderServer::GetAvailableEncoder(std::vector<EncoderCapabilityData> &
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -1176,6 +1217,7 @@ int32_t RecorderServer::GetMaxAmplitude(int32_t &amplitude)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -1191,6 +1233,7 @@ int32_t RecorderServer::IsWatermarkSupported(bool &isWatermarkSupported)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -1208,6 +1251,7 @@ int32_t RecorderServer::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -1232,6 +1276,7 @@ int32_t RecorderServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -1294,6 +1339,7 @@ int32_t RecorderServer::TransmitQos(QOS::QosLevel level)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
@@ -1311,6 +1357,7 @@ int32_t RecorderServer::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
 
     auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
     return result.Value();
 }
 
