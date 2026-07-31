@@ -384,8 +384,8 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 sptr<Surface> HiRecorderImpl::GetSurfaceFromWaterMarkFilter()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From WaterMarkFilter.");
-    FALSE_RETURN_V_MSG_E(filter != nullptr, nullptr, "filter is nullptr");
     auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    FALSE_RETURN_V_MSG_E(filter != nullptr, nullptr, "filter is nullptr");
     producerSurface_ = filter->GetInputSurface();
     return producerSurface_;
 }
