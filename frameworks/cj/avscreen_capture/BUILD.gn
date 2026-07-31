@@ -29,6 +29,8 @@ ohos_shared_library("cj_avscreen_capture_ffi") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  branch_protector_ret = "pac_ret"
+
   include_dirs = [
     "${multimedia_player_framework_path}/frameworks/cj/avscreen_capture/include",
     "${multimedia_player_framework_path}/services/utils/include",
