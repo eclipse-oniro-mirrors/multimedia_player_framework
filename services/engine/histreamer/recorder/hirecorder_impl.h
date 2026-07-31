@@ -203,7 +203,7 @@ private:
     uint64_t instanceId_ = 0;
     bool muteWhenInterrupted_ = false;
     std::shared_ptr<AVBuffer> buffer_ = nullptr;
-    VideoSourceType source_;
+    VideoSourceType source_ = VideoSourceType::VIDEO_SOURCE_SURFACE_ES;
     int32_t rotation_ = 0;
 };
 } // namespace MEDIA
