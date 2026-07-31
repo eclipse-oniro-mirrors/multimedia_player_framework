@@ -301,10 +301,8 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
     taskInfo->urlToFileSizeOffset_.clear();
 
     std::ofstream f(normalizedCacheDir + "/cache_mapping.txt", std::ios::out | std::ios::binary);
-    if (!f.is_open()) {
-        MEDIA_LOGE("GenerateMappingFile failed: unable to open file %{public}s", normalizedCacheDir.c_str());
-        return;
-    }
+    FALSE_RETURN_MSG(f.is_open(),
+        "GenerateMappingFile failed: unable to open file %{public}s", normalizedCacheDir.c_str());
 
     std::vector<uint8_t> playbackParam;
     DownloadedCache::PlayStrategySerializer::Serialize(taskInfo->url, taskInfo->strategy, taskInfo->filter,
@@ -315,13 +313,12 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
         DownloadedCache::PLAYBACK_PARAM_DATA_LENGTH_SIZE + playbackParam.size();
     uint32_t writtenCount = WriteMappingEntries(f, taskInfo, entriesBaseOffset);
 
-    DownloadedCache::CacheMappingHeader mappingHeader {};
-    std::copy_n(DownloadedCache::CACHE_MAPPING_MAGIC, 4, mappingHeader.magic);
-    mappingHeader.version = 1;
-    mappingHeader.entryCount = writtenCount;
-    DownloadedCache::CacheMappingSerializer::CalculateHeaderChecksum(mappingHeader);
-    f.seekp(0, std::ios::beg);
-    DownloadedCache::CacheMappingSerializer::WriteHeader(f, mappingHeader);
+    if (writtenCount != taskInfo->fileList.size()) {
+        mappingHeader.entryCount = writtenCount;
+        DownloadedCache::CacheMappingSerializer::CalculateHeaderChecksum(mappingHeader);
+        f.seekp(0, std::ios::beg);
+        DownloadedCache::CacheMappingSerializer::WriteHeader(f, mappingHeader);
+    }
 
     if (!f.good()) {
         MEDIA_LOGE("GenerateMappingFile: write failed for %{public}s", normalizedCacheDir.c_str());
