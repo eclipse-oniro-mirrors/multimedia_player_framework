@@ -101,6 +101,7 @@ ohos_shared_library("video_editor") {
     "graphic_2d:libnative_image",
     "graphic_surface:surface",
     "hilog:libhilog",
+    "json:nlohmann_json_static",
     "media_foundation:native_media_core",
     "skia:skia_canvaskit",
     "egl:libEGL",
