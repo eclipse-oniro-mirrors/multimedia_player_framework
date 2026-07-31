@@ -1063,6 +1063,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetAVRecorderConfigTask(
 
 int32_t AVRecorderImpl::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     ConfigMap configMap;
     recorder_->GetAVRecorderConfig(configMap);
     OHOS::Media::Location location;
@@ -1205,6 +1206,7 @@ void AVRecorderImpl::GetVideoEncoderInfo(EncoderCapabilityData encoderCapData,
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetEncoderInfoTask(
     const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, &encoderInfo = asyncCtx->encoderInfo_]() {
         const std::string &option = AVRecordergOpt::GET_ENCODER_INFO;
         MEDIA_LOGI("%{public}s Start", option.c_str());
@@ -1383,6 +1385,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::IsWatermarkSupportedTask(
 
 int32_t AVRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
 }
 
@@ -1541,6 +1544,7 @@ int32_t AVRecorderImpl::GetAudioCapturerMaxAmplitudeSync()
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetMaxAmplitudeTask(
     const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, &maxAmplitude = asyncCtx->maxAmplitude_]() {
         const std::string &option = AVRecordergOpt::GET_MAX_AMPLITUDE;
         MEDIA_LOGD("%{public}s Start", option.c_str());
@@ -1669,6 +1673,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::SetWatermarkTask(
 int32_t AVRecorderImpl::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfig> &watermarkConfig)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
 #ifndef CROSS_PLATFORM
     MEDIA_LOGD("pixelMap Width %{public}d, height %{public}d, pixelformat %{public}d, RowStride %{public}d",
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
@@ -1919,6 +1924,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetCurrentCapturerChangeIn
 
 int32_t AVRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return recorder_->GetCurrentCapturerChangeInfo(changeInfo);
 }
 
@@ -2251,6 +2257,12 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::AddWatermarkTask(
  
         CHECK_AND_RETURN_RET(taihe != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(pixelMap != nullptr,
+            GetRetInfo(MSERR_INVALID_VAL, option, ""));
+ 
+        CHECK_AND_RETURN_RET(watermarkConfig != nullptr,
+            GetRetInfo(MSERR_INVALID_VAL, option, ""));
  
         CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
@@ -2298,6 +2310,7 @@ int32_t AVRecorderImpl::CreateWatermarkBuffer(std::shared_ptr<PixelMap> &pixelMa
 int32_t AVRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     MEDIA_LOGI("pixelMap Width: %{public}d, height: %{public}d, adjust Width: %{public}d, adjust height: %{public}d, "
         "pixelformat %{public}d, RowStride %{public}d", pixelMap->GetWidth(), pixelMap->GetHeight(),
         watermarkConfig->width, watermarkConfig->height, pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
