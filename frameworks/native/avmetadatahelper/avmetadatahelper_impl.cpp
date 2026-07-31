@@ -18,21 +18,22 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "directory_ex.h"
+#include "hdr_type.h"
+#include "hisysevent.h"
+#include "image_source.h"
+#include "image_type.h"
+#include "i_media_service.h"
+#include "media_errors.h"
+#include "media_log.h"
+#include "metadata_convertor.h"
+#include "param_wrapper.h"
+#include "securec.h"
+#include "scope_guard.h"
+#include "uri_helper.h"
 #include "v1_0/hdr_static_metadata.h"
 #include "v1_0/buffer_handle_meta_key_type.h"
 
-#include "securec.h"
-#include "image_source.h"
-#include "i_media_service.h"
-#include "media_log.h"
-#include "media_errors.h"
-#include "scope_guard.h"
-#include "hisysevent.h"
-#include "image_type.h"
-#include "param_wrapper.h"
-#include "hdr_type.h"
-#include "metadata_convertor.h"
-#include "uri_helper.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "MetaHelperImpl" };
@@ -800,6 +801,26 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         "avmetadatahelper service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty.");
 
+    if (IsFileUri(uri)) {
+        std::string realUriPath = "";
+        int32_t ret = GetRealPath(uri, realUriPath);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "GetRealPath failed");
+        std::string fileUri = "file://" + realUriPath;
+        std::string fileName = "";
+        ret = ParseFileName(fileUri, fileName);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ParseFileName failed");
+        int32_t fd = -1;
+        int64_t size = -1;
+        ret = OpenFile(fileName, fd, size);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OpenFile failed");
+        concurrentWorkCount_++;
+        ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
+        int32_t res = avMetadataHelperService_->SetSource(fd, 0, size, usage);
+        concurrentWorkCount_--;
+        close(fd);
+        return res;
+    }
+
     concurrentWorkCount_++;
     ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
     auto res = avMetadataHelperService_->SetSource(uri, usage);
@@ -1203,6 +1224,123 @@ void AVMetadataHelperImpl::Release()
     (void)MediaServiceFactory::GetInstance().DestroyAVMetadataHelperService(avMetadataHelperService_);
     avMetadataHelperService_ = nullptr;
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Release out", FAKE_POINTER(this));
+}
+
+bool AVMetadataHelperImpl::IsFileUri(const std::string& uri)
+{
+    return uri.find("file://") == 0;
+}
+
+int32_t AVMetadataHelperImpl::GetRealPath(const std::string& uri, std::string& realUriPath)
+{
+    std::string fileHeader = "file://";
+    std::string tempUriPath = "";
+
+    if (uri.find(fileHeader) == 0 && uri.size() > fileHeader.size()) {
+        tempUriPath = uri.substr(fileHeader.size());
+    } else {
+        tempUriPath = uri;
+    }
+    if (tempUriPath.find("..") != std::string::npos) {
+        MEDIA_LOGE("The uri (%{private}s) path may be invalid.", tempUriPath.c_str());
+        return MSERR_FILE_ACCESS_FAILED;
+    }
+    bool ret = PathToRealPath(tempUriPath, realUriPath);
+    if (!ret) {
+        MEDIA_LOGE("The uri (%{private}s) path may be invalid.", uri.c_str());
+        return MSERR_OPEN_FILE_FAILED;
+    }
+    if (access(realUriPath.c_str(), R_OK) != 0) {
+        return MSERR_FILE_ACCESS_FAILED;
+    }
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperImpl::ParseFileName(const std::string& uri, std::string& fileName)
+{
+    if (uri.empty()) {
+        MEDIA_LOGE("uri is empty");
+        return MSERR_INVALID_VAL;
+    }
+    if (uri.find("file:/") != std::string::npos) {
+        if (uri.find('#') != std::string::npos) {
+            MEDIA_LOGE("Invalid file uri format");
+            return MSERR_INVALID_VAL;
+        }
+        auto pos = uri.find("file:");
+        if (pos == std::string::npos) {
+            MEDIA_LOGE("Invalid file uri format");
+            return MSERR_INVALID_VAL;
+        }
+        size_t sizeOfProtocolHeader = 5;  // size of "file:"
+        size_t sizeBeforeRealPath = 2;  // size of "//"
+        pos += sizeOfProtocolHeader;
+        if (uri.find("///", pos) != std::string::npos) {
+            pos += sizeBeforeRealPath;
+        } else if (uri.find("//", pos) != std::string::npos) {
+            pos += sizeBeforeRealPath;
+            pos = uri.find('/', pos);  // skip host name
+            if (pos == std::string::npos) {
+                MEDIA_LOGE("Invalid file uri format");
+                return MSERR_INVALID_VAL;
+            }
+            pos++;
+        }
+        fileName = uri.substr(pos);
+    } else {
+        fileName = uri;
+    }
+    MEDIA_LOGD("fileName is %{public}s ", fileName.c_str());
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperImpl::CheckFileStat(const std::string& fileName)
+{
+    struct stat fileStat;
+    if (stat(fileName.c_str(), &fileStat) < 0) {
+        MEDIA_LOGE("Check stat failed");
+        return MSERR_INVALID_VAL;
+    }
+    if (S_ISDIR(fileStat.st_mode)) {
+        MEDIA_LOGE("S_ISDIR failed");
+        return MSERR_INVALID_VAL;
+    }
+    if (S_ISSOCK(fileStat.st_mode)) {
+        MEDIA_LOGE("S_ISSOCK failed");
+        return MSERR_INVALID_VAL;
+    }
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperImpl::GetFileSize(const std::string& fileName, int64_t& size)
+{
+    if (fileName.empty()) {
+        MEDIA_LOGE("fileName is empty");
+        return MSERR_INVALID_VAL;
+    }
+    struct stat fileStatus {};
+    if (stat(fileName.c_str(), &fileStatus) != 0) {
+        MEDIA_LOGE("Get stat failed");
+        return MSERR_INVALID_VAL;
+    }
+    size = static_cast<int64_t>(fileStatus.st_size);
+    return MSERR_OK;
+}
+
+int32_t AVMetadataHelperImpl::OpenFile(const std::string& fileName, int32_t& fd, int64_t& size)
+{
+    MEDIA_LOGD("IN");
+    int32_t ret = CheckFileStat(fileName);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckFileStat failed");
+    fd = open(fileName.c_str(), O_RDONLY);
+    CHECK_AND_RETURN_RET_LOG(fd != -1, MSERR_INVALID_VAL, "open file failed");
+    if (GetFileSize(fileName, size) != MSERR_OK) {
+        close(fd);
+        fd = -1;
+        MEDIA_LOGE("GetFileSize failed");
+        return MSERR_INVALID_VAL;
+    }
+    return MSERR_OK;
 }
 } // namespace Media
 } // namespace OHOS
