@@ -306,8 +306,10 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
     taskInfo->urlToFileSizeOffset_.clear();
 
     std::ofstream f(normalizedCacheDir + "/cache_mapping.txt", std::ios::out | std::ios::binary);
-    FALSE_RETURN_MSG(f.is_open(),
-        "GenerateMappingFile failed: unable to open file %{public}s", normalizedCacheDir.c_str());
+    if (!f.is_open()) {
+        MEDIA_LOGE("GenerateMappingFile failed: unable to open file %{public}s", normalizedCacheDir.c_str());
+        return;
+    }
     DownloadedCache::CacheMappingSerializer::CalculateHeaderChecksum(mappingHeader);
     DownloadedCache::CacheMappingSerializer::WriteHeader(f, mappingHeader);
 
