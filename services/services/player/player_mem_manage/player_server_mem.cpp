@@ -339,6 +339,11 @@ int32_t PlayerServerMem::PrepareAsyncInner()
     return PlayerServer::PrepareAsync();
 }
 
+int32_t PlayerServerMem::PrepareSyncInner()
+{
+    return PlayerServer::PrepareInner();
+}
+
 int32_t PlayerServerMem::Pause()
 {
     std::unique_lock<std::mutex> lock(mutex_);

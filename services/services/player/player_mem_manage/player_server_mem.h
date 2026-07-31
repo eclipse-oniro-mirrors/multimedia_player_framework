@@ -184,6 +184,8 @@ private:
     __attribute__((visibility("hidden")))
     int32_t PrepareAsyncInner();
     __attribute__((visibility("hidden")))
+    int32_t PrepareSyncInner();
+    __attribute__((visibility("hidden")))
     void SetPlayerServerConfig();
     __attribute__((visibility("hidden")))
     void GetPlayerServerConfig();
