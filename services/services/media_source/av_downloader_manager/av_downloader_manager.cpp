@@ -298,9 +298,9 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
         return;
     }
 
-    DownloadedCache::CacheMappingHeader mappingHeader {}; 
-    std::copy_n(DownloadedCache::CACHE_MAPPING_MAGIC, 4, mappingHeader.magic); 
-    mappingHeader.version = 1; 
+    DownloadedCache::CacheMappingHeader mappingHeader {};
+    std::copy_n(DownloadedCache::CACHE_MAPPING_MAGIC, 4, mappingHeader.magic);
+    mappingHeader.version = 1;
     mappingHeader.entryCount = taskInfo->fileList.size();
 
     taskInfo->urlToFileSizeOffset_.clear();
