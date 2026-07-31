@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <functional>
 
+#include "avsharedmomorybase.h"
 #include "isoundpool.h"
 #include "sound_parser.h"
 
@@ -26,6 +27,8 @@ namespace {
     static const std::string AUDIO_RAW_MIMETYPE_INFO = "audio/raw";
     static const std::string AUDIO_MPEG_MIMETYPE_INFO = "audio/mpeg";
     static constexpr int32_t MAX_CODEC_BUFFER_SIZE = 5 * 1024 * 1024;
+    const std::string INPUT_BUFFER = "inputBuffer";
+    const uint32_t SINGLE_BUFFER_SIZE_OF_RAWFILE = 8192;
 }
 
 namespace OHOS {
@@ -178,6 +181,12 @@ int32_t SoundParser::DoDecode(const MediaAVCodec::Format &trackFormat)
         CHECK_AND_RETURN_RET_LOG(soundParserListener_ != nullptr, MSERR_INVALID_VAL, "Invalid sound parser listener");
         audioDecCb_->SetDecodeCallback(soundParserListener_);
         if (callback_ != nullptr) audioDecCb_->SetCallback(callback_);
+        if (isRawFile_) {
+            CHECK_AND_RETURN_RET_LOG(audioDecCb_->SpliceFullPcmInRawFile() == MSERR_OK, MSERR_INVALID_VAL,
+                "Failed to get pcm.");
+            return MSERR_OK;
+        }
+
         ret = audioDec_->Start();
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to start audioDecorder.");
         MEDIA_LOGI("DoDecode, audio decoder has been started, soundID is %{public}d", soundID_);
@@ -297,12 +306,6 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
         return;
     }
 
-    if (buffer != nullptr && isRawFile_ && !decodeShouldCompleted_) {
-        DealBufferRawFile(bufferFlag, sampleInfo, index, buffer);
-        amutex_.unlock();
-        return;
-    }
-
     if (buffer != nullptr && !eosFlag_ && !decodeShouldCompleted_) {
         if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
             MEDIA_LOGE("ReadSample failed");
@@ -317,24 +320,33 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
     amutex_.unlock();
 }
 
-void SoundDecoderCallback::DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag bufferFlag,
-    MediaAVCodec::AVCodecBufferInfo sampleInfo, uint32_t index, std::shared_ptr<AVSharedMemory> buffer)
+int32_t SoundDecoderCallback::DealBufferRawFile()
 {
+    MediaAVCodec::AVCodecBufferFlag bufferFlag = MediaAVCodec::AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_NONE;
+    MediaAVCodec::AVCodecBufferInfo sampleInfo;
+    std::shared_ptr<AVSharedMemoryBase> buffer = std::make_shared<AVSharedMemoryBase>(SINGLE_BUFFER_SIZE_OF_RAWFILE,
+        AVSharedMemory::Flags::FLAGS_READ_WRITE, INPUT_BUFFER);
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_OPERATION, "Create AVSharedMemoryBase failed");
+    int32_t ret = buffer->Init();
+    CHECK_AND_RETURN_RET_LOG(bret == AVCodecServiceErrCode::AVCS_ERR_OK, MSERR_INVALID_OPERATION,
+        "Init AVSharedMemoryBase failed, ret is %{public}d", ret);
+
     if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
         MEDIA_LOGE("SoundDecoderCallback demuxer error.");
-        return;
+        return MSERR_INVALID_OPERATION;
     }
     if (!decodeShouldCompleted_ && (currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE ||
             bufferFlag == AVCODEC_BUFFER_FLAG_EOS)) {
         decodeShouldCompleted_ = true;
         ReCombineCacheData();
-        CHECK_AND_RETURN_LOG(listener_ != nullptr, "Invalid listener");
+        CHECK_AND_RETURN_RET_LOG(listener_ != nullptr, MSERR_INVALID_OPERATION, "Invalid listener");
         listener_->OnSoundDecodeCompleted(fullPcmBuffer_);
         listener_->SetSoundBufferTotalSize(static_cast<size_t>(currentSoundBufferSize_));
-        CHECK_AND_RETURN_LOG(SetAudioSharedMemory(), "SetAudioSharedMemory failed");
-        CHECK_AND_RETURN_LOG(callback_ != nullptr, "DealBufferRawFile, callback_ is nullptr");
+        CHECK_AND_RETURN_RET_LOG(SetAudioSharedMemory(), MSERR_INVALID_OPERATION, "SetAudioSharedMemory failed");
+        CHECK_AND_RETURN_RET_LOG(callback_ != nullptr, MSERR_INVALID_OPERATION,
+            "DealBufferRawFile, callback_ is nullptr");
         callback_->OnLoadCompleted(soundID_);
-        return;
+        return MSERR_OK;
     }
     int32_t size = sampleInfo.size;
     uint8_t *buf = new(std::nothrow) uint8_t[size];
@@ -348,7 +360,15 @@ void SoundDecoderCallback::DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag buf
     }
     currentSoundBufferSize_ += size;
     audioDec_->QueueInputBuffer(index, sampleInfo, bufferFlag);
-    return;
+    return MSERR_OK;
+}
+
+int32_t SoundDecoderCallback::SpliceFullPcmInRawFile()
+{
+    while(!decodeShouldCompleted_) {
+        CHECK_AND_RETURN_RET_LOG(DealBufferRawFile() == MSERR_OK, MSERR_INVALID_OPERATION, "DealBufferRawFile failed");
+    }
+    return MSERR_OK;
 }
 
 void SoundDecoderCallback::OnOutputBufferAvailable(uint32_t index, AVCodecBufferInfo info, AVCodecBufferFlag flag,
@@ -503,7 +523,9 @@ int32_t SoundDecoderCallback::Release()
 void SoundParser::SoundParserListener::OnSoundDecodeCompleted(const std::shared_ptr<AudioBufferEntry> &fullPcmBuffer)
 {
     if (std::shared_ptr<SoundParser> soundPaser = soundParserInner_.lock()) {
-        std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
+        if (!soundPaser->isRawFile_) {
+            std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
+        }
         soundData_ = fullPcmBuffer;
         isSoundParserCompleted_.store(true);
     }
@@ -512,7 +534,9 @@ void SoundParser::SoundParserListener::OnSoundDecodeCompleted(const std::shared_
 void SoundParser::SoundParserListener::SetSoundBufferTotalSize(size_t soundBufferTotalSize)
 {
     if (std::shared_ptr<SoundParser> soundPaser = soundParserInner_.lock()) {
-        std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
+        if (!soundPaser->isRawFile_) {
+            std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
+        }
         soundBufferTotalSize_ = soundBufferTotalSize;
     }
 }
