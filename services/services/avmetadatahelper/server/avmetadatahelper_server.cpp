@@ -454,7 +454,7 @@ int32_t AVMetadataHelperServer::CancelAllFetchFrames()
 {
     MediaTrace trace("AVMetadataHelperServer::CancelAllFetchFrames");
     std::unique_lock<std::mutex> lock(mutex_);
-    isCanceled_ = true;
+    cancelGeneration_.fetch_add(1);
     return MSERR_OK;
 }
 
@@ -467,9 +467,10 @@ int32_t AVMetadataHelperServer::FetchFrameYuvs(const std::vector<int64_t>& timeU
     OutputConfiguration config = { .dstWidth = param.dstWidth,
                                    .dstHeight = param.dstHeight,
                                    .colorFormat = param.colorFormat };
-    if (isCanceled_.load()) {isCanceled_ = false;}
+    const uint64_t taskCancelGeneration = cancelGeneration_.load();
 
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config, param] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config,
+        param, taskCancelGeneration] {
         MediaTrace trace("AVMetadataHelperServer::FetchFrameAtTime_task");
         std::shared_ptr<AVBuffer> err(AVBuffer::CreateAVBuffer());
         std::shared_ptr<AVBuffer> frameBuffer_ = nullptr;
@@ -479,7 +480,7 @@ int32_t AVMetadataHelperServer::FetchFrameYuvs(const std::vector<int64_t>& timeU
             MSERR_EXT_API9_SERVICE_DIED);
         int64_t actualTimeUs = 0;
         for (const auto& timeUs : timeUsVector) {
-            if (isCanceled_.load()) {
+            if (cancelGeneration_.load() != taskCancelGeneration) {
                 FrameInfo frameinfo_ = {NO_ERR, timeUs, 0, FETCH_CANCELED};
                 NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
                 continue;
@@ -520,9 +521,10 @@ int32_t AVMetadataHelperServer::FetchFrameYuvsWithTimeout(const std::vector<int6
     OutputConfiguration config = { .dstWidth = param.dstWidth,
                                    .dstHeight = param.dstHeight,
                                    .colorFormat = param.colorFormat };
-    if (isCanceled_.load()) {isCanceled_ = false;}
+    const uint64_t taskCancelGeneration = cancelGeneration_.load();
 
-    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config, param, timeoutMs] {
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, timeUsVector, option, config, param,
+        timeoutMs, taskCancelGeneration] {
         MediaTrace trace("AVMetadataHelperServer::FetchFrameYuvsWithTimeout_task");
         std::shared_ptr<AVBuffer> err(AVBuffer::CreateAVBuffer());
         std::shared_ptr<AVBuffer> frameBuffer_ = nullptr;
@@ -532,7 +534,7 @@ int32_t AVMetadataHelperServer::FetchFrameYuvsWithTimeout(const std::vector<int6
             MSERR_EXT_API9_SERVICE_DIED);
         int64_t actualTimeUs = 0;
         for (const auto& timeUs : timeUsVector) {
-            if (isCanceled_.load()) {
+            if (cancelGeneration_.load() != taskCancelGeneration) {
                 FrameInfo frameinfo_ = {NO_ERR, timeUs, 0, FETCH_CANCELED};
                 NotifyPixelCompleteCallback(HELPER_INFO_TYPE_PIXEL, err, frameinfo_, param);
                 continue;
