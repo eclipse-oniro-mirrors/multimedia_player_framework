@@ -659,6 +659,8 @@ void HiRecorderImpl::ClearAllConfiguration()
         }
         RemoveFilterAction(iter.second);
     }
+    metaDataFilters_.clear();
+    metaDataFormats_.clear();
 
     CloseFd();
 }
