@@ -190,7 +190,6 @@ int32_t AVRecorderImpl::CheckRepeatOperation(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(stateIt != stateCtrl.end(), MSERR_INVALID_OPERATION,
         "invalid state: %{public}s", curState.c_str());
     const std::vector<std::string> &repeatOpt = stateIt->second;
-    std::vector<std::string> repeatOpt = stateCtrl.at(curState);
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
         MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!", curState.c_str(), opt.c_str());
         return MSERR_INVALID_OPERATION;
@@ -1297,7 +1296,6 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetInputMetaSurface(
 
         CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-
         auto metaIt = taihe->metaSourceIDMap_.find(type);
         CHECK_AND_RETURN_RET_LOG(metaIt != taihe->metaSourceIDMap_.end(),
             GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "no meta source type"),
@@ -1545,7 +1543,6 @@ int32_t AVRecorderImpl::GetAudioCapturerMaxAmplitudeSync()
 std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetMaxAmplitudeTask(
     const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
-    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, &maxAmplitude = asyncCtx->maxAmplitude_]() {
         const std::string &option = AVRecordergOpt::GET_MAX_AMPLITUDE;
         MEDIA_LOGD("%{public}s Start", option.c_str());
@@ -2256,7 +2253,6 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::AddWatermarkTask(
         &watermarkConfig = asyncCtx->watermarkConfiguration_, &watermarkCount = asyncCtx->addWatermarkCount_]() {
         const std::string &option = AVRecordergOpt::ADD_WATERMARK;
         MEDIA_LOGI("%{public}s Start", option.c_str());
-
         CHECK_AND_RETURN_RET(taihe != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
 
@@ -2268,7 +2264,6 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::AddWatermarkTask(
 
         CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-
         int32_t ret = taihe->AddWatermark(pixelMap, watermarkConfig, watermarkCount);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, "AddWatermarkTask", ""),
             "AddWatermarkTask failed");
@@ -2327,7 +2322,6 @@ int32_t AVRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
         MSERR_INVALID_VAL, "Invalid pixelMap width");
     CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapHeight <= AVRECORDER_WATERMARK_MAX_LENGTH,
         MSERR_INVALID_VAL, "Invalid pixelMap height");
-    CHECK_AND_RETURN_RET_LOG(pixelMapRowStride > 0, MSERR_INVALID_VAL, "Invalid pixelMap row stride");
     CHECK_AND_RETURN_RET_LOG(pixelMapHeight <= MAX_WATERMARK_SIZE / pixelMapRowStride,
         MSERR_INVALID_VAL, "Invalid data size");
 

@@ -684,7 +684,9 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     ret = TransRecorderStatus(HandleStopOperation());
     // clear all configurations and remove all filters
     ClearAllConfiguration();
-    FALSE_RETURN_V_MSG_E(curState_ == StateId::INIT, ret, "pipeline stop fail");
+    if (ret == MSERR_OK) {
+        OnStateChanged(StateId::INIT);
+    }
     return ret;
 }
 
