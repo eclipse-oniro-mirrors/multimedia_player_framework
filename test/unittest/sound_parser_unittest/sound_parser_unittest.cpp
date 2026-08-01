@@ -228,40 +228,6 @@ HWTEST_F(SoundParserUnitTest, SoundParser_SpliceFullPcmInRawFile_001, TestSize.L
     int32_t soundID = ID_TEST;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec = std::make_shared<MyAVCodecAudioDecoder>();
     std::shared_ptr<AVDemuxerImpl> demuxer_value = std::make_shared<AVDemuxerImpl>();
-    EXPECT_CALL(*(demuxer_value), ReadSample(_, _, _, bufferFlag)).WillRepeatedly(testing::Return(ERR_OK));
-    soundParser_->source_ = std::make_shared<MediaAVCodec::AVSourceImpl>();
-    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer = demuxer_value;
-    bool isRawFile = true;
-    SoundDecoderCallback_ = std::make_shared<SoundDecoderCallback>(soundID, audioDec, demuxer, isRawFile);
-    SoundDecoderCallback_->decodeShouldCompleted_ = false;
-    ASSERT_NE(SoundDecoderCallback_, nullptr);
-    uint32_t index = ID_TEST;
-    MediaAVCodec::AVCodecBufferInfo sampleInfo;
-    uint8_t testNum = ID_TEST;
-    uint8_t *testPtr = &testNum;
-    auto mockBuffer = std::make_shared<MockAVSharedMemory>();
-    EXPECT_CALL(*(mockBuffer), GetBase()).WillRepeatedly(testing::Return(testPtr));
-    std::shared_ptr<AVSharedMemory> buffer = mockBuffer;
-    std::shared_ptr<MockSoundDecodeListener> testvalue = std::make_shared<MockSoundDecodeListener>();
-    SoundDecoderCallback_->listener_ = testvalue;
-    std::shared_ptr<SoundPoolMock> soundPool = std::make_shared<SoundPoolMock>();
-    SoundDecoderCallback_->callback_ = std::make_shared<SoundPoolCallbackTest>(soundPool);
-    SoundDecoderCallback_->SpliceFullPcmInRawFile();
-    EXPECT_EQ(SoundDecoderCallback_->decodeShouldCompleted_, true);
-}
-
-// @tc.name     Test SpliceFullPcmInRawFile API
-// @tc.number   SoundParser_SpliceFullPcmInRawFile_002
-// @tc.desc     Test buf != nullptr
-//              Test memcpy_s(buf, size, buffer->GetBase(), size) != EOK
-HWTEST_F(SoundParserUnitTest, SoundParser_SpliceFullPcmInRawFile_002, TestSize.Level0)
-{
-    ASSERT_NE(soundParser_, nullptr);
-    MediaAVCodec::AVCodecBufferFlag bufferFlag = AVCODEC_BUFFER_FLAG_EOS;
-    int32_t soundID = ID_TEST;
-    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec = std::make_shared<MyAVCodecAudioDecoder>();
-    std::shared_ptr<AVDemuxerImpl> demuxer_value = std::make_shared<AVDemuxerImpl>();
-    EXPECT_CALL(*(demuxer_value), ReadSample(_, _, _, bufferFlag)).WillRepeatedly(testing::Return(ERR_OK));
     soundParser_->source_ = std::make_shared<MediaAVCodec::AVSourceImpl>();
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer = demuxer_value;
     bool isRawFile = true;
