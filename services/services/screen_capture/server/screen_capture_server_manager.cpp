@@ -46,7 +46,7 @@ void ScreenCaptureServerManager::RegisterServer(int32_t sessionId, std::weak_ptr
     int32_t appUid)
 {
     std::unique_lock<std::shared_mutex> lock(mutex_);
-    serverMap_[sessionId] = {server, appUid, static_cast<DataType>(0)};
+    serverMap_[sessionId] = {server, appUid, DataType::INVAILD};
     MEDIA_LOGI("RegisterServer sessionId: %{public}d, serverMap size: %{public}d", sessionId,
         static_cast<uint32_t>(serverMap_.size()));
 }
