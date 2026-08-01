@@ -470,7 +470,7 @@ sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
 
     auto result = task->GetResult();
-    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), nullptr, "task has no result");
     return result.Value();
 }
 
@@ -489,7 +489,7 @@ sptr<OHOS::Surface> RecorderServer::GetMetaSurface(int32_t sourceId)
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "EnqueueTask failed");
 
     auto result = task->GetResult();
-    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), nullptr, "task has no result");
     return result.Value();
 }
 
