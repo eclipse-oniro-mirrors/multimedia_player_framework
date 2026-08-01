@@ -349,14 +349,13 @@ int32_t SoundDecoderCallback::DealBufferRawFile()
     }
     int32_t size = sampleInfo.size;
     uint8_t *buf = new(std::nothrow) uint8_t[size];
-    if (buf != nullptr) {
-        if (memcpy_s(buf, size, buffer->GetBase(), size) != EOK) {
-            delete[] buf;
-            MEDIA_LOGI("audio buffer copy failed, errcode is %{public}s", strerror(errno));
-        } else {
-            availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
-        }
+    CHECK_AND_RETURN_RET_LOG(buf != nullptr, MSERR_INVALID_OPERATION, "buf is nullptr");
+    if (memcpy_s(buf, size, buffer->GetBase(), size) != EOK) {
+        delete[] buf;
+        MEDIA_LOGI("audio buffer copy failed, errcode is %{public}s", strerror(errno));
+        return MSERR_INVALID_OPERATION;
     }
+    availableAudioBuffers_.push_back(std::make_shared<AudioBufferEntry>(buf, size));
     currentSoundBufferSize_ += size;
     return MSERR_OK;
 }
@@ -364,7 +363,7 @@ int32_t SoundDecoderCallback::DealBufferRawFile()
 int32_t SoundDecoderCallback::SpliceFullPcmInRawFile()
 {
     CHECK_AND_RETURN_RET_LOG(decodeShouldCompleted_ == false, MSERR_UNKNOWN, "decodeShouldCompleted_ error");
-    while(!decodeShouldCompleted_) {
+    while (!decodeShouldCompleted_) {
         CHECK_AND_RETURN_RET_LOG(DealBufferRawFile() == MSERR_OK, MSERR_INVALID_OPERATION, "DealBufferRawFile failed");
     }
     MEDIA_LOGI("SpliceFullPcmInRawFile successfully");
