@@ -363,7 +363,7 @@ int32_t SoundDecoderCallback::DealBufferRawFile()
 
 int32_t SoundDecoderCallback::SpliceFullPcmInRawFile()
 {
-    CHECK_AND_RETURN_RET_LOG(decodeShouldCompleted_ == false, MSERR_INVALID_OPERATION, "decodeShouldCompleted_ error");
+    CHECK_AND_RETURN_RET_LOG(decodeShouldCompleted_ == false, MSERR_UNKNOWN, "decodeShouldCompleted_ error");
     while(!decodeShouldCompleted_) {
         CHECK_AND_RETURN_RET_LOG(DealBufferRawFile() == MSERR_OK, MSERR_INVALID_OPERATION, "DealBufferRawFile failed");
     }

@@ -192,17 +192,15 @@ HWTEST_F(SoundParserUnitTest, SoundParser_OnInputBufferAvailable_003, TestSize.L
     }
 }
 
-// @tc.name     Test DealBufferRawFile API
-// @tc.number   SoundParser_DealBufferRawFile_001
-// @tc.desc     Test (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK
-HWTEST_F(SoundParserUnitTest, SoundParser_DealBufferRawFile_001, TestSize.Level0)
+// @tc.name     Test SpliceFullPcmInRawFile API
+// @tc.number   SoundParser_SpliceFullPcmInRawFile_001
+// @tc.desc     Test decodeShouldCompleted_ == false
+HWTEST_F(SoundParserUnitTest, SoundParser_SpliceFullPcmInRawFile_001, TestSize.Level0)
 {
     ASSERT_NE(soundParser_, nullptr);
-    MediaAVCodec::AVCodecBufferFlag bufferFlag = MediaAVCodec::AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_NONE;
     int32_t soundID = ID_TEST;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec = std::make_shared<MyAVCodecAudioDecoder>();
     std::shared_ptr<AVDemuxerImpl> demuxer_value = std::make_shared<AVDemuxerImpl>();
-    EXPECT_CALL(*(demuxer_value), ReadSample(_, _, _, bufferFlag)).WillRepeatedly(testing::Return(ID_TEST));
     soundParser_->source_ = std::make_shared<MediaAVCodec::AVSourceImpl>();
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer = demuxer_value;
     bool isRawFile = true;
@@ -210,21 +208,16 @@ HWTEST_F(SoundParserUnitTest, SoundParser_DealBufferRawFile_001, TestSize.Level0
     SoundDecoderCallback_->eosFlag_ = false;
     SoundDecoderCallback_->decodeShouldCompleted_ = false;
     ASSERT_NE(SoundDecoderCallback_, nullptr);
-    uint32_t index = ID_TEST;
-    MediaAVCodec::AVCodecBufferInfo sampleInfo;
-    int32_t ret = SoundDecoderCallback_->DealBufferRawFile();
-    EXPECT_EQ(ret, MSERR_OK);
+    int32_t ret = SoundDecoderCallback_->SpliceFullPcmInRawFile();
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
 }
 
 // @tc.name     Test SpliceFullPcmInRawFile API
-// @tc.number   SoundParser_SpliceFullPcmInRawFile_001
-// @tc.desc     Test decodeShouldCompleted_ == false
-//              Test currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE
-//              Test bufferFlag == AVCODEC_BUFFER_FLAG_EOS
-HWTEST_F(SoundParserUnitTest, SoundParser_SpliceFullPcmInRawFile_001, TestSize.Level0)
+// @tc.number   SoundParser_SpliceFullPcmInRawFile_002
+// @tc.desc     Test decodeShouldCompleted_ == true
+HWTEST_F(SoundParserUnitTest, SoundParser_SpliceFullPcmInRawFile_002, TestSize.Level0)
 {
     ASSERT_NE(soundParser_, nullptr);
-    MediaAVCodec::AVCodecBufferFlag bufferFlag = AVCODEC_BUFFER_FLAG_EOS;
     int32_t soundID = ID_TEST;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec = std::make_shared<MyAVCodecAudioDecoder>();
     std::shared_ptr<AVDemuxerImpl> demuxer_value = std::make_shared<AVDemuxerImpl>();
@@ -235,7 +228,7 @@ HWTEST_F(SoundParserUnitTest, SoundParser_SpliceFullPcmInRawFile_001, TestSize.L
     SoundDecoderCallback_->decodeShouldCompleted_ = true;
     ASSERT_NE(SoundDecoderCallback_, nullptr);
     int32_t ret = SoundDecoderCallback_->SpliceFullPcmInRawFile();
-    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+    EXPECT_EQ(ret, MSERR_UNKNOWN);
     EXPECT_EQ(SoundDecoderCallback_->currentSoundBufferSize_, 0);
 }
 
