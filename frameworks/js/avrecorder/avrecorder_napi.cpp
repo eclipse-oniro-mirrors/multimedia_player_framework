@@ -1473,7 +1473,7 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
                 asyncCtx->JsResult = std::make_unique<MediaJsResultString>(result.Value().second);
             }
         }
-        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
