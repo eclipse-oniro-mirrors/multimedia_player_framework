@@ -237,13 +237,14 @@ void DownloadTaskCallback::ParseSingleFile(uint64_t downloaderId, DownloadFileIn
 }
 
 // generate mapping file
-void DownloadTaskCallback::WriteMappingEntries(std::ofstream& f,
+uint32_t DownloadTaskCallback::WriteMappingEntries(std::ofstream& f,
     std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::streamoff baseOffset)
 {
     constexpr std::streamoff URL_HASH_SIZE = 32;
     constexpr std::streamoff PATH_LENGTH_SIZE = 4;
     constexpr std::streamoff ENTRY_HEADER_PREFIX = URL_HASH_SIZE + PATH_LENGTH_SIZE;
     std::streamoff currentOffset = baseOffset;
+    uint32_t writtenCount = 0;
     for (const auto& v : taskInfo->fileList) {
         DownloadedCache::CacheMappingEntry entry {};
         auto urlHash = DownloadedCache::SHA256Hasher::GenerateHash(v.url);
@@ -266,16 +267,19 @@ void DownloadTaskCallback::WriteMappingEntries(std::ofstream& f,
         entry.header.fileSize = fileSize;
         entry.filePath = relPath;
 
-        taskInfo->urlToFileSizeOffset_[v.url] = currentOffset + ENTRY_HEADER_PREFIX;
-        currentOffset += sizeof(DownloadedCache::CacheMappingEntryHeader) + relPath.length();
-
         if (!DownloadedCache::CacheMappingSerializer::WriteEntry(f, entry, taskInfo->cacheDir)) {
             MEDIA_LOGE("WriteMappingEntries: WriteEntry failed for %{public}s", v.url.c_str());
+            continue;
         }
+
+        taskInfo->urlToFileSizeOffset_[v.url] = currentOffset + ENTRY_HEADER_PREFIX;
+        currentOffset += sizeof(DownloadedCache::CacheMappingEntryHeader) + relPath.length();
+        writtenCount++;
         MEDIA_LOGD("Serialize: %{public}s, hash: %{public}s, tmp path: %{public}s, value path: %{public}s",
             v.url.c_str(), DownloadedCache::SHA256Hasher::HashToString(urlHash).c_str(),
             relPath.c_str(), v.filePath.c_str());
     }
+    return writtenCount;
 }
 
 void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo)
@@ -316,7 +320,14 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
 
     std::streamoff entriesBaseOffset = sizeof(DownloadedCache::CacheMappingHeader) +
         DownloadedCache::PLAYBACK_PARAM_DATA_LENGTH_SIZE + playbackParam.size();
-    WriteMappingEntries(f, taskInfo, entriesBaseOffset);
+    uint32_t writtenCount = WriteMappingEntries(f, taskInfo, entriesBaseOffset);
+
+    if (writtenCount != taskInfo->fileList.size()) {
+        mappingHeader.entryCount = writtenCount;
+        DownloadedCache::CacheMappingSerializer::CalculateHeaderChecksum(mappingHeader);
+        f.seekp(0, std::ios::beg);
+        DownloadedCache::CacheMappingSerializer::WriteHeader(f, mappingHeader);
+    }
 
     if (!f.good()) {
         MEDIA_LOGE("GenerateMappingFile: write failed for %{public}s", normalizedCacheDir.c_str());
