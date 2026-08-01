@@ -45,8 +45,8 @@ private:
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {
 public:
-    static std::shared_ptr<IScreenCaptureService> Create();
-    ScreenCaptureServer();
+    static std::shared_ptr<IScreenCaptureService> Create(std::unique_ptr<IScreenCaptureServiceProviders> providers);
+    explicit ScreenCaptureServer(std::unique_ptr<IScreenCaptureServiceProviders> providers);
     ~ScreenCaptureServer();
 
     int32_t SetCaptureMode(CaptureMode captureMode) override;
@@ -99,7 +99,6 @@ public:
 
     int32_t ReportAVScreenCaptureUserChoice(const std::string &content);
     int32_t GetAVScreenCaptureConfigurableParameters(std::string &resultStr);
-    void SetSessionId(int32_t sessionId);
     void GetAndSetAppVersion();
     bool CheckAppVersionForUnsupport(DMError result);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
@@ -364,7 +363,7 @@ private:
     int64_t startTime_ = 0;
     bool isTimePaused_ = false;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
-    std::unique_ptr<IScreenCaptureServiceProviders> providers_ = CreateDefaultProviders();
+    std::unique_ptr<IScreenCaptureServiceProviders> providers_;
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCWindowLifecycleListener> appLifecycleListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;

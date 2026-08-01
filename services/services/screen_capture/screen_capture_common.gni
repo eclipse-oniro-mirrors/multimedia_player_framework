@@ -1,0 +1,116 @@
+# Copyright (c) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Common settings for screen_capture library, shared by production (ohos_shared_library)
+# and test (ohos_static_library).
+
+import("//foundation/multimedia/player_framework/config.gni")
+
+_sc =
+    "//foundation/multimedia/player_framework/services/services/screen_capture"
+
+screen_capture_sources = [
+  "$_sc/server/audio_capturer_wrapper.cpp",
+  "$_sc/server/audio_data_source.cpp",
+  "$_sc/server/limitIdGenerator.cpp",
+  "$_sc/server/screen_cap_buffer_consumer_listener.cpp",
+  "$_sc/server/screen_capture_controller_server.cpp",
+  "$_sc/server/screen_capture_record_display_listener.cpp",
+  "$_sc/server/screen_capture_server.cpp",
+  "$_sc/server/screen_capture_server_manager.cpp",
+  "$_sc/server/ui_extension_ability_connection.cpp",
+  "$_sc/server/window_life_cycle_listener.cpp",
+]
+
+screen_capture_external_deps = [
+  "ability_base:base",
+  "ability_base:want",
+  "ability_base:zuri",
+  "ability_runtime:ability_connect_callback_stub",
+  "ability_runtime:ability_context_native",
+  "ability_runtime:ability_manager",
+  "ability_runtime:abilitykit_native",
+  "ability_runtime:extension_manager",
+  "ability_runtime:runtime",
+  "access_token:libaccesstoken_sdk",
+  "access_token:libnativetoken_shared",
+  "access_token:libprivacy_sdk",
+  "access_token:libtokenid_sdk",
+  "access_token:libtokensetproc_shared",
+  "audio_framework:audio_capturer",
+  "audio_framework:audio_client",
+  "av_codec:av_codec_client",
+  "c_utils:utils",
+  "common_event_service:cesfwk_core",
+  "common_event_service:cesfwk_innerkits",
+  "distributed_notification_service:ans_innerkits",
+  "drivers_interface_display:display_commontype_idl_headers",
+  "graphic_2d:librender_service_base",
+  "graphic_surface:surface",
+  "graphic_surface:sync_fence",
+  "hdf_core:libhdi",
+  "hicollie:libhicollie",
+  "hilog:libhilog",
+  "hisysevent:libhisysevent",
+  "hitrace:hitrace_meter",
+  "hitrace:libhitracechain",
+  "hiview:libucollection_client",
+  "i18n:intl_util",
+  "image_framework:image_native",
+  "init:libbegetutil",
+  "ipc:ipc_single",
+  "jsoncpp:jsoncpp",
+  "libxml2:libxml2",
+  "media_foundation:media_foundation",
+  "memmgr:memmgrclient",
+  "napi:ace_napi",
+  "os_account:os_account_innerkits",
+  "qos_manager:qos",
+  "relational_store:native_rdb",
+  "resource_management:global_resmgr",
+  "resource_schedule_service:ressched_client",
+  "safwk:system_ability_fwk",
+  "samgr:samgr_proxy",
+  "window_manager:libdm",
+  "window_manager:libwm",
+  "window_manager:scene_session",
+  "window_manager:scene_session_manager",
+  "window_manager:session_manager_lite",
+]
+
+if (player_framework_support_screen_capture_stopbycall) {
+  screen_capture_external_deps += [
+    "call_manager:tel_call_manager_api",
+    "core_service:tel_core_service_api",
+    "state_registry:tel_state_registry_api",
+  ]
+}
+
+if (player_framework_support_drm) {
+  screen_capture_external_deps += [ "drm_framework:drm_framework" ]
+}
+
+if (player_framework_support_power_manager) {
+  screen_capture_external_deps += [ "power_manager:powermgr_client" ]
+}
+
+screen_capture_deps = [
+  "//foundation/multimedia/player_framework/services/dfx:media_service_dfx",
+  "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx",
+  "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+]
+
+screen_capture_configs = [
+  "//foundation/multimedia/player_framework/services/services/screen_capture:screen_capture_service_config",
+  "//foundation/multimedia/player_framework/services/dfx:media_service_log_dfx_public_config",
+]

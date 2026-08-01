@@ -16,33 +16,26 @@
 #ifndef ACCOUNT_OBSERVER_H
 #define ACCOUNT_OBSERVER_H
 
+#include "account_observer_callback.h"
 #include "os_account_subscribe_info.h"
 #include "os_account_subscriber.h"
 #include "account_listener.h"
-#include "screen_capture.h"
 #include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
-class AccountObserverCallBack {
-public:
-    virtual ~AccountObserverCallBack() = default;
-    virtual bool StopAndRelease(AVScreenCaptureStateCode state);
-    virtual bool NotifyStopAndRelease(AVScreenCaptureStateCode state);
-    virtual void Release();
-};
-
 class AccountObserver {
 public:
-    static AccountObserver& GetInstance();
-    bool RegisterObserver();
-    void UnregisterObserver();
+    static AccountObserver &GetInstance();
     explicit AccountObserver();
     ~AccountObserver();
+    virtual bool RegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
+    virtual void UnregisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
     bool OnAccountsSwitch();
-    bool RegisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
-    void UnregisterAccountObserverCallBack(std::weak_ptr<AccountObserverCallBack> callback);
+
 private:
+    bool RegisterObserver();
+    void UnregisterObserver();
     bool Init();
     std::vector<std::weak_ptr<AccountObserverCallBack>> accountObserverCallBacks_;
     std::atomic<bool> isAccountListenerDied_ = true;

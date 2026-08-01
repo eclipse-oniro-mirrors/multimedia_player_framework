@@ -16,6 +16,10 @@
 #include "mock_screen_capture_service_providers.h"
 #include "recorder_server.h"
 #include "screen_capture_monitor_server.h"
+#include "account_observer.h"
+#ifdef SUPPORT_CALL
+#include "incall_observer.h"
+#endif
 
 namespace OHOS::Media {
 
@@ -27,6 +31,18 @@ IInnerScreenCaptureMonitorService &MockScreenCaptureServiceProviders::GetScreenC
 std::shared_ptr<IRecorderService> MockScreenCaptureServiceProviders::CreateRecorder()
 {
     return RecorderServer::Create();
+}
+
+#ifdef SUPPORT_CALL
+InCallObserver &MockScreenCaptureServiceProviders::GetInCallObserver()
+{
+    return InCallObserver::GetInstance();
+}
+#endif
+
+AccountObserver &MockScreenCaptureServiceProviders::GetAccountObserver()
+{
+    return AccountObserver::GetInstance();
 }
 
 std::unique_ptr<IScreenCaptureServiceProviders> CreateMockProviders()

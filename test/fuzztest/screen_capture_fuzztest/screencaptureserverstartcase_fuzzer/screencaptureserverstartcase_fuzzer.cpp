@@ -84,15 +84,13 @@ void ScreenCaptureServerStartCaseFuzzer::SetConfig(RecorderInfo &recorderInfo)
 
 bool ScreenCaptureServerStartCaseFuzzer::FuzzScreenCaptureServerStartCase(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < 2 * sizeof(int32_t)) {  // 2 input params
+    if (data == nullptr || size < 2 * sizeof(int32_t)) {
         return false;
     }
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
-    std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
-    if (tempServer_ == nullptr) {
+    auto screenCaptureServer_ = MakeScreenCaptureServerShared();
+    if (!screenCaptureServer_) {
         return false;
     }
-    screenCaptureServer_ = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
     recorderInfo.url = "fd://" + std::to_string(outputFd);
@@ -106,7 +104,7 @@ bool ScreenCaptureServerStartCaseFuzzer::FuzzScreenCaptureServerStartCase(uint8_
     screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     screenCaptureServer_->captureCallback_ = std::make_shared<ScreenRendererAudioStateChangeCallback>();
-    screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_);
+    screenCaptureServer_->captureCallback_->SetScreenCaptureServer(screenCaptureServer_->shared_from_this());
     screenCaptureServer_->SyncAudioCaptures();
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackObj = std::make_shared<TestScreenCaptureCallbackTest>();
     TestScreenCapture::SetScreenCaptureCallback(callbackObj);

@@ -14,6 +14,8 @@
  */
 
 #include "screen_capture_controller_server.h"
+#include <map>
+#include <mutex>
 #include "media_log.h"
 #include "media_errors.h"
 #include "uri_helper.h"
@@ -23,7 +25,10 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureControllerServer"};
-}
+std::mutex g_controllerMapMutex;
+std::map<OHOS::Media::IScreenCaptureController *, std::shared_ptr<OHOS::Media::IScreenCaptureController>>
+    g_controllerMap;
+} // namespace
 
 namespace OHOS {
 namespace Media {
@@ -68,5 +73,30 @@ int32_t ScreenCaptureControllerServer::GetAVScreenCaptureConfigurableParameters(
         "GetAVScreenCaptureConfigurableParameters failed to get instance, sessionId: %{public}d", sessionId);
     return server->GetAVScreenCaptureConfigurableParameters(resultStr);
 }
+
+extern "C" {
+__attribute__((visibility("default"))) OHOS::Media::IScreenCaptureController *CreateScreenCaptureControllerServer()
+{
+    auto sp = ScreenCaptureControllerServer::Create();
+    if (sp == nullptr) {
+        return nullptr;
+    }
+    auto *ptr = sp.get();
+    std::lock_guard<std::mutex> lock(g_controllerMapMutex);
+    g_controllerMap[ptr] = std::move(sp);
+    return ptr;
+}
+
+__attribute__((visibility("default"))) void DestroyScreenCaptureControllerServer(
+    OHOS::Media::IScreenCaptureController *controller)
+{
+    if (controller == nullptr) {
+        return;
+    }
+    std::lock_guard<std::mutex> lock(g_controllerMapMutex);
+    g_controllerMap.erase(controller);
+}
+}
+
 } // namespace Media
 } // namespace OHOS

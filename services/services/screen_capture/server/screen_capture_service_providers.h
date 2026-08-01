@@ -17,24 +17,25 @@
 #define SCREEN_CAPTURE_SERVICE_PROVIDERS_H
 
 #include <memory>
+#include <string>
 
 namespace OHOS::Media {
 
-class AudioCapturerWrapper;
-struct AudioCaptureInfo;
-class ScreenCaptureCallBack;
-struct ScreenCaptureContentFilter;
 class IInnerScreenCaptureMonitorService;
 class IRecorderService;
+class InCallObserver;
+class AccountObserver;
 
 class IScreenCaptureServiceProviders {
 public:
     virtual ~IScreenCaptureServiceProviders() = default;
-    virtual std::shared_ptr<AudioCapturerWrapper> CreateAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
-        const ScreenCaptureContentFilter &filter) = 0;
     virtual IInnerScreenCaptureMonitorService &GetScreenCaptureMonitor() = 0;
     virtual std::shared_ptr<IRecorderService> CreateRecorder() = 0;
+    virtual int32_t UpdateSettingsValue(const std::string &key, const std::string &value) = 0;
+#ifdef SUPPORT_CALL
+    virtual InCallObserver &GetInCallObserver() = 0;
+#endif
+    virtual AccountObserver &GetAccountObserver() = 0;
 };
 
 std::unique_ptr<IScreenCaptureServiceProviders> CreateDefaultProviders();

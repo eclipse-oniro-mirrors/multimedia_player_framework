@@ -24,12 +24,13 @@ namespace OHOS::Media {
 
 class MockScreenCaptureServiceProviders : public IScreenCaptureServiceProviders {
 public:
-    MOCK_METHOD(std::shared_ptr<AudioCapturerWrapper>, CreateAudioCapturerWrapper,
-        (AudioCaptureInfo &, const std::shared_ptr<ScreenCaptureCallBack> &, std::string &&,
-            const ScreenCaptureContentFilter &),
-        (override));
     IInnerScreenCaptureMonitorService &GetScreenCaptureMonitor() override;
     std::shared_ptr<IRecorderService> CreateRecorder() override;
+    MOCK_METHOD(int32_t, UpdateSettingsValue, (const std::string &key, const std::string &value), (override));
+#ifdef SUPPORT_CALL
+    InCallObserver &GetInCallObserver() override;
+#endif
+    AccountObserver &GetAccountObserver() override;
 };
 
 std::unique_ptr<IScreenCaptureServiceProviders> CreateMockProviders();

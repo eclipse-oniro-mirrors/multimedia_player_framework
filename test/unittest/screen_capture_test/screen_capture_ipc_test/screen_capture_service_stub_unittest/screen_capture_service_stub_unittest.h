@@ -17,6 +17,7 @@
 #define SCREEN_CAPTURE_SERVICE_STUB_UNITTEST_H
 
 #include "gtest/gtest.h"
+#include "accesstoken_kit.h"
 #include "media_utils.h"
 #include "screen_capture_service_stub.h"
 namespace OHOS {
@@ -33,9 +34,11 @@ public:
     void TearDown(void);
 
     void SetHapPermission();
+
 private:
-    const std::string ScreenRecorderBundleName =
-        GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
+    const std::string ScreenRecorderBundleName = GetScreenCaptureSystemParam()
+        ["const.multimedia.screencapture.screenrecorderbundlename"];
+    // clang-format off
     Security::AccessToken::HapInfoParams info_ = {
         .userID = 100, // 100 UserID
         .bundleName = "com.ohos.test.screencapturetdd",
@@ -92,6 +95,7 @@ private:
             }
         }
     };
+    // clang-format on
 };
 } // namespace Media
 } // namespace OHOS

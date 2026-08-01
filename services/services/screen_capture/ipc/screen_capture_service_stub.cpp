@@ -14,12 +14,15 @@
  */
 
 #include "screen_capture_service_stub.h"
+#include "screen_capture_service_providers.h"
 #include "screen_capture_listener_callback.h"
 #include "media_server_manager.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "avsharedmemory_ipc.h"
-#include "screen_capture_listener_proxy.h"
+#include "screen_capture_listener_callback.h"
+#include "i_standard_screen_capture_listener.h"
+#include "dynamic_module_loader.h"
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
@@ -29,6 +32,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
+
 sptr<ScreenCaptureServiceStub> ScreenCaptureServiceStub::Create()
 {
     sptr<ScreenCaptureServiceStub> screenCaptureStub = new (std::nothrow) ScreenCaptureServiceStub();
@@ -51,9 +55,30 @@ ScreenCaptureServiceStub::~ScreenCaptureServiceStub()
 
 int32_t ScreenCaptureServiceStub::Init()
 {
-    screenCaptureServer_ = ScreenCaptureServer::Create();
-    CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_NO_MEMORY,
-        "failed to create ScreenCaptureServer Service");
+    auto destroyFunc = DynamicModuleLoader::Instance().GetFactory<void (*)(IScreenCaptureService *)>(
+        DynamicModule::SCREEN_CAPTURE, "DestroyScreenCaptureServer");
+    CHECK_AND_RETURN_RET_LOG(destroyFunc != nullptr, MSERR_NO_MEMORY,
+        "failed to get DestroyScreenCaptureServer function");
+
+    auto factory = DynamicModuleLoader::Instance()
+                       .GetFactory<IScreenCaptureService *(*)(IScreenCaptureServiceProviders *)>(
+                           DynamicModule::SCREEN_CAPTURE, "CreateScreenCaptureServer");
+    CHECK_AND_RETURN_RET_LOG(factory != nullptr, MSERR_NO_MEMORY,
+        "failed to get ScreenCaptureServer factory from dynamic module");
+
+    auto providers = CreateDefaultProviders();
+    CHECK_AND_RETURN_RET_LOG(providers != nullptr, MSERR_NO_MEMORY, "CreateDefaultProviders failed");
+    auto ptr = factory(providers.release());
+    CHECK_AND_RETURN_RET_LOG(ptr != nullptr, MSERR_NO_MEMORY,
+        "failed to create ScreenCaptureServer via dynamic module");
+    screenCaptureServer_ = {ptr, destroyFunc};
+
+    RegisterStubFuncs();
+    return MSERR_OK;
+}
+
+void ScreenCaptureServiceStub::RegisterStubFuncs()
+{
     screenCaptureStubFuncs_[SET_LISTENER_OBJ] = &ScreenCaptureServiceStub::SetListenerObject;
     screenCaptureStubFuncs_[RELEASE] = &ScreenCaptureServiceStub::Release;
     screenCaptureStubFuncs_[SET_MIC_ENABLE] = &ScreenCaptureServiceStub::SetMicrophoneEnabled;
@@ -97,12 +122,11 @@ int32_t ScreenCaptureServiceStub::Init()
     screenCaptureStubFuncs_[PAUSE_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::PauseScreenCapture;
     screenCaptureStubFuncs_[RESUME_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::ResumeScreenCapture;
     screenCaptureStubFuncs_[ADD_WATERMARK] = &ScreenCaptureServiceStub::AddWatermark;
-    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServiceStub::DestroyStub()
 {
-    screenCaptureServer_ = nullptr;
+    screenCaptureServer_.reset();
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::SCREEN_CAPTURE, AsObject());
     return MSERR_OK;
 }
@@ -235,7 +259,7 @@ int32_t ScreenCaptureServiceStub::SetListenerObject(const sptr<IRemoteObject> &o
     CHECK_AND_RETURN_RET_LOG(listener != nullptr, MSERR_NO_MEMORY, "failed to convert IStandardScreenCaptureListener");
 
     std::shared_ptr<ScreenCaptureCallBack> callback = std::make_shared<ScreenCaptureListenerCallback>(listener);
-    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new ScreenCaptureCallBack");
+    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to create ScreenCaptureCallBack");
 
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_NO_MEMORY, "screen capture server is nullptr");
     (void)screenCaptureServer_->SetScreenCaptureCallback(callback);
@@ -912,5 +936,6 @@ int32_t ScreenCaptureServiceStub::AddWatermark(MessageParcel &data, MessageParce
     reply.WriteInt32(ret);
     return MSERR_OK;
 }
+
 } // namespace Media
 } // namespace OHOS

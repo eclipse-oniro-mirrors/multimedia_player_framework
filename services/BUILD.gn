@@ -38,6 +38,7 @@ group("media_services_package") {
     deps += [
       "etc:screencapture_config",
       "etc:screencapture_config_dac",
+      "services/screen_capture:media_service_screen_capture",
     ]
   }
 }
