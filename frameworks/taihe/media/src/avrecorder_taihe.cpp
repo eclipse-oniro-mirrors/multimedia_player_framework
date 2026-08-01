@@ -2322,7 +2322,7 @@ int32_t AVRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
         MSERR_INVALID_VAL, "Invalid pixelMap width");
     CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapHeight <= AVRECORDER_WATERMARK_MAX_LENGTH,
         MSERR_INVALID_VAL, "Invalid pixelMap height");
-    CHECK_AND_RETURN_RET_LOG(pixelMapRowStride > 0, MSERR_INVALID_VAL, "Invalid pixelMap row stride"); 
+    CHECK_AND_RETURN_RET_LOG(pixelMapRowStride > 0, MSERR_INVALID_VAL, "Invalid pixelMap row stride");
     CHECK_AND_RETURN_RET_LOG(pixelMapRowStride > 0 && pixelMapHeight <= MAX_WATERMARK_SIZE / pixelMapRowStride,
         MSERR_INVALID_VAL, "Invalid data size");
 
