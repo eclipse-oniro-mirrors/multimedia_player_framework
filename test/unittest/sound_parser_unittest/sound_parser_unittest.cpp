@@ -212,10 +212,8 @@ HWTEST_F(SoundParserUnitTest, SoundParser_DealBufferRawFile_001, TestSize.Level0
     ASSERT_NE(SoundDecoderCallback_, nullptr);
     uint32_t index = ID_TEST;
     MediaAVCodec::AVCodecBufferInfo sampleInfo;
-    std::shared_ptr<AVSharedMemory> buffer = nullptr;
-    SoundDecoderCallback_->DealBufferRawFile(bufferFlag, sampleInfo, index, buffer);
-    bool ret = SoundDecoderCallback_->demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK;
-    EXPECT_EQ(ret, true);
+    int32_t ret = SoundDecoderCallback_->DealBufferRawFile();
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 // @tc.name     Test DealBufferRawFile API
@@ -248,7 +246,7 @@ HWTEST_F(SoundParserUnitTest, SoundParser_DealBufferRawFile_002, TestSize.Level0
     SoundDecoderCallback_->listener_ = testvalue;
     std::shared_ptr<SoundPoolMock> soundPool = std::make_shared<SoundPoolMock>();
     SoundDecoderCallback_->callback_ = std::make_shared<SoundPoolCallbackTest>(soundPool);
-    SoundDecoderCallback_->DealBufferRawFile(bufferFlag, sampleInfo, index, buffer);
+    SoundDecoderCallback_->SpliceFullPcmInRawFile();
     EXPECT_EQ(SoundDecoderCallback_->decodeShouldCompleted_, true);
 }
 
