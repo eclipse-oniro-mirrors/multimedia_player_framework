@@ -24,6 +24,23 @@ using namespace std;
 using namespace testing::ext;
 using namespace OHOS::Media::RecorderTestParam;
 
+namespace {
+std::shared_ptr<AVBuffer> CreateWatermarkBuffer(int32_t width, int32_t height, uint8_t* &rawData)
+{
+    int32_t bufferWidth = (width > 0 && width < INT_MAX / 4 / (height > 0 ? height : 1)) ? width : 100;
+    int32_t bufferHeight = (height > 0 && height < INT_MAX / 4 / bufferWidth) ? height : 50;
+    int32_t dataLength = bufferWidth * bufferHeight * 4;
+    rawData = new uint8_t[dataLength];
+    auto buffer = AVBuffer::CreateAVBuffer(rawData, dataLength, dataLength);
+    if (buffer != nullptr) {
+        buffer->meta_->Set<Tag::VIDEO_COORDINATE_W>(width);
+        buffer->meta_->Set<Tag::VIDEO_COORDINATE_H>(height);
+        buffer->meta_->Set<Tag::VIDEO_STRIDE>(width * 4);
+    }
+    return buffer;
+}
+}
+
 class HiRecorderWatermarkTest : public testing::Test {
 public:
     static void SetUpTestCase();
@@ -63,13 +80,15 @@ void HiRecorderWatermarkTest::TearDown()
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_001, TestSize.Level0)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(150, 75, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 150, 75, watermarkCount);
 
     EXPECT_EQ(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -80,18 +99,22 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_001, TestSize.Level0)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_002, TestSize.Level0)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data1 = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(150, 75, data1);
     ASSERT_NE(watermarkBuffer, nullptr);
     int32_t watermarkCount1 = 0;
     ASSERT_EQ(recorderServer_->AddWatermark(watermarkBuffer, 150, 75, watermarkCount1), MSERR_OK);
+    delete[] data1;
 
-    auto watermarkBuffer2 = AVBuffer::CreateAVBuffer();
+    uint8_t* data2 = nullptr;
+    auto watermarkBuffer2 = CreateWatermarkBuffer(180, 90, data2);
     ASSERT_NE(watermarkBuffer2, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer2, 180, 90, watermarkCount);
 
     EXPECT_EQ(ret, MSERR_OK);
+    delete[] data2;
 }
 
 /**
@@ -118,13 +141,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_003, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_004, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(1, 1, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 1, 1, watermarkCount);
 
     EXPECT_EQ(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -135,13 +160,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_004, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_005, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(0, 50, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 0, 50, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -152,13 +179,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_005, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_006, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(100, 0, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 100, 0, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -169,13 +198,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_006, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_007, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(-1, 50, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, -1, 50, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -186,13 +217,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_007, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_008, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(100, -1, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 100, -1, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -203,13 +236,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_008, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_009, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(0, 0, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 0, 0, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -220,13 +255,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_009, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_010, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(-1, -1, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, -1, -1, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -253,13 +290,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_011, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_012, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(INT_MAX, 50, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, INT_MAX, 50, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -270,13 +309,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_012, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_013, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(100, INT_MAX, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 100, INT_MAX, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -287,13 +328,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_013, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_014, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(INT_MIN, 50, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, INT_MIN, 50, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -304,13 +347,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_014, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_015, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(100, INT_MIN, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 100, INT_MIN, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -321,13 +366,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_015, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_016, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(INT_MAX, INT_MAX, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, INT_MAX, INT_MAX, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -338,13 +385,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_016, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_017, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(0, -1, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 0, -1, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -355,13 +404,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_017, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_018, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(-1, 0, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, -1, 0, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -372,13 +423,15 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_018, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_019, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(2, 50, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 2, 50, watermarkCount);
 
     EXPECT_EQ(ret, MSERR_OK);
+    delete[] data;
 }
 
 /**
@@ -389,11 +442,13 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_019, TestSize.Level2)
  */
 HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_020, TestSize.Level2)
 {
-    auto watermarkBuffer = AVBuffer::CreateAVBuffer();
+    uint8_t* data = nullptr;
+    auto watermarkBuffer = CreateWatermarkBuffer(100, 2, data);
     ASSERT_NE(watermarkBuffer, nullptr);
 
     int32_t watermarkCount = 0;
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, 100, 2, watermarkCount);
 
     EXPECT_EQ(ret, MSERR_OK);
+    delete[] data;
 }
