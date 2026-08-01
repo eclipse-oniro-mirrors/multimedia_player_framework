@@ -216,12 +216,12 @@ HWTEST_F(SoundParserUnitTest, SoundParser_DealBufferRawFile_001, TestSize.Level0
     EXPECT_EQ(ret, MSERR_OK);
 }
 
-// @tc.name     Test DealBufferRawFile API
-// @tc.number   SoundParser_DealBufferRawFile_002
+// @tc.name     Test SpliceFullPcmInRawFile API
+// @tc.number   SoundParser_SpliceFullPcmInRawFile_001
 // @tc.desc     Test decodeShouldCompleted_ == false
 //              Test currentSoundBufferSize_ > MAX_SOUND_BUFFER_SIZE
 //              Test bufferFlag == AVCODEC_BUFFER_FLAG_EOS
-HWTEST_F(SoundParserUnitTest, SoundParser_DealBufferRawFile_002, TestSize.Level0)
+HWTEST_F(SoundParserUnitTest, SoundParser_SpliceFullPcmInRawFile_001, TestSize.Level0)
 {
     ASSERT_NE(soundParser_, nullptr);
     MediaAVCodec::AVCodecBufferFlag bufferFlag = AVCODEC_BUFFER_FLAG_EOS;
@@ -250,11 +250,11 @@ HWTEST_F(SoundParserUnitTest, SoundParser_DealBufferRawFile_002, TestSize.Level0
     EXPECT_EQ(SoundDecoderCallback_->decodeShouldCompleted_, true);
 }
 
-// @tc.name     Test DealBufferRawFile API
-// @tc.number   SoundParser_DealBufferRawFile_003
+// @tc.name     Test SpliceFullPcmInRawFile API
+// @tc.number   SoundParser_SpliceFullPcmInRawFile_002
 // @tc.desc     Test buf != nullptr
 //              Test memcpy_s(buf, size, buffer->GetBase(), size) != EOK
-HWTEST_F(SoundParserUnitTest, SoundParser_DealBufferRawFile_003, TestSize.Level0)
+HWTEST_F(SoundParserUnitTest, SoundParser_SpliceFullPcmInRawFile_002, TestSize.Level0)
 {
     ASSERT_NE(soundParser_, nullptr);
     MediaAVCodec::AVCodecBufferFlag bufferFlag = AVCODEC_BUFFER_FLAG_EOS;
@@ -268,16 +268,9 @@ HWTEST_F(SoundParserUnitTest, SoundParser_DealBufferRawFile_003, TestSize.Level0
     SoundDecoderCallback_ = std::make_shared<SoundDecoderCallback>(soundID, audioDec, demuxer, isRawFile);
     SoundDecoderCallback_->decodeShouldCompleted_ = true;
     ASSERT_NE(SoundDecoderCallback_, nullptr);
-    uint32_t index = ID_TEST;
-    MediaAVCodec::AVCodecBufferInfo sampleInfo;
-    sampleInfo.size = 1;
-    uint8_t testNum = ID_TEST;
-    uint8_t *testPtr = &testNum;
-    auto mockBuffer = std::make_shared<MockAVSharedMemory>();
-    EXPECT_CALL(*(mockBuffer), GetBase()).WillRepeatedly(testing::Return(testPtr));
-    std::shared_ptr<AVSharedMemory> buffer = mockBuffer;
-    SoundDecoderCallback_->DealBufferRawFile(bufferFlag, sampleInfo, index, buffer);
-    EXPECT_EQ(SoundDecoderCallback_->currentSoundBufferSize_, ID_TEST);
+    int32_t ret = SoundDecoderCallback_->SpliceFullPcmInRawFile();
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+    EXPECT_EQ(SoundDecoderCallback_->currentSoundBufferSize_, 0);
 }
 
 // @tc.name     Test OnOutputBufferAvailable API

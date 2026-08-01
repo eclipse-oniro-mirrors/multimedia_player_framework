@@ -27,7 +27,7 @@ namespace {
     static const std::string AUDIO_RAW_MIMETYPE_INFO = "audio/raw";
     static const std::string AUDIO_MPEG_MIMETYPE_INFO = "audio/mpeg";
     static constexpr int32_t MAX_CODEC_BUFFER_SIZE = 5 * 1024 * 1024;
-    const uint32_t SINGLE_BUFFER_SIZE_OF_RAWFILE = 8192;
+    const uint32_t SINGLE_BUFFER_SIZE_OF_RAWFILE = 8192;  // max buffer size per frame when reading sample of raw pcm
 }
 
 namespace OHOS {
@@ -363,9 +363,11 @@ int32_t SoundDecoderCallback::DealBufferRawFile()
 
 int32_t SoundDecoderCallback::SpliceFullPcmInRawFile()
 {
+    CHECK_AND_RETURN_RET_LOG(decodeShouldCompleted_ == false, MSERR_INVALID_OPERATION, "decodeShouldCompleted_ error");
     while(!decodeShouldCompleted_) {
         CHECK_AND_RETURN_RET_LOG(DealBufferRawFile() == MSERR_OK, MSERR_INVALID_OPERATION, "DealBufferRawFile failed");
     }
+    MEDIA_LOGI("SpliceFullPcmInRawFile successfully")
     return MSERR_OK;
 }
 
