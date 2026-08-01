@@ -2322,8 +2322,6 @@ int32_t AVRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
         MSERR_INVALID_VAL, "Invalid pixelMap width");
     CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapHeight <= AVRECORDER_WATERMARK_MAX_LENGTH,
         MSERR_INVALID_VAL, "Invalid pixelMap height");
-    CHECK_AND_RETURN_RET_LOG(pixelMapHeight <= MAX_WATERMARK_SIZE / pixelMapRowStride,
-        MSERR_INVALID_VAL, "Invalid data size");
 
     std::shared_ptr<OHOS::Media::AVBuffer> buffer = nullptr;
     int32_t ret = CreateWatermarkBuffer(pixelMap, pixelMapWidth, pixelMapHeight, buffer);
