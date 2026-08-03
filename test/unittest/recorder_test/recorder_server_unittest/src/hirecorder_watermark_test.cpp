@@ -201,7 +201,6 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_007, TestSize.Level2)
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, -1, 50, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
-
 }
 
 /**
@@ -256,7 +255,6 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_010, TestSize.Level2)
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, -1, -1, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
-
 }
 
 /**
