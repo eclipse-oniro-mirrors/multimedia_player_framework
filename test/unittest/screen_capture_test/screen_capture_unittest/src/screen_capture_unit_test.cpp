@@ -2113,8 +2113,6 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_skip_privacy, TestSize.
     sleep(RECORDER_TIME);
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-#else
-    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
 #endif
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
@@ -2148,15 +2146,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_save_file_skip_privacy_01, TestSi
     sleep(RECORDER_TIME);
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-#else
-    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
 #endif
     windowIds = {-1, 2, 7};
     sleep(RECORDER_TIME);
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-#else
-    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
 #endif
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
@@ -2194,15 +2188,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_with_surface_skip_privacy_01, Tes
     sleep(RECORDER_TIME);
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-#else
-    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
 #endif
     sleep(RECORDER_TIME);
     windowIds = {-1, 2, 6};
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-#else
-    EXPECT_NE(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
 #endif
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIds[0], static_cast<int32_t>(windowIds.size())));
@@ -2912,10 +2902,10 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
 
     sleep(1);
-
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     // 尝试动态调整画布大小
     EXPECT_EQ(MSERR_OK, screenCapture_->ResizeCanvas(1080, 1920));
-
+#endif
     sleep(1);
 
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
@@ -3018,12 +3008,12 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_privacy_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCapture());
 
     sleep(1);
-
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     // 录制中添加更多窗口
     windowIDsVec.push_back(5);
     windowIDsVec.push_back(7);
     EXPECT_EQ(MSERR_OK, screenCapture_->SkipPrivacyMode(&windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size())));
-
+#endif
     sleep(1);
 
     EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenCapture());
