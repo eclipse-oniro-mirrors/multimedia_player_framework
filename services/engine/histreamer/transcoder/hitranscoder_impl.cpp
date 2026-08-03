@@ -41,6 +41,10 @@ constexpr int32_t VIDEO_BITRATE_4M = 4 * VIDEO_BITRATE_1M;
 constexpr int32_t VIDEO_BITRATE_8M = 8 * VIDEO_BITRATE_1M;
 constexpr int32_t INVALID_AUDIO_BITRATE = INT32_MAX; // Invalid value defined in the napi and capi.
 constexpr int32_t DEFAULT_AUDIO_BITRATE = 48000;
+constexpr int32_t MAX_INPUT_VIDEO_WIDTH = 7680;
+constexpr int32_t MAX_INPUT_VIDEO_HEIGHT = 4320;
+constexpr int32_t MAX_OUTPUT_VIDEO_WIDTH = 4096;
+constexpr int32_t MAX_OUTPUT_VIDEO_HEIGHT = 4096;
 const uint32_t ROTATE_90_VALUE = 90;
 const uint32_t ROTATE_180_VALUE = 180;
 const uint32_t ROTATE_270_VALUE = 270;
@@ -640,6 +644,50 @@ void HiTransCoderImpl::SkipAudioDecAndEnc()
     (void)demuxerFilter_->SetSkippingAudioDecAndEnc();
 }
 
+int32_t HiTransCoderImpl::CheckResolutionRange(int32_t width, int32_t height, int32_t maxWidth, int32_t maxHeight,
+    int32_t errCode)
+{
+    FALSE_RETURN_V_MSG_E(width > maxWidth || height > maxHeight, MSERR_OK, "resolution out of range");
+ 
+    MEDIA_LOG_E("Resolution out of range, width: %{public}d, height: %{public}d", width, height);
+    CollectionErrorInfo(errCode, "Prepare error");
+    OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(errCode)});
+    return errCode;
+}
+ 
+int32_t HiTransCoderImpl::CheckCodecCapability(const std::string &mime, bool isEncoder, int32_t width, int32_t height,
+    int32_t errCode)
+{
+    FALSE_RETURN_V_MSG_E(!mime.empty(), MSERR_OK, "mime check failed");
+ 
+    if (codecCapabilityAdapter_ == nullptr) {
+        codecCapabilityAdapter_ = std::make_shared<Pipeline::CodecCapabilityAdapter>();
+        FALSE_RETURN_V_MSG_E(codecCapabilityAdapter_ != nullptr, MSERR_OK,
+            "codecCapabilityAdapter_ check failed");
+ 
+        codecCapabilityAdapter_->Init();
+    }
+    std::vector<MediaAVCodec::CapabilityData*> capInfo;
+    isEncoder ? codecCapabilityAdapter_->GetAvailableEncoder(capInfo)
+              : codecCapabilityAdapter_->GetAvailableDecoder(capInfo);
+    for (auto &capData : capInfo) {
+        if (capData != nullptr && capData->mimeType == mime) {
+            MediaAVCodec::VideoCaps videoCaps(capData);
+            if (!videoCaps.IsSizeSupported(width, height)) {
+                MEDIA_LOG_E("%{public}s does not support resolution, width: %{public}d, height: %{public}d",
+                    isEncoder ? "Encoder" : "Decoder", width, height);
+                CollectionErrorInfo(errCode, "Prepare error");
+                OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(errCode)});
+                return errCode;
+            }
+            return MSERR_OK;
+        }
+    }
+    MEDIA_LOG_W("No matching %{public}s capability found for mime: %{public}s",
+        isEncoder ? "encoder" : "decoder", mime.c_str());
+    return MSERR_OK;
+}
+
 int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
@@ -648,6 +696,9 @@ int32_t HiTransCoderImpl::Prepare()
     int32_t width = 0;
     int32_t height = 0;
     if (isExistVideoTrack_) {
+        int32_t ret = CheckResolutionRange(inputVideoWidth_, inputVideoHeight_,
+            MAX_INPUT_VIDEO_WIDTH, MAX_INPUT_VIDEO_HEIGHT, MSERR_VIDEO_RESOLUTION_OUT_OF_RANGE);
+        FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "input resolution check failed");
         if (videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width) &&
             videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, height)) {
             MEDIA_LOG_D("set output video width: %{public}d, height: %{public}d", width, height);
@@ -657,6 +708,9 @@ int32_t HiTransCoderImpl::Prepare()
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_INVALID_VAL)});
             return MSERR_INVALID_VAL;
         }
+        ret = CheckResolutionRange(width, height, MAX_OUTPUT_VIDEO_WIDTH, MAX_OUTPUT_VIDEO_HEIGHT,
+            MSERR_TARGET_RESOLUTION_OUT_OF_RANGE);
+        FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "output resolution check failed");
         if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
             MEDIA_LOG_E("Output video width or height is invalid");
             CollectionErrorInfo(MSERR_INVALID_OUTPUT_RESOLUTION, "Prepare error");
@@ -664,6 +718,17 @@ int32_t HiTransCoderImpl::Prepare()
                 static_cast<int32_t>(MSERR_INVALID_OUTPUT_RESOLUTION)});
             return MSERR_INVALID_OUTPUT_RESOLUTION;
         }
+        std::string srcVideoMime;
+        std::string encVideoMime;
+        srcVideoFormat_->GetData(Tag::MIME_TYPE, srcVideoMime);
+        videoEncFormat_->GetData(Tag::MIME_TYPE, encVideoMime);
+        ret = CheckCodecCapability(srcVideoMime, false, inputVideoWidth_, inputVideoHeight_,
+            MSERR_VIDEO_RESOLUTION_OUT_OF_RANGE);
+        FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "input decoder resolution check failed");
+ 
+        ret = CheckCodecCapability(encVideoMime, true, width, height, MSERR_TARGET_RESOLUTION_OUT_OF_RANGE);
+        FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "output encoder resolution check failed");
+
         skipProcessFilterFlag_.isSameVideoResolution = (width == inputVideoWidth_) && (height == inputVideoHeight_);
     }
     if (skipProcessFilterFlag_.CanSkipAudioDecAndEncFilter()) {
@@ -788,6 +853,20 @@ int32_t HiTransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
     filter->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
     auto ret = filter->SetWatermark(waterMarkBuffer, width, height);
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransTranscoderStatus(ret), "Watermark filter error");
+    return MSERR_OK;
+}
+
+int32_t HiTransCoderImpl::AddVideoResize(int32_t width, int32_t height)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::AddVideoResize()");
+    if (!skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+        skipProcessFilterFlag_.isAddWaterMark = true;
+        waterMarkFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::WaterMarkFilter>(
+            "Watermark", Pipeline::FilterType::WATERMARK);
+    }
+    FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, MSERR_INVALID_OPERATION, "Watermark filter is nullptr");
+    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    filter->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
     return MSERR_OK;
 }
 
@@ -1151,10 +1230,18 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                 return LinkMuxerFilter(filter, outType);
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO: {
                 Pipeline::FilterType filterType = filter->GetFilterType();
+                if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
+                    skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+                    MEDIA_LOG_I("Pipeline build mode: add watermark");
+                    return LinkWaterMark(filter, outType);
+                }
+
                 // 解码器特殊处理：可能需要先链接resize
                 if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
                     !skipProcessFilterFlag_.CanSkipVideoResizeFilter() &&
                     !skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+                    MEDIA_LOG_I("Pipeline build mode: video resize");
+                    AddVideoResize(inputVideoWidth_, inputVideoHeight_);
                     return LinkVideoResizeFilter(filter, outType);
                 }
 
@@ -1233,12 +1320,16 @@ VideoProcessMode HiTransCoderImpl::DetermineProcessMode()
     bool hasResize = videoResizeFilter_ != nullptr && !skipProcessFilterFlag_.CanSkipVideoResizeFilter();
     bool hasWatermark = waterMarkFilter_ != nullptr && skipProcessFilterFlag_.AddVideoWaterMarkFilter();
     if (hasResize && hasWatermark) {
+        MEDIA_LOG_I("ProcessMode is DECODER_RESIZE_ENCODER");
         return VideoProcessMode::DECODER_RESIZE_WATERMARK_ENCODER;
     } else if (hasResize) {
+        MEDIA_LOG_I("ProcessMode is DECODER_RESIZE_ENCODER");
         return VideoProcessMode::DECODER_RESIZE_ENCODER;
     } else if (hasWatermark) {
+        MEDIA_LOG_I("ProcessMode is DECODER_WATERMARK_ENCODER");
         return VideoProcessMode::DECODER_WATERMARK_ENCODER;
     }
+    MEDIA_LOG_I("ProcessMode is DECODER_TO_ENCODER");
     return VideoProcessMode::DECODER_TO_ENCODER;
 }
  
