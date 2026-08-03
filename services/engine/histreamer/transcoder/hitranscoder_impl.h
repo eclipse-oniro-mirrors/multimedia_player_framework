@@ -66,7 +66,6 @@ public:
     int32_t Resume();
     int32_t Cancel();
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height);
-    int32_t AddVideoResize(int32_t width, int32_t height);
     void OnEvent(const Event &event);
     Status OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
@@ -173,6 +172,8 @@ private:
     bool isVideoTrackLinked_ = false;
     int32_t inputVideoWidth_ = 0;
     int32_t inputVideoHeight_ = 0;
+    Plugins::VideoOrientationType orientation_ = Plugins::VideoOrientationType::ROTATE_NONE;
+    int32_t rotation_ = 0;
     std::string inputAudioMimeType_;
     bool isExistVideoTrack_ = false;
     bool isExistAudioTrack_ = false;
@@ -180,8 +181,8 @@ private:
     std::atomic<int32_t> durationMs_{-1};
 
     uint64_t instanceId_ = 0;
-    int64_t startTime_ = 0;
-    int64_t transcoderTotalDuration_ = 0;
+    std::atomic<int64_t> startTime_{0};
+    std::atomic<int64_t> transcoderTotalDuration_{0};
     int32_t errCode_ = 0;
     std::string errMsg_ = "success";
     std::mutex ignoreErrorMutex_;
