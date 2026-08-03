@@ -1177,7 +1177,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetCurrentRingtoneAttribut
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     int32_t toneId = 1;
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
-    int32_t num = 0;
+    uint32_t num = 0;
     systemSoundManager_->UpdateRingtoneUri(dataShareHelper, toneId, ringtoneType, num);
     ToneAttrs toneAttrs_ = systemSoundManager_->GetCurrentRingtoneAttribute(RINGTONE_TYPE_SIM_CARD_0);
     EXPECT_EQ(toneAttrs_.GetUri().empty(), false);
@@ -1214,7 +1214,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_QueryToneAttrsByType_001, 
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
     bool isProxy = false;
     DatabaseTool databaseTool = {true, isProxy, nullptr};
-    int32_t targetToneType = 1 << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    uint32_t targetToneType = 1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     ToneAttrs toneAttrs_ = systemSoundManager_->QueryToneAttrsByType(databaseTool,
         RINGTONE_COLUMN_RING_TONE_TYPE, targetToneType, SOURCE_TYPE_CUSTOMISED, TONE_CATEGORY_RINGTONE);
     EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
@@ -1227,7 +1227,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_QueryToneAttrsByType_001, 
     EXPECT_EQ(toneAttrs_.GetCategory(), TONE_CATEGORY_RINGTONE);
     isProxy = false;
     databaseTool = {true, isProxy, dataShareHelper};
-    int32_t esimTarget = 1 << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    uint32_t esimTarget = 1u << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     toneAttrs_ = systemSoundManager_->QueryToneAttrsByType(databaseTool,
         RINGTONE_COLUMN_RING_TONE_TYPE, esimTarget, SOURCE_TYPE_CUSTOMISED, TONE_CATEGORY_RINGTONE);
     EXPECT_EQ(toneAttrs_.GetCategory(), TONE_CATEGORY_RINGTONE);
@@ -1243,7 +1243,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_QueryToneAttrsByType_Prese
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
     bool isProxy = false;
     DatabaseTool databaseTool = {true, isProxy, nullptr};
-    int32_t targetToneType = 1 << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    uint32_t targetToneType = 1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     ToneAttrs toneAttrs_ = systemSoundManager_->QueryToneAttrsByType(databaseTool,
         RINGTONE_COLUMN_RING_TONE_TYPE, targetToneType, SOURCE_TYPE_PRESET, TONE_CATEGORY_RINGTONE);
     EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
@@ -1256,7 +1256,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_QueryToneAttrsByType_Prese
     EXPECT_EQ(toneAttrs_.GetCategory(), TONE_CATEGORY_RINGTONE);
     isProxy = false;
     databaseTool = {true, isProxy, dataShareHelper};
-    int32_t esimTarget = 1 << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    uint32_t esimTarget = 1u << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     toneAttrs_ = systemSoundManager_->QueryToneAttrsByType(databaseTool,
         RINGTONE_COLUMN_RING_TONE_TYPE, esimTarget, SOURCE_TYPE_PRESET, TONE_CATEGORY_RINGTONE);
     EXPECT_EQ(toneAttrs_.GetCategory(), TONE_CATEGORY_RINGTONE);
@@ -1705,7 +1705,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdateOnly_Test, testing::e
 
     int32_t toneId = 1;
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
-    int32_t num = 1;
+    uint32_t num = 1;
 
     systemSoundManagerImpl_->UpdateRingtoneUri(dataShareHelper, toneId, ringtoneType, num);
 }
@@ -1727,7 +1727,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdateBoth_Test, testing::e
 
     int32_t toneId = 1;
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
-    int32_t num = 2;
+    uint32_t num = 2;
 
     systemSoundManagerImpl_->UpdateRingtoneUri(dataShareHelper, toneId, ringtoneType, num);
 }
@@ -1749,7 +1749,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateRingtoneUri_UpdatePredicates_Test, test
 
     int32_t toneId = 1;
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
-    int32_t num = 1;
+    uint32_t num = 1;
 
     systemSoundManagerImpl_->UpdateRingtoneUri(dataShareHelper, toneId, ringtoneType, num);
 }
@@ -1790,7 +1790,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_001, TestSize.Level0)
 
     int32_t toneId = 1;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0;
-    int32_t num = SHOT_TONE_TYPE_SIM_CARD_1;
+    uint32_t num = SHOT_TONE_TYPE_SIM_CARD_1;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
@@ -1814,7 +1814,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_002, TestSize.Level0)
 
     int32_t toneId = 2;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1;
-    int32_t num = SHOT_TONE_TYPE_SIM_CARD_2;
+    uint32_t num = SHOT_TONE_TYPE_SIM_CARD_2;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
@@ -1838,7 +1838,7 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_003, TestSize.Level0)
 
     int32_t toneId = 3;
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION;
-    int32_t num = SHOT_TONE_TYPE_SIM_CARD_BOTH;
+    uint32_t num = SHOT_TONE_TYPE_SIM_CARD_BOTH;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(dataShareHelper, toneId, systemToneType, num);
 
