@@ -593,7 +593,7 @@ int32_t AVRecorderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     CHECK_AND_RETURN_RET_LOG(writeRet, MSERR_INVALID_VAL, "Failed to write data to AVBuffer");
 
     MEDIA_LOGI("watermarkCount %{public}d", watermarkCount_);
-    CHECK_AND_RETURN_RET_LOG(watermarkCount_ < WATERMARK_COUNT_MAX, MSERR_PARAM_OUT_OF_RANGE,
+    CHECK_AND_RETURN_RET_LOG(watermarkCount_ < WATERMARK_COUNT_MAX, MSERR_INVALID_OPERATION,
         "Failed to add watermark");
     watermarkCount_++;
     watermarkCount = watermarkCount_;

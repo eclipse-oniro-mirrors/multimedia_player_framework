@@ -27,15 +27,16 @@ using namespace OHOS::Media::RecorderTestParam;
 namespace {
 std::shared_ptr<AVBuffer> CreateWatermarkBuffer(int32_t width, int32_t height, std::vector<uint8_t> &rawData)
 {
-    int32_t bufferWidth = (width > 0 && width < INT_MAX / 4 / (height > 0 ? height : 1)) ? width : 100;
-    int32_t bufferHeight = (height > 0 && height < INT_MAX / 4 / bufferWidth) ? height : 50;
-    int32_t dataLength = bufferWidth * bufferHeight * 4;
+    int32_t pixelSize = 4;
+    int32_t bufferWidth = (width > 0 && width < INT_MAX / pixelSize / (height > 0 ? height : 1)) ? width : 100;
+    int32_t bufferHeight = (height > 0 && height < INT_MAX / pixelSize / bufferWidth) ? height : 50;
+    int32_t dataLength = bufferWidth * bufferHeight * pixelSize;
     rawData.resize(dataLength);
     auto buffer = AVBuffer::CreateAVBuffer(rawData.data(), dataLength, dataLength);
     if (buffer != nullptr) {
         buffer->meta_->Set<Tag::VIDEO_COORDINATE_W>(width);
         buffer->meta_->Set<Tag::VIDEO_COORDINATE_H>(height);
-        buffer->meta_->Set<Tag::VIDEO_STRIDE>(width * 4);
+        buffer->meta_->Set<Tag::VIDEO_STRIDE>(width * pixelSize);
     }
     return buffer;
 }
@@ -397,7 +398,6 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_AddWatermark_018, TestSize.Level2)
     int32_t ret = recorderServer_->AddWatermark(watermarkBuffer, -1, 0, watermarkCount);
 
     EXPECT_NE(ret, MSERR_OK);
-
 }
 
 /**
