@@ -140,10 +140,12 @@ void AVRecorderCallback::OnTaihePhotoAssertAvailableCallback(AVRecordTaiheCallba
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "ref is nullptr");
             auto func = ref->callbackRef_;
+            CHECK_AND_BREAK_LOG(func != nullptr, "failed to get callback");
             std::shared_ptr<taihe::callback<void(uintptr_t)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
             ani_object aniObject = MediaLibraryCommAni::CreatePhotoAssetAni(
                 taihe::get_env(), event->uri, CAMERA_SHOT_TYPE);
+            CHECK_AND_BREAK_LOG(aniObject != nullptr, "CreatePhotoAssetAni failed");
             uintptr_t photoAssetPtr = reinterpret_cast<uintptr_t>(aniObject);
             (*cacheCallback)(photoAssetPtr);
         } while (0);
