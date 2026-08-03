@@ -125,21 +125,26 @@ public:
             deviceInfo.deviceType_, deviceTypeKey);
         taihe::string name = MediaTaiheUtils::ToTaiheString(deviceInfo.deviceName_);
         taihe::string address = MediaTaiheUtils::ToTaiheString(deviceInfo.macAddress_);
-        std::vector<int32_t> samplingRateVec(
-            deviceInfo.audioStreamInfo_.front().samplingRate.begin(),
-            deviceInfo.audioStreamInfo_.front().samplingRate.end());
-        std::vector<int32_t> channelsVec(deviceInfo.audioStreamInfo_.front().channelLayout.begin(),
-            deviceInfo.audioStreamInfo_.front().channelLayout.end());
+        std::vector<int32_t> samplingRateVec;
+        std::vector<int32_t> channelsVec;
+        ohos::multimedia::audio::AudioEncodingType::key_t audioEncodingTypeKey;
+        std::vector<ohos::multimedia::audio::AudioEncodingType> audioEncodingType;
+        if (!deviceInfo.audioStreamInfo_.empty()) {
+            samplingRateVec = std::vector<int32_t>(
+                deviceInfo.audioStreamInfo_.front().samplingRate.begin(),
+                deviceInfo.audioStreamInfo_.front().samplingRate.end());
+            channelsVec = std::vector<int32_t>(
+                deviceInfo.audioStreamInfo_.front().channelLayout.begin(),
+                deviceInfo.audioStreamInfo_.front().channelLayout.end());
+            MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioEncodingType>(
+                deviceInfo.audioStreamInfo_.front().encoding, audioEncodingTypeKey);
+            audioEncodingType.push_back(audioEncodingTypeKey);
+        }
         taihe::string networkId = MediaTaiheUtils::ToTaiheString(deviceInfo.networkId_);
         taihe::string displayName = MediaTaiheUtils::ToTaiheString(
             deviceInfo.displayName_);
-        ohos::multimedia::audio::AudioEncodingType::key_t audioEncodingTypeKey;
-        MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioEncodingType>(
-            deviceInfo.audioStreamInfo_.front().encoding, audioEncodingTypeKey);
         std::vector<int32_t> channelMasks;
         channelMasks.push_back(deviceInfo.channelMasks_);
-        std::vector<ohos::multimedia::audio::AudioEncodingType> audioEncodingType;
-        audioEncodingType.push_back(audioEncodingTypeKey);
 
         ohos::multimedia::audio::AudioDeviceDescriptor descriptor {
             std::move(ohos::multimedia::audio::DeviceRole(deviceRoleKey)),

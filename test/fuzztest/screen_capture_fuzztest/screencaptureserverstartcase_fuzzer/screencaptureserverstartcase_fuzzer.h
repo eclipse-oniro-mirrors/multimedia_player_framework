@@ -23,7 +23,14 @@
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
+#include <memory>
 #include "test_screen_capture.h"
+#include "screen_capture_server.h"
+
+inline std::shared_ptr<OHOS::Media::ScreenCaptureServer> MakeScreenCaptureServerShared()
+{
+    return std::make_shared<OHOS::Media::ScreenCaptureServer>(OHOS::Media::CreateDefaultProviders());
+}
 
 #define FUZZ_PROJECT_NAME "screencaptureserverstartcase_fuzzer"
 

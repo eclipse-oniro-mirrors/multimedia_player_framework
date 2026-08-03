@@ -245,8 +245,8 @@ private:
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);
     void ReadPlayStrategyFromMessageParcel(MessageParcel &data, AVPlayStrategy &strategy);
-    void ReadTrackSelectionFilter(MessageParcel &data, AVPlayTrackSelectionFilter &filter);
-    void ReadTrackSelectionFilterInner(MessageParcel &data, AVPlayTrackSelectionFilter &filter);
+    int32_t ReadTrackSelectionFilter(MessageParcel &data, AVPlayTrackSelectionFilter &filter);
+    int32_t ReadTrackSelectionFilterInner(MessageParcel &data, AVPlayTrackSelectionFilter &filter);
     void WriteTrackSelectionFilter(MessageParcel &reply, const AVPlayTrackSelectionFilter &filter);
     void WriteTrackSelectionFilterInner(MessageParcel &reply, const AVPlayTrackSelectionFilter &filter);
     int32_t ReadUrlSourceFromParcel(MessageParcel &data, bool isUrlSource, std::string &url,

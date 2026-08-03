@@ -66,7 +66,7 @@ private:
     int32_t innerAudioFlag_ = 0;
     int32_t micAudioFlag_ = 0;
     int32_t videoFlag_ = 0;
-    std::atomic<AVScreenCaptureStateCode> screenCaptureState_ = AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVLID;
+    std::atomic<AVScreenCaptureStateCode> screenCaptureState_ = AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID;
     std::atomic<AVScreenCaptureContentChangedEvent> screenCaptureContentChange_ =
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE;
     ScreenCaptureRect* area_ = nullptr;

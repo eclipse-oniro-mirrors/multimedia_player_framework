@@ -42,19 +42,17 @@
 #include "display_manager.h"
 #include "screen_manager.h"
 #include "i_recorder_service.h"
-#include "recorder_server.h"
 #include "notification_content.h"
 #include "notification_helper.h"
 #include "notification_request.h"
 #include "notification_constant.h"
 #include "notification_slot.h"
 #ifdef SUPPORT_CALL
-#include "incall_observer.h"
+#include "incall_observer_callback.h"
 #endif
-#include "account_observer.h"
+#include "account_observer_callback.h"
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
-#include "screen_capture_monitor_server.h"
 #include "json/json.h"
 #include "tokenid_kit.h"
 #include "window_manager.h"
@@ -131,6 +129,12 @@ enum Capability : uint32_t {
     CAP_ACTIVE = 1 << 7,
 };
 
+enum AudioStateFlag : uint32_t {
+    AUDIO_STATE_HEADSET = 1 << 0,
+    AUDIO_STATE_VOIP = 1 << 1,
+    AUDIO_STATE_TEL = 1 << 2,
+};
+
 struct StatisticalEventInfo {
     int32_t errCode = 0;
     std::string errMsg;
@@ -160,8 +164,6 @@ public:
     void Release() override;
 private:
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
-    TaskQueue taskQueObserverCb_;
-    std::mutex mutex_;
 };
 
 class PrivateWindowListenerInScreenCapture : public DisplayManager::IPrivateWindowListener {
@@ -177,11 +179,9 @@ private:
 class ScreenRendererAudioStateChangeCallback : public AudioRendererStateChangeCallback {
 public:
     void OnRendererStateChange(const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
-    void SetAudioSource(std::shared_ptr<AudioDataSource> audioSource);
-    void SetAppName(std::string appName);
+    void SetScreenCaptureServer(std::weak_ptr<ScreenCaptureServer> server);
 private:
-    std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
-    std::string appName_;
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer_;
 };
 
 class ScreenConnectListenerForSC : public Rosen::ScreenManager::IScreenListener {

@@ -79,6 +79,7 @@ int32_t HelperDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &
         cb_->callback_ = refMap_.at(HELPER_READAT_CALLBACK_NAME);
     }
     ON_SCOPE_EXIT(0) {
+        std::lock_guard<std::mutex> lock(mutex_);
         cb_ = nullptr;
     };
 
@@ -96,8 +97,15 @@ int32_t HelperDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> &
                              "Failed to SendEvent, ret = %{public}d", ret);
     CANCEL_SCOPE_EXIT_GUARD(1);
     cb_->WaitResult();
+    int32_t readSize = 0;
+    {
+        std::lock_guard<std::mutex> lock(cb_->mutexCond_);
+        readSize = cb_->readSize_;
+    }
+    CHECK_AND_RETURN_RET_LOG(static_cast<int64_t>(readSize) <= static_cast<int64_t>(length),
+        SOURCE_ERROR_IO, "Read size exceeds requested length");
     MEDIA_LOGD("HelperDataSourceCallback ReadAt out");
-    return cb_->readSize_;
+    return readSize;
 }
 
 napi_status HelperDataSourceCallback::UvWork(HelperDataSourceJsCallbackWraper *cbWrap)
@@ -145,10 +153,16 @@ napi_status HelperDataSourceCallback::UvWork(HelperDataSourceJsCallbackWraper *c
             MEDIA_LOGD("call JS function");
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, paramNum, args, &size);
             CHECK_AND_BREAK(nstatus == napi_ok);
-            nstatus = napi_get_value_int32(ref->env_, size, &event->readSize_);
+            int32_t readSize = 0;
+            nstatus = napi_get_value_int32(ref->env_, size, &readSize);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "get size failed");
-            std::unique_lock<std::mutex> lock(event->mutexCond_);
-            event->setResult_ = true;
+            {
+                std::lock_guard<std::mutex> lock(event->mutexCond_);
+                if (!event->isExit_) {
+                    event->readSize_ = readSize;
+                    event->setResult_ = true;
+                }
+            }
             event->cond_.notify_all();
         } while (0);
         delete cbWrap;
@@ -209,7 +223,10 @@ void HelperDataSourceCallback::ClearCallbackReference()
     temp.swap(refMap_);
     MEDIA_LOGD("callback has been clear");
     if (cb_) {
-        cb_->isExit_ = true;
+        {
+            std::lock_guard<std::mutex> exitLock(cb_->mutexCond_);
+            cb_->isExit_ = true;
+        }
         cb_->cond_.notify_all();
     }
 }

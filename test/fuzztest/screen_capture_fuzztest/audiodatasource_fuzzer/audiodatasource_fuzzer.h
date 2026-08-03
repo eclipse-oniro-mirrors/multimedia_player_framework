@@ -24,6 +24,7 @@
 #include <mutex>
 #include "audio_data_source.h"
 #include "screen_capture_server.h"
+#include "screen_capture_service_providers.h"
 #include "avbuffer.h"
 #include "avsharedmemory.h"
 #include "media_data_source.h"
@@ -31,17 +32,21 @@
 #include "audio_info.h"
 #define FUZZ_PROJECT_NAME "audiodatasource_fuzzer"
 
+inline std::shared_ptr<OHOS::Media::ScreenCaptureServer> MakeScreenCaptureServerShared()
+{
+    return std::make_shared<OHOS::Media::ScreenCaptureServer>(OHOS::Media::CreateDefaultProviders());
+}
+
 namespace OHOS {
 namespace Media {
 class AudioDataSourceFuzzer {
 public:
 
-    bool FuzzSpeakerStateUpdate();
-    bool FuzzHasSpeakerStream();
-    bool FuzzVoIPStateUpdate();
+    bool FuzzAudioRendererStateUpdate();
+    bool FuzzGetAudioRendererState();
+    bool FuzzAudioRendererStateUpdateVoIP();
     bool FuzzHasVoIPStream();
     bool FuzzSetAndGetAppPid();
-    bool FuzzSetAndGetAppName();
     bool FuzzSetVideoFirstFramePts();
     bool FuzzSetAudioFirstFramePts();
     bool FuzzReadAtMixMode();
@@ -63,7 +68,6 @@ public:
     bool FuzzHandleSwitchToSpeakerOptimise();
     bool FuzzHandleBufferTimeStamp();
     bool FuzzLostFrameNum();
-    bool FuzzFillLostBuffer();
 
 private:
     std::shared_ptr<AudioBuffer> CreateAudioBufferInner(int64_t timestamp);
@@ -73,7 +77,7 @@ private:
     void Init();
     void Release();
 
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServer_ = nullptr;
+    std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
     int32_t datasize = 2048;
     std::vector<uint8_t> AVbuf;
 };

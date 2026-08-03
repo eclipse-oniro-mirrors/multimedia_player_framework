@@ -197,6 +197,7 @@ ohos_shared_library("media") {
     "libuv:uv",
     "media_foundation:media_foundation",
     "napi:ace_napi",
+    "node:node_header_notice",
     "qos_manager:qos",
     "window_manager:libdm",
   ]

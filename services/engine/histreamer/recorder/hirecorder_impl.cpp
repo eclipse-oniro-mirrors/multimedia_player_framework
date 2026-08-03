@@ -410,7 +410,10 @@ sptr<Surface> HiRecorderImpl::GetMetaSurface(int32_t sourceId)
     if (SourceIdGenerator::IsMeta(sourceId) &&
         (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&
         GetMetaSourceType(sourceId) < VIDEO_META_SOURCE_BUTT)) {
-        producerMetaSurface_ = metaDataFilters_.at(sourceId)->GetInputMetaSurface();
+        auto it = metaDataFilters_.find(sourceId);
+        if (it != metaDataFilters_.end() && it->second != nullptr) {
+            producerMetaSurface_ = it->second->GetInputMetaSurface();
+        }
     }
     return producerMetaSurface_;
 }
@@ -656,12 +659,15 @@ void HiRecorderImpl::ClearAllConfiguration()
         }
         RemoveFilterAction(iter.second);
     }
+
+    CloseFd();
 }
 
 int32_t HiRecorderImpl::Stop(bool isDrainAll)
 {
     MediaTrace trace("HiRecorderImpl::Stop");
     MEDIA_LOG_I("Stop enter.");
+    std::lock_guard<std::mutex> lock(stateMutex_);
     if (curState_ == StateId::INIT) {
         MEDIA_LOG_I("Stop exit.the reason is state = INIT");
         return static_cast<int32_t>(Status::OK);
@@ -1186,10 +1192,7 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
     MEDIA_LOG_I("HiRecorderImpl ConfigureMuxer enter");
     switch (recParam.type) {
         case RecorderPublicParamType::OUT_FD: {
-            OutFd outFd = static_cast<const OutFd&>(recParam);
-            fd_ = dup(outFd.fd);
-            muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
-            MEDIA_LOG_I("ConfigureMuxer enter " PUBLIC_LOG_D32, fd_);
+            ConfigureOutFd(recParam);
             break;
         }
         case RecorderPublicParamType::MAX_DURATION: {
@@ -1231,6 +1234,15 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
         default:
             break;
     }
+}
+
+void HiRecorderImpl::ConfigureOutFd(const RecorderParam &recParam)
+{
+    CloseFd();
+    OutFd outFd = static_cast<const OutFd&>(recParam);
+    fd_ = dup(outFd.fd);
+    muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
+    MEDIA_LOG_I("ConfigureMuxer enter " PUBLIC_LOG_D32, fd_);
 }
 
 bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)
@@ -1328,6 +1340,10 @@ std::vector<EncoderCapabilityData> HiRecorderImpl::ConvertEncoderInfo(
 {
     std::vector<EncoderCapabilityData> encoderInfoVector;
     for (int32_t i = 0; i < (int32_t)capData.size(); i++) {
+        if (capData[i] == nullptr) {
+            MEDIA_LOG_W("capData[%{public}d] is nullptr, skip", i);
+            continue;
+        }
         EncoderCapabilityData encoderInfo;
         if (capData[i]->codecType == MediaAVCodec::AVCodecType::AVCODEC_TYPE_VIDEO_ENCODER) {
             encoderInfo = ConvertVideoEncoderInfo(capData[i]);

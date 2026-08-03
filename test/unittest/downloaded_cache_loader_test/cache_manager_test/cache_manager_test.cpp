@@ -226,6 +226,8 @@ HWTEST_F(CacheManagerTest, EntryWithPathTraversal_001, TestSize.Level0)
     file.write(reinterpret_cast<const char*>(header.reserved), 8);
     file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
 
+    TestCommon::WriteDefaultPlaybackParamData(file);
+
     CacheMappingEntry entry;
     auto hash = SHA256Hasher::GenerateHash("http://example.com/test.mp4");
     (void)memcpy_s(entry.header.urlHash, SHA256_LEN, hash.data(), SHA256_LEN);
@@ -265,6 +267,8 @@ HWTEST_F(CacheManagerTest, EntryWithInvalidPathLength_001, TestSize.Level0)
     file.write(reinterpret_cast<const char*>(header.reserved), 8);
     file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
 
+    TestCommon::WriteDefaultPlaybackParamData(file);
+
     CacheMappingEntry entry;
     auto hash = SHA256Hasher::GenerateHash("http://example.com/test.mp4");
     (void)memcpy_s(entry.header.urlHash, SHA256_LEN, hash.data(), SHA256_LEN);
@@ -301,6 +305,8 @@ HWTEST_F(CacheManagerTest, TruncatedEntry_001, TestSize.Level0)
     file.write(reinterpret_cast<const char*>(header.reserved), 8);
     file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
 
+    TestCommon::WriteDefaultPlaybackParamData(file);
+
     auto hash = SHA256Hasher::GenerateHash("http://example.com/test.mp4");
     file.write(reinterpret_cast<const char*>(hash.data()), 10);
     file.close();
@@ -319,6 +325,33 @@ HWTEST_F(CacheManagerTest, GetMediaCache_RelativePathContainsDoubleDot_001, Test
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
     std::string result = manager->GetMediaCache(testUrl);
     EXPECT_EQ(result, "");
+}
+
+HWTEST_F(CacheManagerTest, GetCacheMetaData_PathTraversal_001, TestSize.Level0)
+{
+    std::string testUrl = "http://example.com/test.mp4";
+    std::string testPath = "videos/../../etc/passwd";
+    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
+
+    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
+    CacheMetaData metadata;
+    bool result = manager->GetCacheMetaData(testUrl, metadata);
+    EXPECT_FALSE(result);
+}
+
+HWTEST_F(CacheManagerTest, GetCacheMetaData_ValidPath_001, TestSize.Level0)
+{
+    std::string testUrl = "http://example.com/test.mp4";
+    std::string testPath = "videos/test.mp4";
+    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
+    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
+
+    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
+    CacheMetaData metadata;
+    bool result = manager->GetCacheMetaData(testUrl, metadata);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(metadata.url, testUrl);
+    EXPECT_EQ(metadata.entry, testPath);
 }
 
 } // namespace DownloadedCache

@@ -33,6 +33,7 @@ AVMetadataExtractorImpl::AVMetadataExtractorImpl() {}
 
 AVMetadataExtractorImpl::AVMetadataExtractorImpl(std::shared_ptr<OHOS::Media::AVMetadataHelper> avMetadataHelper)
 {
+    CHECK_AND_RETURN_LOG(avMetadataHelper != nullptr, "avMetadataHelper is nullptr");
     helper_ = avMetadataHelper;
     helperCb_ = std::make_shared<AVMetadataHelperCallback>();
     if (helperCb_ == nullptr) {
@@ -47,6 +48,7 @@ AVMetadataExtractorImpl::AVMetadataExtractorImpl(std::shared_ptr<OHOS::Media::AV
 
 optional<AVFileDescriptor> AVMetadataExtractorImpl::GetFdSrc()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractor::get fd");
     MEDIA_LOGI("TaiheGetAVFileDescriptor In");
     AVFileDescriptor fdSrc;
@@ -59,6 +61,7 @@ optional<AVFileDescriptor> AVMetadataExtractorImpl::GetFdSrc()
 
 void AVMetadataExtractorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::set fd");
     MEDIA_LOGI("TaiheSetAVFileDescriptor In");
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_IDLE) {
@@ -91,6 +94,7 @@ void AVMetadataExtractorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
 
 optional<AVDataSrcDescriptor> AVMetadataExtractorImpl::GetDataSrc()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::set dataSrc");
     MEDIA_LOGI("TaiheGetDataSrc In");
     CHECK_AND_RETURN_RET_LOG(dataSrcCb_ != nullptr,
@@ -112,6 +116,7 @@ optional<AVDataSrcDescriptor> AVMetadataExtractorImpl::GetDataSrc()
 
 void AVMetadataExtractorImpl::SetDataSrc(optional_view<AVDataSrcDescriptor> dataSrc)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::set dataSrc");
     MEDIA_LOGI("TaiheSetDataSrc In");
 
@@ -147,6 +152,7 @@ void AVMetadataExtractorImpl::SetDataSrc(optional_view<AVDataSrcDescriptor> data
 
 void AVMetadataExtractorImpl::SetUrlSource(::taihe::string_view url, optional_view<map<string, string>> header)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::setUrlSource");
     MEDIA_LOGI("TaiheSetUrlSource In");
 
@@ -323,6 +329,7 @@ void AVMetadataExtractorImpl::ParseMetadataOfTracks(std::shared_ptr<OHOS::Media:
 
 optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataSync()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchMetadataSync");
     MEDIA_LOGI("FetchMetadataSync In");
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
@@ -350,6 +357,7 @@ optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataSync()
 
 optional<AVMetadata> AVMetadataExtractorImpl::FetchMetadataWithTimeoutSync(int64_t timeoutMs)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchMetadataWithTimeoutSync");
     MEDIA_LOGI("FetchMetadataWithTimeoutSync In");
     if (timeoutMs <= 0 || timeoutMs > MAX_TIMEOUT_MS) {
@@ -417,6 +425,7 @@ static std::unique_ptr<OHOS::Media::PixelMap> ConvertMemToPixelMap(
 
 optional<ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::FetchAlbumCoverSync()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::fetchArtPicture");
     MEDIA_LOGI("TaiheFetchArtPicture In");
 
@@ -439,6 +448,7 @@ optional<ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::Fetc
 
 void AVMetadataExtractorImpl::ReleaseSync()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorTaihe::release");
     MEDIA_LOGI("TaiheRelease In");
     if (dataSrcCb_ != nullptr) {
@@ -461,6 +471,7 @@ void AVMetadataExtractorImpl::ReleaseSync()
 
 int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(int64_t timeUs)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetFrameIndexByTimeSync");
     timeStamp_ = static_cast<uint64_t>(timeUs);
     if (state_ != OHOS::Media::HelperState::HELPER_STATE_RUNNABLE) {
@@ -480,6 +491,7 @@ int32_t AVMetadataExtractorImpl::GetFrameIndexByTimeSync(int64_t timeUs)
 
 int64_t AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::GetTimeByFrameIndexSync");
     if (index < 0) {
         set_business_error(OHOS::Media::MSERR_EXT_API9_INVALID_PARAMETER, "frame index is not valid");
@@ -504,6 +516,7 @@ int64_t AVMetadataExtractorImpl::GetTimeByFrameIndexSync(int32_t index)
 optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::FetchFrameByTimeSync(int64_t timeUs,
     AVImageQueryOptions options, PixelMapParams const& param)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchFrameByTimeSync");
     MEDIA_LOGI("FetchFrameByTimeSync in");
     AVMetadataExtractorImpl *taihe = this;
@@ -549,6 +562,7 @@ optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::Fe
 optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::FetchFrameByTimeWithTimeoutSync(
     int64_t timeUs, AVImageQueryOptions options, PixelMapParams const& param, int64_t timeoutMs)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchFrameByTimeWithTimeoutSync");
     if (timeoutMs <= 0 || timeoutMs > MAX_TIMEOUT_MS) {
         set_business_error(OHOS::Media::MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
@@ -600,6 +614,7 @@ optional<::ohos::multimedia::image::image::PixelMap> AVMetadataExtractorImpl::Fe
 
 void AVMetadataExtractorImpl::CancelAllFetchFrames()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::JsCancelAllFetchFrames.");
     CHECK_AND_RETURN_LOG(helper_ != nullptr, "inner helper is null.");
     int32_t cancelRes = helper_->CancelAllFetchFrames();
@@ -612,6 +627,7 @@ void AVMetadataExtractorImpl::FetchFramesByTimes(array_view<int64_t> timesUs,
     callback_view<void(::ohos::multimedia::media::FrameInfo const& frameInfo,
     optional_view<uintptr_t> err)> callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::JsFetchFramesAtTimes");
     MEDIA_LOGI("JsFetchFramesAtTimes in");
     AVMetadataExtractorImpl *taihe = this;
@@ -664,6 +680,7 @@ void AVMetadataExtractorImpl::FetchFramesByTimesWithTimeout(array_view<int64_t> 
     callback_view<void(::ohos::multimedia::media::FrameInfo const& frameInfo,
     optional_view<uintptr_t> err)> callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVMetadataExtractorImpl::FetchFramesByTimesWithTimeout");
     if (timeoutMs <= 0 || timeoutMs > MAX_TIMEOUT_MS) {
         set_business_error(OHOS::Media::MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,

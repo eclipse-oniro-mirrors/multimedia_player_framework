@@ -55,7 +55,8 @@ enum AudioCapturerWrapperState : int32_t {
 
 class AudioCapturerWrapper {
 public:
-    explicit AudioCapturerWrapper(AudioCaptureInfo &audioInfo, std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
+    explicit AudioCapturerWrapper(AudioCaptureInfo &audioInfo,
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb,
         std::string &&name, const ScreenCaptureContentFilter &filter)
         : screenCaptureCb_(screenCaptureCb), audioInfo_(audioInfo), threadName_(std::move(name)), contentFilter_(filter)
     {
@@ -69,9 +70,7 @@ public:
     int32_t GetBufferSize(size_t &size);
     int32_t ReleaseAudioBuffer();
     void SetIsInVoIPCall(bool isInVoIPCall);
-#ifdef SUPPORT_CALL
-    void SetIsInTelCall(bool isInTelCall);
-#endif
+    inline bool IsInVoIPCall() { return isInVoIPCall_.load(); }
     AudioCapturerWrapperState GetAudioCapturerState();
     int32_t UseUpAllLeftBufferUntil(int64_t audioTime);
     int32_t GetCurrentAudioTime(int64_t &currentAudioTime);
@@ -87,10 +86,6 @@ protected:
 private:
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> CreateAudioCapturer(
         const OHOS::AudioStandard::AppInfo &appInfo);
-
-    using AudioCapturerBuilder = std::function<std::shared_ptr<OHOS::AudioStandard::AudioCapturer>(
-        const OHOS::AudioStandard::AudioCapturerOptions&, const OHOS::AudioStandard::AppInfo&)>;
-    AudioCapturerBuilder audioCapturerBuilder_;
 
     void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
     void PartiallyPrintLog(int32_t lineNumber, std::string str);
@@ -117,9 +112,6 @@ private:
     std::string bundleName_;
     std::atomic<bool> isInVoIPCall_ = false;
     std::atomic<bool> isMute_ = false;
-#ifdef SUPPORT_CALL
-    std::atomic<bool> isInTelCall_ = false;
-#endif
     std::atomic<AudioCapturerWrapperState> captureState_ {CAPTURER_UNKNOWN};
 
     /* used for hilog output */
@@ -140,7 +132,7 @@ private:
 class MicAudioCapturerWrapper : public AudioCapturerWrapper {
 public:
     explicit MicAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
         const ScreenCaptureContentFilter &filter)
         : AudioCapturerWrapper(audioInfo, screenCaptureCb, std::move(name),
         filter) {}

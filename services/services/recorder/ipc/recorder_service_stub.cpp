@@ -194,38 +194,35 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     MessageOption &option)
 {
     MEDIA_LOGI("Stub: OnRemoteRequest of code: %{public}d is received", code);
-    int32_t permissionResult;
 
     auto remoteDescriptor = data.ReadInterfaceToken();
     CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
         MSERR_INVALID_OPERATION, "Invalid descriptor");
 
-    {
-        if (code == SET_AUDIO_SOURCE) {
-            std::lock_guard<std::mutex> lock(stmutex_);
-            int32_t type = data.ReadInt32();
-            CHECK_AND_RETURN_RET_LOG(audioSourceType_ == AUDIO_SOURCE_INVALID,
-                MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport parameter or repeated operation");
-            audioSourceType_ = static_cast<AudioSourceType>(type);
-        }
+    if (code == SET_AUDIO_SOURCE) {
+        std::lock_guard<std::mutex> lock(stmutex_);
+        int32_t type = data.ReadInt32();
+        CHECK_AND_RETURN_RET_LOG(audioSourceType_ == AUDIO_SOURCE_INVALID,
+            MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport parameter or repeated operation");
+        audioSourceType_ = static_cast<AudioSourceType>(type);
     }
 
+    int32_t permissionResult = Security::AccessToken::PERMISSION_GRANTED;
     if (AUDIO_REQUEST.count(code) != 0) {
         permissionResult = CheckPermission();
         needAudioPermissionCheck = true;
-    } else if (COMMON_REQUEST.count(code) != 0) {
-        if (needAudioPermissionCheck) {
-            permissionResult = CheckPermission();
-        } else {
-            // none audio request no need to check permission in recorder server
-            permissionResult = Security::AccessToken::PERMISSION_GRANTED;
-        }
+    } else if (COMMON_REQUEST.count(code) != 0 && needAudioPermissionCheck) {
+        permissionResult = CheckPermission();
     } else {
         // none audio request no need to check permission in recorder server
-        permissionResult = Security::AccessToken::PERMISSION_GRANTED;
     }
-    CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED,
-        MSERR_EXT_API9_NO_PERMISSION, "user do not have the correct permission");
+    if (permissionResult == Security::AccessToken::PERMISSION_DENIED) {
+        MEDIA_LOGE("user do not have the correct permission");
+        if (code == SET_AUDIO_SOURCE) {
+            audioSourceType_ = AUDIO_SOURCE_INVALID;
+        }
+        return MSERR_EXT_API9_NO_PERMISSION;
+    }
 
     auto itFunc = recFuncs_.find(code);
     if (itFunc != recFuncs_.end()) {

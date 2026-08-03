@@ -20,12 +20,15 @@
 #include <vector>
 #include <map>
 #include <memory>
+#include <mutex>
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "av_downloader_manager.h"
 
 namespace OHOS {
 namespace Media {
+
+struct AutoRef;
 
 class AVDownloaderManagerNapi : public AVDownloaderManagerCallback {
 public:
@@ -44,6 +47,8 @@ private:
     static napi_value SetRequestTimeout(napi_env env, napi_callback_info info);
     static napi_value AddAVDownloadTask(napi_env env, napi_callback_info info);
     static napi_value RemoveDownloadTask(napi_env env, napi_callback_info info);
+    static napi_value RemoveSingleTask(napi_env env, AVDownloaderManagerNapi *manager, napi_value arg);
+    static napi_value RemoveAllTasks(napi_env env, AVDownloaderManagerNapi *manager);
     static napi_value PauseDownloadTask(napi_env env, napi_callback_info info);
     static napi_value ResumeDownloadTask(napi_env env, napi_callback_info info);
     static napi_value GetDownloadTasks(napi_env env, napi_callback_info info);
@@ -60,22 +65,19 @@ private:
     AVDownloaderManagerNapi();
     ~AVDownloaderManagerNapi();
 
-    std::string GenerateTaskId();
     std::string GetTaskCacheDir(const std::string &taskId);
     void TriggerStatusCallback(const std::string &taskId, AVDownloadTaskState state);
     void TriggerProgressCallback(const std::string &taskId, double progress);
 
     std::shared_ptr<AVDownloaderManager> downloaderManager_;
     std::shared_ptr<AVDownloaderManagerNapi> selfRef_;
-    napi_env env_ = nullptr;
     bool allowCellularAccess_ = false;
     int32_t requestTimeoutMs_ = 30000;
     std::map<std::string, std::string> taskIdToUrl_;
     std::map<std::string, std::string> taskIdToCacheDir_;
-    std::map<std::string, int32_t> taskIdToStatus_;
-    std::map<std::string, double> taskIdToProgress_;
-    napi_ref statusChangeCallback_ = nullptr;
-    napi_ref progressChangeCallback_ = nullptr;
+    std::shared_ptr<AutoRef> statusChangeCallback_;
+    std::shared_ptr<AutoRef> progressChangeCallback_;
+    std::mutex cbMutex_;
 
     static thread_local napi_ref constructor_;
 };

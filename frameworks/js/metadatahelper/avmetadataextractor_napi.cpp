@@ -86,14 +86,14 @@ napi_value AVMetadataExtractorNapi::Init(napi_env env, napi_value exports)
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVMetadataHelper class");
 
-    status = napi_create_reference(env, constructor, 1, &constructor_);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
-
     status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
+
+    status = napi_create_reference(env, constructor, 1, &constructor_);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
 
     MEDIA_LOGD("AVMetadataExtractorNapi Init success");
     return exports;
@@ -133,6 +133,7 @@ napi_value AVMetadataExtractorNapi::Constructor(napi_env env, napi_callback_info
     status = napi_wrap(env, jsThis, reinterpret_cast<void *>(extractor),
         AVMetadataExtractorNapi::Destructor, nullptr, nullptr);
     if (status != napi_ok) {
+        extractor->helper_->Release();
         delete extractor;
         MEDIA_LOGE("Failed to wrap native instance");
         return result;
@@ -259,9 +260,9 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadataWithTimeout(napi_env env, n
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance.");
     promiseCtx->innerHelper_ = extractor->helper_;
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     napi_status ret = napi_get_value_int64(env, args[ARG_ZERO], &promiseCtx->timeoutMs);
     CHECK_AND_RETURN_RET_LOG(ret == napi_ok, result, "failed to get timeoutMs.");
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
 
     if (promiseCtx->timeoutMs <= 0 || promiseCtx->timeoutMs > MAX_TIMEOUT_MS) {
         promiseCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
@@ -303,7 +304,7 @@ void AVMetadataExtractorNapi::ResolveMetadataComplete(napi_env env, napi_status 
     CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
 
     napi_value result = nullptr;
-    napi_create_object(env, &result);
+    CHECK_AND_RETURN_LOG(napi_create_object(env, &result) == napi_ok, "napi_create_object failed");
     if (status != napi_ok || promiseCtx->errCode != napi_ok) {
         promiseCtx->status = promiseCtx->errCode == napi_ok ? MSERR_INVALID_VAL : promiseCtx->errCode;
         MEDIA_LOGI("Resolve meta data failed");
@@ -328,6 +329,7 @@ void AVMetadataExtractorNapi::HandleMetaDataResult(napi_env env, AVMetadataExtra
     napi_get_undefined(env, &tracks);
     napi_get_undefined(env, &gltfOffset);
     std::shared_ptr<Meta> metadata = promiseCtx->metadata_;
+    CHECK_AND_RETURN_LOG(metadata != nullptr, "metadata is nullptr!");
     std::string notFoundKey = {};
     for (const auto &key : g_Metadata) {
         if (metadata->Find(key) == metadata->end()) {
@@ -494,6 +496,7 @@ void AVMetadataExtractorNapi::FetchArtPictureComplete(napi_env env, napi_status 
 
     MEDIA_LOGI("FetchArtPictureComplete In");
     auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+    CHECK_AND_RETURN_LOG(context != nullptr, "Invalid context.");
 
     if (status == napi_ok && context->errCode == napi_ok) {
         result = Media::PixelMapNapi::CreatePixelMap(env, context->artPicture_);
@@ -600,7 +603,6 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimes(napi_env env, napi_call
     if (fetchRes != MSERR_OK) {
         ThrowError(env, MSERR_EXT_API9_SERVICE_DIED, "Service died.");
     }
-    asyncCtx.release();
     return result;
 }
 
@@ -655,7 +657,6 @@ napi_value AVMetadataExtractorNapi::JsFetchFramesAtTimesWithTimeout(napi_env env
     if (fetchRes != MSERR_OK) {
         ThrowError(env, MSERR_EXT_API9_SERVICE_DIED, "Service died.");
     }
-    asyncCtx.release();
     return result;
 }
 
@@ -761,10 +762,11 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTimeWithTimeout(napi_env env, 
     CHECK_AND_RETURN_RET_LOG(asyncCtx, result, "AVMetadataExtractorAsyncContext is invalid");
     asyncCtx->innerHelper_ = extractor->helper_;
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
-    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     CHECK_AND_RETURN_RET(
         extractor->CheckParamsOfJsFetchFrameAtTimeWithTimeout(env, args, maxArgs, asyncCtx) == MSERR_OK, result);
-
+    
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsFetchFrameAtTimeWithTimeout", NAPI_AUTO_LENGTH, &resource);
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void *data) {
@@ -1178,6 +1180,7 @@ void AVMetadataExtractorNapi::GetTimeByFrameIndexComplete(napi_env env, napi_sta
 {
     napi_value result = nullptr;
     auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+    CHECK_AND_RETURN_LOG(context != nullptr, "Invalid context.");
 
     if (status == napi_ok && context->errCode == napi_ok) {
         napi_create_int64(env, context->timeStamp_, &result);
@@ -1242,6 +1245,7 @@ void AVMetadataExtractorNapi::GetFrameIndexByTimeComplete(napi_env env, napi_sta
 {
     napi_value result = nullptr;
     auto context = static_cast<AVMetadataExtractorAsyncContext*>(data);
+    CHECK_AND_RETURN_LOG(context != nullptr, "Invalid context.");
 
     if (status == napi_ok && context->errCode == napi_ok) {
         napi_create_uint32(env, context->index_, &result);

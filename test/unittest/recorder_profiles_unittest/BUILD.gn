@@ -81,6 +81,7 @@ ohos_unittest("recorder_profiles_xml_parser_unittest") {
   external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libprivacy_sdk",
+    "access_token:libtokenid_sdk",
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
     "av_codec:av_codec_client",

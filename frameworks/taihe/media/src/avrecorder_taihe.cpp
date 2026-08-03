@@ -2267,8 +2267,14 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::AddWatermarkTask(
 int32_t AVRecorderImpl::CreateWatermarkBuffer(std::shared_ptr<PixelMap> &pixelMap,
     int32_t pixelMapWidth, int32_t pixelMapHeight, std::shared_ptr<OHOS::Media::AVBuffer> &buffer)
 {
-    int32_t dataSize = pixelMapHeight * pixelMap->GetRowStride();
-    CHECK_AND_RETURN_RET_LOG(dataSize > 0 && dataSize <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL, "Invalid data size");
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, MSERR_INVALID_VAL, "pixelMap is nullptr");
+    CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapWidth > 0, MSERR_INVALID_VAL,
+        "Invalid watermark dimensions: width=%{public}d, height=%{public}d", pixelMapWidth, pixelMapHeight);
+    int32_t rowStride = pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(rowStride > 0 && pixelMapHeight <= MAX_WATERMARK_SIZE / rowStride,
+        MSERR_INVALID_VAL, "Invalid data size: rowStride=%{public}d, height=%{public}d", rowStride, pixelMapHeight);
+    CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixels() != nullptr, MSERR_INVALID_VAL, "pixelMap pixels is nullptr");
+    int32_t dataSize = pixelMapHeight * rowStride;
 
     std::vector<uint8_t> dataBuffer(dataSize);
     errno_t err = memcpy_s(dataBuffer.data(), dataSize, pixelMap->GetPixels(), dataSize);

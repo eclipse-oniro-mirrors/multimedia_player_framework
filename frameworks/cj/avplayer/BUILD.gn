@@ -30,6 +30,7 @@ ohos_shared_library("cj_avplayer_ffi") {
     cfi_cross_dso = true
     debug = false
   }
+  branch_protector_ret = "pac_ret"
 
   include_dirs = [
     "$MEDIA_ROOT_DIR/frameworks/cj/avplayer",
@@ -66,6 +67,7 @@ ohos_shared_library("cj_avplayer_ffi") {
     "qos_manager:qos",
     "graphic_surface:surface",
     "c_utils:utils",
+    "libuv:uv",
   ]
 
   cflags = [

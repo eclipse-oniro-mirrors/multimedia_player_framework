@@ -47,8 +47,9 @@ function CreateAVImageGeneratorSync(): Optional<AVImageGenerator>;
 @gen_promise("createAVPlayer")
 function CreateAVPlayerSync(): Optional<AVPlayer>;
 
-@gen_promise("createAVAdsController")
 function CreateAVAdsControllerSync(avplayer: AVPlayer): Optional<AVAdsController>;
+@rename("createAVAdsController")
+@promise function CreateAVAdsControllerRetPromise(avplayer: AVPlayer): Optional<AVAdsController>;
 
 @gen_async("createAVRecorder")
 @gen_promise("createAVRecorder")
@@ -83,9 +84,11 @@ function CreateMediaSourceWithUrl(url: String, headers: Optional<@record Map<Str
 function CreateMediaSourceWithStreamData(streams: Array<MediaStream>): Optional<MediaSource>;
 function CreateMediaSourceWithFd(fd: AVFileDescriptor): Optional<MediaSource>;
 function CreateMediaSourceWithDataSource(dataSrc: AVDataSrcDescriptor): Optional<MediaSource>;
-@gen_async("createMediaSourceWithDirectory")
-@gen_promise("createMediaSourceWithDirectory")
 function CreateMediaSourceWithDirectorySync(directoryPath: String): Optional<MediaSource>;
+@rename("createMediaSourceWithDirectory")
+@async function CreateMediaSourceWithDirectoryWithAsyncCallback(directoryPath: String): Optional<MediaSource>;
+@rename("createMediaSourceWithDirectory")
+@promise function CreateMediaSourceWithDirectoryRetPromise(directoryPath: String): Optional<MediaSource>;
 
 @gen_promise("reportAVScreenCaptureUserChoice")
 function ReportAVScreenCaptureUserChoiceSync(sessionId: i32, choice: String): void;
@@ -714,8 +717,9 @@ interface AVAdsController {
     OnAdsListenerAdsCompleted(callback: (adsId: String) => void): void;
     OffAdsListenerAdsCompleted(callback: Optional<(adsId: String) => void>): void;
 
-    @gen_promise("addAdsMediaSource")
     AddAdsMediaSourceSync(src: MediaSource, startMs: i32): String;
+    @rename("addAdsMediaSource")
+ 	@promise AddAdsMediaSourceRetPromise(src: MediaSource, startMs: i32): String;
 
     RemoveAdsMediaSource(id: String): void;
 
@@ -1386,9 +1390,11 @@ enum AVDownloadTaskState: i32 {
     ERROR = 6
 }
 
-@gen_async("createAVDownloaderManager")
-@gen_promise("createAVDownloaderManager")
 function CreateAVDownloaderManagerSync(): Optional<AVDownloaderManager>;
+@rename("createAVDownloaderManager")
+@async function CreateAVDownloaderManagerWithAsyncCallback(): Optional<AVDownloaderManager>;
+@rename("createAVDownloaderManager")
+@promise function CreateAVDownloaderManagerRetPromise(): Optional<AVDownloaderManager>;
 
 interface AVDownloaderManager {
     AllowsCellularAccess(value: bool): void;

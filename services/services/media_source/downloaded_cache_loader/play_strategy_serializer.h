@@ -53,6 +53,18 @@ public:
                              Plugins::TrackSelectionFilter& filter);
 
 private:
+    static void SerializePlayStrategy(const Plugins::PlayStrategy& strategy, std::vector<uint8_t>& output);
+    static bool SerializeTrackSelectionFilter(const Plugins::TrackSelectionFilter& filter,
+        std::vector<uint8_t>& output);
+    static bool WriteStringList(std::vector<uint8_t>& output, const std::vector<std::string>& list,
+        const char* fieldName);
+    static bool DeserializePlayStrategy(const std::vector<uint8_t>& input, size_t& offset,
+        Plugins::PlayStrategy& strategy);
+    static bool DeserializeTrackSelectionFilter(const std::vector<uint8_t>& input, size_t& offset,
+        Plugins::TrackSelectionFilter& filter);
+    static bool ReadStringList(const std::vector<uint8_t>& input, size_t& offset,
+        std::vector<std::string>& list, const char* fieldName);
+
     static constexpr size_t BOOL_SIZE = 1;
     static constexpr size_t INT32_SIZE = 4;
     static constexpr size_t UINT32_SIZE = 4;

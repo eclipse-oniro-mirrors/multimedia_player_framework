@@ -12,7 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
+
 #include <cmath>
 #include <iostream>
 #include "aw_common.h"
@@ -23,23 +23,22 @@
 #include "screencapturekeyboardprivacyprotected_fuzzer.h"
 #include "test_template.h"
 #include "i_standard_screen_capture_service.h"
-#include "i_screen_capture_service.h"
 #include "screen_capture_server.h"
- 
+
 using namespace std;
 using namespace OHOS;
 using namespace Media;
- 
+
 namespace OHOS {
 namespace Media {
 ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyProtectedFuzzer()
 {
 }
- 
+
 ScreenCaptureKeyboardPrivacyProtectedFuzzer::~ScreenCaptureKeyboardPrivacyProtectedFuzzer()
 {
 }
- 
+
 void SetConfig(AVScreenCaptureConfig &config)
 {
     AudioCaptureInfo miccapinfo = {
@@ -69,22 +68,17 @@ void SetConfig(AVScreenCaptureConfig &config)
         .videoInfo = videoinfo,
     };
 }
- 
- 
+
+
 bool ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyProtected(uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
-    std::shared_ptr<IScreenCaptureService> tempServer_ = ScreenCaptureServer::Create();
-    if (tempServer_ == nullptr) {
+    screenCaptureServer_ = MakeScreenCaptureServerShared();
+    if (!screenCaptureServer_) {
         return 0;
     }
-    screenCaptureServer_ = std::static_pointer_cast<ScreenCaptureServer>(tempServer_);
-    if (screenCaptureServer_ == nullptr || data == nullptr) {
-        return 0;
-    }
-    // set random data
     g_baseFuzzData = data;
     g_baseFuzzSize = size;
     g_baseFuzzPos = 0;
@@ -109,16 +103,18 @@ bool ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyPr
     sleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
+    screenCaptureServer_->Release();
+    screenCaptureServer_ = nullptr;
     return true;
 }
 } // namespace Media
- 
+
 bool ScreenCaptureKeyboardPrivacyProtected(uint8_t *data, size_t size)
 {
     if (data == nullptr) {
         return true;
     }
- 
+
     if (size < sizeof(int32_t)) {
         return true;
     }
@@ -126,7 +122,7 @@ bool ScreenCaptureKeyboardPrivacyProtected(uint8_t *data, size_t size)
     return testScreenCapture.ScreenCaptureKeyboardPrivacyProtected(data, size);
 }
 } // namespace OHOS
- 
+
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)
 {

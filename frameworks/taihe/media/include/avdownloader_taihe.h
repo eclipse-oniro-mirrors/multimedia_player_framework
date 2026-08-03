@@ -15,6 +15,7 @@
 #ifndef AVDOWNLOADER_TAIHE_H
 #define AVDOWNLOADER_TAIHE_H
 
+#include <functional>
 #include <mutex>
 #include "av_downloader_manager.h"
 #include "avdownloader_callback_taihe.h"
@@ -60,6 +61,14 @@ public:
     void ClearCallbackReference(const std::string &callbackName);
 
 private:
+    std::shared_ptr<OHOS::Media::AVDownloaderManager> GetManagerLocked();
+    bool TaskIdExistsLocked(const std::string &taskIdStr);
+    void RemoveTaskStateLocked(const std::string &taskIdStr);
+    void ClearAllTaskStateLocked();
+    void ApplyToAllTasks(const char *actionName,
+        const std::shared_ptr<OHOS::Media::AVDownloaderManager> &manager,
+        std::function<int32_t(const std::shared_ptr<OHOS::Media::AVDownloaderManager>&, const std::string &)> action);
+
     std::shared_ptr<OHOS::Media::AVDownloaderManager> downloaderManager_ = nullptr;
     std::shared_ptr<AVDownloaderCallback> downloaderCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;

@@ -102,7 +102,7 @@ optional<SoundPool> CreateParallelSoundPoolSync(int32_t maxStreams,
     return optional<SoundPool>(std::in_place, res);
 }
 
-int32_t SoundPoolImpl::PlaySync(int32_t soundID, optional_view<PlayParameters> params)
+TAIHE_FUNC_PROTOTYPE(int32_t, SoundPoolImpl::Play, (int32_t soundID, optional_view<PlayParameters> params))
 {
     MediaTrace trace("SoundPool::TaihePlay");
     MEDIA_LOGI("SoundPoolTaihe::TaihePlay");
@@ -131,8 +131,12 @@ int32_t SoundPoolImpl::PlaySync(int32_t soundID, optional_view<PlayParameters> p
         return 0;
     }
 }
+TAIHE_OVERLOAD_IMPLEMENT(Play,
+    TAIHE_FUNC_PROMISE(int32_t, SoundPoolImpl::Play, (int32_t soundID, optional_view<PlayParameters> params)),
+    (soundID, params)
+)
 
-int32_t SoundPoolImpl::PlayWithoutParam(int32_t soundID)
+TAIHE_FUNC_PROTOTYPE(int32_t, SoundPoolImpl::PlayWithoutParam, (int32_t soundID))
 {
     MediaTrace trace("SoundPool::TaihePlayWithoutParam");
     MEDIA_LOGI("SoundPoolTaihe::TaihePlayWithoutParam");
@@ -159,8 +163,11 @@ int32_t SoundPoolImpl::PlayWithoutParam(int32_t soundID)
         return 0;
     }
 }
+TAIHE_OVERLOAD_IMPLEMENT(PlayWithoutParam,
+    TAIHE_FUNC_ASYNC(int32_t, SoundPoolImpl::PlayWithoutParam, (int32_t soundID)), (soundID)
+)
 
-int32_t SoundPoolImpl::PlayWithParam(int32_t soundID, PlayParameters const& params)
+TAIHE_FUNC_PROTOTYPE(int32_t, SoundPoolImpl::PlayWithParam, (int32_t soundID, PlayParameters const& params))
 {
     MediaTrace trace("SoundPool::TaihePlayWithParam");
     MEDIA_LOGI("SoundPoolTaihe::TaihePlayWithParam");
@@ -190,6 +197,10 @@ int32_t SoundPoolImpl::PlayWithParam(int32_t soundID, PlayParameters const& para
         return 0;
     }
 }
+TAIHE_OVERLOAD_IMPLEMENT(PlayWithParam,
+    TAIHE_FUNC_ASYNC(int32_t, SoundPoolImpl::PlayWithParam, (int32_t soundID, PlayParameters const& params)),
+    (soundID, params)
+)
 
 int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params, PlayParams &playParameters)
 {
@@ -222,7 +233,7 @@ int32_t SoundPoolImpl::ParserPlayOption(const PlayParameters &params, PlayParams
     return MSERR_OK;
 }
 
-int32_t SoundPoolImpl::LoadSync(string_view uri)
+TAIHE_FUNC_PROTOTYPE(int32_t, SoundPoolImpl::Load, (string_view uri))
 {
     MediaTrace trace("SoundPool::TaiheLoad");
     MEDIA_LOGI("SoundPoolNapi::TaiheLoad");
@@ -236,8 +247,14 @@ int32_t SoundPoolImpl::LoadSync(string_view uri)
     }
     return soundId;
 }
+TAIHE_OVERLOAD_IMPLEMENT(Load,
+    TAIHE_FUNC_ASYNC(int32_t, SoundPoolImpl::Load, (string_view uri)), (uri)
+)
+TAIHE_OVERLOAD_IMPLEMENT(Load,
+    TAIHE_FUNC_PROMISE(int32_t, SoundPoolImpl::Load, (string_view uri)), (uri)
+)
 
-int32_t SoundPoolImpl::LoadWithFdSync(int32_t fd, int64_t offset, int64_t length)
+TAIHE_FUNC_PROTOTYPE(int32_t, SoundPoolImpl::LoadWithFd, (int32_t fd, int64_t offset, int64_t length))
 {
     MediaTrace trace("SoundPool::TaiheLoad");
     MEDIA_LOGI("SoundPoolNapi::TaiheLoad");
@@ -254,8 +271,16 @@ int32_t SoundPoolImpl::LoadWithFdSync(int32_t fd, int64_t offset, int64_t length
     }
     return soundId;
 }
+TAIHE_OVERLOAD_IMPLEMENT(LoadWithFd,
+    TAIHE_FUNC_ASYNC(int32_t, SoundPoolImpl::LoadWithFd, (int32_t fd, int64_t offset, int64_t length)),
+        (fd, offset, length)
+)
+TAIHE_OVERLOAD_IMPLEMENT(LoadWithFd,
+    TAIHE_FUNC_PROMISE(int32_t, SoundPoolImpl::LoadWithFd, (int32_t fd, int64_t offset, int64_t length)),
+        (fd, offset, length)
+)
 
-void SoundPoolImpl::StopSync(int32_t streamID)
+TAIHE_FUNC_PROTOTYPE(void, SoundPoolImpl::Stop, (int32_t streamID))
 {
     MediaTrace trace("SoundPool::TaiheStop");
     MEDIA_LOGI("SoundPoolNapi::TaiheStop");
@@ -270,8 +295,14 @@ void SoundPoolImpl::StopSync(int32_t streamID)
         MEDIA_LOGI("The taihe thread of stop finishes execution and returns");
     }
 }
+TAIHE_OVERLOAD_IMPLEMENT(Stop,
+    TAIHE_FUNC_ASYNC(void, SoundPoolImpl::Stop, (int32_t streamID)), (streamID)
+)
+TAIHE_OVERLOAD_IMPLEMENT(Stop,
+    TAIHE_FUNC_PROMISE(void, SoundPoolImpl::Stop, (int32_t streamID)), (streamID)
+)
 
-void SoundPoolImpl::SetLoopSync(int32_t streamID, int32_t loop)
+TAIHE_FUNC_PROTOTYPE(void, SoundPoolImpl::SetLoop, (int32_t streamID, int32_t loop))
 {
     MediaTrace trace("SoundPool::TaiheSetLoop");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetLoop");
@@ -286,8 +317,14 @@ void SoundPoolImpl::SetLoopSync(int32_t streamID, int32_t loop)
         MEDIA_LOGI("The Taihe thread of SetLoop finishes execution and returns");
     }
 }
+TAIHE_OVERLOAD_IMPLEMENT(SetLoop,
+    TAIHE_FUNC_ASYNC(void, SoundPoolImpl::SetLoop, (int32_t streamID, int32_t loop)), (streamID, loop)
+)
+TAIHE_OVERLOAD_IMPLEMENT(SetLoop,
+    TAIHE_FUNC_PROMISE(void, SoundPoolImpl::SetLoop, (int32_t streamID, int32_t loop)), (streamID, loop)
+)
 
-void SoundPoolImpl::SetPrioritySync(int32_t streamID, int32_t priority)
+TAIHE_FUNC_PROTOTYPE(void, SoundPoolImpl::SetPriority, (int32_t streamID, int32_t priority))
 {
     MediaTrace trace("SoundPool::TaiheSetPriority");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetPriority");
@@ -304,8 +341,15 @@ void SoundPoolImpl::SetPrioritySync(int32_t streamID, int32_t priority)
         MEDIA_LOGI("The taihe thread of SetPriority finishes execution and returns");
     }
 }
+TAIHE_OVERLOAD_IMPLEMENT(SetPriority,
+    TAIHE_FUNC_ASYNC(void, SoundPoolImpl::SetPriority, (int32_t streamID, int32_t priority)), (streamID, priority)
+)
+TAIHE_OVERLOAD_IMPLEMENT(SetPriority,
+    TAIHE_FUNC_PROMISE(void, SoundPoolImpl::SetPriority, (int32_t streamID, int32_t priority)), (streamID, priority)
+)
 
-void SoundPoolImpl::SetRateSync(int32_t streamID, ::ohos::multimedia::audio::AudioRendererRate rate)
+TAIHE_FUNC_PROTOTYPE(void, SoundPoolImpl::SetRate,
+    (int32_t streamID, ::ohos::multimedia::audio::AudioRendererRate rate))
 {
     MediaTrace trace("SoundPool::TaiheSetRate");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetRate");
@@ -322,8 +366,18 @@ void SoundPoolImpl::SetRateSync(int32_t streamID, ::ohos::multimedia::audio::Aud
         MEDIA_LOGI("The taihe thread of SetRate finishes execution and returns");
     }
 }
+TAIHE_OVERLOAD_IMPLEMENT(SetRate,
+    TAIHE_FUNC_ASYNC(
+        void, SoundPoolImpl::SetRate,
+        (int32_t streamID, ::ohos::multimedia::audio::AudioRendererRate rate)), (streamID, rate)
+)
+TAIHE_OVERLOAD_IMPLEMENT(SetRate,
+    TAIHE_FUNC_PROMISE(
+        void, SoundPoolImpl::SetRate,
+        (int32_t streamID, ::ohos::multimedia::audio::AudioRendererRate rate)), (streamID, rate)
+)
 
-void SoundPoolImpl::SetVolumeSync(int32_t streamID, double leftVolume, double rightVolume)
+TAIHE_FUNC_PROTOTYPE(void, SoundPoolImpl::SetVolume, (int32_t streamID, double leftVolume, double rightVolume))
 {
     MediaTrace trace("SoundPool::TaiheSetVolume");
     MEDIA_LOGI("SoundPoolNapi::TaiheSetVolume");
@@ -339,6 +393,16 @@ void SoundPoolImpl::SetVolumeSync(int32_t streamID, double leftVolume, double ri
         MEDIA_LOGI("The taihe thread of SetVolume finishes execution and returns");
     }
 }
+TAIHE_OVERLOAD_IMPLEMENT(SetVolume,
+    TAIHE_FUNC_ASYNC(
+        void, SoundPoolImpl::SetVolume,
+        (int32_t streamID, double leftVolume, double rightVolume)), (streamID, leftVolume, rightVolume)
+)
+TAIHE_OVERLOAD_IMPLEMENT(SetVolume,
+    TAIHE_FUNC_PROMISE(
+        void, SoundPoolImpl::SetVolume,
+        (int32_t streamID, double leftVolume, double rightVolume)), (streamID, leftVolume, rightVolume)
+)
 
 void SoundPoolImpl::SetInterruptMode(::soundPool::InterruptMode interruptMode)
 {
@@ -347,7 +411,7 @@ void SoundPoolImpl::SetInterruptMode(::soundPool::InterruptMode interruptMode)
     soundPool_->SetInterruptMode(static_cast<OHOS::Media::InterruptMode>(interruptMode.get_value()));
 }
 
-void SoundPoolImpl::UnloadSync(int32_t soundID)
+TAIHE_FUNC_PROTOTYPE(void, SoundPoolImpl::Unload, (int32_t soundID))
 {
     MediaTrace trace("SoundPool::TaiheUnload");
     MEDIA_LOGI("SoundPoolNapi::TaiheUnload");
@@ -363,8 +427,14 @@ void SoundPoolImpl::UnloadSync(int32_t soundID)
             soundID);
     }
 }
+TAIHE_OVERLOAD_IMPLEMENT(Unload,
+    TAIHE_FUNC_ASYNC(void, SoundPoolImpl::Unload, (int32_t soundID)), (soundID)
+)
+TAIHE_OVERLOAD_IMPLEMENT(Unload,
+    TAIHE_FUNC_PROMISE(void, SoundPoolImpl::Unload, (int32_t soundID)), (soundID)
+)
 
-void SoundPoolImpl::ReleaseSync()
+TAIHE_FUNC_PROTOTYPE(void, SoundPoolImpl::Release, ())
 {
     MediaTrace trace("SoundPool::TaiheRelease");
     MEDIA_LOGI("SoundPoolNapi::TaiheRelease");
@@ -374,6 +444,8 @@ void SoundPoolImpl::ReleaseSync()
     CHECK_AND_RETURN_LOG(callbackTaihe_ != nullptr, "release callbackTaihe_ is nullptr!");
     CancelCallback(callbackTaihe_);
 }
+TAIHE_OVERLOAD_IMPLEMENT(Release, TAIHE_FUNC_ASYNC(void, SoundPoolImpl::Release, ()), ())
+TAIHE_OVERLOAD_IMPLEMENT(Release, TAIHE_FUNC_PROMISE(void, SoundPoolImpl::Release, ()), ())
 
 void SoundPoolImpl::OnError(callback_view<void(uintptr_t)> callback)
 {

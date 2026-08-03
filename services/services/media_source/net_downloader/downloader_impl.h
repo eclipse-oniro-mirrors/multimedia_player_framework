@@ -95,7 +95,7 @@ private:
     bool IsNetworkAllowDownload(MediaSourceUtils::NetConnType newType);       // 检查当前网络允许下载
 
     uint64_t downloaderId_;
-    uint64_t taskId_;
+    std::atomic<uint64_t> taskId_;
     std::string url_;
     std::string outputPath_;
     std::map<std::string, std::string> header_;
@@ -107,18 +107,16 @@ private:
     std::shared_ptr<DownloadTask> task_;
     std::unique_ptr<MessageQueue> messageQueue_;
     std::unique_ptr<MessageQueue> schedulerQueue_;      // 任务调度队列
-    std::thread schedulerThread_;       // 任务调度线程
 
     mutable std::mutex mutex_;
     std::mutex queueMutex_;     // 队列锁
+    std::mutex taskMutex_;      // task_ 和 pendingTaskToRelease_ 保护锁
     std::queue<QueuedTaskInfo> taskQueue_;  // 任务队列
     bool urlSet_;
     bool pathSet_;
-    bool messageQueueStarted_;      // 消息队列状态位
     std::shared_ptr<DownloadTask> pendingTaskToRelease_;        // 待释放任务
-    std::atomic<bool> schedulerRunning_;  // 任务调度线程状态
-    int32_t totalTaskCount_;
-    int32_t completedTaskCount_;
+    std::atomic<int32_t> totalTaskCount_;
+    std::atomic<int32_t> completedTaskCount_;
 };
 
 } // namespace MediaDownload

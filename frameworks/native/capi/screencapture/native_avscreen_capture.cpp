@@ -15,6 +15,7 @@
 
 #include "native_avscreen_capture.h"
 
+#include <atomic>
 #include <mutex>
 #include <queue>
 #include <shared_mutex>
@@ -61,7 +62,7 @@ struct ScreenCaptureObject : public OH_AVScreenCapture {
 
     const std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<NativeScreenCaptureCallback> callback_ = nullptr;
-    bool isStart = false;
+    std::atomic<bool> isStart{false};
 };
 
 struct ScreenCaptureUserSelectionObject : public OH_AVScreenCapture_UserSelectionInfo {
@@ -934,6 +935,9 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
     int32_t *fence, int64_t *timestamp, struct OH_Rect *region)
 {
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, nullptr, "input capture is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(fence != nullptr, nullptr, "input fence is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(timestamp != nullptr, nullptr, "input timestamp is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(region != nullptr, nullptr, "input region is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr, nullptr, "screenCapture_ is null");
@@ -1276,7 +1280,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
     }
     CHECK_AND_RETURN_RET_LOG(vec.size() >= 0, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window content invalid!");
     int32_t ret = screenCaptureObj->screenCapture_->SkipPrivacyMode(vec);
-    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
+    CHECK_AND_RETURN_RET_LOG(ret != MSERR_UNKNOWN_UNSUPPORT, AV_SCREEN_CAPTURE_ERR_UNSUPPORT,
         "SkipPrivacyMode failed, ret: %{public}d", ret);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
                              "SkipPrivacyMode failed!");

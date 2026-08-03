@@ -45,18 +45,21 @@ AVRecorderCallback::~AVRecorderCallback()
 
 void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(AVRecorderEvent::EVENT_ERROR) == refMap_.end()) {
-        MEDIA_LOGW("can not find error callback!");
-        return;
-    }
+    AVRecordTaiheCallback *cb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(AVRecorderEvent::EVENT_ERROR) == refMap_.end()) {
+            MEDIA_LOGW("can not find error callback!");
+            return;
+        }
 
-    AVRecordTaiheCallback *cb = new(std::nothrow) AVRecordTaiheCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_ERROR);
-    cb->callbackName = AVRecorderEvent::EVENT_ERROR;
-    cb->errorCode = errCode;
-    cb->errorMsg = msg;
+        cb = new(std::nothrow) AVRecordTaiheCallback();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_ERROR);
+        cb->callbackName = AVRecorderEvent::EVENT_ERROR;
+        cb->errorCode = errCode;
+        cb->errorMsg = msg;
+    }
     OnTaiheErrorCallBack(cb);
 }
 
@@ -86,20 +89,22 @@ void AVRecorderCallback::OnTaiheErrorCallBack(AVRecordTaiheCallback *taiheCb) co
 
 void AVRecorderCallback::SendStateCallback(const std::string &state, const OHOS::Media::StateChangeReason &reason)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    currentState_ = state;
-    if (refMap_.find(AVRecorderEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("can not find statechange callback!");
-        return;
+    AVRecordTaiheCallback *cb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        currentState_ = state;
+        if (refMap_.find(AVRecorderEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
+            MEDIA_LOGW("can not find statechange callback!");
+            return;
+        }
+
+        cb = new(std::nothrow) AVRecordTaiheCallback();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_STATE_CHANGE);
+        cb->callbackName = AVRecorderEvent::EVENT_STATE_CHANGE;
+        cb->reason = reason;
+        cb->state = state;
     }
-
-    AVRecordTaiheCallback *cb = new(std::nothrow) AVRecordTaiheCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_STATE_CHANGE);
-    cb->callbackName = AVRecorderEvent::EVENT_STATE_CHANGE;
-    cb->reason = reason;
-    cb->state = state;
-
     OnTaiheStateCallBack(cb);
 }
 
@@ -183,35 +188,41 @@ void AVRecorderCallback::OnTaiheAudioCaptureChangeCallback(AVRecordTaiheCallback
 void AVRecorderCallback::SendAudioCaptureChangeCallback(const OHOS::Media::AudioRecorderChangeInfo
     &audioRecorderChangeInfo)
 {
-    MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is start");
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("can not find audioCaptureChange callback");
-        return;
-    }
+    AVRecordTaiheCallback *cb = nullptr;
+    {
+        MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is start");
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) == refMap_.end()) {
+            MEDIA_LOGW("can not find audioCaptureChange callback");
+            return;
+        }
 
-    AVRecordTaiheCallback *cb = new(std::nothrow) AVRecordTaiheCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE);
-    cb->callbackName = AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE;
-    cb->audioRecorderChangeInfo = audioRecorderChangeInfo;
+        cb = new(std::nothrow) AVRecordTaiheCallback();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE);
+        cb->callbackName = AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE;
+        cb->audioRecorderChangeInfo = audioRecorderChangeInfo;
+    }
     OnTaiheAudioCaptureChangeCallback(cb);
 }
 
 void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE) == refMap_.end()) {
-        MEDIA_LOGW("can not find PhotoAssertAvailable callback");
-        return;
-    }
-
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-    AVRecordTaiheCallback *cb = new(std::nothrow) AVRecordTaiheCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
-    cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
-    cb->uri = uri;
+    AVRecordTaiheCallback *cb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE) == refMap_.end()) {
+            MEDIA_LOGW("can not find PhotoAssertAvailable callback");
+            return;
+        }
+
+        cb = new(std::nothrow) AVRecordTaiheCallback();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
+        cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
+        cb->uri = uri;
+    }
     OnTaihePhotoAssertAvailableCallback(cb);
 #endif
 }

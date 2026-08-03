@@ -50,6 +50,7 @@ constexpr int32_t RATE_UV = 2;
 constexpr int32_t SHIFT_BITS_P010_2_NV12 = 8;
 constexpr double VIDEO_FRAME_RATE = 2000.0;
 constexpr int32_t MAX_WAIT_TIME_SECOND = 3;
+constexpr int32_t S_TO_MS = 1000;
 constexpr uint32_t REQUEST_BUFFER_TIMEOUT = 0; // Requesting buffer overtimes 0ms means no retry
 constexpr uint32_t ERROR_AGAIN_SLEEP_TIME_US = 1000;
 const std::string AV_THUMBNAIL_GENERATOR_INPUT_BUFFER_QUEUE_NAME = "AVThumbnailGeneratorInputBufferQueue";
@@ -631,6 +632,7 @@ std::shared_ptr<AVSharedMemory> AVThumbnailGenerator::FetchFrameAtTime(int64_t t
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    ConfigureReadSample(MAX_WAIT_TIME_SECOND * S_TO_MS);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
     {
@@ -668,8 +670,9 @@ void AVThumbnailGenerator::DfxReport(std::string apiCall)
         return;
     }
     const std::shared_ptr<Meta> globalInfo = mediaDemuxer_->GetGlobalMetaInfo();
+    CHECK_AND_RETURN_LOG(globalInfo != nullptr, "globalInfo is nullptr");
     Plugins::FileType fileType =  Plugins::FileType::UNKNOW;
-    globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+    (void)globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
     metaInfoJson["fileType"] = static_cast<int32_t>(fileType);
     const std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
     size_t trackCount = trackInfos.size();
@@ -720,6 +723,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
         return mpeg4EosBuffer;
     }
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    ConfigureReadSample(MAX_WAIT_TIME_SECOND * S_TO_MS);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     DfxReport("AVImageGenerator call");
     bool fetchFrameRes = false;
@@ -778,6 +782,7 @@ FetchFrameResult AVThumbnailGenerator::FetchFrameYuvWithTimeout(int64_t timeUs, 
         return FetchFrameResult(mpeg4EosBuffer, nullptr, false);
     }
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, FetchFrameResult(nullptr, nullptr, false), "Seek fail");
+    ConfigureReadSample(timeoutMs - seekTimeCostMs);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, FetchFrameResult(nullptr, nullptr, false),
         "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
@@ -821,6 +826,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvs(int64_t timeUs, i
     int64_t realSeekTime = timeUs;
     auto res = SeekToTime(Plugins::Us2Ms(timeUs), static_cast<Plugins::SeekMode>(option), realSeekTime);
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    ConfigureReadSample(MAX_WAIT_TIME_SECOND * S_TO_MS);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
     {
@@ -871,6 +877,7 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuvsWithTimeout(int64_
         return nullptr;
     }
     CHECK_AND_RETURN_RET_LOG(res == Status::OK, nullptr, "Seek fail");
+    ConfigureReadSample(timeoutMs - seekTimeCostMs);
     CHECK_AND_RETURN_RET_LOG(InitDecoder() == Status::OK, nullptr, "FetchFrameAtTime InitDecoder failed.");
     bool fetchFrameRes = false;
     {
@@ -994,8 +1001,16 @@ Status AVThumbnailGenerator::SeekToTime(int64_t timeMs, Plugins::SeekMode option
     return res;
 }
 
+void AVThumbnailGenerator::ConfigureReadSample(uint32_t readSampleTimeoutMs, ReadSampleMode readSampleMode)
+{
+    CHECK_AND_RETURN_LOG(mediaDemuxer_ != nullptr, "Configure failed, mediaDemuxer_ is nullptr");
+    mediaDemuxer_->SetReadSampleMode(readSampleMode);
+    mediaDemuxer_->SetReadSampleTimeout(readSampleTimeoutMs);
+}
+
 void AVThumbnailGenerator::ConvertToAVSharedMemory()
 {
+    CHECK_AND_RETURN_LOG(avBuffer_ != nullptr && avBuffer_->memory_ != nullptr, "avBuffer_ or memory_ is nullptr");
     auto surfaceBuffer = avBuffer_->memory_->GetSurfaceBuffer();
     if (surfaceBuffer != nullptr) {
         auto ret = GetYuvDataAlignStride(surfaceBuffer);
@@ -1138,6 +1153,37 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::GenerateAvBufferFromFCodec()
     return targetAvBuffer;
 }
 
+int32_t AVThumbnailGenerator::CalculateTotalBytesOfAVSharedMemory(size_t baseSize, int32_t width, int32_t height,
+    float bytesPerPixel, int32_t& outputSize)
+{
+    if (width < 0 || height < 0 || bytesPerPixel < 0) {
+        MEDIA_LOGE("Invalid parameters: width=%{public}d|height=%{public}d", width, height);
+        return MSERR_INVALID_VAL;
+    }
+    
+    int32_t pixelCount = 0;
+    if (__builtin_mul_overflow(width, height, &pixelCount)) {
+        MEDIA_LOGE("width * height overflow: width=%{public}d|height=%{public}d", width, height);
+        return MSERR_INVALID_VAL;
+    }
+    
+    if (pixelCount > static_cast<int32_t>(INT32_MAX / bytesPerPixel)) {
+        MEDIA_LOGE("yPlaneSize * bytesPerPixel overflow: pixelCount=%{public}d", pixelCount);
+        return MSERR_INVALID_VAL;
+    }
+    int32_t bytesOfTotalPixel = static_cast<int32_t>(pixelCount * bytesPerPixel);
+    
+    int32_t totalBytes = 0;
+    if (__builtin_add_overflow(baseSize, bytesOfTotalPixel, &totalBytes)) {
+        MEDIA_LOGE("baseSize + bytesOfTotalPixel overflow: baseSize=%{public}zu|bytesOfTotalPixel=%{public}d",
+            baseSize, bytesOfTotalPixel);
+        return MSERR_INVALID_VAL;
+    }
+    
+    outputSize = totalBytes;
+    return MSERR_OK;
+}
+
 int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &surfaceBuffer)
 {
     int32_t width = surfaceBuffer->GetWidth();
@@ -1150,13 +1196,15 @@ int32_t AVThumbnailGenerator::GetYuvDataAlignStride(const sptr<SurfaceBuffer> &s
     }
     MEDIA_LOGD("GetYuvDataAlignStride stride:%{public}d, strideWidth:%{public}d, outputHeight:%{public}d", stride,
                stride, outputHeight);
-
-    fetchedFrameAtTime_ =
-        std::make_shared<AVSharedMemoryBase>(sizeof(OutputFrame) + width * height * BYTES_PER_PIXEL_YUV,
-            AVSharedMemory::Flags::FLAGS_READ_WRITE, "FetchedFrameMemory");
+    
+    int32_t totalBytes = 0;
+    CHECK_AND_RETURN_RET_NOLOG(CalculateTotalBytesOfAVSharedMemory(sizeof(OutputFrame), width, height,
+        BYTES_PER_PIXEL_YUV, totalBytes) == MSERR_OK, MSERR_INVALID_VAL);
+    fetchedFrameAtTime_ = std::make_shared<AVSharedMemoryBase>(totalBytes, AVSharedMemory::Flags::FLAGS_READ_WRITE,
+        "FetchedFrameMemory");
     auto ret = fetchedFrameAtTime_->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Create AVSharedmemory failed, ret:%{public}d", ret);
-    uint8_t *dstPtr = static_cast<uint8_t *>(sizeof(OutputFrame) + fetchedFrameAtTime_->GetBase());
+    uint8_t *dstPtr = static_cast<uint8_t *>(fetchedFrameAtTime_->GetBase() + sizeof(OutputFrame));
     uint8_t *srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr());
     int32_t format = surfaceBuffer->GetFormat();
     if (format == static_cast<int32_t>(GraphicPixelFormat::GRAPHIC_PIXEL_FMT_YCBCR_P010)) {

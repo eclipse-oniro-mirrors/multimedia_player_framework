@@ -20,6 +20,7 @@
 
 #include "avmetadatahelper.h"
 #include "buffer/avsharedmemorybase.h"
+#include "media_dfx.h"
 #include "media_log.h"
 #include "meta/video_types.h"
 #include "meta/any.h"
@@ -123,6 +124,7 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::ExtractMetadata()
     const std::shared_ptr<Meta> globalInfo = mediaDemuxer_->GetGlobalMetaInfo();
     const std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
     collectedMeta_ = GetMetadata(globalInfo, trackInfos);
+    DfxReport("ResolveMetadataMap");
     return collectedMeta_;
 }
 
@@ -137,7 +139,7 @@ Status AVMetaDataCollector::GetVideoTrackId(uint32_t &trackId)
     CHECK_AND_RETURN_RET_LOG(trackCount > 0, Status::ERROR_INVALID_DATA, "GetTargetTrackInfo trackCount is invalid");
     for (size_t index = 0; index < trackCount; index++) {
         std::string trackMime = "";
-        if (!(trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime))) {
+        if (trackInfos[index] == nullptr || !(trackInfos[index]->GetData(Tag::MIME_TYPE, trackMime))) {
             continue;
         }
         if (trackMime.find("video/") == 0) {
@@ -368,6 +370,7 @@ std::string AVMetaDataCollector::ExtractMetadata(int32_t key)
 {
     auto metadata = GetAVMetadata();
     CHECK_AND_RETURN_RET_LOG(collectedMeta_.size() != 0, "", "Failed to call ExtractMetadata");
+    DfxReport("ResolveMetadataKey");
 
     auto it = collectedMeta_.find(key);
     if (it == collectedMeta_.end() || it->second.empty()) {
@@ -420,7 +423,8 @@ std::unordered_map<int32_t, std::string> AVMetaDataCollector::GetMetadata(
     auto it = metadata.tbl_.begin();
     while (it != metadata.tbl_.end()) {
         auto keyNameIt = AVMETA_KEY_TO_X_MAP.find(it->first);
-        if (keyNameIt == AVMETA_KEY_TO_X_MAP.end()) {
+        if (keyNameIt == AVMETA_KEY_TO_X_MAP.end() || it->first == AV_KEY_LOCATION_LONGITUDE ||
+            it->first == AV_KEY_LOCATION_LATITUDE) {
             it++;
             continue;
         }
@@ -733,6 +737,50 @@ void AVMetaDataCollector::Reset()
 void AVMetaDataCollector::Destroy()
 {
     mediaDemuxer_ = nullptr;
+}
+
+void AVMetaDataCollector::SetClientBundleName(std::string appName)
+{
+    appName_ = appName;
+    return;
+}
+
+void AVMetaDataCollector::DfxReport(std::string calledApi)
+{
+    nlohmann::json metaInfoJson;
+    OHOS::Media::MediaEvent event;
+    if (mediaDemuxer_ == nullptr) {
+        std::string events = metaInfoJson.dump();
+        event.MediaKitStatistics("AVMetaDataCollector", appName_, std::to_string(FAKE_POINTER(this)), calledApi,
+            events);
+        return;
+    }
+    const std::shared_ptr<Meta> globalInfo = mediaDemuxer_->GetGlobalMetaInfo();
+    CHECK_AND_RETURN_LOG(globalInfo != nullptr, "globalInfo is nullptr");
+    Plugins::FileType fileType =  Plugins::FileType::UNKNOW;
+    (void)globalInfo->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+    metaInfoJson["fileType"] = static_cast<int32_t>(fileType);
+    if (collectedMeta_.find(AV_KEY_MIME_TYPE) != collectedMeta_.end()) {
+        std::string mimeType = collectedMeta_[AV_KEY_MIME_TYPE];
+        metaInfoJson["fileMimeType"] = mimeType;
+    }
+    
+    const std::vector<std::shared_ptr<Meta>> trackInfos = mediaDemuxer_->GetStreamMetaInfo();
+    size_t trackCount = trackInfos.size();
+    for (size_t index = 0; index < trackCount; index++) {
+        std::shared_ptr<Meta> meta = trackInfos[index];
+        CHECK_AND_RETURN_LOG(meta != nullptr, "DfxReport meta is nullptr");
+        std::string mimeType = "";
+        meta->Get<Tag::MIME_TYPE>(mimeType);
+        if (mimeType.find("video/") == 0) {
+            metaInfoJson["videoTrackMimeType"] = mimeType;
+        }
+        if (mimeType.find("audio/") == 0) {
+            metaInfoJson["audioTrackMimeType"] = mimeType;
+        }
+    }
+    std::string events = metaInfoJson.dump();
+    event.MediaKitStatistics("AVMetaDataCollector", appName_, std::to_string(FAKE_POINTER(this)), calledApi, events);
 }
 }  // namespace Media
 }  // namespace OHOS

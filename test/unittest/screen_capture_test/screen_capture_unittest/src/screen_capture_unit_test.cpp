@@ -1278,7 +1278,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0003, TestSize.Le
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0004, TestSize.Level0)
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_video_configure_0004, TestSize.Level2)
 {
     SetConfig(config_);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_ES;

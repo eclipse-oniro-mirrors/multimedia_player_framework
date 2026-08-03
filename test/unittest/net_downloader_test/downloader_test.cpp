@@ -272,6 +272,22 @@ HWTEST_F(DownloaderTest, SetUrlAfterRelease_001, TestSize.Level0)
     EXPECT_EQ(ret, DOWNLOAD_RET_OK);
 }
 
+HWTEST_F(DownloaderTest, SetOutputPath_PathTraversal_001, TestSize.Level0)
+{
+    auto downloader = DownloaderFactory::CreateDownloader();
+    ASSERT_NE(downloader, nullptr);
+    int32_t ret = downloader->SetOutputPath("/data/../etc/passwd");
+    EXPECT_NE(ret, DOWNLOAD_RET_OK);
+}
+
+HWTEST_F(DownloaderTest, SetOutputPath_PathTraversalInMiddle_001, TestSize.Level0)
+{
+    auto downloader = DownloaderFactory::CreateDownloader();
+    ASSERT_NE(downloader, nullptr);
+    int32_t ret = downloader->SetOutputPath("/data/storage/../../etc/passwd");
+    EXPECT_NE(ret, DOWNLOAD_RET_OK);
+}
+
 } // namespace MediaDownload
 } // namespace Media
 } // namespace OHOS

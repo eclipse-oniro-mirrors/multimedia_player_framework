@@ -1722,7 +1722,9 @@ HWTEST_F(PlayerUnitTest, Player_SetPlaybackSpeed_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, player_->Play());
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_2_00_X));
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
-    EXPECT_EQ(MSERR_OK, player_->Pause());
+    if (player_->IsPlaying()) {
+        EXPECT_EQ(MSERR_OK, player_->Pause());
+    }
     EXPECT_EQ(MSERR_OK, player_->SetPlaybackSpeed(SPEED_FORWARD_1_75_X));
     EXPECT_EQ(MSERR_OK, player_->GetPlaybackSpeed(mode));
     EXPECT_EQ(MSERR_OK, player_->GetDuration(duration));

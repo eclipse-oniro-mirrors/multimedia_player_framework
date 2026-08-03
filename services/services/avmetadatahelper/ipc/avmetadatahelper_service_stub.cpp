@@ -14,9 +14,11 @@
  */
 
 #include "avmetadatahelper_service_stub.h"
+#include "accesstoken_kit.h"
 #include "media_server_manager.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_permission.h"
 #include "media_parcel.h"
 #include "avsharedmemory_ipc.h"
 #include "media_data_source_proxy.h"
@@ -29,6 +31,13 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA, "A
 constexpr uint32_t MAX_MAP_SIZE = 100;
 constexpr int32_t TIMEUS_ARR_MAX_LEN = 4096;
 constexpr int64_t MAX_TIMEOUT_MS = 20000;
+constexpr char FD_URI_PREFIX[] = "fd://";
+
+bool IsFdUri(const std::string &uri)
+{
+    size_t start = uri.find_first_not_of(' ');
+    return start != std::string::npos && uri.compare(start, sizeof(FD_URI_PREFIX) - 1, FD_URI_PREFIX) == 0;
+}
 }
 
 namespace OHOS {
@@ -153,6 +162,11 @@ int AVMetadataHelperServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &d
 
 int32_t AVMetadataHelperServiceStub::SetSource(const std::string &uri, int32_t usage)
 {
+    CHECK_AND_RETURN_RET_LOG(!IsFdUri(uri), MSERR_INVALID_VAL,
+        "fd uri must be transferred through file descriptor IPC");
+    int32_t permissionResult = MediaPermission::CheckReadMediaPermission();
+    CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED,
+        MSERR_USER_NO_PERMISSION, "user does not have READ_MEDIA permission");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->SetSource(uri, usage);
@@ -175,6 +189,8 @@ int32_t AVMetadataHelperServiceStub::SetUrlSource(const std::string &uri,
 
 int32_t AVMetadataHelperServiceStub::SetSource(int32_t fd, int64_t offset, int64_t size, int32_t usage)
 {
+    CHECK_AND_RETURN_RET_LOG(fd > 0 && offset >= 0 && size >= -1, MSERR_INVALID_VAL,
+        "invalid fd source params");
     std::unique_lock<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->SetSource(fd, offset, size, usage);

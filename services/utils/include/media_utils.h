@@ -50,6 +50,10 @@ namespace Media {
     bool __attribute__((visibility("default"))) GetPackageName(const char *key, std::string &value);
     std::unordered_map<std::string, std::string>& __attribute__((visibility("default"))) GetScreenCaptureSystemParam();
     int32_t __attribute__((visibility("default"))) GetAPIVersion();
+    bool __attribute__((visibility("default"))) IsSystemApp();
+    bool __attribute__((visibility("default"))) IsSACalling();
+    bool __attribute__((visibility("default"))) HasSystemPermission();
+    sptr<IRemoteObject> __attribute__((visibility("default"))) GetMediaService();
 }  // namespace Media
 }  // namespace OHOS
 

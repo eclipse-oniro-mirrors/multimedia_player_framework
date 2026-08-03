@@ -68,7 +68,6 @@ public:
 
     void SetResponseHeader(const std::string &key, const std::string &value)
     {
-        std::lock_guard<std::mutex> lock(ctx_->mutex);
         std::string normalizedKey = key;
         std::transform(normalizedKey.begin(), normalizedKey.end(), normalizedKey.begin(), ::tolower);
         ctx_->responseHeaders[normalizedKey] = value;
@@ -103,6 +102,18 @@ public:
     {
         return startPos_;
     }
+
+    int32_t SetOutputPathSimple(const std::string &path)
+    {
+        int64_t startPos = 0;
+        return SetOutputPath(path, 0, startPos);
+    }
+
+    int32_t SetOutputPathSimple(const std::string &path, int64_t resumePos)
+    {
+        int64_t startPos = 0;
+        return SetOutputPath(path, resumePos, startPos);
+    }
 };
 
 class NetworkClientExtTest : public testing::Test {
@@ -128,7 +139,7 @@ HWTEST_F(NetworkClientExtTest, HandleRangeResume_StartPosZero_001, TestSize.Leve
     std::map<std::string, std::string> header;
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
-    (void)client->SetOutputPath(testDir_ + "/handle_range_resume_test.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/handle_range_resume_test.mp4");
     client->SetStartPos(0);
     client->SetDownloadedSize(0);
     
@@ -142,7 +153,7 @@ HWTEST_F(NetworkClientExtTest, HandleRangeResume_DownloadedSizeNonZero_001, Test
     std::map<std::string, std::string> header;
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
-    (void)client->SetOutputPath(testDir_ + "/handle_range_resume_test2.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/handle_range_resume_test2.mp4");
     client->SetStartPos(100);
     client->SetDownloadedSize(50);
     
@@ -156,7 +167,7 @@ HWTEST_F(NetworkClientExtTest, HandleRangeResume_WithContentRange_001, TestSize.
     std::map<std::string, std::string> header;
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
-    (void)client->SetOutputPath(testDir_ + "/handle_range_resume_test3.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/handle_range_resume_test3.mp4");
     client->SetStartPos(100);
     client->SetDownloadedSize(0);
     client->SetResponseHeader("Content-Range", "bytes 100-199/200");
@@ -172,7 +183,7 @@ HWTEST_F(NetworkClientExtTest, WriteData_InvalidFd_001, TestSize.Level0)
     std::map<std::string, std::string> header;
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
-    (void)client->SetOutputPath(testDir_ + "/write_data_test.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/write_data_test.mp4");
     client->SetOutputFd(-1);
     
     char buffer[100] = "test data";
@@ -187,7 +198,7 @@ HWTEST_F(NetworkClientExtTest, WriteData_Success_001, TestSize.Level0)
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     std::string filePath = testDir_ + "/write_data_success_test.mp4";
-    (void)client->SetOutputPath(filePath);
+    (void)client->SetOutputPathSimple(filePath);
     
     char buffer[100] = "test data for write";
     size_t result = client->WriteData(client->GetContext().get(), client.get(), buffer, 100);
@@ -205,7 +216,7 @@ HWTEST_F(NetworkClientExtTest, WriteData_WithProgressCallback_001, TestSize.Leve
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     std::string filePath = testDir_ + "/write_data_progress_test.mp4";
-    (void)client->SetOutputPath(filePath);
+    (void)client->SetOutputPathSimple(filePath);
     
     bool callbackInvoked = false;
     client->SetProgressCallback([&callbackInvoked](int64_t downloadedSize, int64_t totalSize) {
@@ -312,7 +323,7 @@ HWTEST_F(NetworkClientExtTest, CompareAndSetDownloadResult_EqualSizes_001, TestS
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(1024);
-    (void)client->SetOutputPath(testDir_ + "/compare_test.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/compare_test.mp4");
     
     client->CompareAndSetDownloadResult(1024);
     
@@ -328,7 +339,7 @@ HWTEST_F(NetworkClientExtTest, CompareAndSetDownloadResult_MismatchSizes_001, Te
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(1024);
-    (void)client->SetOutputPath(testDir_ + "/mismatch_test.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/mismatch_test.mp4");
     
     client->CompareAndSetDownloadResult(2048);
     
@@ -343,7 +354,7 @@ HWTEST_F(NetworkClientExtTest, CompareAndSetDownloadResult_ServerLarger_001, Tes
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(1024);
-    (void)client->SetOutputPath(testDir_ + "/server_larger_test.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/server_larger_test.mp4");
     
     client->CompareAndSetDownloadResult(2048);
     
@@ -358,7 +369,7 @@ HWTEST_F(NetworkClientExtTest, CompareAndSetDownloadResult_ServerSmaller_001, Te
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(2048);
-    (void)client->SetOutputPath(testDir_ + "/server_smaller_test.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/server_smaller_test.mp4");
     
     client->CompareAndSetDownloadResult(1024);
     
@@ -373,13 +384,12 @@ HWTEST_F(NetworkClientExtTest, Handle416WithoutContentRange_StartPosPositive_001
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(1024);
-    (void)client->SetOutputPath(testDir_ + "/handle416_1.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/handle416_1.mp4");
     
     client->Handle416WithoutContentRange();
     
     auto ctx = client->GetContext();
-    EXPECT_TRUE(ctx->requestSuccess.load());
-    EXPECT_EQ(ctx->totalSize.load(), 1024);
+    EXPECT_FALSE(ctx->requestSuccess.load());
 }
 
 HWTEST_F(NetworkClientExtTest, Handle416WithoutContentRange_StartPosZero_001, TestSize.Level0)
@@ -389,7 +399,7 @@ HWTEST_F(NetworkClientExtTest, Handle416WithoutContentRange_StartPosZero_001, Te
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(0);
-    (void)client->SetOutputPath(testDir_ + "/handle416_2.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/handle416_2.mp4");
     
     client->Handle416WithoutContentRange();
     
@@ -404,7 +414,7 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_WithContentRang
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(2048);
-    (void)client->SetOutputPath(testDir_ + "/process416_1.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/process416_1.mp4");
     client->SetResponseHeader("Content-Range", "bytes 1024-2047/2048");
     
     client->ProcessHttp416RangeNotSatisfiable();
@@ -421,7 +431,7 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_WithContentRang
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(1024);
-    (void)client->SetOutputPath(testDir_ + "/process416_3.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/process416_3.mp4");
     client->SetResponseHeader("Content-Range", "bytes 1024-2047/3000");
     
     client->ProcessHttp416RangeNotSatisfiable();
@@ -437,12 +447,12 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_WithoutContentR
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(500);
-    (void)client->SetOutputPath(testDir_ + "/process416_4.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/process416_4.mp4");
     
     client->ProcessHttp416RangeNotSatisfiable();
     
     auto ctx = client->GetContext();
-    EXPECT_TRUE(ctx->requestSuccess.load());
+    EXPECT_FALSE(ctx->requestSuccess.load());
 }
 
 HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_WithoutContentRange_ZeroStart_001, TestSize.Level0)
@@ -452,7 +462,7 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_WithoutContentR
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(0);
-    (void)client->SetOutputPath(testDir_ + "/process416_5.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/process416_5.mp4");
     
     client->ProcessHttp416RangeNotSatisfiable();
     
@@ -467,7 +477,7 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_InvalidContentR
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(1024);
-    (void)client->SetOutputPath(testDir_ + "/process416_6.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/process416_6.mp4");
     client->SetResponseHeader("Content-Range", "bytes */*");
     
     client->ProcessHttp416RangeNotSatisfiable();
@@ -483,7 +493,7 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_EmptyContentRan
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
     
     client->SetStartPos(1024);
-    (void)client->SetOutputPath(testDir_ + "/process416_7.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/process416_7.mp4");
     client->SetResponseHeader("Content-Range", "");
     
     client->ProcessHttp416RangeNotSatisfiable();
@@ -502,7 +512,7 @@ HWTEST_F(NetworkClientExtTest, WriteData_ErrorCallback_001, TestSize.Level0)
     int fd = open(filePath.c_str(), O_WRONLY | O_CREAT, 0644);
     EXPECT_GE(fd, 0);
     close(fd);
-    (void)client->SetOutputPath(filePath);
+    (void)client->SetOutputPathSimple(filePath);
     
     bool errorCallbackInvoked = false;
     client->SetErrorCallback([&errorCallbackInvoked](DownloadErrorType errorType, int32_t errorCode) {
@@ -520,7 +530,7 @@ HWTEST_F(NetworkClientExtTest, HandleRangeResume_LowerCaseContentRange_001, Test
     std::map<std::string, std::string> header;
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
 
-    (void)client->SetOutputPath(testDir_ + "/range_resume_lowercase.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/range_resume_lowercase.mp4");
     client->SetStartPos(100);
     client->SetDownloadedSize(0);
     client->SetResponseHeader("content-range", "bytes 100-199/200");
@@ -536,7 +546,7 @@ HWTEST_F(NetworkClientExtTest, HandleRangeResume_UpperCaseContentRange_001, Test
     std::map<std::string, std::string> header;
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
 
-    (void)client->SetOutputPath(testDir_ + "/range_resume_uppercase.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/range_resume_uppercase.mp4");
     client->SetStartPos(100);
     client->SetDownloadedSize(0);
     client->SetResponseHeader("CONTENT-RANGE", "bytes 100-199/200");
@@ -552,7 +562,7 @@ HWTEST_F(NetworkClientExtTest, HandleRangeResume_MixedCaseContentRange_001, Test
     std::map<std::string, std::string> header;
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
 
-    (void)client->SetOutputPath(testDir_ + "/range_resume_mixedcase.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/range_resume_mixedcase.mp4");
     client->SetStartPos(100);
     client->SetDownloadedSize(0);
     client->SetResponseHeader("Content-range", "bytes 100-199/200");
@@ -569,7 +579,7 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_LowerCaseConten
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
 
     client->SetStartPos(2048);
-    (void)client->SetOutputPath(testDir_ + "/process416_lowercase.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/process416_lowercase.mp4");
     client->SetResponseHeader("content-range", "bytes 1024-2047/2048");
 
     client->ProcessHttp416RangeNotSatisfiable();
@@ -586,7 +596,7 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_UpperCaseConten
     auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
 
     client->SetStartPos(2048);
-    (void)client->SetOutputPath(testDir_ + "/process416_uppercase.mp4");
+    (void)client->SetOutputPathSimple(testDir_ + "/process416_uppercase.mp4");
     client->SetResponseHeader("CONTENT-RANGE", "bytes 1024-2047/2048");
 
     client->ProcessHttp416RangeNotSatisfiable();
@@ -617,6 +627,55 @@ HWTEST_F(NetworkClientExtTest, RxHeaderCallback_NormalizesHeaderKeyToLowerCase_0
         EXPECT_EQ(it->second, "bytes 0-99/1024");
     }
 }
+
+HWTEST_F(NetworkClientExtTest, SetOutputPath_EmptyPath_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        int32_t ret = client->SetOutputPathSimple("");
+        EXPECT_NE(ret, DOWNLOAD_RET_OK);
+    }
+
+    HWTEST_F(NetworkClientExtTest, SetOutputPath_PathTraversal_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        int32_t ret = client->SetOutputPathSimple("/data/../etc/passwd");
+        EXPECT_NE(ret, DOWNLOAD_RET_OK);
+    }
+
+    HWTEST_F(NetworkClientExtTest, SetOutputPath_RelativePath_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        int32_t ret = client->SetOutputPathSimple("relative/path.mp4");
+        EXPECT_NE(ret, DOWNLOAD_RET_OK);
+    }
+
+    HWTEST_F(NetworkClientExtTest, SetOutputPath_ValidAbsolute_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        int32_t ret = client->SetOutputPathSimple(testDir_ + "/valid_path_test.mp4");
+        EXPECT_EQ(ret, DOWNLOAD_RET_OK);
+        auto ctx = client->GetContext();
+        EXPECT_EQ(ctx->outputPath, testDir_ + "/valid_path_test.mp4");
+    }
+
+    HWTEST_F(NetworkClientExtTest, SetOutputPath_ResumeValid_001, TestSize.Level0)
+    {
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        std::string filePath = testDir_ + "/resume_valid_test.mp4";
+        int32_t ret = client->SetOutputPathSimple(filePath, 100);
+        EXPECT_EQ(ret, DOWNLOAD_RET_OK);
+        EXPECT_GE(client->GetOutputFd(), 0);
+    }
 
 } // namespace MediaDownload
 } // namespace Media

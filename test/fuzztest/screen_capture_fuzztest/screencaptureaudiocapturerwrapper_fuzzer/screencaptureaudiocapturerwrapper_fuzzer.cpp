@@ -126,8 +126,8 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     audioCapturerWrapper->IsRecording();
     audioCapturerWrapper->IsStop();
     audioCapturerWrapper->Stop();
-    audioCapturerWrapper->SetIsInTelCall(GetData<bool>());
     audioCapturerWrapper->SetIsInVoIPCall(GetData<bool>());
+    audioCapturerWrapper->IsInVoIPCall();
     audioCapturerWrapper->Start(appInfo);
     audioCapturerWrapper->ReleaseAudioBuffer();
     audioCapturerWrapper->Stop();

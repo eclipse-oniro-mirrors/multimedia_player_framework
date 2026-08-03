@@ -15,6 +15,8 @@
 #ifndef AVIMAGEGENERATOR_TAIHE_H
 #define AVIMAGEGENERATOR_TAIHE_H
 
+#include <mutex>
+
 #include "ohos.multimedia.media.proj.hpp"
 #include "ohos.multimedia.media.impl.hpp"
 #include "taihe/runtime.hpp"
@@ -39,6 +41,7 @@ public:
         AVImageQueryOptions options, optional_view<OutputSize> param);
     void ReleaseSync();
 private:
+    std::mutex mutex_;
     std::shared_ptr<OHOS::Media::AVMetadataHelper> helper_;
     struct OHOS::Media::AVFileDescriptor fileDescriptor_;
     OHOS::Media::HelperState state_ { OHOS::Media::HelperState::HELPER_STATE_IDLE };

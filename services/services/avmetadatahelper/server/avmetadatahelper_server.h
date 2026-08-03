@@ -87,7 +87,7 @@ private:
     TaskQueue taskQue_;
     std::shared_ptr<IMediaDataSource> dataSrc_ = nullptr;
     bool isLiveStream_ = false;
-    std::atomic<bool> isCanceled_ = false;
+    std::atomic<uint64_t> cancelGeneration_ = 0;
     struct ConfigInfo {
         std::atomic<bool> looping = false;
         float leftVolume = INVALID_VALUE;
@@ -97,7 +97,7 @@ private:
     static constexpr float INVALID_VALUE = 2.0f;
 
     std::shared_ptr<HelperCallback> helperCb_ = nullptr;
-    HelperStates currState_ = HelperStates::HELPER_IDLE;
+    std::atomic<HelperStates> currState_ = HelperStates::HELPER_IDLE;
     std::mutex mutexCb_;
 };
 } // namespace Media

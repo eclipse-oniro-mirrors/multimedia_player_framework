@@ -73,6 +73,7 @@ ohos_shared_library("media_soundpool") {
   ]
 
   external_deps = [
+    "ability_base:session_info",
     "ability_base:want",
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",

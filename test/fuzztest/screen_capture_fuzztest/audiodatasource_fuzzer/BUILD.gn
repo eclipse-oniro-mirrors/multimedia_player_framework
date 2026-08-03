@@ -96,6 +96,7 @@ ohos_fuzztest("AudioDataSourceFuzzTest") {
   }
   deps = [
     "../../../../services/services:media_service",
+    "../../../../services/services/screen_capture:media_service_screen_capture_static",
     "../../../../services/utils:media_service_utils",
   ]
   external_deps = [

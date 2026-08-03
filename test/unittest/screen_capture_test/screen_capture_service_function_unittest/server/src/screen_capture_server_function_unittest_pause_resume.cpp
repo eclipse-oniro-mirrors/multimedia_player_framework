@@ -235,7 +235,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Audio_001, 
     SetRecorderInfo("screen_capture_pause.mp4", recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIX_MODE), MSERR_OK);
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
+    ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
@@ -249,7 +250,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Mic_Only_00
     SetRecorderInfo("screen_capture_pause.mp4", recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::MIC_MODE), MSERR_OK);
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
+    ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
@@ -263,7 +265,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Inner_Only_
     SetRecorderInfo("screen_capture_pause.mp4", recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartFileAudioCapture(AVScreenCaptureMixMode::INNER_MODE), MSERR_OK);
+    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
+    ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
@@ -377,10 +380,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeRecorder_NoRecorder_001, TestSiz
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_PauseButton_001, TestSize.Level2)
 {
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
-    SetMockBuilder(screenCaptureServerInner);
+    auto screenCaptureServerInner = MakeScreenCaptureServer();
+    SetMockBuilder(screenCaptureServerInner.get());
     RecorderInfo recorderInfo{};
     SetValidConfigFile(recorderInfo);
     config_.dataType = DataType::ORIGINAL_STREAM;
@@ -411,10 +412,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_PauseButton_001, TestSize.L
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_ResumeButton_001, TestSize.Level2)
 {
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServerInner;
-    std::shared_ptr<IScreenCaptureService> tempServer = ScreenCaptureServer::Create();
-    screenCaptureServerInner = std::static_pointer_cast<ScreenCaptureServer>(tempServer);
-    SetMockBuilder(screenCaptureServerInner);
+    auto screenCaptureServerInner = MakeScreenCaptureServer();
+    SetMockBuilder(screenCaptureServerInner.get());
     RecorderInfo recorderInfo{};
     SetValidConfigFile(recorderInfo);
     config_.dataType = DataType::ORIGINAL_STREAM;
@@ -447,5 +446,5 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_ResumeButton_001, TestSize.
 
     screenCaptureServerInner->Release();
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

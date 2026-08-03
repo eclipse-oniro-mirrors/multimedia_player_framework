@@ -181,6 +181,9 @@ private:
     static int32_t GetVideoCaptureInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env,
         napi_value args);
     static void AsyncJsReportAVScreenCaptureUserChoice(napi_env env, void *data);
+    static void AsyncJsTaskExecute(napi_env env, void *data);
+    static void QueueAsyncWork(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env,
+        const std::string &opt, napi_async_execute_callback executeCb);
     static int32_t CheckAudioSampleRate(const int32_t &audioSampleRate);
     static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
     static napi_status GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env, napi_value* args);

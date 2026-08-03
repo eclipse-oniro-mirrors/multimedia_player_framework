@@ -70,52 +70,73 @@ struct PlayParameters {
 }
 
 interface SoundPool {
-    @gen_async("load")
-    @gen_promise("load")
     LoadSync(uri: String): i32;
+    @rename("load") @async
+    LoadAsync(uri: String): i32;
+    @rename("load") @promise
+    LoadPromise(uri: String): i32;
 
-    @gen_async("load")
-    @gen_promise("load")
     LoadWithFdSync(fd: i32, offset: i64, length: i64): i32;
+    @rename("load") @async
+    LoadWithFdAsync(fd: i32, offset: i64, length: i64): i32;
+    @rename("load") @promise
+    LoadWithFdPromise(fd: i32, offset: i64, length: i64): i32;
 
-    @gen_promise("play")
     PlaySync(soundID: i32, params: Optional<PlayParameters>): i32;
+    @rename("play") @promise
+    PlayPromise(soundID: i32, params: Optional<PlayParameters>): i32;
 
-    @gen_async("play")
-    PlayWithoutParam(soundID: i32): i32;
+    PlayWithoutParamSync(soundID: i32): i32;
+    @rename("play") @async
+    PlayWithoutParamAsync(soundID: i32): i32;
 
-    @gen_async("play")
-    PlayWithParam(soundID: i32, params: PlayParameters): i32;
+    PlayWithParamSync(soundID: i32, params: PlayParameters): i32;
+    @rename("play") @async
+    PlayWithParamAsync(soundID: i32, params: PlayParameters): i32;
 
-    @gen_async("stop")
-    @gen_promise("stop")
     StopSync(streamID: i32): void;
+    @rename("stop") @async
+    StopAsync(streamID: i32): void;
+    @rename("stop") @promise
+    StopPromise(streamID: i32): void;
 
-    @gen_async("setLoop")
-    @gen_promise("setLoop")
     SetLoopSync(streamID: i32, loop: i32): void;
+    @rename("setLoop") @async
+    SetLoopAsync(streamID: i32, loop: i32): void;
+    @rename("setLoop") @promise
+    SetLoopPromise(streamID: i32, loop: i32): void;
 
-    @gen_async("setRate")
-    @gen_promise("setRate")
     SetRateSync(streamID: i32, rate: audio.AudioRendererRate): void;
+    @rename("setRate") @async
+    SetRateAsync(streamID: i32, rate: audio.AudioRendererRate): void;
+    @rename("setRate") @promise
+    SetRatePromise(streamID: i32, rate: audio.AudioRendererRate): void;
 
-    @gen_async("setPriority")
-    @gen_promise("setPriority")
     SetPrioritySync(streamID: i32, priority: i32): void;
+    @rename("setPriority") @async
+    SetPriorityAsync(streamID: i32, priority: i32): void;
+    @rename("setPriority") @promise
+    SetPriorityPromise(streamID: i32, priority: i32): void;
 
-    @gen_async("setVolume")
-    @gen_promise("setVolume")
     SetVolumeSync(streamID: i32, leftVolume: f64, rightVolume: f64): void;
+    @rename("setVolume") @async
+    SetVolumeAsync(streamID: i32, leftVolume: f64, rightVolume: f64): void;
+    @rename("setVolume") @promise
+    SetVolumePromise(streamID: i32, leftVolume: f64, rightVolume: f64): void;
 
     SetInterruptMode(interruptMode: InterruptMode): void;
 
-    @gen_async("unload")
-    @gen_promise("unload")
     UnloadSync(soundID: i32): void;
+    @rename("unload") @async
+    UnloadAsync(soundID: i32): void;
+    @rename("unload") @promise
+    UnloadPromise(soundID: i32): void;
 
-    @gen_async("release")
-    @gen_promise("release")
     ReleaseSync(): void;
+    @rename("release") @async
+    ReleaseAsync(): void;
+    @rename("release") @promise
+    ReleasePromise(): void;
 
     @!sts_inject_into_interface("on(type: string, callback: (data: object)=> void): void;")
     @!sts_inject_into_class("""on(type: string, callback: object): void {

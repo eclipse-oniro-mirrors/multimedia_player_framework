@@ -40,6 +40,7 @@ public:
 
 private:
     int32_t CreateListenerObject();
+    int32_t CreateListenerObjectLocked();
     int32_t CloseListenerObject();
     sptr<IStandardScreenCaptureMonitorService> screenCaptureMonitorProxy_ = nullptr;
     sptr<ScreenCaptureMonitorListenerStub> listenerStub_ = nullptr;

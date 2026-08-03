@@ -36,6 +36,7 @@ AVImageGeneratorImpl::AVImageGeneratorImpl(std::shared_ptr<OHOS::Media::AVMetada
 
 optional<AVFileDescriptor> AVImageGeneratorImpl::GetFdSrc()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::get fd");
     MEDIA_LOGI("GetFdSrc In");
     AVFileDescriptor fdSrc;
@@ -48,6 +49,7 @@ optional<AVFileDescriptor> AVImageGeneratorImpl::GetFdSrc()
 
 void AVImageGeneratorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::set fd");
     MEDIA_LOGI("SetFdSrc In");
 
@@ -84,6 +86,7 @@ void AVImageGeneratorImpl::SetFdSrc(optional_view<AVFileDescriptor> fdSrc)
 optional<::ohos::multimedia::image::image::PixelMap> AVImageGeneratorImpl::FetchFrameByTimeSync(int64_t timeUs,
     AVImageQueryOptions options, PixelMapParams const& param)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::FetchFrameByTimeSync");
     MEDIA_LOGI("FetchFrameByTimeSync  in");
     AVImageGeneratorImpl *taihe = this;
@@ -124,6 +127,7 @@ optional<::ohos::multimedia::image::image::PixelMap> AVImageGeneratorImpl::Fetch
 optional<::ohos::multimedia::image::image::PixelMap> AVImageGeneratorImpl::FetchScaledFrameByTimeSync(
     int64_t timeUs, AVImageQueryOptions options, optional_view<OutputSize> param)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::FetchScaledFrameByTimeSync");
     MEDIA_LOGI("FetchScaledFrameByTimeSync  in");
     AVImageGeneratorImpl *taihe = this;
@@ -156,6 +160,7 @@ optional<::ohos::multimedia::image::image::PixelMap> AVImageGeneratorImpl::Fetch
 
 void AVImageGeneratorImpl::ReleaseSync()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     OHOS::Media::MediaTrace trace("AVImageGeneratorTaihe::ReleaseSync");
     MEDIA_LOGI("ReleaseSync In");
     if (state_ == OHOS::Media::HelperState::HELPER_STATE_RELEASED) {

@@ -109,6 +109,11 @@ void MediaSourceLoadingRequestImpl::FinishLoading(int64_t uuid, LoadingRequestEr
 {
     MediaTrace trace("MediaSourceLoadingRequestImpl::CreateLoadingRequest");
     MEDIA_LOGD("CreateLoadingRequest >>");
+    if (request == nullptr) {
+        MEDIA_LOGE("request is nullptr");
+        return taihe::make_holder<MediaSourceLoadingRequestImpl,
+            ::ohos::multimedia::media::MediaSourceLoadingRequest>(0);
+    }
     RequestContainer::GetInstance().Insert(request->GetUniqueId(), request);
     return taihe::make_holder<MediaSourceLoadingRequestImpl,
         ::ohos::multimedia::media::MediaSourceLoadingRequest>(request->GetUniqueId());

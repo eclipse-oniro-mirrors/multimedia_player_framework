@@ -45,6 +45,8 @@ ohos_shared_library("cj_avtranscoder_ffi") {
     cfi_vcall_icall_only = true
     debug = false
   }
+  branch_protector_ret = "pac_ret"
+
   include_dirs = [
     "${multimedia_player_framework_path}/frameworks/cj/avplayer",
     "${multimedia_player_framework_path}/services/utils/include",

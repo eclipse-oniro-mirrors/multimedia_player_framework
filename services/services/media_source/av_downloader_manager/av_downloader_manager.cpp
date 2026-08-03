@@ -24,6 +24,8 @@
 #include "../downloaded_cache_loader/sha256_hasher.h"
 #include "../downloaded_cache_loader/cache_mapping_format.h"
 #include "../downloaded_cache_loader/play_strategy_serializer.h"
+#include "path_utils.h"
+#include <cerrno>
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -44,8 +46,9 @@ void DownloadTaskCallback::OnStateChanged(uint64_t downloaderId, MediaDownload::
     if (manager == nullptr) {
         return;
     }
+    std::lock_guard<std::mutex> lock(manager->mapMutex_);
     AVDownloadTaskState downloadState = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(state);
-    manager->NotifyStatusChange(std::to_string(downloaderId), downloadState);
+    manager->NotifyStatusChangeLocked(std::to_string(downloaderId), downloadState);
 }
 
 void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloadedSize)
@@ -55,6 +58,7 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
     if (manager == nullptr) {
         return;
     }
+    std::lock_guard<std::mutex> lock(manager->mapMutex_);
     auto taskIter = manager->taskMap_.find(std::to_string(downloaderId));
     if (taskIter == manager->taskMap_.end()) {
         return;
@@ -75,17 +79,23 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
         if (!taskInfo->mappingFileCreated) {
             GenerateMappingFile(taskInfo);
         }
-        ProcessDownloadFinish(downloaderId, manager, downloaderIter);
+        ProcessDownloadFinish(downloaderId, manager);
         return;
     }
 
+    HandleParseCompleted(downloaderId, downloaderIter, taskInfo, manager);
+}
+
+void DownloadTaskCallback::HandleParseCompleted(uint64_t downloaderId,
+    std::map<std::string, std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter,
+    std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::shared_ptr<AVDownloaderManagerImpl> manager)
+{
     std::vector<DownloadFileInfo> filesToAdd;
     ParseFiles(downloaderId, taskInfo, filesToAdd, manager);
     for (const auto& fileInfo : filesToAdd) {
         taskInfo->fileList.push_back(fileInfo);
     }
 
-    // 检查是否还有需要解析的文件（如HLS子列表），若无则标记完成
     bool hasMoreToParse = false;
     for (const auto& info : taskInfo->fileList) {
         if (info.needParse) {
@@ -104,18 +114,22 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
 }
 
 void DownloadTaskCallback::ProcessDownloadFinish(uint64_t downloaderId,
-    std::shared_ptr<AVDownloaderManagerImpl> manager, std::map<std::string,
-    std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter)
+    std::shared_ptr<AVDownloaderManagerImpl> manager)
 {
     MEDIA_LOGI("TaskId: %{public}" PRIu64 ", all files downloaded, task completed", downloaderId);
-    manager->NotifyStatusChange(std::to_string(downloaderId), AVDownloadTaskState::COMPLETED);
-    manager->NotifyProgressChange(std::to_string(downloaderId), 1.0);
-    manager->activeDownloaderCount_.fetch_sub(1);      // 一个任务完成，减少一个
-    MEDIA_LOGI("TaskId: %{public}" PRIu64 ", activeDownloaderCount_ decremented to %{public}d",
-        downloaderId, manager->activeDownloaderCount_.load());
+    auto taskIter = manager->taskMap_.find(std::to_string(downloaderId));
+    bool wasRunning = (taskIter != manager->taskMap_.end() &&
+        taskIter->second->state == AVDownloadTaskState::RUNNING);
+    manager->NotifyStatusChangeLocked(std::to_string(downloaderId), AVDownloadTaskState::COMPLETED);
+    manager->NotifyProgressChangeLocked(std::to_string(downloaderId), 1.0);
+    if (wasRunning) {
+        manager->activeDownloaderCount_.fetch_sub(1);
+        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", activeDownloaderCount_ decremented to %{public}d",
+            downloaderId, manager->activeDownloaderCount_.load());
+    }
     MediaDownload::Message releaseMsg;
     releaseMsg.type = MediaDownload::MSG_RELEASE_DOWNLOADER;
-    releaseMsg.downloader = downloaderIter->second;
+    releaseMsg.downloaderId = downloaderId;
     manager->messageQueue_->PostMessage(releaseMsg);
     MEDIA_LOGI("TaskId: %{public}" PRIu64 ", release message posted", downloaderId);
     MediaDownload::Message nextMsg;
@@ -131,64 +145,117 @@ void DownloadTaskCallback::ParseFiles(uint64_t downloaderId, std::shared_ptr<AVD
         if (!fileInfo.needParse) {
             continue;
         }
-        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", parsing file: %{public}s", downloaderId, fileInfo.filePath.c_str());
-
-        FILE* fp = fopen(fileInfo.filePath.c_str(), "rb");
-        if (fp == nullptr) {
-            MEDIA_LOGE("failed to open file");
-            continue;
-        }
-        fseek(fp, 0, SEEK_END);
-        long fileSize = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-        if (fileSize <= 0) {
-            fclose(fp);
-            MEDIA_LOGE("file size is 0");
-            continue;
-        }
-        std::vector<uint8_t> buffer(fileSize);
-        size_t readLen = fread(buffer.data(), 1, fileSize, fp);
-        fclose(fp);
-        if (readLen != static_cast<size_t>(fileSize)) {
-            MEDIA_LOGE("failed to read full file");
-            continue;
-        }
-
-        auto parser = SourceParseAgent::GetStreamResourceParser(buffer.data(), buffer.size(),
-            taskInfo->detectedProtocol, fileInfo.url);
-        if (parser == nullptr) {
-            MEDIA_LOGE("TaskId: %{public}" PRIu64 ", GetStreamResourceParser failed", downloaderId);
-            continue;
-        }
-
-        auto resources = parser->GetAll();
-        MEDIA_LOGD("TaskId: %{public}" PRIu64 ", parsed %{public}zu sub-resources from %{public}s",
-            downloaderId, resources.size(), fileInfo.filePath.c_str());
-
-        for (const auto& resource : resources) {
-            std::string subFilePath = manager->GetFilePath(taskInfo->cacheDir, resource.url);
-            DownloadFileInfo subFileInfo;
-            subFileInfo.url = resource.url;
-            subFileInfo.filePath = subFilePath;
-            subFileInfo.downloaded = false;
-            subFileInfo.needParse = resource.isSubPlaylist;
-            filesToAdd.push_back(subFileInfo);
-        }
-        fileInfo.needParse = false;
+        ParseSingleFile(downloaderId, fileInfo, taskInfo, filesToAdd, manager);
     }
     SourceParseAgent::Destroy();
 }
 
+bool DownloadTaskCallback::ReadFileToBuffer(const std::string &filePath, std::vector<uint8_t> &buffer)
+{
+    FILE* fp = fopen(filePath.c_str(), "rb");
+    if (fp == nullptr) {
+        MEDIA_LOGE("failed to open file");
+        return false;
+    }
+    if (fseek(fp, 0, SEEK_END) != 0) {
+        if (fclose(fp) != 0) {
+            MEDIA_LOGE("fclose failed after fseek SEEK_END failed");
+        }
+        MEDIA_LOGE("fseek SEEK_END failed");
+        return false;
+    }
+    long fileSize = ftell(fp);
+    if (fseek(fp, 0, SEEK_SET) != 0) {
+        if (fclose(fp) != 0) {
+            MEDIA_LOGE("fclose failed after fseek SEEK_SET failed");
+        }
+        MEDIA_LOGE("fseek SEEK_SET failed");
+        return false;
+    }
+    constexpr long MAX_PARSE_FILE_SIZE = 64 * 1024 * 1024; // 64MB
+    if (fileSize <= 0 || fileSize > MAX_PARSE_FILE_SIZE) {
+        if (fclose(fp) != 0) {
+            MEDIA_LOGE("fclose failed after file size check");
+        }
+        MEDIA_LOGE("file size invalid or too large: %{public}ld", fileSize);
+        return false;
+    }
+    buffer.resize(fileSize);
+    size_t readLen = fread(buffer.data(), 1, fileSize, fp);
+    if (fclose(fp) != 0) {
+        MEDIA_LOGE("fclose failed after fread");
+        return false;
+    }
+    if (readLen != static_cast<size_t>(fileSize)) {
+        MEDIA_LOGE("failed to read full file");
+        return false;
+    }
+    return true;
+}
+
+void DownloadTaskCallback::ParseSingleFile(uint64_t downloaderId, DownloadFileInfo &fileInfo,
+    std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::vector<DownloadFileInfo> &filesToAdd,
+    std::shared_ptr<AVDownloaderManagerImpl> manager)
+{
+    std::string normalizedPath;
+    auto validateRet = MediaSourceUtils::PathUtils::ValidateAndNormalizePath(
+        fileInfo.filePath, normalizedPath);
+    if (validateRet != MediaSourceUtils::PATH_VALIDATE_OK) {
+        MEDIA_LOGE("ParseFiles: path validation failed for %{public}s, ret=%{public}d",
+            fileInfo.filePath.c_str(), static_cast<int32_t>(validateRet));
+        return;
+    }
+
+    MEDIA_LOGI("TaskId: %{public}" PRIu64 ", parsing file: %{public}s", downloaderId, normalizedPath.c_str());
+
+    std::vector<uint8_t> buffer;
+    if (!ReadFileToBuffer(normalizedPath, buffer)) {
+        return;
+    }
+
+    auto parser = SourceParseAgent::GetStreamResourceParser(buffer.data(), buffer.size(),
+        taskInfo->detectedProtocol, fileInfo.url);
+    if (parser == nullptr) {
+        MEDIA_LOGE("TaskId: %{public}" PRIu64 ", GetStreamResourceParser failed", downloaderId);
+        return;
+    }
+
+    auto resources = parser->GetAll();
+    MEDIA_LOGD("TaskId: %{public}" PRIu64 ", parsed %{public}zu sub-resources from %{public}s",
+        downloaderId, resources.size(), fileInfo.filePath.c_str());
+
+    for (const auto& resource : resources) {
+        std::string subFilePath = manager->GetFilePath(taskInfo->cacheDir, resource.url);
+        DownloadFileInfo subFileInfo;
+        subFileInfo.url = resource.url;
+        subFileInfo.filePath = subFilePath;
+        subFileInfo.downloaded = false;
+        subFileInfo.needParse = resource.isSubPlaylist;
+        filesToAdd.push_back(subFileInfo);
+    }
+    fileInfo.needParse = false;
+}
+
 // generate mapping file
-void DownloadTaskCallback::WriteMappingEntries(std::ofstream& f,
+uint32_t DownloadTaskCallback::WriteMappingEntries(std::ofstream& f,
     std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::streamoff baseOffset)
 {
+    constexpr std::streamoff URL_HASH_SIZE = 32;
+    constexpr std::streamoff PATH_LENGTH_SIZE = 4;
+    constexpr std::streamoff ENTRY_HEADER_PREFIX = URL_HASH_SIZE + PATH_LENGTH_SIZE;
     std::streamoff currentOffset = baseOffset;
+    uint32_t writtenCount = 0;
     for (const auto& v : taskInfo->fileList) {
         DownloadedCache::CacheMappingEntry entry {};
         auto urlHash = DownloadedCache::SHA256Hasher::GenerateHash(v.url);
         std::copy_n(urlHash.data(), urlHash.size(), entry.header.urlHash);
-        std::string relPath = v.filePath.substr(taskInfo->cacheDir.size());
+        std::string relPath;
+        if (v.filePath.size() > taskInfo->cacheDir.size() &&
+            v.filePath.compare(0, taskInfo->cacheDir.size(), taskInfo->cacheDir) == 0) {
+            relPath = v.filePath.substr(taskInfo->cacheDir.size());
+        } else {
+            relPath = v.filePath;
+        }
         entry.header.pathLength = relPath.length();
         uint64_t fileSize = 0;
         if (v.downloaded) {
@@ -200,18 +267,37 @@ void DownloadTaskCallback::WriteMappingEntries(std::ofstream& f,
         entry.header.fileSize = fileSize;
         entry.filePath = relPath;
 
-        taskInfo->urlToFileSizeOffset_[v.url] = currentOffset + 36;  // 36 = 32 urlHash + 4 pathLength
-        currentOffset += sizeof(DownloadedCache::CacheMappingEntryHeader) + relPath.length();
+        if (!DownloadedCache::CacheMappingSerializer::WriteEntry(f, entry, taskInfo->cacheDir)) {
+            MEDIA_LOGE("WriteMappingEntries: WriteEntry failed for %{public}s", v.url.c_str());
+            continue;
+        }
 
-        DownloadedCache::CacheMappingSerializer::WriteEntry(f, entry, taskInfo->cacheDir);
+        taskInfo->urlToFileSizeOffset_[v.url] = currentOffset + ENTRY_HEADER_PREFIX;
+        currentOffset += sizeof(DownloadedCache::CacheMappingEntryHeader) + relPath.length();
+        writtenCount++;
         MEDIA_LOGD("Serialize: %{public}s, hash: %{public}s, tmp path: %{public}s, value path: %{public}s",
             v.url.c_str(), DownloadedCache::SHA256Hasher::HashToString(urlHash).c_str(),
             relPath.c_str(), v.filePath.c_str());
     }
+    return writtenCount;
 }
 
 void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo)
 {
+    if (taskInfo == nullptr || taskInfo->cacheDir.empty()) {
+        MEDIA_LOGE("GenerateMappingFile failed: taskInfo is null or cacheDir is empty");
+        return;
+    }
+
+    std::string normalizedCacheDir;
+    auto validateRet = MediaSourceUtils::PathUtils::ValidateAndNormalizePath(
+        taskInfo->cacheDir, normalizedCacheDir);
+    if (validateRet != MediaSourceUtils::PATH_VALIDATE_OK) {
+        MEDIA_LOGE("GenerateMappingFile failed: cacheDir validation failed, ret=%{public}d",
+            static_cast<int32_t>(validateRet));
+        return;
+    }
+
     DownloadedCache::CacheMappingHeader mappingHeader {};
     std::copy_n(DownloadedCache::CACHE_MAPPING_MAGIC, 4, mappingHeader.magic);
     mappingHeader.version = 1;
@@ -219,7 +305,11 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
 
     taskInfo->urlToFileSizeOffset_.clear();
 
-    std::ofstream f(taskInfo->cacheDir + "/cache_mapping.txt", std::ios::out | std::ios::binary);
+    std::ofstream f(normalizedCacheDir + "/cache_mapping.txt", std::ios::out | std::ios::binary);
+    if (!f.is_open()) {
+        MEDIA_LOGE("GenerateMappingFile failed: unable to open file %{public}s", normalizedCacheDir.c_str());
+        return;
+    }
     DownloadedCache::CacheMappingSerializer::CalculateHeaderChecksum(mappingHeader);
     DownloadedCache::CacheMappingSerializer::WriteHeader(f, mappingHeader);
 
@@ -230,8 +320,20 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
 
     std::streamoff entriesBaseOffset = sizeof(DownloadedCache::CacheMappingHeader) +
         DownloadedCache::PLAYBACK_PARAM_DATA_LENGTH_SIZE + playbackParam.size();
-    WriteMappingEntries(f, taskInfo, entriesBaseOffset);
+    uint32_t writtenCount = WriteMappingEntries(f, taskInfo, entriesBaseOffset);
 
+    if (writtenCount != taskInfo->fileList.size()) {
+        mappingHeader.entryCount = writtenCount;
+        DownloadedCache::CacheMappingSerializer::CalculateHeaderChecksum(mappingHeader);
+        f.seekp(0, std::ios::beg);
+        DownloadedCache::CacheMappingSerializer::WriteHeader(f, mappingHeader);
+    }
+
+    if (!f.good()) {
+        MEDIA_LOGE("GenerateMappingFile: write failed for %{public}s", normalizedCacheDir.c_str());
+        f.close();
+        return;
+    }
     f.close();
     taskInfo->mappingFileCreated = true;
 }
@@ -239,9 +341,13 @@ void DownloadTaskCallback::GenerateMappingFile(std::shared_ptr<AVDownloadTaskInf
 void DownloadTaskCallback::SubmitRemainingTasks(std::shared_ptr<MediaDownload::Downloader> downloader,
     std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::shared_ptr<AVDownloaderManagerImpl> manager)
 {
+    if (downloader == nullptr) {
+        MEDIA_LOGE("SubmitRemainingTasks: downloader is nullptr");
+        return;
+    }
     MediaDownload::DownloadConfig config;
-    config.timeoutMs = manager->requestTimeoutMs_;
-    config.allowMobileData = manager->allowCellularAccess_;
+    config.timeoutMs = manager->requestTimeoutMs_.load();
+    config.allowMobileData = manager->allowCellularAccess_.load();
     config.allowWifi = true;
     for (const auto& fileInfo : taskInfo->fileList) {
         if (fileInfo.downloaded) {
@@ -250,31 +356,37 @@ void DownloadTaskCallback::SubmitRemainingTasks(std::shared_ptr<MediaDownload::D
         downloader->SetConfig(config);
         downloader->AddFileTask(fileInfo.url, fileInfo.filePath, config);
     }
-    (void)downloader->Start();
+    auto ret = downloader->Start();
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("SubmitRemainingTasks: Start failed, ret=%{public}d", ret);
+    }
 }
 
 void DownloadTaskCallback::OnFileCompleted(uint64_t downloaderId, const std::string &url, int64_t fileSize)
 {
     MEDIA_LOGI("OnFileCompleted: downloaderId=%{public}" PRIu64 ", fileSize=%{public}" PRId64,
         downloaderId, fileSize);
+    if (fileSize < 0) {
+        MEDIA_LOGE("OnFileCompleted: invalid fileSize=%{public}" PRId64, fileSize);
+        return;
+    }
     auto manager = manager_.lock();
     if (manager == nullptr) {
         return;
     }
+    std::lock_guard<std::mutex> lock(manager->mapMutex_);
     auto taskIter = manager->taskMap_.find(std::to_string(downloaderId));
     if (taskIter == manager->taskMap_.end()) {
         return;
     }
     auto& taskInfo = taskIter->second;
 
-    // 1. 更新内存中的fileSize
     auto fileIter = std::find_if(taskInfo->fileList.begin(), taskInfo->fileList.end(),
         [&url](const DownloadFileInfo& info) { return info.url == url; });
     if (fileIter != taskInfo->fileList.end()) {
         fileIter->fileSize = static_cast<uint64_t>(fileSize);
     }
 
-    // 2. in-place更新元文件
     auto offsetIter = taskInfo->urlToFileSizeOffset_.find(url);
     if (offsetIter == taskInfo->urlToFileSizeOffset_.end()) {
         MEDIA_LOGW("OnFileCompleted: no offset for url, mapping file may not exist yet");
@@ -295,16 +407,22 @@ void DownloadTaskCallback::OnFailed(uint64_t downloaderId, MediaDownload::Downlo
     if (manager == nullptr) {
         return;
     }
-    manager->NotifyStatusChange(std::to_string(downloaderId), AVDownloadTaskState::ERROR);
-    manager->activeDownloaderCount_.fetch_sub(1);
-    MEDIA_LOGI("TaskId: %{public}" PRIu64 ", activeDownloaderCount_ decremented to %{public}d on failed",
-        downloaderId, manager->activeDownloaderCount_.load());
+    std::lock_guard<std::mutex> lock(manager->mapMutex_);
+    auto taskIter = manager->taskMap_.find(std::to_string(downloaderId));
+    bool wasRunning = (taskIter != manager->taskMap_.end() &&
+        taskIter->second->state == AVDownloadTaskState::RUNNING);
+    manager->NotifyStatusChangeLocked(std::to_string(downloaderId), AVDownloadTaskState::ERROR);
+    if (wasRunning) {
+        manager->activeDownloaderCount_.fetch_sub(1);
+        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", activeDownloaderCount_ decremented to %{public}d on failed",
+            downloaderId, manager->activeDownloaderCount_.load());
+    }
 
     auto downloaderIter = manager->downloaderMap_.find(std::to_string(downloaderId));
     if (downloaderIter != manager->downloaderMap_.end()) {
         MediaDownload::Message msg;
         msg.type = MediaDownload::MSG_RELEASE_DOWNLOADER;
-        msg.downloader = downloaderIter->second;
+        msg.downloaderId = downloaderId;
         manager->messageQueue_->PostMessage(msg);
         MEDIA_LOGI("TaskId: %{public}" PRIu64 ", release message posted on failed", downloaderId);
     }
@@ -324,6 +442,7 @@ void DownloadTaskCallback::OnProgress(uint64_t downloaderId, const MediaDownload
         return;
     }
 
+    std::lock_guard<std::mutex> lock(manager->mapMutex_);
     auto taskIter = manager->taskMap_.find(std::to_string(downloaderId));
     if (taskIter == manager->taskMap_.end()) {
         return;
@@ -332,7 +451,7 @@ void DownloadTaskCallback::OnProgress(uint64_t downloaderId, const MediaDownload
     bool shouldReportProgress = taskInfo->parseCompleted ||
         (taskInfo->protocolSniffed && taskInfo->detectedProtocol == Plugins::HttpPlugin::StreamProtocolType::HTTP);
     if (shouldReportProgress) {
-        manager->NotifyProgressChange(std::to_string(downloaderId), progressValue);
+        manager->NotifyProgressChangeLocked(std::to_string(downloaderId), progressValue);
     }
     if (taskInfo->protocolSniffed) {
         return;
@@ -340,6 +459,9 @@ void DownloadTaskCallback::OnProgress(uint64_t downloaderId, const MediaDownload
 
     auto downloaderIter = manager->downloaderMap_.find(std::to_string(downloaderId));
     if (downloaderIter == manager->downloaderMap_.end()) {
+        return;
+    }
+    if (downloaderIter->second == nullptr) {
         return;
     }
     auto downloader = std::static_pointer_cast<MediaDownload::DownloaderImpl>(downloaderIter->second);
@@ -361,9 +483,17 @@ void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const Medi
         if (progress.downloadedSize < static_cast<int64_t>(sniffSize)) {
             break;
         }
+
+        std::string normalizedFilePath;
+        auto validateRet = MediaSourceUtils::PathUtils::ValidateAndNormalizePath(currentFilePath, normalizedFilePath);
+        if (validateRet != MediaSourceUtils::PATH_VALIDATE_OK) {
+            MEDIA_LOGE("SniffProtocol: path validation failed, ret=%{public}d", static_cast<int32_t>(validateRet));
+            break;
+        }
+
         MEDIA_LOGI("TaskId: %{public}" PRIu64 ", downloadedSize=%{public}" PRId64 " >= sniffSize=%{public}zu, sniff",
             downloaderId, progress.downloadedSize, sniffSize);
-        FILE* fp = fopen(currentFilePath.c_str(), "rb");
+        FILE* fp = fopen(normalizedFilePath.c_str(), "rb");
         if (fp == nullptr) {
             MEDIA_LOGE("TaskId: %{public}" PRIu64 ", failed to open file: %{public}s",
                 downloaderId, currentFilePath.c_str());
@@ -371,34 +501,39 @@ void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const Medi
         }
         std::vector<uint8_t> buffer(sniffSize);
         size_t readLen = fread(buffer.data(), 1, sniffSize, fp);
-        fclose(fp);
-        if (readLen < sniffSize) {
-            MEDIA_LOGW("TaskId: %{public}" PRIu64 ", readLen=%{public}zu < sniffSize=%{public}zu",
-                downloaderId, readLen, sniffSize);
+        if (fclose(fp) != 0) {
+            MEDIA_LOGE("TaskId: %{public}" PRIu64 ", fclose failed after fread", downloaderId);
             break;
         }
         MEDIA_LOGI("readLen: %{public}zu", readLen);
-        auto protocol = SourceParseAgent::SniffStreamProtocol(buffer.data(), readLen);
-        taskInfo->detectedProtocol = protocol;
-        taskInfo->protocolSniffed = true;
-        taskInfo->currentFilePath = currentFilePath;
-        if (protocol == Plugins::HttpPlugin::StreamProtocolType::HLS ||
-            protocol == Plugins::HttpPlugin::StreamProtocolType::DASH) {    // HLS or Dash
-            if (!taskInfo->fileList.empty()) {
-                taskInfo->fileList.front().needParse = true;
-                MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol is HLS/DASH, needParse", downloaderId);
-            }
+        if (readLen < sniffSize) {
+            break;
         }
-        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", detected protocol: %{public}d",
-            downloaderId, static_cast<int>(protocol));
+        ApplySniffedProtocol(downloaderId, buffer.data(), readLen, currentFilePath, taskInfo);
     } while (0);
     SourceParseAgent::Destroy();
-    // HTTP单文件场景：嗅探完成且非HLS/DASH时，提前创建mapping文件
     if (taskInfo->protocolSniffed && !taskInfo->mappingFileCreated &&
         taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::HLS &&
         taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::DASH) {
         GenerateMappingFile(taskInfo);
     }
+}
+
+void DownloadTaskCallback::ApplySniffedProtocol(uint64_t downloaderId, const uint8_t* data, size_t size,
+    const std::string& filePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo)
+{
+    auto protocol = SourceParseAgent::SniffStreamProtocol(data, size);
+    taskInfo->detectedProtocol = protocol;
+    taskInfo->protocolSniffed = true;
+    taskInfo->currentFilePath = filePath;
+    if (protocol == Plugins::HttpPlugin::StreamProtocolType::HLS ||
+        protocol == Plugins::HttpPlugin::StreamProtocolType::DASH) {
+        if (!taskInfo->fileList.empty()) {
+            taskInfo->fileList.front().needParse = true;
+            MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol is HLS/DASH, needParse", downloaderId);
+        }
+    }
+    MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol: %{public}d", downloaderId, static_cast<int>(protocol));
 }
 
 std::shared_ptr<AVDownloaderManager> AVDownloaderManagerFactory::Create()
@@ -420,14 +555,15 @@ bool CreateDirRecursive(const std::string& path)
             continue;
         }
         subPath[i] = '\0';
-        if (access(subPath.c_str(), F_OK) != 0 && mkdir(subPath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP) != 0) {
+        if (mkdir(subPath.c_str(), S_IRWXU | S_IRGRP | S_IXGRP) != 0 && errno != EEXIST) {
             MEDIA_LOGE("Create dir failed: %{public}s", subPath.c_str());
+            subPath[i] = '/';
             return false;
         }
         subPath[i] = '/';
     }
 
-    if (access(path.c_str(), F_OK) != 0 && mkdir(path.c_str(), S_IRWXU | S_IRGRP | S_IXGRP) != 0) {
+    if (mkdir(path.c_str(), S_IRWXU | S_IRGRP | S_IXGRP) != 0 && errno != EEXIST) {
         MEDIA_LOGE("Create dir again failed: %{public}s", path.c_str());
         return false;
     }
@@ -445,16 +581,20 @@ AVDownloaderManagerImpl::AVDownloaderManagerImpl()
     StartNetworkListening();
 }
 
+AVDownloaderManagerImpl::~AVDownloaderManagerImpl()
+{
+    MEDIA_LOGI("~AVDownloaderManagerImpl");
+    Release();
+}
+
 std::string AVDownloaderManagerImpl::GetDefaultCacheDir(const std::string& url)
 {
     std::string baseDir = "/data/storage/el2/base/cache/avplayer_downloaded_cache/";
     auto hash = DownloadedCache::SHA256Hasher::GenerateHash(url);
     std::string hashStr = DownloadedCache::SHA256Hasher::HashToString(hash);
     baseDir += hashStr;
-    if (access(baseDir.c_str(), F_OK) != 0) {
-        if (!CreateDirRecursive(baseDir)) {
-            MEDIA_LOGE("Create base cache dir failed: %{public}s", baseDir.c_str());
-        }
+    if (!CreateDirRecursive(baseDir)) {
+        MEDIA_LOGE("Create base cache dir failed: %{public}s", baseDir.c_str());
     }
     return baseDir;
 }
@@ -463,15 +603,15 @@ std::string AVDownloaderManagerImpl::GetFilePath(const std::string& rootDir, con
 {
     size_t lastSlashPos = url.find_last_of("/\\");
     std::string fileName = (lastSlashPos != std::string::npos) ? url.substr(lastSlashPos + 1) : url;
-    if (fileName.empty()) {
-        fileName = "download";
+    if (fileName.empty() || !MediaSourceUtils::PathUtils::IsPathTraversalSafe(fileName) ||
+        fileName.find('/') != std::string::npos || fileName.find('\\') != std::string::npos) {
+        auto hash = DownloadedCache::SHA256Hasher::GenerateHash(url);
+        fileName = DownloadedCache::SHA256Hasher::HashToString(hash);
     }
     std::string filePath = rootDir + "/1/" + fileName;
     std::string dirPath = rootDir + "/1";
-    if (access(dirPath.c_str(), F_OK) != 0) {
-        if (!CreateDirRecursive(dirPath)) {
-            MEDIA_LOGE("Create file dir failed: %{public}s", dirPath.c_str());
-        }
+    if (!CreateDirRecursive(dirPath)) {
+        MEDIA_LOGE("Create file dir failed: %{public}s", dirPath.c_str());
     }
     return filePath;
 }
@@ -479,14 +619,14 @@ std::string AVDownloaderManagerImpl::GetFilePath(const std::string& rootDir, con
 int32_t AVDownloaderManagerImpl::SetAllowCellularAccess(bool allow)
 {
     MEDIA_LOGI("SetAllowCellularAccess: %{public}d", allow);
-    allowCellularAccess_ = allow;
+    allowCellularAccess_.store(allow);
     return MSERR_OK;
 }
 
 int32_t AVDownloaderManagerImpl::SetRequestTimeout(int32_t timeoutMs)
 {
     MEDIA_LOGI("SetRequestTimeout: %{public}d", timeoutMs);
-    requestTimeoutMs_ = timeoutMs;
+    requestTimeoutMs_.store(timeoutMs);
     return MSERR_OK;
 }
 
@@ -515,7 +655,7 @@ std::string AVDownloaderManagerImpl::AddDownloadTask(std::shared_ptr<Plugins::Me
 
     taskMap_[taskId] = taskInfo;
     downloaderMap_[taskId] = downloader;
-    HandleTaskAdded(taskInfo, taskId, url, downloader, filePath);
+    HandleTaskAdded(taskId, url, downloader, filePath);
 
     MEDIA_LOGI("AddDownloadTask success: taskId=%{public}s, url=%{public}s, state=%{public}d",
         taskId.c_str(), url.c_str(), static_cast<int>(taskInfo->state));
@@ -540,20 +680,22 @@ std::string AVDownloaderManagerImpl::FindExistingTask(const std::string& url)
         }
         MEDIA_LOGI("AddDownloadTask: resuming paused task, taskId=%{public}s", pair.first.c_str());
         auto downloaderIter = downloaderMap_.find(pair.first);
-        if (downloaderIter == downloaderMap_.end()) {
+        if (downloaderIter == downloaderMap_.end() || downloaderIter->second == nullptr) {
             continue;
         }
         if (activeDownloaderCount_.load() >= MAX_DOWNLOADER_COUNT) {
             MEDIA_LOGI("AddDownloadTask: activeDownloaderCount_=%{public}d >= MAX=%{public}d, queuing paused task",
                 activeDownloaderCount_.load(), MAX_DOWNLOADER_COUNT);
             pendingTaskQueue_.push({pair.second->url, pair.first});
-            pair.second->state = AVDownloadTaskState::QUEUED;
-            NotifyStatusChange(pair.first, AVDownloadTaskState::QUEUED);
+            NotifyStatusChangeLocked(pair.first, AVDownloadTaskState::QUEUED);
             return pair.first;
         }
-        downloaderIter->second->Resume();
-        pair.second->state = AVDownloadTaskState::RUNNING;
-        NotifyStatusChange(pair.first, AVDownloadTaskState::RUNNING);
+        auto resumeRet = downloaderIter->second->Resume();
+        if (resumeRet != MSERR_OK) {
+            MEDIA_LOGE("FindExistingTask: Resume failed, ret=%{public}d", resumeRet);
+            continue;
+        }
+        NotifyStatusChangeLocked(pair.first, AVDownloadTaskState::RUNNING);
         activeDownloaderCount_.fetch_add(1);
         return pair.first;
     }
@@ -583,7 +725,7 @@ AVDownloaderManagerImpl::CreateNewDownloaderAndTask(std::shared_ptr<Plugins::Med
     if (strategy) {
         taskInfo->strategy = *strategy;
     }
-    memset_s(&(taskInfo->filter), sizeof(Plugins::TrackSelectionFilter), 0, sizeof(Plugins::TrackSelectionFilter));
+    taskInfo->filter = Plugins::TrackSelectionFilter{};
     MEDIA_LOGI("GetDefaultCacheDir: %{public}s, file path: %{public}s", cacheDir.c_str(), filePath.c_str());
     taskInfo->state = AVDownloadTaskState::INIT;
 
@@ -595,19 +737,18 @@ AVDownloaderManagerImpl::CreateNewDownloaderAndTask(std::shared_ptr<Plugins::Med
     return {taskId, taskInfo, downloader, filePath};
 }
  
-void AVDownloaderManagerImpl::HandleTaskAdded(std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::string taskId,
+void AVDownloaderManagerImpl::HandleTaskAdded(std::string taskId,
     std::string url, std::shared_ptr<MediaDownload::Downloader> downloader, std::string filePath)
 {
     if (activeDownloaderCount_.load() >= MAX_DOWNLOADER_COUNT) {
         MEDIA_LOGI("AddDownloadTask: activeDownloaderCount_=%{public}d >= MAX=%{public}d, pending task",
             activeDownloaderCount_.load(), MAX_DOWNLOADER_COUNT);
         pendingTaskQueue_.push({url, taskId});
-        taskInfo->state = AVDownloadTaskState::QUEUED;
-        NotifyStatusChange(taskId, taskInfo->state);
+        NotifyStatusChangeLocked(taskId, AVDownloadTaskState::QUEUED);
     } else {
         MediaDownload::DownloadConfig config;
-        config.timeoutMs = requestTimeoutMs_;
-        config.allowMobileData = allowCellularAccess_;
+        config.timeoutMs = requestTimeoutMs_.load();
+        config.allowMobileData = allowCellularAccess_.load();
         config.allowWifi = true;
         downloader->AddFileTask(url, filePath, config);
         if (taskCallback_ == nullptr) {
@@ -619,50 +760,56 @@ void AVDownloaderManagerImpl::HandleTaskAdded(std::shared_ptr<AVDownloadTaskInfo
         auto ret = downloader->Start();
         if (ret != MSERR_OK) {
             MEDIA_LOGE("Downloader Start failed, ret: %{public}d", ret);
-            taskInfo->state = AVDownloadTaskState::ERROR;
+            NotifyStatusChangeLocked(taskId, AVDownloadTaskState::ERROR);
         } else {
-            taskInfo->state = AVDownloadTaskState::RUNNING;
             activeDownloaderCount_.fetch_add(1);
+            NotifyStatusChangeLocked(taskId, AVDownloadTaskState::RUNNING);
         }
-        NotifyStatusChange(taskId, taskInfo->state);
     }
 }
 
 int32_t AVDownloaderManagerImpl::RemoveDownloadTask(const std::string &taskId)
 {
     MEDIA_LOGI("RemoveDownloadTask taskId: %{public}s", taskId.c_str());
-    std::lock_guard<std::mutex> lock(mapMutex_);
-
+    std::shared_ptr<MediaDownload::Downloader> downloaderToRelease;
     bool isRunning = false;
-    auto taskIter = taskMap_.find(taskId);
-    if (taskIter != taskMap_.end() && taskIter->second->state == AVDownloadTaskState::RUNNING) {
-        isRunning = true;
-    }
 
-    auto downloaderIter = downloaderMap_.find(taskId);
-    if (downloaderIter != downloaderMap_.end()) {
-        if (downloaderIter->second != nullptr) {
-            downloaderIter->second->Cancel();
-            downloaderIter->second->Release();
+    {
+        std::lock_guard<std::mutex> lock(mapMutex_);
+        auto taskIter = taskMap_.find(taskId);
+        if (taskIter != taskMap_.end() && taskIter->second->state == AVDownloadTaskState::RUNNING) {
+            isRunning = true;
         }
-        downloaderMap_.erase(downloaderIter);
+
+        auto downloaderIter = downloaderMap_.find(taskId);
+        if (downloaderIter != downloaderMap_.end()) {
+            downloaderToRelease = downloaderIter->second;
+            downloaderMap_.erase(downloaderIter);
+        }
+
+        if (taskIter != taskMap_.end()) {
+            taskMap_.erase(taskIter);
+        }
+
+        if (isRunning) {
+            activeDownloaderCount_.fetch_sub(1);
+            MEDIA_LOGI("RemoveDownloadTask: activeDownloaderCount_ decremented to %{public}d",
+                activeDownloaderCount_.load());
+        }
+
+        NotifyStatusChangeLocked(taskId, AVDownloadTaskState::REMOVING);
     }
 
-    if (taskIter != taskMap_.end()) {
-        taskIter->second->state = AVDownloadTaskState::REMOVING;
-        taskMap_.erase(taskIter);
+    if (downloaderToRelease != nullptr) {
+        downloaderToRelease->Cancel();
+        downloaderToRelease->Release();
     }
 
     if (isRunning) {
-        activeDownloaderCount_.fetch_sub(1);
-        MEDIA_LOGI("RemoveDownloadTask: activeDownloaderCount_ decremented to %{public}d",
-            activeDownloaderCount_.load());
         MediaDownload::Message nextMsg;
         nextMsg.type = MediaDownload::MSG_PROCESS_NEXT_TASK;
         messageQueue_->PostMessage(nextMsg);
     }
-
-    NotifyStatusChange(taskId, AVDownloadTaskState::REMOVING);
     return MSERR_OK;
 }
 
@@ -686,8 +833,7 @@ int32_t AVDownloaderManagerImpl::PauseDownloadTask(const std::string &taskId)
     auto ret = downloaderIter->second->Pause();
     if (ret == MSERR_OK) {
         if (taskIter != taskMap_.end()) {
-            taskIter->second->state = AVDownloadTaskState::PAUSED;
-            NotifyStatusChange(taskId, AVDownloadTaskState::PAUSED);
+            NotifyStatusChangeLocked(taskId, AVDownloadTaskState::PAUSED);
         }
         if (wasRunning) {
             activeDownloaderCount_.fetch_sub(1);
@@ -728,8 +874,7 @@ int32_t AVDownloaderManagerImpl::ResumeDownloadTask(const std::string &taskId)
     if (ret == MSERR_OK) {
         auto taskIter = taskMap_.find(taskId);
         if (taskIter != taskMap_.end()) {
-            taskIter->second->state = AVDownloadTaskState::RUNNING;
-            NotifyStatusChange(taskId, AVDownloadTaskState::RUNNING);
+            NotifyStatusChangeLocked(taskId, AVDownloadTaskState::RUNNING);
             activeDownloaderCount_.fetch_add(1);
             MEDIA_LOGI("ResumeDownloadTask: activeDownloaderCount_ incremented to %{public}d",
                 activeDownloaderCount_.load());
@@ -829,6 +974,7 @@ double AVDownloaderManagerImpl::GetTaskProgress(const std::string &taskId)
 int32_t AVDownloaderManagerImpl::SetManagerCallback(const std::weak_ptr<AVDownloaderManagerCallback> &callback)
 {
     MEDIA_LOGI("SetManagerCallback");
+    std::lock_guard<std::mutex> lock(cbMutex_);
     callback_ = callback;
     return MSERR_OK;
 }
@@ -836,7 +982,13 @@ int32_t AVDownloaderManagerImpl::SetManagerCallback(const std::weak_ptr<AVDownlo
 int32_t AVDownloaderManagerImpl::Release()
 {
     MEDIA_LOGI("Release");
+    if (released_.exchange(true)) {
+        return MSERR_OK;
+    }
     StopNetworkListening();
+    if (messageQueue_) {
+        messageQueue_->Stop();
+    }
     std::lock_guard<std::mutex> lock(mapMutex_);
 
     for (auto &pair : downloaderMap_) {
@@ -855,9 +1007,12 @@ int32_t AVDownloaderManagerImpl::Release()
 void AVDownloaderManagerImpl::NotifyStatusChange(const std::string &taskId, AVDownloadTaskState state)
 {
     MEDIA_LOGI("NotifyStatusChange: %{public}s, Task state: %{public}d", taskId.c_str(), state);
-    auto taskIter = taskMap_.find(taskId);
-    if (taskIter != taskMap_.end()) {
-        taskIter->second->state = state;
+    {
+        std::lock_guard<std::mutex> lock(mapMutex_);
+        auto taskIter = taskMap_.find(taskId);
+        if (taskIter != taskMap_.end()) {
+            taskIter->second->state = state;
+        }
     }
     std::lock_guard<std::mutex> lock(cbMutex_);
     auto callback = callback_.lock();
@@ -867,17 +1022,50 @@ void AVDownloaderManagerImpl::NotifyStatusChange(const std::string &taskId, AVDo
     }
 }
 
+void AVDownloaderManagerImpl::NotifyStatusChangeLocked(const std::string &taskId, AVDownloadTaskState state)
+{
+    MEDIA_LOGI("NotifyStatusChangeLocked: %{public}s, Task state: %{public}d", taskId.c_str(), state);
+    auto taskIter = taskMap_.find(taskId);
+    if (taskIter != taskMap_.end()) {
+        taskIter->second->state = state;
+    }
+    std::lock_guard<std::mutex> lock(cbMutex_);
+    auto callback = callback_.lock();
+    if (callback != nullptr) {
+        MEDIA_LOGI("NotifyStatusChangeLocked: %{public}s, callback not null", taskId.c_str());
+        callback->OnStatusChange(taskId, state);
+    }
+}
+
 void AVDownloaderManagerImpl::NotifyProgressChange(const std::string &taskId, double progress)
 {
-    MEDIA_LOGI("NotifyProgressChange: %{public}s, Task state: %{public}f", taskId.c_str(), progress);
+    MEDIA_LOGI("NotifyProgressChange: %{public}s, progress: %{public}f", taskId.c_str(), progress);
+    {
+        std::lock_guard<std::mutex> lock(mapMutex_);
+        auto taskIter = taskMap_.find(taskId);
+        if (taskIter != taskMap_.end()) {
+            taskIter->second->progress = progress;
+        }
+    }
     std::lock_guard<std::mutex> lock(cbMutex_);
+    auto callback = callback_.lock();
+    if (callback != nullptr) {
+        MEDIA_LOGI("NotifyProgressChange: %{public}s, callback not null", taskId.c_str());
+        callback->OnProgressChange(taskId, progress);
+    }
+}
+
+void AVDownloaderManagerImpl::NotifyProgressChangeLocked(const std::string &taskId, double progress)
+{
+    MEDIA_LOGI("NotifyProgressChangeLocked: %{public}s, progress: %{public}f", taskId.c_str(), progress);
     auto taskIter = taskMap_.find(taskId);
     if (taskIter != taskMap_.end()) {
         taskIter->second->progress = progress;
     }
+    std::lock_guard<std::mutex> lock(cbMutex_);
     auto callback = callback_.lock();
     if (callback != nullptr) {
-        MEDIA_LOGI("NotifyProgressChange: %{public}s, callback not null", taskId.c_str());
+        MEDIA_LOGI("NotifyProgressChangeLocked: %{public}s, callback not null", taskId.c_str());
         callback->OnProgressChange(taskId, progress);
     }
 }
@@ -898,26 +1086,29 @@ void AVDownloaderManagerImpl::ProcessNextPendingTask()
     pendingTaskQueue_.pop();
 
     auto downloaderIter = downloaderMap_.find(taskId);
-    if (downloaderIter == downloaderMap_.end()) {
+    if (downloaderIter == downloaderMap_.end() || downloaderIter->second == nullptr) {
         MEDIA_LOGE("ProcessNextPendingTask: downloader not found for taskId=%{public}s", taskId.c_str());
+        pendingTaskQueue_.push({url, taskId});
         return;
     }
     auto downloader = downloaderIter->second;
-    
+
+    auto taskIter = taskMap_.find(taskId);
+    if (taskIter == taskMap_.end()) {
+        MEDIA_LOGE("ProcessNextPendingTask: task not found for taskId=%{public}s", taskId.c_str());
+        pendingTaskQueue_.push({url, taskId});
+        return;
+    }
+    auto& taskInfo = taskIter->second;
+
     if (taskCallback_ == nullptr) {
         taskCallback_ = std::make_shared<DownloadTaskCallback>(weak_from_this());
     }
     downloader->SetDownloadCallback(taskCallback_);
 
-    auto taskIter = taskMap_.find(taskId);        // 取taskInfo
-    if (taskIter == taskMap_.end()) {
-        return;
-    }
-    auto& taskInfo = taskIter->second;
-
     MediaDownload::DownloadConfig config;
-    config.timeoutMs = requestTimeoutMs_;
-    config.allowMobileData = allowCellularAccess_;
+    config.timeoutMs = requestTimeoutMs_.load();
+    config.allowMobileData = allowCellularAccess_.load();
     config.allowWifi = true;
     downloader->AddFileTask(taskInfo->url, taskInfo->currentFilePath, config);
 
@@ -928,7 +1119,9 @@ void AVDownloaderManagerImpl::ProcessNextPendingTask()
         MEDIA_LOGI("ProcessNextPendingTask: started taskId=%{public}s, activeDownloaderCount_=%{public}d",
             taskId.c_str(), activeDownloaderCount_.load());
     } else {
-        MEDIA_LOGE("ProcessNextPendingTask: Start failed for taskId=%{public}s, ret=%{public}d", taskId.c_str(), ret);
+        MEDIA_LOGE("ProcessNextPendingTask: Start failed for taskId=%{public}s, ret=%{public}d",
+            taskId.c_str(), ret);
+        pendingTaskQueue_.push({url, taskId});
     }
 }
 
@@ -936,9 +1129,15 @@ void AVDownloaderManagerImpl::HandleMessage(const MediaDownload::Message &msg)
 {
     switch (msg.type) {
         case MediaDownload::MSG_RELEASE_DOWNLOADER:
-            if (msg.downloader != nullptr) {
-                MEDIA_LOGI("HandleMessage: releasing downloader");
-                msg.downloader->Release();
+            {
+                std::string taskId = std::to_string(msg.downloaderId);
+                MEDIA_LOGI("HandleMessage: releasing downloader: %{public}s", taskId.c_str());
+                std::lock_guard<std::mutex> lock(mapMutex_);
+                auto iter = downloaderMap_.find(taskId);
+                if (iter != downloaderMap_.end() && iter->second != nullptr) {
+                    iter->second->Release();
+                    downloaderMap_.erase(iter);
+                }
             }
             break;
         case MediaDownload::MSG_PROCESS_NEXT_TASK:
@@ -980,6 +1179,10 @@ void AVDownloaderManagerImpl::StopNetworkListening()
 void AVDownloaderManagerImpl::OnNetworkChanged(MediaSourceUtils::NetConnType newType)
 {
     MEDIA_LOGI("OnNetworkChanged: newType=%{public}d", newType);
+    if (released_.load()) {
+        MEDIA_LOGI("OnNetworkChanged: already released, ignoring");
+        return;
+    }
     std::lock_guard<std::mutex> lock(mapMutex_);
     for (auto& pair : downloaderMap_) {
         auto downloader = pair.second;
@@ -1004,7 +1207,7 @@ bool AVDownloaderManagerImpl::IsNetworkAllowDownload(MediaSourceUtils::NetConnTy
         return false;
     }
 
-    if (allowCellularAccess_ && newType == MediaSourceUtils::NetConnType::NET_CONN_CELLULAR) {
+    if (allowCellularAccess_.load() && newType == MediaSourceUtils::NetConnType::NET_CONN_CELLULAR) {
         MEDIA_LOGI("IsNetworkAllowDownload: Mobile data network allowed");
         return true;
     }

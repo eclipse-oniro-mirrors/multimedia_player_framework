@@ -50,13 +50,19 @@ struct AdsAsyncContext {
 
 class AVAdsControllerNapi {
 public:
-    AVAdsControllerNapi() : player_(nullptr) {}
+    AVAdsControllerNapi() : playerRef_(nullptr), player_(nullptr) {}
     ~AVAdsControllerNapi() {}
 
-    void SetPlayer(void* player)
+    void SetPlayer(void* env, void* playerObj)
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        player_ = player;
+        player_ = playerObj;
+    }
+    void ClearPlayer(void* env)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        playerRef_ = nullptr;
+        player_ = nullptr;
     }
     void* GetPlayer() const
     {
@@ -65,6 +71,7 @@ public:
     }
 
 private:
+    void* playerRef_;
     void* player_;
     mutable std::mutex mutex_;
 };

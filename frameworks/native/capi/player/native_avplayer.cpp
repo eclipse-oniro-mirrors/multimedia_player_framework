@@ -2268,6 +2268,7 @@ OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredWidth(OH_AVPlaybackStrategy *stra
 OH_AVErrCode OH_AVPlaybackStrategy_SetPreferredHeight(OH_AVPlaybackStrategy *strategy, int32_t height)
 {
     CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_ERR_INVALID_VAL, "strategy is nullptr");
+    CHECK_AND_RETURN_RET_LOG(height >= 0, AV_ERR_INVALID_VAL, "height is invalid");
     strategy->preferredHeight = static_cast<uint32_t>(height);
     return AV_ERR_OK;
 }

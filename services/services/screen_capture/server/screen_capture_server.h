@@ -20,55 +20,33 @@
 #include "ui_extension_ability_connection.h"
 #include "audio_data_source.h"
 #include "window_life_cycle_listener.h"
-#include "external_service_providers.h"
+#include "screen_capture_service_providers.h"
 
 namespace OHOS {
 namespace Media {
 
+class ScreenCaptureCallbackProxy : public ScreenCaptureCallBack, public NoCopyable {
+public:
+    void SetCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback);
+    void Reset();
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
+    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
+    void OnVideoBufferAvailable(bool isReady) override;
+    void OnStateChange(AVScreenCaptureStateCode stateCode) override;
+    void OnDisplaySelected(uint64_t displayId) override;
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
+    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override;
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override;
+private:
+    std::shared_mutex mutex_;
+    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+};
+
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {
 public:
-    static std::map<int32_t, std::weak_ptr<ScreenCaptureServer>> serverMap_;
-    static std::map<int32_t, std::pair<int32_t, int32_t>> saUidAppUidMap_;
-    static const int32_t maxSessionId_;
-    static const int32_t maxAppLimit_;
-    static UniqueIDGenerator gIdGenerator_;
-    static std::list<int32_t> startedSessionIDList_;
-    static const int32_t maxSessionPerUid_;
-    static const int32_t maxSCServerDataTypePerUid_;
-    static std::shared_mutex mutexServerMapRWGlobal_;
-    static std::shared_mutex mutexListRWGlobal_;
-    static std::shared_mutex mutexSaAppInfoMapGlobal_;
-    static std::atomic<int32_t> systemScreenRecorderPid_;
-
-    static std::shared_ptr<IScreenCaptureService> Create();
-    static bool IsSAServiceCalling();
-    static bool CanScreenCaptureInstanceBeCreate(int32_t appUid);
-    static std::shared_ptr<IScreenCaptureService> CreateScreenCaptureNewInstance();
-    static int32_t ReportAVScreenCaptureUserChoice(int32_t sessionId, const std::string &content);
-    static int32_t GetRunningScreenCaptureInstancePid(std::list<int32_t> &pidList);
-    static int32_t GetAVScreenCaptureConfigurableParameters(int32_t sessionId, std::string &resultStr);
-    static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
-    static void GetValueFromJson(Json::Value &root, const std::string &content, std::string key, bool &value);
-    static void AddScreenCaptureServerMap(int32_t sessionId, std::weak_ptr<ScreenCaptureServer> server);
-    static void RemoveScreenCaptureServerMap(int32_t sessionId);
-    static bool CheckScreenCaptureSessionIdLimit(int32_t curAppUid);
-    static bool CheckSCServerSpecifiedDataTypeNum(int32_t curAppUid, DataType dataType);
-    static void CountScreenCaptureAppNum(std::set<int32_t>& appSet);
-    static bool CheckScreenCaptureAppLimit(int32_t curAppUid);
-    static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerById(int32_t id);
-    static std::shared_ptr<ScreenCaptureServer> GetScreenCaptureServerByIdWithLock(int32_t id);
-    static std::list<int32_t> GetStartedScreenCaptureServerPidList();
-    static int32_t CountStartedScreenCaptureServerNumByPid(int32_t pid);
-    static size_t AddStartedSessionIdList(int32_t value);
-    static size_t RemoveStartedSessionIdList(int32_t value);
-    static std::list<int32_t> GetAllStartedSessionIdList();
-    static void AddSaAppInfoMap(int32_t saUid, int32_t curAppUid);
-    static void RemoveSaAppInfoMap(int32_t saUid);
-    static bool CheckSaUid(int32_t saUid, int32_t appUid);
-    static bool IsSaUidValid(int32_t saUid, int32_t appUid);
-    static bool CheckPidIsScreenRecorder(int32_t pid);
-    ScreenCaptureServer();
+    static std::shared_ptr<IScreenCaptureService> Create(std::unique_ptr<IScreenCaptureServiceProviders> providers);
+    explicit ScreenCaptureServer(std::unique_ptr<IScreenCaptureServiceProviders> providers);
     ~ScreenCaptureServer();
 
     int32_t SetCaptureMode(CaptureMode captureMode) override;
@@ -84,6 +62,7 @@ public:
     int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled) override;
     int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled) override;
     int32_t StopScreenCapture() override;
+    int32_t StopAndRelease(AVScreenCaptureStateCode state);
     int32_t PresentPicker() override;
     int32_t SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback) override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
@@ -103,7 +82,7 @@ public:
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
     int32_t RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
-    int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) override;
+    int32_t ExcludePickerWindows(const std::vector<int32_t> &windowIDsVec) override;
     int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
@@ -118,10 +97,10 @@ public:
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
         int32_t &watermarkCount) override;
 
-    void SetSessionId(int32_t sessionId);
+    int32_t ReportAVScreenCaptureUserChoice(const std::string &content);
+    int32_t GetAVScreenCaptureConfigurableParameters(std::string &resultStr);
     void GetAndSetAppVersion();
     bool CheckAppVersionForUnsupport(DMError result);
-    int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StopScreenCaptureByEvent(AVScreenCaptureStateCode stateCode);
     std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> GetWantAgent(const std::string& callingLabel,
         int32_t sessionId);
@@ -132,15 +111,8 @@ public:
     void OnWindowLifecycle(SCWindowLifecycleListener::SessionLifecycleEvent event);
 #ifdef SUPPORT_CALL
     int32_t TelCallStateUpdated(bool isInTelCall);
-    int32_t TelCallAudioStateUpdated(bool isInTelCallAudio);
 #endif
     void UpdateMicrophoneEnabled();
-    int32_t ReleaseMicAudioBuffer();
-    int32_t ReleaseInnerAudioBuffer();
-    int32_t GetInnerAudioCaptureBufferSize(size_t &size);
-    int32_t GetMicAudioCaptureBufferSize(size_t &size);
-    int32_t OnVoIPStatusChanged(bool isInVoIPCall);
-    int32_t OnSpeakerAliveStatusChanged(bool speakerAliveStatus);
     int32_t ShowCursorInner();
     void OnDMPrivateWindowChange(bool hasPrivate);
     void SetMissionId(uint64_t missionId);
@@ -159,29 +131,14 @@ public:
     void ChangeMirrorScreen();
     void ChangeMirrorScreenForRemove();
     void ChangeMirrorScreenForSet();
-    int32_t GetAppPid();
-    int32_t GetAppUid();
-    void NotifyStateChange(AVScreenCaptureStateCode stateCode);
-    void NotifyDisplaySelected(uint64_t displayId);
     void NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area);
-    void NotifyUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
     void NotifyprivacyProtect();
-    int32_t SetAndCheckAppInfo(OHOS::AudioStandard::AppInfo &appInfo);
-    void SetSCServerSaUid(int32_t saUid);
-    int32_t GetSCServerSaUid();
-    DataType GetSCServerDataType();
     bool IsState(uint32_t cap) const;
     bool IsSCRecorderFileWithVideo();
-    std::shared_ptr<AudioCapturerWrapper> GetInnerAudioCapture();
-    std::shared_ptr<AudioCapturerWrapper> GetMicAudioCapture();
     bool IsStopAcquireAudioBufferFlag();
     bool IsMicrophoneSwitchTurnOn();
-    bool IsMicrophoneCaptureRunning();
-    bool IsInnerCaptureRunning();
-    void SetInnerAudioCapture(std::shared_ptr<AudioCapturerWrapper> innerAudioCapture);
-    int32_t StopInnerAudioCapture();
-    void SetWindowIdList(uint64_t windowId);
-    std::vector<int32_t> GetWindowIdList();
+    int32_t AudioRendererStateUpdate(
+        const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void OnSceneSessionManagerDied(const wptr<IRemoteObject>& remote);
     void SetDefaultDisplayIdOfWindows();
     bool IsCaptureScreen(uint64_t displayId);
@@ -189,6 +146,7 @@ public:
     uint64_t GetCurDisplayId();
 
 private:
+    int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
     int32_t StartScreenCaptureInner(bool isPrivacyAuthorityEnabled);
     int32_t RegisterServerCallbacks();
     int32_t OnStartScreenCapture(bool isSkipPrivacyWindow = false);
@@ -204,20 +162,14 @@ private:
     int32_t InitRecorder();
     OutlineShape ConvertToOutlineShape(ScreenCaptureHighlightMode mode);
     void UpdateHighlightOutline(bool isStarted);
-    void SetHighlightConfigForWindowManager(bool isStarted,
-        Rosen::OutlineParams &outlineParams);
+    void SetHighlightConfigForWindowManager(bool isStarted, Rosen::OutlineParams &outlineParams);
     bool IsSetHighlightConfig();
     int32_t StartScreenCaptureFile();
     int32_t StartScreenCaptureStream();
-    int32_t StartAudioCapture();
+    int32_t SyncAudioCaptures(bool ignoreMicError = false);
     std::string GenerateThreadNameByPrefix(std::string threadName);
-    int32_t StartStreamInnerAudioCapture();
-    int32_t StartStreamMicAudioCapture();
-    int32_t StartFileInnerAudioCapture();
-    int32_t StartFileMicAudioCapture();
-    int32_t StartFileAudioCapture();
-    int32_t StartMicAudioCapture();
-    int32_t StopMicAudioCapture();
+    int32_t StartInnerAudioCapture();
+    int32_t StartMicAudioCapture(bool isVoip);
     int32_t StartStreamVideoCapture();
     int32_t StartStreamHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
@@ -236,15 +188,14 @@ private:
     int32_t SkipPrivacyModeInner();
     int32_t SetScreenScaleMode();
     void InitAppInfo();
+    void ConvertTaskIdsToMissionIds();
+    void SetupCaptureListeners();
     void CloseFd();
     void ReleaseInner();
     void GetDumpFlag();
     void GetSystemUIFlag();
-    int32_t SetMicrophoneOn();
-    int32_t SetMicrophoneOff();
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
-    int32_t GetMissionIds(std::vector<uint64_t> &missionIds);
     int32_t SetupVirtualScreenMirror(const sptr<Rosen::Display> &defaultDisplay,
         std::vector<ScreenId> &mirrorIds);
     DMError CreateMirror(const std::vector<uint64_t> &displayIds, std::vector<ScreenId> &mirrorIds);
@@ -306,25 +257,18 @@ private:
     void SetMetaDataReport();
     void SetMediaKitReport(const std::string &errMsg);
     void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
-    int32_t ReStartMicForVoIPStatusSwitch();
     void RegisterPrivateWindowListener();
     void RegisterScreenConnectListener();
     uint64_t GetDisplayIdOfWindows(uint64_t displayId);
     std::string GetStringByResourceName(const char* name);
-    void RefreshResConfig();
     void InitResourceManager();
-    void SetSystemScreenRecorderStatus(bool status);
-#ifdef SUPPORT_CALL
-    int32_t OnTelCallStart();
-    int32_t OnTelCallStop();
-#endif
     bool DestroyPopWindow();
     bool DestroyPrivacySheet();
     void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t RegisterAppLifecycleListener(const std::string &bundleName, int32_t appIndex,
         const std::string& appInstanceKey = "");
     int32_t UnRegisterAppLifecycleListener();
-    int32_t RegisterWindowLifecycleListener(std::vector<int32_t> windowIdList);
+    int32_t RegisterWindowLifecycleListener();
     int32_t UnRegisterWindowLifecycleListener();
     int32_t RegisterWindowInfoChangedListener();
     int32_t UnRegisterWindowInfoChangedListener();
@@ -350,26 +294,22 @@ private:
     void StopCaptureOnError(const std::string &reportMsg);
 private:
     std::mutex mutex_;
-    std::mutex cbMutex_;
-    std::mutex innerMutex_;
-    std::mutex inCallMutex_;
-    std::mutex displayScreenIdsMutex_;
-    std::shared_mutex windowIdListMutex_;
-    mutable std::shared_mutex rw_lock_;
+    std::mutex captureIdsMutex_;
     mutable std::shared_mutex appMissionIdslock_;
     mutable std::condition_variable_any appMissionIdsCondVar_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
-    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    TaskQueue taskQue_{"SCServer"};
+    std::shared_ptr<ScreenCaptureCallbackProxy> cbProxy_ = nullptr;
     bool canvasRotation_ = false;
     bool showCursor_ = true;
-    bool isMicrophoneSwitchTurnOn_ = true;
-    bool isPrivacyAuthorityEnabled_ = false;
+    std::atomic<bool> isMicrophoneSwitchTurnOn_{true};
+    std::atomic<bool> isPrivacyAuthorityEnabled_{false};
     bool showSensitiveCheckBox_ = false;
     bool checkBoxSelected_ = false;
     bool showShareSystemAudioBox_ = false;
     bool isInnerAudioBoxSelected_ = true;
-    bool appPrivacyProtectionSwitch_ = true;
-    bool systemPrivacyProtectionSwitch_ = true;
+    std::atomic<bool> appPrivacyProtectionSwitch_{true};
+    std::atomic<bool> systemPrivacyProtectionSwitch_{true};
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
     std::atomic<bool> stopAcquireAudioBufferFromAudio_ = false;
@@ -390,7 +330,7 @@ private:
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
     bool isScreenCaptureAuthority_ = false;
-    bool isPresentPickerPopWindow_ = false;
+    std::atomic<bool> isPresentPickerPopWindow_{false};
     std::string appName_ = "";
     std::atomic<bool> isSystemRecorder_ = {false};
     AVScreenCaptureConfig captureConfig_;
@@ -409,7 +349,7 @@ private:
     std::vector<uint64_t> missionIds_;
     std::vector<uint64_t> appMissionIds_ = {};
     std::vector<uint64_t> appMissionIdsForGround_ = {};
-    std::vector<int32_t> windowIdList_ = {};
+    int32_t interestWindowId_ = -1;
     std::atomic<uint64_t> focusAppMissionId_ = INVALID_FOCUS_MISSION_ID;
     std::atomic<bool> isGetAppMissionId_ = true;
     std::atomic<ScreenId> curWindowInDisplayId_{SCREEN_ID_INVALID};
@@ -423,27 +363,26 @@ private:
     int64_t startTime_ = 0;
     bool isTimePaused_ = false;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
-    std::unique_ptr<ExternalServiceProviders> providers_ = CreateDefaultProviders();
+    std::unique_ptr<IScreenCaptureServiceProviders> providers_;
     sptr<SCWindowLifecycleListener> windowLifecycleListener_ = nullptr;
     sptr<SCWindowLifecycleListener> appLifecycleListener_ = nullptr;
     sptr<SCDeathRecipientListener> lifecycleListenerDeathRecipient_ = nullptr;
     sptr<SCWindowInfoChangedListener> windowInfoChangedListener_ = nullptr;
     sptr<ScreenManager::IRecordDisplayListener> recordDisplayListener_ = nullptr;
-    bool isRegionCapture_ = false;
+    std::atomic<bool> isRegionCapture_{false};
     uint64_t regionDisplayId_ = 0;
     OHOS::Rect regionArea_ = {0, 0, 0, 0};
 
     /* used for CAPTURE STREAM */
     sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
     sptr<OHOS::Surface> surface_ = nullptr;
-    bool isSurfaceMode_ = false;
+    std::atomic<bool> isSurfaceMode_{false};
     std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;
     std::shared_ptr<AudioCapturerWrapper> micAudioCapture_;
-    std::mutex innerAudioMutex_;
+    std::mutex audioMutex_;
 
     /* used for CAPTURE FILE */
     std::shared_ptr<IRecorderService> recorder_ = nullptr;
-    std::string url_;
     OutputFormatType fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     int32_t outputFd_ = -1;
     int32_t audioSourceId_ = 0;
@@ -458,15 +397,13 @@ private:
     Global::Resource::ResConfig *resConfig_ = nullptr;
     OHOS::sptr<Rosen::ScreenManager::IScreenListener> screenConnectListener_ = nullptr;
     std::shared_ptr<ScreenCaptureSubscriber> subscriber_ = nullptr;
-    int32_t watermarkCount_ = 0;
 
     /* used for customize picker */
     std::vector<int32_t> excludedWindowIDsVec_;
     PickerMode pickerMode_ = PickerMode::SCREEN_AND_WINDOW;
-    bool isPickerModePopUp_ = false;
+    std::atomic<bool> isPickerModePopUp_{false};
 #ifdef SUPPORT_CALL
     std::atomic<bool> isInTelCall_ = false;
-    std::atomic<bool> isInTelCallAudio_ = false;
 #endif
     std::atomic<bool> recorderFileWithVideo_{false};
 private:
@@ -480,6 +417,8 @@ private:
     static int32_t CheckVideoEncInfo(VideoEncInfo &videoEncInfo);
     static int32_t CheckCaptureMode(CaptureMode captureMode);
     static int32_t CheckDataType(DataType dataType);
+    static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
+    static void GetValueFromJson(Json::Value &root, const std::string &content, std::string key, bool &value);
 
 private:
     static constexpr int32_t ROOT_UID = 0;

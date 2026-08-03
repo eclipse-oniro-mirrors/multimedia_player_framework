@@ -117,6 +117,8 @@ public:
     MOCK_METHOD(void, SetCacheLimit, (uint32_t limitSize), (override));
     MOCK_METHOD(void, WaitForBufferingEnd, (), (override));
     MOCK_METHOD(void, SetEnableOnlineFdCache, (bool isEnableFdCache), (override));
+    MOCK_METHOD(void, SetReadSampleMode, (ReadSampleMode readSampleMode), (override));
+    MOCK_METHOD(void, SetReadSampleTimeout, (uint32_t timeoutMs), (override));
 };
 } // namespace Media
 } // namespace OHOS

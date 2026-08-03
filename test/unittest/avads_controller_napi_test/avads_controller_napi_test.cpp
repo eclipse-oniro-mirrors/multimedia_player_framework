@@ -29,8 +29,9 @@ HWTEST_F(AVAdsControllerNapiTest, SetPlayer_Nullptr_001, TestSize.Level0)
     auto controller = std::make_unique<AVAdsControllerNapi>();
     ASSERT_NE(controller, nullptr);
 
+    void* nullEnv = nullptr;
     void* nullPlayer = nullptr;
-    controller->SetPlayer(nullPlayer);
+    controller->SetPlayer(nullEnv, nullPlayer);
     EXPECT_EQ(controller->GetPlayer(), nullptr);
 }
 
@@ -48,7 +49,7 @@ HWTEST_F(AVAdsControllerNapiTest, GetPlayer_AfterSetPlayer_001, TestSize.Level0)
     ASSERT_NE(controller, nullptr);
 
     int dummyPlayer = 42;
-    controller->SetPlayer(&dummyPlayer);
+    controller->SetPlayer(nullptr, &dummyPlayer);
     EXPECT_EQ(controller->GetPlayer(), &dummyPlayer);
 }
 
@@ -60,10 +61,10 @@ HWTEST_F(AVAdsControllerNapiTest, SetPlayer_MultipleTimes_001, TestSize.Level0)
     int player1 = 1;
     int player2 = 2;
 
-    controller->SetPlayer(&player1);
+    controller->SetPlayer(nullptr, &player1);
     EXPECT_EQ(controller->GetPlayer(), &player1);
 
-    controller->SetPlayer(&player2);
+    controller->SetPlayer(nullptr, &player2);
     EXPECT_EQ(controller->GetPlayer(), &player2);
 }
 
@@ -75,10 +76,10 @@ HWTEST_F(AVAdsControllerNapiTest, ThreadSafety_SetPlayer_GetPlayer_001, TestSize
     int player1 = 1;
     int player2 = 2;
 
-    controller->SetPlayer(&player1);
+    controller->SetPlayer(nullptr, &player1);
     EXPECT_EQ(controller->GetPlayer(), &player1);
 
-    controller->SetPlayer(&player2);
+    controller->SetPlayer(nullptr, &player2);
     EXPECT_EQ(controller->GetPlayer(), &player2);
 }
 
@@ -89,7 +90,7 @@ HWTEST_F(AVAdsControllerNapiTest, ConcurrentAccess_001, TestSize.Level1)
 
     int dummyPlayer = 42;
 
-    controller->SetPlayer(&dummyPlayer);
+    controller->SetPlayer(nullptr, &dummyPlayer);
     auto player1 = controller->GetPlayer();
     auto player2 = controller->GetPlayer();
 
@@ -419,4 +420,40 @@ HWTEST_F(AVAdsControllerNapiTest, OpType_AllCases_001, TestSize.Level0)
         ctx->opType = opType;
         EXPECT_EQ(ctx->opType, opType);
     }
+}
+
+HWTEST_F(AVAdsControllerNapiTest, ClearPlayer_NoPlayer_001, TestSize.Level0)
+{
+    auto controller = std::make_unique<AVAdsControllerNapi>();
+    ASSERT_NE(controller, nullptr);
+
+    controller->ClearPlayer(nullptr);
+    EXPECT_EQ(controller->GetPlayer(), nullptr);
+}
+
+HWTEST_F(AVAdsControllerNapiTest, ClearPlayer_AfterSetPlayer_001, TestSize.Level0)
+{
+    auto controller = std::make_unique<AVAdsControllerNapi>();
+    ASSERT_NE(controller, nullptr);
+
+    int dummyPlayer = 42;
+    controller->SetPlayer(nullptr, &dummyPlayer);
+    EXPECT_EQ(controller->GetPlayer(), &dummyPlayer);
+
+    controller->ClearPlayer(nullptr);
+    EXPECT_EQ(controller->GetPlayer(), nullptr);
+}
+
+HWTEST_F(AVAdsControllerNapiTest, ClearPlayer_MultipleTimes_001, TestSize.Level0)
+{
+    auto controller = std::make_unique<AVAdsControllerNapi>();
+    ASSERT_NE(controller, nullptr);
+
+    int dummyPlayer = 42;
+    controller->SetPlayer(nullptr, &dummyPlayer);
+    controller->ClearPlayer(nullptr);
+    EXPECT_EQ(controller->GetPlayer(), nullptr);
+
+    controller->ClearPlayer(nullptr);
+    EXPECT_EQ(controller->GetPlayer(), nullptr);
 }

@@ -18,34 +18,10 @@
 
 #include "i_standard_screen_capture_listener.h"
 #include "media_death_recipient.h"
-#include "screen_capture.h"
 #include "nocopyable.h"
 
 namespace OHOS {
 namespace Media {
-class ScreenCaptureListenerCallback : public ScreenCaptureCallBack, public NoCopyable {
-public:
-    explicit ScreenCaptureListenerCallback(const sptr<IStandardScreenCaptureListener> &listener);
-    virtual ~ScreenCaptureListenerCallback();
-
-    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
-    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
-    void OnVideoBufferAvailable(bool isReady) override;
-    void OnStateChange(AVScreenCaptureStateCode stateCode) override;
-    void OnDisplaySelected(uint64_t displayId) override;
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
-    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override;
-    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override;
-    void Stop()
-    {
-        isStopped_ = true;
-    }
-
-private:
-    sptr<IStandardScreenCaptureListener> listener_ = nullptr;
-    std::atomic<bool> isStopped_ = false;
-};
-
 class ScreenCaptureListenerProxy : public IRemoteProxy<IStandardScreenCaptureListener>, public NoCopyable {
 public:
     explicit ScreenCaptureListenerProxy(const sptr<IRemoteObject> &impl);

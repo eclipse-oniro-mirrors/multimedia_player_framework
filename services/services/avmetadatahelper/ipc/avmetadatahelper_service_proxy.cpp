@@ -14,6 +14,8 @@
  */
 
 #include "avmetadatahelper_service_proxy.h"
+#include <charconv>
+#include <string_view>
 #include "media_log.h"
 #include "media_errors.h"
 #include "media_parcel.h"
@@ -23,6 +25,44 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_METADATA,
                                                "AVMetadataHelperServiceProxy"};
+constexpr std::string_view FD_URI_PREFIX = "fd://";
+constexpr std::string_view OFFSET_KEY = "?offset=";
+constexpr std::string_view SIZE_KEY = "&size=";
+
+struct FdUriInfo {
+    int32_t fd = -1;
+    int64_t offset = 0;
+    int64_t size = 0;
+};
+
+template<typename T>
+bool ParseInteger(std::string_view value, T &result)
+{
+    CHECK_AND_RETURN_RET(!value.empty(), false);
+    auto [ptr, ec] = std::from_chars(value.data(), value.data() + value.size(), result);
+    return ec == std::errc{} && ptr == value.data() + value.size();
+}
+
+bool ParseFdUri(std::string_view uri, FdUriInfo &fdUriInfo)
+{
+    CHECK_AND_RETURN_RET(uri.compare(0, FD_URI_PREFIX.size(), FD_URI_PREFIX) == 0, false);
+    uri.remove_prefix(FD_URI_PREFIX.size());
+
+    size_t offsetPos = uri.find(OFFSET_KEY);
+    if (offsetPos == std::string_view::npos) {
+        return ParseInteger(uri, fdUriInfo.fd) && fdUriInfo.fd > 0;
+    }
+
+    size_t sizePos = uri.find(SIZE_KEY, offsetPos + OFFSET_KEY.size());
+    CHECK_AND_RETURN_RET(sizePos != std::string_view::npos, false);
+    std::string_view fdValue = uri.substr(0, offsetPos);
+    std::string_view offsetValue = uri.substr(offsetPos + OFFSET_KEY.size(),
+        sizePos - offsetPos - OFFSET_KEY.size());
+    std::string_view sizeValue = uri.substr(sizePos + SIZE_KEY.size());
+    return ParseInteger(fdValue, fdUriInfo.fd) && ParseInteger(offsetValue, fdUriInfo.offset) &&
+        ParseInteger(sizeValue, fdUriInfo.size) && fdUriInfo.fd > 0 && fdUriInfo.offset >= 0 &&
+        fdUriInfo.size >= -1;
+}
 }
 
 namespace OHOS {
@@ -49,7 +89,9 @@ int32_t AVMetadataHelperServiceProxy::DestroyStub()
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(DESTROY, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(DESTROY, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "DestroyStub failed, error: %{public}d", error);
 
@@ -58,6 +100,12 @@ int32_t AVMetadataHelperServiceProxy::DestroyStub()
 
 int32_t AVMetadataHelperServiceProxy::SetSource(const std::string &uri, int32_t usage)
 {
+    if (uri.compare(0, FD_URI_PREFIX.size(), FD_URI_PREFIX) == 0) {
+        FdUriInfo fdUriInfo;
+        CHECK_AND_RETURN_RET_LOG(ParseFdUri(uri, fdUriInfo), MSERR_INVALID_VAL, "Invalid fd uri");
+        return SetSource(fdUriInfo.fd, fdUriInfo.offset, fdUriInfo.size, usage);
+    }
+
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
@@ -68,7 +116,9 @@ int32_t AVMetadataHelperServiceProxy::SetSource(const std::string &uri, int32_t 
     (void)data.WriteString(uri);
     (void)data.WriteInt32(usage);
 
-    int error = Remote()->SendRequest(SET_URI_SOURCE, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(SET_URI_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetSource failed, error: %{public}d", error);
 
@@ -86,7 +136,9 @@ int32_t AVMetadataHelperServiceProxy::SetAVMetadataCaller(AVMetadataCaller calle
 
     (void)data.WriteInt32(static_cast<int32_t>(caller));
 
-    int error = Remote()->SendRequest(SET_METADATA_CALLER, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(SET_METADATA_CALLER, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetAVMetadataCaller failed, error: %{public}d", error);
 
@@ -120,7 +172,9 @@ int32_t AVMetadataHelperServiceProxy::SetUrlSource(const std::string &uri,
         }
     }
 
-    int error = Remote()->SendRequest(SET_HTTP_URI_SOURCE, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(SET_HTTP_URI_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetUrlSource failed, error: %{public}d", error);
     return reply.ReadInt32();
@@ -140,7 +194,9 @@ int32_t AVMetadataHelperServiceProxy::SetSource(int32_t fd, int64_t offset, int6
     (void)data.WriteInt64(size);
     (void)data.WriteInt32(usage);
 
-    int error = Remote()->SendRequest(SET_FD_SOURCE, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(SET_FD_SOURCE, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetSource failed, error: %{public}d", error);
 
@@ -157,7 +213,9 @@ int32_t AVMetadataHelperServiceProxy::SetSource(const sptr<IRemoteObject> &objec
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     (void)data.WriteRemoteObject(object);
-    int32_t error = Remote()->SendRequest(SET_MEDIA_DATA_SRC_OBJ, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(SET_MEDIA_DATA_SRC_OBJ, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetSource failed, error: %{public}d", error);
 
@@ -174,7 +232,9 @@ int32_t AVMetadataHelperServiceProxy::SetListenerObject(const sptr<IRemoteObject
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
     (void)data.WriteRemoteObject(object);
-    int32_t error = Remote()->SendRequest(SET_LISTENER_OBJ, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(SET_LISTENER_OBJ, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetListenerObject failed, error: %{public}d", error);
 
@@ -189,7 +249,10 @@ int32_t AVMetadataHelperServiceProxy::CancelAllFetchFrames()
 
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_EXT_API9_SERVICE_DIED, "Failed to write descriptor!");
-    int error = Remote()->SendRequest(CANCEL_FETCHFRAMES, data, reply, option);
+
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(CANCEL_FETCHFRAMES, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED,
         "CancelAllFetchFrames failed, error: %{public}d", error);
 
@@ -207,7 +270,9 @@ std::string AVMetadataHelperServiceProxy::ResolveMetadata(int32_t key)
 
     (void)data.WriteInt32(key);
 
-    int error = Remote()->SendRequest(RESOLVE_METADATA, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, "", "Remote() is nullptr");
+    int error = remoteObject->SendRequest(RESOLVE_METADATA, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, "",
         "ResolveMetadata failed, error: %{public}d", error);
 
@@ -226,7 +291,9 @@ std::shared_ptr<Meta> AVMetadataHelperServiceProxy::GetAVMetadata()
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, metadata, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(GET_AVMETADATA, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, metadata, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(GET_AVMETADATA, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, metadata,
         "GetAVMetadata failed, error: %{public}d", error);
 
@@ -271,7 +338,9 @@ MetadataResult AVMetadataHelperServiceProxy::GetAVMetadataWithTimeout(int64_t ti
     CHECK_AND_RETURN_RET_LOG(token, MetadataResult(nullptr, false), "Failed to write descriptor!");
     (void)data.WriteInt64(timeoutMs);
 
-    int error = Remote()->SendRequest(GET_AVMETADATA_WITH_TIMEOUT, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MetadataResult(nullptr, false), "Remote() is nullptr");
+    int error = remoteObject->SendRequest(GET_AVMETADATA_WITH_TIMEOUT, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MetadataResult(nullptr, false),
         "GetAVMetadata failed, error: %{public}d", error);
     CHECK_AND_RETURN_RET(reply.ReadInt32() != MSERR_NETWORK_TIMEOUT, MetadataResult(nullptr, true));
@@ -315,7 +384,9 @@ std::unordered_map<int32_t, std::string> AVMetadataHelperServiceProxy::ResolveMe
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, metadata, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(RESOLVE_METADATA_MAP, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, metadata, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(RESOLVE_METADATA_MAP, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, metadata,
         "ResolveMetadataMap failed, error: %{public}d", error);
 
@@ -345,7 +416,9 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchArtPicture()
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, nullptr, "Failed to write descriptor!");
 
-    int error = Remote()->SendRequest(FETCH_ALBUM_COVER, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, nullptr, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(FETCH_ALBUM_COVER, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "FetchArtPicture failed, error: %{public}d", error);
 
@@ -368,7 +441,9 @@ std::shared_ptr<AVBuffer> AVMetadataHelperServiceProxy::FetchFrameYuv(int64_t ti
     (void)data.WriteInt32(param.dstHeight);
     (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
 
-    int error = Remote()->SendRequest(FETCH_FRAME_YUV, data, reply, opt);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, nullptr, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(FETCH_FRAME_YUV, data, reply, opt);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr, "FetchFrameYuv failed, error: %{public}d", error);
     CHECK_AND_RETURN_RET(reply.ReadInt32() == MSERR_OK, nullptr);
     auto avBuffer = AVBuffer::CreateAVBuffer();
@@ -395,7 +470,9 @@ FetchFrameResult AVMetadataHelperServiceProxy::FetchFrameYuvWithTimeout(int64_t 
     (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
     (void)data.WriteInt64(timeoutMs);
 
-    int error = Remote()->SendRequest(FETCH_FRAME_YUV_WITH_TIMEOUT, data, reply, opt);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, FetchFrameResult(nullptr, nullptr, false), "Remote() is nullptr");
+    int error = remoteObject->SendRequest(FETCH_FRAME_YUV_WITH_TIMEOUT, data, reply, opt);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, FetchFrameResult(nullptr, nullptr, false),
         "FetchFrameYuvWithTimeout failed, error: %{public}d", error);
     CHECK_AND_RETURN_RET_LOG(reply.ReadInt32() != MSERR_NETWORK_TIMEOUT, FetchFrameResult(nullptr, nullptr, true),
@@ -424,7 +501,10 @@ int32_t AVMetadataHelperServiceProxy::FetchFrameYuvs(const std::vector<int64_t>&
     (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
     (void)data.WriteBool(param.isSupportFlip);
     (void)data.WriteBool(param.convertColorSpace);
-    int error = Remote()->SendRequest(FETCH_FRAME_YUVS, data, reply, opt);
+    
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(FETCH_FRAME_YUVS, data, reply, opt);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED,
         "FetchFrameYuvs failed, error: %{public}d", error);
     CHECK_AND_RETURN_RET(reply.ReadInt32() == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED);
@@ -450,7 +530,10 @@ int32_t AVMetadataHelperServiceProxy::FetchFrameYuvsWithTimeout(const std::vecto
     (void)data.WriteBool(param.isSupportFlip);
     (void)data.WriteBool(param.convertColorSpace);
     (void)data.WriteInt64(timeoutMs);
-    int error = Remote()->SendRequest(FETCH_FRAME_YUVS_WITH_TIMEOUT, data, reply, opt);
+
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(FETCH_FRAME_YUVS_WITH_TIMEOUT, data, reply, opt);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED,
         "FetchFrameYuvsWithTimeout failed, error: %{public}d", error);
     CHECK_AND_RETURN_RET(reply.ReadInt32() == MSERR_OK, MSERR_EXT_API9_SERVICE_DIED);
@@ -474,7 +557,9 @@ std::shared_ptr<AVSharedMemory> AVMetadataHelperServiceProxy::FetchFrameAtTime(i
     (void)data.WriteInt32(param.dstHeight);
     (void)data.WriteInt32(static_cast<int32_t>(param.colorFormat));
 
-    int error = Remote()->SendRequest(FETCH_FRAME_AT_TIME, data, reply, opt);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, nullptr, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(FETCH_FRAME_AT_TIME, data, reply, opt);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, nullptr,
         "FetchFrameAtTime failed, error: %{public}d", error);
 
@@ -503,7 +588,9 @@ int32_t AVMetadataHelperServiceProxy::SetHelperCallback()
     bool token = data.WriteInterfaceToken(AVMetadataHelperServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    int32_t error = Remote()->SendRequest(SET_CALLBACK, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(SET_CALLBACK, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "SetHelperCallback failed, error: %{public}d", error);
 
@@ -521,7 +608,9 @@ int32_t AVMetadataHelperServiceProxy::GetTimeByFrameIndex(uint32_t index, uint64
 
     (void)data.WriteUint32(index);
 
-    int32_t error = Remote()->SendRequest(GET_TIME_BY_FRAME_INDEX, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(GET_TIME_BY_FRAME_INDEX, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetTimeByFrameIndex failed, error: %{public}d", error);
     time = reply.ReadUint64();
@@ -539,7 +628,9 @@ int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(uint64_t time, uint32_
 
     (void)data.WriteUint64(time);
 
-    int32_t error = Remote()->SendRequest(GET_FRAME_INDEX_BY_TIME, data, reply, option);
+    const sptr<IRemoteObject> remoteObject = Remote();
+    CHECK_AND_RETURN_RET_LOG(remoteObject != nullptr, MSERR_UNKNOWN, "Remote() is nullptr");
+    int error = remoteObject->SendRequest(GET_FRAME_INDEX_BY_TIME, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetFrameIndexByTime failed, error: %{public}d", error);
     index = reply.ReadUint32();
@@ -547,4 +638,3 @@ int32_t AVMetadataHelperServiceProxy::GetFrameIndexByTime(uint64_t time, uint32_
 }
 } // namespace Media
 } // namespace OHOS
-

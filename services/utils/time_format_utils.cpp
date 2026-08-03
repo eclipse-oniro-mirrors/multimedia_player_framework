@@ -73,11 +73,10 @@ std::string TimeFormatUtils::FormatDateTimeByTimeZone(const std::string &iso8601
 
     // convert time to localtime
     long timezone = 0;
-    std::tm *timeWithOffsetPtr = localtime(&tt);
-    if (timeWithOffsetPtr == nullptr) {
+    std::tm timeWithOffset {};
+    if (localtime_r(&tt, &timeWithOffset) == nullptr) {
         return "";
     }
-    std::tm timeWithOffset = *timeWithOffsetPtr;
     if (timeWithOffset.tm_gmtoff != 0) {
         timezone = timeWithOffset.tm_gmtoff;
     }
@@ -132,11 +131,10 @@ long TimeFormatUtils::ParseIso8601TimeZoneOffset(const std::string& tz)
 std::string TimeFormatUtils::FormatLocalTime(std::chrono::system_clock::time_point localTime)
 {
     std::time_t localTimeT = std::chrono::system_clock::to_time_t(localTime);
-    std::tm *localTmPtr = std::localtime(&localTimeT);
-    if (localTmPtr == nullptr) {
+    std::tm localTm {};
+    if (localtime_r(&localTimeT, &localTm) == nullptr) {
         return "";
     }
-    std::tm localTm = *localTmPtr;
     std::ostringstream oss;
     oss << std::put_time(&localTm, "%Y-%m-%d %H:%M:%S");
     return oss.str();

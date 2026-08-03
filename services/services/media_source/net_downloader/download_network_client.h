@@ -18,7 +18,6 @@
 
 #include <atomic>
 #include <cstdint>
-#include <condition_variable>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -29,6 +28,7 @@
 #include "nocopyable.h"
 #include "network/network_client.h"
 #include "network/network_typs.h"
+#include "path_utils.h"
 #include "status.h"
 
 namespace OHOS {
@@ -44,13 +44,10 @@ struct DownloadContext {
     std::atomic<bool> requestSuccess{false};
     std::atomic<int64_t> totalSize{-1};
     std::atomic<int64_t> downloadedSize{0};
-    std::atomic<bool> isHeaderReceived{false};
     std::atomic<int32_t> httpStatusCode{0};
     std::string outputPath;
     int outputFd{-1};
     std::map<std::string, std::string> responseHeaders;
-    std::mutex mutex;
-    std::condition_variable cv;
 };
 
 class NetworkClient : public NoCopyable {
@@ -59,7 +56,7 @@ public:
         int32_t timeoutMs, int32_t retryCount);
     ~NetworkClient();
 
-    int32_t SetOutputPath(const std::string &path, int64_t existingSize = 0);
+    int32_t SetOutputPath(const std::string &path, int64_t resumePos, int64_t &startPos);
     int32_t Download(int64_t startPos = 0);
     int64_t GetTotalSize();
     bool IsConnected();
@@ -78,6 +75,20 @@ public:
     void SetErrorCallback(ErrorCallback cb);
 
     bool IsRequestSuccess() const;
+
+    void SetClientImpl(std::shared_ptr<Plugins::HttpPlugin::NetworkClient> impl)
+    {
+        std::lock_guard<std::mutex> lock(clientMutex_);
+        clientImpl_ = impl;
+    }
+
+    std::shared_ptr<Plugins::HttpPlugin::NetworkClient> GetClientImpl()
+    {
+        std::lock_guard<std::mutex> lock(clientMutex_);
+        return clientImpl_;
+    }
+
+    void ForceClose();
 
 private:
     static size_t RxHeaderCallback(void* buffer, size_t size, size_t nitems, void* userParam);
@@ -116,6 +127,8 @@ private:
     ErrorCallback errorCallback_;
 
     std::shared_ptr<DownloadContext> ctx_;
+    std::shared_ptr<Plugins::HttpPlugin::NetworkClient> clientImpl_;
+    std::mutex clientMutex_;
     int64_t startPos_{0};
     std::optional<uint32_t> connectTimeoutMs_ {std::nullopt};
 };

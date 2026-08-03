@@ -26,6 +26,9 @@
 #include "media_log.h"
 #include "parameter.h"
 #include "os_account_manager.h"
+#include "tokenid_kit.h"
+#include "accesstoken_kit.h"
+#include "ipc_skeleton.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "MediaUtils" };
@@ -440,5 +443,34 @@ int32_t __attribute__((visibility("default"))) GetAPIVersion()
     #endif
 }
 
+bool __attribute__((visibility("default"))) IsSystemApp()
+{
+    uint64_t accessTokenIDEx = IPCSkeleton::GetCallingFullTokenID();
+    bool isSystemApp = Security::AccessToken::TokenIdKit::IsSystemAppByFullTokenID(accessTokenIDEx);
+    return isSystemApp;
+}
+
+bool __attribute__((visibility("default"))) IsSACalling()
+{
+    auto tokenId = IPCSkeleton::GetCallingTokenID();
+    auto tokenType = Security::AccessToken::AccessTokenKit::GetTokenTypeFlag(tokenId);
+    return tokenType == Security::AccessToken::TOKEN_NATIVE || tokenType == Security::AccessToken::TOKEN_SHELL;
+}
+
+bool __attribute__((visibility("default"))) HasSystemPermission()
+{
+    return IsSACalling() || IsSystemApp();
+}
+
+sptr<IRemoteObject> __attribute__((visibility("default"))) GetMediaService()
+{
+    auto samgr = SystemAbilityManagerClient::GetInstance().GetSystemAbilityManager();
+    if (samgr == nullptr) {
+        MEDIA_LOG_E("GetSystemAbilityManager failed");
+        return nullptr;
+    }
+    constexpr int32_t mediaServiceSAId = 3002;
+    return samgr->GetSystemAbility(mediaServiceSAId);
+}
 }  // namespace Media
 }  // namespace OHOS

@@ -18,9 +18,11 @@
 #include <fstream>
 #include <cstring>
 #include <securec.h>
+#include <climits>
 #include "cache_manager.h"
 #include "cache_mapping_format.h"
 #include "path_validator.h"
+#include "path_utils.h"
 #include "sha256_hasher.h"
 #include "common/log.h"
 #include "media_log.h"
@@ -39,6 +41,18 @@ namespace DownloadedCache {
 DownloadedCacheManager::DownloadedCacheManager(const std::string& cacheDir)
     : cacheDir_(cacheDir)
 {
+    if (cacheDir_.empty()) {
+        MEDIA_LOGE("DownloadedCacheManager: cacheDir is empty");
+        return;
+    }
+    std::string normalizedCacheDir;
+    if (MediaSourceUtils::PathUtils::ValidateAndNormalizePath(cacheDir_, normalizedCacheDir) !=
+        MediaSourceUtils::PATH_VALIDATE_OK) {
+        MEDIA_LOGE("DownloadedCacheManager: cacheDir validation failed: %{public}s", cacheDir_.c_str());
+        cacheDir_.clear();
+        return;
+    }
+    cacheDir_ = normalizedCacheDir;
     LoadCacheMapping();
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create, cacheDir: %{public}s",
         FAKE_POINTER(this), cacheDir_.c_str());
@@ -118,6 +132,11 @@ std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
     const CacheMappingEntry& entry = it->second;
     std::string relativePath = entry.filePath;
 
+    if (!PathValidator::Validate(cacheDir_, relativePath)) {
+        MEDIA_LOGE("GetMediaCache: path validation failed for %{public}s", relativePath.c_str());
+        return "";
+    }
+
     std::string path = cacheDir_ + "/" + relativePath;
 
     return path;
@@ -136,10 +155,20 @@ bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaD
     MEDIA_LOGI("0x%{public}06" PRIXPTR " search meta entry: %{public}s", FAKE_POINTER(this), hashIndex.c_str());
     const CacheMappingEntry& entry = it->second;
 
+    if (!PathValidator::Validate(cacheDir_, entry.filePath)) {
+        MEDIA_LOGE("GetCacheMetaData: path validation failed for %{public}s", entry.filePath.c_str());
+        return false;
+    }
+
+    std::string fullPath = cacheDir_ + "/" + entry.filePath;
+
     metadata.url = url;
+    if (entry.header.fileSize > static_cast<uint64_t>(INT64_MAX)) {
+        MEDIA_LOGE("GetCacheMetaData: fileSize exceeds INT64_MAX: %{public}" PRIu64, entry.header.fileSize);
+        return false;
+    }
     metadata.size = static_cast<int64_t>(entry.header.fileSize);
     if (metadata.size == 0) {
-        std::string fullPath = cacheDir_ + "/" + entry.filePath;
         struct stat st;
         if (stat(fullPath.c_str(), &st) == 0 && st.st_size > 0) {
             metadata.size = static_cast<int64_t>(st.st_size);
@@ -160,6 +189,12 @@ std::map<std::string, std::string> DownloadedCacheManager::BuildHttpHeaders(cons
         return {};
     }
 
+    if (fileSize < 0) {
+        MEDIA_LOGE("BuildHttpHeaders: invalid fileSize=%{public}" PRId64 ", using metadata.size=%{public}" PRId64,
+            fileSize, metadata.size);
+        fileSize = metadata.size;
+    }
+
     std::map<std::string, std::string> headers;
     headers["content-length"] = std::to_string(fileSize);
     headers["content-type"] = metadata.type;
@@ -173,8 +208,14 @@ std::map<std::string, std::string> DownloadedCacheManager::BuildHttpHeaders(cons
 
 bool DownloadedCacheManager::CreateDirectories(const std::string& path)
 {
-    CHECK_AND_RETURN_RET_LOG(!fs::exists(path) || !fs::is_directory(path), true, "directory exists");
     std::error_code ec;
+    if (fs::exists(path, ec)) {
+        if (fs::is_directory(path, ec)) {
+            return true;
+        }
+        MEDIA_LOGE("CreateDirectories: path exists but is not a directory: %{public}s", path.c_str());
+        return false;
+    }
     bool success = fs::create_directories(path, ec);
     CHECK_AND_RETURN_RET_LOG(success, false, "create_directories error:%{public}s", ec.message().c_str());
     return success;

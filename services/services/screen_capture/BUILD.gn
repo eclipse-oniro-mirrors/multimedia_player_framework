@@ -1,0 +1,113 @@
+# Copyright (c) 2025 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//build/ohos.gni")
+import("//foundation/multimedia/player_framework/config.gni")
+import(
+    "//foundation/multimedia/player_framework/services/services/screen_capture/screen_capture_common.gni")
+
+config("screen_capture_service_config") {
+  visibility = [ ":*" ]
+
+  cflags = [
+    "-std=c++17",
+    "-fno-rtti",
+    "-fno-exceptions",
+    "-fvisibility=hidden",
+    "-Wall",
+    "-fno-common",
+    "-fstack-protector-strong",
+    "-Wshadow",
+    "-FPIC",
+    "-FS",
+    "-O2",
+    "-D_FORTIFY_SOURCE=2",
+    "-Wformat=2",
+    "-Wfloat-equal",
+    "-Wdate-time",
+    "-Werror",
+    "-Wextra",
+    "-Wimplicit-fallthrough",
+    "-Wsign-compare",
+  ]
+
+  if (player_framework_support_avsession_background) {
+    cflags += [ "-Wno-unused-parameter" ]
+  } else {
+    cflags += [ "-Wunused-parameter" ]
+  }
+
+  include_dirs = [
+    "server",
+    "ipc",
+    "//foundation/multimedia/player_framework/services/services/sa_media/ipc",
+    "//foundation/multimedia/player_framework/services/services/factory",
+    "//foundation/multimedia/player_framework/services/services/engine_intf",
+    "//foundation/multimedia/player_framework/services/services/observer",
+    "//foundation/multimedia/player_framework/services/include",
+    "//foundation/multimedia/player_framework/services/utils/include",
+    "//foundation/multimedia/player_framework/interfaces/inner_api/native",
+    "//foundation/multimedia/player_framework/services/engine/common/recorder_profiles",
+  ]
+
+  defines = []
+  defines += player_framework_defines
+  if (player_framework_feature_pc_select_window) {
+    defines += [ "PC_STANDARD" ]
+  }
+  if (player_framework_feature_phone_pad_select_window) {
+    defines += [ "SUPPORT_PICKER_PHONE_PAD" ]
+  }
+  if (target_cpu == "arm") {
+    cflags += [ "-DBINDER_IPC_32BIT" ]
+  }
+}
+
+ohos_shared_library("media_service_screen_capture") {
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+  version_script = "screen_capture.versionscript"
+  stack_protector_ret = true
+  install_enable = true
+
+  sanitize = {
+    integer_overflow = true
+    ubsan = true
+    boundary_sanitize = true
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  sources = screen_capture_sources
+  configs = screen_capture_configs
+  deps = screen_capture_deps
+  external_deps = screen_capture_external_deps
+}
+
+ohos_static_library("media_service_screen_capture_static") {
+  testonly = true
+  subsystem_name = "multimedia"
+  part_name = "player_framework"
+
+  sanitize = {
+    cfi = true
+    cfi_cross_dso = true
+    debug = false
+  }
+
+  sources = screen_capture_sources
+  configs = screen_capture_configs
+  deps = screen_capture_deps
+  external_deps = screen_capture_external_deps
+}

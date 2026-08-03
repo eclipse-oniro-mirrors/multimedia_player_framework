@@ -186,7 +186,7 @@ int32_t ScreenCaptureClient::RemoveWhiteListWindows(const std::vector<uint64_t> 
     return screenCaptureProxy_->RemoveWhiteListWindows(windowIDsVec);
 }
 
-int32_t ScreenCaptureClient::ExcludePickerWindows(std::vector<int32_t> &windowIDsVec)
+int32_t ScreenCaptureClient::ExcludePickerWindows(const std::vector<int32_t> &windowIDsVec)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_UNKNOWN, "screenCapture service does not exist.");

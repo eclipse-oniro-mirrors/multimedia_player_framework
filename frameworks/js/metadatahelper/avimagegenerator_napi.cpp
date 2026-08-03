@@ -77,14 +77,22 @@ napi_value AVImageGeneratorNapi::Init(napi_env env, napi_value exports)
         sizeof(properties) / sizeof(properties[0]), properties, &constructor);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVImageGenerator class");
 
-    status = napi_create_reference(env, constructor, 1, &constructor_);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
-
     status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
+    if (status != napi_ok) {
+        (void)napi_delete_reference(env, constructor_);
+        constructor_ = nullptr;
+        return nullptr;
+    }
 
     status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
+    if (status != napi_ok) {
+        (void)napi_delete_reference(env, constructor_);
+        constructor_ = nullptr;
+        return nullptr;
+    }
+
+    status = napi_create_reference(env, constructor, 1, &constructor_);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
 
     MEDIA_LOGD("AVImageGeneratorNapi Init success");
     return exports;
@@ -163,6 +171,18 @@ napi_value AVImageGeneratorNapi::JsCreateAVImageGenerator(napi_env env, napi_cal
     auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncContext.get(), napi_eprio_high);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+        if (asyncContext->callbackRef != nullptr) {
+            (void)napi_delete_reference(env, asyncContext->callbackRef);
+            asyncContext->callbackRef = nullptr;
+        }
+        if (asyncContext->deferred != nullptr) {
+            napi_value error = nullptr;
+            (void)CommonNapi::CreateError(env, MSERR_EXT_UNKNOWN, "Failed to send completion event.", error);
+            if (error != nullptr) {
+                (void)napi_reject_deferred(env, asyncContext->deferred, error);
+            }
+            asyncContext->deferred = nullptr;
+        }
     } else {
         asyncContext.release();
     }
@@ -323,7 +343,6 @@ napi_value AVImageGeneratorNapi::VerifyTheParameters(napi_env env, napi_callback
     promiseCtx = std::make_unique<AVImageGeneratorAsyncContext>(env);
     CHECK_AND_RETURN_RET_LOG(promiseCtx != nullptr, nullptr, "promiseCtx is null");
     promiseCtx->innerHelper_ = napi->helper_;
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
 
     napi_valuetype valueType = napi_undefined;
     bool notParamValid = argCount < argOutputSizeIndex;
@@ -350,6 +369,7 @@ napi_value AVImageGeneratorNapi::VerifyTheParameters(napi_env env, napi_callback
         return nullptr;
     }
 
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     return result;
 }
 
@@ -403,6 +423,7 @@ void AVImageGeneratorNapi::CreatePixelMapComplete(napi_env env, napi_status stat
 void AVImageGeneratorNapi::CommonCallbackRoutine(napi_env env, AVImageGeneratorAsyncContext* &asyncContext,
     const napi_value &valueParam)
 {
+    CHECK_AND_RETURN_LOG(asyncContext != nullptr, "asyncContext is nullptr");
     napi_value result[2] = {0};
     napi_value retVal;
     napi_value callback = nullptr;
@@ -411,8 +432,28 @@ void AVImageGeneratorNapi::CommonCallbackRoutine(napi_env env, AVImageGeneratorA
     napi_get_undefined(env, &result[1]);
 
     napi_handle_scope scope = nullptr;
-    napi_open_handle_scope(env, &scope);
-    CHECK_AND_RETURN(scope != nullptr && asyncContext != nullptr);
+    napi_status status = napi_open_handle_scope(env, &scope);
+    if (status != napi_ok || scope == nullptr) {
+        if (asyncContext->deferred != nullptr) {
+            napi_value error = nullptr;
+            (void)CommonNapi::CreateError(env, MSERR_EXT_UNKNOWN, "Failed to open handle scope.", error);
+            if (error != nullptr) {
+                (void)napi_reject_deferred(env, asyncContext->deferred, error);
+            }
+            asyncContext->deferred = nullptr;
+        }
+        if (asyncContext->callbackRef != nullptr) {
+            (void)napi_delete_reference(env, asyncContext->callbackRef);
+            asyncContext->callbackRef = nullptr;
+        }
+        if (asyncContext->work != nullptr) {
+            (void)napi_delete_async_work(env, asyncContext->work);
+            asyncContext->work = nullptr;
+        }
+        delete asyncContext;
+        asyncContext = nullptr;
+        return;
+    }
     if (asyncContext->status == ERR_OK) {
         result[1] = valueParam;
     }

@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "avsharedmemory_ipc.h"
 #include "media_utils.h"
+#include "dynamic_module_loader.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureControllerStub"};
@@ -52,9 +53,21 @@ ScreenCaptureControllerStub::~ScreenCaptureControllerStub()
 int32_t ScreenCaptureControllerStub::Init()
 {
     MEDIA_LOGI("ScreenCaptureControllerStub::Init() start");
-    screenCaptureControllerServer_ = ScreenCaptureControllerServer::Create();
-    CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, MSERR_NO_MEMORY,
-        "failed to create screenCaptureControllerServer Service");
+    auto destroyFunc = DynamicModuleLoader::Instance().GetFactory<void (*)(IScreenCaptureController*)>(
+        DynamicModule::SCREEN_CAPTURE, "DestroyScreenCaptureControllerServer");
+    CHECK_AND_RETURN_RET_LOG(destroyFunc != nullptr, MSERR_NO_MEMORY,
+        "failed to get DestroyScreenCaptureControllerServer function");
+
+    auto factory = DynamicModuleLoader::Instance().GetFactory<IScreenCaptureController* (*)()>(
+        DynamicModule::SCREEN_CAPTURE, "CreateScreenCaptureControllerServer");
+    CHECK_AND_RETURN_RET_LOG(factory != nullptr, MSERR_NO_MEMORY,
+        "failed to get ScreenCaptureControllerServer factory from dynamic module");
+
+    auto ptr = factory();
+    CHECK_AND_RETURN_RET_LOG(ptr != nullptr, MSERR_NO_MEMORY,
+        "failed to create ScreenCaptureControllerServer via dynamic module");
+    screenCaptureControllerServer_ = {ptr, destroyFunc};
+
     screenCaptureControllerStubFuncs_[REPORT_USER_CHOICE] =
         &ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice;
     screenCaptureControllerStubFuncs_[GET_CONFIG_PARAM] =
@@ -94,7 +107,7 @@ int ScreenCaptureControllerStub::OnRemoteRequest(uint32_t code, MessageParcel &d
 
 int32_t ScreenCaptureControllerStub::DestroyStub()
 {
-    screenCaptureControllerServer_ = nullptr;
+    screenCaptureControllerServer_.reset();
     MediaServerManager::GetInstance().DestroyStubObject(MediaServerManager::SCREEN_CAPTURE_CONTROLLER, AsObject());
     return MSERR_OK;
 }
@@ -111,13 +124,8 @@ int32_t ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice(int32_t ses
     MEDIA_LOGI("ScreenCaptureControllerStub::ReportAVScreenCaptureUserChoice start 2");
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
         "screen capture controller server is nullptr");
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    std::string appName = GetClientBundleName(appUid);
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName) != 0) {
-        MEDIA_LOGE("ScreenCaptureControllerStub called by app name %{public}s", appName.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(HasSystemPermission(), MSERR_INVALID_OPERATION,
+        "is not system app failed to init ScreenCaptureMonitorServer");
     return screenCaptureControllerServer_->ReportAVScreenCaptureUserChoice(sessionId, choice);
 }
 
@@ -139,13 +147,8 @@ int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(in
     MEDIA_LOGI("ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters start");
     CHECK_AND_RETURN_RET_LOG(screenCaptureControllerServer_ != nullptr, false,
         "screen capture controller server is nullptr");
-    int32_t appUid = IPCSkeleton::GetCallingUid();
-    std::string appName = GetClientBundleName(appUid);
-    if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"]
-            .compare(appName) != 0) {
-        MEDIA_LOGE("ScreenCaptureControllerStub called by app name %{public}s", appName.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
+    CHECK_AND_RETURN_RET_LOG(HasSystemPermission(), MSERR_INVALID_OPERATION,
+        "is not system app failed to init ScreenCaptureMonitorServer");
     return screenCaptureControllerServer_->GetAVScreenCaptureConfigurableParameters(sessionId, resultStr);
 }
 
@@ -164,7 +167,6 @@ int32_t ScreenCaptureControllerStub::GetAVScreenCaptureConfigurableParameters(Me
     reply.WriteString(resultStr);
     return MSERR_OK;
 }
-
 
 } // namespace Media
 } // namespace OHOS

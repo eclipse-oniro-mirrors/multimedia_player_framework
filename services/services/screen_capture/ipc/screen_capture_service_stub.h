@@ -17,8 +17,9 @@
 #define SCREEN_CAPTURE_SERVICE_STUB_H
 
 #include <map>
+#include <memory>
 #include "i_standard_screen_capture_service.h"
-#include "screen_capture_server.h"
+#include "i_screen_capture_service.h"
 #include "media_death_recipient.h"
 
 namespace OHOS {
@@ -70,7 +71,7 @@ public:
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
     int32_t RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
-    int32_t ExcludePickerWindows(std::vector<int32_t> &windowIDsVec) override;
+    int32_t ExcludePickerWindows(const std::vector<int32_t> &windowIDsVec) override;
     int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;
@@ -86,6 +87,7 @@ public:
 private:
     ScreenCaptureServiceStub();
     int32_t Init();
+    void RegisterStubFuncs();
     int32_t SetCaptureMode(MessageParcel &data, MessageParcel &reply);
     int32_t SetDataType(MessageParcel &data, MessageParcel &reply);
     int32_t SetRecorderInfo(MessageParcel &data, MessageParcel &reply);
@@ -130,7 +132,7 @@ private:
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 
     std::mutex mutex_;
-    std::shared_ptr<IScreenCaptureService> screenCaptureServer_ = nullptr;
+    std::unique_ptr<IScreenCaptureService, void (*)(IScreenCaptureService *)> screenCaptureServer_{nullptr, nullptr};
     using screenCaptureStubFuncs = int32_t(ScreenCaptureServiceStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, screenCaptureStubFuncs> screenCaptureStubFuncs_;
 };
