@@ -577,8 +577,10 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     for (int32_t totalNum = 0; totalNum < totalLen; totalNum++) {
         int temp = 0;
         for (int channelNum = 0; channelNum < channels; channelNum++) {
-            CHECK_AND_CONTINUE(!(channelNum == 1 && micAudioBuffer->length <= totalNum * channels));
-            temp += *reinterpret_cast<short *>(srcData[channelNum] + totalNum * channels);
+            if (channelNum != 1 ||
+                micAudioBuffer->length >= totalNum * channels + static_cast<int32_t>(sizeof(short))) {
+                temp += *reinterpret_cast<short *>(srcData[channelNum] + totalNum * channels);
+            }
         }
         int32_t output = static_cast<int32_t>(temp * coefficient);
         if (output > max) {

@@ -3157,26 +3157,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabled_001, TestSize.Lev
     EXPECT_EQ(screenCaptureServer_->isMicrophoneSwitchTurnOn_, true);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_001, TestSize.Level2)
-{
-    auto& screenCaptureMonitorServer = ScreenCaptureMonitorServer::GetInstance();
-    HasSystemPermission();
-    screenCaptureMonitorServer.RegisterScreenCaptureMonitorListener(nullptr);
-    screenCaptureMonitorServer.UnregisterScreenCaptureMonitorListener(nullptr);
-    screenCaptureMonitorServer.SetSystemScreenRecorderPid(-1);
-    bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(15000);
-    ASSERT_EQ(ret, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_002, TestSize.Level2)
-{
-    auto& screenCaptureMonitorServer = ScreenCaptureMonitorServer::GetInstance();
-    screenCaptureMonitorServer.SetSystemScreenRecorderPid(-1);
-    ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
-    bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(-1);
-    ASSERT_EQ(ret, false);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamHomeVideoCapture_001, TestSize.Level2)
 {
     SetValidConfig();

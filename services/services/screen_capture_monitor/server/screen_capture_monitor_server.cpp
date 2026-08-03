@@ -161,6 +161,11 @@ int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureFinished(int32_t pid)
             value->OnScreenCaptureFinished(pid);
         }
     }
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (pid == systemScreenRecorderPid_) {
+        MEDIA_LOGI("Clear systemScreenRecorderPid_ after pid %{public}d finished", pid);
+        systemScreenRecorderPid_ = -1;
+    }
     return MSERR_OK;
 }
 
