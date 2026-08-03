@@ -64,7 +64,7 @@ int32_t ScreenCaptureMonitorServer::Init()
 int32_t ScreenCaptureMonitorServer::Release()
 {
     MEDIA_LOGI("ScreenCaptureMonitorServer:0x%{public}06" PRIXPTR " Release S", FAKE_POINTER(this));
-    std::lock_guard<std::mutex> lockCb(mutex_);
+    std::lock_guard<std::mutex> lock(mutex_);
     screenCaptureMonitorCbSet_.clear();
     return MSERR_OK;
 }
