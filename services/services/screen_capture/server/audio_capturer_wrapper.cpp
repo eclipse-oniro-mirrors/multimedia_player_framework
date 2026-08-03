@@ -504,15 +504,6 @@ AudioCapturerWrapper::~AudioCapturerWrapper()
     bufferCond_.notify_all();
 }
 
-void MicAudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode)
-{
-    (void)errorType;
-    (void)errorCode;
-    if (screenCaptureCb_ != nullptr) {
-        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
-    }
-}
-
 bool AudioCapturerWrapper::IsRecording()
 {
     return captureState_.load() == AudioCapturerWrapperState::CAPTURER_RECORDING;

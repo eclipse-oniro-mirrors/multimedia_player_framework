@@ -128,19 +128,6 @@ private:
     static constexpr int64_t AUDIO_CAPTURE_READ_FRAME_TIME = 21333333; // 21333333 ns 21ms
     static constexpr int32_t MAX_AUDIO_BUFFER_LEN = 10 * 1024 * 1024; // 10M
 };
-
-class MicAudioCapturerWrapper : public AudioCapturerWrapper {
-public:
-    explicit MicAudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
-        const ScreenCaptureContentFilter &filter)
-        : AudioCapturerWrapper(audioInfo, screenCaptureCb, std::move(name),
-        filter) {}
-    ~MicAudioCapturerWrapper() override {}
-
-protected:
-    void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode) override;
-};
 } // namespace Media
 } // namespace OHOS
 #endif // SCREEN_CAPTURE_AUDIO_CAPTURER_WRAPPER_H
