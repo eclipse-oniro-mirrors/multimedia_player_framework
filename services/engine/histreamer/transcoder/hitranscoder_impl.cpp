@@ -41,6 +41,9 @@ constexpr int32_t VIDEO_BITRATE_4M = 4 * VIDEO_BITRATE_1M;
 constexpr int32_t VIDEO_BITRATE_8M = 8 * VIDEO_BITRATE_1M;
 constexpr int32_t INVALID_AUDIO_BITRATE = INT32_MAX; // Invalid value defined in the napi and capi.
 constexpr int32_t DEFAULT_AUDIO_BITRATE = 48000;
+const uint32_t ROTATE_90_VALUE = 90;
+const uint32_t ROTATE_180_VALUE = 180;
+const uint32_t ROTATE_270_VALUE = 270;
 }
 
 namespace OHOS {
@@ -165,6 +168,7 @@ HiTransCoderImpl::~HiTransCoderImpl()
     MEDIA_LOG_I("~HiTransCoderImpl");
 }
 
+
 void HiTransCoderImpl::SetInstanceId(uint64_t instanceId)
 {
     instanceId_ = instanceId;
@@ -235,7 +239,7 @@ int32_t HiTransCoderImpl::SetInputFile(const std::string &url)
     if (ret != MSERR_OK) {
         MEDIA_LOG_E("SetInputFile error: demuxerFilter_->SetDataSource error");
         CollectionErrorInfo(ret, "SetInputFile error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_UNSUPPORT_SOURCE)});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_SET_INPUT_DATA_SOURCE_FAILED)});
         return ret;
     }
     int64_t duration = 0;
@@ -275,6 +279,17 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, muxerFormat_);
             meta->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
             meta->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
+            meta->GetData(Tag::VIDEO_ORIENTATION_TYPE, orientation_);
+            if (orientation_ == ROTATE_270) {
+                rotation_ = ROTATE_90_VALUE;
+            }
+            if (orientation_ == ROTATE_180) {
+                rotation_ = ROTATE_180_VALUE;
+            }
+            if (orientation_ == ROTATE_90) {
+                rotation_ = ROTATE_270_VALUE;
+            }
+            MEDIA_LOG_I("Set the default rotation_ format %{public}d", rotation_);
             isExistVideoTrack_ = true;
             isInitializeVideoEncFormat = true;
         } else if (!isInitializeAudioEncFormat && (trackMime.find("audio/") == 0)) {
@@ -283,11 +298,11 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, muxerFormat_);
             isExistAudioTrack_ = true;
             isInitializeAudioEncFormat = true;
-        }
+        } 
     }
     if (!isExistVideoTrack_ && !isExistAudioTrack_) {
         MEDIA_LOG_E("No video track found.");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_UNSUPPORT_VID_SRC_TYPE)});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_NO_VALID_TRACK_FOUND)});
     }
 }
 
@@ -390,10 +405,10 @@ Status HiTransCoderImpl::ConfigureVideoAudioMetaData()
     MEDIA_LOG_I("trackCount: %{public}zu", trackCount);
     if (trackCount == 0) {
         MEDIA_LOG_E("No track found in the source");
-        CollectionErrorInfo(TransTranscoderStatus(Status::ERROR_NO_TRACK),
+        CollectionErrorInfo(TransTranscoderStatus(Status::ERROR_NO_VALID_TRACK_FOUND),
             "ConfigureVideoAudioMetaData error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_UNSUPPORT_VID_SRC_TYPE)});
-        return Status::ERROR_NO_TRACK;
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(MSERR_NO_VALID_TRACK_FOUND)});
+        return Status::ERROR_NO_VALID_TRACK_FOUND;
     }
     ConfigureMetaDataToTrackFormat(globalInfo, trackInfos);
     ConfigureDefaultParameter();
@@ -489,7 +504,7 @@ Status HiTransCoderImpl::ConfigureVideoBitrate()
     if (videoEncFormat_->Find(Tag::MEDIA_BITRATE) != videoEncFormat_->end()) {
         videoEncFormat_->Get<Tag::MEDIA_BITRATE>(videoBitrate);
     }
-    MEDIA_LOG_D("get videoBitrate: %{public}lld", videoBitrate);
+    MEDIA_LOG_D("get videoBitrate: " PUBLIC_LOG_D64, videoBitrate);
     int32_t width = 0;
     int32_t height = 0;
     videoEncFormat_->GetData(Tag::VIDEO_WIDTH, width);
@@ -599,8 +614,8 @@ Status HiTransCoderImpl::ConfigureAudioParam(const TransCoderParam &transCoderPa
             if (audioBitrate.bitRate <= 0) {
                 MEDIA_LOG_E("Invalid audioBitrate.bitRate %{public}d", audioBitrate.bitRate);
                 OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
-                    static_cast<int32_t>(MSERR_PARAMETER_VERIFICATION_FAILED)});
-                return Status::ERROR_INVALID_PARAMETER;
+                    static_cast<int32_t>(MSERR_INVALID_AUDIO_BITRATE)});
+                return Status::ERROR_INVALID_AUDIO_BITRATE;
             }
             int64_t bitrate = -1;
             audioEncFormat_->Get<Tag::MEDIA_BITRATE>(bitrate);
@@ -644,10 +659,10 @@ int32_t HiTransCoderImpl::Prepare()
         }
         if (width > inputVideoWidth_ || height > inputVideoHeight_ || std::min(width, height) < MINIMUM_WIDTH_HEIGHT) {
             MEDIA_LOG_E("Output video width or height is invalid");
-            CollectionErrorInfo(MSERR_PARAMETER_VERIFICATION_FAILED, "Prepare error");
+            CollectionErrorInfo(MSERR_INVALID_OUTPUT_RESOLUTION, "Prepare error");
             OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
-                static_cast<int32_t>(MSERR_PARAMETER_VERIFICATION_FAILED)});
-            return MSERR_PARAMETER_VERIFICATION_FAILED;
+                static_cast<int32_t>(MSERR_INVALID_OUTPUT_RESOLUTION)});
+            return MSERR_INVALID_OUTPUT_RESOLUTION;
         }
         skipProcessFilterFlag_.isSameVideoResolution = (width == inputVideoWidth_) && (height == inputVideoHeight_);
     }
@@ -659,7 +674,7 @@ int32_t HiTransCoderImpl::Prepare()
         MEDIA_LOG_E("Prepare failed with error " PUBLIC_LOG_D32, ret);
         int32_t errCode = TransTranscoderStatus(ret);
         CollectionErrorInfo(errCode, "Prepare error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, errCode});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(errCode)});
         return errCode;
     }
     Status errCode = Status::OK;
@@ -669,7 +684,7 @@ int32_t HiTransCoderImpl::Prepare()
             errCode = Status::ERROR_SET_OUTPUT_SURFACE_FAILED;
         }
     }
-
+    
     return TransTranscoderStatus(errCode);
 }
 
@@ -684,12 +699,12 @@ int32_t HiTransCoderImpl::Start()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Start()");
     MediaTrace trace("HiTransCoderImpl::Start()");
-    startTime_ = GetCurrentMillisecond();
+    startTime_.store(GetCurrentMillisecond());
     int32_t ret = TransTranscoderStatus(pipeline_->Start());
     if (ret != MSERR_OK) {
         MEDIA_LOG_E("Start pipeline failed");
         CollectionErrorInfo(ret, "Start error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(ret)});
         return ret;
     }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
@@ -705,12 +720,12 @@ int32_t HiTransCoderImpl::Pause()
     if (ret != MSERR_OK) {
         MEDIA_LOG_E("Pause pipeline failed");
         CollectionErrorInfo(ret, "Pause error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(ret)});
     }
-    if (startTime_ != -1) {
-        transcoderTotalDuration_ += GetCurrentMillisecond() - startTime_;
+    if (startTime_.load() != -1) {
+        transcoderTotalDuration_.fetch_add(GetCurrentMillisecond() - startTime_.load());
     }
-    startTime_ = -1;
+    startTime_.store(-1);
     return ret;
 }
 
@@ -722,11 +737,11 @@ int32_t HiTransCoderImpl::Resume()
     if (ret != MSERR_OK) {
         MEDIA_LOG_E("Resume pipeline failed");
         CollectionErrorInfo(ret, "Resume error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(ret)});
         return ret;
     }
     callbackLooper_->StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
-    startTime_ = GetCurrentMillisecond();
+    startTime_.store(GetCurrentMillisecond());
     return MSERR_OK;
 }
 
@@ -740,7 +755,7 @@ int32_t HiTransCoderImpl::Cancel()
     if (ret != MSERR_OK) {
         MEDIA_LOG_E("Stop pipeline failed");
         CollectionErrorInfo(ret, "Cancel error");
-        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, ret});
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(ret)});
     }
     if (fd_ >= 0) {
         (void)::close(fd_);
@@ -750,10 +765,10 @@ int32_t HiTransCoderImpl::Cancel()
         return ret;
     }
     MEDIA_LOG_I("HiTransCoderImpl::Cancel done");
-    if (startTime_ != -1) {
-        transcoderTotalDuration_ += GetCurrentMillisecond() - startTime_;
+    if (startTime_.load() != -1) {
+        transcoderTotalDuration_.fetch_add(GetCurrentMillisecond() - startTime_.load());
     }
-    startTime_ = -1;
+    startTime_.store(-1);
     AppendTranscoderMediaInfo();
     ReportMediaInfo(instanceId_);
     return MSERR_OK;
@@ -775,20 +790,6 @@ int32_t HiTransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
     FALSE_RETURN_V_MSG_E(ret == Status::OK, TransTranscoderStatus(ret), "Watermark filter error");
     return MSERR_OK;
 }
- 
-int32_t HiTransCoderImpl::AddVideoResize(int32_t width, int32_t height)
-{
-    MEDIA_LOG_I("HiTransCoderImpl::AddVideoResize()");
-    if (!skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
-        skipProcessFilterFlag_.isAddWaterMark = true;
-        waterMarkFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::WaterMarkFilter>(
-            "Watermark", Pipeline::FilterType::WATERMARK);
-    }
-    FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, MSERR_INVALID_OPERATION, "Watermark filter is nullptr");
-    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
-    filter->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
-    return MSERR_OK;
-}
 
 void HiTransCoderImpl::AppendTranscoderMediaInfo()
 {
@@ -798,7 +799,7 @@ void HiTransCoderImpl::AppendTranscoderMediaInfo()
     meta->SetData(Tag::AV_TRANSCODER_ERR_CODE, errCode_);
     meta->SetData(Tag::AV_TRANSCODER_ERR_MSG, errMsg_);
     meta->SetData(Tag::AV_TRANSCODER_SOURCE_DURATION, durationMs_.load());
-    meta->SetData(Tag::AV_TRANSCODER_TRANSCODER_DURATION, static_cast<int32_t>(transcoderTotalDuration_));
+    meta->SetData(Tag::AV_TRANSCODER_TRANSCODER_DURATION, static_cast<int32_t>(transcoderTotalDuration_.load()));
 
     AppendSrcMediaInfo(meta);
     AppendDstMediaInfo(meta);
@@ -1011,6 +1012,10 @@ Status HiTransCoderImpl::LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter SetCodecFormat fail");
     ret = audioEncoderFilter_->SetTranscoderMode();
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter SetTranscoderMode fail");
+    if (!isExistVideoTrack_ && isExistAudioTrack_) {
+        ret = audioEncoderFilter_->SetPureAudioMode();
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter SetPureAudioMode fail");
+    }
     audioEncoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     ret = audioEncoderFilter_->Configure(audioEncFormat_);
     if (ret == Status::ERROR_UNKNOWN) {
@@ -1146,22 +1151,19 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                 return LinkMuxerFilter(filter, outType);
             case Pipeline::StreamType::STREAMTYPE_RAW_VIDEO: {
                 Pipeline::FilterType filterType = filter->GetFilterType();
-                if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
-                    skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
-                    MEDIA_LOG_I("Pipeline build mode: add watermark");
-                    return LinkWaterMark(filter, outType);
-                }
- 
                 // 解码器特殊处理：可能需要先链接resize
                 if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
                     !skipProcessFilterFlag_.CanSkipVideoResizeFilter() &&
                     !skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
-                    MEDIA_LOG_I("Pipeline build mode: video resize");
-                    AddVideoResize(inputVideoWidth_, inputVideoHeight_);
+                    return LinkVideoResizeFilter(filter, outType);
+                }
+
+                if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
+                    skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
                     return LinkWaterMark(filter, outType);
                 }
                 // 水印或其他：直接链接编码器
-                return LinkVideoEncoderFilter(filter, outType);
+                return LinkVideoEncoderFilter(filter, outType); 
             }
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
@@ -1231,16 +1233,12 @@ VideoProcessMode HiTransCoderImpl::DetermineProcessMode()
     bool hasResize = videoResizeFilter_ != nullptr && !skipProcessFilterFlag_.CanSkipVideoResizeFilter();
     bool hasWatermark = waterMarkFilter_ != nullptr && skipProcessFilterFlag_.AddVideoWaterMarkFilter();
     if (hasResize && hasWatermark) {
-        MEDIA_LOG_I("ProcessMode is DECODER_RESIZE_ENCODER");
         return VideoProcessMode::DECODER_RESIZE_WATERMARK_ENCODER;
     } else if (hasResize) {
-        MEDIA_LOG_I("ProcessMode is DECODER_RESIZE_ENCODER");
         return VideoProcessMode::DECODER_RESIZE_ENCODER;
     } else if (hasWatermark) {
-        MEDIA_LOG_I("ProcessMode is DECODER_WATERMARK_ENCODER");
         return VideoProcessMode::DECODER_WATERMARK_ENCODER;
     }
-    MEDIA_LOG_I("ProcessMode is DECODER_TO_ENCODER");
     return VideoProcessMode::DECODER_TO_ENCODER;
 }
  
@@ -1334,7 +1332,7 @@ Status HiTransCoderImpl::ConnectDecoderWatermarkEncoder(int32_t outputVideoWidth
     FALSE_RETURN_V_MSG_E(encoderSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
         "encoderSurface is nullptr");
  
-    return filter->SetOutputSurface(encoderSurface, outputVideoWidth, outputVideoHeight);
+    return filter->SetOutputSurface(encoderSurface, outputVideoWidth, outputVideoHeight, rotation_);
 }
 } // namespace MEDIA
 } // namespace OHOS
