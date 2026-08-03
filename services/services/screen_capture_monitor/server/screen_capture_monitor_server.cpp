@@ -118,7 +118,6 @@ void ScreenCaptureMonitorServer::UnregisterScreenCaptureMonitorListener(
 int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureStarted(int32_t pid)
 {
     MEDIA_LOGI("CallOnScreenCaptureStarted S");
-    AddRunningCapturePid(pid);
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> cbSet;
     {
         std::lock_guard<std::mutex> lock(mutex_);
@@ -135,7 +134,6 @@ int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureStarted(int32_t pid)
 int32_t ScreenCaptureMonitorServer::CallOnScreenCaptureFinished(int32_t pid)
 {
     MEDIA_LOGI("CallOnScreenCaptureFinished S");
-    RemoveRunningCapturePid(pid);
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> cbSet;
     {
         std::lock_guard<std::mutex> lock(mutex_);
