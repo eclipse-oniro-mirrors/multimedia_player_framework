@@ -33,6 +33,7 @@
 #include "muxer_filter.h"
 #include "video_resize_filter.h"
 #include "hitranscoder_callback_looper.h"
+#include "codec_capability_adapter.h"
 
 namespace OHOS {
 namespace Media {
@@ -66,6 +67,7 @@ public:
     int32_t Resume();
     int32_t Cancel();
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height);
+    int32_t AddVideoResize(int32_t width, int32_t height);
     void OnEvent(const Event &event);
     Status OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
@@ -115,6 +117,10 @@ private:
     Status ConnectDecoderResizeEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight);
     Status ConnectDecoderWatermarkEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight);
     static std::string GetModeString(VideoProcessMode mode);
+    int32_t CheckResolutionRange(int32_t width, int32_t height, int32_t maxWidth, int32_t maxHeight,
+        int32_t errCode);
+    int32_t CheckCodecCapability(const std::string &mime, bool isEncoder, int32_t width, int32_t height,
+        int32_t errCode);
 
     struct SkipProcessFilterFlag {
         bool isSameAudioEncFmt = false;
@@ -151,6 +157,7 @@ private:
     std::shared_ptr<Pipeline::VideoResizeFilter> videoResizeFilter_;
     std::shared_ptr<Pipeline::Filter> waterMarkFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
+    std::shared_ptr<Pipeline::CodecCapabilityAdapter> codecCapabilityAdapter_;
 
     std::shared_ptr<Pipeline::EventReceiver> transCoderEventReceiver_;
     std::shared_ptr<Pipeline::FilterCallback> transCoderFilterCallback_;
