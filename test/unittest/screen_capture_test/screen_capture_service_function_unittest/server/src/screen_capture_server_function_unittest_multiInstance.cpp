@@ -756,7 +756,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_004, TestSize.Level2)
 {
-    screenCaptureServer_->cbProxy_->Reset();
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
     screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
         nullptr);

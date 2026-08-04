@@ -199,118 +199,6 @@ void NotificationSubscriber::OnDied()
     MEDIA_LOGI("NotificationSubscriber OnDied");
 }
 
-void ScreenCaptureCallbackProxy::SetCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback)
-{
-    std::unique_lock<std::shared_mutex> lock(mutex_);
-    screenCaptureCb_ = callback;
-}
-
-void ScreenCaptureCallbackProxy::Reset()
-{
-    std::unique_lock<std::shared_mutex> lock(mutex_);
-    screenCaptureCb_ = nullptr;
-}
-
-void ScreenCaptureCallbackProxy::OnError(ScreenCaptureErrorType errorType, int32_t errorCode)
-{
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        cb = screenCaptureCb_;
-    }
-    if (cb != nullptr) {
-        cb->OnError(errorType, errorCode);
-    }
-}
-
-void ScreenCaptureCallbackProxy::OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type)
-{
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        cb = screenCaptureCb_;
-    }
-    if (cb != nullptr) {
-        cb->OnAudioBufferAvailable(isReady, type);
-    }
-}
-
-void ScreenCaptureCallbackProxy::OnVideoBufferAvailable(bool isReady)
-{
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        cb = screenCaptureCb_;
-    }
-    if (cb != nullptr) {
-        cb->OnVideoBufferAvailable(isReady);
-    }
-}
-
-void ScreenCaptureCallbackProxy::OnStateChange(AVScreenCaptureStateCode stateCode)
-{
-    if (stateCode == AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID) {
-        return;
-    }
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        cb = screenCaptureCb_;
-    }
-    if (cb != nullptr) {
-        cb->OnStateChange(stateCode);
-    }
-}
-
-void ScreenCaptureCallbackProxy::OnDisplaySelected(uint64_t displayId)
-{
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        cb = screenCaptureCb_;
-    }
-    if (cb != nullptr) {
-        cb->OnDisplaySelected(displayId);
-    }
-}
-
-void ScreenCaptureCallbackProxy::OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event,
-    ScreenCaptureRect *area)
-{
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        cb = screenCaptureCb_;
-    }
-    if (cb != nullptr) {
-        cb->OnCaptureContentChanged(event, area);
-    }
-}
-
-void ScreenCaptureCallbackProxy::OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo)
-{
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        cb = screenCaptureCb_;
-    }
-    if (cb != nullptr) {
-        cb->OnUserSelected(selectionInfo);
-    }
-}
-
-void ScreenCaptureCallbackProxy::OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect)
-{
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        cb = screenCaptureCb_;
-    }
-    if (cb != nullptr) {
-        cb->OnPrivacyProtect(privacyProtect);
-    }
-}
-
 PrivateWindowListenerInScreenCapture::PrivateWindowListenerInScreenCapture(
     std::weak_ptr<ScreenCaptureServer> screenCaptureServer)
 {
@@ -4313,7 +4201,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner start, stateCode:%{public}d.",
         FAKE_POINTER(this), stateCode);
     ON_SCOPE_EXIT(0) { captureState_ = AVScreenCaptureState::STOPPED; };
-    cbProxy_->Reset();
+    cbProxy_->SetBufferActive(false);
     {
         std::lock_guard<std::mutex> audioLock(audioMutex_);
         if (audioSource_ && audioSource_->GetAppPid() > 0) { // DataType::CAPTURE_FILE

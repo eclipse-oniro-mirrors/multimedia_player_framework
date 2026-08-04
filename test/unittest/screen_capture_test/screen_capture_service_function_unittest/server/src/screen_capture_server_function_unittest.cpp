@@ -950,12 +950,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_003, Tes
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_004, TestSize.Level2)
-{
-    screenCaptureServer_->cbProxy_->Reset();
-    ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_001, TestSize.Level2)
 {
     SetInvalidConfig();
@@ -3265,7 +3259,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartAudioCapture_001, TestSize.Level2
 {
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
-    screenCaptureServer_->cbProxy_->Reset();
     screenCaptureServer_->cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
     screenCaptureServer_->cbProxy_->OnDisplaySelected(0);
     EXPECT_EQ(screenCaptureServer_->StartInnerAudioCapture(), MSERR_OK);
