@@ -169,8 +169,8 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_INVALID_OPERATION_STARTED,           "Capture state is not in STARTED."},
     {MSERR_UNKNOWN_UNSUPPORT,                   "Device not support."},
     {MSERR_UNKNOWN_CREATE_AUDIO_RENDER,
-        "possible caused by audio format not support, too many audio streams, or audio host system error"
-        "(such as audio host died)"},
+        "possible caused by audio format not support, too many audio streams, or audio server system error"
+        "(such as audio server died)"},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
