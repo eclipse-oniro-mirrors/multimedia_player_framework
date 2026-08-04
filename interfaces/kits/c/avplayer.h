@@ -1054,13 +1054,15 @@ uint32_t OH_AVPlayer_GetTrackCount(OH_AVPlayer *player);
 OH_AVFormat *OH_AVPlayer_GetTrackFormat(OH_AVPlayer *player, uint32_t trackIndex);
 
 /**
- * @brief Method to set audio pcm data callback.
+ * @brief Method to set audio pcm data callback. This API can be called only
+ *     when the avplayer is in the idle or initialized state.
  * @param player Pointer to an OH_AVPlayer instance.
  * @param callback Pointer to callback function, nullptr indicates unregister callback.
  * @param userData Pointer to user specific data.
  * @return Function result code.
  *         {@link AV_ERR_OK} if the execution is successful.
  *         {@link AV_ERR_INVALID_VAL} if input player is null or player SetPCMOutputCallback failed.
+ *         {@link AV_ERR_OPERATE_NOT_PERMIT} if called in unsupported state.
  * @since 26.0.0
  */
 OH_AVErrCode OH_AVPlayer_SetPCMOutputCallback(OH_AVPlayer *player, OH_AVPlayerPCMOutputCallback callback,
@@ -1088,30 +1090,34 @@ OH_AVPlayerVideoOutput* OH_AVPlayer_SetVideoSideOutput(OH_AVPlayer *player, OHNa
 OH_VideoOutputResult OH_AVPlayerVideoOutput_GetNewestVideoSample(OH_AVPlayerVideoOutput *videoOutput);
 
 /**
- * @brief Method to set audio pcm data process callback.
+ * @brief Method to set audio pcm data process callback. This API can be called only
+ * when the avplayer is in the idle or initialized state.
  * @param player Pointer to an OH_AVPlayer instance.
  * @param callback Pointer to callback function, nullptr indicates unregister callback.
  * @param userData Pointer to user specific data.
  * @return Function result code.
- *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input player is null or player SetPCMProcessorCallback failed.
+ *         <br>{@link AV_ERR_OK} if the execution is successful.
+ *         <br>{@link AV_ERR_INVALID_VAL} if input player is null or player SetPCMProcessorCallback failed.
+ *         <br>{@link AV_ERR_OPERATE_NOT_PERMIT} if called in unsupported state.
  * @since 26.0.0
  */
-OH_AVErrCode OH_AVPlayer_SetPCMProcessorCallback(OH_AVPlayer *player, OH_AVPlayerPCMOutputCallback callback,
+OH_AVErrCode OH_AVPlayer_SetPCMProcessorCallback(OH_AVPlayer *player, OH_AVPlayerPCMProcessorCallback callback,
     void *userData);
 
 /**
  * @brief Sets the maximum amount of data that can be returned at a time during audio post-processing.
- * Allows some PCM data to be cached and returned with the next PCM data
+ * Allows some PCM data to be cached and returned with the next PCM data. This API can be called only
+ * when the avplayer is in the idle or initialized state.
  * @param player Pointer to an OH_AVPlayer instance.
- * @param maxProcessedPCMLen the maximum amount of PCM data returned at one time.
+ * @param maxProcessedPCMLen the maximum amount of PCM data returned at one time, in the range (0, 5MB].
  *     OH_AVPlayerPCMProcessorCallback ensures that the returned pcmBuffer's Capacity is not less than this value.
  * @return Function result code.
- *         {@link AV_ERR_OK} if the execution is successful.
- *         {@link AV_ERR_INVALID_VAL} if input player is null or maxProcessedPCMLen is error.
+ *         <br>{@link AV_ERR_OK} if the execution is successful.
+ *         <br>{@link AV_ERR_INVALID_VAL} if input player is null or maxProcessedPCMLen is error.
+ *         <br>{@link AV_ERR_OPERATE_NOT_PERMIT} if called in unsupported state.
  * @since 26.0.0
  */
-OH_AVErrCode OH_AVPlayer_SetPCMProcessorMaxLen(OH_AVPlayer *player, int maxProcessedPCMLen);
+OH_AVErrCode OH_AVPlayer_SetPCMProcessorMaxLen(OH_AVPlayer *player, int32_t maxProcessedPCMLen);
 
 #ifdef __cplusplus
 }
