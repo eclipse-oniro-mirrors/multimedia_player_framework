@@ -2913,5 +2913,21 @@ int32_t PlayerServer::DisableAllAdsMediaSource()
     MEDIA_LOGI("PlayerServer DisableAllAdsMediaSource in");
     return playerEngine_->DisableAllAdsMediaSource();
 }
+
+int32_t PlayerServer::PrepareInner()
+{
+    if (inReleasing_.load()) {
+        MEDIA_LOGE("Can not Prepare, now in releasing");
+        return MSERR_INVALID_OPERATION;
+    }
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("KPI-TRACE: PlayerServer PrepareInner in");
+
+    if (lastOpStatus_ == PLAYER_INITIALIZED || lastOpStatus_ == PLAYER_STOPPED) {
+        return OnPrepare(true);
+    }
+    MEDIA_LOGE("Can not Prepare, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
+    return MSERR_INVALID_OPERATION;
+}
 } // namespace Media
 } // namespace OHOS

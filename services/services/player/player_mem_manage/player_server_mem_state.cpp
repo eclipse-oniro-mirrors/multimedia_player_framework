@@ -68,9 +68,9 @@ int32_t PlayerServerMem::MemBaseState::MemRecoverToPrepared()
     res = playerServerMem_.SetConfigInternal();
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, MSERR_INVALID_OPERATION,
         "curState:%{public}s failed to SetConfigInternal.", GetStateName().c_str());
-    res = playerServerMem_.PrepareAsyncInner();
+    res = playerServerMem_.PrepareSyncInner();
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, MSERR_INVALID_OPERATION,
-        "curState:%{public}s failed to PrepareAsyncInner.", GetStateName().c_str());
+        "curState:%{public}s failed to PrepareSyncInner.", GetStateName().c_str());
     res = playerServerMem_.SetBehaviorInternal();
     CHECK_AND_RETURN_RET_LOG(res == MSERR_OK, MSERR_INVALID_OPERATION,
         "curState:%{public}s failed to SetBehaviorInternal.", GetStateName().c_str());
@@ -87,9 +87,9 @@ int32_t PlayerServerMem::MemBaseState::MemRecoverToCompleted()
     ret = playerServerMem_.SetConfigInternal();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
         "curState:%{public}s failed to SetConfigInternal", GetStateName().c_str());
-    ret = playerServerMem_.PrepareAsyncInner();
+    ret = playerServerMem_.PrepareSyncInner();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
-        "curState:%{public}s failed to PrepareAsyncInner", GetStateName().c_str());
+        "curState:%{public}s failed to PrepareSyncInner", GetStateName().c_str());
     ret = playerServerMem_.SetPlaybackSpeedInternal();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION,
         "curState:%{public}s failed to SetPlaybackSpeedInternal", GetStateName().c_str());
