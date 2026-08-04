@@ -168,6 +168,9 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_INVALID_OPERATION_PRESENT,           "PresentPicker not support picker."},
     {MSERR_INVALID_OPERATION_STARTED,           "Capture state is not in STARTED."},
     {MSERR_UNKNOWN_UNSUPPORT,                   "Device not support."},
+    {MSERR_UNKNOWN_CREATE_AUDIO_RENDER,
+        "possible caused by audio format not support, too many audio streams, or audio host system error"
+        "(such as audio host died)"},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -241,6 +244,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRO
     {MSERR_RS_DATA_FALLBACK_FAILED,             MSERR_EXT_UNKNOWN},
     {MSERR_LPP_INSTANCE_EXCEED_LIMIT,           MSERR_EXT_UNKNOWN},
     {MSERR_HARDWARE_ERROR,                      MSERR_EXT_UNKNOWN},
+    {MSERR_UNKNOWN_CREATE_AUDIO_RENDER,         MSERR_EXT_UNSUPPORT},
 };
 
 const std::map<MediaServiceExtErrCode, std::string> MSEXTERRCODE_INFOS = {
@@ -401,6 +405,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_INVALID_OPERATION_PRESENT,           MSERR_EXT_API9_OPERATE_NOT_PERMIT},
     {MSERR_INVALID_OPERATION_STARTED,           MSERR_EXT_API9_OPERATE_NOT_PERMIT},
     {MSERR_UNKNOWN_UNSUPPORT,                   MSERR_EXT_API9_IO},
+    {MSERR_UNKNOWN_CREATE_AUDIO_RENDER,         MSERR_EXT_API9_UNSUPPORT_FORMAT},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
