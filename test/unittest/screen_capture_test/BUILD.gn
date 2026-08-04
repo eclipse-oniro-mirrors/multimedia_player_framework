@@ -108,7 +108,7 @@ ohos_unittest("screen_capture_native_unit_test") {
 
   sanitize = {
     cfi = true
-    cfi_cross_dso = true
+    cfi_cross_dso = false
     debug = false
   }
 
@@ -178,7 +178,7 @@ ohos_unittest("screen_capture_capi_unit_test") {
 
   sanitize = {
     cfi = true
-    cfi_cross_dso = true
+    cfi_cross_dso = false
     debug = false
   }
 
@@ -242,7 +242,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
 
   sanitize = {
     cfi = true
-    cfi_cross_dso = true
+    cfi_cross_dso = false
     debug = false
   }
 
@@ -340,7 +340,7 @@ ohos_unittest("screen_capture_ipc_unit_test") {
 
   sanitize = {
     cfi = true
-    cfi_cross_dso = true
+    cfi_cross_dso = false
     debug = false
   }
 
