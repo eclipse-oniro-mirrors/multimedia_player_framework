@@ -267,6 +267,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
       "mock/mock_audio_capturer_create.cpp",
       "mock/mock_screen_capture_service_providers.cpp",
       "screen_capture_service_function_unittest/server/src/audio_capturer_wrapper_function_unittest.cpp",
+      "screen_capture_service_function_unittest/server/src/screen_capture_monitor_server_function_unittest.cpp",
       "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest.cpp",
       "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_buffer.cpp",
       "screen_capture_service_function_unittest/server/src/screen_capture_server_function_unittest_capability.cpp",

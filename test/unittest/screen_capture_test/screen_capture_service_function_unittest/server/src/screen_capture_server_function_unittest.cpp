@@ -950,12 +950,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_003, Tes
     ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, OnReceiveUserPrivacyAuthority_004, TestSize.Level2)
-{
-    screenCaptureServer_->cbProxy_->Reset();
-    ASSERT_NE(screenCaptureServer_->OnReceiveUserPrivacyAuthority(false), MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_001, TestSize.Level2)
 {
     SetInvalidConfig();
@@ -1675,11 +1669,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WriteInnerAudio_001, TestSize.Level2)
     std::shared_ptr<AudioBuffer> innerAudioBuffer =
         std::make_shared<AudioBuffer>(innerBuffer, bufferSize, 0, SOURCE_DEFAULT);
     SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
-    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(-1);
+    screenCaptureServer_->audioSource_->firstAudioFramePts_ = -1;
     AudioDataSourceReadAtActionState ret =
         screenCaptureServer_->audioSource_->WriteInnerAudio(bufferSize, innerAudioBuffer);
     MEDIA_LOGI("WriteInnerAudio_001 1 ret: %{public}d", static_cast<int32_t>(ret));
-    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(10);
+    screenCaptureServer_->audioSource_->firstAudioFramePts_ = 10;
     ret = screenCaptureServer_->audioSource_->WriteInnerAudio(bufferSize, innerAudioBuffer);
     MEDIA_LOGI("WriteInnerAudio_001 2 ret: %{public}d", static_cast<int32_t>(ret));
 }
@@ -1704,11 +1698,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WriteMicAudio_001, TestSize.Level2)
     std::shared_ptr<AudioBuffer> micAudioBuffer =
         std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0, SOURCE_DEFAULT);
     SetSCMicAudioCaptureAndPushData(micAudioBuffer);
-    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(-1);
+    screenCaptureServer_->audioSource_->firstAudioFramePts_ = -1;
     AudioDataSourceReadAtActionState ret =
         screenCaptureServer_->audioSource_->WriteMicAudio(bufferSize, micAudioBuffer);
     MEDIA_LOGI("WriteMicAudio_001 1 ret: %{public}d", static_cast<int32_t>(ret));
-    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(10);
+    screenCaptureServer_->audioSource_->firstAudioFramePts_ = 10;
     ret = screenCaptureServer_->audioSource_->WriteMicAudio(bufferSize, micAudioBuffer);
     MEDIA_LOGI("WriteMicAudio_001 2 ret: %{public}d", static_cast<int32_t>(ret));
 }
@@ -1737,11 +1731,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WriteMixAudio_001, TestSize.Level2)
         std::make_shared<AudioBuffer>(micBuffer, bufferSize, 0, SOURCE_DEFAULT);
     SetSCMicAudioCaptureAndPushData(micAudioBuffer);
     SetSCInnerAudioCaptureAndPushData(innerAudioBuffer);
-    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(-1);
+    screenCaptureServer_->audioSource_->firstAudioFramePts_ = -1;
     AudioDataSourceReadAtActionState ret =
         screenCaptureServer_->audioSource_->WriteMixAudio(bufferSize, innerAudioBuffer, micAudioBuffer);
     MEDIA_LOGI("WriteMixAudio_001 1 ret: %{public}d", static_cast<int32_t>(ret));
-    screenCaptureServer_->audioSource_->firstAudioFramePts_.store(10);
+    screenCaptureServer_->audioSource_->firstAudioFramePts_ = 10;
     ret = screenCaptureServer_->audioSource_->WriteMixAudio(bufferSize, innerAudioBuffer, micAudioBuffer);
     MEDIA_LOGI("WriteMixAudio_001 2 ret: %{public}d", static_cast<int32_t>(ret));
 }
@@ -1899,10 +1893,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_SetAudioFirstFramePts,
         AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
     int64_t testPts = 987654321;
     screenCaptureServer_->audioSource_->SetAudioFirstFramePts(testPts);
-    ASSERT_EQ(screenCaptureServer_->audioSource_->firstAudioFramePts_.load(), testPts);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->firstAudioFramePts_, testPts);
     // Test that it only sets once
     screenCaptureServer_->audioSource_->SetAudioFirstFramePts(111111111);
-    ASSERT_EQ(screenCaptureServer_->audioSource_->firstAudioFramePts_.load(), testPts);
+    ASSERT_EQ(screenCaptureServer_->audioSource_->firstAudioFramePts_, testPts);
 }
 
 // Test AudioDataSource::LostFrameNum
@@ -1914,7 +1908,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_LostFrameNum, TestSize
     screenCaptureServer_->audioSource_->writedFrameTime_ = 50000000;     // 50ms
     screenCaptureServer_->audioSource_->pauseDuration_ = 0;
     int64_t timestamp = 150000000; // 150ms
-    int32_t lostNum = screenCaptureServer_->audioSource_->LostFrameNum(timestamp);
+    int64_t lostNum = screenCaptureServer_->audioSource_->LostFrameNum(timestamp);
     // (150ms - 0 - (50ms + 100ms)) / frame_duration = 0
     ASSERT_EQ(lostNum, 0);
 }
@@ -3157,26 +3151,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabled_001, TestSize.Lev
     EXPECT_EQ(screenCaptureServer_->isMicrophoneSwitchTurnOn_, true);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_001, TestSize.Level2)
-{
-    auto& screenCaptureMonitorServer = ScreenCaptureMonitorServer::GetInstance();
-    HasSystemPermission();
-    screenCaptureMonitorServer.RegisterScreenCaptureMonitorListener(nullptr);
-    screenCaptureMonitorServer.UnregisterScreenCaptureMonitorListener(nullptr);
-    screenCaptureMonitorServer.SetSystemScreenRecorderPid(-1);
-    bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(15000);
-    ASSERT_EQ(ret, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, IsSystemScreenRecorder_002, TestSize.Level2)
-{
-    auto& screenCaptureMonitorServer = ScreenCaptureMonitorServer::GetInstance();
-    screenCaptureMonitorServer.SetSystemScreenRecorderPid(-1);
-    ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorderWorking();
-    bool ret = ScreenCaptureMonitor::GetInstance()->IsSystemScreenRecorder(-1);
-    ASSERT_EQ(ret, false);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamHomeVideoCapture_001, TestSize.Level2)
 {
     SetValidConfig();
@@ -3285,7 +3259,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartAudioCapture_001, TestSize.Level2
 {
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
-    screenCaptureServer_->cbProxy_->Reset();
     screenCaptureServer_->cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
     screenCaptureServer_->cbProxy_->OnDisplaySelected(0);
     EXPECT_EQ(screenCaptureServer_->StartInnerAudioCapture(), MSERR_OK);

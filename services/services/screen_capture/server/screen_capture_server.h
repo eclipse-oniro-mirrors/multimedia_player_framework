@@ -17,6 +17,7 @@
 #define SCREEN_CAPTURE_SERVICE_SERVER_H
 
 #include "screen_capture_server_base.h"
+#include "screen_capture_callback_proxy.h"
 #include "ui_extension_ability_connection.h"
 #include "audio_data_source.h"
 #include "window_life_cycle_listener.h"
@@ -24,23 +25,6 @@
 
 namespace OHOS {
 namespace Media {
-
-class ScreenCaptureCallbackProxy : public ScreenCaptureCallBack, public NoCopyable {
-public:
-    void SetCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback);
-    void Reset();
-    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override;
-    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override;
-    void OnVideoBufferAvailable(bool isReady) override;
-    void OnStateChange(AVScreenCaptureStateCode stateCode) override;
-    void OnDisplaySelected(uint64_t displayId) override;
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect* area) override;
-    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override;
-    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override;
-private:
-    std::shared_mutex mutex_;
-    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
-};
 
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
         public IScreenCaptureService, public NoCopyable {

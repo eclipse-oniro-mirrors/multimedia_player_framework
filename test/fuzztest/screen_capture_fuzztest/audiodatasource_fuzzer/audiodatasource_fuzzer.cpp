@@ -530,7 +530,7 @@ bool AudioDataSourceFuzzer::FuzzLostFrameNum()
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
 
     int64_t timestamp = GetData<int64_t>();
-    int32_t lostFrameNum = audioDataSource->LostFrameNum(timestamp);
+    int64_t lostFrameNum = audioDataSource->LostFrameNum(timestamp);
     (void)lostFrameNum;
     Release();
     return true;

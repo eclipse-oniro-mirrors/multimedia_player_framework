@@ -18,11 +18,9 @@
 
 #include <mutex>
 #include <vector>
-#include <unordered_map>
 #include <chrono>
 #include <atomic>
 #include "incall_observer_callback.h"
-#include "media_telephony_listener.h"
 #include "task_queue.h"
 
 namespace OHOS {
@@ -42,7 +40,6 @@ private:
     void UnRegisterObserver();
     InCallObserver();
     ~InCallObserver();
-    std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
     std::vector<std::weak_ptr<InCallObserverCallBack>> inCallObserverCallBacks_;
     std::atomic<bool> inCall_{false};
     std::mutex mutex_;

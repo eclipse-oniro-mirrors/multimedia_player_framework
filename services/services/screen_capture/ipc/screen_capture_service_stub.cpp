@@ -560,7 +560,6 @@ int32_t ScreenCaptureServiceStub::SetRecorderInfo(MessageParcel &data, MessagePa
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
     RecorderInfo recorderInfo;
-    recorderInfo.url = data.ReadString();
     recorderInfo.fileFormat = data.ReadString();
     int32_t ret = SetRecorderInfo(recorderInfo);
     reply.WriteInt32(ret);

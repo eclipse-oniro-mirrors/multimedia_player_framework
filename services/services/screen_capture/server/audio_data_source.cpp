@@ -87,8 +87,8 @@ void AudioDataSource::SetVideoFirstFramePts(int64_t firstFramePts)
 
 void AudioDataSource::SetAudioFirstFramePts(int64_t firstFramePts)
 {
-    if (firstAudioFramePts_.load() == -1) {
-        firstAudioFramePts_.store(firstFramePts);
+    if (firstAudioFramePts_ == -1) {
+        firstAudioFramePts_ = firstFramePts;
         MEDIA_LOGI("firstAudioFramePts_: %{public}" PRId64, firstFramePts);
     }
 }
@@ -162,6 +162,9 @@ AudioDataSourceReadAtActionState AudioDataSource::WriteMixAudio(uint32_t length,
 AudioDataSourceReadAtActionState AudioDataSource::InnerMicAudioSync(uint32_t length,
     std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
+    if (innerAudioBuffer->timestamp < 0 || micAudioBuffer->timestamp < 0) {
+        return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
+    }
     int64_t timeWindow = micAudioBuffer->timestamp - innerAudioBuffer->timestamp;
     if (timeWindow <= NEG_AUDIO_INTERVAL_IN_NS) { // mic before inner
         CHECK_AND_RETURN_RET_NOLOG(micCapture_ != nullptr, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
@@ -577,8 +580,10 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     for (int32_t totalNum = 0; totalNum < totalLen; totalNum++) {
         int temp = 0;
         for (int channelNum = 0; channelNum < channels; channelNum++) {
-            CHECK_AND_CONTINUE(!(channelNum == 1 && micAudioBuffer->length <= totalNum * channels));
-            temp += *reinterpret_cast<short *>(srcData[channelNum] + totalNum * channels);
+            if (channelNum != 1 ||
+                micAudioBuffer->length >= totalNum * channels + static_cast<int32_t>(sizeof(short))) {
+                temp += *reinterpret_cast<short *>(srcData[channelNum] + totalNum * channels);
+            }
         }
         int32_t output = static_cast<int32_t>(temp * coefficient);
         if (output > max) {
@@ -596,10 +601,13 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     }
 }
 
-int32_t AudioDataSource::LostFrameNum(const int64_t &timestamp)
+int64_t AudioDataSource::LostFrameNum(const int64_t &timestamp)
 {
-    return static_cast<int32_t>(
-        (timestamp - pauseDuration_ - (writedFrameTime_ + firstAudioFramePts_)) / FILL_AUDIO_FRAME_DURATION_IN_NS);
+    int64_t pauseDuration = pauseDuration_.load();
+    if (firstAudioFramePts_ < 0 || timestamp < 0 || pauseDuration < 0 || writedFrameTime_ < 0) {
+        return 0;
+    }
+    return (timestamp - pauseDuration - writedFrameTime_ - firstAudioFramePts_) / FILL_AUDIO_FRAME_DURATION_IN_NS;
 }
 
 AudioDataSourceReadAtActionState AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length)

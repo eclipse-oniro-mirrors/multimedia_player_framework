@@ -128,15 +128,18 @@ int32_t AudioCapturerWrapper::Stop()
 int32_t AudioCapturerWrapper::UpdateAudioCapturerConfig(ScreenCaptureContentFilter &filter)
 {
     MEDIA_LOGI("AudioCapturerWrapper::UpdateAudioCapturerConfig start");
-    contentFilter_ = filter;
     AudioPlaybackCaptureConfig config;
-    SetInnerStreamUsage(config.filterOptions.usages);
-    if (contentFilter_.filteredAudioContents.find(
-        AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO) !=
-        contentFilter_.filteredAudioContents.end()) {
-        config.filterOptions.pids.push_back(appInfo_.appPid);
-        config.filterOptions.pidFilterMode = OHOS::AudioStandard::FilterMode::EXCLUDE;
-        MEDIA_LOGI("UpdateAudioCapturerConfig exclude current app audio");
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        contentFilter_ = filter;
+        SetInnerStreamUsage(config.filterOptions.usages);
+        if (contentFilter_.filteredAudioContents.find(
+                AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO) !=
+            contentFilter_.filteredAudioContents.end()) {
+            config.filterOptions.pids.push_back(appInfo_.appPid);
+            config.filterOptions.pidFilterMode = OHOS::AudioStandard::FilterMode::EXCLUDE;
+            MEDIA_LOGI("UpdateAudioCapturerConfig exclude current app audio");
+        }
     }
     std::shared_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
     CHECK_AND_RETURN_RET_LOG(audioCapturer_ != nullptr, MSERR_INVALID_VAL,
@@ -499,15 +502,6 @@ AudioCapturerWrapper::~AudioCapturerWrapper()
     Stop();
     captureState_.store(CAPTURER_RELEASED);
     bufferCond_.notify_all();
-}
-
-void MicAudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode)
-{
-    (void)errorType;
-    (void)errorCode;
-    if (screenCaptureCb_ != nullptr) {
-        screenCaptureCb_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
-    }
 }
 
 bool AudioCapturerWrapper::IsRecording()
