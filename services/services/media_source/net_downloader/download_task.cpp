@@ -49,6 +49,7 @@ constexpr int32_t SPEED_CALCULATION_INTERVAL_MS = 1000;
 constexpr int64_t PERCENT_MAX = 100;
 constexpr int64_t CANCEL_TIMEOUT_SECONDS = 1;
 constexpr int64_t PAUSE_TIMEOUT_SECONDS = 1;
+constexpr int64_t FORCE_CLOSE_WAIT_SECONDS = 1;
 }
 
 DownloadTask::DownloadTask(const DownloadTaskInfo &info, const DownloadConfig &config,
@@ -129,7 +130,19 @@ int32_t DownloadTask::Pause()
     });
 
     if (!finished) {
-        MEDIA_LOGW("Pause: timeout waiting for state transition");
+        MEDIA_LOGW("Pause: timeout, force closing connection");
+        if (client != nullptr) {
+            client->ForceClose();
+        }
+        finished = finishCv_.wait_for(stateLock, std::chrono::seconds(FORCE_CLOSE_WAIT_SECONDS), [this] {
+            DownloadState s = state_.load();
+            return s == DOWNLOAD_PAUSED || s == DOWNLOAD_COMPLETED ||
+                   s == DOWNLOAD_CANCELED || s == DOWNLOAD_FAILED;
+        });
+    }
+
+    if (!finished) {
+        MEDIA_LOGE("Pause: force close timeout, setting FAILED");
         state_.store(DOWNLOAD_FAILED);
     }
 
@@ -188,7 +201,19 @@ int32_t DownloadTask::Cancel()
     });
 
     if (!finished) {
-        MEDIA_LOGW("Cancel: timeout waiting for state transition");
+        MEDIA_LOGW("Cancel: timeout, force closing connection");
+        if (client != nullptr) {
+            client->ForceClose();
+        }
+        finished = finishCv_.wait_for(stateLock, std::chrono::seconds(FORCE_CLOSE_WAIT_SECONDS), [this] {
+            DownloadState s = state_.load();
+            return s == DOWNLOAD_CANCELED || s == DOWNLOAD_COMPLETED || s == DOWNLOAD_FAILED;
+        });
+    }
+
+    if (!finished) {
+        MEDIA_LOGE("Cancel: force close timeout, setting FAILED");
+        state_.store(DOWNLOAD_FAILED);
     }
 
     DownloadState s = state_.load();

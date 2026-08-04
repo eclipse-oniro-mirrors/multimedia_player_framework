@@ -17,6 +17,7 @@
 
 #include <climits>
 #include <cstring>
+#include <sstream>
 #include <unistd.h>
 
 #include "common/log.h"
@@ -42,9 +43,50 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "PathUtils"};
 }
 
+std::vector<std::string> PathUtils::allowedRootDirs_;
+std::shared_mutex PathUtils::rootDirsMutex_;
+
 bool PathUtils::IsPathTraversalSafe(const std::string &path)
 {
-    return path.find("..") == std::string::npos;
+    std::stringstream ss(path);
+    std::string component;
+    while (std::getline(ss, component, '/')) {
+        if (component == "..") {
+            return false;
+        }
+    }
+    return true;
+}
+
+void PathUtils::SetAllowedRootDir(const std::string &dir)
+{
+    std::unique_lock<std::shared_mutex> lock(rootDirsMutex_);
+    std::string normalizedDir = dir;
+    while (normalizedDir.length() > 1 && normalizedDir.back() == '/') {
+        normalizedDir.pop_back();
+    }
+    allowedRootDirs_.push_back(normalizedDir);
+}
+
+void PathUtils::ClearAllowedRootDir()
+{
+    std::unique_lock<std::shared_mutex> lock(rootDirsMutex_);
+    allowedRootDirs_.clear();
+}
+
+bool PathUtils::IsPathInAllowedDir(const std::string &path)
+{
+    std::shared_lock<std::shared_mutex> lock(rootDirsMutex_);
+    if (allowedRootDirs_.empty()) {
+        return true;
+    }
+    for (const auto &root: allowedRootDirs_) {
+        if (path.length() >= root.length() && path.compare(0, root.length(), root) == 0 &&
+            (path.length() == root.length() || path[root.length()] == '/')) {
+            return true;
+        }
+    }
+    return false;
 }
 
 PathValidateResult PathUtils::ValidateAndNormalizePath(const std::string &path, std::string &normalizedPath)
@@ -67,6 +109,10 @@ PathValidateResult PathUtils::ValidateAndNormalizePath(const std::string &path, 
     char resolved[PATH_MAX] = {0};
     if (realpath(path.c_str(), resolved) != nullptr) {
         normalizedPath = resolved;
+        if (!IsPathInAllowedDir(normalizedPath)) {
+            MEDIA_LOGE("ValidateAndNormalizePath failed: path is not in allowed directory");
+            return PATH_VALIDATE_ERROR_NOT_IN_ALLOWED_DIR;
+        }
         return PATH_VALIDATE_OK;
     }
 
@@ -79,6 +125,10 @@ PathValidateResult PathUtils::ValidateAndNormalizePath(const std::string &path, 
     }
 
     normalizedPath = resolvedParent;
+    if (!IsPathInAllowedDir(normalizedPath)) {
+        MEDIA_LOGE("ValidateAndNormalizePath failed: parent dir not in allowed directory");
+        return PATH_VALIDATE_ERROR_NOT_IN_ALLOWED_DIR;
+    }
     if (normalizedPath != "/") {
         normalizedPath += "/";
     }

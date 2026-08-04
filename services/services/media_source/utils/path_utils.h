@@ -17,6 +17,8 @@
 #define MEDIA_SOURCE_PATH_UTILS_H
 
 #include <string>
+#include <vector>
+#include <shared_mutex>
 
 namespace OHOS {
 namespace Media {
@@ -28,12 +30,20 @@ enum PathValidateResult : int32_t {
     PATH_VALIDATE_ERROR_TRAVERSAL = -2,
     PATH_VALIDATE_ERROR_NOT_ABSOLUTE = -3,
     PATH_VALIDATE_ERROR_REALPATH_FAILED = -4,
+    PATH_VALIDATE_ERROR_NOT_IN_ALLOWED_DIR = -5,
 };
 
 class PathUtils {
 public:
     static PathValidateResult ValidateAndNormalizePath(const std::string &path, std::string &normalizedPath);
     static bool IsPathTraversalSafe(const std::string &path);
+    static void SetAllowedRootDir(const std::string &dir);
+    static void ClearAllowedRootDir();
+
+private:
+    static bool IsPathInAllowedDir(const std::string &path);
+    static std::vector<std::string> allowedRootDirs_;
+    static std::shared_mutex rootDirsMutex_;
 };
 
 } // namespace MediaSourceUtils

@@ -106,7 +106,7 @@ int32_t NetworkClient::SetOutputPath(const std::string &path, int64_t resumePos,
     }
 
     mode_t mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH;
-    ctx_->outputFd = open(normalizedPath.c_str(), O_WRONLY | O_CREAT | O_APPEND, mode);
+    ctx_->outputFd = open(normalizedPath.c_str(), O_WRONLY | O_CREAT | O_APPEND | O_NOFOLLOW, mode);
 
     if (ctx_->outputFd < 0) {
         MEDIA_LOGE("SetOutputPath failed: open failed, errno=%{public}d", errno);
