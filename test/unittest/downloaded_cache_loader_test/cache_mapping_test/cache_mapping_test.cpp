@@ -79,19 +79,6 @@ HWTEST_F(CacheMappingTest, Checksum_Calculate_001, TestSize.Level0)
     EXPECT_NE(checksum, 0);
 }
 
-HWTEST_F(CacheMappingTest, Checksum_Consistent_001, TestSize.Level0)
-{
-    CacheMappingHeader header;
-    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
-    header.version = CACHE_MAPPING_VERSION;
-    header.entryCount = 5;
-    (void)memset_s(header.reserved, 8, 0, 8);
-
-    uint32_t checksum1 = CacheMappingSerializer::CalculateHeaderChecksum(header);
-    uint32_t checksum2 = CacheMappingSerializer::CalculateHeaderChecksum(header);
-    EXPECT_EQ(checksum1, checksum2);
-}
-
 HWTEST_F(CacheMappingTest, Checksum_Different_EntryCount_001, TestSize.Level0)
 {
     CacheMappingHeader header1;

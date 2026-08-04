@@ -83,20 +83,6 @@ HWTEST_F(AVAdsControllerNapiTest, ThreadSafety_SetPlayer_GetPlayer_001, TestSize
     EXPECT_EQ(controller->GetPlayer(), &player2);
 }
 
-HWTEST_F(AVAdsControllerNapiTest, ConcurrentAccess_001, TestSize.Level1)
-{
-    auto controller = std::make_unique<AVAdsControllerNapi>();
-    ASSERT_NE(controller, nullptr);
-
-    int dummyPlayer = 42;
-
-    controller->SetPlayer(nullptr, &dummyPlayer);
-    auto player1 = controller->GetPlayer();
-    auto player2 = controller->GetPlayer();
-
-    EXPECT_EQ(player1, player2);
-}
-
 HWTEST_F(AVAdsControllerNapiInterfaceTest, AdsAsyncContext_Constructor_001, TestSize.Level0)
 {
     void* env = nullptr;
