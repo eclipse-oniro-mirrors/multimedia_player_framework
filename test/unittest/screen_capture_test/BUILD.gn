@@ -110,6 +110,7 @@ ohos_unittest("screen_capture_native_unit_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "$MEDIA_PLAYER_ROOT_DIR/cfi_blocklist.txt"
   }
 
   cflags = [
@@ -180,6 +181,7 @@ ohos_unittest("screen_capture_capi_unit_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "$MEDIA_PLAYER_ROOT_DIR/cfi_blocklist.txt"
   }
 
   cflags = [
@@ -244,6 +246,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "$MEDIA_PLAYER_ROOT_DIR/cfi_blocklist.txt"
   }
 
   configs = [
@@ -342,6 +345,7 @@ ohos_unittest("screen_capture_ipc_unit_test") {
     cfi = true
     cfi_cross_dso = true
     debug = false
+    blocklist = "$MEDIA_PLAYER_ROOT_DIR/cfi_blocklist.txt"
   }
 
   deps = [
