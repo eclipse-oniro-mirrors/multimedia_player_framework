@@ -19,7 +19,6 @@
 #include <mutex>
 #include <random>
 
-#include "network_monitor.h"
 #include "path_utils.h"
 
 #include "common/log.h"
@@ -44,6 +43,9 @@ namespace MediaDownload {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "NetDownloaderDownloaderImpl"};
 constexpr int32_t MIN_URL_LENGTH = 10;
+constexpr int32_t MAX_URL_LENGTH = 8192;
+constexpr size_t MAX_TASK_QUEUE_SIZE = 100000;
+constexpr int32_t FULL_PROGRESS_PERCENT = 100;
 constexpr std::array<int32_t, 5> HTTP_NETWORK_ERROR_CODES = {6, 7, 35, 55, 56};
 constexpr auto IsNetworkErrorCode = [](int32_t code) {
     for (auto it : HTTP_NETWORK_ERROR_CODES) {
@@ -73,6 +75,39 @@ std::string GetErrorMessage(int32_t errorCode)
             return "Unknown error";
     }
 }
+
+constexpr int32_t MIN_PROGRESS_INTERVAL_MS = 100;
+constexpr int32_t MAX_PROGRESS_INTERVAL_MS = 60000;
+constexpr int32_t MIN_TIMEOUT_MS = 1000;
+constexpr int32_t MAX_TIMEOUT_MS = 3600000;
+constexpr int32_t MAX_RETRY_COUNT = 10;
+constexpr int32_t MIN_BUFFER_SIZE = 1024;
+constexpr int32_t MAX_BUFFER_SIZE = 1048576;
+
+DownloadConfig ClampConfig(DownloadConfig config)
+{
+    if (config.progressCallbackIntervalMs < MIN_PROGRESS_INTERVAL_MS) {
+        config.progressCallbackIntervalMs = MIN_PROGRESS_INTERVAL_MS;
+    } else if (config.progressCallbackIntervalMs > MAX_PROGRESS_INTERVAL_MS) {
+        config.progressCallbackIntervalMs = MAX_PROGRESS_INTERVAL_MS;
+    }
+    if (config.timeoutMs < MIN_TIMEOUT_MS) {
+        config.timeoutMs = MIN_TIMEOUT_MS;
+    } else if (config.timeoutMs > MAX_TIMEOUT_MS) {
+        config.timeoutMs = MAX_TIMEOUT_MS;
+    }
+    if (config.retryCount < 0) {
+        config.retryCount = 0;
+    } else if (config.retryCount > MAX_RETRY_COUNT) {
+        config.retryCount = MAX_RETRY_COUNT;
+    }
+    if (config.bufferSize < MIN_BUFFER_SIZE) {
+        config.bufferSize = MIN_BUFFER_SIZE;
+    } else if (config.bufferSize > MAX_BUFFER_SIZE) {
+        config.bufferSize = MAX_BUFFER_SIZE;
+    }
+    return config;
+}
 }
 
 DownloaderImpl::DownloaderImpl()
@@ -81,8 +116,6 @@ DownloaderImpl::DownloaderImpl()
       state_(DOWNLOAD_IDLE),
       urlSet_(false),
       pathSet_(false),
-      messageQueueStarted_(false),
-      schedulerRunning_(false),
       totalTaskCount_(0),
       completedTaskCount_(0)
 {
@@ -108,17 +141,9 @@ DownloaderImpl::~DownloaderImpl()
     }
     if (messageQueue_ != nullptr) {
         messageQueue_->Stop();
-        messageQueue_ = nullptr;
-    }
-    if (schedulerRunning_.load()) {
-        schedulerRunning_.store(false);
-        if (schedulerThread_.joinable()) {
-            schedulerThread_.join();
-        }
     }
     if (schedulerQueue_ != nullptr) {
         schedulerQueue_->Stop();
-        schedulerQueue_ = nullptr;
     }
 }
 
@@ -133,13 +158,18 @@ uint64_t DownloaderImpl::GetCurrentTaskId()
     if (currentState == DOWNLOAD_IDLE) {
         return INVALID_TASK_ID;
     }
-    return taskId_;
+    return taskId_.load();
 }
 
 int32_t DownloaderImpl::ValidateUrl(const std::string &url)
 {
     if (url.empty() || url.length() < MIN_URL_LENGTH) {
         MEDIA_LOGE("Invalid URL: empty or too short");
+        return DOWNLOAD_ERROR_INVALID_PARAM;
+    }
+
+    if (url.length() > MAX_URL_LENGTH) {
+        MEDIA_LOGE("Invalid URL: too long, length=%{public}zu, max=%{public}d", url.length(), MAX_URL_LENGTH);
         return DOWNLOAD_ERROR_INVALID_PARAM;
     }
 
@@ -183,7 +213,7 @@ int32_t DownloaderImpl::SetUrl(const std::string &url)
 
     url_ = url;
     urlSet_ = true;
-    MEDIA_LOGI("SetUrl success: %{public}s", url.c_str());
+    MEDIA_LOGI("SetUrl success: %{private}s", url.c_str());
     return DOWNLOAD_RET_OK;
 }
 
@@ -233,7 +263,7 @@ int32_t DownloaderImpl::SetConfig(const DownloadConfig &config)
         return DOWNLOAD_ERROR_INVALID_OPERATION;
     }
 
-    config_ = config;
+    config_ = ClampConfig(config);
     MEDIA_LOGI("SetConfig success");
     return DOWNLOAD_RET_OK;
 }
@@ -256,20 +286,28 @@ int32_t DownloaderImpl::AddFileTask(const std::string &url, const std::string &p
     QueuedTaskInfo taskInfo;
     taskInfo.url = url;
     taskInfo.outputPath = path;
-    taskInfo.config = config;
+    taskInfo.config = ClampConfig(config);
 
     {
         std::lock_guard<std::mutex> lock(queueMutex_);
+        if (taskQueue_.size() >= MAX_TASK_QUEUE_SIZE) {
+            MEDIA_LOGE("AddFileTask failed: queue full, max=%{public}zu", MAX_TASK_QUEUE_SIZE);
+            return DOWNLOAD_ERROR_INVALID_OPERATION;
+        }
         taskQueue_.push(taskInfo);
         totalTaskCount_++;
-        MEDIA_LOGD("AddFileTask: url=%{public}s, path=%{public}s, queueSize=%{public}zu, totalTaskCount=%{public}d",
-            url.c_str(), path.c_str(), taskQueue_.size(), totalTaskCount_);
+        MEDIA_LOGD("AddFileTask: url=%{private}s, path=%{private}s, queueSize=%{public}zu, totalTaskCount=%{public}d",
+            url.c_str(), path.c_str(), taskQueue_.size(), totalTaskCount_.load());
     }
     return DOWNLOAD_RET_OK;
 }
 
 int32_t DownloaderImpl::SetDownloadCallback(const std::shared_ptr<DownloadCallback> &callback)
 {
+    if (callback == nullptr) {
+        MEDIA_LOGE("SetDownloadCallback failed: callback is null");
+        return DOWNLOAD_ERROR_INVALID_PARAM;
+    }
     std::lock_guard<std::mutex> lock(mutex_);
     callback_ = callback;
     MEDIA_LOGI("SetDownloadCallback success");
@@ -325,31 +363,35 @@ int32_t DownloaderImpl::Start()
 
 int32_t DownloaderImpl::InnerStart()
 {
-    taskId_ = g_taskIdCounter.fetch_add(1);
+    taskId_.store(g_taskIdCounter.fetch_add(1));
 
-    DownloadTaskInfo info = {taskId_, url_, outputPath_, header_};
-    task_ = std::make_shared<DownloadTask>(info, config_, shared_from_this());
+    DownloadTaskInfo info = {taskId_.load(), url_, outputPath_, header_};
+    std::shared_ptr<DownloadTask> localTask;
+    {
+        std::lock_guard<std::mutex> lock(taskMutex_);
+        task_ = std::make_shared<DownloadTask>(info, config_, shared_from_this());
+        localTask = task_;
+    }
 
-    int32_t ret = task_->Start();
-    state_.store(DOWNLOAD_RUNNING);
+    int32_t ret = localTask->Start();
     if (ret != DOWNLOAD_RET_OK) {
         state_.store(DOWNLOAD_FAILED);
         NotifyFailed(DOWNLOAD_ERROR_INTERNAL, ret, GetErrorMessage(ret));
-        task_ = nullptr;
+        std::lock_guard<std::mutex> lock(taskMutex_);
+        if (task_ == localTask) {
+            task_ = nullptr;
+        }
         return ret;
     }
+    state_.store(DOWNLOAD_RUNNING);
 
-    MEDIA_LOGI("Start success, taskId=%{public}" PRIu64, taskId_);
+    MEDIA_LOGI("Start success, taskId=%{public}" PRIu64, taskId_.load());
     return DOWNLOAD_RET_OK;
 }
 
 void DownloaderImpl::StartMessageQueue()
 {
     MEDIA_LOGI("StartMessageQueue");
-    if (messageQueueStarted_) {
-        return;
-    }
-    messageQueueStarted_ = true;
     auto weakThis = std::weak_ptr<DownloaderImpl>(shared_from_this());
     messageQueue_->Start([weakThis](const Message &msg) {
         MEDIA_LOGI("Handle message, type=%{public}d", msg.type);
@@ -358,7 +400,12 @@ void DownloaderImpl::StartMessageQueue()
             MEDIA_LOGI("StartMessageQueue, strongThis null");
             return;
         }
-        auto cb = strongThis->callback_.lock();
+        std::weak_ptr<DownloadCallback> callbackCopy;
+        {
+            std::lock_guard<std::mutex> lock(strongThis->mutex_);
+            callbackCopy = strongThis->callback_;
+        }
+        auto cb = callbackCopy.lock();
         if (cb == nullptr) {
             MEDIA_LOGI("StartMessageQueue, callback_ null");
             return;
@@ -389,10 +436,6 @@ void DownloaderImpl::StartMessageQueue()
 
 void DownloaderImpl::StartSchedulerQueue()
 {
-    if (schedulerRunning_.load()) {
-        return;
-    }
-    schedulerRunning_.store(true);
     auto weakThis = std::weak_ptr<DownloaderImpl>(shared_from_this());
     schedulerQueue_->Start([weakThis](const Message &msg) {
         auto strongThis = weakThis.lock();
@@ -426,6 +469,13 @@ int32_t DownloaderImpl::ProcessNextTaskInQueue()
         return DOWNLOAD_RET_OK;
     }
 
+    // 网络检查在出队和设状态之前 — 失败时任务保留在队列中，状态不变
+    auto networkType = MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
+    if (!IsNetworkAllowDownload(networkType)) {    // 当前网络不允许下载
+        MEDIA_LOGE("ProcessNextTaskInQueue failed: network not available");
+        return DOWNLOAD_ERROR_NETWORK;
+    }
+
     QueuedTaskInfo taskInfo = taskQueue_.front();
     taskQueue_.pop();
 
@@ -440,12 +490,6 @@ int32_t DownloaderImpl::ProcessNextTaskInQueue()
 
     state_.store(DOWNLOAD_PREPARING);
 
-    auto networkType = MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
-    if (!IsNetworkAllowDownload(networkType)) {    // 当前网络不允许下载
-        MEDIA_LOGE("ProcessNextTaskInQueue failed: network not available");
-        return DOWNLOAD_ERROR_NETWORK;
-    }
-
     return InnerStart();
 }
 
@@ -459,15 +503,21 @@ int32_t DownloaderImpl::Pause()
         return DOWNLOAD_ERROR_INVALID_OPERATION;
     }
 
-    if (task_ != nullptr) {
-        int32_t ret = task_->Pause();
+    std::shared_ptr<DownloadTask> localTask;
+    {
+        std::lock_guard<std::mutex> lockTask(taskMutex_);
+        localTask = task_;
+    }
+    if (localTask != nullptr) {
+        int32_t ret = localTask->Pause();
         if (ret != DOWNLOAD_RET_OK) {
+            state_.store(DOWNLOAD_FAILED);
+            NotifyStateChanged(DOWNLOAD_FAILED);
             return ret;
         }
     }
 
     state_.store(DOWNLOAD_PAUSED);
-    schedulerRunning_.store(false);
     NotifyStateChanged(DOWNLOAD_PAUSED);
 
     MEDIA_LOGI("Pause success");
@@ -484,33 +534,42 @@ int32_t DownloaderImpl::Resume()
         return DOWNLOAD_ERROR_INVALID_OPERATION;
     }
 
-    if (task_ != nullptr) {     // 当前有task
-        int32_t ret = task_->Resume();  // 恢复
+    std::shared_ptr<DownloadTask> localTask;
+    {
+        std::lock_guard<std::mutex> lockTask(taskMutex_);
+        localTask = task_;
+    }
+    if (localTask != nullptr) {     // 当前有task
+        int32_t ret = localTask->Resume();  // 恢复
         if (ret != DOWNLOAD_RET_OK) {   // 恢复失败
             state_.store(DOWNLOAD_FAILED);
             NotifyFailed(DOWNLOAD_ERROR_INTERNAL, ret, GetErrorMessage(ret));
             return ret;
         }
         state_.store(DOWNLOAD_RUNNING);     // 恢复成功
-        schedulerRunning_.store(true);
         NotifyStateChanged(DOWNLOAD_RUNNING);
     } else {        // 当前无task
-        schedulerRunning_.store(true);
-        bool hasNextTask = false;
-        {
-            std::lock_guard<std::mutex> lockQueue(queueMutex_);
-            hasNextTask = !taskQueue_.empty();
+        int32_t ret = ProcessNextTaskInQueue();
+        if (ret != DOWNLOAD_RET_OK) {
+            return ret;
         }
-        if (hasNextTask) {
-            state_.store(DOWNLOAD_PREPARING);
-            ProcessNextTaskInQueue();
-        } else {    // 无task了
+        std::shared_ptr<DownloadTask> checkTask;
+        {
+            std::lock_guard<std::mutex> lockTask(taskMutex_);
+            checkTask = task_;
+        }
+        if (checkTask == nullptr) {    // 无task了
             state_.store(DOWNLOAD_COMPLETED);
-            NotifyCompleted(progress_.downloadedSize);
+            int64_t downloadedSize;
+            {
+                std::lock_guard<std::mutex> lockProgress(progressMutex_);
+                downloadedSize = progress_.downloadedSize;
+            }
+            NotifyCompleted(downloadedSize);
         }
     }
 
-    MEDIA_LOGI("Resume success, taskId=%{public}" PRIu64, taskId_);
+    MEDIA_LOGI("Resume success, taskId=%{public}" PRIu64, taskId_.load());
     return DOWNLOAD_RET_OK;
 }
 
@@ -527,14 +586,18 @@ int32_t DownloaderImpl::Cancel()
             MEDIA_LOGE("Cancel failed: state=%{public}d", currentState);
             return DOWNLOAD_ERROR_INVALID_OPERATION;
         }
-
-        if (task_ != nullptr) {
-            (void)task_->Cancel();
-            pendingTaskToRelease_ = task_;
-            task_ = nullptr;
-        }
-
         state_.store(DOWNLOAD_CANCELED);
+    }
+
+    std::shared_ptr<DownloadTask> localTask;
+    {
+        std::lock_guard<std::mutex> lockTask(taskMutex_);
+        localTask = task_;
+        pendingTaskToRelease_ = task_;
+        task_ = nullptr;
+    }
+    if (localTask != nullptr) {
+        (void)localTask->Cancel();
     }
 
     {
@@ -559,35 +622,29 @@ int32_t DownloaderImpl::Release()
     MEDIA_LOGI("DownloaderImpl::Release enter");
     if (messageQueue_ != nullptr) {
         messageQueue_->Stop();
-        messageQueue_ = nullptr;
     }
 
+    std::shared_ptr<DownloadTask> localTask;
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (task_ != nullptr) {
-            task_->Cancel();
-            pendingTaskToRelease_ = task_;
-            task_ = nullptr;
-        }
+        std::lock_guard<std::mutex> lockTask(taskMutex_);
+        localTask = task_;
+        pendingTaskToRelease_ = task_;
+        task_ = nullptr;
+    }
+    if (localTask != nullptr) {
+        localTask->Cancel();
     }
 
     std::shared_ptr<DownloadTask> taskToRelease;
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lockTask(taskMutex_);
         taskToRelease = pendingTaskToRelease_;
         pendingTaskToRelease_ = nullptr;
     }
     taskToRelease = nullptr;
 
-    if (schedulerRunning_.load()) {
-        schedulerRunning_.store(false);
-        if (schedulerThread_.joinable()) {
-            schedulerThread_.join();
-        }
-    }
     if (schedulerQueue_ != nullptr) {
         schedulerQueue_->Stop();
-        schedulerQueue_ = nullptr;
     }
 
     {
@@ -602,7 +659,7 @@ int32_t DownloaderImpl::Release()
     header_.clear();
     urlSet_ = false;
     pathSet_ = false;
-    taskId_ = INVALID_TASK_ID;
+    taskId_.store(INVALID_TASK_ID);
     state_.store(DOWNLOAD_IDLE);
 
     MEDIA_LOGI("Release success");
@@ -700,7 +757,19 @@ void DownloaderImpl::OnStateChanged(DownloadState state)
 void DownloaderImpl::OnCompleted(int64_t downloadedSize)
 {
     MEDIA_LOGI("OnCompleted: called");
-    DownloadProgress currentProgress = task_->GetProgress();
+    std::shared_ptr<DownloadTask> localTask;
+    {
+        std::lock_guard<std::mutex> lock(taskMutex_);
+        if (task_ == nullptr) {
+            MEDIA_LOGI("OnCompleted: task already released");
+            return;
+        }
+        localTask = task_;
+        pendingTaskToRelease_ = task_;
+        task_ = nullptr;
+    }
+
+    DownloadProgress currentProgress = localTask->GetProgress();
 
     {
         std::lock_guard<std::mutex> lock(progressMutex_);
@@ -709,13 +778,6 @@ void DownloaderImpl::OnCompleted(int64_t downloadedSize)
     }
 
     MEDIA_LOGI("OnCompleted: start new task");
-
-    { // 单个文件下载完成后自动调度后续下载
-        std::lock_guard<std::mutex> lock(mutex_);
-        pendingTaskToRelease_ = task_;
-        task_ = nullptr;
-        MEDIA_LOGI("OnCompleted: find new task");
-    }
 
     if (schedulerQueue_ != nullptr) {
         Message msg;
@@ -734,11 +796,17 @@ void DownloaderImpl::OnFailed(DownloadErrorType errorType, int32_t errorCode, co
         msg.errorType = errorType;
         msg.errorCode = errorCode;
         msg.errorMsg = errorMsg;
-        schedulerQueue_->PostMessage(msg);
+        if (schedulerQueue_ != nullptr) {
+            schedulerQueue_->PostMessage(msg);
+        }
         return;
     }
     {
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard<std::mutex> lock(taskMutex_);
+        if (task_ == nullptr) {
+            MEDIA_LOGI("OnFailed: task already released");
+            return;
+        }
         pendingTaskToRelease_ = task_;
         task_ = nullptr;
     }
@@ -761,8 +829,11 @@ void DownloaderImpl::OnProgress(const DownloadProgress &progress)
     {
         std::lock_guard<std::mutex> lock(progressMutex_);
         progress_.downloadSpeed = progress.downloadSpeed;
-        if (totalTaskCount_ > 0) {
-            progress_.progressPercent = (completedTaskCount_ * 100 + progress.progressPercent) / totalTaskCount_;
+        int32_t total = totalTaskCount_.load();
+        if (total > 0) {
+            int32_t completed = completedTaskCount_.load();
+            progress_.progressPercent =
+                (completed * FULL_PROGRESS_PERCENT + progress.progressPercent) / total;
         } else {        // 单个文件，直接取回调上来的信息
             progress_ = progress;
         }
@@ -779,32 +850,44 @@ void DownloaderImpl::HandleTaskCompleted()
     MEDIA_LOGI("HandleTaskCompleted enter: %{public}" PRIu64, downloaderId_);
 
     // 通知上层单文件完成
+    std::shared_ptr<DownloadTask> localPendingTask;
     {
+        std::lock_guard<std::mutex> lock(taskMutex_);
+        localPendingTask = pendingTaskToRelease_;
+        pendingTaskToRelease_ = nullptr;
+    }
+
+    if (localPendingTask != nullptr) {
         Message fileMsg;
         fileMsg.type = MSG_FILE_COMPLETED;
         fileMsg.fileUrl = url_;
-        fileMsg.downloadedSize = pendingTaskToRelease_->GetProgress().downloadedSize;
+        fileMsg.downloadedSize = localPendingTask->GetProgress().downloadedSize;
         if (messageQueue_ != nullptr) {
             messageQueue_->PostMessage(fileMsg);
         }
     }
 
     completedTaskCount_++;
-    pendingTaskToRelease_ = nullptr;
 
-    bool hasNextTask = false;
-    {
-        std::lock_guard<std::mutex> lockQueue(queueMutex_);
-        hasNextTask = !taskQueue_.empty();
+    int32_t ret = ProcessNextTaskInQueue();
+    if (ret != DOWNLOAD_RET_OK) {
+        state_.store(DOWNLOAD_PAUSED);
+        NotifyStateChanged(DOWNLOAD_PAUSED);
+        return;
     }
-
-    if (hasNextTask) {
-        state_.store(DOWNLOAD_PREPARING);
-        MEDIA_LOGI("HandleTaskCompleted: starting next task");
-        ProcessNextTaskInQueue();
-    } else {
+    std::shared_ptr<DownloadTask> checkTask;
+    {
+        std::lock_guard<std::mutex> lockTask(taskMutex_);
+        checkTask = task_;
+    }
+    if (checkTask == nullptr) {
         state_.store(DOWNLOAD_COMPLETED);
-        NotifyCompleted(progress_.downloadedSize);
+        int64_t downloadedSize;
+        {
+            std::lock_guard<std::mutex> lockProgress(progressMutex_);
+            downloadedSize = progress_.downloadedSize;
+        }
+        NotifyCompleted(downloadedSize);
         MEDIA_LOGI("HandleTaskCompleted: all tasks finished");
     }
 
@@ -814,7 +897,10 @@ void DownloaderImpl::HandleTaskCompleted()
 void DownloaderImpl::HandleTaskFailed(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg)
 {
     MEDIA_LOGI("HandleTaskFailed enter");
-    pendingTaskToRelease_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(taskMutex_);
+        pendingTaskToRelease_ = nullptr;
+    }
 
     {
         std::lock_guard<std::mutex> lockQueue(queueMutex_);
@@ -831,7 +917,10 @@ void DownloaderImpl::HandleTaskFailed(DownloadErrorType errorType, int32_t error
 void DownloaderImpl::HandleTaskCanceled()
 {
     MEDIA_LOGI("HandleTaskCanceled enter");
-    pendingTaskToRelease_ = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(taskMutex_);
+        pendingTaskToRelease_ = nullptr;
+    }
 
     NotifyStateChanged(DOWNLOAD_CANCELED);
     MEDIA_LOGI("HandleTaskCanceled done");
@@ -844,7 +933,6 @@ void DownloaderImpl::HandleTaskNetChanged()     // 网络切换，暂停
     auto networkType = MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
     if (!IsNetworkAllowDownload(networkType)) {    // 当前网络不允许下载
         MEDIA_LOGE("HandleTaskNetChanged: network not available");
-        schedulerRunning_.store(false);
         NotifyStateChanged(DOWNLOAD_PAUSED);
     } else {
         Resume();

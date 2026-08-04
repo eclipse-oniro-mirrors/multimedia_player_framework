@@ -12,6 +12,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef AVDOWNLOADER_CALLBACK_TAIHE_H
 #define AVDOWNLOADER_CALLBACK_TAIHE_H
 
@@ -26,15 +27,37 @@
 namespace ANI {
 namespace Media {
 
+inline std::string AVDownloadTaskStateToString(OHOS::Media::AVDownloadTaskState state)
+{
+    switch (state) {
+        case OHOS::Media::AVDownloadTaskState::INIT:
+            return "init";
+        case OHOS::Media::AVDownloadTaskState::QUEUED:
+            return "queued";
+        case OHOS::Media::AVDownloadTaskState::RUNNING:
+            return "running";
+        case OHOS::Media::AVDownloadTaskState::COMPLETED:
+            return "completed";
+        case OHOS::Media::AVDownloadTaskState::PAUSED:
+            return "paused";
+        case OHOS::Media::AVDownloadTaskState::REMOVING:
+            return "removing";
+        case OHOS::Media::AVDownloadTaskState::ERROR:
+        default:
+            return "error";
+    }
+}
+
 namespace AVDownloaderEvent {
     const std::string EVENT_STATUS_CHANGE = "statusChange";
     const std::string EVENT_PROGRESS_CHANGE = "progressChange";
 }
 
-class AVDownloaderCallback : public OHOS::Media::AVDownloaderManagerCallback {
+class AVDownloaderCallback : public OHOS::Media::AVDownloaderManagerCallback,
+                             public std::enable_shared_from_this<AVDownloaderCallback> {
 public:
     AVDownloaderCallback() = default;
-    ~AVDownloaderCallback() = default;
+    ~AVDownloaderCallback() override;
 
     void OnStatusChange(const std::string &taskId, OHOS::Media::AVDownloadTaskState state) override;
     void OnProgressChange(const std::string &taskId, double progress) override;
@@ -44,8 +67,6 @@ public:
 
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void ClearCallbackReference(const std::string &name);
-
-    std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 
 private:
     struct AVDownloaderTaiheCallback {
@@ -59,6 +80,7 @@ private:
     void OnTaiheProgressChangeCallback(AVDownloaderTaiheCallback *taiheCb) const;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> mainHandler_ = nullptr;
 };
 
 } // namespace Media

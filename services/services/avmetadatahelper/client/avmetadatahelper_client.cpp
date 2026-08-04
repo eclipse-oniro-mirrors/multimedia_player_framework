@@ -65,10 +65,15 @@ int32_t AVMetadataHelperClient::SetHelperCallback(const std::shared_ptr<HelperCa
 
 void AVMetadataHelperClient::MediaServerDied()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    avMetadataHelperProxy_ = nullptr;
-    if (callback_ != nullptr) {
-        callback_->OnError(MSERR_SERVICE_DIED,
+    std::shared_ptr<HelperCallback> callback;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        avMetadataHelperProxy_ = nullptr;
+        callback = callback_;
+    }
+
+    if (callback != nullptr) {
+        callback->OnError(MSERR_SERVICE_DIED,
             "mediaserver is died, please create a new meta data helper instance again");
     }
 }

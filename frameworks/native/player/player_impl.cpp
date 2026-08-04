@@ -30,6 +30,7 @@
 #endif
 #include "fd_utils.h"
 #include "osal/utils/steady_clock.h"
+#include "directory_ex.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
@@ -163,6 +164,18 @@ int32_t PlayerImpl::SetSource(const std::string &url)
     ScopedTimer timer("SetSource url", OVERTIME_WARNING_MS);
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
+
+    if (IsFileUrl(url)) {
+        // file url
+        std::string realUriPath;
+        int32_t result = GetRealPath(url, realUriPath);
+        CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "SetSource error: GetRealPath error");
+        std::string uri = "file://" + realUriPath;
+        std::string fileName;
+        int32_t ret = ParseFileName(uri, fileName);
+        CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, MSERR_INVALID_VAL);
+        return OpenFile(fileName);
+    }
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSource(url), "SetSource url", false, TIME_OUT_SECOND);
     return ret;
@@ -1637,6 +1650,110 @@ int32_t PlayerImpl::DisableAllAdsMediaSource()
     MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " DisableAllAdsMediaSource", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
     return playerService_->DisableAllAdsMediaSource();
+}
+
+bool PlayerImpl::IsFileUrl(const std::string &url) const
+{
+    return url.find("://") == std::string::npos || url.find("file://") == 0;
+}
+
+int32_t PlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPath) const
+{
+    std::string fileHead = "file://";
+    std::string tempUrlPath;
+
+    if (url.find(fileHead) == 0 && url.size() > fileHead.size()) {
+        tempUrlPath = url.substr(fileHead.size());
+    } else {
+        tempUrlPath = url;
+    }
+    if (tempUrlPath.find("..") != std::string::npos) {
+        MEDIA_LOGE("invalid url. The Url (%{private}s) path may be invalid.", tempUrlPath.c_str());
+        return MSERR_FILE_ACCESS_FAILED;
+    }
+    bool ret = PathToRealPath(tempUrlPath, realUrlPath);
+    if (!ret) {
+        MEDIA_LOGE("invalid url. The Url (%{private}s) path may be invalid.", url.c_str());
+        return MSERR_OPEN_FILE_FAILED;
+    }
+    if (access(realUrlPath.c_str(), R_OK) != 0) {
+        return MSERR_FILE_ACCESS_FAILED;
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::ParseFileName(const std::string& uri, std::string &fileName)
+{
+    if (uri.empty()) {
+        MEDIA_LOGE("uri is empty");
+        return MSERR_INVALID_VAL;
+    }
+    if (uri.find("file:/") != std::string::npos) {
+        if (uri.find('#') != std::string::npos) {
+            MEDIA_LOGE("Invalid file uri format");
+            return MSERR_INVALID_VAL;
+        }
+        auto pos = uri.find("file:");
+        pos += 5; // 5: offset
+        if (uri.find("///", pos) != std::string::npos) {
+            pos += 2; // 2: offset
+        } else if (uri.find("//", pos) != std::string::npos) {
+            pos = uri.find('/', pos); // skip host name
+            if (pos == std::string::npos) {
+                MEDIA_LOGE("Invalid file uri format");
+                return MSERR_INVALID_VAL;
+            }
+            pos++;
+        }
+        fileName = uri.substr(pos);
+    } else {
+        fileName = uri;
+    }
+    return MSERR_OK;
+}
+
+int32_t PlayerImpl::OpenFile(const std::string& fileName)
+{
+    MEDIA_LOGD("IN");
+    int32_t ret = CheckFileStat(fileName);
+    CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, ret);
+    int fd = open(fileName.c_str(), O_RDONLY);
+    CHECK_AND_RETURN_RET_NOLOG(fd != -1, MSERR_INVALID_VAL);
+    int64_t fileSize = GetFileSize(fileName);
+    if (!fdsanFd_) {
+        fdsanFd_ = std::make_unique<FdsanFd>(fd);
+    } else {
+        fdsanFd_->Reset(fd);
+    }
+    LISTENER(ret = playerService_->SetSource(fd, 0, fileSize), "setSource url", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::CheckFileStat(const std::string& fileName)
+{
+    struct stat fileStat;
+    if (stat(fileName.c_str(), &fileStat) < 0) {
+        return MSERR_INVALID_VAL;
+    }
+    if (S_ISDIR(fileStat.st_mode)) {
+        return MSERR_INVALID_VAL;
+    }
+    if (S_ISSOCK(fileStat.st_mode)) {
+        return MSERR_INVALID_VAL;
+    }
+    return MSERR_OK;
+}
+
+int64_t PlayerImpl::GetFileSize(const std::string& fileName)
+{
+    int64_t fileSize = 0;
+    if (!fileName.empty()) {
+        struct stat fileStatus {};
+        if (stat(fileName.c_str(), &fileStatus) == 0) {
+            fileSize = static_cast<int64_t>(fileStatus.st_size);
+        }
+    }
+    return fileSize;
 }
 } // namespace Media
 } // namespace OHOS

@@ -80,8 +80,6 @@ bool SourceParseAgent::Create()
     }
     getSniffBufferSizeFunc_ = getSniffBufferSizeFunc;
 
-    MEDIA_LOGE("getSniffBufferSizeFunc_ func success: %{public}d", (getSniffBufferSizeFunc_ == nullptr));
-
     // 获取协议类型
     using SniffProtocolFuncType = Plugins::HttpPlugin::StreamProtocolType (*)(const uint8_t* data, size_t size);
     SniffProtocolFuncType sniffStreamProtocolFunc =
@@ -92,7 +90,6 @@ bool SourceParseAgent::Create()
         return false;
     }
     sniffStreamProtocolFunc_ = sniffStreamProtocolFunc;
-    MEDIA_LOGE("sniffStreamProtocolFunc_ func success: %{public}d", (sniffStreamProtocolFunc_ == nullptr));
 
     // 获取流解析对象
     using StreamParserFuncType = Plugins::HttpPlugin::StreamResourceParser* (*)(
@@ -107,7 +104,6 @@ bool SourceParseAgent::Create()
         return false;
     }
     getStreamResourceParserFunc_ = getStreamResourceParserFunc;
-    MEDIA_LOGE("getStreamResourceParserFunc_ func success: %{public}d", (getStreamResourceParserFunc_ == nullptr));
 
     MEDIA_LOGI("SourceParseAgent::Create success");
     return true;
@@ -123,7 +119,6 @@ void SourceParseAgent::Destroy()
 void SourceParseAgent::DestroyInner()
 {
     getSniffBufferSizeFunc_ = nullptr;
-    MEDIA_LOGE("sniffStreamProtocolFunc func set nullptr");
     sniffStreamProtocolFunc_ = nullptr;
     getStreamResourceParserFunc_ = nullptr;
     if (handler_ != nullptr) {
@@ -132,8 +127,9 @@ void SourceParseAgent::DestroyInner()
     }
 }
 
-size_t SourceParseAgent::GetSniffBufferSize() // 获取buffer size
+size_t SourceParseAgent::GetSniffBufferSize()
 {
+    std::lock_guard<std::mutex> lock(loadMutex_);
     if (getSniffBufferSizeFunc_ == nullptr) {
         MEDIA_LOGE("getSniffBufferSizeFunc_ is nullptr");
         return MIN_SNIFF_BUFFER_SIZE;
@@ -143,8 +139,14 @@ size_t SourceParseAgent::GetSniffBufferSize() // 获取buffer size
 
 Plugins::HttpPlugin::StreamProtocolType SourceParseAgent::SniffStreamProtocol(const uint8_t* data, size_t size)
 {
+    std::lock_guard<std::mutex> lock(loadMutex_);
     if (sniffStreamProtocolFunc_ == nullptr) {
         MEDIA_LOGE("sniffStreamProtocolFunc_ is nullptr");
+        return Plugins::HttpPlugin::StreamProtocolType::HTTP;
+    }
+    if (data == nullptr || size == 0) {
+        MEDIA_LOGE("SniffStreamProtocol invalid params: data is %{public}s, size=%{public}zu",
+            data == nullptr ? "nullptr" : "valid", size);
         return Plugins::HttpPlugin::StreamProtocolType::HTTP;
     }
     return sniffStreamProtocolFunc_(data, size);
@@ -154,8 +156,14 @@ std::unique_ptr<Plugins::HttpPlugin::StreamResourceParser> SourceParseAgent::Get
     const uint8_t* data, size_t size, Plugins::HttpPlugin::StreamProtocolType protocol,
     const std::string& rootUrl)
 {
+    std::lock_guard<std::mutex> lock(loadMutex_);
     if (getStreamResourceParserFunc_ == nullptr) {
         MEDIA_LOGE("getStreamResourceParserFunc_ is nullptr");
+        return nullptr;
+    }
+    if (data == nullptr || size == 0) {
+        MEDIA_LOGE("GetStreamResourceParser invalid params: data is %{public}s, size=%{public}zu",
+            data == nullptr ? "nullptr" : "valid", size);
         return nullptr;
     }
 
@@ -164,7 +172,6 @@ std::unique_ptr<Plugins::HttpPlugin::StreamResourceParser> SourceParseAgent::Get
         MEDIA_LOGE("parser is nullptr");
         return nullptr;
     }
-    
 
     return std::unique_ptr<Plugins::HttpPlugin::StreamResourceParser>(parser);
 }

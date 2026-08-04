@@ -33,6 +33,13 @@ public:
     virtual bool IsSystemScreenRecorder(int32_t pid) = 0;
     virtual bool IsSystemScreenRecorderWorking() = 0;
 };
+
+class IInnerScreenCaptureMonitorService : public IScreenCaptureMonitorService {
+public:
+    virtual void SetSystemScreenRecorderPid(int32_t pid) = 0;
+    virtual int32_t CallOnScreenCaptureStarted(int32_t pid) = 0;
+    virtual int32_t CallOnScreenCaptureFinished(int32_t pid) = 0;
+};
 } // namespace Media
 } // namespace OHOS
 #endif // I_SCREEN_CAPTURE_MONITOR_SERVICE_H

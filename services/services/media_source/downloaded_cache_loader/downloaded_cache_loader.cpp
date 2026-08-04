@@ -27,18 +27,37 @@ namespace {
 DownloadedCacheLoader::DownloadedCacheLoader(std::shared_ptr<DownloadedCacheManager> cacheManager)
     : cacheManager_(cacheManager)
 {
+    if (cacheManager_ == nullptr) {
+        MEDIA_LOG_E("DownloadedCacheLoader: cacheManager is nullptr");
+    }
     readTask_ = std::make_shared<Task>("OS_Custom_Read", "", TaskType::SINGLETON, TaskPriority::HIGH, false);
     MEDIA_LOG_I("DownloadedCacheLoader constructor");
 }
 
 DownloadedCacheLoader::~DownloadedCacheLoader()
 {
+    // Stop the read task first to ensure no more async jobs run,
+    // preventing pending jobs from accessing members during destruction.
+    if (readTask_) {
+        readTask_->Stop();
+    }
+    // Close all CacheReaders and clear the map under lock.
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        for (auto& [id, reader] : requestMap_) {
+            if (reader) {
+                reader->Close(id);
+            }
+        }
+        requestMap_.clear();
+    }
     MEDIA_LOG_I("~DownloadedCacheLoader");
 }
 
 int64_t DownloadedCacheLoader::Open(std::shared_ptr<LoadingRequest>& request)
 {
     FALSE_RETURN_V_MSG_E(request != nullptr, -1, "request is nullptr");
+    FALSE_RETURN_V_MSG_E(cacheManager_ != nullptr, -1, "cacheManager is nullptr");
     auto cacheReader = std::shared_ptr<CacheReader>(nullptr);
     {
         std::lock_guard<std::mutex> lock(mutex_);

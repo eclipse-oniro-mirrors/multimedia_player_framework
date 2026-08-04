@@ -42,19 +42,17 @@
 #include "display_manager.h"
 #include "screen_manager.h"
 #include "i_recorder_service.h"
-#include "recorder_server.h"
 #include "notification_content.h"
 #include "notification_helper.h"
 #include "notification_request.h"
 #include "notification_constant.h"
 #include "notification_slot.h"
 #ifdef SUPPORT_CALL
-#include "incall_observer.h"
+#include "incall_observer_callback.h"
 #endif
-#include "account_observer.h"
+#include "account_observer_callback.h"
 #include "meta/meta.h"
 #include "audio_stream_manager.h"
-#include "screen_capture_monitor_server.h"
 #include "json/json.h"
 #include "tokenid_kit.h"
 #include "window_manager.h"
@@ -87,11 +85,6 @@ public:
 enum VideoPermissionState : int32_t {
     START_VIDEO = 0,
     STOP_VIDEO = 1
-};
-
-enum class CaptureRole : int32_t {
-    INNER = 0,
-    MIC = 1,
 };
 
 enum AVScreenCaptureState : int32_t {

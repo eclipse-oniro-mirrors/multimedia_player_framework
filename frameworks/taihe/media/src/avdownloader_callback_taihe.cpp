@@ -19,31 +19,17 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVDownloaderCallback"};
-
-std::string AVDownloadTaskStateToString(OHOS::Media::AVDownloadTaskState state)
-{
-    switch (state) {
-        case OHOS::Media::AVDownloadTaskState::INIT:
-            return "init";
-        case OHOS::Media::AVDownloadTaskState::QUEUED:
-            return "queued";
-        case OHOS::Media::AVDownloadTaskState::RUNNING:
-            return "running";
-        case OHOS::Media::AVDownloadTaskState::COMPLETED:
-            return "completed";
-        case OHOS::Media::AVDownloadTaskState::PAUSED:
-            return "paused";
-        case OHOS::Media::AVDownloadTaskState::REMOVING:
-            return "removing";
-        case OHOS::Media::AVDownloadTaskState::ERROR:
-        default:
-            return "error";
-    }
-}
 }
 
 namespace ANI {
 namespace Media {
+
+AVDownloaderCallback::~AVDownloaderCallback()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    refMap_.clear();
+    mainHandler_ = nullptr;
+}
 
 void AVDownloaderCallback::OnStatusChange(const std::string &taskId, OHOS::Media::AVDownloadTaskState state)
 {
@@ -57,25 +43,44 @@ void AVDownloaderCallback::OnProgressChange(const std::string &taskId, double pr
     SendProgressChangeCallback(taskId, progress);
 }
 
-void AVDownloaderCallback::SendStatusChangeCallback(const std::string &taskId, OHOS::Media::AVDownloadTaskState state)
+void AVDownloaderCallback::SendStatusChangeCallback(const std::string &taskId,
+    OHOS::Media::AVDownloadTaskState state)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(AVDownloaderEvent::EVENT_STATUS_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("can not find statusChange callback!");
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler;
+    AVDownloaderTaiheCallback *cb = new(std::nothrow) AVDownloaderTaiheCallback();
+    if (cb == nullptr) {
+        MEDIA_LOGE("Failed to allocate AVDownloaderTaiheCallback");
+        return;
+    }
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(AVDownloaderEvent::EVENT_STATUS_CHANGE) == refMap_.end()) {
+            MEDIA_LOGW("can not find statusChange callback!");
+            delete cb;
+            return;
+        }
+        cb->autoRef = refMap_.at(AVDownloaderEvent::EVENT_STATUS_CHANGE);
+        cb->callbackName = AVDownloaderEvent::EVENT_STATUS_CHANGE;
+        cb->taskId = taskId;
+        cb->stateStr = AVDownloadTaskStateToString(state);
+        handler = mainHandler_;
+    }
+    if (handler == nullptr) {
+        MEDIA_LOGE("mainHandler_ is nullptr, cannot post status change callback");
+        delete cb;
         return;
     }
 
-    AVDownloaderTaiheCallback *cb = new(std::nothrow) AVDownloaderTaiheCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVDownloaderEvent::EVENT_STATUS_CHANGE);
-    cb->callbackName = AVDownloaderEvent::EVENT_STATUS_CHANGE;
-    cb->taskId = taskId;
-    cb->stateStr = AVDownloadTaskStateToString(state);
-
-    auto task = [this, cb]() {
-        this->OnTaiheStatusChangeCallback(cb);
+    auto weakThis = weak_from_this();
+    auto task = [weakThis, cb]() {
+        auto self = weakThis.lock();
+        if (!self) {
+            delete cb;
+            return;
+        }
+        self->OnTaiheStatusChangeCallback(cb);
     };
-    bool ret = mainHandler_->PostTask(task, "OnStatusChange",
+    bool ret = handler->PostTask(task, "OnStatusChange",
         0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
@@ -85,23 +90,41 @@ void AVDownloaderCallback::SendStatusChangeCallback(const std::string &taskId, O
 
 void AVDownloaderCallback::SendProgressChangeCallback(const std::string &taskId, double progress)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(AVDownloaderEvent::EVENT_PROGRESS_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("can not find progressChange callback!");
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler;
+    AVDownloaderTaiheCallback *cb = new(std::nothrow) AVDownloaderTaiheCallback();
+    if (cb == nullptr) {
+        MEDIA_LOGE("Failed to allocate AVDownloaderTaiheCallback");
+        return;
+    }
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(AVDownloaderEvent::EVENT_PROGRESS_CHANGE) == refMap_.end()) {
+            MEDIA_LOGW("can not find progressChange callback!");
+            delete cb;
+            return;
+        }
+        cb->autoRef = refMap_.at(AVDownloaderEvent::EVENT_PROGRESS_CHANGE);
+        cb->callbackName = AVDownloaderEvent::EVENT_PROGRESS_CHANGE;
+        cb->taskId = taskId;
+        cb->progress = progress;
+        handler = mainHandler_;
+    }
+    if (handler == nullptr) {
+        MEDIA_LOGE("mainHandler_ is nullptr, cannot post progress change callback");
+        delete cb;
         return;
     }
 
-    AVDownloaderTaiheCallback *cb = new(std::nothrow) AVDownloaderTaiheCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVDownloaderEvent::EVENT_PROGRESS_CHANGE);
-    cb->callbackName = AVDownloaderEvent::EVENT_PROGRESS_CHANGE;
-    cb->taskId = taskId;
-    cb->progress = progress;
-
-    auto task = [this, cb]() {
-        this->OnTaiheProgressChangeCallback(cb);
+    auto weakThis = weak_from_this();
+    auto task = [weakThis, cb]() {
+        auto self = weakThis.lock();
+        if (!self) {
+            delete cb;
+            return;
+        }
+        self->OnTaiheProgressChangeCallback(cb);
     };
-    bool ret = mainHandler_->PostTask(task, "OnProgressChange",
+    bool ret = handler->PostTask(task, "OnProgressChange",
         0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
@@ -152,6 +175,10 @@ void AVDownloaderCallback::SaveCallbackReference(const std::string &name, std::w
     MEDIA_LOGI("Set callback type: %{public}s", name.c_str());
     if (mainHandler_ == nullptr) {
         std::shared_ptr<OHOS::AppExecFwk::EventRunner> runner = OHOS::AppExecFwk::EventRunner::GetMainEventRunner();
+        if (runner == nullptr) {
+            MEDIA_LOGE("GetMainEventRunner returned nullptr");
+            return;
+        }
         mainHandler_ = std::make_shared<OHOS::AppExecFwk::EventHandler>(runner);
     }
 }

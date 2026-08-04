@@ -10,19 +10,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
- 
+
 #####################hydra-fuzz###################
 import("//build/config/features.gni")
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework/"
- 
+
 ##############################fuzztest##########################################
 ohos_fuzztest("ScreenCaptureAddSaConcurrentFuzzTest") {
   module_out_path = "./player_framework/ScreenCapture/concurrent/screen_capture"
   fuzz_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/screen_capture_fuzztest/screencaptureaddsaconcurrent_fuzzer"
   resource_config_file = "$MEDIA_ROOT_DIR/test/fuzztest/resource/ohos_test.xml"
- 
+
   include_dirs = [
     "./",
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native",
@@ -100,6 +100,7 @@ ohos_fuzztest("ScreenCaptureAddSaConcurrentFuzzTest") {
   deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/services/services:media_service",
+    "$MEDIA_ROOT_DIR/services/services/screen_capture:media_service_screen_capture_static",
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
   ]
   external_deps = [

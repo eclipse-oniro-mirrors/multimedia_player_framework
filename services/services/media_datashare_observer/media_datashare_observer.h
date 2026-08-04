@@ -21,6 +21,7 @@
 #include "common_event_support.h"
 #include "nocopyable.h"
 #include <cstdlib>
+#include <future>
 #include <string>
 
 namespace OHOS {
@@ -32,6 +33,11 @@ public:
     {}
     ~MediaDatashareObserver() = default;
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
+
+private:
+    void UpdateSettingsValueAsync();
+
+    std::future<void> future_;
 };
 
 class MediaDatashareObserverRegister {

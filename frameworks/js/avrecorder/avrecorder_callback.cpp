@@ -67,70 +67,82 @@ void AVRecorderCallback::ClearCallbackReference()
 
 void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(AVRecorderEvent::EVENT_ERROR) == refMap_.end()) {
-        MEDIA_LOGW("can not find error callback!");
-        return;
-    }
+    AVRecordJsCallback *cb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(AVRecorderEvent::EVENT_ERROR) == refMap_.end()) {
+            MEDIA_LOGW("can not find error callback!");
+            return;
+        }
 
-    AVRecordJsCallback *cb = new(std::nothrow) AVRecordJsCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_ERROR);
-    cb->callbackName = AVRecorderEvent::EVENT_ERROR;
-    cb->errorCode = errCode;
-    cb->errorMsg = msg;
+        cb = new(std::nothrow) AVRecordJsCallback();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_ERROR);
+        cb->callbackName = AVRecorderEvent::EVENT_ERROR;
+        cb->errorCode = errCode;
+        cb->errorMsg = msg;
+    }
     return OnJsErrorCallBack(cb);
 }
 
 void AVRecorderCallback::SendStateCallback(const std::string &state, const StateChangeReason &reason)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    currentState_ = state;
-    if (refMap_.find(AVRecorderEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("can not find statechange callback!");
-        return;
-    }
+    AVRecordJsCallback *cb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        currentState_ = state;
+        if (refMap_.find(AVRecorderEvent::EVENT_STATE_CHANGE) == refMap_.end()) {
+            MEDIA_LOGW("can not find statechange callback!");
+            return;
+        }
 
-    AVRecordJsCallback *cb = new(std::nothrow) AVRecordJsCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_STATE_CHANGE);
-    cb->callbackName = AVRecorderEvent::EVENT_STATE_CHANGE;
-    cb->reason = reason;
-    cb->state = state;
+        cb = new(std::nothrow) AVRecordJsCallback();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_STATE_CHANGE);
+        cb->callbackName = AVRecorderEvent::EVENT_STATE_CHANGE;
+        cb->reason = reason;
+        cb->state = state;
+    }
     return OnJsStateCallBack(cb);
 }
 
 void AVRecorderCallback::SendAudioCaptureChangeCallback(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
-    MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is start");
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) == refMap_.end()) {
-        MEDIA_LOGW("can not find audioCaptureChange callback");
-        return;
-    }
+    AVRecordJsCallback *cb = nullptr;
+    {
+        MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is start");
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE) == refMap_.end()) {
+            MEDIA_LOGW("can not find audioCaptureChange callback");
+            return;
+        }
 
-    AVRecordJsCallback *cb = new(std::nothrow) AVRecordJsCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE);
-    cb->callbackName = AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE;
-    cb->audioRecorderChangeInfo = audioRecorderChangeInfo;
+        cb = new(std::nothrow) AVRecordJsCallback();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE);
+        cb->callbackName = AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE;
+        cb->audioRecorderChangeInfo = audioRecorderChangeInfo;
+    }
     return OnJsAudioCaptureChangeCallback(cb);
 }
 
 void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (refMap_.find(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE) == refMap_.end()) {
-        MEDIA_LOGW("can not find PhotoAssertAvailable callback");
-        return;
-    }
-
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-    AVRecordJsCallback *cb = new(std::nothrow) AVRecordJsCallback();
-    CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
-    cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
-    cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
-    cb->uri = uri;
+    AVRecordJsCallback *cb = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (refMap_.find(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE) == refMap_.end()) {
+            MEDIA_LOGW("can not find PhotoAssertAvailable callback");
+            return;
+        }
+
+        cb = new(std::nothrow) AVRecordJsCallback();
+        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
+        cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
+        cb->uri = uri;
+    }
     return OnJsPhotoAssertAvailableCallback(cb);
 #endif
 }
@@ -393,7 +405,8 @@ napi_status AudioCaptureChangeInfoJsCallback::SetAudioCapturerInfo(napi_env env,
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     setRet = CommonNapi::SetPropertyInt32(env, captureInfo, "capturerFlags", value_.capturerInfo.capturerFlags);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    napi_set_named_property(env, result, "capturerInfo", captureInfo);
+    CHECK_AND_RETURN_RET(napi_set_named_property(env, result, "capturerInfo", captureInfo) == napi_ok,
+        napi_generic_failure);
     return napi_ok;
 }
 
@@ -439,34 +452,40 @@ napi_status AudioCaptureChangeInfoJsCallback::SetDeviceInfo(napi_env env,
         std::vector<int32_t>(value_.inputDeviceInfo.audioStreamInfo.samplingRate.begin(),
         value_.inputDeviceInfo.audioStreamInfo.samplingRate.end()));
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    napi_set_named_property(env, element, "sampleRates", sampleRates);
+    CHECK_AND_RETURN_RET(napi_set_named_property(env, element, "sampleRates", sampleRates) == napi_ok,
+        napi_generic_failure);
 
     napi_value channelCounts;
     setRet = CommonNapi::AddArrayInt(env, channelCounts,
         std::vector<int32_t>(value_.inputDeviceInfo.audioStreamInfo.channels.begin(),
         value_.inputDeviceInfo.audioStreamInfo.channels.end()));
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    napi_set_named_property(env, element, "channelCounts", channelCounts);
+    CHECK_AND_RETURN_RET(napi_set_named_property(env, element, "channelCounts", channelCounts) == napi_ok,
+        napi_generic_failure);
 
     napi_value channelMasks;
     setRet = CommonNapi::AddArrayInt(env, channelMasks, std::vector<int32_t>({value_.inputDeviceInfo.channelMasks}));
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    napi_set_named_property(env, element, "channelMasks", channelMasks);
+    CHECK_AND_RETURN_RET(napi_set_named_property(env, element, "channelMasks", channelMasks) == napi_ok,
+        napi_generic_failure);
 
     napi_value channelIndexMasks;
     setRet = CommonNapi::AddArrayInt(env, channelIndexMasks,
         std::vector<int32_t>({value_.inputDeviceInfo.channelIndexMasks}));
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    napi_set_named_property(env, element, "channelIndexMasks", channelIndexMasks);
+    CHECK_AND_RETURN_RET(napi_set_named_property(env, element, "channelIndexMasks", channelIndexMasks) == napi_ok,
+        napi_generic_failure);
 
     napi_value encodingTypes;
     setRet = CommonNapi::AddArrayInt(env, encodingTypes,
         std::vector<int32_t>({value_.inputDeviceInfo.audioStreamInfo.encoding}));
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    napi_set_named_property(env, element, "encodingTypes", encodingTypes);
+    CHECK_AND_RETURN_RET(napi_set_named_property(env, element, "encodingTypes", encodingTypes) == napi_ok,
+        napi_generic_failure);
 
-    napi_set_element(env, deviceDescriptors, 0, element);
-    napi_set_named_property(env, result, "deviceDescriptors", deviceDescriptors);
+    CHECK_AND_RETURN_RET(napi_set_element(env, deviceDescriptors, 0, element) == napi_ok, napi_generic_failure);
+    CHECK_AND_RETURN_RET(napi_set_named_property(env, result, "deviceDescriptors", deviceDescriptors) == napi_ok,
+        napi_generic_failure);
     return napi_ok;
 }
 } // namespace Media

@@ -83,19 +83,24 @@ public:
     void OnFileCompleted(uint64_t downloaderId, const std::string &url, int64_t fileSize) override;
 
 private:
-    void ProcessDownloadFinish(uint64_t downloaderId, std::shared_ptr<AVDownloaderManagerImpl> manager,
-        std::map<std::string, std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter);
+    void ProcessDownloadFinish(uint64_t downloaderId, std::shared_ptr<AVDownloaderManagerImpl> manager);
     void ParseFiles(uint64_t downloaderId, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
         std::vector<DownloadFileInfo> &filesToAdd, std::shared_ptr<AVDownloaderManagerImpl> manager);
     void GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo);
-    void WriteMappingEntries(std::ofstream& f, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
+    uint32_t WriteMappingEntries(std::ofstream& f, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
         std::streamoff baseOffset);
     void ParseSingleFile(uint64_t downloaderId, DownloadFileInfo &fileInfo,
         std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::vector<DownloadFileInfo> &filesToAdd,
         std::shared_ptr<AVDownloaderManagerImpl> manager);
+    bool ReadFileToBuffer(const std::string &filePath, std::vector<uint8_t> &buffer);
     void SniffStreamProtocol(uint64_t downloaderId, const MediaDownload::DownloadProgress &progress,
         std::string currentFilePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo);
+    void ApplySniffedProtocol(uint64_t downloaderId, const uint8_t* data, size_t size,
+        const std::string& filePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo);
     void SubmitRemainingTasks(std::shared_ptr<MediaDownload::Downloader> downloader,
+        std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::shared_ptr<AVDownloaderManagerImpl> manager);
+    void HandleParseCompleted(uint64_t downloaderId,
+        std::map<std::string, std::shared_ptr<MediaDownload::Downloader>>::iterator &downloaderIter,
         std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::shared_ptr<AVDownloaderManagerImpl> manager);
     std::weak_ptr<AVDownloaderManagerImpl> manager_;
 };
@@ -154,9 +159,10 @@ private:
     std::mutex mapMutex_;
     std::string defaultCacheDir_;
     std::shared_ptr<DownloadTaskCallback> taskCallback_;
-    bool networkListeningStarted_ = false;
+    std::atomic<bool> networkListeningStarted_ {false};
     std::atomic<bool> released_ {false};
 
+    friend class DownloadTaskCallback;
     friend class AVDownloaderManagerTest;
 };
 

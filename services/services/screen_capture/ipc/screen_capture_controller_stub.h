@@ -17,12 +17,14 @@
 #define SCREEN_CAPTURE_CONTROLLER_STUB_H
 
 #include <map>
+#include <memory>
 #include "i_standard_screen_capture_controller.h"
-#include "screen_capture_controller_server.h"
+#include "i_screen_capture_controller.h"
 #include "media_death_recipient.h"
 
 namespace OHOS {
 namespace Media {
+
 class ScreenCaptureControllerStub : public IRemoteStub<IStandardScreenCaptureController>, public NoCopyable {
 public:
     static sptr<ScreenCaptureControllerStub> Create();
@@ -41,7 +43,9 @@ private:
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 
     std::mutex mutex_;
-    std::shared_ptr<IScreenCaptureController> screenCaptureControllerServer_ = nullptr;
+    std::unique_ptr<IScreenCaptureController, void (*)(IScreenCaptureController *)> screenCaptureControllerServer_{
+        nullptr, nullptr
+    };
     using screenCaptureControllerStubFuncs =
         int32_t(ScreenCaptureControllerStub::*)(MessageParcel &data, MessageParcel &reply);
     std::map<uint32_t, screenCaptureControllerStubFuncs> screenCaptureControllerStubFuncs_;

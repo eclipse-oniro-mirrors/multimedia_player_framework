@@ -35,7 +35,6 @@ std::string CommonNapi::GetStringArgument(napi_env env, napi_value value, size_t
         CHECK_AND_RETURN_RET_LOG(buffer != nullptr, strValue, "no memory");
         status = napi_get_value_string_utf8(env, value, buffer, bufLength + 1, &bufLength);
         if (status == napi_ok) {
-            MEDIA_LOGD("argument = %{public}s", buffer);
             strValue = buffer;
         }
         free(buffer);

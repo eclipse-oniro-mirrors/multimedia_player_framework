@@ -14,25 +14,25 @@
  */
 
 #include "screen_capture_server_function_unittest.h"
+#include "screen_capture_monitor_server.h"
+#include "screen_capture_server_manager.h"
 
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE,
-        "ScreenCaptureServerFunctionTest"};
-    constexpr int32_t ROOT_UID = 0;
+constexpr int32_t ROOT_UID = 0;
 }
 
 namespace OHOS {
 namespace Media {
 
 /**
-* @tc.name: LimitIdGenerator_001
-* @tc.desc: idGenerator get invalid newId
-* @tc.type: FUNC
-*/
+ * @tc.name: LimitIdGenerator_001
+ * @tc.desc: idGenerator get invalid newId
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, LimitIdGenerator_001, TestSize.Level2)
 {
     int32_t limit = 0;
@@ -41,10 +41,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, LimitIdGenerator_001, TestSize.Level2)
 }
 
 /**
-* @tc.name: LimitIdGenerator_002
-* @tc.desc: idGenerator get valid newId
-* @tc.type: FUNC
-*/
+ * @tc.name: LimitIdGenerator_002
+ * @tc.desc: idGenerator get valid newId
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, LimitIdGenerator_002, TestSize.Level2)
 {
     int32_t limit = 10;
@@ -53,10 +53,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, LimitIdGenerator_002, TestSize.Level2)
 }
 
 /**
-* @tc.name: LimitIdGenerator_003
-* @tc.desc: idGenerator return valid/invalid ID
-* @tc.type: FUNC
-*/
+ * @tc.name: LimitIdGenerator_003
+ * @tc.desc: idGenerator return valid/invalid ID
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, LimitIdGenerator_003, TestSize.Level2)
 {
     int32_t limit = 10;
@@ -68,127 +68,108 @@ HWTEST_F(ScreenCaptureServerFunctionTest, LimitIdGenerator_003, TestSize.Level2)
 }
 
 /**
-* @tc.name: ProcessScreenCaptureServerMap_001
-* @tc.desc: AddScreenCaptureServerMap
-* @tc.type: FUNC
-*/
+ * @tc.name: ProcessScreenCaptureServerMap_001
+ * @tc.desc: AddScreenCaptureServerMap
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcessScreenCaptureServerMap_001, TestSize.Level2)
 {
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    server->SetSessionId(sessionId);
-    int32_t sizeBefore = ScreenCaptureServer::serverMap_.size();
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), sizeBefore + 1);
-    ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
+    int32_t sessionId = ScreenCaptureServerManager::GetInstance().GetNewSessionId();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->sessionId_ = sessionId;
+    int32_t sizeBefore = ScreenCaptureServerManager::GetInstance().serverMap_.size();
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeBefore + 1);
+    ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(sessionId);
 }
 
 /**
-* @tc.name: ProcessScreenCaptureServerMap_002
-* @tc.desc: RemoveScreenCaptureServerMap
-* @tc.type: FUNC
-*/
+ * @tc.name: ProcessScreenCaptureServerMap_002
+ * @tc.desc: RemoveScreenCaptureServerMap
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcessScreenCaptureServerMap_002, TestSize.Level2)
 {
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    server->SetSessionId(sessionId);
-    int32_t sizeBefore = ScreenCaptureServer::serverMap_.size();
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    int32_t sizeAfter = ScreenCaptureServer::serverMap_.size();
-    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), sizeBefore + 1);
-    ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
-    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), sizeAfter - 1);
+    int32_t sessionId = ScreenCaptureServerManager::GetInstance().GetNewSessionId();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->sessionId_ = sessionId;
+    int32_t sizeBefore = ScreenCaptureServerManager::GetInstance().serverMap_.size();
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
+    int32_t sizeAfter = ScreenCaptureServerManager::GetInstance().serverMap_.size();
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeBefore + 1);
+    ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(sessionId);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeAfter - 1);
 }
 
 /**
-* @tc.name: CheckGetScreenCaptureServerById_001
-* @tc.desc: GetScreenCaptureServerByIdWithLock: sessionId exists in serverMap_
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckGetScreenCaptureServerById_001
+ * @tc.desc: GetScreenCaptureServerById: sessionId exists in serverMap_
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckGetScreenCaptureServerById_001, TestSize.Level2)
 {
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    server->SetSessionId(sessionId);
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ASSERT_NE(ScreenCaptureServer::GetScreenCaptureServerByIdWithLock(sessionId), nullptr);
-    ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
+    int32_t sessionId = ScreenCaptureServerManager::GetInstance().GetNewSessionId();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->sessionId_ = sessionId;
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
+    ASSERT_NE(ScreenCaptureServerManager::GetInstance().GetScreenCaptureServerById(sessionId).lock(), nullptr);
+    ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(sessionId);
 }
 
 /**
-* @tc.name: CheckGetScreenCaptureServerById_002
-* @tc.desc: GetScreenCaptureServerByIdWithLock: sessionId not exists in serverMap_
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckGetScreenCaptureServerById_002
+ * @tc.desc: GetScreenCaptureServerById: sessionId not exists in serverMap_
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckGetScreenCaptureServerById_002, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
     UniqueIDGenerator gIdGenerator(20);
     int32_t sessionId = gIdGenerator.GetNewID();
-    ASSERT_EQ(ScreenCaptureServer::GetScreenCaptureServerByIdWithLock(sessionId), nullptr);
-    ScreenCaptureServer::gIdGenerator_.ReturnID(sessionId);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().GetScreenCaptureServerById(sessionId).lock(), nullptr);
+    ScreenCaptureServerManager::GetInstance().idGenerator_.ReturnID(sessionId);
 }
 
 /**
-* @tc.name: CountStartedSCSNumByPid_001
-* @tc.desc: CountStartedScreenCaptureServerNumByPid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, CountStartedSCSNumByPid_001, TestSize.Level2)
-{
-    ScreenCaptureServer::serverMap_.clear();
-    UniqueIDGenerator gIdGenerator(20);
-    int32_t sessionId = gIdGenerator.GetNewID();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    server->SetSessionId(sessionId);
-    server->appInfo_.appPid = 1;
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
-    MEDIA_LOGD("mapSize: %{public}d", static_cast<int32_t>(ScreenCaptureServer::serverMap_.size()));
-    ASSERT_NE(ScreenCaptureServer::CountStartedScreenCaptureServerNumByPid(server->appInfo_.appPid), 0);
-
-    ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
-    ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
-}
-
-/**
-* @tc.name: CheckScreenCaptureSessionIdLimit_001
-* @tc.desc: CheckScreenCaptureSessionIdLimit: success
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckScreenCaptureSessionIdLimit_001
+ * @tc.desc: CheckScreenCaptureSessionIdLimit: success
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
     server->appInfo_.appUid = 1;
-    ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(server->appInfo_.appUid), true);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(server->appInfo_.appUid),
+        true);
 }
 
 /**
-* @tc.name: CheckScreenCaptureSessionIdLimit_002
-* @tc.desc: CheckScreenCaptureSessionIdLimit: fail, current appUid has too many ScreenCaptureServer instances
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckScreenCaptureSessionIdLimit_002
+ * @tc.desc: CheckScreenCaptureSessionIdLimit: fail, current appUid has too many ScreenCaptureServer instances
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_002, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
     std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
-    for (int32_t i = 0; i <= ScreenCaptureServer::maxSessionPerUid_; i++) {
-        std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    for (int32_t i = 0; i <= ScreenCaptureServerManager::GetInstance().maxSessionPerUid_; i++) {
+        std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
         serverList.push_back(server);
         int32_t sessionId = i + 1;
-        server->SetSessionId(sessionId);
+        server->sessionId_ = sessionId;
         server->appInfo_.appUid = 0;
-        ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(server->appInfo_.appUid), true);
-        ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+        ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(server->appInfo_.appUid),
+            true);
+        ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
     }
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    int32_t sessionId = ScreenCaptureServer::maxSessionPerUid_ + 1;
-    server->SetSessionId(sessionId);
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    int32_t sessionId = ScreenCaptureServerManager::GetInstance().maxSessionPerUid_ + 1;
+    server->sessionId_ = sessionId;
     server->appInfo_.appUid = 0;
-    ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(server->appInfo_.appUid), false);
-    ScreenCaptureServer::serverMap_.clear();
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(server->appInfo_.appUid),
+        false);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
 }
 
 /**
@@ -198,12 +179,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_002, 
  */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_003, TestSize.Level2)
 {
-    for (auto iter = ScreenCaptureServer::serverMap_.begin(); iter != ScreenCaptureServer::serverMap_.end();
-        iter++) {
-            std::weak_ptr<ScreenCaptureServer> wp;
-            (iter->second) = wp;
-        }
-    ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(screenCaptureServer_->appInfo_.appUid), true);
+    for (auto iter = ScreenCaptureServerManager::GetInstance().serverMap_.begin();
+        iter != ScreenCaptureServerManager::GetInstance().serverMap_.end(); iter++) {
+        std::weak_ptr<ScreenCaptureServer> wp;
+        (iter->second.server) = wp;
+    }
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(
+                  screenCaptureServer_->appInfo_.appUid),
+        true);
 }
 
 /**
@@ -213,274 +196,175 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_003, 
  */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_004, TestSize.Level2)
 {
-    ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureSessionIdLimit(screenCaptureServer_->appInfo_.appUid + 1), true);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(
+                  screenCaptureServer_->appInfo_.appUid + 1),
+        true);
 }
 
 /**
-* @tc.name: CheckScreenCaptureAppLimit_001
-* @tc.desc: CheckScreenCaptureAppLimit: true, appNum less than maxAppLimit_
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckScreenCaptureAppLimit_001
+ * @tc.desc: CheckScreenCaptureAppLimit: true, appNum less than maxAppLimit_
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureAppLimit_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
     int32_t curAppUid = ROOT_UID + 1;
-    ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureAppLimit(curAppUid), true);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(curAppUid), true);
 }
 
 /**
-* @tc.name: CheckScreenCaptureAppLimit_002
-* @tc.desc: CheckScreenCaptureAppLimit: true, appNum exists
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckScreenCaptureAppLimit_002
+ * @tc.desc: CheckScreenCaptureAppLimit: true, appNum exists
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureAppLimit_002, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
-    server->SetSessionId(sessionId);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    int32_t sessionId = ScreenCaptureServerManager::GetInstance().GetNewSessionId();
+    server->sessionId_ = sessionId;
     server->appInfo_.appUid = ROOT_UID + 1;
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureAppLimit(ROOT_UID + 1), true);
-    ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(ROOT_UID + 1), true);
+    ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(sessionId);
 }
 
 /**
-* @tc.name: CheckScreenCaptureAppLimit_003
-* @tc.desc: CheckScreenCaptureAppLimit: false, appNum reach maxAppLimit_
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckScreenCaptureAppLimit_003
+ * @tc.desc: CheckScreenCaptureAppLimit: false, appNum reach maxAppLimit_
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureAppLimit_003, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
     std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
     UniqueIDGenerator gIdGenerator(20);
-    for (int32_t i = 0; i <= ScreenCaptureServer::maxAppLimit_; i++) {
-        std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    for (int32_t i = 0; i <= ScreenCaptureServerManager::GetInstance().maxAppLimit_; i++) {
+        std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
         serverList.push_back(server);
         int32_t sessionId = gIdGenerator.GetNewID();
-        server->SetSessionId(sessionId);
+        server->sessionId_ = sessionId;
         server->appInfo_.appUid = ROOT_UID + i;
-        ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+        ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
     }
-    ASSERT_EQ(ScreenCaptureServer::CheckScreenCaptureAppLimit(ROOT_UID + ScreenCaptureServer::maxAppLimit_ + 1), false);
-    ScreenCaptureServer::serverMap_.clear();
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(
+                  ROOT_UID + ScreenCaptureServerManager::GetInstance().maxAppLimit_ + 1),
+        false);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
 }
 
 /**
-* @tc.name: ProcessStartedSessionIdList_001
-* @tc.desc: AddStartedSessionIdList
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, ProcessStartedSessionIdList_001, TestSize.Level2)
-{
-    int32_t beforeSize = ScreenCaptureServer::startedSessionIDList_.size();
-    UniqueIDGenerator gIdGenerator(20);
-    int32_t sessionId = gIdGenerator.GetNewID();
-    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
-    ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), beforeSize + 1);
-    ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
-    ScreenCaptureServer::gIdGenerator_.ReturnID(sessionId);
-}
-
-/**
-* @tc.name: ProcessStartedSessionIdList_002
-* @tc.desc: RemoveStartedSessionIdList
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, ProcessStartedSessionIdList_002, TestSize.Level2)
-{
-    int32_t beforeSize = ScreenCaptureServer::startedSessionIDList_.size();
-    UniqueIDGenerator gIdGenerator(20);
-    int32_t sessionId = gIdGenerator.GetNewID();
-    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
-    int32_t afterSize = ScreenCaptureServer::startedSessionIDList_.size();
-    ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), beforeSize + 1);
-    ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
-    ASSERT_EQ(ScreenCaptureServer::startedSessionIDList_.size(), afterSize - 1);
-    ScreenCaptureServer::gIdGenerator_.ReturnID(sessionId);
-}
-
-/**
-* @tc.name: GetStartedSCSPidList_001
-* @tc.desc: GetStartedScreenCaptureServerPidList
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, GetStartedSCSPidList_001, TestSize.Level2)
-{
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    UniqueIDGenerator gIdGenerator(20);
-    int32_t sessionId = gIdGenerator.GetNewID();
-    server->SetSessionId(sessionId);
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
-    MEDIA_LOGD("GetStartedSCSPidList_001 listSize: %{public}d, mapSize: %{public}d",
-        static_cast<int32_t>(ScreenCaptureServer::GetStartedScreenCaptureServerPidList().size()),
-        static_cast<int32_t>(ScreenCaptureServer::serverMap_.size()));
-    ASSERT_EQ(ScreenCaptureServer::GetStartedScreenCaptureServerPidList().size()
-        <= ScreenCaptureServer::serverMap_.size(), true);
-    ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
-    ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
-}
-
-/**
-* @tc.name: GetStartedSCSPidList_002
-* @tc.desc: GetAllStartedSessionIdList
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, GetStartedSCSPidList_002, TestSize.Level2)
-{
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    UniqueIDGenerator gIdGenerator(20);
-    int32_t sessionId = gIdGenerator.GetNewID();
-    server->SetSessionId(sessionId);
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
-    ASSERT_EQ(ScreenCaptureServer::GetAllStartedSessionIdList().size() <= ScreenCaptureServer::serverMap_.size(), true);
-    ScreenCaptureServer::RemoveStartedSessionIdList(sessionId);
-    ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
-}
-
-/**
-* @tc.name: GetStartedSCSPidList_003
-* @tc.desc: GetRunningScreenCaptureInstancePid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, GetStartedSCSPidList_003, TestSize.Level2)
-{
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    UniqueIDGenerator gIdGenerator(20);
-    int32_t sessionId = gIdGenerator.GetNewID();
-    server->SetSessionId(sessionId);
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
-    std::list<int32_t> pidList{};
-    ASSERT_EQ(ScreenCaptureServer::GetRunningScreenCaptureInstancePid(pidList), MSERR_OK);
-}
-
-/**
-* @tc.name: CheckCanSCInstanceBeCreate_001
-* @tc.desc: CanScreenCaptureInstanceBeCreate: true
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckCanSCInstanceBeCreate_001
+ * @tc.desc: CanScreenCaptureInstanceBeCreate: true
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCanSCInstanceBeCreate_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    ASSERT_EQ(ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(ROOT_UID), true);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(ROOT_UID), true);
 }
 
 /**
-* @tc.name: CheckCanSCInstanceBeCreate_002
-* @tc.desc: CanScreenCaptureInstanceBeCreate: false, exceed ScreenCaptureServer maxSessionPerUid limit.
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckCanSCInstanceBeCreate_002
+ * @tc.desc: CanScreenCaptureInstanceBeCreate: false, exceed ScreenCaptureServer maxSessionPerUid limit.
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCanSCInstanceBeCreate_002, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
     std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
     UniqueIDGenerator gIdGenerator(20);
-    for (int32_t i = 0; i <= ScreenCaptureServer::maxSessionPerUid_; i++) {
-        std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    for (int32_t i = 0; i <= ScreenCaptureServerManager::GetInstance().maxSessionPerUid_; i++) {
+        std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
         serverList.push_back(server);
         int32_t sessionId = gIdGenerator.GetNewID();
-        server->SetSessionId(sessionId);
+        server->sessionId_ = sessionId;
         server->appInfo_.appUid = 0;
-        ASSERT_EQ(ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(server->appInfo_.appUid), true);
-        ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+        ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(server->appInfo_.appUid),
+            true);
+        ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
     }
-    ASSERT_EQ(ScreenCaptureServer::CanScreenCaptureInstanceBeCreate(0), false);
-    ScreenCaptureServer::serverMap_.clear();
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(0), false);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
 }
 
 /**
-* @tc.name: CreateSCNewInstance_001
-* @tc.desc: CreateScreenCaptureNewInstance: newInstance exists
-* @tc.type: FUNC
-*/
+ * @tc.name: CreateSCNewInstance_001
+ * @tc.desc: CreateScreenCaptureNewInstance: newInstance exists
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CreateSCNewInstance_001, TestSize.Level2)
 {
-    ASSERT_NE(ScreenCaptureServer::CreateScreenCaptureNewInstance(), nullptr);
+    ASSERT_NE(MakeScreenCaptureServerViaCreate(), nullptr);
 }
 
 /**
-* @tc.name: CreateSCNewInstance_002
-* @tc.desc: CreateScreenCaptureNewInstance: nullptr
-* @tc.type: FUNC
-*/
+ * @tc.name: CreateSCNewInstance_002
+ * @tc.desc: CreateScreenCaptureNewInstance: nullptr
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CreateSCNewInstance_002, TestSize.Level2)
 {
     std::queue<int32_t> tmpQ;
-    while (!ScreenCaptureServer::gIdGenerator_.availableIDs_.empty()) {
-        tmpQ.push(ScreenCaptureServer::gIdGenerator_.availableIDs_.front());
-        ScreenCaptureServer::gIdGenerator_.availableIDs_.pop();
+    while (!ScreenCaptureServerManager::GetInstance().idGenerator_.availableIDs_.empty()) {
+        tmpQ.push(ScreenCaptureServerManager::GetInstance().idGenerator_.availableIDs_.front());
+        ScreenCaptureServerManager::GetInstance().idGenerator_.availableIDs_.pop();
     }
-    ASSERT_EQ(ScreenCaptureServer::CreateScreenCaptureNewInstance(), nullptr);
+    ASSERT_EQ(ScreenCaptureServer::Create(nullptr), nullptr);
 
     while (!tmpQ.empty()) {
-        ScreenCaptureServer::gIdGenerator_.availableIDs_.push(tmpQ.front());
+        ScreenCaptureServerManager::GetInstance().idGenerator_.availableIDs_.push(tmpQ.front());
         tmpQ.pop();
     }
 }
 
 /**
-* @tc.name: CreateSCNewInstance_003
-* @tc.desc: Create: success
-* @tc.type: FUNC
-*/
+ * @tc.name: CreateSCNewInstance_003
+ * @tc.desc: Create: success
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CreateSCNewInstance_003, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    ASSERT_NE(ScreenCaptureServer::Create(), nullptr);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    ASSERT_NE(MakeScreenCaptureServerViaCreate(), nullptr);
 }
 
 /**
-* @tc.name: CheckFirstStartPidInstance_001
-* @tc.desc: startedSessionIDList_ is empty not ROOT_UID
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckFirstStartPidInstance_001
+ * @tc.desc: no running capture, first pid instance
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstStartPidInstance_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    ScreenCaptureServer::startedSessionIDList_.clear();
     screenCaptureServer_->appInfo_.appPid = 1;
     ASSERT_EQ(screenCaptureServer_->IsFirstStartPidInstance(screenCaptureServer_->appInfo_.appPid), true);
-    ASSERT_EQ(screenCaptureServer_->IsLastStartedPidInstance(screenCaptureServer_->appInfo_.appPid), false);
 }
 
 /**
-* @tc.name: CheckFirstStartPidInstance_002
-* @tc.desc: startedSessionIDList_ exists one sessionId
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckFirstStartPidInstance_002
+ * @tc.desc: pid already running, not first instance
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstStartPidInstance_002, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    ScreenCaptureServer::startedSessionIDList_.clear();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
-    server->SetSessionId(sessionId);
-    server->appInfo_.appPid = 1;
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
-    ASSERT_EQ(server->IsFirstStartPidInstance(server->appInfo_.appPid), false);
-    ASSERT_EQ(server->FirstPidUpdatePrivacyUsingPermissionState(server->appInfo_.appPid), true);
-    ASSERT_EQ(server->IsLastStartedPidInstance(server->appInfo_.appPid), true);
-
-    ScreenCaptureServer::RemoveScreenCaptureServerMap(sessionId);
-    ScreenCaptureServer::serverMap_.clear();
-    ScreenCaptureServer::startedSessionIDList_.clear();
+    auto &monitorServer = ScreenCaptureMonitorServer::GetInstance();
+    int32_t pid = 1;
+    monitorServer.CallOnScreenCaptureStarted(pid);
+    ASSERT_EQ(screenCaptureServer_->IsFirstStartPidInstance(pid), false);
+    ASSERT_EQ(screenCaptureServer_->FirstPidUpdatePrivacyUsingPermissionState(pid), true);
+    monitorServer.CallOnScreenCaptureFinished(pid);
+    ASSERT_EQ(screenCaptureServer_->IsLastStartedPidInstance(pid), true);
 }
 
 /**
-* @tc.name: CheckFirstPidUpdatePrivacyUsingPermissionState_001
-* @tc.desc: startedSessionIDList_ is empty ROOT_UID
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckFirstPidUpdatePrivacyUsingPermissionState_001
+ * @tc.desc: no running capture, first pid instance, ROOT_UID
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstPidUpdatePrivacyUsingPermissionState_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    ScreenCaptureServer::startedSessionIDList_.clear();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
     server->appInfo_.appUid = ROOT_UID;
     server->appInfo_.appPid = 1;
     ASSERT_EQ(server->IsFirstStartPidInstance(server->appInfo_.appPid), true);
@@ -488,71 +372,57 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstPidUpdatePrivacyUsingPermiss
 }
 
 /**
-* @tc.name: CheckLastStartedPidInstance_001
-* @tc.desc: startedSessionIDList_ exists more than one sessionId
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckLastStartedPidInstance_001
+ * @tc.desc: multiple running captures, not last instance
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckLastStartedPidInstance_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    ScreenCaptureServer::startedSessionIDList_.clear();
-    std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
-    UniqueIDGenerator gIdGenerator(20);
-    for (int32_t i = 0; i < ScreenCaptureServer::maxSessionPerUid_; i++) {
-        std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-        serverList.push_back(server);
-        int32_t sessionId = gIdGenerator.GetNewID();
-        server->SetSessionId(sessionId);
-        server->appInfo_.appPid = 1;
-        ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-        ScreenCaptureServer::AddStartedSessionIdList(sessionId);
-    }
-    screenCaptureServer_->appInfo_.appPid = 1;
-    ASSERT_EQ(screenCaptureServer_->IsLastStartedPidInstance(screenCaptureServer_->appInfo_.appPid), false);
-    ASSERT_EQ(screenCaptureServer_->LastPidUpdatePrivacyUsingPermissionState(screenCaptureServer_->appInfo_.appPid),
-        true);
-    
-    ScreenCaptureServer::serverMap_.clear();
-    ScreenCaptureServer::startedSessionIDList_.clear();
+    auto &monitorServer = ScreenCaptureMonitorServer::GetInstance();
+    int32_t pid = 1;
+    monitorServer.CallOnScreenCaptureStarted(pid);
+    monitorServer.CallOnScreenCaptureStarted(pid);
+    monitorServer.CallOnScreenCaptureFinished(pid);
+    ASSERT_EQ(screenCaptureServer_->IsLastStartedPidInstance(pid), false);
+    ASSERT_EQ(screenCaptureServer_->LastPidUpdatePrivacyUsingPermissionState(pid), true);
+    monitorServer.CallOnScreenCaptureFinished(pid);
 }
 
 /**
-* @tc.name: CheckLastPidUpdatePrivacyUsingPermissionState_001
-* @tc.desc: startedSessionIDList_ exists one sessionId
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckLastPidUpdatePrivacyUsingPermissionState_001
+ * @tc.desc: one running capture, last instance
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckLastPidUpdatePrivacyUsingPermissionState_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    ScreenCaptureServer::startedSessionIDList_.clear();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
-    server->SetSessionId(sessionId);
+    auto &monitorServer = ScreenCaptureMonitorServer::GetInstance();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
     server->appInfo_.appUid = ROOT_UID;
     server->appInfo_.appPid = 1;
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ScreenCaptureServer::AddStartedSessionIdList(sessionId);
+    monitorServer.CallOnScreenCaptureStarted(server->appInfo_.appPid);
+    monitorServer.CallOnScreenCaptureFinished(server->appInfo_.appPid);
     ASSERT_EQ(server->IsLastStartedPidInstance(server->appInfo_.appPid), true);
     ASSERT_EQ(server->LastPidUpdatePrivacyUsingPermissionState(server->appInfo_.appPid), true);
 }
 
 /**
-* @tc.name: StopScreenCaptureByEvent_001
-* @tc.desc: StopScreenCaptureByEvent_001
-* @tc.type: FUNC
-*/
+ * @tc.name: StopScreenCaptureByEvent_001
+ * @tc.desc: StopScreenCaptureByEvent_001
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureByEvent_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
-    ASSERT_EQ(screenCaptureServer_->StopScreenCaptureByEvent(AVScreenCaptureStateCode::
-        SCREEN_CAPTURE_STATE_STOPPED_BY_USER), MSERR_OK);
+    ASSERT_EQ(
+        screenCaptureServer_->StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER),
+        MSERR_OK);
 }
 
 /**
-* @tc.name: StopScreenCapture_001
-* @tc.desc: StopScreenCapture_001
-* @tc.type: FUNC
-*/
+ * @tc.name: StopScreenCapture_001
+ * @tc.desc: StopScreenCapture_001
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCapture_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
@@ -560,145 +430,118 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCapture_001, TestSize.Level2
 }
 
 /**
-* @tc.name: CheckPrivacyWindowSkipPermission_001
-* @tc.desc: CheckPrivacyWindowSkipPermission_001
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckPrivacyWindowSkipPermission_001
+ * @tc.desc: CheckPrivacyWindowSkipPermission_001
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckPrivacyWindowSkipPermission_001, TestSize.Level2)
 {
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
     server->appInfo_.appUid = ROOT_UID;
     server->appInfo_.appPid = 1;
     ASSERT_EQ(server->CheckPrivacyWindowSkipPermission(), false);
 }
 
 /**
-* @tc.name: ProcessSCServerSaUid_001
-* @tc.desc: check SCServerSaUid
-* @tc.type: FUNC
-*/
+ * @tc.name: ProcessSCServerSaUid_001
+ * @tc.desc: check SCServerSaUid
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcessSCServerSaUid_001, TestSize.Level2)
 {
     int32_t saUid = ROOT_UID + 1;
-    screenCaptureServer_->SetSCServerSaUid(saUid);
-    ASSERT_EQ(screenCaptureServer_->GetSCServerSaUid(), saUid);
+    screenCaptureServer_->saUid_ = saUid;
+    ASSERT_EQ(screenCaptureServer_->saUid_, saUid);
 }
 
 /**
-* @tc.name: ProcesssaUidAppUidMap_001
-* @tc.desc: check AddSaAppInfoMap
-* @tc.type: FUNC
-*/
+ * @tc.name: ProcesssaUidAppUidMap_001
+ * @tc.desc: check AddSaAppInfoMap
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcesssaUidAppUidMap_001, TestSize.Level2)
 {
-    ScreenCaptureServer::saUidAppUidMap_.clear();
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
     int32_t appUid = ROOT_UID;
     int32_t saUid = appUid + 1;
-    ScreenCaptureServer::AddSaAppInfoMap(saUid, appUid);
-    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_.size(), 1);
+    ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.size(), 1);
 }
 
 /**
-* @tc.name: ProcesssaUidAppUidMap_002
-* @tc.desc: check RemoveSaAppInfoMap
-* @tc.type: FUNC
-*/
+ * @tc.name: ProcesssaUidAppUidMap_002
+ * @tc.desc: check RemoveSaAppInfoMap
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcesssaUidAppUidMap_002, TestSize.Level2)
 {
-    ScreenCaptureServer::saUidAppUidMap_.clear();
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
     int32_t appUid = ROOT_UID;
     int32_t saUid = appUid + 1;
-    ScreenCaptureServer::AddSaAppInfoMap(saUid, appUid);
-    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_.size(), 1);
-    ScreenCaptureServer::RemoveSaAppInfoMap(saUid);
-    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_.size(), 0);
+    ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.size(), 1);
+    ScreenCaptureServerManager::GetInstance().RemoveSaAppInfoMap(saUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.size(), 0);
 }
 
 /**
-* @tc.name: CheckIsSAServiceCalling_001
-* @tc.desc: check IsSAServiceCalling
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAServiceCalling_001, TestSize.Level2)
+ * @tc.name: CheckIsSACalling_001
+ * @tc.desc: check IsSACalling
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSACalling_001, TestSize.Level2)
 {
-    ASSERT_EQ(ScreenCaptureServer::IsSAServiceCalling(), false);
+    ASSERT_EQ(IsSACalling(), false);
 }
 
 /**
-* @tc.name: CheckIsSaUidValid_001
-* @tc.desc: check IsSaUidValid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_001, TestSize.Level2)
+ * @tc.name: CheckIsSAUidValid_001
+ * @tc.desc: check IsSAUidValid
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_001, TestSize.Level2)
 {
     int32_t appUid = ROOT_UID;
     int32_t saUid = -1;
-    ASSERT_EQ(ScreenCaptureServer::IsSaUidValid(saUid, appUid), false);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), false);
     saUid = appUid + 1;
-    ASSERT_EQ(ScreenCaptureServer::IsSaUidValid(saUid, appUid), false);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), false);
 }
 
 /**
-* @tc.name: CheckIsSaUidValid_002
-* @tc.desc: saUid not in saUidAppUidMap_
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_002, TestSize.Level2)
+ * @tc.name: CheckIsSAUidValid_004
+ * @tc.desc: saUid in saUidAppUidMap_ and saUid.first != appUid
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_004, TestSize.Level2)
 {
     int32_t appUid = ROOT_UID;
     int32_t saUid = -1;
-    ScreenCaptureServer::saUidAppUidMap_ = {};
-    ScreenCaptureServer::saUidAppUidMap_[saUid + 1] = {appUid, 0};
-    ASSERT_EQ(ScreenCaptureServer::CheckSaUid(saUid, appUid), true);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_ = {};
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {appUid + 1, 0};
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), false);
 }
 
 /**
-* @tc.name: CheckIsSaUidValid_003
-* @tc.desc: saUid in saUidAppUidMap_ and saUid.first == appUid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_003, TestSize.Level2)
+ * @tc.name: CheckIsSAUidValid_005
+ * @tc.desc: saUid in saUidAppUidMap_ and saUid.first != appUid
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_005, TestSize.Level2)
 {
     int32_t appUid = ROOT_UID;
     int32_t saUid = -1;
-    ScreenCaptureServer::saUidAppUidMap_ = {};
-    ScreenCaptureServer::saUidAppUidMap_[saUid] = {appUid, 0};
-    ASSERT_EQ(ScreenCaptureServer::CheckSaUid(saUid, appUid), true);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_ = {};
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {appUid,
+        ScreenCaptureServerManager::GetInstance().maxSessionPerUid_};
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), false);
 }
 
 /**
-* @tc.name: CheckIsSaUidValid_004
-* @tc.desc: saUid in saUidAppUidMap_ and saUid.first != appUid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_004, TestSize.Level2)
-{
-    int32_t appUid = ROOT_UID;
-    int32_t saUid = -1;
-    ScreenCaptureServer::saUidAppUidMap_ = {};
-    ScreenCaptureServer::saUidAppUidMap_[saUid] = {appUid + 1, 0};
-    ASSERT_EQ(ScreenCaptureServer::CheckSaUid(saUid, appUid), false);
-}
-
-/**
-* @tc.name: CheckIsSaUidValid_005
-* @tc.desc: saUid in saUidAppUidMap_ and saUid.first != appUid
-* @tc.type: FUNC
-*/
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSaUidValid_005, TestSize.Level2)
-{
-    int32_t appUid = ROOT_UID;
-    int32_t saUid = -1;
-    ScreenCaptureServer::saUidAppUidMap_ = {};
-    ScreenCaptureServer::saUidAppUidMap_[saUid] = {appUid, ScreenCaptureServer::maxSessionPerUid_};
-    ASSERT_EQ(ScreenCaptureServer::CheckSaUid(saUid, appUid), false);
-}
-
-/**
-* @tc.name: SetAndCheckSaLimit_001
-* @tc.desc: SetAndCheckSaLimit_001
-* @tc.type: FUNC
-*/
+ * @tc.name: SetAndCheckSaLimit_001
+ * @tc.desc: SetAndCheckSaLimit_001
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, SetAndCheckSaLimit_001, TestSize.Level2)
 {
     OHOS::AudioStandard::AppInfo appInfo;
@@ -707,83 +550,82 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetAndCheckSaLimit_001, TestSize.Level
     appInfo.appTokenId = 0;
     appInfo.appFullTokenId = 0;
 
-    int32_t sessionId = ScreenCaptureServer::gIdGenerator_.GetNewID();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    server->SetSessionId(sessionId);
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+    int32_t sessionId = ScreenCaptureServerManager::GetInstance().GetNewSessionId();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->sessionId_ = sessionId;
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
 
-    ASSERT_EQ(server->SetAndCheckAppInfo(appInfo), MSERR_INVALID_OPERATION);
     ASSERT_EQ(server->SetAndCheckSaLimit(appInfo), MSERR_INVALID_OPERATION);
 }
 
 /**
-* @tc.name: SetAndCheckLimit_001
-* @tc.desc: SetAndCheckLimit_001
-* @tc.type: FUNC
-*/
+ * @tc.name: SetAndCheckLimit_001
+ * @tc.desc: SetAndCheckLimit_001
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, SetAndCheckLimit_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
     ASSERT_EQ(screenCaptureServer_->SetAndCheckLimit(), MSERR_OK);
 }
 
 /**
-* @tc.name: SetAndCheckLimit_002
-* @tc.desc: SetAndCheckLimit_002
-* @tc.type: FUNC
-*/
+ * @tc.name: SetAndCheckLimit_002
+ * @tc.desc: SetAndCheckLimit_002
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, SetAndCheckLimit_002, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
     std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
     UniqueIDGenerator gIdGenerator(20);
-    for (int32_t i = 0; i <= ScreenCaptureServer::maxSessionPerUid_; i++) {
-        std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    for (int32_t i = 0; i <= ScreenCaptureServerManager::GetInstance().maxSessionPerUid_; i++) {
+        std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
         serverList.push_back(server);
         int32_t sessionId = gIdGenerator.GetNewID();
-        server->SetSessionId(sessionId);
+        server->sessionId_ = sessionId;
         server->appInfo_.appUid = IPCSkeleton::GetCallingUid();
-        ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+        ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
     }
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
     int32_t sessionId = gIdGenerator.GetNewID();
-    server->SetSessionId(sessionId);
+    server->sessionId_ = sessionId;
     ASSERT_EQ(server->SetAndCheckLimit(), MSERR_INVALID_OPERATION);
 }
 
 /**
-* @tc.name: CheckReleaseInner_001
-* @tc.desc: CheckReleaseInner_001
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckReleaseInner_001
+ * @tc.desc: CheckReleaseInner_001
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckReleaseInner_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
-    ScreenCaptureServer::saUidAppUidMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
     UniqueIDGenerator gIdGenerator(20);
     int32_t sessionId = gIdGenerator.GetNewID();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    server->SetSessionId(sessionId);
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->sessionId_ = sessionId;
     server->captureState_ = AVScreenCaptureState::STOPPED;
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
 
     int32_t appUid = ROOT_UID + 1;
     int32_t saUid = 1;
-    server->SetSCServerSaUid(saUid);
-    server->AddSaAppInfoMap(saUid, appUid);
-    int32_t appInfoMapSizeBefore = ScreenCaptureServer::saUidAppUidMap_.size();
-    int32_t serverMapSizeBefore = ScreenCaptureServer::serverMap_.size();
+    server->saUid_ = saUid;
+    ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appUid);
+    int32_t appInfoMapSizeBefore = ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.size();
+    int32_t serverMapSizeBefore = ScreenCaptureServerManager::GetInstance().serverMap_.size();
     server->ReleaseInner();
 
-    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_.size(), appInfoMapSizeBefore - 1);
-    ASSERT_EQ(ScreenCaptureServer::serverMap_.size(), serverMapSizeBefore - 1);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.size(), appInfoMapSizeBefore - 1);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), serverMapSizeBefore - 1);
 }
 
 /**
-* @tc.name: CheckIsIDExist_001
-* @tc.desc: CheckIsIDExist_001
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckIsIDExist_001
+ * @tc.desc: CheckIsIDExist_001
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsIDExist_001, TestSize.Level2)
 {
     UniqueIDGenerator gIdGenerator(20);
@@ -794,78 +636,83 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsIDExist_001, TestSize.Level2)
 }
 
 /**
-* @tc.name: CheckSpecifiedDataTypeNum_001
-* @tc.desc: CheckSCServerSpecifiedDataTypeNum Success
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckSpecifiedDataTypeNum_001
+ * @tc.desc: CheckSCServerSpecifiedDataTypeNum Success
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckSpecifiedDataTypeNum_001, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
     UniqueIDGenerator gIdGenerator(20);
     int32_t sessionId = gIdGenerator.GetNewID();
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
-    server->SetSessionId(sessionId);
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->sessionId_ = sessionId;
     server->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server->appInfo_.appUid = ROOT_UID;
-    ASSERT_EQ(ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
-        server->captureConfig_.dataType), true);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
+                  server->captureConfig_.dataType),
+        true);
 }
 
 /**
-* @tc.name: CheckSpecifiedDataTypeNum_002
-* @tc.desc: CheckSCServerSpecifiedDataTypeNum Failed
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckSpecifiedDataTypeNum_002
+ * @tc.desc: CheckSCServerSpecifiedDataTypeNum Failed
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckSpecifiedDataTypeNum_002, TestSize.Level2)
 {
-    ScreenCaptureServer::serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
     UniqueIDGenerator gIdGenerator(20);
     std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
-    for (int32_t i = 0; i < ScreenCaptureServer::maxSCServerDataTypePerUid_; i++) {
-        std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    for (int32_t i = 0; i < ScreenCaptureServerManager::GetInstance().maxSCServerDataTypePerUid_; i++) {
+        std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
         serverList.push_back(server);
         int32_t sessionId = gIdGenerator.GetNewID();
-        server->SetSessionId(sessionId);
+        server->sessionId_ = sessionId;
         server->appInfo_.appUid = IPCSkeleton::GetCallingUid();
         server->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
-        ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-        ASSERT_EQ(ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
-            server->captureConfig_.dataType), true);
+        ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
+        ScreenCaptureServerManager::GetInstance().UpdateServerDataType(sessionId, server->captureConfig_.dataType);
+        ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
+                      server->captureConfig_.dataType),
+            true);
     }
-    std::shared_ptr<ScreenCaptureServer> server = std::make_shared<ScreenCaptureServer>();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
     int32_t sessionId = gIdGenerator.GetNewID();
-    server->SetSessionId(sessionId);
+    server->sessionId_ = sessionId;
     server->appInfo_.appUid = IPCSkeleton::GetCallingUid();
     server->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
-    ScreenCaptureServer::AddScreenCaptureServerMap(sessionId, server);
-    ASSERT_EQ(ScreenCaptureServer::CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
-        server->captureConfig_.dataType), false);
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
+    ScreenCaptureServerManager::GetInstance().UpdateServerDataType(sessionId, server->captureConfig_.dataType);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CheckSCServerSpecifiedDataTypeNum(server->appInfo_.appUid,
+                  server->captureConfig_.dataType),
+        false);
 }
 
 /**
-* @tc.name: AddSaAppInfoMap_001
-* @tc.desc: AddSaAppInfoMap has sa uid info
-* @tc.type: FUNC
-*/
+ * @tc.name: AddSaAppInfoMap_001
+ * @tc.desc: AddSaAppInfoMap has sa uid info
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, AddSaAppInfoMap_001, TestSize.Level2)
 {
     int32_t saUid = 10086;
-    ScreenCaptureServer::saUidAppUidMap_[saUid] = {saUid, 0};
-    screenCaptureServer_->AddSaAppInfoMap(saUid, saUid);
-    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_[saUid].second, 1);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {saUid, 0};
+    ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, saUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid].second, 1);
 }
 
 /**
-* @tc.name: RemoveSaAppInfoMap_001
-* @tc.desc: RemoveSaAppInfoMap has sa uid info
-* @tc.type: FUNC
-*/
+ * @tc.name: RemoveSaAppInfoMap_001
+ * @tc.desc: RemoveSaAppInfoMap has sa uid info
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_001, TestSize.Level2)
 {
     int32_t saUid = 10086;
-    ScreenCaptureServer::saUidAppUidMap_[saUid] = {saUid, 1};
-    screenCaptureServer_->RemoveSaAppInfoMap(saUid);
-    ASSERT_EQ(ScreenCaptureServer::saUidAppUidMap_[saUid].second, 0);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {saUid, 1};
+    ScreenCaptureServerManager::GetInstance().RemoveSaAppInfoMap(saUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid].second, 0);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ProcessCurDisplayId_001, TestSize.Level2)
@@ -877,7 +724,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ProcessCurDisplayId_001, TestSize.Leve
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestSize.Level2)
 {
-    ScreenCaptureRect* area = nullptr;
+    ScreenCaptureRect *area = nullptr;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
         nullptr);
@@ -919,7 +766,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_004, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetDefaultDisplayIdOfWindows_001, TestSize.Level2)
 {
-    screenCaptureServer_->missionIds_ = { 80 };
+    screenCaptureServer_->missionIds_ = {80};
     screenCaptureServer_->curWindowInDisplayId_ = SCREEN_ID_INVALID;
     screenCaptureServer_->SetDefaultDisplayIdOfWindows();
     ASSERT_NE(screenCaptureServer_->GetCurDisplayId(), SCREEN_ID_INVALID);
@@ -960,37 +807,22 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AppMissionId_002, TestSize.Level2)
     EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 0);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, RegisterAppLifecycleListener_001, TestSize.Level2)
-{
-    screenCaptureServer_->interestWindowId_ = -1;
-    screenCaptureServer_->appLifecycleListener_ = nullptr;
-    screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
-    screenCaptureServer_->RegisterAppLifecycleListener("appName", 0);
-    screenCaptureServer_->RegisterAppLifecycleListener("appName", 0);
-    ASSERT_NE(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
-    ASSERT_NE(screenCaptureServer_->appLifecycleListener_, nullptr);
-    screenCaptureServer_->UnRegisterAppLifecycleListener();
-    screenCaptureServer_->UnRegisterAppLifecycleListener();
-    ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
-    ASSERT_EQ(screenCaptureServer_->appLifecycleListener_, nullptr);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_001, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
     payload.sessionState_ = SessionState::STATE_FOREGROUND;
     payload.persistentId_ = 0;
     screenCaptureServer_->windowLifecycleListener_->OnAppInstanceLifecycleEvent(payload);
- 
+
     ASSERT_EQ(screenCaptureServer_->appMissionIds_.size(), 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_002, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
@@ -1002,7 +834,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_002, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_003, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
@@ -1014,7 +846,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_003, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_004, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
@@ -1026,7 +858,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_004, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_005, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
@@ -1041,7 +873,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_005, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_006, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
@@ -1054,7 +886,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_006, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnAppInstanceLifecycleEvent_007, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     SCWindowLifecycleListener::LifecycleEventPayload payload;
@@ -1071,6 +903,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_001, TestSize.Level
     appInformation["bundleName"] = "bundleName_001";
     appInformation["appIndex"] = 0;
     screenCaptureServer_->ParseAppMissionIds(appInformation);
+    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
@@ -1081,6 +914,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_002, TestSize.Level
     appInformation["appIndex"] = 0;
     screenCaptureServer_->ParseAppMissionIds(appInformation);
     screenCaptureServer_->SetAppMissionIds(1);
+    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
@@ -1091,6 +925,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_003, TestSize.Level
     appInformation["appIndex"] = 0;
     screenCaptureServer_->SetAppMissionIds(1);
     screenCaptureServer_->ParseAppMissionIds(appInformation);
+    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
@@ -1102,9 +937,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_004, TestSize.Level
     screenCaptureServer_->ParseAppMissionIds(appInformation);
     std::vector<uint64_t> missionIds = {1};
     screenCaptureServer_->SetAppMissionIds(missionIds);
+    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
-
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
 HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_001, TestSize.Level2)
@@ -1127,7 +962,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_002, TestSize.
     screenCaptureServer_->interestWindowId_ = windowId;
     screenCaptureServer_->lifecycleListenerDeathRecipient_ = nullptr;
 
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     screenCaptureServer_->RegisterWindowLifecycleListener();
@@ -1166,7 +1001,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WindowInfoChangedListener_001, TestSiz
 
 HWTEST_F(ScreenCaptureServerFunctionTest, WindowInfoChangedListener_002, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
     screenCaptureServer_->windowInfoChangedListener_ = listener;
     ASSERT_EQ(screenCaptureServer_->RegisterWindowInfoChangedListener(), MSERR_OK);
@@ -1197,7 +1032,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RegisterWindowRelatedListener_001, Tes
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_001, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     screenCaptureServer_->SetDisplayScreenId(0);
@@ -1207,21 +1042,18 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_001, TestSize.Level2)
     SCWindowLifecycleListener::LifecycleEventPayload payload;
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
-    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
-        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_, SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND);
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND, payload);
-    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
-        SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_, SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND);
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::DESTROYED, payload);
-    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
-        SCWindowLifecycleListener::SessionLifecycleEvent::DESTROYED);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_, SCWindowLifecycleListener::SessionLifecycleEvent::DESTROYED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_002, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     screenCaptureServer_->SetDisplayScreenId(0);
@@ -1230,17 +1062,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_002, TestSize.Level2)
     SCWindowLifecycleListener::LifecycleEventPayload payload;
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
-    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
-        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_, SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND);
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND, payload);
-    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
-        SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_, SCWindowLifecycleListener::SessionLifecycleEvent::BACKGROUND);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_003, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowLifecycleListener> listener(new (std::nothrow) SCWindowLifecycleListener(screenCaptureServer));
     screenCaptureServer_->windowLifecycleListener_ = listener;
     screenCaptureServer_->SetDisplayScreenId(0);
@@ -1250,13 +1080,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnLifecycleEvent_003, TestSize.Level2)
     SCWindowLifecycleListener::LifecycleEventPayload payload;
     screenCaptureServer_->windowLifecycleListener_->OnLifecycleEvent(
         SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
-    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_,
-        SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND);
+    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_, SCWindowLifecycleListener::SessionLifecycleEvent::FOREGROUND);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_001, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
     screenCaptureServer_->windowInfoChangedListener_ = listener;
     std::vector<std::unordered_map<WindowInfoKey, WindowChangeInfoType>> myWindowInfoList;
@@ -1267,7 +1096,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_001, TestSize.Leve
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_002, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
     screenCaptureServer_->windowInfoChangedListener_ = listener;
     screenCaptureServer_->interestWindowId_ = 80;
@@ -1284,7 +1113,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_002, TestSize.Leve
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_003, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
     screenCaptureServer_->windowInfoChangedListener_ = listener;
     screenCaptureServer_->interestWindowId_ = 80;
@@ -1301,7 +1130,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_003, TestSize.Leve
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnWindowInfoChanged_004, TestSize.Level2)
 {
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     sptr<SCWindowInfoChangedListener> listener(new (std::nothrow) SCWindowInfoChangedListener(screenCaptureServer));
     screenCaptureServer_->windowInfoChangedListener_ = listener;
     screenCaptureServer_->interestWindowId_ = 80;
@@ -1375,7 +1204,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnDisconnect_001, TestSize.Level2)
 {
     Rosen::ScreenId screenId = 1;
     screenCaptureServer_->SetDisplayScreenId(screenId);
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     screenCaptureServer_->screenConnectListener_ = sptr<ScreenConnectListenerForSC>::MakeSptr(
         screenCaptureServer_->displayScreenIds_, screenCaptureServer);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -1388,7 +1217,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnDisconnect_002, TestSize.Level2)
 {
     Rosen::ScreenId screenId = 1;
     screenCaptureServer_->SetDisplayScreenId(2);
-    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_);
+    std::weak_ptr<ScreenCaptureServer> screenCaptureServer(screenCaptureServer_->shared_from_this());
     screenCaptureServer_->screenConnectListener_ = sptr<ScreenConnectListenerForSC>::MakeSptr(
         screenCaptureServer_->displayScreenIds_, screenCaptureServer);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -1397,5 +1226,5 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnDisconnect_002, TestSize.Level2)
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
 }
 #endif
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

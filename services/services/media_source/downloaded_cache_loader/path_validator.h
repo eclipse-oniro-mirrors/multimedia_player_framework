@@ -29,8 +29,6 @@ public:
 
 private:
     static bool ContainsIllegalCharacters(const std::string& path);
-    static bool IsPathEscaped(const std::string& resolvedPath, const std::string& rootPath);
-    static std::string NormalizePath(const std::string& path);
 };
 
 } // namespace DownloadedCache

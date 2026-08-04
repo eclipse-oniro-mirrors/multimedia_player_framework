@@ -102,6 +102,7 @@ ohos_fuzztest("ScreenCaptureServerStartCaseFuzzTest") {
   deps = [
     "$MEDIA_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_ROOT_DIR/services/services:media_service",
+    "$MEDIA_ROOT_DIR/services/services/screen_capture:media_service_screen_capture_static",
     "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
   ]
   external_deps = [

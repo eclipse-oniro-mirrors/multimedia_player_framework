@@ -16,6 +16,7 @@
 #include <ani.h>
 #include <sstream>
 #include <iomanip>
+#include <memory>
 #include "avmetadatahelper_callback_taihe.h"
 #include "media_errors.h"
 #include "media_log.h"
@@ -110,6 +111,7 @@ void AVMetadataHelperCallback::SendPixelCompleteCallback(const ::OHOS::Media::Fr
 void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *jsCb) const
 {
     CHECK_AND_RETURN_LOG(jsCb != nullptr, "jsCb is nullptr");
+    std::unique_ptr<AVMetadataJsCallback> callbackGuard(jsCb);
     std::string request = jsCb->callbackName;
     std::shared_ptr<AutoRef> ref = jsCb->autoRef;
     CHECK_AND_RETURN_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());
@@ -129,11 +131,14 @@ void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *j
 
     taihe::env_guard guard;
     ani_env *env = guard.get_env();
+    CHECK_AND_RETURN_LOG(env != nullptr, "env is nullptr");
     ::ohos::multimedia::media::FrameInfo frameInfo = {
         jsCb->requestedTimeUs,
         taihe::optional<int64_t>(std::in_place_t{}, jsCb->actualTimeUs),
-        optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
-        Image::PixelMapImpl::CreatePixelMap(jsCb->pixel_)),
+        jsCb->pixel_ != nullptr ?
+            optional<::ohos::multimedia::image::image::PixelMap>(std::in_place_t{},
+                Image::PixelMapImpl::CreatePixelMap(jsCb->pixel_)) :
+            optional<::ohos::multimedia::image::image::PixelMap>(std::nullopt),
         result
     };
     env->ResetError();

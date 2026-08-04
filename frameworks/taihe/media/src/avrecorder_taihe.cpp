@@ -186,11 +186,10 @@ int32_t AVRecorderImpl::CheckRepeatOperation(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(taiheCb != nullptr, MSERR_INVALID_OPERATION, "taiheCb is nullptr!");
 
     std::string curState = taiheCb->GetState();
-    if (stateCtrl.find(curState) == stateCtrl.end()) {
-        MEDIA_LOGI("Invalid state: %{public}s.", curState.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
-    std::vector<std::string> repeatOpt = stateCtrl.at(curState);
+    auto stateIt = stateCtrl.find(curState);
+    CHECK_AND_RETURN_RET_LOG(stateIt != stateCtrl.end(), MSERR_INVALID_OPERATION,
+        "invalid state: %{public}s", curState.c_str());
+    const std::vector<std::string> &repeatOpt = stateIt->second;
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
         MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!", curState.c_str(), opt.c_str());
         return MSERR_INVALID_OPERATION;
@@ -760,11 +759,10 @@ int32_t AVRecorderImpl::CheckStateMachine(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(recorderCb != nullptr, MSERR_INVALID_OPERATION, "taiheCb is nullptr!");
 
     std::string curState = recorderCb->GetState();
-    if (stateCtrlList.find(curState) == stateCtrlList.end()) {
-        MEDIA_LOGI("Invalid state: %{public}s.", curState.c_str());
-        return MSERR_INVALID_OPERATION;
-    }
-    std::vector<std::string> allowedOpt = stateCtrlList.at(curState);
+    auto stateIt = stateCtrlList.find(curState);
+    CHECK_AND_RETURN_RET_LOG(stateIt != stateCtrlList.end(), MSERR_INVALID_OPERATION,
+        "invalid state: %{public}s", curState.c_str());
+    const std::vector<std::string> &allowedOpt = stateIt->second;
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
         return MSERR_INVALID_OPERATION;
@@ -1063,6 +1061,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetAVRecorderConfigTask(
 
 int32_t AVRecorderImpl::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &config)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     ConfigMap configMap;
     recorder_->GetAVRecorderConfig(configMap);
     OHOS::Media::Location location;
@@ -1229,6 +1228,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetEncoderInfoTask(
 
 int32_t AVRecorderImpl::GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return recorder_->GetAvailableEncoder(encoderInfo);
 }
 
@@ -1296,12 +1296,13 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetInputMetaSurface(
 
         CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        CHECK_AND_RETURN_RET_LOG(taihe->metaSourceIDMap_.find(type) != taihe->metaSourceIDMap_.end(),
+        auto metaIt = taihe->metaSourceIDMap_.find(type);
+        CHECK_AND_RETURN_RET_LOG(metaIt != taihe->metaSourceIDMap_.end(),
             GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "no meta source type"),
             "failed to find meta type");
         if (taihe->metaSurface_ == nullptr) {
             MEDIA_LOGI("The meta source type is %{public}d", static_cast<int32_t>(type));
-            taihe->metaSurface_ = taihe->recorder_->GetMetaSurface(taihe->metaSourceIDMap_.at(type));
+            taihe->metaSurface_ = taihe->recorder_->GetMetaSurface(metaIt->second);
             CHECK_AND_RETURN_RET_LOG(taihe->metaSurface_ != nullptr,
                 GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", ""), "failed to GetInputMetaSurface");
 
@@ -1383,6 +1384,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::IsWatermarkSupportedTask(
 
 int32_t AVRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
 }
 
@@ -1565,6 +1567,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetMaxAmplitudeTask(
 
 int32_t AVRecorderImpl::GetMaxAmplitude(int32_t &maxAmplitude)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return recorder_->GetMaxAmplitude(maxAmplitude);
 }
 
@@ -1669,6 +1672,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::SetWatermarkTask(
 int32_t AVRecorderImpl::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfig> &watermarkConfig)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
 #ifndef CROSS_PLATFORM
     MEDIA_LOGD("pixelMap Width %{public}d, height %{public}d, pixelformat %{public}d, RowStride %{public}d",
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
@@ -1919,6 +1923,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetCurrentCapturerChangeIn
 
 int32_t AVRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     return recorder_->GetCurrentCapturerChangeInfo(changeInfo);
 }
 
@@ -2248,13 +2253,17 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::AddWatermarkTask(
         &watermarkConfig = asyncCtx->watermarkConfiguration_, &watermarkCount = asyncCtx->addWatermarkCount_]() {
         const std::string &option = AVRecordergOpt::ADD_WATERMARK;
         MEDIA_LOGI("%{public}s Start", option.c_str());
- 
         CHECK_AND_RETURN_RET(taihe != nullptr,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
- 
+
+        CHECK_AND_RETURN_RET(pixelMap != nullptr,
+            GetRetInfo(MSERR_INVALID_VAL, option, ""));
+
+        CHECK_AND_RETURN_RET(watermarkConfig != nullptr,
+            GetRetInfo(MSERR_INVALID_VAL, option, ""));
+
         CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
- 
         int32_t ret = taihe->AddWatermark(pixelMap, watermarkConfig, watermarkCount);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, "AddWatermarkTask", ""),
             "AddWatermarkTask failed");
@@ -2267,8 +2276,14 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::AddWatermarkTask(
 int32_t AVRecorderImpl::CreateWatermarkBuffer(std::shared_ptr<PixelMap> &pixelMap,
     int32_t pixelMapWidth, int32_t pixelMapHeight, std::shared_ptr<OHOS::Media::AVBuffer> &buffer)
 {
-    int32_t dataSize = pixelMapHeight * pixelMap->GetRowStride();
-    CHECK_AND_RETURN_RET_LOG(dataSize > 0 && dataSize <= MAX_WATERMARK_SIZE, MSERR_INVALID_VAL, "Invalid data size");
+    CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, MSERR_INVALID_VAL, "pixelMap is nullptr");
+    CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapWidth > 0, MSERR_INVALID_VAL,
+        "Invalid watermark dimensions: width=%{public}d, height=%{public}d", pixelMapWidth, pixelMapHeight);
+    int32_t rowStride = pixelMap->GetRowStride();
+    CHECK_AND_RETURN_RET_LOG(rowStride > 0 && pixelMapHeight <= MAX_WATERMARK_SIZE / rowStride,
+        MSERR_INVALID_VAL, "Invalid data size: rowStride=%{public}d, height=%{public}d", rowStride, pixelMapHeight);
+    CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixels() != nullptr, MSERR_INVALID_VAL, "pixelMap pixels is nullptr");
+    int32_t dataSize = pixelMapHeight * rowStride;
 
     std::vector<uint8_t> dataBuffer(dataSize);
     errno_t err = memcpy_s(dataBuffer.data(), dataSize, pixelMap->GetPixels(), dataSize);
@@ -2292,6 +2307,7 @@ int32_t AVRecorderImpl::CreateWatermarkBuffer(std::shared_ptr<PixelMap> &pixelMa
 int32_t AVRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr");
     MEDIA_LOGI("pixelMap Width: %{public}d, height: %{public}d, adjust Width: %{public}d, adjust height: %{public}d, "
         "pixelformat %{public}d, RowStride %{public}d", pixelMap->GetWidth(), pixelMap->GetHeight(),
         watermarkConfig->width, watermarkConfig->height, pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
@@ -2307,7 +2323,7 @@ int32_t AVRecorderImpl::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     CHECK_AND_RETURN_RET_LOG(pixelMapHeight > 0 && pixelMapHeight <= AVRECORDER_WATERMARK_MAX_LENGTH,
         MSERR_INVALID_VAL, "Invalid pixelMap height");
     CHECK_AND_RETURN_RET_LOG(pixelMapRowStride > 0, MSERR_INVALID_VAL, "Invalid pixelMap row stride");
-    CHECK_AND_RETURN_RET_LOG(pixelMapHeight <= MAX_WATERMARK_SIZE / pixelMapRowStride,
+    CHECK_AND_RETURN_RET_LOG(pixelMapRowStride > 0 && pixelMapHeight <= MAX_WATERMARK_SIZE / pixelMapRowStride,
         MSERR_INVALID_VAL, "Invalid data size");
 
     std::shared_ptr<OHOS::Media::AVBuffer> buffer = nullptr;

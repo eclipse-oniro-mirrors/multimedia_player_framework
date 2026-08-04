@@ -888,7 +888,7 @@ HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_004, TestSize.Level0
     databaseTool.dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     ASSERT_NE(databaseTool.dataShareHelper, nullptr);
 
-    int32_t targetToneType = 1 << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    uint32_t targetToneType = 1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     ToneAttrs result = systemSoundManagerImpl_->QueryToneAttrsByType(databaseTool,
         RINGTONE_COLUMN_RING_TONE_TYPE, targetToneType, SOURCE_TYPE_CUSTOMISED, TONE_CATEGORY_RINGTONE);
     EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_RINGTONE);
@@ -912,7 +912,7 @@ HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_005, TestSize.Level0
     databaseTool.dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     ASSERT_NE(databaseTool.dataShareHelper, nullptr);
 
-    int32_t targetToneType = 1 << (SYSTEM_TONE_TYPE_SIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0);
+    uint32_t targetToneType = 1u << (SYSTEM_TONE_TYPE_SIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0);
     ToneAttrs result = systemSoundManagerImpl_->QueryToneAttrsByType(databaseTool,
         RINGTONE_COLUMN_SHOT_TONE_TYPE, targetToneType, SOURCE_TYPE_CUSTOMISED, TONE_CATEGORY_TEXT_MESSAGE);
     EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_TEXT_MESSAGE);
@@ -936,7 +936,7 @@ HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_006, TestSize.Level0
     databaseTool.dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     ASSERT_NE(databaseTool.dataShareHelper, nullptr);
 
-    int32_t esim0Target = 1 << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    uint32_t esim0Target = 1u << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     ToneAttrs result = systemSoundManagerImpl_->QueryToneAttrsByType(databaseTool,
         RINGTONE_COLUMN_RING_TONE_TYPE, esim0Target, SOURCE_TYPE_CUSTOMISED, TONE_CATEGORY_RINGTONE);
     EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_RINGTONE);
@@ -1024,7 +1024,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_001, TestSize.
     auto dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     ASSERT_NE(dataShareHelper, nullptr);
 
-    int32_t targetToneType = 1 << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    uint32_t targetToneType = 1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(dataShareHelper,
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
         targetToneType, SOURCE_TYPE_CUSTOMISED);
@@ -1046,7 +1046,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_002, TestSize.
     auto dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     ASSERT_NE(dataShareHelper, nullptr);
 
-    int32_t targetToneType = 1 << (SYSTEM_TONE_TYPE_SIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0);
+    uint32_t targetToneType = 1u << (SYSTEM_TONE_TYPE_SIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0);
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(dataShareHelper,
         RINGTONE_COLUMN_SHOT_TONE_TYPE, RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
         targetToneType, SOURCE_TYPE_CUSTOMISED);
@@ -1068,7 +1068,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_003, TestSize.
     auto dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     ASSERT_NE(dataShareHelper, nullptr);
 
-    int32_t esim0Target = 1 << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    uint32_t esim0Target = 1u << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(dataShareHelper,
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
         esim0Target, SOURCE_TYPE_CUSTOMISED);
@@ -1113,7 +1113,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateToneTypeUri_001, TestSize.Level0)
         1,
         RINGTONE_COLUMN_RING_TONE_TYPE,
         RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        1 << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0),
+        1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0),
         1
     };
 
@@ -1140,7 +1140,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateToneTypeUri_002, TestSize.Level0)
         1,
         RINGTONE_COLUMN_RING_TONE_TYPE,
         RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        1 << (RINGTONE_TYPE_SIM_CARD_1 - RINGTONE_TYPE_SIM_CARD_0),
+        1u << (RINGTONE_TYPE_SIM_CARD_1 - RINGTONE_TYPE_SIM_CARD_0),
         2
     };
 
@@ -1167,7 +1167,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateToneTypeUri_003, TestSize.Level0)
         1,
         RINGTONE_COLUMN_RING_TONE_TYPE,
         RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        1 << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0),
+        1u << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0),
         4
     };
 
@@ -1194,7 +1194,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateToneTypeUri_004, TestSize.Level0)
         1,
         RINGTONE_COLUMN_RING_TONE_TYPE,
         RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        1 << (RINGTONE_TYPE_ESIM_CARD_1 - RINGTONE_TYPE_SIM_CARD_0),
+        1u << (RINGTONE_TYPE_ESIM_CARD_1 - RINGTONE_TYPE_SIM_CARD_0),
         8
     };
 
@@ -1221,7 +1221,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateToneTypeUri_005, TestSize.Level0)
         1,
         RINGTONE_COLUMN_SHOT_TONE_TYPE,
         RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
-        1 << (SYSTEM_TONE_TYPE_SIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0),
+        1u << (SYSTEM_TONE_TYPE_SIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0),
         1
     };
 
@@ -1248,7 +1248,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateToneTypeUri_006, TestSize.Level0)
         1,
         RINGTONE_COLUMN_SHOT_TONE_TYPE,
         RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
-        1 << (SYSTEM_TONE_TYPE_ESIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0),
+        1u << (SYSTEM_TONE_TYPE_ESIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0),
         4
     };
 
@@ -1275,7 +1275,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateToneTypeUri_007, TestSize.Level0)
         1,
         RINGTONE_COLUMN_SHOT_TONE_TYPE,
         RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
-        1 << (SYSTEM_TONE_TYPE_ESIM_CARD_1 - SYSTEM_TONE_TYPE_SIM_CARD_0),
+        1u << (SYSTEM_TONE_TYPE_ESIM_CARD_1 - SYSTEM_TONE_TYPE_SIM_CARD_0),
         8
     };
 
@@ -1302,7 +1302,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateToneTypeUri_008, TestSize.Level0)
         1,
         RINGTONE_COLUMN_RING_TONE_TYPE,
         RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        1 << (RINGTONE_TYPE_SIM_CARD_1 - RINGTONE_TYPE_SIM_CARD_0),
+        1u << (RINGTONE_TYPE_SIM_CARD_1 - RINGTONE_TYPE_SIM_CARD_0),
         3
     };
 
@@ -1327,7 +1327,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateRingtoneUri_001, TestSize.Level0)
 
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_0;
     int32_t toneId = 1;
-    int32_t storedToneType = 1;
+    uint32_t storedToneType = 1;
 
     int32_t result = systemSoundManagerImpl_->UpdateRingtoneUri(
         dataShareHelper, toneId, ringtoneType, storedToneType);
@@ -1351,7 +1351,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateRingtoneUri_002, TestSize.Level0)
 
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_SIM_CARD_1;
     int32_t toneId = 1;
-    int32_t storedToneType = 2;
+    uint32_t storedToneType = 2;
 
     int32_t result = systemSoundManagerImpl_->UpdateRingtoneUri(
         dataShareHelper, toneId, ringtoneType, storedToneType);
@@ -1375,7 +1375,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateRingtoneUri_003, TestSize.Level0)
 
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_ESIM_CARD_0;
     int32_t toneId = 1;
-    int32_t storedToneType = 4;
+    uint32_t storedToneType = 4;
 
     int32_t result = systemSoundManagerImpl_->UpdateRingtoneUri(
         dataShareHelper, toneId, ringtoneType, storedToneType);
@@ -1399,7 +1399,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateRingtoneUri_004, TestSize.Level0)
 
     RingtoneType ringtoneType = RingtoneType::RINGTONE_TYPE_ESIM_CARD_1;
     int32_t toneId = 1;
-    int32_t storedToneType = 8;
+    uint32_t storedToneType = 8;
 
     int32_t result = systemSoundManagerImpl_->UpdateRingtoneUri(
         dataShareHelper, toneId, ringtoneType, storedToneType);
@@ -1423,7 +1423,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateShotToneUri_001, TestSize.Level0)
 
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1;
     int32_t toneId = 1;
-    int32_t storedToneType = 2;
+    uint32_t storedToneType = 2;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(
         dataShareHelper, toneId, systemToneType, storedToneType);
@@ -1447,7 +1447,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateShotToneUri_002, TestSize.Level0)
 
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION;
     int32_t toneId = 1;
-    int32_t storedToneType = 32;
+    uint32_t storedToneType = 32;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(
         dataShareHelper, toneId, systemToneType, storedToneType);
@@ -1471,7 +1471,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateShotToneUri_003, TestSize.Level0)
 
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_ESIM_CARD_0;
     int32_t toneId = 1;
-    int32_t storedToneType = 4;
+    uint32_t storedToneType = 4;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(
         dataShareHelper, toneId, systemToneType, storedToneType);
@@ -1495,7 +1495,7 @@ HWTEST(SystemSoundManagerUnitNextTest, UpdateShotToneUri_004, TestSize.Level0)
 
     SystemToneType systemToneType = SystemToneType::SYSTEM_TONE_TYPE_ESIM_CARD_1;
     int32_t toneId = 1;
-    int32_t storedToneType = 8;
+    uint32_t storedToneType = 8;
 
     int32_t result = systemSoundManagerImpl_->UpdateShotToneUri(
         dataShareHelper, toneId, systemToneType, storedToneType);
@@ -2412,7 +2412,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_004, TestSize.
     ON_CALL(*mockHelper, Query(_, _, _, _))
         .WillByDefault(Return(std::shared_ptr<DataShare::DataShareResultSet>(nullptr)));
 
-    int32_t targetToneType = 1;
+    uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
@@ -2444,7 +2444,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_005, TestSize.
     EXPECT_CALL(*mockHelper, Delete(_, _)).Times(AtLeast(1));
     EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
 
-    int32_t targetToneType = 1;
+    uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
@@ -2476,7 +2476,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_006, TestSize.
     EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
     EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
 
-    int32_t targetToneType = 1;
+    uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
@@ -2508,7 +2508,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_007, TestSize.
     EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
     EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
 
-    int32_t targetToneType = 1;
+    uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
@@ -2539,7 +2539,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_008, TestSize.
 
     EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
 
-    int32_t targetToneType = 1;
+    uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_SHOT_TONE_TYPE, RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,

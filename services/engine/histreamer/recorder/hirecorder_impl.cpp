@@ -385,6 +385,7 @@ sptr<Surface> HiRecorderImpl::GetSurfaceFromWaterMarkFilter()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From WaterMarkFilter.");
     auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    FALSE_RETURN_V_MSG_E(filter != nullptr, nullptr, "filter is nullptr");
     producerSurface_ = filter->GetInputSurface();
     return producerSurface_;
 }
@@ -392,6 +393,7 @@ sptr<Surface> HiRecorderImpl::GetSurfaceFromWaterMarkFilter()
 sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoEncoder()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From VideoEncoder.");
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, nullptr, "videoEncoderFilter_ is nullptr");
     producerSurface_ = videoEncoderFilter_->GetInputSurface();
     return producerSurface_;
 }
@@ -399,6 +401,7 @@ sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoEncoder()
 sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoCapture()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From VideoCapture.");
+    FALSE_RETURN_V_MSG_E(videoCaptureFilter_ != nullptr, nullptr, "videoCaptureFilter_ is nullptr");
     producerSurface_ = videoCaptureFilter_->GetInputSurface();
     return producerSurface_;
 }
@@ -513,6 +516,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
 {
     MEDIA_LOG_I("HiRecorderImpl PrepareVideoEncoder enter.");
     if (videoEncoderFilter_) {
+        FALSE_RETURN_V_MSG_E(videoEncFormat_ != nullptr, MSERR_UNKNOWN, "videoEncFormat is nullptr");
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
         }
@@ -563,6 +567,7 @@ int32_t HiRecorderImpl::Start()
     int32_t ret = MSERR_OK;
     if (hasWatermark_) {
         ret = TransRecorderStatus(SetVideoEncoderSurface());
+        FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "SetVideoEncoderSurface fail");
     }
     if (curState_ == StateId::PAUSE) {
         ret = TransRecorderStatus(pipeline_->Resume());
@@ -631,7 +636,6 @@ void HiRecorderImpl::ClearAllConfiguration()
     isWatermarkSupported_ = false;
     hasWatermark_ = false;
     codecMimeType_ = "";
-    CloseFd();
     if (audioEncFormat_) {
         audioEncFormat_->Clear();
     }
@@ -660,6 +664,10 @@ void HiRecorderImpl::ClearAllConfiguration()
         }
         RemoveFilterAction(iter.second);
     }
+    metaDataFilters_.clear();
+    metaDataFormats_.clear();
+
+    CloseFd();
 }
 
 int32_t HiRecorderImpl::Stop(bool isDrainAll)
@@ -676,7 +684,9 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     ret = TransRecorderStatus(HandleStopOperation());
     // clear all configurations and remove all filters
     ClearAllConfiguration();
-    FALSE_RETURN_V_MSG_E(curState_ == StateId::INIT, ret, "pipeline stop fail");
+    if (ret == MSERR_OK) {
+        OnStateChanged(StateId::INIT);
+    }
     return ret;
 }
 
@@ -766,6 +776,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
     Pipeline::StreamType outType)
 {
     MEDIA_LOG_I("OnCallback enter.");
+    FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_NULL_POINTER, "filter is nullptr");
     FALSE_RETURN_V(cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED, Status::OK);
     switch (outType) {
         case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
@@ -1237,6 +1248,7 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureOutFd(const RecorderParam &recParam)
 {
+    CloseFd();
     OutFd outFd = static_cast<const OutFd&>(recParam);
     fd_ = dup(outFd.fd);
     muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
@@ -1338,6 +1350,10 @@ std::vector<EncoderCapabilityData> HiRecorderImpl::ConvertEncoderInfo(
 {
     std::vector<EncoderCapabilityData> encoderInfoVector;
     for (int32_t i = 0; i < (int32_t)capData.size(); i++) {
+        if (capData[i] == nullptr) {
+            MEDIA_LOG_W("capData[%{public}d] is nullptr, skip", i);
+            continue;
+        }
         EncoderCapabilityData encoderInfo;
         if (capData[i]->codecType == MediaAVCodec::AVCodecType::AVCODEC_TYPE_VIDEO_ENCODER) {
             encoderInfo = ConvertVideoEncoderInfo(capData[i]);

@@ -21,42 +21,34 @@
 #include <unordered_map>
 #include <chrono>
 #include <atomic>
+#include "incall_observer_callback.h"
 #include "media_telephony_listener.h"
-#include "screen_capture.h"
 #include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
 
-class InCallObserverCallBack {
-public:
-    virtual ~InCallObserverCallBack() = default;
-    virtual bool StopAndRelease(AVScreenCaptureStateCode state);
-    virtual bool NotifyStopAndRelease(AVScreenCaptureStateCode state);
-    virtual bool TelCallStateUpdated(bool isInCall);
-    virtual bool NotifyTelCallStateUpdated(bool isInCall);
-    virtual void Release();
-};
-
 class InCallObserver {
 public:
-    static InCallObserver& GetInstance();
+    static InCallObserver &GetInstance();
+    virtual bool IsInCall(bool refreshState);
+    virtual bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> registerInCallObserverCallBack);
+    virtual void UnregisterInCallObserverCallBack(
+        std::weak_ptr<InCallObserverCallBack> unRegisterInCallObserverCallBack);
+    bool OnCallStateUpdated(bool inCall);
+
+private:
     bool RegisterObserver();
     void UnRegisterObserver();
-    bool OnCallStateUpdated(bool inCall);
-    bool IsInCall(bool refreshState);
-    bool RegisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> registerInCallObserverCallBack);
-    void UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> unRegisterInCallObserverCallBack);
-private:
-    std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
-    std::vector<std::weak_ptr<InCallObserverCallBack>> inCallObserverCallBacks_;
     InCallObserver();
     ~InCallObserver();
+    std::vector<MediaTelephonyListener *> mediaTelephonyListeners_;
+    std::vector<std::weak_ptr<InCallObserverCallBack>> inCallObserverCallBacks_;
     std::atomic<bool> inCall_{false};
     std::mutex mutex_;
     bool Init();
     TaskQueue taskQue_;
 };
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif // IN_CALL_OBSERVER_H

@@ -320,7 +320,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAtMicMode(uint32_t length)
             lastWriteAudioFramePts_.load());
         lastWriteAudioFramePts_.store(micAudioBuffer->timestamp);
         lastWriteType_.store(AVScreenCaptureMixBufferType::MIC);
-        audioBufferQ_.emplace_back(micAudioBuffer);
+        cacheBuffer_ = std::make_unique<CacheBuffer>(micAudioBuffer);
         CHECK_AND_RETURN_RET_LOG(micCapture_->ReleaseAudioBuffer() == MSERR_OK,
             AudioDataSourceReadAtActionState::RETRY_SKIP, "micAudioCapture ReleaseAudioBuffer failed");
         micAudioBuffer = nullptr;
@@ -351,7 +351,7 @@ AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncInnerMode(uint32
         MEDIA_LOGD("ABuffer write inner cur:%{public}" PRId64 " last: %{public}" PRId64, innerAudioBuffer->timestamp,
             lastWriteAudioFramePts_.load());
         lastWriteAudioFramePts_.store(innerAudioBuffer->timestamp);
-        audioBufferQ_.emplace_back(innerAudioBuffer);
+        cacheBuffer_ = std::make_unique<CacheBuffer>(innerAudioBuffer);
         SetAudioFirstFramePts(innerAudioBuffer->timestamp);
         lastWriteType_.store(AVScreenCaptureMixBufferType::INNER);
         innerCapture_->ReleaseAudioBuffer();
@@ -384,7 +384,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAtInnerMode(uint32_t lengt
             lastWriteAudioFramePts_.load());
         lastWriteAudioFramePts_.store(innerAudioBuffer->timestamp);
         lastWriteType_.store(AVScreenCaptureMixBufferType::INNER);
-        audioBufferQ_.emplace_back(innerAudioBuffer);
+        cacheBuffer_ = std::make_unique<CacheBuffer>(innerAudioBuffer);
         CHECK_AND_RETURN_RET_LOG(innerCapture_->ReleaseAudioBuffer() == MSERR_OK,
             AudioDataSourceReadAtActionState::RETRY_SKIP, "innerAudioCapture ReleaseAudioBuffer failed");
         innerAudioBuffer = nullptr;
@@ -481,14 +481,14 @@ AudioDataSourceReadAtActionState AudioDataSource::MixModeBufferWrite(std::shared
         lastWriteAudioFramePts_.store(innerAudioBuffer->timestamp);
         lastMicAudioFramePts_.store(micAudioBuffer->timestamp);
         lastWriteType_.store(AVScreenCaptureMixBufferType::MIX);
-        audioBufferQ_.emplace_back(mixData, innerAudioBuffer->timestamp);
+        cacheBuffer_ = std::make_unique<CacheBuffer>(std::move(mixData), innerAudioBuffer->timestamp);
     } else if (innerAudioBuffer && innerAudioBuffer->buffer) {
         MEDIA_LOGD("ABuffer write mix inner cur:%{public}" PRId64 " last: %{public}" PRId64,
             innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
         lastWriteAudioFramePts_.store(innerAudioBuffer->timestamp);
         lastWriteType_.store(AVScreenCaptureMixBufferType::INNER);
         stableStopInnerSwitchCount_ = 0;
-        audioBufferQ_.emplace_back(innerAudioBuffer);
+        cacheBuffer_ = std::make_unique<CacheBuffer>(innerAudioBuffer);
     } else if (micAudioBuffer && micAudioBuffer->buffer) {
         MEDIA_LOGD("ABuffer write mix mic cur:%{public}" PRId64 " last: %{public}" PRId64, micAudioBuffer->timestamp,
             lastWriteAudioFramePts_.load());
@@ -496,22 +496,21 @@ AudioDataSourceReadAtActionState AudioDataSource::MixModeBufferWrite(std::shared
         lastMicAudioFramePts_.store(micAudioBuffer->timestamp);
         lastWriteType_.store(AVScreenCaptureMixBufferType::MIC);
         stableStopInnerSwitchCount_ = 0;
-        audioBufferQ_.emplace_back(micAudioBuffer);
+        cacheBuffer_ = std::make_unique<CacheBuffer>(micAudioBuffer);
     } else {
         MEDIA_LOGE("without buffer write");
         return AudioDataSourceReadAtActionState::RETRY_SKIP;
     }
-    SetMixAudioTypeLog();
     ReleaseAudioBuffer(innerAudioBuffer, micAudioBuffer);
     return AudioDataSourceReadAtActionState::OK;
 }
 
-void AudioDataSource::SetMixAudioTypeLog()
+void AudioDataSource::SetMixAudioTypeLog(AVScreenCaptureMixBufferType bufferType)
 {
-    if (lastWriteType_ != audioType_) {
+    if (bufferType != audioType_) {
         MEDIA_LOGI("get audio buffer times type: %{public}d, size: %{public}" PRIu64, audioType_.load(),
             audioTypeSize_.load());
-        audioType_.store(lastWriteType_);
+        audioType_.store(bufferType);
         audioTypeSize_ = 1;
     } else {
         audioTypeSize_++;
@@ -603,39 +602,32 @@ int32_t AudioDataSource::LostFrameNum(const int64_t &timestamp)
         (timestamp - pauseDuration_ - (writedFrameTime_ + firstAudioFramePts_)) / FILL_AUDIO_FRAME_DURATION_IN_NS);
 }
 
-void AudioDataSource::FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize)
-{
-    CHECK_AND_RETURN_LOG(bufferSize > 0, "AudioDataSource::FillLostBuffer: bufferSize is invalid");
-    MEDIA_LOGI("AudioDataSource::FillLostBuffer: lostNum=%{public}" PRId64 ", timestamp=%{public}" PRId64
-               ", bufferSize=%{public}" PRId32,
-        lostNum, timestamp, bufferSize);
-    auto pts = timestamp;
-    for (int64_t i = 0; i < lostNum; i++) {
-        auto buffer = std::make_unique<uint8_t[]>(bufferSize);
-        pts -= FILL_AUDIO_FRAME_DURATION_IN_NS;
-        audioBufferQ_.emplace_front(buffer, pts);
-    }
-}
-
 AudioDataSourceReadAtActionState AudioDataSource::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(buffer != nullptr && buffer->memory_ != nullptr,
         AudioDataSourceReadAtActionState::RETRY_SKIP, "buffer or buffer->memory_ nullptr");
-    std::lock_guard<std::mutex> lock(mutex_);
-    while (audioBufferQ_.empty()) {
+    if (!cacheBuffer_) {
         const auto &ret = ReadAudioBuffer(length);
-        if (ret != AudioDataSourceReadAtActionState::OK || audioBufferQ_.empty()) {
+        if (ret != AudioDataSourceReadAtActionState::OK) {
             return ret;
         }
     }
-    auto &audioBuffer = audioBufferQ_.front();
-    auto lostNum = LostFrameNum(audioBuffer.timestamp);
-    if (lostNum >= FILL_LOST_FRAME_COUNT_THRESHOLD) {
-        FillLostBuffer(lostNum, audioBuffer.timestamp, length);
+    auto lostNum = LostFrameNum(cacheBuffer_->timestamp);
+    if (lostNum > 0) {
+        if (zeroBuffer_.size() < length) {
+            zeroBuffer_.assign(length, 0);
+        }
+        buffer->memory_->Write(zeroBuffer_.data(), length, 0);
+        writedFrameTime_ += FILL_AUDIO_FRAME_DURATION_IN_NS;
+        SetMixAudioTypeLog(AVScreenCaptureMixBufferType::SILENT);
+        return AudioDataSourceReadAtActionState::OK;
     }
-    audioBufferQ_.front().WriteTo(buffer->memory_, length);
-    audioBufferQ_.pop_front();
+    cacheBuffer_->WriteTo(buffer->memory_, length);
+    cacheBuffer_.reset();
+    zeroBuffer_.clear();
     writedFrameTime_ += FILL_AUDIO_FRAME_DURATION_IN_NS;
+    SetMixAudioTypeLog(lastWriteType_.load());
     return AudioDataSourceReadAtActionState::OK;
 }
 
@@ -644,7 +636,7 @@ AudioDataSource::CacheBuffer::CacheBuffer(const std::shared_ptr<AudioBuffer> &bu
 {
 }
 
-AudioDataSource::CacheBuffer::CacheBuffer(std::unique_ptr<uint8_t[]> &buf, const int64_t &timestamp)
+AudioDataSource::CacheBuffer::CacheBuffer(std::unique_ptr<uint8_t[]> buf, const int64_t &timestamp)
     : buf_(std::move(buf)), timestamp(timestamp)
 {
 }

@@ -23,6 +23,66 @@ namespace Media {
 namespace DownloadedCache {
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_PLAYER, "DownloadedCachePathValidator"};
+constexpr unsigned char FIRST_PRINTABLE_ASCII = 32;
+}
+
+struct NormalizeResult {
+    std::string path;
+    bool escaped;  // true if '..' attempted to escape above root
+};
+
+static NormalizeResult NormalizePath(const std::string& path)
+{
+    NormalizeResult result;
+    result.escaped = false;
+    std::vector<std::string> components;
+    std::stringstream ss(path);
+    std::string component;
+
+    while (std::getline(ss, component, '/')) {
+        if (component.empty() || component == ".") {
+            continue;
+        }
+        if (component == "..") {
+            if (!components.empty()) {
+                components.pop_back();
+            } else {
+                result.escaped = true;
+            }
+        } else {
+            components.push_back(component);
+        }
+    }
+
+    std::string resultPath;
+    // Preserve leading slash for absolute paths
+    if (!path.empty() && path[0] == '/') {
+        resultPath = "/";
+    }
+    for (const auto& comp : components) {
+        if (!resultPath.empty() && resultPath.back() != '/') {
+            resultPath += "/";
+        }
+        resultPath += comp;
+    }
+
+    result.path = resultPath;
+    return result;
+}
+
+static bool IsPathEscaped(const std::string& resolvedPath, const std::string& rootPath)
+{
+    if (resolvedPath.length() < rootPath.length()) {
+        return true;
+    }
+    if (resolvedPath.compare(0, rootPath.length(), rootPath) != 0) {
+        return true;
+    }
+    if (resolvedPath.length() > rootPath.length() &&
+        resolvedPath[rootPath.length()] != '/') {
+        return true;
+    }
+    return false;
 }
 
 bool PathValidator::Validate(const std::string& rootPath, const std::string& relativePath)
@@ -47,9 +107,14 @@ bool PathValidator::Validate(const std::string& rootPath, const std::string& rel
         return false;
     }
 
-    std::string resolvedPath = NormalizePath(rootPath + "/" + relativePath);
-    std::string normalizedRoot = NormalizePath(rootPath);
-    if (IsPathEscaped(resolvedPath, normalizedRoot)) {
+    auto resolvedResult = NormalizePath(rootPath + "/" + relativePath);
+    if (resolvedResult.escaped) {
+        MEDIA_LOGE("Path escapes root directory via '..' traversal");
+        return false;
+    }
+
+    auto rootResult = NormalizePath(rootPath);
+    if (IsPathEscaped(resolvedResult.path, rootResult.path)) {
         MEDIA_LOGE("Path escapes root directory");
         return false;
     }
@@ -57,59 +122,13 @@ bool PathValidator::Validate(const std::string& rootPath, const std::string& rel
     return true;
 }
 
-std::string PathValidator::NormalizePath(const std::string& path)
-{
-    std::vector<std::string> components;
-    std::stringstream ss(path);
-    std::string component;
-
-    while (std::getline(ss, component, '/')) {
-        if (component.empty() || component == ".") {
-            continue;
-        }
-        if (component == "..") {
-            if (!components.empty()) {
-                components.pop_back();
-            }
-        } else {
-            components.push_back(component);
-        }
-    }
-
-    std::string result;
-    for (const auto& comp : components) {
-        if (!result.empty()) {
-            result += "/";
-        }
-        result += comp;
-    }
-
-    return result;
-}
-
-bool PathValidator::IsPathEscaped(const std::string& resolvedPath, const std::string& rootPath)
-{
-    if (resolvedPath.length() < rootPath.length()) {
-        return true;
-    }
-    if (resolvedPath.compare(0, rootPath.length(), rootPath) != 0) {
-        return true;
-    }
-    if (resolvedPath.length() > rootPath.length() &&
-        resolvedPath[rootPath.length()] != '/') {
-        return true;
-    }
-    return false;
-}
-
 bool PathValidator::ContainsIllegalCharacters(const std::string& path)
 {
     for (char c : path) {
-        if (static_cast<unsigned char>(c) < 32) { // ASCII < 32, only '\t', '\n', '\r' are safe
-            if (c != '\t' && c != '\n' && c != '\r') {
-                MEDIA_LOGE("Path contains control character: 0x%{public}02X", static_cast<uint8_t>(c));
-                return true;
-            }
+        auto uc = static_cast<unsigned char>(c);
+        if (uc < FIRST_PRINTABLE_ASCII && uc != 0x09 && uc != 0x0A && uc != 0x0D) {
+            MEDIA_LOGE("Path contains control character: 0x%{public}02X", static_cast<uint8_t>(c));
+            return true;
         }
     }
     return false;

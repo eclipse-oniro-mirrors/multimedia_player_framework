@@ -16,12 +16,13 @@
 #ifndef MESSAGE_QUEUE_H
 #define MESSAGE_QUEUE_H
 
+#include <algorithm>
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
+#include <deque>
 #include <functional>
 #include <mutex>
-#include <queue>
 #include <thread>
 
 #include "downloader.h"
@@ -54,7 +55,7 @@ struct Message {
     int32_t errorCode;
     std::string errorMsg;
     int64_t downloadedSize;
-    std::shared_ptr<Downloader> downloader;
+    uint64_t downloaderId;
     std::string fileUrl;
 };
 
@@ -69,18 +70,18 @@ public:
     void Start(MessageHandler handler);
     void Stop();
     void PostMessage(const Message &msg);
-    void ProcessMessages();
 
 private:
-    void Run();
+    void Run(uint64_t myGeneration);
 
-    std::queue<Message> queue_;
-    std::mutex mutex_;
+    std::deque<Message> queue_;
+    std::mutex queueMutex_;
     std::condition_variable cv_;
     std::atomic<bool> running_;
     std::thread thread_;
     MessageHandler handler_;
-    std::mutex startStopMutex_;
+    std::mutex lifecycleMutex_;
+    std::atomic<uint64_t> generation_{0};
 };
 
 } // namespace MediaDownload

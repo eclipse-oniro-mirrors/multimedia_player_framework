@@ -320,7 +320,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
             }
         }
         asyncCtx->napi->taskQue_->ResetQos();
-        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -372,7 +372,7 @@ napi_value AVRecorderNapi::JsSetOrientationHint(napi_env env, napi_callback_info
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
-        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -564,6 +564,7 @@ int32_t AVRecorderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
     std::shared_ptr<WatermarkConfiguration> &watermarkConfig, int32_t &watermarkCount)
 {
 #ifndef CROSS_PLATFORM
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     int32_t pixelMapWidth = pixelMap->GetWidth();
     int32_t pixelMapHeight = pixelMap->GetHeight();
     int32_t pixelMapRowStride = pixelMap->GetRowStride();
@@ -591,12 +592,6 @@ int32_t AVRecorderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
 
     bool writeRet = buffer->memory_->Write(dataBuffer.data(), dataSize, 0);
     CHECK_AND_RETURN_RET_LOG(writeRet, MSERR_INVALID_VAL, "Failed to write data to AVBuffer");
-
-    MEDIA_LOGI("watermarkCount %{public}d", watermarkCount_);
-    CHECK_AND_RETURN_RET_LOG(watermarkCount_ < WATERMARK_COUNT_MAX, MSERR_INVALID_OPERATION,
-        "Failed to add watermark");
-    watermarkCount_++;
-    watermarkCount = watermarkCount_;
 
     buffer->meta_->Set<Tag::VIDEO_COORDINATE_X>(watermarkConfig->left);
     buffer->meta_->Set<Tag::VIDEO_COORDINATE_Y>(watermarkConfig->top);
@@ -630,8 +625,8 @@ napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
 
     if (jsRecorder->CheckStateMachine(opt) == MSERR_OK) {
         std::map<std::string, std::string> recordMeta;
-        CommonNapi::GetPropertyMap(env, args[0], recordMeta);
-        CHECK_AND_RETURN_RET_LOG(recordMeta.size() != 0, result, "recordMeta has no data");
+        bool getMapRet = CommonNapi::GetPropertyMap(env, args[0], recordMeta);
+        CHECK_AND_RETURN_RET_LOG(getMapRet && recordMeta.size() != 0, result, "recordMeta has no data");
 
         asyncCtx->task_ = std::make_shared<TaskHandler<RetInfo>>([jsRecorder, recordMeta]() {
             int32_t ret = jsRecorder->SetMetadata(recordMeta);
@@ -761,7 +756,7 @@ napi_value AVRecorderNapi::JsGetInputMetaSurface(napi_env env, napi_callback_inf
                 asyncCtx->JsResult = std::make_unique<MediaJsResultString>(result.Value().second);
             }
         }
-        MEDIA_LOGI("The js thread of getInputMetaSurface finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -859,7 +854,7 @@ napi_value AVRecorderNapi::JsGetAVRecorderProfile(napi_env env, napi_callback_in
                 asyncCtx->JsResult = std::make_unique<MediaJsAVRecorderProfile>(asyncCtx->profile_);
             }
         }
-        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -961,7 +956,7 @@ napi_value AVRecorderNapi::JsSetAVRecorderConfig(napi_env env, napi_callback_inf
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
-        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -1014,7 +1009,7 @@ napi_value AVRecorderNapi::JsGetAVRecorderConfig(napi_env env, napi_callback_inf
                 asyncCtx->JsResult = std::make_unique<MediaJsAVRecorderConfig>(asyncCtx->config_);
             }
         }
-        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -1066,7 +1061,7 @@ napi_value AVRecorderNapi::JsGetCurrentAudioCapturerInfo(napi_env env, napi_call
                 asyncCtx->JsResult = std::make_unique<AudioCaptureChangeInfoJsCallback>(asyncCtx->changeInfo_);
             }
         }
-        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -1117,7 +1112,7 @@ napi_value AVRecorderNapi::JsGetAudioCapturerMaxAmplitude(napi_env env,  napi_ca
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(asyncCtx->maxAmplitude_);
             }
         }
-        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -1168,7 +1163,7 @@ napi_value AVRecorderNapi::JsGetAvailableEncoder(napi_env env,  napi_callback_in
                 asyncCtx->JsResult = std::make_unique<MediaJsEncoderInfo>(asyncCtx->encoderInfo_);
             }
         }
-        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -1336,7 +1331,7 @@ napi_value AVRecorderNapi::JsIsWatermarkSupported(napi_env env, napi_callback_in
                 asyncCtx->JsResult = std::make_unique<MediaJsResultBoolean>(asyncCtx->isWatermarkSupported_);
             }
         }
-        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -1671,6 +1666,8 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::SetWatermarkTask(
 
 RetInfo AVRecorderNapi::GetInputSurface()
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr,
+        GetRetInfo(MSERR_INVALID_OPERATION, "GetInputSurface", ""), "recorder_ is nullptr!");
     CHECK_AND_RETURN_RET_LOG(withVideo_, GetRetInfo(MSERR_INVALID_OPERATION, "GetInputSurface", "",
         "The VideoSourceType is not configured. Please do not call getInputSurface"), "No video recording");
 
@@ -1701,12 +1698,13 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderNapi::GetInputMetaSurface(
 
         CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
             GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
-        CHECK_AND_RETURN_RET_LOG(napi->metaSourceIDMap_.find(type) != napi->metaSourceIDMap_.end(),
+        auto metaIt = napi->metaSourceIDMap_.find(type);
+        CHECK_AND_RETURN_RET_LOG(metaIt != napi->metaSourceIDMap_.end(),
             GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", "no meta source type"),
             "failed to find meta type");
         if (napi->metaSurface_ == nullptr) {
             MEDIA_LOGI("The meta source type is %{public}d", static_cast<int32_t>(type));
-            napi->metaSurface_ = napi->recorder_->GetMetaSurface(napi->metaSourceIDMap_.at(type));
+            napi->metaSurface_ = napi->recorder_->GetMetaSurface(metaIt->second);
             CHECK_AND_RETURN_RET_LOG(napi->metaSurface_ != nullptr,
                 GetRetInfo(MSERR_INVALID_OPERATION, "GetInputMetaSurface", ""), "failed to GetInputMetaSurface");
  
@@ -1822,23 +1820,27 @@ int32_t AVRecorderNapi::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &c
 
 int32_t AVRecorderNapi::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     int32_t ret = recorder_->GetCurrentCapturerChangeInfo(changeInfo);
     return ret;
 }
 
 int32_t AVRecorderNapi::GetMaxAmplitude(int32_t &maxAmplitude)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     return recorder_->GetMaxAmplitude(maxAmplitude);
 }
 
 int32_t AVRecorderNapi::GetEncoderInfo(std::vector<EncoderCapabilityData> &encoderInfo)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     int32_t ret = recorder_->GetAvailableEncoder(encoderInfo);
     return ret;
 }
 
 int32_t AVRecorderNapi::IsWatermarkSupported(bool &isWatermarkSupported)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     return recorder_->IsWatermarkSupported(isWatermarkSupported);
 }
 
@@ -1856,6 +1858,7 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     std::shared_ptr<Meta> avBufferConfig = std::make_shared<Meta>();
     int32_t ret = ConfigAVBufferMeta(pixelMap, watermarkConfig, avBufferConfig);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "ConfigAVBufferMeta is failed");
@@ -1868,7 +1871,8 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
         .usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_CPU_WRITE | BUFFER_USAGE_MEM_DMA,
         .timeout = 0,
     };
-    surfaceBuffer->Alloc(bufferConfig);
+    ret = surfaceBuffer->Alloc(bufferConfig);
+    CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_NO_MEMORY, "surfaceBuffer Alloc failed");
 
     MEDIA_LOGD("surface size %{public}d, surface stride %{public}d",
         surfaceBuffer->GetSize(), surfaceBuffer->GetStride());
@@ -1888,9 +1892,9 @@ int32_t AVRecorderNapi::SetWatermark(std::shared_ptr<PixelMap> &pixelMap,
 
 int32_t AVRecorderNapi::SetMetadata(const std::map<std::string, std::string> &recordMeta)
 {
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
     std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
     for (auto &meta : recordMeta) {
-        MEDIA_LOGI("recordMeta tag: %{public}s, value: %{public}s", meta.first.c_str(), meta.second.c_str());
         userMeta->SetData(meta.first, meta.second);
     }
     return recorder_->SetUserMeta(userMeta);
@@ -1955,7 +1959,10 @@ int32_t AVRecorderNapi::CheckStateMachine(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
     std::string curState = napiCb->GetState();
-    std::vector<std::string> allowedOpt = stateCtrlList.at(curState);
+    auto stateIt = stateCtrlList.find(curState);
+    CHECK_AND_RETURN_RET_LOG(stateIt != stateCtrlList.end(), MSERR_INVALID_OPERATION,
+        "invalid state: %{public}s", curState.c_str());
+    const std::vector<std::string> &allowedOpt = stateIt->second;
     if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
         MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
         return MSERR_INVALID_OPERATION;
@@ -1994,7 +2001,10 @@ int32_t AVRecorderNapi::CheckRepeatOperation(const std::string &opt)
     CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
 
     std::string curState = napiCb->GetState();
-    std::vector<std::string> repeatOpt = stateCtrl.at(curState);
+    auto stateIt = stateCtrl.find(curState);
+    CHECK_AND_RETURN_RET_LOG(stateIt != stateCtrl.end(), MSERR_INVALID_OPERATION,
+        "invalid state: %{public}s", curState.c_str());
+    const std::vector<std::string> &repeatOpt = stateIt->second;
     if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
         MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!", curState.c_str(), opt.c_str());
         return MSERR_INVALID_OPERATION;
@@ -2459,6 +2469,7 @@ bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncC
 
 RetInfo AVRecorderNapi::SetProfile(std::shared_ptr<AVRecorderConfig> config)
 {
+    CHECK_AND_RETURN_RET(recorder_ != nullptr, GetRetInfo(MSERR_INVALID_OPERATION, "SetProfile", ""));
     int32_t ret;
     AVRecorderProfile &profile = config->profile;
 
@@ -2583,6 +2594,7 @@ RetInfo AVRecorderNapi::Configure(std::shared_ptr<AVRecorderConfig> config)
 
 RetInfo AVRecorderNapi::ConfigureUrl(std::shared_ptr<AVRecorderConfig> config)
 {
+    CHECK_AND_RETURN_RET(recorder_ != nullptr, GetRetInfo(MSERR_INVALID_OPERATION, "ConfigureUrl", ""));
     int32_t ret;
     if (config->fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE) {
         ret = recorder_->SetFileGenerationMode(config->fileGenerationMode);
@@ -2673,6 +2685,7 @@ void AVRecorderNapi::StateCallback(const std::string &state)
 
 void AVRecorderNapi::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
+    std::lock_guard<std::mutex> lock(eventCbMutex_);
     eventCbMap_[callbackName] = ref;
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
@@ -2681,10 +2694,11 @@ void AVRecorderNapi::SetCallbackReference(const std::string &callbackName, std::
 
 void AVRecorderNapi::CancelCallbackReference(const std::string &callbackName)
 {
+    std::lock_guard<std::mutex> lock(eventCbMutex_);
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
     auto napiCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
     napiCb->CancelCallbackReference(callbackName);
-    eventCbMap_[callbackName] = nullptr;
+    eventCbMap_.erase(callbackName);
 }
 
 void AVRecorderNapi::CancelCallback()
@@ -2922,7 +2936,7 @@ napi_status MediaJsAVRecorderConfig::GetJsResult(napi_env env, napi_value &resul
         setRet = CommonNapi::SetPropertyString(env, profile, "fileFormat", fileFormat);
         CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     }
-    napi_set_named_property(env, result, "profile", profile);
+    CHECK_AND_RETURN_RET((ret = napi_set_named_property(env, result, "profile", profile)) == napi_ok, ret);
     return ret;
 }
 
@@ -2981,7 +2995,8 @@ napi_status MediaJsAVRecorderConfig::locationToSet(napi_env env, napi_value &loc
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     setRet = CommonNapi::SetPropertyDouble(env, location, "longitude", value_->location.longitude);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
-    napi_set_named_property(env, result, "location", location);
+    CHECK_AND_RETURN_RET(napi_set_named_property(env, result, "location", location)== napi_ok,
+        napi_generic_failure);
     return napi_ok;
 }
 
@@ -2990,9 +3005,7 @@ napi_status MediaJsEncoderInfo::GetJsResult(napi_env env, napi_value &result)
     napi_status ret = napi_ok;
 
     size_t size = encoderInfo_.size();
-    napi_create_array_with_length(env, size, &result);
-
-    CHECK_AND_RETURN_RET((ret = napi_create_array(env, &result)) == napi_ok, ret);
+    CHECK_AND_RETURN_RET((ret = napi_create_array_with_length(env, size, &result)) == napi_ok, ret);
 
     napi_value audioEncoder;
     napi_value vidoeEncoder;

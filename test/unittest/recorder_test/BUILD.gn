@@ -223,8 +223,7 @@ ohos_unittest("recorder_server_unit_test") {
   if (player_framework_support_recorder) {
     sources = [
       "./recorder_server_unittest/src/recorder_server_mock.cpp",
-      "./recorder_server_unittest/src/recorder_server_unit_test.cpp",
-      "./recorder_server_unittest/src/hirecorder_watermark_test.cpp"
+      "./recorder_server_unittest/src/recorder_server_unit_test.cpp"
     ]
     external_deps += [
       "drivers_interface_display:libdisplay_composer_proxy_1.2",
