@@ -13,277 +13,1289 @@
  * limitations under the License.
  */
 
-#ifndef AV_TRANSCODER_NAPI_H
-#define AV_TRANSCODER_NAPI_H
-
-#include "av_common.h"
+#include <climits>
+#ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
+#include "histogram_plugin_macros.h"
+#endif
+#include "avtranscoder_callback.h"
+#include "media_dfx.h"
+#include "media_log.h"
 #include "media_errors.h"
-#include "napi/native_api.h"
-#include "napi/native_node_api.h"
+#include "scope_guard.h"
 #include "common_napi.h"
-#include "task_queue.h"
-#include "transcoder.h"
-#include "pixel_map_napi.h"
-#include "buffer/avbuffer.h"
+#include "surface_utils.h"
+#include "string_ex.h"
+#include "avcodec_info.h"
+#include "av_common.h"
+#ifdef SUPPORT_JSSTACK
+#include "xpower_event_js.h"
+#endif
+#include "avtranscoder_napi.h"
+
+namespace {
+    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVTransCoderNapi"};
+}
 
 namespace OHOS {
 namespace Media {
-namespace AVTransCoderState {
-const std::string STATE_IDLE = "idle";
-const std::string STATE_PREPARED = "prepared";
-const std::string STATE_STARTED = "started";
-const std::string STATE_PAUSED = "paused";
-const std::string STATE_CANCELLED = "cancelled";
-const std::string STATE_COMPLETED = "completed";
-const std::string STATE_RELEASED = "released";
-const std::string STATE_ERROR = "error";
-}
-
-namespace AVTransCoderOpt {
-const std::string PREPARE = "Prepare";
-const std::string START = "Start";
-const std::string PAUSE = "Pause";
-const std::string RESUME = "Resume";
-const std::string CANCEL = "Cancel";
-const std::string RELEASE = "Release";
-const std::string SET_AV_TRANSCODER_CONFIG = "SetAVTransCoderConfig";
-const std::string ADD_WATERMARK = "AddWatermark";
-}
-
-constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = INT32_MAX;
-constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = -1;
-constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
-constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
-constexpr int32_t AVTRANSCODER_WATERMARK_MAX_LENGTH = 4096;
-constexpr int32_t AVTRANSCODER_WATERMARK_MAX_NUM = 5;
-constexpr int32_t AVTRANSCODER_WATERMARK_MAX_ROWSTRIDE_NUM = 5;
-
-const std::map<std::string, std::vector<std::string>> STATE_LIST = {
+using namespace MediaAVCodec;
+thread_local napi_ref AVTransCoderNapi::constructor_ = nullptr;
+const std::string CLASS_NAME = "AVTransCoder";
+const std::map<std::string, std::vector<std::string>> STATE_CTRL = {
     {AVTransCoderState::STATE_IDLE, {
-        AVTransCoderOpt::PREPARE,
-        AVTransCoderOpt::RELEASE,
-        AVTransCoderOpt::ADD_WATERMARK
+        AVTransCoderOpt::SET_AV_TRANSCODER_CONFIG,
     }},
-    {AVTransCoderState::STATE_PREPARED, {
-        AVTransCoderOpt::START,
-        AVTransCoderOpt::RELEASE
-    }},
+    {AVTransCoderState::STATE_PREPARED, {}},
     {AVTransCoderState::STATE_STARTED, {
         AVTransCoderOpt::START,
-        AVTransCoderOpt::PAUSE,
-        AVTransCoderOpt::RESUME,
-        AVTransCoderOpt::CANCEL,
-        AVTransCoderOpt::RELEASE
+        AVTransCoderOpt::RESUME
     }},
     {AVTransCoderState::STATE_PAUSED, {
-        AVTransCoderOpt::START,
-        AVTransCoderOpt::PAUSE,
-        AVTransCoderOpt::RESUME,
-        AVTransCoderOpt::CANCEL,
-        AVTransCoderOpt::RELEASE
+        AVTransCoderOpt::PAUSE
     }},
     {AVTransCoderState::STATE_CANCELLED, {
-        AVTransCoderOpt::RELEASE
-    }},
-    {AVTransCoderState::STATE_COMPLETED, {
-        AVTransCoderOpt::RELEASE
+        AVTransCoderOpt::CANCEL
     }},
     {AVTransCoderState::STATE_RELEASED, {
         AVTransCoderOpt::RELEASE
     }},
-    {AVTransCoderState::STATE_ERROR, {
-        AVTransCoderOpt::RELEASE
-    }},
+    {AVTransCoderState::STATE_COMPLETED, {}},
+    {AVTransCoderState::STATE_ERROR, {}},
+};
+const std::set<MediaServiceErrCode> MSERRCODE_AVTRANSCODER_INFOS = {
+    MSERR_AUD_FAILED,
+    MSERR_AUD_INIT_FAILED,
+    MSERR_AUD_START_FAILED,
+    MSERR_AUD_STOP_FAILED,
+    MSERR_AUD_DEC_INIT_FAILED,
+    MSERR_AUD_DEC_CONFIGURE_FAILED,
+    MSERR_AUD_ENC_FAILED,
+    MSERR_AUD_ENC_INIT_FAILED,
+    MSERR_AUD_ENC_START_FAILED,
+    MSERR_AUD_ENC_STOP_FAILED,
+    MSERR_VID_DEC_INIT_FAILED,
+    MSERR_VID_DEC_CONFIGURE_FAILED,
+    MSERR_VID_ENHANCER_CONFIGURE_FAILED,
+    MSERR_VID_ENC_FAILED,
+    MSERR_VID_ENC_CONFIG_FAILED,
+    MSERR_VID_ENC_INIT_FAILED,
+    MSERR_VID_ENC_START_FAILED,
+    MSERR_VID_ENC_STOP_FAILED,
+    MSERR_SET_INPUT_DATA_SOURCE_FAILED,
+    MSERR_NO_VALID_TRACK_FOUND,
+    MSERR_MUXER_FAILED,
+    MSERR_MUXER_INIT_FAILED,
+    MSERR_MUXER_START_FAILED,
+    MSERR_MUXER_STOP_FAILED,
+    MSERR_FRAMEWORK_ERROR,
+    MSERR_INVALID_OUTPUT_RESOLUTION,
+    MSERR_INVALID_AUDIO_BITRATE,
+    MSERR_WATERMARK_NUM_OUT_OF_RANGE,
+    MSERR_FRAMEWORK_INTERNAL_ERROR,
+    MSERR_VIDEO_RESOLUTION_OUT_OF_RANGE,
+    MSERR_TARGET_RESOLUTION_OUT_OF_RANGE,
+};
+std::map<std::string, AVTransCoderNapi::AvTransCoderTaskqFunc> AVTransCoderNapi::taskQFuncs_ = {
+    {AVTransCoderOpt::START, &AVTransCoderNapi::Start},
+    {AVTransCoderOpt::PAUSE, &AVTransCoderNapi::Pause},
+    {AVTransCoderOpt::RESUME, &AVTransCoderNapi::Resume},
+    {AVTransCoderOpt::CANCEL, &AVTransCoderNapi::Cancel},
+    {AVTransCoderOpt::RELEASE, &AVTransCoderNapi::Release},
+};
+const std::unordered_map<AudioCodecFormat, std::set<OutputFormatType>> AUDIO_MUX_FORMAT_INFO = {
+    {AudioCodecFormat::AAC_LC, {OutputFormatType::FORMAT_MPEG_4, OutputFormatType::FORMAT_M4A,
+        OutputFormatType::FORMAT_AAC}},
+    {AudioCodecFormat::AUDIO_MPEG, {OutputFormatType::FORMAT_MPEG_4, OutputFormatType::FORMAT_MP3}},
+    {AudioCodecFormat::AUDIO_AMR_NB, {OutputFormatType::FORMAT_AMR}},
+    {AudioCodecFormat::AUDIO_AMR_WB, {OutputFormatType::FORMAT_AMR}},
+    {AudioCodecFormat::AUDIO_RAW, {OutputFormatType::FORMAT_WAV}},
+    {AudioCodecFormat::AUDIO_DEFAULT, {OutputFormatType::FORMAT_MPEG_4, OutputFormatType::FORMAT_M4A,
+        OutputFormatType::FORMAT_AAC}},
 };
 
-/**
- * on(type: 'complete', callback: Callback<void>): void
- * on(type: 'error', callback: ErrorCallback): void
- * on(type: 'progressUpdate', callback: Callback<number>): void
- */
-namespace AVTransCoderEvent {
-const std::string EVENT_COMPLETE = "complete";
-const std::string EVENT_ERROR = "error";
-const std::string EVENT_PROGRESS_UPDATE = "progressUpdate";
+AVTransCoderNapi::AVTransCoderNapi()
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances create", FAKE_POINTER(this));
 }
 
-struct AVTransCoderAsyncContext;
+AVTransCoderNapi::~AVTransCoderNapi()
+{
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Instances destroy", FAKE_POINTER(this));
+}
 
-struct AVTransCoderConfig {
-    AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT;
-    AudioCodecFormat audioCodecFormatV2 = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT;
-    int32_t audioBitrate = AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE;
-    OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
-    VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
-    int32_t videoBitrate = AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE;
-    int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
-    int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
-    bool enableBFrame = false;
-};
+napi_value AVTransCoderNapi::Init(napi_env env, napi_value exports)
+{
+    napi_property_descriptor staticProperty[] = {
+        DECLARE_NAPI_STATIC_FUNCTION("createAVTranscoder", JsCreateAVTransCoder),
+    };
 
-using RetInfo = std::pair<int32_t, std::string>;
+    napi_property_descriptor properties[] = {
+        DECLARE_NAPI_FUNCTION("prepare", JsPrepare),
+        DECLARE_NAPI_FUNCTION("start", JsStart),
+        DECLARE_NAPI_FUNCTION("pause", JsPause),
+        DECLARE_NAPI_FUNCTION("resume", JsResume),
+        DECLARE_NAPI_FUNCTION("cancel", JsCancel),
+        DECLARE_NAPI_FUNCTION("release", JsRelease),
+        DECLARE_NAPI_FUNCTION("on", JsSetEventCallback),
+        DECLARE_NAPI_FUNCTION("off", JsCancelEventCallback),
+        DECLARE_NAPI_FUNCTION("addWatermark", JsAddWatermark),
 
-class AVTransCoderNapi {
-public:
-    __attribute__((visibility("default"))) static napi_value Init(napi_env env, napi_value exports);
+        DECLARE_NAPI_GETTER_SETTER("fdSrc", JsGetSrcFd, JsSetSrcFd),
+        DECLARE_NAPI_GETTER_SETTER("fdDst", JsGetDstFd, JsSetDstFd),
+    };
 
-    using AvTransCoderTaskqFunc = RetInfo (AVTransCoderNapi::*)();
+    napi_value constructor = nullptr;
+    napi_status status = napi_define_class(env, CLASS_NAME.c_str(), NAPI_AUTO_LENGTH, Constructor, nullptr,
+                                           sizeof(properties) / sizeof(properties[0]), properties, &constructor);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define AVTransCoder class");
 
-private:
-    static napi_value Constructor(napi_env env, napi_callback_info info);
-    static void Destructor(napi_env env, void *nativeObject, void *finalize);
-    /**
-     * createAVTransCoder(): Promise<VideoPlayer>
-     */
-    static napi_value JsCreateAVTransCoder(napi_env env, napi_callback_info info);
-    /**
-     * prepare(config: AVTransCoderConfig): Promise<void>;
-     */
-    static napi_value JsPrepare(napi_env env, napi_callback_info info);
-    /**
-     * start(): Promise<void>;
-     */
-    static napi_value JsStart(napi_env env, napi_callback_info info);
-    /**
-     * pause(): Promise<void>;
-     */
-    static napi_value JsPause(napi_env env, napi_callback_info info);
-    /**
-     * resume(): Promise<void>;
-     */
-    static napi_value JsResume(napi_env env, napi_callback_info info);
-    /**
-     * cancel(): Promise<void>;
-     */
-    static napi_value JsCancel(napi_env env, napi_callback_info info);
-    /**
-     * release(): Promise<void>
-     */
-    static napi_value JsRelease(napi_env env, napi_callback_info info);
-    /**
-     * on(type: 'complete', callback: Callback<void>): void
-     * on(type: 'error', callback: ErrorCallback): void
-     * on(type: 'progressUpdate', callback: Callback<number>): void
-     */
-    static napi_value JsSetEventCallback(napi_env env, napi_callback_info info);
-    /**
-     * off(type: 'complete'): void;
-     * off(type: 'error'): void;
-     * off(type: 'progressUpdate'): void
-     */
-    static napi_value JsCancelEventCallback(napi_env env, napi_callback_info info);
-    /**
-     * addWatermark(watermark: image.PixelMap, config: WatermarkConfiguration): promise<void>;
-    */
-    static napi_value JsAddWatermark(napi_env env, napi_callback_info info);
+    status = napi_create_reference(env, constructor, 1, &constructor_);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to create reference of constructor");
 
-    /**
-     * srcUrl: string
-     */
-    static napi_value JsGetSrcUrl(napi_env env, napi_callback_info info);
+    status = napi_set_named_property(env, exports, CLASS_NAME.c_str(), constructor);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to set constructor");
 
-    static napi_value JsSetSrcFd(napi_env env, napi_callback_info info);
-    static napi_value JsGetSrcFd(napi_env env, napi_callback_info info);
+    status = napi_define_properties(env, exports, sizeof(staticProperty) / sizeof(staticProperty[0]), staticProperty);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "Failed to define static function");
 
-    static napi_value JsSetDstFd(napi_env env, napi_callback_info info);
-    static napi_value JsGetDstFd(napi_env env, napi_callback_info info);
+    MEDIA_LOGD("Init success");
+    return exports;
+}
 
-    static AVTransCoderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
-        size_t &argCount, napi_value *args);
-    static napi_value ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt);
-    static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx);
-    static std::shared_ptr<TaskHandler<RetInfo>> GetPromiseTask(AVTransCoderNapi *avnapi, const std::string &opt);
+napi_value AVTransCoderNapi::Constructor(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::Constructor");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
 
-    static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
-    static int32_t GetAudioCodecFormatV2(const std::string &mime, AudioCodecFormat &codecFormat);
-    static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);
-    static int32_t GetOutputFormat(const std::string &extension, OutputFormatType &type);
+    size_t argCount = 0;
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
-    AVTransCoderNapi();
-    ~AVTransCoderNapi();
+    AVTransCoderNapi *jsTransCoder = new(std::nothrow) AVTransCoderNapi();
+    CHECK_AND_RETURN_RET_LOG(jsTransCoder != nullptr, result, "failed to new AVTransCoderNapi");
 
-    RetInfo Start();
-    RetInfo Pause();
-    RetInfo Resume();
-    RetInfo Cancel();
-    RetInfo Release();
-
-    RetInfo SetInputFile(int32_t fd, int64_t offset, int64_t size);
-    RetInfo SetOutputFile(int32_t fd);
-
-    int32_t CheckStateMachine(const std::string &opt);
-    int32_t CheckRepeatOperation(const std::string &opt);
-
-    void ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add = "");
-    void StateCallback(const std::string &state);
-    void SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref);
-    void CancelCallbackReference(const std::string &callbackName);
-    void CancelCallback();
-
-    RetInfo Configure(std::shared_ptr<AVTransCoderConfig> config);
-    int32_t AddWatermark(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfiguration> &watermarkConfig);
-    static std::shared_ptr<TaskHandler<RetInfo>> AddWatermarkTask(
-        const std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx);
-    int32_t GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    int32_t GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    int32_t GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx, napi_env env, napi_value args);
-    bool CanAddTrack(const AudioCodecFormat &audioType, const OutputFormatType &muxerType);
-
-    int32_t GetWatermarkParameter(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
-        napi_env env, napi_value watermark, napi_value watermarkConfig);
-    int32_t GetWatermark(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
-        napi_env env, napi_value args);
-    int32_t GetWatermarkConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
-        napi_env env, napi_value args);
-    static thread_local napi_ref constructor_;
-    napi_env env_ = nullptr;
-    std::shared_ptr<TransCoder> transCoder_ = nullptr;
-    std::shared_ptr<TransCoderCallback> transCoderCb_ = nullptr;
-    std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
-    std::unique_ptr<TaskQueue> taskQue_;
-    static std::map<std::string, AvTransCoderTaskqFunc> taskQFuncs_;
-    std::atomic<bool> hasConfiged_ = false;
-    std::mutex eventCbMutex_;
-    std::shared_mutex transCoderMutex_;
-    std::shared_mutex transCoderCbMutex_;
-
-    std::string srcUrl_ = "";
-    struct AVFileDescriptor srcFd_;
-    int32_t dstFd_ = -1;
-    std::atomic<int32_t> watermarkCount_{0};
-    std::atomic<bool> isAudioV2Valid{false};
-};
-
-struct AVTransCoderAsyncContext : public MediaAsyncContext {
-    explicit AVTransCoderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
-    ~AVTransCoderAsyncContext() = default;
-
-    void AVTransCoderSignError(int32_t errCode, const std::string &operate,
-        const std::string &param, const std::string &add = "");
-
-    AVTransCoderNapi *napi = nullptr;
-    std::shared_ptr<AVTransCoderConfig> config_ = nullptr;
-    std::shared_ptr<PixelMap> pixelMap_ = nullptr;
-    std::shared_ptr<WatermarkConfiguration> watermarkConfig_ = nullptr;
-    std::string opt_ = "";
-    std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
-    int32_t watermarkCount = 0;
-    struct AVFileDescriptor srcFd;
-    int32_t dstFd = -1;
-};
-
-class MediaJsAVTransCoderConfig : public MediaJsResult {
-public:
-    explicit MediaJsAVTransCoderConfig(std::shared_ptr<AVTransCoderConfig> value)
-        : value_(value)
-    {
+    jsTransCoder->env_ = env;
+    jsTransCoder->transCoder_ = TransCoderFactory::CreateTransCoder();
+    if (jsTransCoder->transCoder_ == nullptr) {
+        delete jsTransCoder;
+        MEDIA_LOGE("failed to CreateTransCoder");
+        return result;
     }
-    ~MediaJsAVTransCoderConfig() = default;
 
-private:
-    std::shared_ptr<AVTransCoderConfig> value_ = nullptr;
-};
+    jsTransCoder->taskQue_ = std::unique_ptr<TaskQueue>(
+        new(std::nothrow) TaskQueue("OS_AVTransCoderNapi"));
+    if (jsTransCoder->taskQue_ == nullptr) {
+        delete jsTransCoder;
+        MEDIA_LOGE("failed to create TaskQueue");
+        return result;
+    }
+    (void)jsTransCoder->taskQue_->Start();
+
+    jsTransCoder->transCoderCb_ = std::shared_ptr<AVTransCoderCallback>(
+        new(std::nothrow) AVTransCoderCallback(env));
+    if (jsTransCoder->transCoderCb_ == nullptr) {
+        delete jsTransCoder;
+        MEDIA_LOGE("failed to CreateTransCoderCb");
+        return result;
+    }
+    (void)jsTransCoder->transCoder_->SetTransCoderCallback(jsTransCoder->transCoderCb_);
+
+    status = napi_wrap(env, jsThis, reinterpret_cast<void *>(jsTransCoder),
+                       AVTransCoderNapi::Destructor, nullptr, nullptr);
+    if (status != napi_ok) {
+        if (jsTransCoder->taskQue_) {
+            (void)jsTransCoder->taskQue_->Stop();
+        }
+        if (jsTransCoder->transCoderCb_) {
+            jsTransCoder->transCoderCb_ = nullptr;
+        }
+        if (jsTransCoder->transCoder_) {
+            jsTransCoder->transCoder_->Release();
+        }
+        delete jsTransCoder;
+        MEDIA_LOGE("Failed to wrap native instance");
+        return result;
+    }
+
+    MEDIA_LOGI("Constructor success");
+    return jsThis;
+}
+
+void AVTransCoderNapi::Destructor(napi_env env, void *nativeObject, void *finalize)
+{
+    MediaTrace trace("AVTransCoder::Destructor");
+    (void)finalize;
+    if (nativeObject != nullptr) {
+        AVTransCoderNapi *napi = reinterpret_cast<AVTransCoderNapi *>(nativeObject);
+        if (napi->taskQue_ != nullptr) {
+            (void)napi->taskQue_->Stop();
+        }
+        
+        {
+            std::unique_lock<std::shared_mutex> cblock(napi->transCoderCbMutex_);
+            napi->transCoderCb_ = nullptr;
+        }
+
+        {
+            std::unique_lock<std::shared_mutex> transCoderlock(napi->transCoderMutex_);
+            if (napi->transCoder_) {
+                napi->transCoder_->Release();
+                napi->transCoder_ = nullptr;
+            }
+        }
+
+        delete napi;
+    }
+    MEDIA_LOGI("Destructor success");
+}
+
+napi_value AVTransCoderNapi::JsCreateAVTransCoder(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsCreateAVTransCoder");
+#ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
+    HISTOGRAM_BOOLEAN("MediaKit.ArkTS.AVTranscoder.createAVTranscoder.Count",1);
+#endif
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    MEDIA_LOGI("JsCreateAVTransCoder Start");
+
+    // get args
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
+
+    std::unique_ptr<AVTransCoderAsyncContext> asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
+    asyncCtx->ctorFlag = true;
+
+    auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncCtx.get(), napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+        if (asyncCtx->callbackRef != nullptr) {
+            napi_delete_reference(env, asyncCtx->callbackRef);
+            asyncCtx->callbackRef = nullptr;
+        }
+    } else {
+        asyncCtx.release();
+    }
+
+    MEDIA_LOGI("JsCreateAVTransCoder success");
+    return result;
+}
+
+RetInfo GetReturnRet(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")
+{
+    MEDIA_LOGE("failed to %{public}s, param %{public}s, errCode = %{public}d", operate.c_str(), param.c_str(), errCode);
+    MediaServiceErrCode extCode = static_cast<MediaServiceErrCode>(errCode);
+    MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    
+    std::string message;
+    if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
+        message = MSExtErrorAPI9ToString(err, param, "") + add;
+    } else {
+        message = MSExtErrorAPI9ToString(err, operate, "") + add;
+    }
+
+    if (MSERRCODE_AVTRANSCODER_INFOS.find(extCode) != MSERRCODE_AVTRANSCODER_INFOS.end()) {
+        message = message + " " + MSErrorToString(extCode);
+    }
+
+    MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
+    return RetInfo(err, message);
+}
+
+napi_value AVTransCoderNapi::JsPrepare(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsPrepare");
+    const std::string &opt = AVTransCoderOpt::PREPARE;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 2; // config + callbackRef
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[1]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+    asyncCtx->watermarkCount = asyncCtx->napi->watermarkCount_.load();
+
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->napi->GetConfig(asyncCtx, env, args[0]) == MSERR_OK) {
+            asyncCtx->task_ = AVTransCoderNapi::GetPrepareTask(asyncCtx);
+            (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        }
+    } else {
+        asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION, opt, "");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVTransCoderAsyncContext* asyncCtx = reinterpret_cast<AVTransCoderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            } else {
+                asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(asyncCtx->watermarkCount);
+            }
+        }
+        MEDIA_LOGI("The js thread of prepare finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVTransCoderNapi::GetPrepareTask(
+    std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, config = asyncCtx->config_]() {
+        const std::string &option = AVTransCoderOpt::PREPARE;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        std::shared_lock<std::shared_mutex> transCoderlock(napi->transCoderMutex_);
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->transCoder_ != nullptr && config != nullptr,
+            GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
+
+        RetInfo retinfo = napi->Configure(config);
+        CHECK_AND_RETURN_RET(retinfo.first == MSERR_OK, ((void)napi->transCoder_->Cancel(), retinfo));
+
+        int32_t ret = napi->transCoder_->Prepare();
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, ((void)napi->transCoder_->Cancel(), GetReturnRet(ret, "Prepare", "")));
+
+        napi->StateCallback(AVTransCoderState::STATE_PREPARED);
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+napi_value AVTransCoderNapi::JsStart(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsStart");
+#ifdef MEDIA_HISTOGRAM_MANAGEMENT_ENABLE
+    HISTOGRAM_BOOLEAN("MediaKit.ArkTS.AVTranscoder.start.Count",1);
+#endif
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
+    return ExecuteByPromise(env, info, AVTransCoderOpt::START);
+}
+
+napi_value AVTransCoderNapi::JsPause(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsPause");
+    return ExecuteByPromise(env, info, AVTransCoderOpt::PAUSE);
+}
+
+napi_value AVTransCoderNapi::JsResume(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsResume");
+#ifdef SUPPORT_JSSTACK
+    HiviewDFX::ReportXPowerJsStackSysEvent(env, "STREAM_CHANGE", "SRC=Media");
+#endif
+    return ExecuteByPromise(env, info, AVTransCoderOpt::RESUME);
+}
+
+napi_value AVTransCoderNapi::JsCancel(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsCancle");
+    return ExecuteByPromise(env, info, AVTransCoderOpt::CANCEL);
+}
+
+napi_value AVTransCoderNapi::JsRelease(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsRelease");
+    return ExecuteByPromise(env, info, AVTransCoderOpt::RELEASE);
+}
+
+napi_value AVTransCoderNapi::JsSetEventCallback(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsSetEventCallback");
+    MEDIA_LOGI("JsSetEventCallback Start");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argCount = 2;
+    napi_value args[2] = { nullptr, nullptr };
+    AVTransCoderNapi *transCoderNapi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(transCoderNapi != nullptr, result, "Failed to retrieve instance");
+    CHECK_AND_RETURN_RET_LOG(argCount == 2, result, "JsSetEventCallback requires 2 parameters");
+
+    napi_valuetype valueType0 = napi_undefined;
+    napi_valuetype valueType1 = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string ||
+        napi_typeof(env, args[1], &valueType1) != napi_ok || valueType1 != napi_function) {
+        transCoderNapi->ErrorCallback(MSERR_INVALID_VAL, "SetEventCallback");
+        return result;
+    }
+
+    std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+
+    napi_ref ref = nullptr;
+    napi_status status = napi_create_reference(env, args[1], 1, &ref);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && ref != nullptr, result, "failed to create reference!");
+
+    std::shared_ptr<AutoRef> autoRef = std::make_shared<AutoRef>(env, ref);
+    transCoderNapi->SetCallbackReference(callbackName, autoRef);
+
+    MEDIA_LOGI("JsSetEventCallback End");
+    return result;
+}
+
+napi_value AVTransCoderNapi::JsCancelEventCallback(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsCancelEventCallback");
+    MEDIA_LOGI("JsCancelEventCallback Start");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+    AVTransCoderNapi *transCoderNapi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(transCoderNapi != nullptr, result, "Failed to retrieve instance");
+
+    napi_valuetype valueType0 = napi_undefined;
+    if (napi_typeof(env, args[0], &valueType0) != napi_ok || valueType0 != napi_string) {
+        transCoderNapi->ErrorCallback(MSERR_INVALID_VAL, "CancelEventCallback");
+        return result;
+    }
+
+    std::string callbackName = CommonNapi::GetStringArgument(env, args[0]);
+
+    transCoderNapi->CancelCallbackReference(callbackName);
+
+    MEDIA_LOGI("JsCancelEventCallback End");
+    return result;
+}
+
+AVTransCoderNapi *AVTransCoderNapi::GetJsInstanceAndArgs(
+    napi_env env, napi_callback_info info, size_t &argCount, napi_value *args)
+{
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
+    MEDIA_LOGI("argCount:%{public}zu", argCount);
+
+    AVTransCoderNapi *transCoderNapi = nullptr;
+    status = napi_unwrap(env, jsThis, reinterpret_cast<void **>(&transCoderNapi));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && transCoderNapi != nullptr, nullptr, "failed to retrieve instance");
+
+    return transCoderNapi;
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVTransCoderNapi::GetPromiseTask(AVTransCoderNapi *avnapi, const std::string &opt)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = avnapi, option = opt]() {
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        std::shared_lock<std::shared_mutex> transCoderlock(napi->transCoderMutex_);
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->transCoder_ != nullptr,
+            GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
+        
+        CHECK_AND_RETURN_RET(napi->CheckRepeatOperation(option) == MSERR_OK,
+            RetInfo(MSERR_EXT_API9_OK, ""));
+
+        RetInfo ret(MSERR_EXT_API9_OPERATE_NOT_PERMIT, "");
+        auto itFunc = taskQFuncs_.find(option);
+        CHECK_AND_RETURN_RET_LOG(itFunc != taskQFuncs_.end(), ret, "%{public}s not found in map!", option.c_str());
+        auto memberFunc = itFunc->second;
+        CHECK_AND_RETURN_RET_LOG(memberFunc != nullptr, ret, "memberFunc is nullptr!");
+        ret = (napi->*memberFunc)();
+        
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return ret;
+    });
+}
+
+napi_value AVTransCoderNapi::ExecuteByPromise(napi_env env, napi_callback_info info, const std::string &opt)
+{
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    size_t argCount = 1; // Only callbackRef parameter
+    napi_value args[1] = { nullptr }; // Only callbackRef parameter
+
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        asyncCtx->task_ = AVTransCoderNapi::GetPromiseTask(asyncCtx->napi, opt);
+        (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        asyncCtx->opt_ = opt;
+    } else {
+        asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION, opt, "");
+    }
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVTransCoderAsyncContext* asyncCtx = reinterpret_cast<AVTransCoderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+napi_value AVTransCoderNapi::JsGetSrcUrl(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoderNapi::get url");
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+
+    napi_value value = nullptr;
+    (void)napi_create_string_utf8(env, asyncCtx->napi->srcUrl_.c_str(), NAPI_AUTO_LENGTH, &value);
+
+    MEDIA_LOGD("JsGetUrl Out Current Url: %{public}s", asyncCtx->napi->srcUrl_.c_str());
+    return value;
+}
+
+napi_value AVTransCoderNapi::JsSetSrcFd(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoderNapi::set fd");
+    const std::string &opt = AVTransCoderOpt::PREPARE;
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+
+    // get url from js
+    if (!CommonNapi::GetFdArgument(env, args[0], asyncCtx->napi->srcFd_)) {
+        MEDIA_LOGE("get fileDescriptor argument failed!");
+        return result;
+    }
+
+    asyncCtx->srcFd = asyncCtx->napi->srcFd_;
+
+    asyncCtx->task_ = std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, srcFd = asyncCtx->srcFd]() {
+        MEDIA_LOGI("JsSetSrcFd Task");
+        return napi->SetInputFile(srcFd.fd, srcFd.offset, srcFd.length);
+    });
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVTransCoderAsyncContext* asyncCtx = reinterpret_cast<AVTransCoderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("JsSetSrcFd Out");
+    return result;
+}
+
+napi_value AVTransCoderNapi::JsGetSrcFd(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoderNapi::get url");
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+
+    napi_value value = nullptr;
+    (void)napi_create_string_utf8(env, asyncCtx->napi->srcUrl_.c_str(), NAPI_AUTO_LENGTH, &value);
+
+    MEDIA_LOGD("JsGetUrl Out Current Url: %{public}s", asyncCtx->napi->srcUrl_.c_str());
+    return value;
+}
+
+napi_value AVTransCoderNapi::JsSetDstFd(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoderNapi::set fd");
+    const std::string &opt = AVTransCoderOpt::PREPARE;
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+
+    // get url from js
+    napi_status status = napi_get_value_int32(env, args[0], &asyncCtx->napi->dstFd_);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to get fdDst value");
+
+    asyncCtx->dstFd = asyncCtx->napi->dstFd_;
+
+    asyncCtx->task_ = std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, dstFd = asyncCtx->dstFd]() {
+        MEDIA_LOGI("JsSetDstFd Task");
+        return napi->SetOutputFile(dstFd);
+    });
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVTransCoderAsyncContext* asyncCtx = reinterpret_cast<AVTransCoderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            }
+        }
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+
+    MEDIA_LOGI("JsSetDstFd Out");
+    return result;
+}
+
+napi_value AVTransCoderNapi::JsGetDstFd(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoderNapi::get url");
+    size_t argCount = 1;
+    napi_value args[1] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+
+    napi_value value = nullptr;
+    napi_status status = napi_create_int32(env, asyncCtx->napi->dstFd_, &value);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && value != nullptr, result,
+        "failed to create int32 for dstFd");
+
+    MEDIA_LOGD("JsGetUrl Out Current Url: %{public}s", asyncCtx->napi->srcUrl_.c_str());
+    return value;
+}
+
+napi_value AVTransCoderNapi::JsAddWatermark(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVTransCoder::JsAddWatermark");
+    const std::string &opt = AVTransCoderOpt::ADD_WATERMARK;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+    
+    const int32_t maxParam = 2;
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+    
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    
+    auto asyncCtx = std::make_unique<AVTransCoderAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVTransCoderNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+    
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, nullptr, result);
+
+    if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
+        if (asyncCtx->napi->GetWatermarkParameter(asyncCtx, env, args[0], args[1]) == MSERR_OK) {
+            asyncCtx->task_ = AVTransCoderNapi::AddWatermarkTask(asyncCtx);
+            (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        } else {
+            asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, opt, "addWatermark with wrong params");
+        }
+    } else {
+        asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION,
+            opt, "addWatermark operation is not allowed in this status");
+    }
+    
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, opt.c_str(), NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
+        AVTransCoderAsyncContext* asyncCtx = reinterpret_cast<AVTransCoderAsyncContext *>(data);
+        CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+
+        if (asyncCtx->task_) {
+            auto result = asyncCtx->task_->GetResult();
+            if (result.Value().first != MSERR_EXT_API9_OK) {
+                asyncCtx->SignError(result.Value().first, result.Value().second);
+            } else {
+                int32_t count = 0;
+                char *end = nullptr;
+                long longVal = std::strtol(result.Value().second.c_str(), &end, 10);
+                if (end == nullptr || *end != '\0' || longVal < INT32_MIN || longVal > INT32_MAX) {
+                    MEDIA_LOGE("Invalid argument or out of range: %{public}s",
+                        result.Value().second.c_str());
+                } else {
+                    count = static_cast<int32_t>(longVal);
+                }
+                asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(count);
+            }
+        }
+        MEDIA_LOGI("The js thread of addWatermark finishes execution and returns");
+    }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
+    NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
+    asyncCtx.release();
+    
+    MEDIA_LOGI("Js %{public}s End", opt.c_str());
+    return result;
+}
+
+RetInfo AVTransCoderNapi::Start()
+{
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
+    CHECK_AND_RETURN_RET(transCoder_ != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, "Start", ""));
+    int32_t ret = transCoder_->Start();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Start", ""));
+    StateCallback(AVTransCoderState::STATE_STARTED);
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVTransCoderNapi::Pause()
+{
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
+    CHECK_AND_RETURN_RET(transCoder_ != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, "Pause", ""));
+    int32_t ret = transCoder_->Pause();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Pause", ""));
+    StateCallback(AVTransCoderState::STATE_PAUSED);
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVTransCoderNapi::Resume()
+{
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
+    CHECK_AND_RETURN_RET(transCoder_ != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, "Resume", ""));
+    int32_t ret = transCoder_->Resume();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Resume", ""));
+    StateCallback(AVTransCoderState::STATE_STARTED);
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVTransCoderNapi::Cancel()
+{
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
+    CHECK_AND_RETURN_RET(transCoder_ != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, "Cancel", ""));
+    int32_t ret = transCoder_->Cancel();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Stop", ""));
+    StateCallback(AVTransCoderState::STATE_CANCELLED);
+    hasConfiged_.store(false);
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVTransCoderNapi::Release()
+{
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
+    CHECK_AND_RETURN_RET(transCoder_ != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, "Release", ""));
+    int32_t ret = transCoder_->Release();
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Release", ""));
+
+    StateCallback(AVTransCoderState::STATE_RELEASED);
+    CancelCallback();
+    hasConfiged_.store(false);
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVTransCoderNapi::SetInputFile(int32_t fd, int64_t offset, int64_t size)
+{
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
+    int32_t ret = transCoder_->SetInputFile(fd, offset, size);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetInputFile", ""));
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVTransCoderNapi::SetOutputFile(int32_t fd)
+{
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
+    int32_t ret = transCoder_->SetOutputFile(fd);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetOutputFile", ""));
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+int32_t AVTransCoderNapi::CheckStateMachine(const std::string &opt)
+{
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
+    auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
+    CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
+
+    std::string curState = napiCb->GetState();
+    CHECK_AND_RETURN_RET_LOG(STATE_LIST.find(curState) != STATE_LIST.end(), MSERR_INVALID_VAL, "state is not in list");
+    std::vector<std::string> allowedOpt = STATE_LIST.at(curState);
+    if (find(allowedOpt.begin(), allowedOpt.end(), opt) == allowedOpt.end()) {
+        MEDIA_LOGE("The %{public}s operation is not allowed in the %{public}s state!", opt.c_str(), curState.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    return MSERR_OK;
+}
+
+int32_t AVTransCoderNapi::CheckRepeatOperation(const std::string &opt)
+{
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
+    auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
+    CHECK_AND_RETURN_RET_LOG(napiCb != nullptr, MSERR_INVALID_OPERATION, "napiCb is nullptr!");
+
+    std::string curState = napiCb->GetState();
+    std::vector<std::string> repeatOpt = STATE_CTRL.at(curState);
+    if (find(repeatOpt.begin(), repeatOpt.end(), opt) != repeatOpt.end()) {
+        MEDIA_LOGI("Current state is %{public}s. Please do not call %{public}s again!",
+            curState.c_str(), opt.c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+
+    return MSERR_OK;
+}
+
+RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
+{
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
+    CHECK_AND_RETURN_RET(transCoder_ != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, "Configure", ""));
+    CHECK_AND_RETURN_RET(config != nullptr, GetReturnRet(MSERR_INVALID_VAL, "Configure", "config"));
+
+    if (hasConfiged_.load()) {
+        MEDIA_LOGE("AVTransCoderConfig has been configured and will not be configured again");
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    }
+
+    int32_t ret = transCoder_->SetOutputFormat(config->fileFormat);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetOutputFormat", "fileFormat"));
+
+    AudioCodecFormat outputAudioCodec = isAudioV2Valid.load() ? config->audioCodecFormatV2 : config->audioCodecFormat;
+    ret = transCoder_->SetAudioEncoder(outputAudioCodec);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetAudioEncoder", "audioCodecFormat"));
+    
+    ret = transCoder_->SetAudioEncodingBitRate(config->audioBitrate);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetAudioEncoderBitRate", "audioBitrate"));
+    
+    ret = transCoder_->SetVideoEncoder(config->videoCodecFormat);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoder", "videoCodecFormat"));
+    
+    ret = transCoder_->SetVideoSize(config->videoFrameWidth, config->videoFrameHeight);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSize", "videoSize"));
+    
+    ret = transCoder_->SetVideoEncodingBitRate(config->videoBitrate);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderBitRate", "videoBitrate"));
+
+    ret = transCoder_->SetEnableBFrame(config->enableBFrame);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncodingEnableBFrame", "enableBFrame"));
+    hasConfiged_.store(true);
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+int32_t AVTransCoderNapi::AddWatermark(std::shared_ptr<PixelMap> &pixelMap,
+    std::shared_ptr<WatermarkConfiguration> &watermarkConfig)
+{
+    MEDIA_LOGI("pixelMap Width %{public}d, height %{public}d, pixelformat %{public}d, RowStride %{public}d",
+        pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
+    CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
+        "Invalid pixel format");
+
+    bool isValidHeight = (pixelMap->GetHeight() >= 0) && (pixelMap->GetHeight() <= AVTRANSCODER_WATERMARK_MAX_LENGTH);
+    CHECK_AND_RETURN_RET_LOG(isValidHeight, MSERR_INVALID_VAL, "Invalid pixel Height");
+    bool isValidRowStride = (pixelMap->GetRowStride() >= 0) &&
+        (pixelMap->GetRowStride() <= AVTRANSCODER_WATERMARK_MAX_LENGTH * AVTRANSCODER_WATERMARK_MAX_ROWSTRIDE_NUM);
+    CHECK_AND_RETURN_RET_LOG(isValidRowStride, MSERR_INVALID_VAL, "Invalid pixel RowStride");
+
+    int32_t dataSize = pixelMap->GetHeight() * pixelMap->GetRowStride();
+    auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
+    auto buffer = AVBuffer::CreateAVBuffer(allocator, dataSize);
+    CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_VAL, "Create buffer failed");
+    CHECK_AND_RETURN_RET_LOG(buffer->memory_ != nullptr, MSERR_INVALID_VAL, "buffer memory is null");
+    CHECK_AND_RETURN_RET_LOG(buffer->meta_ != nullptr, MSERR_INVALID_VAL, "buffer meta is null");
+    buffer->memory_->Write(pixelMap->GetPixels(), dataSize, 0);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_X>(watermarkConfig->left);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_Y>(watermarkConfig->top);
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_W>(pixelMap->GetWidth());
+    buffer->meta_->Set<Tag::VIDEO_COORDINATE_H>(pixelMap->GetHeight());
+    buffer->meta_->Set<Tag::VIDEO_STRIDE>(pixelMap->GetRowStride());
+    std::shared_lock<std::shared_mutex> transCoderlock(transCoderMutex_);
+    return transCoder_->AddWatermark(buffer, watermarkConfig->width, watermarkConfig->height);
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVTransCoderNapi::AddWatermarkTask(
+    const std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, pixelMap = asyncCtx->pixelMap_,
+        watermarkConfig = asyncCtx->watermarkConfig_]() mutable {
+        const std::string &option = AVTransCoderOpt::ADD_WATERMARK;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(napi != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(napi->CheckStateMachine(option) == MSERR_OK,
+            GetReturnRet(MSERR_INVALID_OPERATION, option, ""));
+
+        int32_t ret = napi->AddWatermark(pixelMap, watermarkConfig);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetReturnRet(ret, "AddWatermarkTask", ""),
+            "AddWatermarkTask failed");
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        int32_t oldCount = napi->watermarkCount_.load();
+        do {
+            if (oldCount > AVTRANSCODER_WATERMARK_MAX_NUM) {
+                break;
+            }
+        } while (!napi->watermarkCount_.compare_exchange_weak(oldCount, oldCount + 1));
+        int32_t currentCount = napi->watermarkCount_.load();
+        MEDIA_LOGI("%{public}s End, watermark count: %{public}d", option.c_str(), currentCount);
+        return RetInfo(MSERR_EXT_API9_OK, std::to_string(currentCount));
+    });
+}
+
+void AVTransCoderNapi::ErrorCallback(int32_t errCode, const std::string &operate, const std::string &add)
+{
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
+    MEDIA_LOGE("failed to %{public}s, errCode = %{public}d", operate.c_str(), errCode);
+    CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
+    auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
+
+    MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
+    std::string msg = MSExtErrorAPI9ToString(err, operate, "") + add;
+    napiCb->SendErrorCallback(err, msg);
+}
+
+void AVTransCoderNapi::StateCallback(const std::string &state)
+{
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
+    MEDIA_LOGI("Change state to %{public}s", state.c_str());
+    CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
+    auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
+    std::string curState = napiCb->GetState();
+    if (curState == AVTransCoderState::STATE_ERROR && state != AVTransCoderState::STATE_RELEASED) {
+        MEDIA_LOGI("current state is error, only can execute release");
+        return;
+    }
+    napiCb->SendStateCallback(state, StateChangeReason::USER);
+}
+
+void AVTransCoderNapi::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
+{
+    std::lock_guard<std::mutex> lock(eventCbMutex_);
+    eventCbMap_[callbackName] = ref;
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
+    CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
+    auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
+    napiCb->SaveCallbackReference(callbackName, ref);
+}
+
+void AVTransCoderNapi::CancelCallbackReference(const std::string &callbackName)
+{
+    std::lock_guard<std::mutex> lock(eventCbMutex_);
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
+    CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
+    auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
+    napiCb->CancelCallbackReference(callbackName);
+    eventCbMap_[callbackName] = nullptr;
+}
+
+void AVTransCoderNapi::CancelCallback()
+{
+    std::shared_lock<std::shared_mutex> cblock(transCoderCbMutex_);
+    CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
+    auto napiCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
+    napiCb->ClearCallbackReference();
+}
+
+int32_t AVTransCoderNapi::GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat)
+{
+    MEDIA_LOGI("mime %{public}s", mime.c_str());
+    const std::map<std::string_view, AudioCodecFormat> mimeStrToCodecFormat = {
+        { CodecMimeType::AUDIO_AAC, AudioCodecFormat::AAC_LC },
+        { "", AudioCodecFormat::AUDIO_DEFAULT },
+    };
+
+    auto iter = mimeStrToCodecFormat.find(mime);
+    if (iter != mimeStrToCodecFormat.end()) {
+        codecFormat = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t AVTransCoderNapi::GetAudioCodecFormatV2(const std::string &mime, AudioCodecFormat &codecFormat)
+{
+    MEDIA_LOGI("mime %{public}s", mime.c_str());
+    const std::map<std::string_view, AudioCodecFormat> mimeStrToCodecFormat = {
+        { CodecMimeType::AUDIO_AAC, AudioCodecFormat::AAC_LC },
+        { CodecMimeType::AUDIO_AMR_NB, AudioCodecFormat::AUDIO_AMR_NB },
+        { CodecMimeType::AUDIO_AMR_WB, AudioCodecFormat::AUDIO_AMR_WB },
+        { CodecMimeType::AUDIO_MPEG, AudioCodecFormat::AUDIO_MPEG },
+        { CodecMimeType::AUDIO_RAW, AudioCodecFormat::AUDIO_RAW },
+        { "", AudioCodecFormat::AUDIO_DEFAULT },
+    };
+
+    auto iter = mimeStrToCodecFormat.find(mime);
+    if (iter != mimeStrToCodecFormat.end()) {
+        codecFormat = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t AVTransCoderNapi::GetAudioConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
+    std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
+    std::string audioCodec = CommonNapi::GetPropertyString(env, args, "audioCodec");
+    std::string audioCodecV2 = CommonNapi::GetPropertyString(env, args, "audioCodecV2");
+    (void)AVTransCoderNapi::GetAudioCodecFormat(audioCodec, config->audioCodecFormat);
+    int32_t ret = AVTransCoderNapi::GetAudioCodecFormatV2(audioCodecV2, config->audioCodecFormatV2);
+    isAudioV2Valid.store(!audioCodecV2.empty());
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to set audioCodecV2");
+    if (isAudioV2Valid.load()) {
+        MEDIA_LOGI("audio encoder mime is v2 %{public}s", audioCodecV2.c_str());
+    } else {
+        MEDIA_LOGI("audio encoder mime is %{public}s", audioCodec.c_str());
+    }
+    (void)CommonNapi::GetPropertyInt32(env, args, "audioBitrate", config->audioBitrate);
+    return MSERR_OK;
+}
+
+int32_t AVTransCoderNapi::GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat)
+{
+    MEDIA_LOGI("mime %{public}s", mime.c_str());
+    const std::map<std::string_view, VideoCodecFormat> mimeStrToCodecFormat = {
+        { CodecMimeType::VIDEO_AVC, VideoCodecFormat::H264 },
+        { CodecMimeType::VIDEO_HEVC, VideoCodecFormat::H265 },
+        { "", VideoCodecFormat::VIDEO_DEFAULT },
+    };
+
+    auto iter = mimeStrToCodecFormat.find(mime);
+    if (iter != mimeStrToCodecFormat.end()) {
+        codecFormat = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
+    std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
+    std::string videoCodec = CommonNapi::GetPropertyString(env, args, "videoCodec");
+    (void)AVTransCoderNapi::GetVideoCodecFormat(videoCodec, config->videoCodecFormat);
+    (void)CommonNapi::GetPropertyInt32(env, args, "videoBitrate", config->videoBitrate);
+    (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameWidth", config->videoFrameWidth);
+    (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight);
+    (void)CommonNapi::GetPropertyBool(env, args, "enableBFrame", config->enableBFrame);
+    return MSERR_OK;
+}
+
+int32_t AVTransCoderNapi::GetOutputFormat(const std::string &extension, OutputFormatType &type)
+{
+    MEDIA_LOGI("mime %{public}s", extension.c_str());
+    const std::map<std::string, OutputFormatType> extensionToOutputFormat = {
+        { "mp4", OutputFormatType::FORMAT_MPEG_4 },
+        { "m4a", OutputFormatType::FORMAT_M4A },
+        { "amr", OutputFormatType::FORMAT_AMR },
+        { "mp3", OutputFormatType::FORMAT_MP3 },
+        { "aac", OutputFormatType::FORMAT_AAC },
+        { "wav", OutputFormatType::FORMAT_WAV },
+        { "", OutputFormatType::FORMAT_DEFAULT },
+    };
+
+    auto iter = extensionToOutputFormat.find(extension);
+    if (iter != extensionToOutputFormat.end()) {
+        type = iter->second;
+        return MSERR_OK;
+    }
+    return MSERR_INVALID_VAL;
+}
+
+bool AVTransCoderNapi::CanAddTrack(const AudioCodecFormat &audioType, const OutputFormatType &muxerType)
+{
+    auto it = AUDIO_MUX_FORMAT_INFO.find(static_cast<AudioCodecFormat>(audioType));
+    if (it == AUDIO_MUX_FORMAT_INFO.end()) {
+        return false;
+    }
+    return it->second.find(muxerType) != it->second.end();
+}
+
+int32_t AVTransCoderNapi::GetConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
+    napi_valuetype valueType = napi_undefined;
+    if (args == nullptr || napi_typeof(env, args, &valueType) != napi_ok || valueType != napi_object) {
+        asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetConfig", "AVTransCoderConfig");
+        return MSERR_INVALID_VAL;
+    }
+
+    asyncCtx->config_ = std::make_shared<AVTransCoderConfig>();
+    CHECK_AND_RETURN_RET(asyncCtx->config_,
+        (asyncCtx->AVTransCoderSignError(MSERR_FRAMEWORK_INTERNAL_ERROR, "AVTransCoderConfig", "AVTransCoderConfig"),
+            MSERR_FRAMEWORK_INTERNAL_ERROR));
+
+    std::shared_ptr<AVTransCoderConfig> config = asyncCtx->config_;
+
+    int32_t ret = GetAudioConfig(asyncCtx, env, args);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetAudioConfig");
+
+    ret = GetVideoConfig(asyncCtx, env, args);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetVideoConfig");
+
+    std::string fileFormat = CommonNapi::GetPropertyString(env, args, "fileFormat");
+    ret = AVTransCoderNapi::GetOutputFormat(fileFormat, config->fileFormat);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVTransCoderSignError(ret, "GetOutputFormat", "fileFormat"), ret));
+    if (isAudioV2Valid.load()) {
+        CHECK_AND_RETURN_RET(CanAddTrack(config->audioCodecFormatV2, config->fileFormat),
+            (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetOutputFormat", "fileFormat"), MSERR_INVALID_VAL));
+    } else {
+        CHECK_AND_RETURN_RET(CanAddTrack(AudioCodecFormat::AAC_LC, config->fileFormat),
+            (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetOutputFormat", "fileFormat"), MSERR_INVALID_VAL));
+        CHECK_AND_RETURN_RET(config->fileFormat != OutputFormatType::FORMAT_AAC,
+            (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetOutputFormat", "fileFormat"), MSERR_INVALID_VAL));
+    }
+    
+    return MSERR_OK;
+}
+
+int32_t AVTransCoderNapi::GetWatermarkParameter(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+    napi_env env, napi_value watermark, napi_value watermarkConfig)
+{
+    int32_t ret = GetWatermark(asyncCtx, env, watermark);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermark");
+
+    ret = GetWatermarkConfig(asyncCtx, env, watermarkConfig);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetWatermarkConfig");
+
+    return MSERR_OK;
+}
+
+int32_t AVTransCoderNapi::GetWatermark(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
+    CHECK_AND_RETURN_RET(CommonNapi::CheckValueType(env, args, napi_object),
+        (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetPixelMap", "PixelMap"), MSERR_INVALID_VAL));
+
+    asyncCtx->pixelMap_ = Media::PixelMapNapi::GetPixelMap(env, args);
+    CHECK_AND_RETURN_RET(asyncCtx->pixelMap_ != nullptr,
+        (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetPixelMap", "pixelMap"), MSERR_INVALID_VAL));
+    CHECK_AND_RETURN_RET(asyncCtx->pixelMap_->GetWidth() > 0
+        && asyncCtx->pixelMap_->GetWidth() <= AVTRANSCODER_WATERMARK_MAX_LENGTH,
+        (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermark", "pixelMap Width",
+        "width of pixelmap must be greater than zero and less than 4097"), MSERR_PARAMETER_VERIFICATION_FAILED));
+    CHECK_AND_RETURN_RET(asyncCtx->pixelMap_->GetHeight() > 0
+        && asyncCtx->pixelMap_->GetHeight() <= AVTRANSCODER_WATERMARK_MAX_LENGTH,
+        (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermark", "pixelMap Height",
+        "height of pixelmap must be greater than zero and less than 4097"), MSERR_PARAMETER_VERIFICATION_FAILED));
+    return MSERR_OK;
+}
+    
+int32_t AVTransCoderNapi::GetWatermarkConfig(std::unique_ptr<AVTransCoderAsyncContext> &asyncCtx,
+    napi_env env, napi_value args)
+{
+    CHECK_AND_RETURN_RET(CommonNapi::CheckValueType(env, args, napi_object),
+        (asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL,
+            "GetWatermarkConfig", "WatermarkConfiguration"), MSERR_INVALID_VAL));
+
+    asyncCtx->watermarkConfig_ = std::make_shared<WatermarkConfiguration>();
+    CHECK_AND_RETURN_RET(asyncCtx->watermarkConfig_,
+        (asyncCtx->AVTransCoderSignError(MSERR_FRAMEWORK_INTERNAL_ERROR, "GetWatermarkConfig",
+            "WatermarkConfiguration"), MSERR_FRAMEWORK_INTERNAL_ERROR));
+
+    std::shared_ptr<WatermarkConfiguration> config = asyncCtx->watermarkConfig_;
+
+    bool ret = CommonNapi::GetPropertyInt32(env, args, "top", config->top);
+    CHECK_AND_RETURN_RET(ret,
+        (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "top",
+        "config top cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
+
+    ret = CommonNapi::GetPropertyInt32(env, args, "left", config->left);
+    CHECK_AND_RETURN_RET(ret,
+        (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "left",
+        "config left cannot be null"), MSERR_PARAMETER_VERIFICATION_FAILED));
+
+    if (CommonNapi::CheckhasNamedProperty(env, args, "width")) {
+        ret = CommonNapi::GetPropertyInt32(env, args, "width", config->width);
+        CHECK_AND_RETURN_RET(ret && config->width > 0
+            && config->width <= AVTRANSCODER_WATERMARK_MAX_LENGTH,
+            (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "width",
+            "config width must be greater than zero and less than 4097"), MSERR_PARAMETER_VERIFICATION_FAILED));
+    }
+
+    if (CommonNapi::CheckhasNamedProperty(env, args, "height")) {
+        ret = CommonNapi::GetPropertyInt32(env, args, "height", config->height);
+        CHECK_AND_RETURN_RET(ret && config->height > 0
+            && config->height <= AVTRANSCODER_WATERMARK_MAX_LENGTH,
+            (asyncCtx->AVTransCoderSignError(MSERR_PARAMETER_VERIFICATION_FAILED, "GetWatermarkConfig", "height",
+            "config height must be greater than zero and less than 4097"), MSERR_PARAMETER_VERIFICATION_FAILED));
+    }
+
+    return MSERR_OK;
+}
+
+void AVTransCoderAsyncContext::AVTransCoderSignError(int32_t errCode, const std::string &operate,
+    const std::string &param, const std::string &add)
+{
+    RetInfo retInfo = GetReturnRet(errCode, operate, param, add);
+    SignError(retInfo.first, retInfo.second);
+}
+
 
 } // namespace Media
 } // namespace OHOS
-#endif // AV_RECORDER_NAPI_H
