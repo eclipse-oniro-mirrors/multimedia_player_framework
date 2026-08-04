@@ -112,13 +112,13 @@ private:
     AudioDataSourceReadAtActionState ReadAtInnerMode(uint32_t length);
     AudioDataSourceReadAtActionState VideoAudioSyncInnerMode(uint32_t length, int64_t timeWindow,
         std::shared_ptr<AudioBuffer> &innerAudioBuffer);
-    int32_t LostFrameNum(const int64_t &timestamp);
-    int64_t writedFrameTime_{0};
+    int64_t LostFrameNum(const int64_t &timestamp);
+    int64_t writedFrameTime_ = 0;
+    int64_t firstAudioFramePts_ = -1;
     std::unique_ptr<CacheBuffer> cacheBuffer_;
     std::vector<uint8_t> zeroBuffer_;
     int32_t appPid_{0};
     std::atomic<uint32_t> audioRendererState_{0};
-    std::atomic<int64_t> firstAudioFramePts_{-1};
     std::atomic<int64_t> firstVideoFramePts_{-1};
     std::atomic<int64_t> lastWriteAudioFramePts_{0};
     std::atomic<int64_t> lastMicAudioFramePts_{0};

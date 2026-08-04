@@ -26,7 +26,7 @@
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServiceStub"};
-constexpr int MAX_LIST_COUNT = 1000;
+constexpr size_t MAX_LIST_COUNT = 1000;
 } // namespace
 
 namespace OHOS {
@@ -155,9 +155,9 @@ int32_t ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking(MessageParcel &d
 {
     (void)data;
     std::list<int32_t> pidList = IsScreenCaptureWorking();
-    int32_t size = static_cast<int32_t>(pidList.size());
+    size_t size = pidList.size();
     CHECK_AND_RETURN_RET_LOG(size < MAX_LIST_COUNT, MSERR_INVALID_STATE, "content filter size exceed max range");
-    reply.WriteInt32(size);
+    reply.WriteInt32(static_cast<int32_t>(size));
 
     MEDIA_LOGD("ScreenCaptureMonitorServiceStub::IsScreenCaptureWorking pid start.");
     for (auto pid : pidList) {

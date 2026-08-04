@@ -1513,25 +1513,19 @@ int32_t ScreenCaptureServer::CheckAudioCapParam(const AudioCaptureInfo &audioCap
 {
     MEDIA_LOGD("CheckAudioCapParam sampleRate:%{public}d, channels:%{public}d, source:%{public}d, state:%{public}d",
         audioCapInfo.audioSampleRate, audioCapInfo.audioChannels, audioCapInfo.audioSource, audioCapInfo.state);
-    std::vector<AudioSamplingRate> supportedSamplingRates = AudioStandard::AudioCapturer::GetSupportedSamplingRates();
-    bool foundSupportSample = false;
-    for (auto iter = supportedSamplingRates.begin(); iter != supportedSamplingRates.end(); ++iter) {
-        if (static_cast<AudioSamplingRate>(audioCapInfo.audioSampleRate) == *iter) {
-            foundSupportSample = true;
-        }
-    }
+    auto supportedSamplingRates = AudioStandard::AudioCapturer::GetSupportedSamplingRates();
+    bool foundSupportSample = std::any_of(supportedSamplingRates.begin(), supportedSamplingRates.end(),
+        [&audioCapInfo](
+            const AudioSamplingRate &rate) { return audioCapInfo.audioSampleRate == static_cast<int32_t>(rate); });
     if (!foundSupportSample) {
         MEDIA_LOGE("invalid audioSampleRate:%{public}d", audioCapInfo.audioSampleRate);
         return MSERR_UNSUPPORT_AUD_SAMPLE_RATE;
     }
 
-    std::vector<AudioChannel> supportedChannelList = AudioStandard::AudioCapturer::GetSupportedChannels();
-    bool foundSupportChannel = false;
-    for (auto iter = supportedChannelList.begin(); iter != supportedChannelList.end(); ++iter) {
-        if (static_cast<AudioChannel>(audioCapInfo.audioChannels) == *iter) {
-            foundSupportChannel = true;
-        }
-    }
+    auto supportedChannelList = AudioStandard::AudioCapturer::GetSupportedChannels();
+    bool foundSupportChannel = std::any_of(supportedChannelList.begin(), supportedChannelList.end(),
+        [&audioCapInfo](
+            const AudioChannel &channel) { return audioCapInfo.audioChannels == static_cast<int32_t>(channel); });
     if (!foundSupportChannel) {
         MEDIA_LOGE("invalid audioChannels:%{public}d", audioCapInfo.audioChannels);
         return MSERR_UNSUPPORT_AUD_CHANNEL_NUM;

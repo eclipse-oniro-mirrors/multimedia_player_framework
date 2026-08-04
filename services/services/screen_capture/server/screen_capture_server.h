@@ -17,6 +17,7 @@
 #define SCREEN_CAPTURE_SERVICE_SERVER_H
 
 #include "screen_capture_server_base.h"
+#include "screen_capture_callback_proxy.h"
 #include "ui_extension_ability_connection.h"
 #include "audio_data_source.h"
 #include "window_life_cycle_listener.h"
