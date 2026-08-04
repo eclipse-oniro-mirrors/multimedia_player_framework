@@ -41,6 +41,7 @@ public:
 private:
     std::shared_mutex mutex_;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    bool bufferActive_ = false;
 };
 } // namespace Media
 } // namespace OHOS
