@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 #include "hirecorder_impl.h"
+#include <unordered_map>
 #include "meta/audio_types.h"
 #include "osal/task/pipeline_threadpool.h"
 #include "sync_fence.h"
@@ -717,6 +718,21 @@ void HiRecorderImpl::UpdateVideoFirstFramePts(const Event &event)
     }
 }
 
+int32_t TransformEventStatusCode(Status statusCode)
+{
+    static const std::unordered_map<Status, int32_t> map = {
+        {Status::OK,                      MSERR_OK},
+        {Status::ERROR_AUDIO_INTERRUPT,   MSERR_AUD_INTERRUPT},
+        {Status::ERROR_VID_ENC_FAILED,    MSERR_VID_ENC_FAILED},
+        {Status::ERROR_AUD_ENC_INIT_FAILED, MSERR_AUD_ENC_INIT_FAILED},
+        {Status::ERROR_VID_ENC_INIT_FAILED, MSERR_VID_ENC_INIT_FAILED},
+        {Status::ERROR_AUDIO_BITRATE_LE_ZERO, MSERR_AUDIO_BITRATE_LE_ZERO_ERROR_5400103},
+        {Status::ERROR_VIDEO_BITRATE_LE_ZERO, MSERR_VIDEO_BITRATE_LE_ZERO_ERROR_5400103},
+    };
+    auto it = map.find(statusCode);
+    return (it != map.end()) ? it->second : MSERR_FRAMEWORK_ERROR_5400103;
+}
+
 void HiRecorderImpl::OnEvent(const Event &event)
 {
     switch (event.type) {
@@ -724,16 +740,13 @@ void HiRecorderImpl::OnEvent(const Event &event)
             MEDIA_LOG_I("EVENT_ERROR.");
             auto ptr = obs_.lock();
             if (ptr != nullptr) {
-                switch (AnyCast<int32_t>(event.param)) {
-                    case static_cast<int32_t>(Status::ERROR_AUDIO_INTERRUPT):
-                        // audio interrupted, recorder first stop then error
-                        Stop(true);
-                        ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_AUD_INTERRUPT);
-                        break;
-                    default:
-                        ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_EXT_API9_INVALID_PARAMETER);
-                        OnStateChanged(StateId::ERROR);
-                        break;
+                int32_t errorCode = TransformEventStatusCode(static_cast<Status>(AnyCast<int32_t>(event.param)));
+                if (errorCode == MSERR_AUD_INTERRUPT) {
+                    Stop(true);
+                    ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, errorCode);
+                } else {
+                    ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, errorCode);
+                    OnStateChanged(StateId::ERROR);
                 }
             }
             break;
@@ -917,7 +930,7 @@ void HiRecorderImpl::ConfigureAudio(const RecorderParam &recParam)
             AudBitRate audBitRate = static_cast<const AudBitRate&>(recParam);
             if (audBitRate.bitRate <= 0) {
                 OnEvent({"audioBitRate", EventType::EVENT_ERROR,
-                    static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER)});
+                    static_cast<int32_t>(Status::ERROR_AUDIO_BITRATE_LE_ZERO)});
             }
             audioEncFormat_->Set<Tag::MEDIA_BITRATE>(audBitRate.bitRate);
             break;
@@ -1091,7 +1104,7 @@ void HiRecorderImpl::ConfigureVidBitRate(const RecorderParam &recParam)
 {
     VidBitRate vidBitRate = static_cast<const VidBitRate&>(recParam);
     if (vidBitRate.bitRate <= 0) {
-        OnEvent({"videoBitRate", EventType::EVENT_ERROR, static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER)});
+        OnEvent({"videoBitRate", EventType::EVENT_ERROR, static_cast<int32_t>(Status::ERROR_VIDEO_BITRATE_LE_ZERO)});
     }
     videoEncFormat_->Set<Tag::MEDIA_BITRATE>(vidBitRate.bitRate);
 }
