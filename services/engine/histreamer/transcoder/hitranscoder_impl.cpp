@@ -302,7 +302,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, muxerFormat_);
             isExistAudioTrack_ = true;
             isInitializeAudioEncFormat = true;
-        }
+        } 
     }
     if (!isExistVideoTrack_ && !isExistAudioTrack_) {
         MEDIA_LOG_E("No video track found.");
@@ -728,7 +728,6 @@ int32_t HiTransCoderImpl::Prepare()
  
         ret = CheckCodecCapability(encVideoMime, true, width, height, MSERR_TARGET_RESOLUTION_OUT_OF_RANGE);
         FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "output encoder resolution check failed");
-
         skipProcessFilterFlag_.isSameVideoResolution = (width == inputVideoWidth_) && (height == inputVideoHeight_);
     }
     if (skipProcessFilterFlag_.CanSkipAudioDecAndEncFilter()) {
@@ -1235,7 +1234,6 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                     MEDIA_LOG_I("Pipeline build mode: add watermark");
                     return LinkWaterMark(filter, outType);
                 }
-
                 // 解码器特殊处理：可能需要先链接resize
                 if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
                     !skipProcessFilterFlag_.CanSkipVideoResizeFilter() &&
@@ -1245,7 +1243,7 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                     return LinkWaterMark(filter, outType);
                 }
                 // 水印或其他：直接链接编码器
-                return LinkVideoEncoderFilter(filter, outType);
+                return LinkVideoEncoderFilter(filter, outType); 
             }
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
