@@ -1351,6 +1351,7 @@ int32_t ScreenCaptureServer::SetDataType(DataType dataType)
         MEDIA_LOGI("ScreenCaptureServer::SetDataType start, dataType:%{public}d", dataType);
         int32_t ret = CheckDataType(dataType);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, ret);
+        std::unique_lock<std::shared_mutex> configLock(captureConfigMutex_);
         captureConfig_.dataType = dataType;
         appUid = appInfo_.appUid;
     }
@@ -2439,7 +2440,6 @@ int32_t ScreenCaptureServer::InitRecorderMix()
     captureCallback_->SetScreenCaptureServer(shared_from_this());
     audioSource_->RegisterAudioRendererEventListener(appInfo_.appPid, captureCallback_);
     ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
-    recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     return ret;
 }
 
@@ -2453,7 +2453,6 @@ int32_t ScreenCaptureServer::InitRecorderInner()
         audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, this);
     }
     ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
-    recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     return ret;
 }
 
@@ -2465,7 +2464,6 @@ int32_t ScreenCaptureServer::InitRecorderMic()
         audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, this);
     }
     int32_t ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
-    recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
     return ret;
 }
 
@@ -3750,7 +3748,6 @@ int32_t ScreenCaptureServer::AudioRendererStateUpdate(
         audioSource_->SetAudioRendererState(newState);
     }
 
-    std::lock_guard<std::mutex> lock(mutex_);
     return SyncAudioCaptures();
 }
 
@@ -3767,8 +3764,13 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
     bool micStop = !isMicrophoneSwitchTurnOn_ || (state & AUDIO_STATE_TEL) ||
         (micAudioCapture_ && micAudioCapture_->IsInVoIPCall() != ((state & AUDIO_STATE_VOIP) != 0));
     bool micStart = isMicrophoneSwitchTurnOn_ && !(state & AUDIO_STATE_TEL);
-    bool innerStart = captureConfig_.dataType == DataType::ORIGINAL_STREAM ||
-        (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && (state != 0 || micStop));
+    bool innerStart;
+    {
+        std::shared_lock<std::shared_mutex> configLock(captureConfigMutex_);
+        innerStart = captureConfig_.dataType == DataType::ORIGINAL_STREAM;
+    }
+    innerStart |= audioSource_ && audioSource_->GetType() == AVScreenCaptureMixMode::MIX_MODE &&
+        (state != 0 || micStop);
 
     MEDIA_LOGI("SyncAudioCaptures: 0x%{public}06" PRIXPTR " newState=%{public}u state=%{public}u "
                "isMicrophoneSwitchTurnOn_=%{public}d micStop=%{public}d micStart=%{public}d innerStart=%{public}d "
@@ -4139,7 +4141,7 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
         stopAcquireAudioBufferFromAudio_.store(true);
         {
             std::lock_guard<std::mutex> audioLock(audioMutex_);
-            if (recorderFileAudioType_ == AVScreenCaptureMixMode::MIX_MODE && audioSource_ &&
+            if (audioSource_ && audioSource_->GetType() == AVScreenCaptureMixMode::MIX_MODE &&
                 audioSource_->IsInWaitMicSyncState() && innerAudioCapture_ && innerAudioCapture_->IsRecording()) {
                 int64_t currentAudioTime;
                 innerAudioCapture_->GetCurrentAudioTime(currentAudioTime);

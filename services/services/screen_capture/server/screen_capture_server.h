@@ -279,6 +279,7 @@ private:
 private:
     std::mutex mutex_;
     std::mutex captureIdsMutex_;
+    mutable std::shared_mutex captureConfigMutex_;
     mutable std::shared_mutex appMissionIdslock_;
     mutable std::condition_variable_any appMissionIdsCondVar_;
     std::shared_ptr<ScreenCaptureObserverCallBack> screenCaptureObserverCb_ = nullptr;
@@ -297,7 +298,6 @@ private:
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
     std::atomic<bool> stopAcquireAudioBufferFromAudio_ = false;
-    AVScreenCaptureMixMode recorderFileAudioType_ = AVScreenCaptureMixMode::INVALID_MODE;
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;

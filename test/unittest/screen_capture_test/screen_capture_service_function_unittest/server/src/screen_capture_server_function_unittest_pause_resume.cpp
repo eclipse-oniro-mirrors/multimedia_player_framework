@@ -235,7 +235,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Audio_001, 
     SetRecorderInfo("screen_capture_pause.mp4", recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
@@ -250,7 +249,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Mic_Only_00
     SetRecorderInfo("screen_capture_pause.mp4", recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
@@ -265,7 +263,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Inner_Only_
     SetRecorderInfo("screen_capture_pause.mp4", recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
