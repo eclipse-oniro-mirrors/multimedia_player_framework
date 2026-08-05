@@ -124,6 +124,7 @@
           "ringtone_library",
           "os_account",
           "i18n",
+          "icu",
           "skia",
           "camera_framework",
           "drivers_interface_camera",

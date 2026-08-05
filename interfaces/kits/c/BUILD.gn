@@ -213,6 +213,7 @@ ohos_shared_library("avrecorder") {
     "qos_manager:qos",
     "resource_management:librawfile",
     "window_manager:libdm",
+    "node:node_header_notice",
   ]
 
   if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
