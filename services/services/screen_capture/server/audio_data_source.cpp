@@ -36,6 +36,8 @@ void AudioDataSource::SpeakerStateUpdate(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     (void)audioRendererChangeInfos;
+    std::lock_guard<std::mutex> lock(mutexCallBack_);
+    CHECK_AND_RETURN_LOG(!isUnregistered, "AudioDataSource isUnregistered");
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
     AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
     uint32_t changeInfoSize = allAudioRendererChangeInfos.size();
@@ -59,8 +61,10 @@ void AudioDataSource::SpeakerStateUpdate(
 void AudioDataSource::TelCallAudioStateUpdate(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
-    CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
     (void)audioRendererChangeInfos;
+    std::lock_guard<std::mutex> lock(mutexCallBack_);
+    CHECK_AND_RETURN_LOG(!isUnregistered, "AudioDataSource isUnregistered");
+    CHECK_AND_RETURN(screenCaptureServer_ != nullptr);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
     AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
     for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo: allAudioRendererChangeInfos) {
@@ -111,8 +115,9 @@ bool AudioDataSource::HasSpeakerStream(
 void AudioDataSource::VoIPStateUpdate(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
-    std::lock_guard<std::mutex> lock(voipStatusChangeMutex_);
     (void)audioRendererChangeInfos;
+    std::lock_guard<std::mutex> lock(mutexCallBack_);
+    CHECK_AND_RETURN_LOG(!isUnregistered, "AudioDataSource isUnregistered");
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> allAudioRendererChangeInfos;
     AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(allAudioRendererChangeInfos);
     bool isInVoIPCall = HasVoIPStream(allAudioRendererChangeInfos);
@@ -191,6 +196,8 @@ int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t client
 int32_t AudioDataSource::UnregisterAudioRendererEventListener(const int32_t clientPid)
 {
     MEDIA_LOGI("client id: %{public}d", clientPid);
+    std::lock_guard<std::mutex> lock(mutexCallBack_);
+    isUnregistered = true;
     return AudioStreamManager::GetInstance()->UnregisterAudioRendererEventListener(clientPid);
 }
 
@@ -214,6 +221,8 @@ void AudioDataSource::SetAudioFirstFramePts(int64_t firstFramePts)
 
 ScreenCaptureServer* AudioDataSource::GetScreenCaptureServer()
 {
+    std::lock_guard<std::mutex> lock(mutexCallBack_);
+    CHECK_AND_RETURN_RET_LOG(!isUnregistered, nullptr, "AudioDataSource isUnregistered");
     return screenCaptureServer_;
 }
 

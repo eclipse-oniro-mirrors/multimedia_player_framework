@@ -123,13 +123,15 @@ private:
     AudioDataSourceReadAtActionState ReadAudioBuffer(std::shared_ptr<AVBuffer> &buffer, const uint32_t &length);
     int32_t LostFrameNum(const int64_t &timestamp);
     void FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize);
+
+    std::mutex mutexCallBack_;
+
     int64_t writedFrameTime_{0};
     std::deque<CacheBuffer> audioBufferQ_;
     int32_t appPid_ { 0 };
     std::string appName_;
     std::atomic<bool> speakerAliveStatus_ = true;
     std::atomic<bool> isInVoIPCall_ = false;
-    std::mutex voipStatusChangeMutex_;
     std::atomic<int64_t> firstAudioFramePts_{-1};
     std::atomic<int64_t> firstVideoFramePts_{-1};
     std::atomic<int64_t> lastWriteAudioFramePts_{0};
@@ -144,7 +146,8 @@ private:
     ScreenCaptureServer* screenCaptureServer_;
     std::atomic<int64_t> pauseStartTime_{0};
     std::atomic<int64_t> pauseDuration_{0};
- 
+    bool isUnregistered = false;
+
     static constexpr int32_t INNER_SWITCH_MIC_REQUIRE_COUNT = 10;
     static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
     static constexpr int64_t MAX_INNER_AUDIO_TIMEOUT_IN_NS = 2000000000; // 2s

@@ -27,7 +27,6 @@
 #include "access_token.h"
 
 namespace {
-static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureMonitorServer"};
 }
 
