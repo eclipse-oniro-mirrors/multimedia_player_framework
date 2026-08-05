@@ -385,6 +385,7 @@ sptr<Surface> HiRecorderImpl::GetSurfaceFromWaterMarkFilter()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From WaterMarkFilter.");
     auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    FALSE_RETURN_V_MSG_E(filter != nullptr, nullptr, "filter is nullptr");
     producerSurface_ = filter->GetInputSurface();
     return producerSurface_;
 }
@@ -392,6 +393,7 @@ sptr<Surface> HiRecorderImpl::GetSurfaceFromWaterMarkFilter()
 sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoEncoder()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From VideoEncoder.");
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, nullptr, "videoEncoderFilter_ is nullptr");
     producerSurface_ = videoEncoderFilter_->GetInputSurface();
     return producerSurface_;
 }
@@ -399,6 +401,7 @@ sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoEncoder()
 sptr<Surface> HiRecorderImpl::GetSurfaceFromVideoCapture()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From VideoCapture.");
+    FALSE_RETURN_V_MSG_E(videoCaptureFilter_ != nullptr, nullptr, "videoCaptureFilter_ is nullptr");
     producerSurface_ = videoCaptureFilter_->GetInputSurface();
     return producerSurface_;
 }
@@ -441,7 +444,7 @@ int32_t HiRecorderImpl::Prepare()
     MediaTrace trace("HiRecorderImpl::Prepare");
     MEDIA_LOG_I("Prepare enter.");
     FALSE_RETURN_V_MSG_E(lseek(fd_, 0, SEEK_CUR) != -1, MSERR_OPEN_FILE_FAILED,
-        "The fd is invalid, fd: " PUBLIC_LOG_D32 ", errno: " PUBLIC_LOG_D32, fd_, errno);
+        "The fd is invalid, fd: %{public}d, errno: %{public}d.", fd_, errno);
 
     int32_t result = MSERR_OK;
     result = PrepareAudioCapture();
@@ -469,6 +472,7 @@ int32_t HiRecorderImpl::PrepareAudioCapture()
         audioEncFormat_->Set<Tag::APP_PID>(appPid_);
         audioEncFormat_->Set<Tag::APP_FULL_TOKEN_ID>(appFullTokenId_);
         audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
+        audioEncFormat_->Set<Tag::AUDIO_ENCODE_PTS_MODE>(Plugins::ZERO_START_ENCODE_PTS_MODE);
         audioCaptureFilter_->SetParameter(audioEncFormat_);
         audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         capturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
@@ -513,6 +517,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
 {
     MEDIA_LOG_I("HiRecorderImpl PrepareVideoEncoder enter.");
     if (videoEncoderFilter_) {
+        FALSE_RETURN_V_MSG_E(videoEncFormat_ != nullptr, MSERR_UNKNOWN, "videoEncFormat is nullptr");
         if (videoSourceIsRGBA_) {
             videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
         }
@@ -524,7 +529,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
         }
         videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
-            ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
+            MSERR_VID_ENC_CONFIG_FAILED, "videoEncoderFilter Configure fail");
     }
     return MSERR_OK;
 }
@@ -536,7 +541,7 @@ int32_t HiRecorderImpl::PrepareMetaData()
         for (auto iter : metaDataFilters_) {
             if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
                 FALSE_RETURN_V_MSG_E(iter.second->Configure(metaDataFormats_.at(iter.first)) == Status::OK,
-                    ERR_UNKNOWN_REASON, "MetaDataFilter Configure fail MetaType(%{public}d)", iter.first);
+                    MSERR_FRAMEWORK_ERROR, "MetaDataFilter Configure fail MetaType(%{public}d)", iter.first);
                 iter.second->SetCodecFormat(metaDataFormats_.at(iter.first));
             }
             iter.second->Init(recorderEventReceiver_, recorderCallback_);
@@ -551,7 +556,7 @@ int32_t HiRecorderImpl::PrepareVideoCapture()
         videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
         videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoCaptureFilter_->Configure(videoEncFormat_) == Status::OK,
-            ERR_UNKNOWN_REASON, "videoCaptureFilter Configure fail");
+            MSERR_VID_CAPTURE_CONFIG_FAILED, "videoCaptureFilter Configure fail");
     }
     return MSERR_OK;
 }
@@ -563,6 +568,7 @@ int32_t HiRecorderImpl::Start()
     int32_t ret = MSERR_OK;
     if (hasWatermark_) {
         ret = TransRecorderStatus(SetVideoEncoderSurface());
+        FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "SetVideoEncoderSurface fail");
     }
     if (curState_ == StateId::PAUSE) {
         ret = TransRecorderStatus(pipeline_->Resume());
@@ -631,6 +637,7 @@ void HiRecorderImpl::ClearAllConfiguration()
     isWatermarkSupported_ = false;
     hasWatermark_ = false;
     codecMimeType_ = "";
+    CloseFd();
     if (audioEncFormat_) {
         audioEncFormat_->Clear();
     }
@@ -659,6 +666,8 @@ void HiRecorderImpl::ClearAllConfiguration()
         }
         RemoveFilterAction(iter.second);
     }
+    metaDataFilters_.clear();
+    metaDataFormats_.clear();
 
     CloseFd();
 }
@@ -677,7 +686,9 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     ret = TransRecorderStatus(HandleStopOperation());
     // clear all configurations and remove all filters
     ClearAllConfiguration();
-    FALSE_RETURN_V_MSG_E(curState_ == StateId::INIT, ret, "pipeline stop fail");
+    if (ret == MSERR_OK) {
+        OnStateChanged(StateId::INIT);
+    }
     return ret;
 }
 
@@ -767,6 +778,7 @@ Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, cons
     Pipeline::StreamType outType)
 {
     MEDIA_LOG_I("OnCallback enter.");
+    FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_NULL_POINTER, "filter is nullptr");
     FALSE_RETURN_V(cmd == Pipeline::FilterCallBackCommand::NEXT_FILTER_NEEDED, Status::OK);
     switch (outType) {
         case Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
