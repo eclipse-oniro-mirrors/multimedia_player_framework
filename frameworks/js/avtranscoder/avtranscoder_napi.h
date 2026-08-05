@@ -116,8 +116,8 @@ struct AVTransCoderConfig {
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
     int32_t videoBitrate = AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE;
-    int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
-    int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
+    int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
+    int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
     bool enableBFrame = false;
 };
 
@@ -242,7 +242,7 @@ private:
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvTransCoderTaskqFunc> taskQFuncs_;
-    bool hasConfiged_ = false;
+    std::atomic<bool> hasConfiged_ = false;
     std::mutex eventCbMutex_;
     std::shared_mutex transCoderMutex_;
     std::shared_mutex transCoderCbMutex_;
@@ -250,8 +250,8 @@ private:
     std::string srcUrl_ = "";
     struct AVFileDescriptor srcFd_;
     int32_t dstFd_ = -1;
-    int32_t watermarkCount_ = 0;
-    bool isAudioV2Valid = false;
+    std::atomic<int32_t> watermarkCount_{0};
+    std::atomic<bool> isAudioV2Valid{false};
 };
 
 struct AVTransCoderAsyncContext : public MediaAsyncContext {
@@ -267,6 +267,9 @@ struct AVTransCoderAsyncContext : public MediaAsyncContext {
     std::shared_ptr<WatermarkConfiguration> watermarkConfig_ = nullptr;
     std::string opt_ = "";
     std::shared_ptr<TaskHandler<RetInfo>> task_ = nullptr;
+    int32_t watermarkCount = 0;
+    struct AVFileDescriptor srcFd;
+    int32_t dstFd = -1;
 };
 
 class MediaJsAVTransCoderConfig : public MediaJsResult {

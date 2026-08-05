@@ -444,7 +444,7 @@ int32_t HiRecorderImpl::Prepare()
     MediaTrace trace("HiRecorderImpl::Prepare");
     MEDIA_LOG_I("Prepare enter.");
     FALSE_RETURN_V_MSG_E(lseek(fd_, 0, SEEK_CUR) != -1, MSERR_OPEN_FILE_FAILED,
-        "The fd is invalid, fd: " PUBLIC_LOG_D32 ", errno: " PUBLIC_LOG_D32, fd_, errno);
+        "The fd is invalid, fd: %{public}d, errno: %{public}d.", fd_, errno);
 
     int32_t result = MSERR_OK;
     result = PrepareAudioCapture();
@@ -472,6 +472,7 @@ int32_t HiRecorderImpl::PrepareAudioCapture()
         audioEncFormat_->Set<Tag::APP_PID>(appPid_);
         audioEncFormat_->Set<Tag::APP_FULL_TOKEN_ID>(appFullTokenId_);
         audioEncFormat_->Set<Tag::AUDIO_SAMPLE_FORMAT>(Plugins::AudioSampleFormat::SAMPLE_S16LE);
+        audioEncFormat_->Set<Tag::AUDIO_ENCODE_PTS_MODE>(Plugins::ZERO_START_ENCODE_PTS_MODE);
         audioCaptureFilter_->SetParameter(audioEncFormat_);
         audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         capturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
@@ -528,7 +529,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
         }
         videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
-            ERR_UNKNOWN_REASON, "videoEncoderFilter Configure fail");
+            MSERR_VID_ENC_CONFIG_FAILED, "videoEncoderFilter Configure fail");
     }
     return MSERR_OK;
 }
@@ -540,7 +541,7 @@ int32_t HiRecorderImpl::PrepareMetaData()
         for (auto iter : metaDataFilters_) {
             if (metaDataFormats_.find(iter.first) != metaDataFormats_.end()) {
                 FALSE_RETURN_V_MSG_E(iter.second->Configure(metaDataFormats_.at(iter.first)) == Status::OK,
-                    ERR_UNKNOWN_REASON, "MetaDataFilter Configure fail MetaType(%{public}d)", iter.first);
+                    MSERR_FRAMEWORK_ERROR, "MetaDataFilter Configure fail MetaType(%{public}d)", iter.first);
                 iter.second->SetCodecFormat(metaDataFormats_.at(iter.first));
             }
             iter.second->Init(recorderEventReceiver_, recorderCallback_);
@@ -555,7 +556,7 @@ int32_t HiRecorderImpl::PrepareVideoCapture()
         videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
         videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         FALSE_RETURN_V_MSG_E(videoCaptureFilter_->Configure(videoEncFormat_) == Status::OK,
-            ERR_UNKNOWN_REASON, "videoCaptureFilter Configure fail");
+            MSERR_VID_CAPTURE_CONFIG_FAILED, "videoCaptureFilter Configure fail");
     }
     return MSERR_OK;
 }
@@ -636,6 +637,7 @@ void HiRecorderImpl::ClearAllConfiguration()
     isWatermarkSupported_ = false;
     hasWatermark_ = false;
     codecMimeType_ = "";
+    CloseFd();
     if (audioEncFormat_) {
         audioEncFormat_->Clear();
     }

@@ -22,6 +22,8 @@
 #include "task_queue.h"
 #include "media_ani_common.h"
 #include "pixel_map.h"
+#include <mutex>
+#include <condition_variable>
 
 namespace OHOS {
 namespace Media {
@@ -68,6 +70,7 @@ constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_LENGTH = 4096;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_NUM = 5;
+constexpr int32_t AVTRANSCODER_WATERMARK_MAX_ROWSTRIDE_NUM = 5;
 
 const std::map<std::string, std::vector<std::string>> STATE_LIST = {
     {AVTransCoderState::STATE_IDLE, {
@@ -115,6 +118,12 @@ namespace AVTransCoderEvent {
 
 struct AVTransCoderAsyncContext;
 
+struct AVTranscoderAsyncGuard {
+    int32_t pendingTaskCount{0};
+    std::mutex mtx;
+    std::condition_variable cv;
+};
+
 struct AVTransCoderConfigInner {
     AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_DEFAULT;
     AudioCodecFormat audioCodecFormatV2 = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT;
@@ -130,6 +139,7 @@ struct AVTransCoderConfigInner {
 class AVTranscoderImpl {
 public:
     AVTranscoderImpl();
+    ~AVTranscoderImpl();
     AVTranscoderImpl(AVTranscoderImpl *obj);
 
     ohos::multimedia::media::AVFileDescriptor GetFdSrc();
@@ -200,12 +210,15 @@ private:
     struct OHOS::Media::AVFileDescriptor srcFd_;
     std::string srcUrl_ = "";
     static std::map<std::string, AvTransCoderTaskqFunc> taskQFuncs_;
-    bool hasConfiged_ = false;
+    std::atomic<bool> hasConfiged_ {false};
     std::shared_ptr<AVTransCoderConfigInner> config_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
+    std::mutex eventCbMapMutex_;
+    std::mutex fdMutex_;
     int32_t dstFd_ = -1;
     int32_t watermarkCount_ = 0;
     bool isAudioV2Valid = false;
+    std::shared_ptr<AVTranscoderAsyncGuard> asyncGuard_;
 };
 
 struct AVTransCoderAsyncContext {
