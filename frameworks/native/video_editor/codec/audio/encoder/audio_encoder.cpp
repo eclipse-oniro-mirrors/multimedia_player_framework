@@ -35,12 +35,17 @@ AudioEncoder::AudioEncoder(uint64_t id, const CodecOnOutData& encodecCallback)
 AudioEncoder::~AudioEncoder()
 {
     MEDIA_LOGD("[%{public}s] destruct.", logTag_.c_str());
-    encoderMutex_.lock();
-    if (encoder_) {
-        OH_AudioEncoder_Destroy(encoder_);
-        encoder_ = nullptr;
+    if (encoder_ != nullptr && state_ == CodecState::RUNNING) {
+        pcmInputBufferQueue_->CancelDequeue();
+        OH_AudioEncoder_Stop(encoder_);
     }
-    encoderMutex_.unlock();
+    {
+        std::lock_guard<ffrt::mutex> lk(encoderMutex_);
+        if (encoder_) {
+            OH_AudioEncoder_Destroy(encoder_);
+            encoder_ = nullptr;
+        }
+    }
     MEDIA_LOGD("[%{public}s] destruct finish.", logTag_.c_str());
 }
 
@@ -187,12 +192,19 @@ VEFError AudioEncoder::Start()
 
 VEFError AudioEncoder::Stop()
 {
-    std::lock_guard<ffrt::mutex> lk(encoderMutex_);
+    std::unique_lock<ffrt::mutex> lk(encoderMutex_);
     MEDIA_LOGI("[%{public}s] stop encoder.", logTag_.c_str());
 
     pcmInputBufferQueue_->CancelDequeue();
 
-    OH_AVErrCode ret = OH_AudioEncoder_Stop(encoder_);
+    auto handle = encoder_;
+    if (handle == nullptr) {
+        MEDIA_LOGW("[%{public}s] stop encoder skipped, encoder is nullptr.", logTag_.c_str());
+        return VEFError::ERR_INTERNAL_ERROR;
+    }
+    lk.unlock();
+    OH_AVErrCode ret = OH_AudioEncoder_Stop(handle);
+    lk.lock();
     if (ret != AV_ERR_OK) {
         MEDIA_LOGE("[%{public}s] stop encoder failed, OH_AudioEncoder_Stop return: %{public}d.", logTag_.c_str(), ret);
         return VEFError::ERR_INTERNAL_ERROR;
@@ -203,9 +215,16 @@ VEFError AudioEncoder::Stop()
 
 VEFError AudioEncoder::Flush()
 {
-    std::lock_guard<ffrt::mutex> lk(encoderMutex_);
+    std::unique_lock<ffrt::mutex> lk(encoderMutex_);
     MEDIA_LOGI("[%{public}s] flush encoder.", logTag_.c_str());
-    OH_AVErrCode ret = OH_AudioEncoder_Flush(encoder_);
+    auto handle = encoder_;
+    if (handle == nullptr) {
+        MEDIA_LOGW("[%{public}s] flush encoder skipped, encoder is nullptr.", logTag_.c_str());
+        return VEFError::ERR_INTERNAL_ERROR;
+    }
+    lk.unlock();
+    OH_AVErrCode ret = OH_AudioEncoder_Flush(handle);
+    lk.lock();
     if (ret != AV_ERR_OK) {
         MEDIA_LOGE("[%{public}s] flush encoder failed, OH_AudioEncoder_Flush return: %{public}d.", logTag_.c_str(),
             ret);
