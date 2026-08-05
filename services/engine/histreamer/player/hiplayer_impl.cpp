@@ -3922,15 +3922,18 @@ void HiPlayerImpl::HandleSubtitleTrackChangeEvent(const Event& event)
             return false;
         }
     );
+    FALSE_RETURN(iter != metaInfo.end());
     auto meta = *iter;
-    FALSE_RETURN(iter != metaInfo.end() && meta != nullptr);
+    FALSE_RETURN(meta != nullptr);
     int32_t index = std::distance(metaInfo.begin(), iter);
     if (!(meta->GetData(Tag::MIME_TYPE, mime))) {
         MEDIA_LOG_E("HandleSubtitleTrackChangeEvent trackId " PUBLIC_LOG_D32 "get mime error", innerTrackId);
         return;
     }
     if (IsSubtitleMime(mime)) {
-        if (Status::OK != subtitleSink_->DoFlush()) {
+        int32_t subtitleId = subtitleSink_->GetCurrentSubtitleTrackId();
+        subtitleSink_->SelectTrack(innerTrackId);
+        if (demuxer_->IsNeedSelectTrack(subtitleId) && Status::OK != subtitleSink_->ClearByTrackId(subtitleId)) {
             MEDIA_LOG_E("HandleSubtitleTrackChangeEvent DoFlush error");
             return;
         }
@@ -4467,6 +4470,7 @@ Status HiPlayerImpl::LinkSubtitleSinkFilter(const std::shared_ptr<Filter>& preFi
     std::shared_ptr<Meta> globalMeta = std::make_shared<Meta>();
     if (demuxer_ != nullptr) {
         globalMeta = demuxer_->GetGlobalMetaInfo();
+        subtitleSink_->SetBufferQueueSize(demuxer_->GetBuiltInSubtitleNum());
     }
     if (globalMeta != nullptr) {
         subtitleSink_->SetParameter(globalMeta);
