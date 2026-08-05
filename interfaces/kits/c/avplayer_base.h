@@ -618,16 +618,21 @@ typedef void (*OH_AVPlayerOnSeiMessageReceivedCallback)(OH_AVPlayer *player, OH_
 /**
  * @brief Describes the handle used to obtain the decoded audio PCM data.
  * @param player Pointer to an OH_AVPlayer instance
- * @param pcmBuffer Decoded PCM audio data.
+ * @param pcmBuffer Decoded PCM audio data. The pcmBuffer is valid only within this callback,
+ *     and released by the player after the callback returns.
  * @param userData Pointer to user specific data
  * @since 26.0.0
  */
 typedef void (*OH_AVPlayerPCMOutputCallback)(OH_AVPlayer *player, OH_AVBuffer *pcmBuffer, void *userData);
 
 /**
- * @brief This callback provides a PCM buffer for processing.
+ * @brief This callback provides a PCM buffer for processing. AVPlayer needs to use the processed data
+ * for audio playback, and processing must be completed in a timely manner, otherwise it will block playback.
+ * Do not change sampling rate, channels, or sampling format.
+ *
  * @param player Pointer to an OH_AVPlayer instance
- * @param pcmBuffer Decoded PCM audio data.
+ * @param pcmBuffer Decoded PCM audio data. The pcmBuffer is valid only within this callback,
+ *     and released by the player after the callback returns.
  * @param userData Pointer to user specific data
  * @since 26.0.0
  */
