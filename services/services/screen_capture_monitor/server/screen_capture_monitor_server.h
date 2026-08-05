@@ -17,7 +17,6 @@
 #define SCREEN_CAPTURE_MONITOR_SERVICE_SERVER_H
 
 #include <chrono>
-#include <functional>
 
 #include "i_screen_capture_monitor_service.h"
 #include "nocopyable.h"
@@ -28,6 +27,7 @@
 
 namespace OHOS {
 namespace Media {
+
 class ScreenCaptureMonitorServer : public IScreenCaptureMonitorService, public NoCopyable {
 public:
     static std::shared_ptr<ScreenCaptureMonitorServer> GetInstance();
