@@ -302,7 +302,7 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, muxerFormat_);
             isExistAudioTrack_ = true;
             isInitializeAudioEncFormat = true;
-        } 
+        }
     }
     if (!isExistVideoTrack_ && !isExistAudioTrack_) {
         MEDIA_LOG_E("No video track found.");
@@ -1243,7 +1243,7 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                     return LinkWaterMark(filter, outType);
                 }
                 // 水印或其他：直接链接编码器
-                return LinkVideoEncoderFilter(filter, outType); 
+                return LinkVideoEncoderFilter(filter, outType);
             }
             case Pipeline::StreamType::STREAMTYPE_ENCODED_VIDEO:
                 if (filter->GetFilterType() == Pipeline::FilterType::FILTERTYPE_DEMUXER) {
