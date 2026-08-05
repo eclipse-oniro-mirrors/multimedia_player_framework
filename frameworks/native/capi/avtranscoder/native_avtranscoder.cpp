@@ -375,7 +375,12 @@ OH_AVErrCode NativeAVTranscoderCallback::SetOnProgressUpdateCallback(OH_AVTransc
 
 OH_AVErrCode NativeAVTranscoderCallback::IsValidOpt(const std::string &opt)
 {
-    auto currentState = STATE_LIST.find(state_);
+    std::string localState;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        localState = state_;
+    }
+    auto currentState = STATE_LIST.find(localState);
     CHECK_AND_RETURN_RET_LOG(currentState != STATE_LIST.end(), AV_ERR_INVALID_VAL,
         "IsValidOpt is called, current state is invalid!");
 
@@ -384,17 +389,22 @@ OH_AVErrCode NativeAVTranscoderCallback::IsValidOpt(const std::string &opt)
         std::find(allowableOpts.begin(), allowableOpts.end(), opt) != allowableOpts.end(),
         AV_ERR_OPERATE_NOT_PERMIT,
         "IsValidOpt is called, current state does not allow this opt! current state is %{public}s,\
-        opt is %{public}s", state_.c_str(), opt.c_str());
+        opt is %{public}s", localState.c_str(), opt.c_str());
     return AV_ERR_OK;
 }
 
 OH_AVErrCode NativeAVTranscoderCallback::IsRepeatOpt(const std::string &opt)
 {
-    auto currentState = STATE_LIST.find(state_);
+    std::string localState;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        localState = state_;
+    }
+    auto currentState = STATE_LIST.find(localState);
     CHECK_AND_RETURN_RET_LOG(currentState != STATE_LIST.end(), AV_ERR_INVALID_VAL,
         "IsRepeatOpt is called, current state is invalid!");
 
-    auto currentCtrlState = STATE_CTRL.find(state_);
+    auto currentCtrlState = STATE_CTRL.find(localState);
     CHECK_AND_RETURN_RET_LOG(currentCtrlState != STATE_CTRL.end(), AV_ERR_INVALID_VAL,
         "IsRepeatOpt is called, current state is invalid!");
 
@@ -413,13 +423,15 @@ void NativeAVTranscoderCallback::OnError(int32_t errCode, const std::string &err
     CHECK_AND_RETURN_LOG(transcoder_ != nullptr,
         "NativeAVTranscoderCallback::OnError is called, transcoder_ is nullptr!");
     state_ = NativeTranscoderState::ERROR;
+    auto localErrorCb = errorCallback_;
+    auto localTranscoder = transcoder_;
     lock.unlock();
-    if (errorCallback_ != nullptr) {
+    if (localErrorCb != nullptr) {
         MediaServiceExtErrCodeAPI9 extErrCodeAPI =
             MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
         int32_t avErrorCode = ExtErrCodeAPIToAVErrCode(extErrCodeAPI);
         std::string errorMsgExt = MSExtAVErrorToString(extErrCodeAPI) + errorMsg;
-        errorCallback_->OnErrorCallback(transcoder_, avErrorCode, errorMsgExt.c_str());
+        localErrorCb->OnErrorCallback(localTranscoder, avErrorCode, errorMsgExt.c_str());
     }
 }
 
