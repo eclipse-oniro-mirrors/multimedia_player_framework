@@ -1242,11 +1242,6 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                     !skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
                     MEDIA_LOG_I("Pipeline build mode: video resize");
                     AddVideoResize(inputVideoWidth_, inputVideoHeight_);
-                    return LinkVideoResizeFilter(filter, outType);
-                }
-
-                if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
-                    skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
                     return LinkWaterMark(filter, outType);
                 }
                 // 水印或其他：直接链接编码器
