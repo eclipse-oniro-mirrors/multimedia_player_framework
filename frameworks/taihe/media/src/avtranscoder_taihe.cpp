@@ -71,6 +71,7 @@ const std::unordered_map<AudioCodecFormat, std::set<OutputFormatType>> AUDIO_MUX
 
 AVTranscoderImpl::AVTranscoderImpl()
 {
+    asyncGuard_ = std::make_shared<AVTranscoderAsyncGuard>();
     transCoder_ = TransCoderFactory::CreateTransCoder();
     if (transCoder_ == nullptr) {
         MEDIA_LOGE("failed to CreateTransCoder");
@@ -88,6 +89,14 @@ AVTranscoderImpl::AVTranscoderImpl()
         return;
     }
     (void)transCoder_->SetTransCoderCallback(transCoderCb_);
+}
+
+AVTranscoderImpl::~AVTranscoderImpl()
+{
+    if (asyncGuard_ != nullptr) {
+        std::unique_lock<std::mutex> lock(asyncGuard_->mtx);
+        asyncGuard_->cv.wait(lock, [this] { return asyncGuard_->pendingTaskCount == 0; });
+    }
 }
 
 RetInfo GetReturnRet(int32_t errCode, const std::string &operate, const std::string &param, const std::string &add = "")
@@ -149,7 +158,7 @@ RetInfo AVTranscoderImpl::Cancel()
     int32_t ret = transCoder_->Cancel();
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "Stop", ""));
     StateCallback(AVTransCoderState::STATE_CANCELLED);
-    hasConfiged_ = false;
+    hasConfiged_.store(false);
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
@@ -168,7 +177,7 @@ RetInfo AVTranscoderImpl::Release()
 
     StateCallback(AVTransCoderState::STATE_RELEASED);
     CancelCallback();
-    hasConfiged_ = false;
+    hasConfiged_.store(false);
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
@@ -194,6 +203,7 @@ int32_t AVTranscoderImpl::GetFdDst()
 {
     MediaTrace trace("AVTranscoderImpl::get url");
     MEDIA_LOGD("TaiheGetUrl Out Current Url: %{public}s", srcUrl_.c_str());
+    std::lock_guard<std::mutex> lock(fdMutex_);
     return dstFd_;
 }
 
@@ -204,12 +214,26 @@ void AVTranscoderImpl::SetFdDst(int32_t fdDst)
     CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->avTransCoder = this;
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetJsInstanceAndArgs");
-    dstFd_ = fdDst;
-    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->avTransCoder]() {
+    int32_t localFd = fdDst;
+    {
+        std::lock_guard<std::mutex> lock(fdMutex_);
+        dstFd_ = localFd;
+    }
+    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->avTransCoder, guard = asyncGuard_,
+        localFd]() {
         MEDIA_LOGI("JsSetSrcFd Task");
-        taihe->SetOutputFile(taihe->dstFd_);
+        taihe->SetOutputFile(localFd);
+        {
+            std::lock_guard<std::mutex> lock(guard->mtx);
+            guard->pendingTaskCount--;
+        }
+        guard->cv.notify_all();
     });
     (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(task);
+    {
+        std::lock_guard<std::mutex> lock(asyncGuard_->mtx);
+        asyncGuard_->pendingTaskCount++;
+    }
     if (asyncCtx->task_) {
         auto result = asyncCtx->task_->GetResult();
         if (result.Value().first != MSERR_EXT_API9_OK) {
@@ -225,6 +249,7 @@ ohos::multimedia::media::AVFileDescriptor AVTranscoderImpl::GetFdSrc()
 {
     MediaTrace trace("AVTranscoderImpl::get url");
     ohos::multimedia::media::AVFileDescriptor fdSrc;
+    std::lock_guard<std::mutex> lock(fdMutex_);
     fdSrc.fd = srcFd_.fd;
     fdSrc.offset = optional<int64_t>(std::in_place_t{}, srcFd_.offset);
     fdSrc.length = optional<int64_t>(std::in_place_t{}, srcFd_.length);
@@ -240,18 +265,36 @@ void AVTranscoderImpl::SetFdSrc(ohos::multimedia::media::AVFileDescriptor const&
     CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->avTransCoder = this;
     CHECK_AND_RETURN_LOG(asyncCtx->avTransCoder != nullptr, "failed to GetJsInstanceAndArgs");
-    srcFd_.fd = fdSrc.fd;
-    if (fdSrc.offset.has_value()) {
-        srcFd_.offset = fdSrc.offset.value();
-    }
-    if (fdSrc.length.has_value()) {
-        srcFd_.length = fdSrc.length.value();
+    int32_t localFd = fdSrc.fd;
+    int64_t localOffset;
+    int64_t localLength;
+    {
+        std::lock_guard<std::mutex> lock(fdMutex_);
+        srcFd_.fd = localFd;
+        if (fdSrc.offset.has_value()) {
+            srcFd_.offset = fdSrc.offset.value();
+        }
+        if (fdSrc.length.has_value()) {
+            srcFd_.length = fdSrc.length.value();
+        }
+        localOffset = srcFd_.offset;
+        localLength = srcFd_.length;
     }
 
-    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->avTransCoder]() {
+    auto task = std::make_shared<TaskHandler<void>>([taihe = asyncCtx->avTransCoder, guard = asyncGuard_,
+        localFd, localOffset, localLength]() {
         MEDIA_LOGI("JsSetSrcFd Task");
-        taihe->SetInputFile(taihe->srcFd_.fd, taihe->srcFd_.offset, taihe->srcFd_.length);
+        taihe->SetInputFile(localFd, localOffset, localLength);
+        {
+            std::lock_guard<std::mutex> lock(guard->mtx);
+            guard->pendingTaskCount--;
+        }
+        guard->cv.notify_all();
     });
+    {
+        std::lock_guard<std::mutex> lock(asyncGuard_->mtx);
+        asyncGuard_->pendingTaskCount++;
+    }
     (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(task);
     if (asyncCtx->task_) {
         auto result = asyncCtx->task_->GetResult();
@@ -328,14 +371,16 @@ uintptr_t AVTranscoderImpl::PrepareSync(AVTranscoderConfig const& config)
         if (asyncCtx->avTransCoder->GetConfig(asyncCtx, config) == MSERR_OK) {
             asyncCtx->task_ = AVTranscoderImpl::GetPrepareTask(asyncCtx);
             (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(asyncCtx->task_);
+        } else {
+            asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, opt, "");
         }
     } else {
         asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION, opt, "");
     }
     CHECK_AND_RETURN_RET_LOG(asyncCtx->promise_ != nullptr, reinterpret_cast<uintptr_t>(nullptr),
-        "promise is nullptr!");
+        "promise_ is nullptr");
     ani_object promiseValue = asyncCtx->promise_;
-    std::thread([asyncCtx = std::move(asyncCtx)]() {
+    std::thread([asyncCtx = std::move(asyncCtx), guard = asyncGuard_]() {
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
 
         RetInfo taiheRet = std::make_pair<int32_t, std::string>(0, "");
@@ -347,7 +392,16 @@ uintptr_t AVTranscoderImpl::PrepareSync(AVTranscoderConfig const& config)
         }
         MEDIA_LOGI("The taihe thread of prepare finishes execution and returns");
         asyncCtx->CompleteCallback(taiheRet);
+        {
+            std::lock_guard<std::mutex> lock(guard->mtx);
+            guard->pendingTaskCount--;
+        }
+        guard->cv.notify_all();
     }).detach();
+    {
+        std::lock_guard<std::mutex> lock(asyncGuard_->mtx);
+        asyncGuard_->pendingTaskCount++;
+    }
     asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
@@ -431,15 +485,19 @@ uintptr_t AVTranscoderImpl::ExecuteByPromise(AVTranscoderImpl *taihe, const std:
     MEDIA_LOGI("Taihe %{public}s Start", opt.c_str());
     if (asyncCtx->avTransCoder->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = AVTranscoderImpl::GetPromiseTask(asyncCtx->avTransCoder, opt);
-        (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(asyncCtx->task_);
         asyncCtx->opt_ = opt;
+        {
+            std::lock_guard<std::mutex> lock(asyncGuard_->mtx);
+            asyncGuard_->pendingTaskCount++;
+        }
+        (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(asyncCtx->task_);
     } else {
         asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION, opt, "");
     }
     CHECK_AND_RETURN_RET_LOG(asyncCtx->promise_ != nullptr, reinterpret_cast<uintptr_t>(nullptr),
-        "promise is nullptr!");
+        "promise_ is nullptr");
     ani_object promiseValue = asyncCtx->promise_;
-    std::thread([asyncCtx = std::move(asyncCtx)]() {
+    std::thread([asyncCtx = std::move(asyncCtx), guard = asyncGuard_]() {
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
 
         RetInfo taiheRet = std::make_pair<int32_t, std::string>(0, "");
@@ -451,6 +509,11 @@ uintptr_t AVTranscoderImpl::ExecuteByPromise(AVTranscoderImpl *taihe, const std:
         }
         MEDIA_LOGI("The taihe thread of prepare finishes execution and returns");
         asyncCtx->CompleteCallback(taiheRet);
+        {
+            std::lock_guard<std::mutex> lock(guard->mtx);
+            guard->pendingTaskCount--;
+        }
+        guard->cv.notify_all();
     }).detach();
     asyncCtx.release();
 
@@ -490,6 +553,7 @@ void AVTranscoderImpl::OnError(callback_view<void(uintptr_t)> callback)
 
     std::string callbackName = AVTransCoderState::STATE_ERROR;
     ani_env *env = get_env();
+    CHECK_AND_RETURN_LOG(env != nullptr, "get_env() returned nullptr");
     std::shared_ptr<taihe::callback<void(uintptr_t)>> taiheCallback =
             std::make_shared<taihe::callback<void(uintptr_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
@@ -517,6 +581,7 @@ void AVTranscoderImpl::OnComplete(callback_view<void(uintptr_t)> callback)
 
     std::string callbackName = AVTransCoderState::STATE_COMPLETED;
     ani_env *env = get_env();
+    CHECK_AND_RETURN_LOG(env != nullptr, "get_env() returned nullptr");
     std::shared_ptr<taihe::callback<void(uintptr_t)>> taiheCallback =
             std::make_shared<taihe::callback<void(uintptr_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
@@ -544,6 +609,7 @@ void AVTranscoderImpl::OnProgressUpdate(callback_view<void(int32_t)> callback)
 
     std::string callbackName = STATE_PROGRESSUPDATE;
     ani_env *env = get_env();
+    CHECK_AND_RETURN_LOG(env != nullptr, "get_env() returned nullptr");
     std::shared_ptr<taihe::callback<void(int32_t)>> taiheCallback =
             std::make_shared<taihe::callback<void(int32_t)>>(callback);
     std::shared_ptr<uintptr_t> cacheCallback = std::reinterpret_pointer_cast<uintptr_t>(taiheCallback);
@@ -569,7 +635,7 @@ RetInfo AVTranscoderImpl::Configure(std::shared_ptr<AVTransCoderConfigInner> con
     CHECK_AND_RETURN_RET(transCoder_ != nullptr, GetReturnRet(MSERR_INVALID_OPERATION, "Configure", ""));
     CHECK_AND_RETURN_RET(config != nullptr, GetReturnRet(MSERR_INVALID_VAL, "Configure", "config"));
 
-    if (hasConfiged_) {
+    if (hasConfiged_.load()) {
         MEDIA_LOGE("AVTransCoderConfig has been configured and will not be configured again");
         return RetInfo(MSERR_EXT_API9_OK, "");
     }
@@ -596,7 +662,7 @@ RetInfo AVTranscoderImpl::Configure(std::shared_ptr<AVTransCoderConfigInner> con
     ret = transCoder_->SetEnableBFrame(config->enableBFrame);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderEnableBFrame", "enableBFrame"));
 
-    hasConfiged_ = true;
+    hasConfiged_.store(true);
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
@@ -778,7 +844,10 @@ void AVTransCoderAsyncContext::SignError(int32_t code, const std::string &messag
 
 void AVTranscoderImpl::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
-    eventCbMap_[callbackName] = ref;
+    {
+        std::lock_guard<std::mutex> lock(eventCbMapMutex_);
+        eventCbMap_[callbackName] = ref;
+    }
     CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
     auto taiheCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     taiheCb->SaveCallbackReference(callbackName, ref);
@@ -789,7 +858,10 @@ void AVTranscoderImpl::CancelCallbackReference(const std::string &callbackName)
     CHECK_AND_RETURN_LOG(transCoderCb_ != nullptr, "transCoderCb_ is nullptr!");
     auto taiheCb = std::static_pointer_cast<AVTransCoderCallback>(transCoderCb_);
     taiheCb->CancelCallbackReference(callbackName);
-    eventCbMap_[callbackName] = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(eventCbMapMutex_);
+        eventCbMap_[callbackName] = nullptr;
+    }
 }
 
 AVTransCoderAsyncContext::~AVTransCoderAsyncContext()
@@ -932,9 +1004,9 @@ uintptr_t AVTranscoderImpl::AddWatermarkSync(::ohos::multimedia::image::image::w
         asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION, opt, "");
     }
     CHECK_AND_RETURN_RET_LOG(asyncCtx->promise_ != nullptr, reinterpret_cast<uintptr_t>(nullptr),
-        "promise is nullptr!");
+        "promise_ is nullptr");
     ani_object promiseValue = asyncCtx->promise_;
-    std::thread([asyncCtx = std::move(asyncCtx)]() {
+    std::thread([asyncCtx = std::move(asyncCtx), guard = asyncGuard_]() {
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
 
         RetInfo taiheRet = std::make_pair<int32_t, std::string>(0, "");
@@ -947,7 +1019,16 @@ uintptr_t AVTranscoderImpl::AddWatermarkSync(::ohos::multimedia::image::image::w
         }
         MEDIA_LOGI("The taihe thread of AddWatermark finishes execution and returns");
         asyncCtx->CompleteCallback(taiheRet);
+        {
+            std::lock_guard<std::mutex> lock(guard->mtx);
+            guard->pendingTaskCount--;
+        }
+        guard->cv.notify_all();
     }).detach();
+    {
+        std::lock_guard<std::mutex> lock(asyncGuard_->mtx);
+        asyncGuard_->pendingTaskCount++;
+    }
 
     asyncCtx.release();
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
@@ -987,6 +1068,10 @@ int32_t AVTranscoderImpl::AddWatermark(std::shared_ptr<OHOS::Media::PixelMap> &p
         pixelMap->GetWidth(), pixelMap->GetHeight(), pixelMap->GetPixelFormat(), pixelMap->GetRowStride());
     CHECK_AND_RETURN_RET_LOG(pixelMap->GetPixelFormat() == OHOS::Media::PixelFormat::RGBA_8888, MSERR_INVALID_VAL,
         "Invalid pixel format");
+    bool isValidRowStride = (pixelMap->GetRowStride() >= 0) &&
+        (pixelMap->GetRowStride() <= AVTRANSCODER_WATERMARK_MAX_LENGTH * AVTRANSCODER_WATERMARK_MAX_ROWSTRIDE_NUM);
+    CHECK_AND_RETURN_RET_LOG(isValidRowStride, MSERR_INVALID_VAL, "Invalid pixel RowStride");
+
     size_t dataSize = static_cast<size_t>(pixelMap->GetHeight()) * static_cast<size_t>(pixelMap->GetRowStride());
     auto allocator = AVAllocatorFactory::CreateSharedAllocator(MemoryFlag::MEMORY_READ_WRITE);
     auto buffer = AVBuffer::CreateAVBuffer(allocator, dataSize);
