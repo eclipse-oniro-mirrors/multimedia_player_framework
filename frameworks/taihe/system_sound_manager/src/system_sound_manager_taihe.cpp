@@ -633,7 +633,7 @@ RingtonePlayerOrNull SystemSoundManagerImpl::GetMockHapticRingtonePlayerByTypeAn
     std::string uriInner = std::string(toneUri);
     std::string absFilePath;
     if (!OHOS::PathToRealPath(uriInner, absFilePath)) {
-        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed. Audo uri is invalid.");
+        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed. Audio uri is invalid.");
         return RingtonePlayerOrNull::make_type_null();
     }
     if (sysSoundMgrClient_ == nullptr) {
@@ -677,7 +677,7 @@ RingtonePlayerOrNull SystemSoundManagerImpl::GetMockHapticRingtonePlayerByHaptic
     }
     std::string uriInner = std::string(hapticsUri);
     if (uriInner.empty()) {
-        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed. Uri is empty");
+        CommonTaihe::ThrowError(TAIHE_ERR_PARAM_CHECK_ERROR, "Parameter verification failed. Uri is empty.");
         return RingtonePlayerOrNull::make_type_null();
     }
     std::string absFilePath;
