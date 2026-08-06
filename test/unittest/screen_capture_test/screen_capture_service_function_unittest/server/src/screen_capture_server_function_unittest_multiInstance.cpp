@@ -978,6 +978,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AppMissionId_002, TestSize.Level2)
     EXPECT_EQ(screenCaptureServer_->appMissionIdsForGround_.size(), 0);
 }
 
+#ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
 HWTEST_F(ScreenCaptureServerFunctionTest, RegisterAppLifecycleListener_001, TestSize.Level2)
 {
     screenCaptureServer_->windowIdList_ = {};
@@ -1123,7 +1124,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_004, TestSize.Level
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
-
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
 HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_001, TestSize.Level2)
 {
@@ -1139,6 +1139,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_001, TestSize.
     ASSERT_EQ(screenCaptureServer_->lifecycleListenerDeathRecipient_, nullptr);
     ASSERT_EQ(screenCaptureServer_->windowLifecycleListener_, nullptr);
 }
+#endif
 
 HWTEST_F(ScreenCaptureServerFunctionTest, WindowLifecycleListener_002, TestSize.Level2)
 {
