@@ -46,15 +46,53 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_001, TestSize.Level2)
 }
 
 /**
-* @tc.name: CheckCaptureMode_002
-* @tc.desc: captureMode > CAPTURE_SPECIFIED_WINDOW
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckCaptureMode_002
+ * @tc.desc: captureMode is invalid value greater than CAPTURE_SPECIFIED_APP
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_002, TestSize.Level2)
 {
     int32_t ret = screenCaptureServer_->CheckCaptureMode(static_cast<CaptureMode>
-        (CaptureMode::CAPTURE_SPECIFIED_WINDOW + 1));
+        (CaptureMode::CAPTURE_SPECIFIED_APP + 1));
     ASSERT_NE(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: CheckCaptureMode_003
+ * @tc.desc: captureMode is CAPTURE_VIRTUAL_EXTENDED_SCREEN, should be valid
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_003, TestSize.Level2)
+{
+    int32_t ret = screenCaptureServer_->CheckCaptureMode(CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN);
+    ASSERT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: CheckAllParams_Extended_001
+ * @tc.desc: EXTENDED mode with empty displayIds_ should fail
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_001, TestSize.Level2)
+{
+    SetValidConfig();
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
+    screenCaptureServer_->displayIds_.clear();
+    ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
+}
+
+/**
+ * @tc.name: CheckAllParams_Extended_002
+ * @tc.desc: EXTENDED mode with invalid displayId should fail
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_002, TestSize.Level2)
+{
+    SetValidConfig();
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
+    screenCaptureServer_->displayIds_.clear();
+    screenCaptureServer_->displayIds_.push_back(99999);
+    ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
 /**

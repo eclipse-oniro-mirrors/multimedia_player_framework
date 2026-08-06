@@ -443,5 +443,52 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_ResumeButton_001, TestSize.
 
     screenCaptureServerInner->Release();
 }
+HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenExtended_InvalidScreenId_001, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = -1;
+    screenCaptureServer_->displayIds_.clear();
+    screenCaptureServer_->displayIds_.push_back(1);
+    ASSERT_NE(screenCaptureServer_->MakeVirtualScreenExtended(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenExtended_InvalidScreenId_002, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->displayIds_.clear();
+    screenCaptureServer_->displayIds_.push_back(1);
+    ASSERT_NE(screenCaptureServer_->MakeVirtualScreenExtended(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenExtended_EmptyDisplayIds_001, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = 100;
+    screenCaptureServer_->displayIds_.clear();
+    ASSERT_NE(screenCaptureServer_->MakeVirtualScreenExtended(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PauseVideoCapture_ExtendedMode_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
+    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->isConsumerStart_ = true;
+    ASSERT_EQ(screenCaptureServer_->PauseVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResumeVideoCapture_ExtendedMode_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
+    screenCaptureServer_->isSurfaceMode_ = false;
+    screenCaptureServer_->surface_ = nullptr;
+    screenCaptureServer_->producerSurface_ = nullptr;
+    ASSERT_NE(screenCaptureServer_->ResumeVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResumeVideoCapture_ExtendedMode_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
+    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->surface_ = nullptr;
+    ASSERT_NE(screenCaptureServer_->ResumeVideoCapture(), MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS

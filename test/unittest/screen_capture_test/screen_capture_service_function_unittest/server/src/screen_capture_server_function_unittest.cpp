@@ -848,14 +848,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetDataType_001, TestSize.Level2)
     ASSERT_EQ(screenCaptureServer_->SetDataType(DataType::INVAILD), MSERR_INVALID_VAL);
 }
 
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
 HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_001, TestSize.Level2)
 {
     ScreenCaptureStrategy strategy;
     strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->SetScreenCaptureStrategy(strategy);
-#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), true);
-#endif
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_002, TestSize.Level2)
@@ -863,10 +862,48 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_002, TestSize.Level2)
     ScreenCaptureStrategy strategy;
     strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE;
     screenCaptureServer_->SetScreenCaptureStrategy(strategy);
-#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), false);
-#endif
 }
+
+/**
+ * @tc.name: IsPickerPopUp_Extended_001
+ * @tc.desc: EXTENDED mode with pickerPopUp ENABLE should not pop up
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_Extended_001, TestSize.Level2)
+{
+    ScreenCaptureStrategy strategy;
+    strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
+    screenCaptureServer_->SetScreenCaptureStrategy(strategy);
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
+    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), false);
+}
+
+/**
+ * @tc.name: IsPickerPopUp_Extended_002
+ * @tc.desc: EXTENDED mode with pickerPopUp DISABLE should not pop up
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_Extended_002, TestSize.Level2)
+{
+    ScreenCaptureStrategy strategy;
+    strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE;
+    screenCaptureServer_->SetScreenCaptureStrategy(strategy);
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
+    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), false);
+}
+
+/**
+ * @tc.name: IsPickerPopUp_Extended_003
+ * @tc.desc: EXTENDED mode with default pickerPopUp should not pop up
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_Extended_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
+    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), false);
+}
+#endif
 
 HWTEST_F(ScreenCaptureServerFunctionTest, InitVideoCap_PickerModePopUp_001, TestSize.Level2)
 {

@@ -724,7 +724,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_001, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -734,7 +734,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_002, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -744,7 +744,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_003, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1, 2};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -754,7 +754,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_004, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1, 2};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -764,7 +764,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_005, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureServer_->appMissionIds_ = {1};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
