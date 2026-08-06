@@ -23,6 +23,7 @@
 #include "hisysevent.h"
 #include "image_source.h"
 #include "image_type.h"
+#include "image_utils.h"
 #include "i_media_service.h"
 #include "media_errors.h"
 #include "media_log.h"
@@ -562,7 +563,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
     if (!options.useDMA) {
         pixelMap = CreatePixelmapWithSDR(surfaceBuffer, pixelMapInfo, options, isColorSpaceInfoObtained);
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create non-DMA pixelMap failed");
-        SetPixelMapYuvInfo(surfaceBuffer, pixelMap, pixelMapInfo, false);
+        ImageUtils::UpdateYUVDataInfo(*pixelMap);
         return pixelMap;
     }
     
@@ -666,7 +667,8 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
     srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + uvOffset;
     
     // copy src UV plane to dst, height(UV) = height(Y) / 2
-    for (int32_t uv = 0; uv < displayHeight / 2; uv++) {
+    lineByteCount = ((displayWidth + 1) / UV_DIV_BASE) * UV_DIV_BASE;  // adapt to the case that width is odd
+    for (int32_t uv = 0; uv < (displayHeight + 1) / UV_DIV_BASE; uv++) {  // adapt to the case that height is odd
         auto ret = memcpy_s(dstPtr, lineByteCount, srcPtr, lineByteCount);
         TRUE_LOG(ret != EOK, MEDIA_LOGW, "Memcpy UV component failed.");
         srcPtr += stride;
