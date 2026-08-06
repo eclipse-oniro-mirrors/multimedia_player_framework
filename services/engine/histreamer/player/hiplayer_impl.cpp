@@ -3335,6 +3335,7 @@ PlayerErrorType HiPlayerImpl::GetPlayerErrorTypeFromAudioServerSinkPlugin(const 
         case MSERR_UNSUPPORT_AUD_SAMPLE_RATE:
         case MSERR_UNSUPPORT_AUD_CHANNEL_NUM:
         case MSERR_UNSUPPORT_AUD_PARAMS:
+        case MSERR_UNKNOWN_CREATE_AUDIO_RENDER:
             errorType = PlayerErrorType::AUD_OUTPUT_ERR;
             break;
         default:
