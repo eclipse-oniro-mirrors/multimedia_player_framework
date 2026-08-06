@@ -1282,7 +1282,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMix_002, TestSize.Level2)
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     int64_t size = 0;
     screenCaptureServer_->audioSource_->GetSize(size);
     screenCaptureServer_->innerAudioCapture_ = nullptr;
@@ -1314,7 +1313,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMicMode_001, TestSize.Level2)
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
     const int bufferSize = 10;
     auto wrapper =
         CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture", false);
@@ -1347,7 +1345,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMicMode_002, TestSize.Level2)
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
     const int bufferSize = 10;
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     std::shared_ptr<AudioBuffer> micAudioBuffer =
@@ -1377,7 +1374,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtInnerMode_001, TestSize.Level2)
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     const int bufferSize = 10;
     auto wrapper =
         CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_innerAudioCapture", true);
@@ -1410,7 +1406,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtInnerMode_002, TestSize.Level2)
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     std::shared_ptr<AudioBuffer> innerAudioBuffer =
@@ -1439,7 +1434,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadAtMixMode_001, TestSize.Level2)
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -1468,7 +1462,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadWriteAudioBufferMix_001, TestSize.
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -1497,7 +1490,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadWriteAudioBufferMix_002, TestSize.
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->recorderFileWithVideo_ = true;
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -1527,7 +1519,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadWriteAudioBufferMixCore_001, TestS
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -1556,7 +1547,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadWriteAudioBufferMixCore_002, TestS
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -1598,7 +1588,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReadWriteAudioBufferMixCore_003, TestS
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -1663,7 +1652,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WriteInnerAudio_001, TestSize.Level2)
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     std::shared_ptr<AudioBuffer> innerAudioBuffer =
@@ -1692,7 +1680,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WriteMicAudio_001, TestSize.Level2)
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
     const int bufferSize = 10;
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     std::shared_ptr<AudioBuffer> micAudioBuffer =
@@ -1721,7 +1708,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, WriteMixAudio_001, TestSize.Level2)
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     const int bufferSize = 10;
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -1754,7 +1740,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InnerMicAudioSync_001, TestSize.Level2
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -1788,7 +1773,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InnerMicAudioSync_002, TestSize.Level2
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -1822,7 +1806,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InnerMicAudioSync_003, TestSize.Level2
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -1985,7 +1968,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_001, TestSize
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -2022,7 +2004,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_002, TestSize
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -2060,7 +2041,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleMicBeforeInnerSync_003, TestSize
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -2097,7 +2077,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncMixMode_001, TestSize.Le
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -2142,7 +2121,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncMixMode_002, TestSize.Le
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -2184,7 +2162,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncMixMode_003, TestSize.Le
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     const int bufferSize = 10;
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -2225,7 +2202,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncMixMode_004, TestSize.Le
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -2267,7 +2243,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncMixMode_005, TestSize.Le
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     const int bufferSize = 10;
     uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -2308,7 +2283,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncMixMode_006, TestSize.Le
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -2349,7 +2323,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncMixMode_007, TestSize.Le
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     const int bufferSize = 10;
@@ -2388,7 +2361,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncInnerMode_001, TestSize.
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -2424,7 +2396,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncInnerMode_002, TestSize.
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -2463,7 +2434,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, VideoAudioSyncInnerMode_003, TestSize.
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->audioSource_->SetAudioRendererState(0);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     screenCaptureServer_->StartInnerAudioCapture();
     const int bufferSize = 10;
     uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * bufferSize);
@@ -3093,7 +3063,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_001, TestSize.
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_002, TestSize.Level2)
 {
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     auto wrapper =
@@ -3106,7 +3075,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_002, TestSize.
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_003, TestSize.Level2)
 {
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::INNER_MODE;
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     auto wrapper =
@@ -3119,7 +3087,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_003, TestSize.
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_004, TestSize.Level2)
 {
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     screenCaptureServer_->innerAudioCapture_ = nullptr;
     screenCaptureServer_->appInfo_.appUid = 100;
     int ret = screenCaptureServer_->SetMicrophoneEnabled(false);
@@ -3132,7 +3099,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_005, TestSize.
     SetRecorderInfo("screen_capture_micoff_005.mp4", recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->cbProxy_,
@@ -3775,7 +3741,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ExcludePickerWindows_001, TestSize.Lev
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SyncAudioCaptures_001, TestSize.Level2)
 {
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     auto wrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         "OS_InnerAudioCapture", true);
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_STOPED;
@@ -3785,7 +3750,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SyncAudioCaptures_001, TestSize.Level2
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SyncAudioCaptures_002, TestSize.Level2)
 {
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIC_MODE;
     SetSCInnerAudioCaptureAndPushData(nullptr);
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_STOPED;
     auto ret = screenCaptureServer_->SyncAudioCaptures();
@@ -3794,7 +3758,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SyncAudioCaptures_002, TestSize.Level2
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SyncAudioCaptures_003, TestSize.Level2)
 {
-    screenCaptureServer_->recorderFileAudioType_ = AVScreenCaptureMixMode::MIX_MODE;
     SetSCInnerAudioCaptureAndPushData(nullptr);
     auto ret = screenCaptureServer_->SyncAudioCaptures();
     EXPECT_EQ(ret, MSERR_OK);
