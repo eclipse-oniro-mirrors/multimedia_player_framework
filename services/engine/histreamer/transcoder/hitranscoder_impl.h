@@ -33,6 +33,7 @@
 #include "muxer_filter.h"
 #include "video_resize_filter.h"
 #include "hitranscoder_callback_looper.h"
+#include "codec_capability_adapter.h"
 
 namespace OHOS {
 namespace Media {
@@ -116,6 +117,10 @@ private:
     Status ConnectDecoderResizeEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight);
     Status ConnectDecoderWatermarkEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight);
     static std::string GetModeString(VideoProcessMode mode);
+    int32_t CheckResolutionRange(int32_t width, int32_t height, int32_t maxWidth, int32_t maxHeight,
+        int32_t errCode);
+    int32_t CheckCodecCapability(const std::string &mime, bool isEncoder, int32_t width, int32_t height,
+        int32_t errCode);
 
     struct SkipProcessFilterFlag {
         bool isSameAudioEncFmt = false;
@@ -152,6 +157,7 @@ private:
     std::shared_ptr<Pipeline::VideoResizeFilter> videoResizeFilter_;
     std::shared_ptr<Pipeline::Filter> waterMarkFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
+    std::shared_ptr<Pipeline::CodecCapabilityAdapter> codecCapabilityAdapter_;
 
     std::shared_ptr<Pipeline::EventReceiver> transCoderEventReceiver_;
     std::shared_ptr<Pipeline::FilterCallback> transCoderFilterCallback_;
@@ -173,6 +179,8 @@ private:
     bool isVideoTrackLinked_ = false;
     int32_t inputVideoWidth_ = 0;
     int32_t inputVideoHeight_ = 0;
+    Plugins::VideoOrientationType orientation_ = Plugins::VideoOrientationType::ROTATE_NONE;
+    int32_t rotation_ = 0;
     std::string inputAudioMimeType_;
     bool isExistVideoTrack_ = false;
     bool isExistAudioTrack_ = false;
@@ -180,8 +188,8 @@ private:
     std::atomic<int32_t> durationMs_{-1};
 
     uint64_t instanceId_ = 0;
-    int64_t startTime_ = 0;
-    int64_t transcoderTotalDuration_ = 0;
+    std::atomic<int64_t> startTime_{0};
+    std::atomic<int64_t> transcoderTotalDuration_{0};
     int32_t errCode_ = 0;
     std::string errMsg_ = "success";
     std::mutex ignoreErrorMutex_;
