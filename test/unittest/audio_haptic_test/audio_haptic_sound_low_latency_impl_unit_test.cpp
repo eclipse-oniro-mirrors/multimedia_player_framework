@@ -402,7 +402,7 @@ HWTEST_F(AudioHapticSoundLowLatencyImplUnitTest, AudioHapticSoundLowLatencyImpl_
     ASSERT_NE(audioHapticSoundLowLatencyImpl->soundPoolPlayer_, nullptr);
 
     auto ret = audioHapticSoundLowLatencyImpl->SetVolume(volume);
-    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 /**
