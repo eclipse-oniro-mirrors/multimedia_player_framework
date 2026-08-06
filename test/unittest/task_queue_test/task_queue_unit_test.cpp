@@ -61,12 +61,14 @@ HWTEST_F(TaskQueueUnitTest, Stop_000, TestSize.Level0) {
 HWTEST_F(TaskQueueUnitTest, Stop_001, TestSize.Level0) {
     taskQueue_->isExit_ = false;
     int32_t result = -1;
+    std::mutex m;
+    std::unique_lock lk(m);
+    std::condition_variable cv;
     taskQueue_->thread_ = std::make_unique<std::thread>([&]() {
         result = taskQueue_->Stop();
+        cv.notify_all();
     });
-    if (taskQueue_->thread_->joinable()) {
-        taskQueue_->thread_->join();
-    }
+    cv.wait(lk);
     ASSERT_EQ(result, MSERR_INVALID_OPERATION);
 }
 
