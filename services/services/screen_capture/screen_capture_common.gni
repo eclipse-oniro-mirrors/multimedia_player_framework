@@ -87,6 +87,7 @@ screen_capture_external_deps = [
   "window_manager:scene_session_manager",
   "window_manager:session_manager_lite",
   "icu:shared_icuuc",
+  "icu:shared_icui18n",
 ]
 
 if (player_framework_support_screen_capture_stopbycall) {

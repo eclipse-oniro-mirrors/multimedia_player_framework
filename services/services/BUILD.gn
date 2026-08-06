@@ -287,6 +287,8 @@ ohos_shared_library("media_service") {
     "hitrace:libhitracechain",
     "hiview:libucollection_client",
     "i18n:intl_util",
+    "icu:shared_icuuc",
+    "icu:shared_icui18n",
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
