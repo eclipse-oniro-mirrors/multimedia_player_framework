@@ -3208,6 +3208,10 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
             "MakeVirtualScreenMirror failed");
         return MSERR_UNKNOWN_MAKE_MIRROR;
     }
+    uint32_t actualRefreshRate = 0;
+    auto res = providers_->screenManager->GetInstance().SetVirtualScreenMaxRefreshRate(virtualScreenId_,
+        VIDEO_FRAME_RATE_MAX, actualRefreshRate);
+    MEDIA_LOGI("SetVirtualScreenMaxRefreshRate res: %{public}d, actualRefreshRate %{public}u", res, actualRefreshRate);
     isConsumerStart_ = true;
     return MSERR_OK;
 }
