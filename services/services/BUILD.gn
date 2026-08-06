@@ -367,6 +367,7 @@ ohos_shared_library("media_service") {
       "camera_framework:camera_framework",
       "data_share:datashare_common",
       "data_share:datashare_consumer",
+      "drivers_interface_camera:metadata",
       "media_library:media_library_camera_helper",
       "samgr:samgr_proxy",
     ]
