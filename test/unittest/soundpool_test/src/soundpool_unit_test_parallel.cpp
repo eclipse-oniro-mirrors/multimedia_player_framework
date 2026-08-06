@@ -405,7 +405,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_057, TestSize.Level2)
     struct PlayParams playParameters;
     streamIDs_[playNum_] = soundPoolParallel_->Play(5, playParameters);
     cout << "soundId 5 play, result: " << streamIDs_[playNum_] << endl;
-    EXPECT_EQ(streamIDs_[playNum_], -1);
+    EXPECT_EQ(streamIDs_[playNum_], MSERR_INVALID_VAL);
     sleep(waitTime1);
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_057 after");
@@ -429,7 +429,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_058, TestSize.Level2)
     struct PlayParams playParameters;
     streamIDs_[playNum_] = soundPoolParallel_->Play(-1, playParameters);
     cout << "soundId -1 play, result: " << streamIDs_[playNum_] << endl;
-    EXPECT_EQ(streamIDs_[playNum_], -1);
+    EXPECT_EQ(streamIDs_[playNum_], MSERR_INVALID_VAL);
     sleep(waitTime1);
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_058 after");
@@ -1579,7 +1579,7 @@ void SoundPoolUnitTest::functionTest086(std::shared_ptr<SoundPoolParallelMock> s
     EXPECT_GT(streamIDs_[num2], 0);
     EXPECT_GT(streamIDs_[num3], 0);
 
-    sleep(waitTime20);
+    sleep(waitTime30);
 
     ASSERT_TRUE(cb1->WaitLoadedSoundNum(soundNum));
     EXPECT_EQ(soundNum, cb1->GetHavePlayedSoundNum());
