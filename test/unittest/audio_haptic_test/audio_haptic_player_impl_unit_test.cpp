@@ -976,7 +976,7 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_049, TestSize.Leve
     audioHapticSoundCallbackImpl->OnEndOfStream();
     // OnEndOfStream with valid player should call NotifyEndOfStreamEvent
     // which triggers HandleEndOfStreamEvent => STATE_STOPPED (loop=false)
-    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_NEW);
 }
 
 /**

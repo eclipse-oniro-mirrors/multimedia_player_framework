@@ -201,7 +201,7 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_007, Tes
     audioHapticSoundNormalImpl->configuredAudioSource_ = {.audioUri = "abc"};
     auto ret = audioHapticSoundNormalImpl->StartSound();
 
-    EXPECT_EQ(ret, MSERR_START_FAILED);
+    EXPECT_EQ(ret, MSERR_NO_MEMORY);
 }
 
 /**

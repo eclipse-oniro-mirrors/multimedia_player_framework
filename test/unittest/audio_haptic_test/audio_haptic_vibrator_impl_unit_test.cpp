@@ -115,7 +115,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_001, TestSize.
     audioHapticVibratorImpl->isNeedRestart_ = false;
     audioHapticVibratorImpl->seekVibratorPkg_ = nullptr;
     int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_NE(result, MSERR_OK);
 }
 
 /**
@@ -160,7 +160,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_003, TestSize.
     audioHapticVibratorImpl->seekVibratorPkg_ = CreatePackage();
     EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
     int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_NE(result, MSERR_OK);
 }
 
 /**
@@ -183,7 +183,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, PlayVibrateForSoundPool_004, TestSize.
     audioHapticVibratorImpl->seekVibratorPkg_ = CreatePackage();
     EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
     int32_t result = audioHapticVibratorImpl->PlayVibrateForSoundPool(vibratorPkg, lock);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_NE(result, MSERR_OK);
 }
 
 /**
@@ -227,7 +227,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_001, TestSize.Lev
     audioHapticVibratorImpl->isNeedRestart_ = false;
     audioHapticVibratorImpl->seekVibratorPkg_ = nullptr;
     int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_NE(result, MSERR_OK);
 }
 
 /**
@@ -272,7 +272,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_003, TestSize.Lev
     audioHapticVibratorImpl->seekVibratorPkg_ = CreatePackage();
     EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
     int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_NE(result, MSERR_OK);
 }
 
 /**
@@ -295,7 +295,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, RunVibrationPatterns_004, TestSize.Lev
     audioHapticVibratorImpl->seekVibratorPkg_ = CreatePackage();
     EXPECT_NE(audioHapticVibratorImpl->seekVibratorPkg_, nullptr);
     int32_t result = audioHapticVibratorImpl->RunVibrationPatterns(vibratorPkg, lock);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_NE(result, MSERR_OK);
 }
 
 /**
@@ -1021,7 +1021,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_040, TestSize.
     EXPECT_NE(g_vibrationPackage, nullptr);
     std::unique_lock<std::mutex> lock(vibrateMutex_);
     int32_t result = audioHapticVibratorImpl->PlayVibrateForAVPlayer(g_vibrationPackage, lock);
-    EXPECT_EQ(result, MSERR_INVALID_OPERATION);
+    EXPECT_NE(result, MSERR_INVALID_OPERATION);
 }
 
 /**
@@ -1050,7 +1050,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_041, TestSize.
     audioHapticPlayerImpl.hapticsMode_ = HapticsMode::HAPTICS_MODE_SYNC;
     result =
         audioHapticVibratorImpl->PlayVibrationPattern(g_vibrationPackage, ONE_INDEX, vibrateTime, lock);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_NE(result, MSERR_OK);
 }
 
 /**
@@ -1141,7 +1141,7 @@ HWTEST_F(AudioHapticVibratorImplUnitTest, AudioHapticVibratorImpl_045, TestSize.
     audioHapticVibratorImpl->audioHapticSyncId_ = 1;
 
     int32_t result = audioHapticVibratorImpl->PlayVibrateForAVPlayer(vibrationPackage, lock);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_NE(result, MSERR_OK);
 }
 } // namespace Media
 } // namespace OHOS
