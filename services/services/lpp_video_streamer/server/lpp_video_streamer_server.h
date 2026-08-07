@@ -18,6 +18,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <shared_mutex>
 
 #include "i_lpp_video_streamer_service.h"
 #include "i_lpp_video_streamer.h"
@@ -125,6 +126,7 @@ private:
 
     VideoState state_ {VideoState::CREATED};
     std::mutex stateMutex_ {};
+    std::shared_mutex cbMutex_ {};
     std::atomic<bool> isFirstFrameDecoded_ {false};
     std::atomic<bool> isFirstFrameRendered_ {false};
     Format param_ {};
