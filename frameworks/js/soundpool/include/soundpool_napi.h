@@ -24,6 +24,33 @@
 
 namespace OHOS {
 namespace Media {
+enum SoundPoolApiType : int32_t {
+    SOUNDPOOL_API_TYPE_BEGIN = -1,
+    createSoundPool,
+    createParallelSoundPool,
+    load,
+    on,
+    onError,
+    onErrorOccurred,
+    onLoadComplete,
+    onPlayFinished,
+    off,
+    offError,
+    offErrorOccurred,
+    offLoadComplete,
+    offPlayFinished,
+    play,
+    release,
+    setInterruptMode,
+    setLoop,
+    setPriority,
+    setRate,
+    setVolume,
+    stop,
+    unload,
+    SOUNDPOOL_API_TYPE_END
+};
+
 using RetInfo = std::pair<int32_t, std::string>;
 const int PARAM0 = 0;
 const int PARAM1 = 1;
