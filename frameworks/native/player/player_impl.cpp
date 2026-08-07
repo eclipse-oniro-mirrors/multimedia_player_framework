@@ -331,6 +331,7 @@ int32_t PlayerImpl::Stop()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     {
         std::lock_guard<std::mutex> lock(listMutex_);
+        prevTrackIndex_ = INT32_MIN;
         // If stop is called during switch mediaSource.
         if (IsInListMode() && isSwitchingItem_) {
             MEDIA_LOGD("Stop called during switch mediaSource, deal with after switch mediaSource.");
@@ -350,6 +351,7 @@ int32_t PlayerImpl::Reset()
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     ResetSeekVariables();
+    prevTrackIndex_ = INT32_MIN;
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->Reset(), "Reset", false, TIME_OUT_SECOND);
     return ret;
