@@ -107,6 +107,11 @@ namespace MediaDescriptionKey {
     static constexpr std::string_view MD_KEY_SAMPLE_RATE = "sample_rate";
 
     /**
+     * Key for audio sample format, value type is uint32_t
+     */
+    static constexpr std::string_view MD_KEY_AUDIO_SAMPLE_FORMAT = "audio_sample_format";
+
+    /**
      * Key for track count in the container, value type is uint32_t
      */
     static constexpr std::string_view MD_KEY_TRACK_COUNT = "track_count";
