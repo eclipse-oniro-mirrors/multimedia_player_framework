@@ -17,6 +17,7 @@
 #include "i_lpp_sync_manager.h"
 #include "lpp_sync_manager_adapter.h"
 #include "osal/task/task.h"
+#include <shared_mutex>
 
 namespace OHOS {
 namespace Media {
@@ -57,6 +58,7 @@ private:
     std::string videoStreamerId_ {};
 #ifdef SUPPORT_DRIVERS_INTERFACE_LPPLAYER
     std::shared_ptr<LppSyncManagerAdapter> adapter_ {nullptr};
+    std::shared_mutex smMutex_ {};
 #endif
     bool videoIsLpp_ {true};
     bool audioIsLpp_ {false};

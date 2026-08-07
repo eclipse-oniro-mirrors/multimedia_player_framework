@@ -125,6 +125,7 @@ int32_t LppSyncManagerAdapter::SetVideoChannelId(const uint32_t channelId)
 {
     MediaTrace trace("LppSyncManagerAdapter::SetVideoChannelId");
     MEDIA_LOG_I("SetVideoChannelId enter");
+    std::lock_guard<std::mutex> lock(adMutex_);
     FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrAdapter_ is nullptr");
     int32_t ret = syncMgrAdapter_->SetVideoChannelId(channelId);
     FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_HARDWARE_ERROR, "SyncMananger SetVideoChannelId failed, ret");
@@ -135,6 +136,7 @@ int32_t LppSyncManagerAdapter::SetAudioChannelId(const uint32_t channelId)
 {
     MediaTrace trace("LppSyncManagerAdapter::SetAudioChannelId");
     MEDIA_LOG_I("SetAudioChannelId enter");
+    std::lock_guard<std::mutex> lock(adMutex_);
     FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrAdapter_ is nullptr");
     int32_t ret = syncMgrAdapter_->SetAudioChannelId(channelId);
     FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_HARDWARE_ERROR, "SyncMananger SetAudioChannelId failed, ret");
@@ -225,6 +227,7 @@ int32_t LppSyncManagerAdapter::SetPlaybackSpeed(float speed)
 {
     MediaTrace trace("LppSyncManagerAdapter::SetPlaybackSpeed");
     MEDIA_LOG_I("SetPlaybackSpeed enter");
+    std::lock_guard<std::mutex> lock(adMutex_);
     FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrAdapter_ is nullptr");
     int32_t ret = syncMgrAdapter_->SetPlaybackSpeed(speed);
     FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_HARDWARE_ERROR, "SyncMananger SetPlaybackSpeed failed");
@@ -235,6 +238,7 @@ int32_t LppSyncManagerAdapter::SetTargetStartFrame(const uint64_t targetPts, uin
 {
     MediaTrace trace("LppSyncManagerAdapter::SetTargetStartFrame");
     MEDIA_LOG_I("SetTargetStartFrame enter");
+    std::lock_guard<std::mutex> lock(adMutex_);
     FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrAdapter_ is nullptr");
     int32_t ret = syncMgrAdapter_->SetTargetStartFrame(targetPts, timeoutMs);
     FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_HARDWARE_ERROR, "SyncMananger SetTargetStartFrame failed");
@@ -245,6 +249,7 @@ int32_t LppSyncManagerAdapter::SetParameter(const std::map<std::string, std::str
 {
     MediaTrace trace("LppSyncManagerAdapter::SetParameter");
     MEDIA_LOG_I("SetParameter enter");
+    std::lock_guard<std::mutex> lock(adMutex_);
     FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrAdapter_ is nullptr");
     int32_t ret = syncMgrAdapter_->SetParameter(parameters);
     FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_HARDWARE_ERROR, "SyncMananger SetParameter failed");
@@ -316,6 +321,7 @@ int32_t LppSyncManagerAdapter::SetTunnelId(uint64_t tunnelId)
 {
     MediaTrace trace("LppSyncManagerAdapter::SetTunnelId");
     MEDIA_LOG_I("SetTunnelId enter");
+    std::lock_guard<std::mutex> lock(adMutex_);
     FALSE_RETURN_V_MSG_E(syncMgrAdapter_ != nullptr, MSERR_INVALID_OPERATION, "syncMgrAdapter_ is nullptr");
     int32_t ret = syncMgrAdapter_->SetTunnelId(tunnelId);
     FALSE_RETURN_V_MSG(ret == HDF_SUCCESS, MSERR_HARDWARE_ERROR, "SyncMananger SetTunnelId failed with error");
@@ -332,6 +338,7 @@ int32_t LppSyncManagerAdapter::GetLatestPts(int64_t &pts)
 
 void LppSyncManagerAdapter::SetEventReceiver(std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver)
 {
+    std::lock_guard<std::mutex> lock(adMutex_);
     eventReceiver_ = eventReceiver;
 }
 

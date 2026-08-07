@@ -293,6 +293,7 @@ int32_t LppVideoStreamerServer::RegisterCallback()
 int32_t LppVideoStreamerServer::SetLppVideoStreamerCallback(const std::shared_ptr<VideoStreamerCallback> &callback)
 {
     MEDIA_LOGI("LppVideoStreamerServer SetLppVideoStreamerCallback");
+    std::unique_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback is nullptr");
     callback_ = callback;
     CHECK_AND_RETURN_RET_LOG(streamerEngine_ != nullptr, MSERR_INVALID_OPERATION, "streamerEngine_ is nullptr");
@@ -372,6 +373,7 @@ bool LppVideoStreamerServer::ErrorCheck(int32_t errorCode)
 
 void LppVideoStreamerServer::OnDataNeeded(const int32_t maxBufferSize, const int32_t maxFrameNum)
 {
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     MEDIA_LOGD("LppVideoStreamerServer OnDataNeeded");
     Format infoBody;
     infoBody.PutIntValue(VideoStreamerKeys::LPP_VIDEO_MAX_BUFFER_SIZE, maxBufferSize);
@@ -388,6 +390,7 @@ bool LppVideoStreamerServer::OnAnchorUpdateNeeded(int64_t &anchorPts, int64_t &a
 
 void LppVideoStreamerServer::OnError(const MediaServiceErrCode errCode, const std::string &errMsg)
 {
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
     MEDIA_LOGE("LppVideoStreamerServer::OnError, errorCode: %{public}d, errorMsg: %{public}s",
         static_cast<int32_t>(errCode), errMsg.c_str());
@@ -398,6 +401,7 @@ void LppVideoStreamerServer::OnError(const MediaServiceErrCode errCode, const st
 void LppVideoStreamerServer::OnEos()
 {
     MEDIA_LOGI("LppVideoStreamerServer::OnEos");
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(StateEnter(VideoState::EOS), "wrong state");
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
     Format infoBody;
@@ -407,6 +411,7 @@ void LppVideoStreamerServer::OnEos()
 void LppVideoStreamerServer::OnRenderStarted()
 {
     MEDIA_LOGI("LppVideoStreamerServer::OnRenderStarted Render started");
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
     Format infoBody;
     callback_->OnInfo(VIDEO_INFO_TYPE_LPP_RENDER_STARTED, 0, infoBody);
@@ -415,6 +420,7 @@ void LppVideoStreamerServer::OnRenderStarted()
 void LppVideoStreamerServer::OnTargetArrived(const int64_t targetPts, const bool isTimeout)
 {
     MEDIA_LOGI("LppVideoStreamerServer::OnTargetArrived Target arrived");
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
     Format infoBody;
     infoBody.PutLongValue(VideoStreamerKeys::LPP_VIDEO_TARGET_PTS, targetPts);
@@ -425,6 +431,7 @@ void LppVideoStreamerServer::OnTargetArrived(const int64_t targetPts, const bool
 void LppVideoStreamerServer::OnFirstFrameReady()
 {
     MEDIA_LOGI("LppVideoStreamerServer::First frame ready");
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(!isFirstFrameDecoded_.load(), "first frame is decoded, dont repeat");
     isFirstFrameDecoded_.store(true);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
@@ -435,6 +442,7 @@ void LppVideoStreamerServer::OnFirstFrameReady()
 void LppVideoStreamerServer::OnStreamChanged(Format &format)
 {
     MEDIA_LOGI("LppVideoStreamerServer::OnStreamChanged");
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(callback_ != nullptr, "callback_ is nullptr");
     callback_->OnInfo(VIDEO_INFO_TYPE_LPP_STREAM_CHANGED, 0, format);
 }

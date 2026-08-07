@@ -17,6 +17,7 @@
 #define LPP_PLAYER_SERVICE_SERVER_H
 
 #include <mutex>
+#include <shared_mutex>
 
 #include "i_lpp_audio_streamer_service.h"
 #include "i_lpp_audio_streamer.h"
@@ -118,6 +119,7 @@ private:
     int32_t appPid_ = 0;
     std::string appName_;
     Format param_ {};
+    std::shared_mutex cbMutex_ {};
 };
 } // namespace Media
 } // namespace OHOS

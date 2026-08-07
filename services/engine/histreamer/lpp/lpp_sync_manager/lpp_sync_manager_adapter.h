@@ -66,9 +66,11 @@ public:
     void OnFirstFrameReady();
     void SetEventReceiver(std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver);
 private:
+
     sptr<PlayerHDI::ILowPowerPlayerFactory> factory_{ nullptr };
     sptr<PlayerHDI::ILppSyncManagerAdapter> syncMgrAdapter_{ nullptr };
     std::shared_ptr<Media::Pipeline::EventReceiver> eventReceiver_ {nullptr};
+    std::mutex adMutex_;
 };
 
 class LowPowerPlayerFactory {
