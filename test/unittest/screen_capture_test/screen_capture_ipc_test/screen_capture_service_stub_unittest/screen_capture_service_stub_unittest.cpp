@@ -341,7 +341,7 @@ HWTEST_F(ScreenCaptureServiceStubTest, SetRecorderInfo_001, TestSize.Level1)
     bool token = data.WriteInterfaceToken(screenCaptureServiceStub->GetDescriptor());
     ASSERT_EQ(token, true);
     RecorderInfo recorderInfo = {.url = "url", .fileFormat = "mp4"};
-    token = data.WriteString(recorderInfo.url) && data.WriteString(recorderInfo.fileFormat);
+    token = data.WriteString(recorderInfo.fileFormat);
     ASSERT_EQ(token, true);
 
     int ret = screenCaptureServiceStub->OnRemoteRequest(
