@@ -284,6 +284,7 @@ int32_t LppAudioStreamerServer::RegisterCallback()
 
 int32_t LppAudioStreamerServer::SetLppAudioStreamerCallback(const std::shared_ptr<AudioStreamerCallback> &callback)
 {
+    std::unique_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "callback nullptr");
     lppAudioStreamerCb_ = callback;
     return MSERR_OK;
@@ -322,6 +323,7 @@ bool LppAudioStreamerServer::ErrorCheck(int32_t errorCode)
 
 void LppAudioStreamerServer::OnError(const MediaServiceErrCode errCode, const std::string &errMsg)
 {
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(lppAudioStreamerCb_ != nullptr, "lppAudioStreamerCb_ nullptr");
     MEDIA_LOGE("LppAudioStreamerServer::OnError, errorCode: %{public}d, errorMsg: %{public}s",
         static_cast<int32_t>(errCode), errMsg.c_str());
@@ -331,6 +333,7 @@ void LppAudioStreamerServer::OnError(const MediaServiceErrCode errCode, const st
 
 void LppAudioStreamerServer::OnDataNeeded(const int32_t maxBufferSize)
 {
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(lppAudioStreamerCb_ != nullptr, "lppAudioStreamerCb_ nullptr");
     MEDIA_LOGI("LppAudioStreamerServer::OnDataNeeded %{public}d", maxBufferSize);
     Format infoBody;
@@ -341,6 +344,7 @@ void LppAudioStreamerServer::OnDataNeeded(const int32_t maxBufferSize)
 
 void LppAudioStreamerServer::OnPositionUpdated(const int64_t currentPositionMs)
 {
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(lppAudioStreamerCb_ != nullptr, "lppAudioStreamerCb_ nullptr");
     MEDIA_LOGI("LppAudioStreamerServer::OnPositionUpdated %{public}ld", currentPositionMs);
     Format infoBody;
@@ -350,6 +354,7 @@ void LppAudioStreamerServer::OnPositionUpdated(const int64_t currentPositionMs)
 
 void LppAudioStreamerServer::OnEos()
 {
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     MEDIA_LOGI("LppAudioStreamerServer::OnEos");
     CHECK_AND_RETURN_LOG(StateEnter(LppAudioState::EOS), "wrong state");
     CHECK_AND_RETURN_LOG(lppAudioStreamerCb_ != nullptr, "lppAudioStreamerCb_ nullptr");
@@ -359,6 +364,7 @@ void LppAudioStreamerServer::OnEos()
 
 void LppAudioStreamerServer::OnInterrupted(const int64_t forceType, const int64_t hint)
 {
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(lppAudioStreamerCb_ != nullptr, "lppAudioStreamerCb_ nullptr");
     MEDIA_LOGI("LppAudioStreamerServer::OnInterrupted forceType %{public}ld hint %{public}ld", forceType, hint);
     Format infoBody;
@@ -369,6 +375,7 @@ void LppAudioStreamerServer::OnInterrupted(const int64_t forceType, const int64_
 
 void LppAudioStreamerServer::OnDeviceChanged(const int64_t reason)
 {
+    std::shared_lock<std::shared_mutex> lock(cbMutex_);
     CHECK_AND_RETURN_LOG(lppAudioStreamerCb_ != nullptr, "lppAudioStreamerCb_ nullptr");
     MEDIA_LOGI("LppAudioStreamerServer::OnDeviceChanged reason %{public}ld", reason);
     Format infoBody;
