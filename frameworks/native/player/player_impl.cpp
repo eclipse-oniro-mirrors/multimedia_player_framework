@@ -1598,7 +1598,7 @@ int32_t PlayerImpl::SetPCMProcessorMaxLen(int32_t maxProcessedPcmLen)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist.");
 
     const int32_t maxLenLimit = 5 * 1024 * 1024; // 5MB
-    CHECK_AND_RETURN_RET_LOG(maxProcessedPcmLen <= maxLenLimit, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(maxProcessedPcmLen > 0 && maxProcessedPcmLen <= maxLenLimit, MSERR_INVALID_VAL,
         "maxProcessedPcmLen out of support range.");
 
     int32_t ret = MSERR_OK;

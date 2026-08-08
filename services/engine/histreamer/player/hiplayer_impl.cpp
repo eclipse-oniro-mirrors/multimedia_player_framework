@@ -5190,7 +5190,8 @@ int32_t HiPlayerImpl::SetPCMOutputStatus(bool isEnable)
     std::lock_guard<std::mutex> lock(pcmCallbackMutex_);
 
     // If isPcmProcessorEnable_ is true, can not set SetPCMOutputStatus
-    FALSE_RETURN_V(!isPcmProcessorEnable_, TransStatus(Status::ERROR_INVALID_OPERATION));
+    FALSE_RETURN_V_MSG_E(!isPcmProcessorEnable_, TransStatus(Status::ERROR_INVALID_OPERATION),
+        "Can not SetPCMOutputCallback because has SetPCMProcessorCallback.");
     isPcmOutputEnable_ = isEnable;
     return TransStatus(Status::OK);
 }
@@ -5200,7 +5201,8 @@ int32_t HiPlayerImpl::SetPCMProcessorStatus(bool isEnable)
     std::lock_guard<std::mutex> lock(pcmCallbackMutex_);
 
     // If isPcmOutputEnable_ is true, can not set SetPCMProcessorStatus
-    FALSE_RETURN_V(!isPcmOutputEnable_, TransStatus(Status::ERROR_INVALID_OPERATION));
+    FALSE_RETURN_V_MSG_E(!isPcmOutputEnable_, TransStatus(Status::ERROR_INVALID_OPERATION),
+        "Can not SetPCMProcessorCallback because has SetPCMOutputCallback.");
     isPcmProcessorEnable_ = isEnable;
     return TransStatus(Status::OK);
 }
