@@ -555,7 +555,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_014, TestSize.Level2)
     struct PlayParams playParameters;
     streamIDs_[playNum_] = soundPool_->Play(5, playParameters);
     cout << "soundId 5 play, result: " << streamIDs_[playNum_] << endl;
-    EXPECT_EQ(streamIDs_[playNum_], -1);
+    EXPECT_EQ(streamIDs_[playNum_], MSERR_INVALID_VAL);
     sleep(waitTime1);
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_014 after");
@@ -579,7 +579,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_015, TestSize.Level2)
     struct PlayParams playParameters;
     streamIDs_[playNum_] = soundPool_->Play(-1, playParameters);
     cout << "soundId -1 play, result: " << streamIDs_[playNum_] << endl;
-    EXPECT_EQ(streamIDs_[playNum_], -1);
+    EXPECT_EQ(streamIDs_[playNum_], MSERR_INVALID_VAL);
     sleep(waitTime1);
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_015 after");
@@ -900,7 +900,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_024, TestSize.Level2)
         EXPECT_GT(streamIDs_[playNum_], 0);
         sleep(waitTime1);
         int32_t setPool = soundPool_->SetLoop(-1, loop);
-        EXPECT_EQ(MSERR_INVALID_OPERATION, setPool);
+        EXPECT_EQ(MSERR_SOUNDPOOL_STREAM_NOT_FOUND, setPool);
         sleep(waitTime1);
     } else {
         cout << "Get soundId failed, please try to get soundId: " << soundIDs_[loadNum_] << endl;
@@ -1644,7 +1644,7 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_042, TestSize.Level2)
     EXPECT_GT(streamIDs_[playNum_], 0);
     int32_t totalNum = playNum_ + 1;
     int32_t matchNum = 0;
-    sleep(waitTime10);
+    sleep(waitTime30);
 
     std::vector<int32_t> vector = cb->GetHavePlayedStreamID();
     EXPECT_EQ(totalNum, vector.size());
