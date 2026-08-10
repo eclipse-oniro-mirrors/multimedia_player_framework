@@ -56,9 +56,30 @@ inline void CreateTestCacheFile(const std::string& cacheDir, const std::string& 
     }
 }
 
+static std::vector<uint8_t> BuildTestPlaybackParamData(const std::string& rootUrl = "")
+{
+    constexpr size_t DEFAULT_TAIL_SIZE = 97;
+    std::vector<uint8_t> buf;
+    uint32_t rootLen = static_cast<uint32_t>(rootUrl.size());
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(&rootLen);
+    buf.insert(buf.end(), p, p + sizeof(uint32_t));
+    buf.insert(buf.end(), rootUrl.begin(), rootUrl.end());
+    buf.resize(buf.size() + DEFAULT_TAIL_SIZE, 0);
+    return buf;
+}
+
+inline void WriteTestPlaybackParamData(std::ofstream& file, const std::string& rootUrl = "")
+{
+    std::vector<uint8_t> data = BuildTestPlaybackParamData(rootUrl);
+    uint32_t len = static_cast<uint32_t>(data.size());
+    file.write(reinterpret_cast<const char*>(&len), sizeof(len));
+    file.write(reinterpret_cast<const char*>(data.data()), data.size());
+}
+
 void CreateTestMappingFile(const std::string& cacheDir,
     const std::vector<std::pair<std::string, std::string>>& entries,
-    uint64_t fileSize = 1024)
+    uint64_t fileSize = 1024,
+    const std::string& rootUrl = "")
 {
     std::string mappingPath = cacheDir + "/" + TEST_MAPPING_FILE;
 
@@ -79,6 +100,8 @@ void CreateTestMappingFile(const std::string& cacheDir,
     file.write(reinterpret_cast<const char*>(&header.entryCount), 4);
     file.write(reinterpret_cast<const char*>(header.reserved), 8);
     file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
+
+    WriteTestPlaybackParamData(file, rootUrl);
 
     for (const auto& entry : entries) {
         auto hash = SHA256Hasher::GenerateHash(entry.first);

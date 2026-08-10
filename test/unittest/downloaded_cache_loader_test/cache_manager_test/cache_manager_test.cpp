@@ -205,7 +205,7 @@ HWTEST_F(CacheManagerTest, EmptyRelativePath_Entry_001, TestSize.Level0)
 
     auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
     std::string result = manager->GetMediaCache(testUrl);
-    EXPECT_EQ(result, "");
+    EXPECT_EQ(result, testCacheDir_ + "/");
 }
 
 HWTEST_F(CacheManagerTest, EntryWithPathTraversal_001, TestSize.Level0)
@@ -225,6 +225,8 @@ HWTEST_F(CacheManagerTest, EntryWithPathTraversal_001, TestSize.Level0)
     file.write(reinterpret_cast<const char*>(&header.entryCount), 4);
     file.write(reinterpret_cast<const char*>(header.reserved), 8);
     file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
+
+    TestCommon::WriteTestPlaybackParamData(file);
 
     CacheMappingEntry entry;
     auto hash = SHA256Hasher::GenerateHash("http://example.com/test.mp4");
@@ -265,6 +267,8 @@ HWTEST_F(CacheManagerTest, EntryWithInvalidPathLength_001, TestSize.Level0)
     file.write(reinterpret_cast<const char*>(header.reserved), 8);
     file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
 
+    TestCommon::WriteTestPlaybackParamData(file);
+
     CacheMappingEntry entry;
     auto hash = SHA256Hasher::GenerateHash("http://example.com/test.mp4");
     (void)memcpy_s(entry.header.urlHash, SHA256_LEN, hash.data(), SHA256_LEN);
@@ -300,6 +304,8 @@ HWTEST_F(CacheManagerTest, TruncatedEntry_001, TestSize.Level0)
     file.write(reinterpret_cast<const char*>(&header.entryCount), 4);
     file.write(reinterpret_cast<const char*>(header.reserved), 8);
     file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
+
+    TestCommon::WriteTestPlaybackParamData(file);
 
     auto hash = SHA256Hasher::GenerateHash("http://example.com/test.mp4");
     file.write(reinterpret_cast<const char*>(hash.data()), 10);
