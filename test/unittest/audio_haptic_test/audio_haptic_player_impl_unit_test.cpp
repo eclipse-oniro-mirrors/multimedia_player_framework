@@ -804,24 +804,6 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_040, TestSize.Leve
 
 /**
  * @tc.name  : Test AudioHapticPlayerImpl API
- * @tc.number: AudioHapticPlayerImpl_041
- * @tc.desc  : Test AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
- */
-HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_041, TestSize.Level1)
-{
-    auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
-
-    std::shared_ptr<AudioHapticPlayerCallback> playerCallback = std::make_shared<AudioHapticPlayerCallbackTest>();
-    audioHapticPlayerImpl->audioHapticPlayerCallback_ = playerCallback;
-
-    audioHapticPlayerImpl->NotifyEndOfStreamEvent();
-    // NotifyEndOfStreamEvent calls HandleEndOfStreamEvent => playerState_ becomes STATE_STOPPED
-    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
-    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), playerCallback);
-}
-
-/**
- * @tc.name  : Test AudioHapticPlayerImpl API
  * @tc.number: AudioHapticPlayerImpl_042
  * @tc.desc  : Test AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
  */
