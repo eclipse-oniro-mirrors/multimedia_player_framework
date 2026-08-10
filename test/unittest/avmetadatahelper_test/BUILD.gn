@@ -171,6 +171,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "hitrace:libhitracechain",
     "i18n:intl_util",
     "image_framework:image_native",
+    "image_framework:image_utils",
     "init:libbegetutil",
     "ipc:ipc_single",
     "libxml2:libxml2",
