@@ -82,7 +82,7 @@ bool ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyPr
     g_baseFuzzData = data;
     g_baseFuzzSize = size;
     g_baseFuzzPos = 0;
-    ScreenId virtualScreenId = 1;
+    Rosen::ScreenId virtualScreenId = 1;
     bool systemPrivacyProtectionSwitch = true;
     bool appPrivacyProtectionSwitch = true;
     screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,

@@ -24,11 +24,7 @@ namespace Media {
 class InCallObserverCallBack {
 public:
     virtual ~InCallObserverCallBack() = default;
-    virtual bool StopAndRelease(AVScreenCaptureStateCode state) = 0;
-    virtual bool NotifyStopAndRelease(AVScreenCaptureStateCode state) = 0;
-    virtual bool TelCallStateUpdated(bool isInCall) = 0;
-    virtual bool NotifyTelCallStateUpdated(bool isInCall) = 0;
-    virtual void Release() = 0;
+    virtual bool OnTelCallStateUpdated(bool isInCall) = 0;
 };
 
 } // namespace Media

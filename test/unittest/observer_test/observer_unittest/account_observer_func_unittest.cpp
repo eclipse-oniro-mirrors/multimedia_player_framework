@@ -32,30 +32,14 @@ class AccountObserverTestCallBack : public AccountObserverCallBack {
 public:
     AccountObserverTestCallBack() {}
     ~AccountObserverTestCallBack() {}
-    bool StopAndRelease(AVScreenCaptureStateCode state)
-    {
-        return true;
-    }
-    bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
-    {
-        return true;
-    }
-    void Release() {}
+    bool OnAccountsSwitch() override { return true; }
 };
 
 class AccountObserverTestFalseCallBack : public AccountObserverCallBack {
 public:
     AccountObserverTestFalseCallBack() {}
     ~AccountObserverTestFalseCallBack() {}
-    bool StopAndRelease(AVScreenCaptureStateCode state)
-    {
-        return false;
-    }
-    bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
-    {
-        return false;
-    }
-    void Release() {}
+    bool OnAccountsSwitch() override { return false; }
 };
 
 class AccountObserverInnerUnitTest : public testing::Test {

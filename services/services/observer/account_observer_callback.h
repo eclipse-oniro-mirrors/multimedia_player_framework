@@ -16,17 +16,13 @@
 #ifndef ACCOUNT_OBSERVER_CALLBACK_H
 #define ACCOUNT_OBSERVER_CALLBACK_H
 
-#include "screen_capture.h"
-
 namespace OHOS {
 namespace Media {
 
 class AccountObserverCallBack {
 public:
     virtual ~AccountObserverCallBack() = default;
-    virtual bool StopAndRelease(AVScreenCaptureStateCode state) = 0;
-    virtual bool NotifyStopAndRelease(AVScreenCaptureStateCode state) = 0;
-    virtual void Release() = 0;
+    virtual bool OnAccountsSwitch() = 0;
 };
 
 } // namespace Media
