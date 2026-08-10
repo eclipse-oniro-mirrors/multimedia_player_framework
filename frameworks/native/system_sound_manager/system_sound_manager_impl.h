@@ -172,6 +172,7 @@ public:
 private:
     void InitDefaultToneHapticsMap();
     void ReadDefaultToneHaptics(const char *paramName, ToneHapticsType toneHapticsType);
+    std::string GetJsonValue(const std::string &jsonPath);
     std::string OpenCustomAudioUri(const std::string &customAudioUri);
 
     int32_t AddCustomizedTone(const std::shared_ptr<DataShare::DataShareHelper> &dataShareHelper,
@@ -226,6 +227,7 @@ private:
     bool ConvertToRingtoneType(ToneHapticsType toneHapticsType, RingtoneType &ringtoneType);
     bool ConvertToSystemToneType(ToneHapticsType toneHapticsType, SystemToneType &systemToneType);
     std::string ConvertToHapticsFileName(const std::string &fileName);
+    ToneHapticsMode ConvertRingMockHapticPlayModeToToneHapticsMode(const int32_t dbValue);
     ToneHapticsMode IntToToneHapticsMode(int32_t value);
     std::string GetCurrentToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         ToneHapticsType toneHapticsType);
@@ -233,8 +235,6 @@ private:
     std::unique_ptr<SimcardSettingAsset> GetSimcardSettingAssetByToneHapticsType(const DatabaseTool &databaseTool,
         ToneHapticsType toneHapticsType);
 
-    std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
-        const std::string &standardHapticsUri, HapticsStyle hapticsStyle, const std::string &vibrateFilesUri);
     std::string GetToneSyncedHapticsUri(const DatabaseTool &databaseTool,
         const std::string &toneUri);
     std::string GetDefaultNonSyncedHapticsUri(const DatabaseTool &databaseTool,
@@ -248,6 +248,8 @@ private:
     bool GetVibrateTypeByStyle(int standardVibrateType, HapticsStyle hapticsStyle, int &vibrateType);
     std::unique_ptr<RingtoneAsset> IsPresetRingtone(const DatabaseTool &databaseTool, const std::string &toneUri);
     int GetStandardVibrateType(int toneType);
+    std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
+        const std::string &standardHapticsUri, HapticsStyle hapticsStyle, const std::string &vibrateFilesUri);
 
     bool IsSystemToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
         const SystemToneType &systemToneType);

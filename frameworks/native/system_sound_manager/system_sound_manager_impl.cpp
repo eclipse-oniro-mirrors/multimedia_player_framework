@@ -377,9 +377,7 @@ bool SystemSoundManagerImpl::IsSystemToneType(const unique_ptr<RingtoneAsset> &r
     const SystemToneType &systemToneType)
 {
     CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, false, "Invalid ringtone asset.");
-    return (systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
-        TONE_TYPE_NOTIFICATION != ringtoneAsset->GetToneType() :
-        TONE_TYPE_SHOT != ringtoneAsset->GetToneType());
+    return TONE_TYPE_NOTIFICATION != ringtoneAsset->GetToneType();
 }
 
 void SystemSoundManagerImpl::ReadDefaultToneHaptics(const char *paramName, ToneHapticsType toneHapticsType)
@@ -1148,11 +1146,7 @@ ToneAttrs SystemSoundManagerImpl::GetAlarmToneAttrs(const DatabaseTool &database
         toneAttrs.SetFileName(ringtoneAsset->GetDisplayName());
         toneAttrs.SetTitle(ringtoneAsset->GetTitle());
         toneAttrs.SetUri(ringtoneAsset->GetPath());
-        if (ringtoneAsset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO) {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_VID);
-        } else {
-            toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
-        }
+        toneAttrs.SetMediaType(ToneMediaType::MEDIA_TYPE_AUD);
     } else {
         MEDIA_LOGE("GetAlarmToneAttrs: no alarmtone in the ringtone library!");
     }
@@ -2991,7 +2985,7 @@ void SystemSoundManagerImpl::SendPlaybackFailedEvent(const int32_t &errorCode)
     Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
 }
 
-static ToneHapticsMode ConvertRingMockHapticPlayModeToToneHapticsMode(int32_t dbValue)
+ToneHapticsMode SystemSoundManagerImpl::ConvertRingMockHapticPlayModeToToneHapticsMode(const int32_t dbValue)
 {
     if (dbValue == RING_MOCK_HAPTIC_AUDIO_PLAYMODE_SYNC) {
         return ToneHapticsMode::SYNC;

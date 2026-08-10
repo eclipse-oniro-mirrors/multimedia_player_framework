@@ -656,9 +656,8 @@ void AudioHapticPlayerImpl::HandleEndOfStreamEvent()
 void AudioHapticPlayerImpl::HandleInterruptEventThreadFunc(std::weak_ptr<AudioHapticPlayerImpl> player)
 {
     std::shared_ptr<AudioHapticPlayerImpl> playerPtr = player.lock();
-    if (playerPtr != nullptr) {
-        playerPtr->HandleInterruptEvent();
-    }
+    CHECK_AND_RETURN_LOG(playerPtr != nullptr, "playerPtr is nullptr");
+    playerPtr->HandleInterruptEvent();
 }
 
 void AudioHapticPlayerImpl::HandleInterruptEvent()
