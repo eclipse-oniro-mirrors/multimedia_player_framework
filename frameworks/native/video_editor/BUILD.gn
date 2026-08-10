@@ -106,6 +106,7 @@ ohos_shared_library("video_editor") {
     "skia:skia_canvaskit",
     "egl:libEGL",
     "opengles:libGLES",
+    "bounds_checking_function:libsec_shared",
   ]
 
   defines = []
