@@ -179,12 +179,14 @@ private:
     void GetDumpFlag();
     void GetSystemUIFlag();
 
-    VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
+    VirtualScreenOption InitVirtualScreenOption(sptr<OHOS::Surface> consumer);
+    std::string GetVirtualScreenName() const;
     int32_t SetupVirtualScreenMirror(const sptr<Rosen::Display> &defaultDisplay,
         std::vector<ScreenId> &mirrorIds);
     DMError CreateMirror(const std::vector<uint64_t> &displayIds, std::vector<ScreenId> &mirrorIds);
     int32_t MakeVirtualScreenMirror();
-    int32_t CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer);
+    int32_t MakeVirtualScreenExtended();
+    int32_t CreateVirtualScreen(sptr<OHOS::Surface> consumer);
     int32_t SetVirtualScreenAutoRotation();
     int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();

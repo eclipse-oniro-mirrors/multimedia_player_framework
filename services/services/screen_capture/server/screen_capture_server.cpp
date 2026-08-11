@@ -101,8 +101,6 @@ static const std::string ICON_PATH_RESUME = "/etc/screencapture/play.svg";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.screenrecorderbundlename";
 static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
-static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE = "screeen_capture";
-static const std::string VIRTUAL_SCREENAME_SCREEN_CAPTRURE_FILE = "screeen_capture_file";
 static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
@@ -900,10 +898,10 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     int32_t ret = MSERR_OK;
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         auto consumerSurface = isSurfaceMode_ ? surface_ : producerSurface_;
-        ret = CreateVirtualScreen(VIRTUAL_SCREENAME_SCREEN_CAPTRURE, consumerSurface);
+        ret = CreateVirtualScreen(consumerSurface);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen surface failed, ret: %{public}d", ret);
     } else if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-        ret = CreateVirtualScreen(VIRTUAL_SCREENAME_SCREEN_CAPTRURE_FILE, consumer_);
+        ret = CreateVirtualScreen(consumer_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen file failed, ret: %{public}d", ret);
     } else {
         MEDIA_LOGE("HandlePresentPickerWindowCase dataType is invalid");
@@ -1487,7 +1485,7 @@ bool ScreenCaptureServer::IsUserPrivacyAuthorityNeeded()
 int32_t ScreenCaptureServer::CheckCaptureMode(CaptureMode captureMode)
 {
     MEDIA_LOGD("CheckCaptureMode start, captureMode:%{public}d", captureMode);
-    if ((captureMode > CAPTURE_SPECIFIED_WINDOW) || (captureMode < CAPTURE_HOME_SCREEN)) {
+    if ((captureMode > CAPTURE_VIRTUAL_EXTENDED_SCREEN) || (captureMode < CAPTURE_HOME_SCREEN)) {
         MEDIA_LOGE("invalid captureMode:%{public}d", captureMode);
         return MSERR_INVALID_VAL;
     }
@@ -1925,8 +1923,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
             consumer_ = nullptr;
         }
     };
-    std::string virtualScreenName = "screen_capture_file";
-    ret = CreateVirtualScreen(virtualScreenName, consumer_);
+    ret = CreateVirtualScreen(consumer_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen failed, ret:%{public}d, dataType:%{public}d",
         ret, captureConfig_.dataType);
 
@@ -2664,6 +2661,9 @@ bool ScreenCaptureServer::CheckCaptureSpecifiedWindowForSelectWindow()
 
 bool ScreenCaptureServer::IsPickerPopUp()
 {
+    if (captureConfig_.captureMode == CAPTURE_VIRTUAL_EXTENDED_SCREEN) {
+        return false;
+    }
     if (captureConfig_.strategy.pickerPopUp == AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE) {
         return true;
     }
@@ -3075,9 +3075,8 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
     MediaTrace trace("ScreenCaptureServer::StartStreamHomeVideoCapture");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamHomeVideoCapture start, "
         "isSurfaceMode: %{public}s.", FAKE_POINTER(this), isSurfaceMode_.load() ? "true" : "false");
-    std::string virtualScreenName = "screen_capture";
     if (isSurfaceMode_) {
-        int32_t ret = CreateVirtualScreen(virtualScreenName, surface_);
+        int32_t ret = CreateVirtualScreen(surface_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "create virtual screen with input surface failed");
         return MSERR_OK;
     }
@@ -3109,7 +3108,7 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_UNKNOWN, "MakeSptr surfaceCb_ failed");
     consumer_->RegisterConsumerListener(surfaceCb_);
     MEDIA_LOGD("StartStreamHomeVideoCapture producerSurface_: %{public}" PRIu64, producerSurface_->GetUniqueId());
-    int32_t ret = CreateVirtualScreen(virtualScreenName, producerSurface_);
+    int32_t ret = CreateVirtualScreen(producerSurface_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "create virtual screen without input surface failed");
     CANCEL_SCOPE_EXIT_GUARD(0);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamHomeVideoCapture OK.", FAKE_POINTER(this));
@@ -3132,12 +3131,12 @@ int32_t ScreenCaptureServer::SetVirtualScreenAutoRotation()
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::CreateVirtualScreen(const std::string &name, sptr<OHOS::Surface> consumer)
+int32_t ScreenCaptureServer::CreateVirtualScreen(sptr<OHOS::Surface> consumer)
 {
     MediaTrace trace("ScreenCaptureServer::CreateVirtualScreen");
     MEDIA_LOGI("0x%{public}06" PRIXPTR " CreateVirtualScreen Start", FAKE_POINTER(this));
     isConsumerStart_ = false;
-    VirtualScreenOption virScrOption = InitVirtualScreenOption(name, consumer);
+    VirtualScreenOption virScrOption = InitVirtualScreenOption(consumer);
     sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {
         MEDIA_LOGI("get displayInfo width:%{public}d,height:%{public}d, density:%{public}f", display->GetWidth(),
@@ -3200,12 +3199,17 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
         SetCanvasRotationInner();
     }
     SkipPrivacyModeInner();
-    int32_t ret = MakeVirtualScreenMirror();
+    int32_t ret;
+    if (captureConfig_.captureMode == CAPTURE_VIRTUAL_EXTENDED_SCREEN) {
+        ret = MakeVirtualScreenExtended();
+    } else {
+        ret = MakeVirtualScreenMirror();
+    }
     if (ret != MSERR_OK) {
-        MEDIA_LOGE("MakeVirtualScreenMirror failed");
+        MEDIA_LOGE("MakeVirtualScreen failed, captureMode:%{public}d", captureConfig_.captureMode);
         DestroyVirtualScreen();
         FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
-            "MakeVirtualScreenMirror failed");
+            "MakeVirtualScreen failed");
         return MSERR_UNKNOWN_MAKE_MIRROR;
     }
     uint32_t actualRefreshRate = 0;
@@ -3336,6 +3340,30 @@ int32_t ScreenCaptureServer::MakeVirtualScreenMirror()
     return SetupVirtualScreenMirror(defaultDisplay, mirrorIds);
 }
 
+int32_t ScreenCaptureServer::MakeVirtualScreenExtended()
+{
+    MediaTrace trace("ScreenCaptureServer::MakeVirtualScreenExtended");
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " MakeVirtualScreenExtended start.", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(virtualScreenId_ >= 0 && virtualScreenId_ != SCREEN_ID_INVALID, MSERR_UNKNOWN,
+        "invalid virtualScreenId");
+    CHECK_AND_RETURN_RET_LOG(!displayIds_.empty(), MSERR_INVALID_VAL, "displayIds_ empty");
+    ScreenId mainScreenId = displayIds_.front();
+    auto mainRsId = Rosen::SCREEN_ID_INVALID;
+    auto secondRsId = Rosen::SCREEN_ID_INVALID;
+    CHECK_AND_RETURN_RET_LOG(Rosen::DisplayManager::GetInstance().ConvertScreenIdToRsScreenId(mainScreenId, mainRsId) &&
+            Rosen::DisplayManager::GetInstance().ConvertScreenIdToRsScreenId(virtualScreenId_, secondRsId),
+        MSERR_UNKNOWN, "convert rs screen id failed, mainScreenId:%{public}" PRIu64 " virtualScreenId:%{public}" PRIu64,
+        mainScreenId, virtualScreenId_);
+    auto ret = Rosen::ScreenManager::GetInstance().SetMultiScreenMode(mainScreenId, secondRsId,
+        Rosen::MultiScreenMode::SCREEN_EXTEND);
+    CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
+        "SetMultiScreenMode failed, rsId:%{public}" PRIu64 " ret:%{public}d", secondRsId, ret);
+    SetDisplayScreenId(mainScreenId);
+    MEDIA_LOGI("MakeVirtualScreenExtended success, mainScreenId:%{public}" PRIu64 ", virtualScreenId:%{public}" PRIu64,
+        mainScreenId, virtualScreenId_);
+    return MSERR_OK;
+}
+
 void ScreenCaptureServer::DestroyVirtualScreen()
 {
     MediaTrace trace("ScreenCaptureServer::DestroyVirtualScreen");
@@ -3365,13 +3393,21 @@ void ScreenCaptureServer::CloseFd()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " CloseFd end.", FAKE_POINTER(this));
 }
 
-VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer)
+std::string ScreenCaptureServer::GetVirtualScreenName() const
+{
+    switch (captureConfig_.captureMode) {
+        case CAPTURE_VIRTUAL_EXTENDED_SCREEN:
+            return "CooperationExtend";
+        default:
+            return "screen_capture";
+    }
+}
+
+VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(sptr<OHOS::Surface> consumer)
 {
     MediaTrace trace("ScreenCaptureServer::InitVirtualScreenOption");
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, name:%{public}s.",
-        FAKE_POINTER(this), name.c_str());
     VirtualScreenOption virScrOption = {
-        .name_ = name,
+        .name_ = GetVirtualScreenName(),
         .width_ = captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
         .height_ = captureConfig_.videoInfo.videoCapInfo.videoFrameHeight,
         .density_ = 0,
@@ -3382,6 +3418,8 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(const std::stri
         .virtualScreenType_ = VirtualScreenType::SCREEN_RECORDING,
         .bundleName_ = appName_,
     };
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, name:%{public}s.",
+        FAKE_POINTER(this), virScrOption.name_.c_str());
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption end.", FAKE_POINTER(this));
     return virScrOption;
 }
@@ -4707,6 +4745,11 @@ int32_t ScreenCaptureServer::ResumeScreenCaptureInner(AVScreenCaptureStateCode s
 int32_t ScreenCaptureServer::PauseVideoCapture()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PauseVideoCapture start.", FAKE_POINTER(this));
+    if (captureConfig_.captureMode == CAPTURE_VIRTUAL_EXTENDED_SCREEN) {
+        DestroyVirtualScreen();
+        MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PauseVideoCapture end.", FAKE_POINTER(this));
+        return MSERR_OK;
+    }
     if (virtualScreenId_ >= 0 && virtualScreenId_ != SCREEN_ID_INVALID && isConsumerStart_) {
         std::vector<ScreenId> screenIds;
         screenIds.push_back(virtualScreenId_);
@@ -4721,6 +4764,15 @@ int32_t ScreenCaptureServer::PauseVideoCapture()
 int32_t ScreenCaptureServer::ResumeVideoCapture()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ResumeVideoCapture start.", FAKE_POINTER(this));
+    if (captureConfig_.captureMode == CAPTURE_VIRTUAL_EXTENDED_SCREEN) {
+        sptr<OHOS::Surface> surface = isSurfaceMode_ ? surface_ : producerSurface_;
+        CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_OPERATION,
+            "ResumeVideoCapture surface is null");
+        int32_t ret = CreateVirtualScreen(surface);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ResumeVideoCapture CreateVirtualScreen failed");
+        MEDIA_LOGI("ResumeVideoCapture: recreate virtual screen success");
+        return MSERR_OK;
+    }
     if (virtualScreenId_ >= 0 && virtualScreenId_ != SCREEN_ID_INVALID) {
         int32_t ret = MakeVirtualScreenMirror();
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_MAKE_MIRROR,
