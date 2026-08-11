@@ -178,6 +178,7 @@ private:
     void ReleaseInner();
     void GetDumpFlag();
     void GetSystemUIFlag();
+    void StopMicAudio();
 
     VirtualScreenOption InitVirtualScreenOption(const std::string &name, sptr<OHOS::Surface> consumer);
     int32_t SetupVirtualScreenMirror(const sptr<Rosen::Display> &defaultDisplay,
