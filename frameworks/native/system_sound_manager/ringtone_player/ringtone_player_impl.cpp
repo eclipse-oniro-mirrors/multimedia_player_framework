@@ -114,8 +114,7 @@ RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
     CHECK_AND_RETURN_LOG(audioHapticManager_ != nullptr, "Failed to get audio haptic manager");
 
     AudioHapticPlayerOptions options = {false, false};
-    InitPlayer(specifyRingtoneUri_, mockToneHapticsSettings_, options,
-        AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
+    InitPlayer(specifyRingtoneUri_, mockToneHapticsSettings_, options);
     ReleaseDatabaseTool();
 }
 
@@ -167,7 +166,7 @@ std::string RingtonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &au
 {
     std::string hapticUri = GetNewHapticUriForAudioUri(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
     if (hapticUri.empty()) {
-        MEDIA_LOGW("Failed to find the vibration json file for audioUri.");
+        MEDIA_LOGW("Failed to find the vibration json file for audioUri. Use the default json file.");
     }
     return hapticUri;
 }
@@ -183,7 +182,7 @@ std::string RingtonePlayerImpl::GetHapticUriForAudioUri(const std::string &audio
     }
 
     if (hapticUri == "" || !IsFileExisting(hapticUri)) {
-        MEDIA_LOGW("Failed to find the vibration json file for audioUri.");
+        MEDIA_LOGW("Failed to find the vibration json file for audioUri. Use the default json file.");
     }
 
     return hapticUri;
