@@ -218,7 +218,8 @@ HWTEST_F(PlayerServiceStubTest, GetPlaybackSpeed_001, TestSize.Level0)
 {
     auto mockService = std::make_shared<MockIPlayerService>();
     ASSERT_NE(mockService, nullptr);
-    EXPECT_CALL(*mockService, GetPlaybackSpeed(_)).WillOnce(DoAll(SetArgReferee<0>(PlaybackRateMode::SPEED_FORWARD_2_00_X), Return(0)));
+    EXPECT_CALL(*mockService,
+        GetPlaybackSpeed(_)).WillOnce(DoAll(SetArgReferee<0>(PlaybackRateMode::SPEED_FORWARD_2_00_X), Return(0)));
     PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
     int32_t ret = mockService->GetPlaybackSpeed(mode);
     EXPECT_EQ(ret, 0);

@@ -28,8 +28,10 @@ namespace Media {
 
 class MockLoadingRequest : public LoadingRequest {
 public:
-    MOCK_METHOD(int32_t, RespondData, (int64_t uuid, int64_t offset, const std::shared_ptr<AVSharedMemory> &mem), (override));
-    MOCK_METHOD(int32_t, RespondHeader, (int64_t uuid, (std::map<std::string, std::string>) header, (std::string) redirectUrl), (override));
+    MOCK_METHOD(int32_t, RespondData,
+        (int64_t uuid, int64_t offset, const std::shared_ptr<AVSharedMemory> &mem), (override));
+    MOCK_METHOD(int32_t, RespondHeader,
+        (int64_t uuid, (std::map<std::string, std::string>) header, (std::string) redirectUrl), (override));
     MOCK_METHOD(int32_t, FinishLoading, (int64_t uuid, int32_t requestedError), (override));
     MOCK_METHOD(uint64_t, GetUniqueId, (), (override));
     MOCK_METHOD(std::string, GetUrl, (), (override));

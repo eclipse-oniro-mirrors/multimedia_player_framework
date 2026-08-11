@@ -23,7 +23,8 @@ namespace Media {
 
 HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithUrl_001, TestSize.Level0)
 {
-    mediaSource_ = std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
     ASSERT_NE(mediaSource_, nullptr);
     EXPECT_EQ(mediaSource_->url, "http://example.com/test.mp4");
 }
@@ -54,7 +55,8 @@ HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithDirectory_001, TestSize.Level
 
 HWTEST_F(MediaSourceNapiTest, MimeType_001, TestSize.Level0)
 {
-    mediaSource_ = std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
     ASSERT_NE(mediaSource_, nullptr);
     mediaSource_->SetMimeType("video/mp4");
     EXPECT_EQ(mediaSource_->GetMimeType(), "video/mp4");
@@ -62,7 +64,8 @@ HWTEST_F(MediaSourceNapiTest, MimeType_001, TestSize.Level0)
 
 HWTEST_F(MediaSourceNapiTest, OfflineCache_001, TestSize.Level0)
 {
-    mediaSource_ = std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
     ASSERT_NE(mediaSource_, nullptr);
     EXPECT_FALSE(mediaSource_->GetenableOfflineCache());
     mediaSource_->enableOfflineCache(true);
@@ -71,7 +74,8 @@ HWTEST_F(MediaSourceNapiTest, OfflineCache_001, TestSize.Level0)
 
 HWTEST_F(MediaSourceNapiTest, Id_001, TestSize.Level0)
 {
-    mediaSource_ = std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
     ASSERT_NE(mediaSource_, nullptr);
     mediaSource_->SetID("test-id-123");
     EXPECT_EQ(mediaSource_->GetID(), "test-id-123");
@@ -79,8 +83,10 @@ HWTEST_F(MediaSourceNapiTest, Id_001, TestSize.Level0)
 
 HWTEST_F(MediaSourceNapiTest, MultipleMediaSourceInstances_001, TestSize.Level0)
 {
-    auto source1 = std::make_shared<AVMediaSource>("http://example.com/video1.mp4", std::map<std::string, std::string>{});
-    auto source2 = std::make_shared<AVMediaSource>("http://example.com/video2.mp4", std::map<std::string, std::string>{});
+    auto source1 =
+        std::make_shared<AVMediaSource>("http://example.com/video1.mp4", std::map<std::string, std::string>{});
+    auto source2 =
+        std::make_shared<AVMediaSource>("http://example.com/video2.mp4", std::map<std::string, std::string>{});
     ASSERT_NE(source1, nullptr);
     ASSERT_NE(source2, nullptr);
     EXPECT_NE(source1->url, source2->url);

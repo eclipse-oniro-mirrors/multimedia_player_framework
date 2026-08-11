@@ -213,7 +213,8 @@ HWTEST_F(AVDownloaderManagerTest, ConvertToAVDownloadTaskState_PAUSED_001, TestS
 
 HWTEST_F(AVDownloaderManagerTest, ConvertToAVDownloadTaskState_COMPLETED_001, TestSize.Level0)
 {
-    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::DOWNLOAD_COMPLETED);
+    auto state =
+        AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::DOWNLOAD_COMPLETED);
     EXPECT_EQ(state, AVDownloadTaskState::COMPLETED);
 }
 
@@ -443,7 +444,8 @@ HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_BasicCreate_001, Te
     ASSERT_NE(manager, nullptr);
     
     auto source = std::make_shared<Plugins::MediaSource>("http://example.com/test.mp4");
-    auto [taskId, taskInfo, downloader, filePath] = manager->CreateNewDownloaderAndTask(source, "http://example.com/test.mp4");
+    auto [taskId, taskInfo, downloader, filePath] =
+        manager->CreateNewDownloaderAndTask(source, "http://example.com/test.mp4");
     
     EXPECT_FALSE(taskId.empty());
     EXPECT_NE(taskInfo, nullptr);
@@ -467,7 +469,8 @@ HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_WithPlayStrategy_00
     strategy->duration = 5000;
     (void)source->SetPlayStrategy(strategy);
 
-    auto [taskId, taskInfo, downloader, filePath] = manager->CreateNewDownloaderAndTask(source, "http://example.com/test.mp4");
+    auto [taskId, taskInfo, downloader, filePath] =
+        manager->CreateNewDownloaderAndTask(source, "http://example.com/test.mp4");
 
     EXPECT_FALSE(taskId.empty());
     EXPECT_NE(taskInfo, nullptr);
