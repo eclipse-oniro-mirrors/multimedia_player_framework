@@ -67,7 +67,7 @@ void StreamIDManagerUnitTest::TearDown(void)
 HWTEST_F(StreamIDManagerUnitTest, streamId_function_001, TestSize.Level2)
 {
     MEDIA_LOGI("streamId_function_001 before");
-    streamIDManager_->isStreamPlayingThreadPoolStarted_.store(true);
+    streamIDManager_->isStreamThreadPoolStarted_.store(true);
     EXPECT_EQ(MSERR_OK, streamIDManager_->InitThreadPool());
     MEDIA_LOGI("streamId_function_001 after");
 }
@@ -81,7 +81,7 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_001, TestSize.Level2)
 HWTEST_F(StreamIDManagerUnitTest, streamId_function_002, TestSize.Level2)
 {
     MEDIA_LOGI("streamId_function_002 before");
-    streamIDManager_->isStreamPlayingThreadPoolStarted_.store(false);
+    streamIDManager_->isStreamThreadPoolStarted_.store(false);
     streamIDManager_->maxStreams_ = 0;
     EXPECT_EQ(MSERR_OK, streamIDManager_->InitThreadPool());
     MEDIA_LOGI("streamId_function_002 after");
@@ -96,7 +96,7 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_002, TestSize.Level2)
 HWTEST_F(StreamIDManagerUnitTest, streamId_function_003, TestSize.Level2)
 {
     MEDIA_LOGI("streamId_function_003 before");
-    streamIDManager_->isStreamPlayingThreadPoolStarted_.store(false);
+    streamIDManager_->isStreamThreadPoolStarted_.store(false);
     PlayParams playParams;
     EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->SetPlay(0, 0, playParams));
     MEDIA_LOGI("streamId_function_003 after");
@@ -111,7 +111,7 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_003, TestSize.Level2)
 HWTEST_F(StreamIDManagerUnitTest, streamId_function_004, TestSize.Level2)
 {
     MEDIA_LOGI("streamId_function_004 before");
-    streamIDManager_->isStreamPlayingThreadPoolStarted_.store(false);
+    streamIDManager_->isStreamThreadPoolStarted_.store(false);
     streamIDManager_->playingStreamIDs_.emplace_back(BEGIN_NUM);
     streamIDManager_->QueueAndSortPlayingStreamID(BEGIN_NUM);
     EXPECT_EQ(1, streamIDManager_->playingStreamIDs_.size());
