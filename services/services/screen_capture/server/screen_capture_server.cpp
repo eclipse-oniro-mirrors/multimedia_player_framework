@@ -3767,7 +3767,7 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
 #endif
     bool micStop = !isMicrophoneSwitchTurnOn_ || (state & AUDIO_STATE_TEL) ||
         (micAudioCapture_ && micAudioCapture_->IsInVoIPCall() != ((state & AUDIO_STATE_VOIP) != 0));
-    bool micStart = isMicrophoneSwitchTurnOn_ && !(state & AUDIO_STATE_TEL);
+    bool micStart = isMicrophoneSwitchTurnOn_;
     bool innerStart;
     {
         std::shared_lock<std::shared_mutex> configLock(captureConfigMutex_);
@@ -3780,7 +3780,13 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
                "isMicrophoneSwitchTurnOn_=%{public}d micStop=%{public}d micStart=%{public}d innerStart=%{public}d "
                "ignoreMicError=%{public}d",
         FAKE_POINTER(this), newState, state, IsMicrophoneSwitchTurnOn(), micStop, micStart, innerStart, ignoreMicError);
-
+#ifdef SUPPORT_CALL
+    if (providers_->GetInCallObserver().IsInCall(true) && isMicrophoneSwitchTurnOn_) {
+        MEDIA_LOGE("Try SetMicrophoneOn But In Call");
+        cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+        return MSERR_UNKNOWN_INCALL;
+    }
+#endif
     if (micStop) {
         if (micAudioCapture_ && micAudioCapture_->IsRecording()) {
             usleep(AUDIO_CHANGE_TIME);
