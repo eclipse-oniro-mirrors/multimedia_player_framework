@@ -3767,7 +3767,7 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
 #endif
     bool micStop = !isMicrophoneSwitchTurnOn_ || (state & AUDIO_STATE_TEL) ||
         (micAudioCapture_ && micAudioCapture_->IsInVoIPCall() != ((state & AUDIO_STATE_VOIP) != 0));
-    bool micStart = isMicrophoneSwitchTurnOn_;
+    bool micStart = isMicrophoneSwitchTurnOn_ && !(state & AUDIO_STATE_TEL);
     bool innerStart;
     {
         std::shared_lock<std::shared_mutex> configLock(captureConfigMutex_);
