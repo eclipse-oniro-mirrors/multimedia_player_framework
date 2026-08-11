@@ -69,6 +69,7 @@ int32_t CJHelperDataSourceCallback::ReadAt(
 {
     int32_t ret = 0;
     MEDIA_LOGD("ReadAt in");
+    std::shared_ptr<HelperDataSourceCJCallback> cb;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (funcMap_.find(HELPER_READAT_CALLBACK_NAME) == funcMap_.end()) {
@@ -77,19 +78,20 @@ int32_t CJHelperDataSourceCallback::ReadAt(
         cb_ = std::make_shared<HelperDataSourceCJCallback>(HELPER_READAT_CALLBACK_NAME, mem, length, pos);
         CHECK_AND_RETURN_RET_LOG(cb_ != nullptr, 0, "Failed to Create HelperDataSourceCJCallback");
         cb_->callback_ = funcMap_.at(HELPER_READAT_CALLBACK_NAME).second;
+        cb = cb_;
     }
-    do {
-        MEDIA_LOGD("length is %{public}u", length);
-        auto arraybuffer = mem->GetBase();
-        if (arraybuffer == nullptr) {
-            MEDIA_LOGE("Failed to get arraybuffer.");
-        }
-        ret = cb_->callback_(arraybuffer, length, pos);
-        std::unique_lock<std::mutex> lock(cb_->mutexCond_);
-        cb_->setResult_ = true;
-        cb_->cond_.notify_all();
-    } while (0);
-    cb_->WaitResult();
+    MEDIA_LOGD("length is %{public}u", length);
+    auto arraybuffer = mem->GetBase();
+    if (arraybuffer == nullptr) {
+        MEDIA_LOGE("Failed to get arraybuffer.");
+    }
+    ret = cb->callback_(arraybuffer, length, pos);
+    {
+        std::unique_lock<std::mutex> lock(cb->mutexCond_);
+        cb->setResult_ = true;
+        cb->cond_.notify_all();
+    }
+    cb->WaitResult();
     return ret;
 }
 
