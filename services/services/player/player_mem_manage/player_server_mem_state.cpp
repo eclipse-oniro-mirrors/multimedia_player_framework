@@ -102,7 +102,18 @@ int32_t PlayerServerMem::MemInitializedState::MemStateRecover()
     return MemRecoverToInitialized();
 }
 
+int32_t PlayerServerMem::MemStoppedState::MemStateRecover()
+{
+    return MemRecoverToInitialized();
+}
+
 int32_t PlayerServerMem::MemInitializedState::MemStateRelease()
+{
+    playerServerMem_.GetPlayerServerConfig();
+    return MSERR_OK;
+}
+
+int32_t PlayerServerMem::MemStoppedState::MemStateRelease()
 {
     playerServerMem_.GetPlayerServerConfig();
     return MSERR_OK;
