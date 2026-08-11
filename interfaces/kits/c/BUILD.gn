@@ -91,6 +91,7 @@ ohos_shared_library("native_avscreen_capture") {
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
     "c_utils:utils",
+    "graphic_2d:color_manager",
     "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_core",
