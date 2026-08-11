@@ -16,7 +16,7 @@
 #include "player_listener_test.h"
 
 using namespace testing;
-using namespace testing::Ext;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
@@ -25,8 +25,8 @@ HWTEST_F(PlayerListenerTest, OnError_WithType_001, TestSize.Level0)
 {
     auto mockListener = std::make_shared<MockIStandardPlayerListener>();
     ASSERT_NE(mockListener, nullptr);
-    EXPECT_CALL(*mockListener, OnError(PlayerErrorType::MEDIA_ERROR_UNKNOWN, 1001)).Times(1);
-    mockListener->OnError(PlayerErrorType::MEDIA_ERROR_UNKNOWN, 1001);
+    EXPECT_CALL(*mockListener, OnError(PlayerErrorType::PLAYER_ERROR_UNKNOWN, 1001)).Times(1);
+    mockListener->OnError(PlayerErrorType::PLAYER_ERROR_UNKNOWN, 1001);
 }
 
 HWTEST_F(PlayerListenerTest, OnError_WithMsg_001, TestSize.Level0)
@@ -43,8 +43,8 @@ HWTEST_F(PlayerListenerTest, OnInfo_001, TestSize.Level0)
     auto mockListener = std::make_shared<MockIStandardPlayerListener>();
     ASSERT_NE(mockListener, nullptr);
     Format infoBody;
-    EXPECT_CALL(*mockListener, OnInfo(PlayerOnInfoType::INFO_TYPE_SEEKBABLE_RANGES_CHANGED, 0, _)).Times(1);
-    mockListener->OnInfo(PlayerOnInfoType::INFO_TYPE_SEEKBABLE_RANGES_CHANGED, 0, infoBody);
+    EXPECT_CALL(*mockListener, OnInfo(PlayerOnInfoType::INFO_TYPE_SEEKDONE, 0, _)).Times(1);
+    mockListener->OnInfo(PlayerOnInfoType::INFO_TYPE_SEEKDONE, 0, infoBody);
 }
 
 HWTEST_F(PlayerListenerTest, SetFreezeFlag_True_001, TestSize.Level0)
@@ -81,20 +81,20 @@ HWTEST_F(PlayerListenerTest, SetInterruptListenerFlag_False_001, TestSize.Level0
 
 HWTEST_F(PlayerListenerTest, PlayerErrorType_Values_001, TestSize.Level0)
 {
-    EXPECT_EQ(static_cast<int32_t>(PlayerErrorType::MEDIA_ERROR_UNKNOWN), 0);
-    EXPECT_EQ(static_cast<int32_t>(PlayerErrorType::MEDIA_ERROR_INVALID_PARAMETER), 1);
-    EXPECT_EQ(static_cast<int32_t>(PlayerErrorType::MEDIA_ERROR_NULL_POINTER), 2);
-    EXPECT_EQ(static_cast<int32_t>(PlayerErrorType::MEDIA_ERROR_TIMEOUT), 3);
+    EXPECT_EQ(static_cast<int32_t>(PlayerErrorType::PLAYER_ERROR), 0);
+    EXPECT_EQ(static_cast<int32_t>(PlayerErrorType::PLAYER_ERROR_UNKNOWN), 1);
+    EXPECT_EQ(static_cast<int32_t>(PlayerErrorType::PLAY_ERR), 0x10001);
+    EXPECT_EQ(static_cast<int32_t>(PlayerErrorType::NET_ERR), 0x10002);
 }
 
 HWTEST_F(PlayerListenerTest, PlayerOnInfoType_Values_001, TestSize.Level0)
 {
-    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_SEEKBABLE_RANGES_CHANGED), 0);
-    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATED), 1);
-    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_DURATION_UPDATED), 2);
-    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_BUFFERING_UPDATE), 3);
-    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_RESOLUTION_CHANGE), 4);
-    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_MESSAGE), 5);
+    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_SEEKDONE), 1);
+    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_SPEEDDONE), 2);
+    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_BITRATEDONE), 3);
+    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_EOS), 4);
+    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_STATE_CHANGE), 5);
+    EXPECT_EQ(static_cast<int32_t>(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATE), 6);
 }
 
 HWTEST_F(PlayerListenerTest, MultipleCallbacks_001, TestSize.Level0)
@@ -103,10 +103,10 @@ HWTEST_F(PlayerListenerTest, MultipleCallbacks_001, TestSize.Level0)
     ASSERT_NE(mockListener, nullptr);
 
     Format infoBody;
-    EXPECT_CALL(*mockListener, OnInfo(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATED, 0, _)).Times(3);
-    mockListener->OnInfo(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATED, 0, infoBody);
-    mockListener->OnInfo(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATED, 0, infoBody);
-    mockListener->OnInfo(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATED, 0, infoBody);
+    EXPECT_CALL(*mockListener, OnInfo(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATE, 0, _)).Times(3);
+    mockListener->OnInfo(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATE, 0, infoBody);
+    mockListener->OnInfo(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATE, 0, infoBody);
+    mockListener->OnInfo(PlayerOnInfoType::INFO_TYPE_POSITION_UPDATE, 0, infoBody);
 }
 
 HWTEST_F(PlayerListenerTest, OnError_WithEmptyMsg_001, TestSize.Level0)

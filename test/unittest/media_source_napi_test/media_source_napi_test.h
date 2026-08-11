@@ -17,25 +17,13 @@
 #define MEDIA_SOURCE_NAPI_TEST_H
 
 #include "gtest/gtest.h"
-#include "gmock/gmock.h"
 #include <string>
+#include <map>
 #include <memory>
-#include <vector>
-#include "media_source.h"
+#include "player.h"
 
 namespace OHOS {
 namespace Media {
-
-class MockMediaSource : public Plugins::MediaSource {
-public:
-    MockMediaSource() : Plugins::MediaSource("") {}
-    explicit MockMediaSource(const std::string &url) : Plugins::MediaSource(url) {}
-
-    MOCK_METHOD(std::string, GetSourceUri, (), (const, override));
-    MOCK_METHOD(MediaSourceType, GetSourceType, (), (const, override));
-    MOCK_METHOD(std::vector<std::string>, GetSupportedProtocols, (), (const, override));
-    MOCK_METHOD(std::vector<ProtocolType>, GetProtocolTypes, (), (const, override));
-};
 
 class MediaSourceNapiTest : public testing::Test {
 public:
@@ -45,7 +33,7 @@ public:
     void TearDown(void) {}
 
 protected:
-    std::shared_ptr<MockMediaSource> mockMediaSource_;
+    std::shared_ptr<AVMediaSource> mediaSource_;
 };
 
 } // namespace Media

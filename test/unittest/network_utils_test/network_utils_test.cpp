@@ -14,10 +14,10 @@
  */
 
 #include "network_utils_test.h"
-#include "network_utils.cpp"
 
 using namespace testing;
-using namespace testing::Ext;
+using namespace testing::ext;
+using namespace OHOS::Media::MediaSourceUtils;
 
 namespace OHOS {
 namespace Media {
@@ -134,13 +134,13 @@ HWTEST_F(NetworkUtilsTest, GetConnectionProperties_001, TestSize.Level0)
 
 HWTEST_F(NetworkUtilsTest, NetConnType_Values_001, TestSize.Level0)
 {
-    EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_UNKNOWN), 0);
-    EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_CELLULAR), 1);
-    EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_WIFI), 2);
-    EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_BLUETOOTH), 3);
-    EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_ETHERNET), 4);
-    EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_VPN), 5);
-    EXPECT_EQ(static_cast<int32_t>(NetConnType::NET_CONN_NONE), 6);
+    EXPECT_EQ(static_cast<int32_t>(NET_CONN_UNKNOWN), 0);
+    EXPECT_EQ(static_cast<int32_t>(NET_CONN_CELLULAR), 1);
+    EXPECT_EQ(static_cast<int32_t>(NET_CONN_WIFI), 2);
+    EXPECT_EQ(static_cast<int32_t>(NET_CONN_BLUETOOTH), 3);
+    EXPECT_EQ(static_cast<int32_t>(NET_CONN_ETHERNET), 4);
+    EXPECT_EQ(static_cast<int32_t>(NET_CONN_VPN), 5);
+    EXPECT_EQ(static_cast<int32_t>(NET_CONN_NONE), 6);
 }
 
 HWTEST_F(NetworkUtilsTest, ConnProperties_Struct_001, TestSize.Level0)
@@ -161,10 +161,10 @@ HWTEST_F(NetworkUtilsTest, ConnProperties_Struct_001, TestSize.Level0)
 
 HWTEST_F(NetworkUtilsTest, NetworkChangeCallback_Type_001, TestSize.Level0)
 {
-    NetworkChangeCallback callback = [](NetConnType type) {
-        EXPECT_TRUE(type >= NetConnType::NET_CONN_UNKNOWN && type <= NetConnType::NET_CONN_NONE);
+    NetworkUtils::NetworkChangeCallback callback = [](NetConnType type) {
+        EXPECT_TRUE(type >= NET_CONN_UNKNOWN && type <= NET_CONN_NONE);
     };
-    callback(NetConnType::NET_CONN_WIFI);
+    callback(NET_CONN_WIFI);
 }
 
 } // namespace Media

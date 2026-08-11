@@ -23,71 +23,67 @@ namespace Media {
 
 HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithUrl_001, TestSize.Level0)
 {
-    auto mediaSource = std::make_shared<MockMediaSource>("http://example.com/test.mp4");
-    ASSERT_NE(mediaSource, nullptr);
-    EXPECT_CALL(*mediaSource, GetSourceUri()).WillRepeatedly(Return("http://example.com/test.mp4"));
-    EXPECT_EQ(mediaSource->GetSourceUri(), "http://example.com/test.mp4");
+    mediaSource_ = std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    EXPECT_EQ(mediaSource_->url, "http://example.com/test.mp4");
 }
 
 HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithUrl_EmptyUrl_001, TestSize.Level0)
 {
-    auto mediaSource = std::make_shared<MockMediaSource>("");
-    ASSERT_NE(mediaSource, nullptr);
-    EXPECT_CALL(*mediaSource, GetSourceUri()).WillRepeatedly(Return(""));
-    EXPECT_EQ(mediaSource->GetSourceUri(), "");
+    mediaSource_ = std::make_shared<AVMediaSource>("", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    EXPECT_EQ(mediaSource_->url, "");
 }
 
-HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithUrl_WithHeader_001, TestSize.Level0)
+HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithHeader_001, TestSize.Level0)
 {
-    auto mediaSource = std::make_shared<MockMediaSource>("http://example.com/test.mp4");
-    ASSERT_NE(mediaSource, nullptr);
-    EXPECT_CALL(*mediaSource, GetSourceUri()).WillRepeatedly(Return("http://example.com/test.mp4"));
-    EXPECT_EQ(mediaSource->GetSourceUri(), "http://example.com/test.mp4");
+    std::map<std::string, std::string> headers = {{"User-Agent", "test"}, {"Range", "bytes=0-1024"}};
+    mediaSource_ = std::make_shared<AVMediaSource>("http://example.com/test.mp4", headers);
+    ASSERT_NE(mediaSource_, nullptr);
+    EXPECT_EQ(mediaSource_->url, "http://example.com/test.mp4");
+    EXPECT_EQ(mediaSource_->header.size(), 2);
+    EXPECT_EQ(mediaSource_->header["User-Agent"], "test");
 }
 
-HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithDirectory_ValidPath_001, TestSize.Level0)
+HWTEST_F(MediaSourceNapiTest, CreateMediaSourceWithDirectory_001, TestSize.Level0)
 {
-    auto mediaSource = std::make_shared<MockMediaSource>("/data/media");
-    ASSERT_NE(mediaSource, nullptr);
-    EXPECT_CALL(*mediaSource, GetSourceUri()).WillRepeatedly(Return("/data/media"));
-    EXPECT_EQ(mediaSource->GetSourceUri(), "/data/media");
+    mediaSource_ = std::make_shared<AVMediaSource>("/data/media");
+    ASSERT_NE(mediaSource_, nullptr);
+    EXPECT_EQ(mediaSource_->GetDirectoryPath(), "/data/media");
 }
 
-HWTEST_F(MediaSourceNapiTest, MediaSourceType_001, TestSize.Level0)
+HWTEST_F(MediaSourceNapiTest, MimeType_001, TestSize.Level0)
 {
-    auto mediaSource = std::make_shared<MockMediaSource>("http://example.com/test.mp4");
-    ASSERT_NE(mediaSource, nullptr);
-    EXPECT_CALL(*mediaSource, GetSourceType()).WillRepeatedly(Return(Plugins::MediaSourceType::SOURCE_TYPE_URL));
-    EXPECT_EQ(mediaSource->GetSourceType(), Plugins::MediaSourceType::SOURCE_TYPE_URL);
+    mediaSource_ = std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    mediaSource_->SetMimeType("video/mp4");
+    EXPECT_EQ(mediaSource_->GetMimeType(), "video/mp4");
 }
 
-HWTEST_F(MediaSourceNapiTest, GetSupportedProtocols_001, TestSize.Level0)
+HWTEST_F(MediaSourceNapiTest, OfflineCache_001, TestSize.Level0)
 {
-    auto mediaSource = std::make_shared<MockMediaSource>("http://example.com/test.mp4");
-    ASSERT_NE(mediaSource, nullptr);
-    EXPECT_CALL(*mediaSource, GetSupportedProtocols()).WillRepeatedly(Return(std::vector<std::string>{"http", "https"}));
-    auto protocols = mediaSource->GetSupportedProtocols();
-    EXPECT_EQ(protocols.size(), 2);
+    mediaSource_ = std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    EXPECT_FALSE(mediaSource_->GetenableOfflineCache());
+    mediaSource_->enableOfflineCache(true);
+    EXPECT_TRUE(mediaSource_->GetenableOfflineCache());
 }
 
-HWTEST_F(MediaSourceNapiTest, GetProtocolTypes_001, TestSize.Level0)
+HWTEST_F(MediaSourceNapiTest, Id_001, TestSize.Level0)
 {
-    auto mediaSource = std::make_shared<MockMediaSource>("http://example.com/test.mp4");
-    ASSERT_NE(mediaSource, nullptr);
-    EXPECT_CALL(*mediaSource, GetProtocolTypes()).WillRepeatedly(Return(std::vector<Plugins::ProtocolType>{Plugins::ProtocolType::HTTP, Plugins::ProtocolType::HTTPS}));
-    auto types = mediaSource->GetProtocolTypes();
-    EXPECT_EQ(types.size(), 2);
+    mediaSource_ = std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    mediaSource_->SetID("test-id-123");
+    EXPECT_EQ(mediaSource_->GetID(), "test-id-123");
 }
 
 HWTEST_F(MediaSourceNapiTest, MultipleMediaSourceInstances_001, TestSize.Level0)
 {
-    auto mediaSource1 = std::make_shared<MockMediaSource>("http://example.com/video1.mp4");
-    auto mediaSource2 = std::make_shared<MockMediaSource>("http://example.com/video2.mp4");
-    ASSERT_NE(mediaSource1, nullptr);
-    ASSERT_NE(mediaSource2, nullptr);
-    EXPECT_CALL(*mediaSource1, GetSourceUri()).WillRepeatedly(Return("http://example.com/video1.mp4"));
-    EXPECT_CALL(*mediaSource2, GetSourceUri()).WillRepeatedly(Return("http://example.com/video2.mp4"));
-    EXPECT_NE(mediaSource1->GetSourceUri(), mediaSource2->GetSourceUri());
+    auto source1 = std::make_shared<AVMediaSource>("http://example.com/video1.mp4", std::map<std::string, std::string>{});
+    auto source2 = std::make_shared<AVMediaSource>("http://example.com/video2.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(source1, nullptr);
+    ASSERT_NE(source2, nullptr);
+    EXPECT_NE(source1->url, source2->url);
 }
 
 } // namespace Media

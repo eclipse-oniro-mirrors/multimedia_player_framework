@@ -23,12 +23,59 @@ ohos_unittest("player_client_test") {
     "../",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/server_manager",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/audio_background_adapter",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/player_mem_manage",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/player/subscriber",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader",
-    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/observer",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/pcm_output/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodec/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodec/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodeclist/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/avcodeclist/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture-monitor/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture-monitor/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/factory",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
+    "$MEDIA_PLAYER_ROOT_DIR/services/dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/media_source_loading_request",
   ]
+
+  if (player_framework_support_avsession_background) {
+    include_dirs += [
+      "$MEDIA_PLAYER_ROOT_DIR/services/services/player/avsession_background",
+    ]
+  }
 
   cflags = [
     "-Wall",
@@ -45,11 +92,60 @@ ohos_unittest("player_client_test") {
   }
 
   external_deps = [
+    "ability_runtime:ability_connect_callback_stub",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libtokenid_sdk",
+    "audio_framework:audio_client",
+    "av_codec:av_codec_client",
     "c_utils:utils",
+    "common_event_service:cesfwk_innerkits",
     "googletest:gmock",
+    "graphic_2d:librender_service_base",
+    "hdf_core:libhdi",
+    "hicollie:libhicollie",
     "hilog:libhilog",
+    "hisysevent:libhisysevent",
+    "hitrace:hitrace_meter",
+    "hitrace:libhitracechain",
+    "hiview:libucollection_client",
+    "i18n:intl_util",
+    "image_framework:image_native",
+    "init:libbegetutil",
+    "ipc:ipc_single",
+    "jsoncpp:jsoncpp",
+    "libxml2:libxml2",
     "media_foundation:media_foundation",
+    "memmgr:memmgrclient",
+    "napi:ace_napi",
+    "os_account:os_account_innerkits",
+    "openssl:libcrypto_shared",
+    "qos_manager:qos",
+    "resource_management:global_resmgr",
+    "resource_schedule_service:ressched_client",
+    "safwk:system_ability_fwk",
+    "samgr:samgr_proxy",
+    "zlib:shared_libz",
   ]
+
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
+  if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
+    external_deps += [
+      "drivers_interface_lpplayer:liblow_power_player_proxy_1.0",
+    ]
+  }
+
+  if (player_framework_support_avsession_background) {
+    external_deps += [
+      "ability_base:want",
+      "ability_runtime:wantagent_innerkits",
+      "audio_framework:audio_client",
+      "av_session:avsession_client",
+      "input:libmmi-client",
+    ]
+  }
 
   deps = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
@@ -65,6 +161,30 @@ ohos_unittest("player_client_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/player/ipc/player_service_stub.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client/monitor_client.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client/monitor_client_object.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/ipc/media_source_loader_stub.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/ipc/media_source_loading_request_proxy.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/media_loader.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/custom_loader_callback.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/cache_manager.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/file_cache_manager.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/http_header_parser.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/request_handler.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/network_client_agent.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils/path_utils.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc/dolby_passthrough_stub.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/pcm_output/ipc/pcm_output_callback_stub.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/media_source_loading_request/loading_request_impl.cpp",
     "player_client_test.cpp",
   ]
 

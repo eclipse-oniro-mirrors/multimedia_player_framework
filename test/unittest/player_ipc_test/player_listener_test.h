@@ -22,12 +22,14 @@
 #include <memory>
 #include <vector>
 #include "i_standard_player_listener.h"
+#include "iremote_object.h"
 
 namespace OHOS {
 namespace Media {
 
 class MockIStandardPlayerListener : public IStandardPlayerListener {
 public:
+    MOCK_METHOD(sptr<IRemoteObject>, AsObject, (), (override));
     MOCK_METHOD(void, OnError, (PlayerErrorType errorType, int32_t errorCode), (override));
     MOCK_METHOD(void, OnError, (int32_t errorCode, const std::string &errorMsg), (override));
     MOCK_METHOD(void, OnInfo, (PlayerOnInfoType type, int32_t extra, const Format &infoBody), (override));

@@ -21,8 +21,6 @@ ohos_unittest("avdownloader_manager_napi_test") {
 
   include_dirs = [
     "../",
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/avdownloader/include",
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/avdownloader/src",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/include",
   ]
@@ -54,7 +52,6 @@ ohos_unittest("avdownloader_manager_napi_test") {
   ]
 
   sources = [
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/avdownloader/src/avdownloader_manager_napi.cpp",
     "avdownloader_manager_napi_test.cpp",
   ]
 

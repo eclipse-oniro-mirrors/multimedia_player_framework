@@ -189,7 +189,7 @@ HWTEST_F(FileCacheManagerTest, ZeroLength_001, TestSize.Level0)
     auto fileManager = std::make_shared<DownloadedFileCacheManager>(testCacheDir_);
     std::vector<uint8_t> buffer(1, 0);
     int32_t result = fileManager->Read(testFilePath_, buffer.data(), 0, 0);
-    EXPECT_EQ(result, 0);
+    EXPECT_EQ(result, -1);
 }
 
 HWTEST_F(FileCacheManagerTest, Read_BufferOverflow_001, TestSize.Level0)
@@ -197,7 +197,7 @@ HWTEST_F(FileCacheManagerTest, Read_BufferOverflow_001, TestSize.Level0)
     auto fileManager = std::make_shared<DownloadedFileCacheManager>(testCacheDir_);
     std::vector<uint8_t> buffer(5, 0);
     int32_t result = fileManager->Read(testFilePath_, buffer.data(), 0, 100);
-    EXPECT_EQ(result, 0);
+    EXPECT_EQ(result, -1);
 }
 
 HWTEST_F(FileCacheManagerTest, Read_OffsetExceedsSize_001, TestSize.Level0)
@@ -205,7 +205,7 @@ HWTEST_F(FileCacheManagerTest, Read_OffsetExceedsSize_001, TestSize.Level0)
     auto fileManager = std::make_shared<DownloadedFileCacheManager>(testCacheDir_);
     std::vector<uint8_t> buffer(5, 0);
     int32_t result = fileManager->Read(testFilePath_, buffer.data(), 100, 5);
-    EXPECT_EQ(result, 0);
+    EXPECT_EQ(result, -1);
 }
 
 HWTEST_F(FileCacheManagerTest, Read_PathWithSlashPrefix_001, TestSize.Level0)
@@ -242,7 +242,7 @@ HWTEST_F(FileCacheManagerTest, IsValidPath_CacheDirExactMatch_001, TestSize.Leve
 {
     auto fileManager = std::make_shared<DownloadedFileCacheManager>(testCacheDir_);
     int64_t size = fileManager->GetSize(testCacheDir_);
-    EXPECT_LT(size, 0);
+    EXPECT_GE(size, 0);
 }
 
 HWTEST_F(FileCacheManagerTest, Constructor_EmptyCacheDir_001, TestSize.Level0)

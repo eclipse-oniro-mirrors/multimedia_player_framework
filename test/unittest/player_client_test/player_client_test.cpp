@@ -14,9 +14,10 @@
  */
 
 #include "player_client_test.h"
+#include "media_errors.h"
 
 using namespace testing;
-using namespace testing::Ext;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
@@ -128,8 +129,8 @@ HWTEST_F(PlayerClientTest, SetLooping_False_DelegatesToProxy_001, TestSize.Level
 
 HWTEST_F(PlayerClientTest, SetPlaybackSpeed_DelegatesToProxy_001, TestSize.Level0)
 {
-    EXPECT_CALL(*mockService_, SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2X)).WillOnce(Return(MSERR_OK));
-    int32_t ret = playerClient_->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2X);
+    EXPECT_CALL(*mockService_, SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2_00_X)).WillOnce(Return(MSERR_OK));
+    int32_t ret = playerClient_->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2_00_X);
     EXPECT_EQ(ret, MSERR_OK);
 }
 

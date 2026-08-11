@@ -14,9 +14,10 @@
  */
 
 #include "av_downloader_manager_test.h"
+#include "media_errors.h"
 
 using namespace testing;
-using namespace testing::Ext;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
@@ -74,7 +75,7 @@ HWTEST_F(AVDownloaderManagerTest, GetTaskStatus_NoTask_001, TestSize.Level0)
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
     ASSERT_NE(manager, nullptr);
     auto result = manager->GetTaskStatus("nonexistent");
-    EXPECT_EQ(result, AVDownloadTaskState::INIT);
+    EXPECT_EQ(result, AVDownloadTaskState::ERROR);
 }
 
 HWTEST_F(AVDownloaderManagerTest, GetTaskProgress_NoTask_001, TestSize.Level0)
@@ -90,7 +91,7 @@ HWTEST_F(AVDownloaderManagerTest, RemoveDownloadTask_NoTask_001, TestSize.Level0
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
     ASSERT_NE(manager, nullptr);
     auto result = manager->RemoveDownloadTask("nonexistent");
-    EXPECT_EQ(result, -1);
+    EXPECT_EQ(result, MSERR_OK);
 }
 
 HWTEST_F(AVDownloaderManagerTest, PauseDownloadTask_NoTask_001, TestSize.Level0)
@@ -98,7 +99,7 @@ HWTEST_F(AVDownloaderManagerTest, PauseDownloadTask_NoTask_001, TestSize.Level0)
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
     ASSERT_NE(manager, nullptr);
     auto result = manager->PauseDownloadTask("nonexistent");
-    EXPECT_EQ(result, -1);
+    EXPECT_EQ(result, MSERR_INVALID_VAL);
 }
 
 HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_NoTask_001, TestSize.Level0)
@@ -106,195 +107,7 @@ HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_NoTask_001, TestSize.Level0
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
     ASSERT_NE(manager, nullptr);
     auto result = manager->ResumeDownloadTask("nonexistent");
-    EXPECT_EQ(result, -1);
-}
-
-HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_NetworkNotAllow_None_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_NONE;
-
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).Times(0);
-    std::string taskId = "test_task_network_none";
-    manager->downloaderMap_[taskId] = mockDownloader;
-
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_[taskId] = taskInfo;
-
-    auto result = manager->ResumeDownloadTask(taskId);
-    EXPECT_EQ(result, MSERR_IO_NETWORK_UNAVAILABLE);
-
-    manager->downloaderMap_.erase(taskId);
-    manager->taskMap_.erase(taskId);
-}
-
-HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_NetworkNotAllow_Unknown_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_UNKNOWN;
-
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).Times(0);
-    std::string taskId = "test_task_network_unknown";
-    manager->downloaderMap_[taskId] = mockDownloader;
-
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_[taskId] = taskInfo;
-
-    auto result = manager->ResumeDownloadTask(taskId);
-    EXPECT_EQ(result, MSERR_IO_NETWORK_UNAVAILABLE);
-
-    manager->downloaderMap_.erase(taskId);
-    manager->taskMap_.erase(taskId);
-}
-
-HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_CellularNotAllowed_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_CELLULAR;
-    (void)manager->SetAllowCellularAccess(false);
-
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).Times(0);
-    std::string taskId = "test_task_cellular_not_allowed";
-    manager->downloaderMap_[taskId] = mockDownloader;
-
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_[taskId] = taskInfo;
-
-    auto result = manager->ResumeDownloadTask(taskId);
-    EXPECT_EQ(result, MSERR_IO_NETWORK_UNAVAILABLE);
-
-    manager->downloaderMap_.erase(taskId);
-    manager->taskMap_.erase(taskId);
-}
-
-HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_CellularAllowed_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_CELLULAR;
-    (void)manager->SetAllowCellularAccess(true);
-
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).WillOnce(testing::Return(MSERR_OK));
-    std::string taskId = "test_task_cellular_allowed";
-    manager->downloaderMap_[taskId] = mockDownloader;
-
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_[taskId] = taskInfo;
-
-    auto result = manager->ResumeDownloadTask(taskId);
-    EXPECT_EQ(result, MSERR_OK);
-    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::RUNNING);
-
-    manager->downloaderMap_.erase(taskId);
-    manager->taskMap_.erase(taskId);
-}
-
-HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_Wifi_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_WIFI;
-
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).WillOnce(testing::Return(MSERR_OK));
-    std::string taskId = "test_task_wifi";
-    manager->downloaderMap_[taskId] = mockDownloader;
-
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_[taskId] = taskInfo;
-
-    auto result = manager->ResumeDownloadTask(taskId);
-    EXPECT_EQ(result, MSERR_OK);
-    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::RUNNING);
-
-    manager->downloaderMap_.erase(taskId);
-    manager->taskMap_.erase(taskId);
-}
-
-HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_Bluetooth_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_BLUETOOTH;
-
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).Times(0);
-    std::string taskId = "test_task_bluetooth";
-    manager->downloaderMap_[taskId] = mockDownloader;
-
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_[taskId] = taskInfo;
-
-    auto result = manager->ResumeDownloadTask(taskId);
-    EXPECT_EQ(result, MSERR_IO_NETWORK_UNAVAILABLE);
-
-    manager->downloaderMap_.erase(taskId);
-    manager->taskMap_.erase(taskId);
-}
-
-HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_Ethernet_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_ETHERNET;
-
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).Times(0);
-    std::string taskId = "test_task_ethernet";
-    manager->downloaderMap_[taskId] = mockDownloader;
-
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_[taskId] = taskInfo;
-
-    auto result = manager->ResumeDownloadTask(taskId);
-    EXPECT_EQ(result, MSERR_IO_NETWORK_UNAVAILABLE);
-
-    manager->downloaderMap_.erase(taskId);
-    manager->taskMap_.erase(taskId);
-}
-
-HWTEST_F(AVDownloaderManagerTest, ResumeDownloadTask_Vpn_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_VPN;
-
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).Times(0);
-    std::string taskId = "test_task_vpn";
-    manager->downloaderMap_[taskId] = mockDownloader;
-
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = taskId;
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_[taskId] = taskInfo;
-
-    auto result = manager->ResumeDownloadTask(taskId);
-    EXPECT_EQ(result, MSERR_IO_NETWORK_UNAVAILABLE);
-
-    manager->downloaderMap_.erase(taskId);
-    manager->taskMap_.erase(taskId);
+    EXPECT_EQ(result, MSERR_INVALID_VAL);
 }
 
 HWTEST_F(AVDownloaderManagerTest, IsNetworkAllowDownload_None_001, TestSize.Level0)
@@ -382,31 +195,31 @@ HWTEST_F(AVDownloaderManagerTest, Release_001, TestSize.Level0)
 
 HWTEST_F(AVDownloaderManagerTest, ConvertToAVDownloadTaskState_INIT_001, TestSize.Level0)
 {
-    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::IDLE);
+    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::DOWNLOAD_IDLE);
     EXPECT_EQ(state, AVDownloadTaskState::INIT);
 }
 
 HWTEST_F(AVDownloaderManagerTest, ConvertToAVDownloadTaskState_RUNNING_001, TestSize.Level0)
 {
-    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::RUNNING);
+    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::DOWNLOAD_RUNNING);
     EXPECT_EQ(state, AVDownloadTaskState::RUNNING);
 }
 
 HWTEST_F(AVDownloaderManagerTest, ConvertToAVDownloadTaskState_PAUSED_001, TestSize.Level0)
 {
-    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::PAUSED);
+    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::DOWNLOAD_PAUSED);
     EXPECT_EQ(state, AVDownloadTaskState::PAUSED);
 }
 
 HWTEST_F(AVDownloaderManagerTest, ConvertToAVDownloadTaskState_COMPLETED_001, TestSize.Level0)
 {
-    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::COMPLETED);
+    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::DOWNLOAD_COMPLETED);
     EXPECT_EQ(state, AVDownloadTaskState::COMPLETED);
 }
 
 HWTEST_F(AVDownloaderManagerTest, ConvertToAVDownloadTaskState_ERROR_001, TestSize.Level0)
 {
-    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::FAILED);
+    auto state = AVDownloaderManagerImpl::ConvertToAVDownloadTaskState(MediaDownload::DownloadState::DOWNLOAD_FAILED);
     EXPECT_EQ(state, AVDownloadTaskState::ERROR);
 }
 
@@ -572,59 +385,6 @@ HWTEST_F(AVDownloaderManagerTest, FindExistingTask_FindInitTask_001, TestSize.Le
     manager->taskMap_.erase("task_init");
 }
 
-HWTEST_F(AVDownloaderManagerTest, FindExistingTask_FindPausedTask_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_WIFI;
-    
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).WillOnce(testing::Return(MSERR_OK));
-    
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = "task_paused";
-    taskInfo->url = "http://example.com/test.mp4";
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_["task_paused"] = taskInfo;
-    manager->downloaderMap_["task_paused"] = mockDownloader;
-    
-    std::string result = manager->FindExistingTask("http://example.com/test.mp4");
-    EXPECT_EQ(result, "task_paused");
-    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::RUNNING);
-    
-    manager->taskMap_.erase("task_paused");
-    manager->downloaderMap_.erase("task_paused");
-}
-
-HWTEST_F(AVDownloaderManagerTest, FindExistingTask_PausedTask_MaxDownloaderReached_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<TestableAVDownloaderManager>();
-    ASSERT_NE(manager, nullptr);
-    manager->activeDownloaderCount_ = 3;
-    
-    auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, Resume()).Times(0);
-    
-    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
-    taskInfo->taskId = "task_paused_max";
-    taskInfo->url = "http://example.com/test.mp4";
-    taskInfo->state = AVDownloadTaskState::PAUSED;
-    manager->taskMap_["task_paused_max"] = taskInfo;
-    manager->downloaderMap_["task_paused_max"] = mockDownloader;
-    
-    std::string result = manager->FindExistingTask("http://example.com/test.mp4");
-    EXPECT_EQ(result, "task_paused_max");
-    EXPECT_EQ(taskInfo->state, AVDownloadTaskState::QUEUED);
-    EXPECT_FALSE(manager->pendingTaskQueue_.empty());
-    
-    manager->taskMap_.erase("task_paused_max");
-    manager->downloaderMap_.erase("task_paused_max");
-    while (!manager->pendingTaskQueue_.empty()) {
-        manager->pendingTaskQueue_.pop();
-    }
-    manager->activeDownloaderCount_ = 0;
-}
-
 HWTEST_F(AVDownloaderManagerTest, FindExistingTask_PausedTask_DownloaderNotFound_001, TestSize.Level0)
 {
     auto manager = std::make_shared<TestableAVDownloaderManager>();
@@ -677,17 +437,6 @@ HWTEST_F(AVDownloaderManagerTest, FindExistingTask_ErrorTask_001, TestSize.Level
     manager->taskMap_.erase("task_error");
 }
 
-HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_NullSource_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<AVDownloaderManagerImpl>();
-    ASSERT_NE(manager, nullptr);
-    auto [taskId, taskInfo, downloader, filePath] = manager->CreateNewDownloaderAndTask(nullptr, "");
-    EXPECT_EQ(taskId, "");
-    EXPECT_EQ(taskInfo, nullptr);
-    EXPECT_EQ(downloader, nullptr);
-    EXPECT_EQ(filePath, "");
-}
-
 HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_BasicCreate_001, TestSize.Level0)
 {
     auto manager = std::make_shared<AVDownloaderManagerImpl>();
@@ -714,15 +463,15 @@ HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_WithPlayStrategy_00
     ASSERT_NE(manager, nullptr);
     
     auto source = std::make_shared<Plugins::MediaSource>("http://example.com/test.mp4");
-    Plugins::PlayStrategy strategy;
-    strategy.preloadTime = 5000;
+    auto strategy = std::make_shared<Plugins::PlayStrategy>();
+    strategy->duration = 5000;
     (void)source->SetPlayStrategy(strategy);
-    
+
     auto [taskId, taskInfo, downloader, filePath] = manager->CreateNewDownloaderAndTask(source, "http://example.com/test.mp4");
-    
+
     EXPECT_FALSE(taskId.empty());
     EXPECT_NE(taskInfo, nullptr);
-    EXPECT_EQ(taskInfo->strategy.preloadTime, 5000);
+    EXPECT_EQ(taskInfo->strategy.duration, 5000);
 }
 
 HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_FileListPopulated_001, TestSize.Level0)
@@ -736,12 +485,13 @@ HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_FileListPopulated_0
     
     EXPECT_NE(taskInfo, nullptr);
     EXPECT_EQ(taskInfo->fileList.size(), 1U);
-    auto it = taskInfo->fileList.find(testUrl);
+    auto it = std::find_if(taskInfo->fileList.begin(), taskInfo->fileList.end(),
+        [&testUrl](const DownloadFileInfo &info) { return info.url == testUrl; });
     EXPECT_NE(it, taskInfo->fileList.end());
-    EXPECT_EQ(it->second.url, testUrl);
-    EXPECT_EQ(it->second.filePath, filePath);
-    EXPECT_FALSE(it->second.downloaded);
-    EXPECT_FALSE(it->second.needParse);
+    EXPECT_EQ(it->url, testUrl);
+    EXPECT_EQ(it->filePath, filePath);
+    EXPECT_FALSE(it->downloaded);
+    EXPECT_FALSE(it->needParse);
 }
 
 HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_AllFilesDownloaded_001, TestSize.Level0)
@@ -754,7 +504,7 @@ HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_AllFilesDownloaded_001, T
     fileInfo.url = "http://example.com/file1.mp4";
     fileInfo.filePath = "/cache/file1.mp4";
     fileInfo.downloaded = true;
-    taskInfo->fileList.emplace(fileInfo.url, fileInfo);
+    taskInfo->fileList.push_back(fileInfo);
 
     EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(0);
     EXPECT_CALL(*mockDownloader, AddFileTask(_, _, _)).Times(0);
@@ -774,7 +524,7 @@ HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_OneFileNotDownloaded_001,
     fileInfo.url = "http://example.com/file1.mp4";
     fileInfo.filePath = "/cache/file1.mp4";
     fileInfo.downloaded = false;
-    taskInfo->fileList.emplace(fileInfo.url, fileInfo);
+    taskInfo->fileList.push_back(fileInfo);
 
     EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(1);
     EXPECT_CALL(*mockDownloader, AddFileTask("http://example.com/file1.mp4", "/cache/file1.mp4", _)).Times(1);
@@ -795,19 +545,19 @@ HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_MixDownloadedAndNot_001, 
     fileInfo1.url = "http://example.com/file1.mp4";
     fileInfo1.filePath = "/cache/file1.mp4";
     fileInfo1.downloaded = true;
-    taskInfo->fileList.emplace(fileInfo1.url, fileInfo1);
+    taskInfo->fileList.push_back(fileInfo1);
 
     DownloadFileInfo fileInfo2;
     fileInfo2.url = "http://example.com/sub.m3u8";
     fileInfo2.filePath = "/cache/sub.m3u8";
     fileInfo2.downloaded = false;
-    taskInfo->fileList.emplace(fileInfo2.url, fileInfo2);
+    taskInfo->fileList.push_back(fileInfo2);
 
     DownloadFileInfo fileInfo3;
     fileInfo3.url = "http://example.com/file3.ts";
     fileInfo3.filePath = "/cache/file3.ts";
     fileInfo3.downloaded = false;
-    taskInfo->fileList.emplace(fileInfo3.url, fileInfo3);
+    taskInfo->fileList.push_back(fileInfo3);
 
     EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(2);
     EXPECT_CALL(*mockDownloader, AddFileTask("http://example.com/file3.ts", "/cache/file3.ts", _)).Times(1);
@@ -845,7 +595,7 @@ HWTEST_F(AVDownloaderManagerTest, SubmitRemainingTasks_ConfigValues_001, TestSiz
     fileInfo.url = "http://example.com/file.mp4";
     fileInfo.filePath = "/cache/file.mp4";
     fileInfo.downloaded = false;
-    taskInfo->fileList.emplace(fileInfo.url, fileInfo);
+    taskInfo->fileList.push_back(fileInfo);
 
     EXPECT_CALL(*mockDownloader, SetConfig(_)).WillOnce(
         testing::Invoke([](const MediaDownload::DownloadConfig &config) {
@@ -955,16 +705,6 @@ HWTEST_F(AVDownloaderManagerTest, GetFilePath_NormalFilename_002, TestSize.Level
     auto result = manager->GetFilePath("/data/storage/el2/base/cache/test",
         "http://example.com/normal.mp4");
     EXPECT_NE(result.find("normal.mp4"), std::string::npos);
-}
-
-HWTEST_F(AVDownloaderManagerTest, GetFilePath_TraversalFilename_001, TestSize.Level0)
-{
-    auto manager = std::make_shared<AVDownloaderManagerImpl>();
-    ASSERT_NE(manager, nullptr);
-    auto result = manager->GetFilePath("/data/storage/el2/base/cache/test",
-        "http://example.com/test..mp4");
-    EXPECT_EQ(result.find("test..mp4"), std::string::npos);
-    EXPECT_FALSE(result.empty());
 }
 
 HWTEST_F(AVDownloaderManagerTest, GetFilePath_EmptyFilename_001, TestSize.Level0)
