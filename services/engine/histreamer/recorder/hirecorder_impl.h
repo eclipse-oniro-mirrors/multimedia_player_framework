@@ -85,6 +85,7 @@ public:
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
     Status SetUserMeta(const std::shared_ptr<Meta> &userMeta);
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
+    int32_t SetScreenCaptureMode();
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height);
 
 private:
@@ -185,6 +186,7 @@ private:
     bool hasWatermark_ = false;
     bool enableStableQualityMode_ = false;
     bool enableBFrame_ = false;
+    bool isScreenCaptureMode_ = false;
 
     std::mutex stateMutex_;
     ConditionVariable cond_ {};

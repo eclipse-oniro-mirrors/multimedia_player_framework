@@ -235,6 +235,11 @@ public:
      * Set Interrupt strategy
      */
     virtual int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) = 0;
+
+    /**
+     * Set screen capture mode for recording isolation
+     */
+    virtual int32_t SetScreenCaptureMode() { return MSERR_OK; }
 };
 } // namespace Media
 } // namespace OHOS
