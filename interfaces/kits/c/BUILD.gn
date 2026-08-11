@@ -270,6 +270,7 @@ ohos_shared_library("avimage_generator") {
     "image_framework:ohimage",
     "image_framework:pixelmap",
     "napi:ace_napi",
+    "node:node_header_notice",
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "qos_manager:qos",
@@ -333,6 +334,7 @@ ohos_shared_library("avmetadata_extractor") {
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "media_foundation:native_media_core",
+    "node:node_header_notice",
     "samgr:samgr_proxy",
     "window_manager:libdm",
   ]

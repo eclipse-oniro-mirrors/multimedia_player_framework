@@ -134,6 +134,7 @@ taihe_shared_library("soundpool_taihe") {
     "ipc:ipc_core",
     "ipc:ipc_single",
     "media_foundation:media_foundation",
+    "node:node_header_notice",
     "qos_manager:qos",
     "runtime_core:ani",
     "window_manager:libdm",
