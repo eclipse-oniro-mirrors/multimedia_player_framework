@@ -82,13 +82,13 @@ public:
 
     int32_t SetCallback(const std::shared_ptr<ISoundPoolCallback> &callback);
     int32_t ReCombineCacheData();
+    int32_t SpliceFullPcmInRawFile();
     bool SetAudioSharedMemory();
     std::shared_ptr<AudioStandard::AudioSharedMemory> GetAudioSharedMemory();
     int32_t Release();
 
 private:
-    void DealBufferRawFile(MediaAVCodec::AVCodecBufferFlag bufferFlag, MediaAVCodec::AVCodecBufferInfo sampleInfo,
-        uint32_t index, std::shared_ptr<AVSharedMemory> buffer);
+    int32_t DealBufferRawFile();
 
     int32_t soundID_ = 0;
     std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec_ = nullptr;
