@@ -196,16 +196,20 @@ HWTEST_F(FileCacheManagerTest, Read_BufferOverflow_001, TestSize.Level0)
 {
     auto fileManager = std::make_shared<DownloadedFileCacheManager>(testCacheDir_);
     std::vector<uint8_t> buffer(5, 0);
+    std::vector<uint8_t> originalBuffer(5, 0);
     int32_t result = fileManager->Read(testFilePath_, buffer.data(), 0, 100);
     EXPECT_EQ(result, -1);
+    EXPECT_EQ(buffer, originalBuffer);
 }
 
 HWTEST_F(FileCacheManagerTest, Read_OffsetExceedsSize_001, TestSize.Level0)
 {
     auto fileManager = std::make_shared<DownloadedFileCacheManager>(testCacheDir_);
     std::vector<uint8_t> buffer(5, 0);
+    std::vector<uint8_t> originalBuffer(5, 0);
     int32_t result = fileManager->Read(testFilePath_, buffer.data(), 100, 5);
     EXPECT_EQ(result, -1);
+    EXPECT_EQ(buffer, originalBuffer);
 }
 
 HWTEST_F(FileCacheManagerTest, Read_PathWithSlashPrefix_001, TestSize.Level0)

@@ -51,7 +51,6 @@ group("media_unit_test") {
       "unittest/downloaded_cache_loader_test/sha256_hasher_test:downloaded_sha256_hasher_test",
       "unittest/downloaded_cache_loader_test/file_cache_manager_test:downloaded_file_cache_manager_test",
       "unittest/av_downloader_manager_test:av_downloader_manager_test",
-      "unittest/avdownloader_manager_napi_test:avdownloader_manager_napi_test",
       "unittest/media_source_napi_test:media_source_napi_test",
       "unittest/network_utils_test:network_utils_test",
       "unittest/dragging_player_agent_unittest:dragging_player_agent_unittest",

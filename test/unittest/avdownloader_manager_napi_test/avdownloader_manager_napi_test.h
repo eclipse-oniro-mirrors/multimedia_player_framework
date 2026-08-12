@@ -21,7 +21,6 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <map>
 #include "av_downloader_manager.h"
 
 namespace OHOS {
