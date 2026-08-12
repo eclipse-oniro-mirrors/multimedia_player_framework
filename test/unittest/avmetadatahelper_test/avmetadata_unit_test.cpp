@@ -754,5 +754,113 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
     ASSERT_NE(pixelMap, nullptr);
     close(fdInfo.fd);
 }
+
+/**
+    * @tc.number    : GetAVMetadataWihtTimeout_API_0100
+    * @tc.name      : GetAVMetadataWihtTimeout H264_AAC.mp4
+    * @tc.desc      : GetAVMetadataWihtTimeout_API
+*/
+HWTEST_F(AVMetadataUnitTest, GetAVMetadataWihtTimeout_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_META_ONLY));
+    MetadataResult result = helper->GetAVMetadataWihtTimeout(3000);
+    EXPECT_NE(nullptr, result.meta);
+    close(fdInfo.fd);
+}
+
+/**
+    * @tc.number    : FetchFrameYuvWithTimeout_API_0100
+    * @tc.name      : FetchFrameYuvWithTimeout H264_AAC.mp4
+    * @tc.desc      : FetchFrameYuvWithTimeout_API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuvWithTimeout_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    OutputConfiguration param;
+    FetchFrameResult result = helper->FetchFrameYuvWithTimeout(time, 0, param, 5000);
+    ASSERT_NE(result.avbuffer, nullptr);
+    close(fdInfo.fd);
+}
+
+/**
+    * @tc.number    : FetchFrameYuvWithTimeout_API_0200
+    * @tc.name      : FetchFrameYuvWithTimeout H264_AAC.mp4
+    * @tc.desc      : FetchFrameYuvWithTimeout_API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuvWithTimeout_API_0200, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    OutputConfiguration param;
+    FetchFrameResult result = helper->FetchFrameYuvWithTimeout(time, 0, param, 5);
+    ASSERT_EQ(result.avbuffer, nullptr);
+    close(fdInfo.fd);
+}
+
+/**
+    * @tc.number    : FetchFrameYuvsWithTimeout_API_0100
+    * @tc.name      : FetchFrameYuvsWithTimeout H264_AAC.mp4
+    * @tc.desc      : FetchFrameYuvsWithTimeout_API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuvsWithTimeout_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    PixelMapParams param;
+    std::vector<std::int64_t> timeUsVector = {0};
+    int32_t result = helper->FetchFrameYuvWithTimeout(timeUsVector, 0, param, 5000);
+    ASSERT_EQ(result, 0);
+    close(fdInfo.fd);
+}
+
+/**
+    * @tc.number    : FetchFrameYuvsWithTimeout_API_0200
+    * @tc.name      : FetchFrameYuvsWithTimeout H264_AAC.mp4
+    * @tc.desc      : FetchFrameYuvsWithTimeout_API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuvsWithTimeout_API_0100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    PixelMapParams param;
+    std::vector<std::int64_t> timeUsVector = {0};
+    int32_t result = helper->FetchFrameYuvWithTimeout(timeUsVector, 0, param, 5);
+    ASSERT_EQ(result, 0);
+    close(fdInfo.fd);
+}
 } // namespace Media
 } // namespace OHOS
