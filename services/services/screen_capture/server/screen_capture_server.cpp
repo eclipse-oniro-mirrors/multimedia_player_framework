@@ -3696,6 +3696,10 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     isMicrophoneSwitchTurnOn_ = isMicrophone;
     int32_t ret = SyncAudioCaptures();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SyncAudioCaptures failed");
+#ifdef SUPPORT_CALL
+    CHECK_AND_RETURN_RET_LOG(!(isMicrophone && isInTelCall_.load()), MSERR_UNKNOWN_INCALL,
+        "Mic unavailable due to call");
+#endif
     cbProxy_->OnStateChange(isMicrophone ? AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER
         : AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER);
     MEDIA_LOGI("SetMicrophoneEnabled OK.");
@@ -3791,13 +3795,7 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
                "isMicrophoneSwitchTurnOn_=%{public}d micStop=%{public}d micStart=%{public}d innerStart=%{public}d "
                "ignoreMicError=%{public}d",
         FAKE_POINTER(this), newState, state, IsMicrophoneSwitchTurnOn(), micStop, micStart, innerStart, ignoreMicError);
-#ifdef SUPPORT_CALL
-    if (providers_->GetInCallObserver().IsInCall(true) && isMicrophoneSwitchTurnOn_) {
-        MEDIA_LOGE("Try SetMicrophoneOn But In Call");
-        cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
-        return MSERR_UNKNOWN_INCALL;
-    }
-#endif
+
     if (micStop) {
         StopMicAudio();
     }
@@ -3814,7 +3812,12 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
     if (innerStart) {
         ret = StartInnerAudioCapture();
     }
-
+#ifdef SUPPORT_CALL
+    if ((state & AUDIO_STATE_TEL) && isMicrophoneSwitchTurnOn_) {
+        MEDIA_LOGI("Mic unavailable due to call");
+        cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+    }
+#endif
     return ret;
 }
 
