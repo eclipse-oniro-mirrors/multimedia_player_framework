@@ -198,7 +198,7 @@ int32_t PlayerImpl::SetSource(const std::string &url)
         int64_t size = -1;
         ret = OpenFile(fileName, fd, size);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "open file failed");
-        return SetSourceByFd(fd, offset, size);
+        return SetSourceByFd(fd, 0, size);
     } else if (UriHelper::IsFdUrl(url)) {
         int32_t fd = -1;
         int64_t offset = 0;
@@ -1847,7 +1847,7 @@ bool PlayerImpl::IsNumber(const std::string& str)
     return str.find_first_not_of("0123456789") == std::string::npos;
 }
 
-int32_t SetSourceByFd(int32_t& fd, int64_t& offset, int64_t& size)
+int32_t SetSourceByFd(int32_t fd, int64_t offset, int64_t size)
 {
     if (!fdsanFd_) {
         fdsanFd_ = std::make_unique<FdsanFd>(fd);
@@ -1859,7 +1859,7 @@ int32_t SetSourceByFd(int32_t& fd, int64_t& offset, int64_t& size)
     return ret;
 }
 
-int32_t AddSubSourceByFd(int32_t& fd, int64_t& offset, int64_t& size)
+int32_t AddSubSourceByFd(int32_t fd, int64_t offset, int64_t size)
 {
     if (!subFdsanFd_) {
         subFdsanFd_ = std::make_unique<FdsanFd>(fd);

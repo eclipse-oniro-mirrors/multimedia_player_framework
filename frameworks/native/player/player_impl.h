@@ -162,8 +162,8 @@ private:
     int32_t ParseUriInfo(const std::string& uri, int32_t& fd, int64_t& offset, int64_t& size);
     int64_t GetFileSize(int32_t fd);
     bool IsNumber(const std::string& str);
-    int32_t SetSourceByFd(int32_t& fd, int64_t& offset, int64_t& size);
-    int32_t AddSubSourceByFd(int32_t& fd, int64_t& offset, int64_t& size);
+    int32_t SetSourceByFd(int32_t fd, int64_t offset, int64_t size);
+    int32_t AddSubSourceByFd(int32_t fd, int64_t offset, int64_t size);
     std::recursive_mutex recMutex_;
     int64_t mCurrentPosition = INT64_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
