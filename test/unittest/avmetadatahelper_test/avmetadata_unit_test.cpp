@@ -664,7 +664,7 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0600, Level2)
     std::string uri = "file:///data/test/invalid.mp4";
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    std::string realPath = fileUri.substr(strlen("file://"));
+    std::string realPath = uri.substr(strlen("file://"));
     FileDescriptorInfo fdInfo;
     fdInfo.fd = open(realPath.c_str(), O_RDONLY);
     ASSERT_EQ(fdInfo.fd, -1);
