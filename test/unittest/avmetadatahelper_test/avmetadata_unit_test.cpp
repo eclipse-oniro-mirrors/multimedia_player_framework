@@ -408,8 +408,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_Resolution_0200, TestSize.Level0)
 */
 HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0100, TestSize.Level2)
 {
-    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
-        std::string("H264_AAC.mp4");
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
     FileDescriptorInfo fdInfo;
