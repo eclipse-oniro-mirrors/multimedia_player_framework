@@ -63,12 +63,20 @@ public:
     void OnDied() override;
 };
 
+struct AudioCaptureSyncFlags {
+    bool micStop = false;
+    bool micStart = false;
+    bool innerStart = false;
+    bool innerStop = false;
+};
+
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
                             public IScreenCaptureService,
                             public IScreenCaptureEventListener,
                             public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create(std::unique_ptr<IScreenCaptureServiceProviders> providers);
+    AudioCaptureSyncFlags CalcAudioCaptureSyncFlags(uint32_t state) const;
     explicit ScreenCaptureServer(std::unique_ptr<IScreenCaptureServiceProviders> providers);
     ~ScreenCaptureServer() override;
 
@@ -167,6 +175,7 @@ public:
         const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void OnSceneSessionManagerDied(const wptr<IRemoteObject> &remote);
     bool IsCaptureScreen(uint64_t displayId);
+    void PostSyncAudioCaptures();
 
 private:
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);

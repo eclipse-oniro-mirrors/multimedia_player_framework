@@ -733,11 +733,11 @@ int32_t ScreenCaptureServiceStub::AcquireAudioBuffer(MessageParcel &data, Messag
     reply.WriteInt32(ret);
     if (ret == MSERR_OK) {
         reply.WriteInt32(audioBuffer->length);
+        reply.WriteInt32(audioBuffer->sourcetype);
+        reply.WriteInt64(audioBuffer->timestamp);
         if ((audioBuffer->buffer != nullptr) && (audioBuffer->length > 0)) {
             reply.WriteBuffer(audioBuffer->buffer, audioBuffer->length);
         }
-        reply.WriteInt32(audioBuffer->sourcetype);
-        reply.WriteInt64(audioBuffer->timestamp);
     }
     return MSERR_OK;
 }
