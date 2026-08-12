@@ -150,7 +150,7 @@ private:
     int32_t ParseFileName(const std::string& uri, std::string& fileName);
     int32_t CheckFileStat(const std::string& fileName);
     int32_t GetFileSize(const std::string& fileName, int64_t& size);
-    int32_t OpenFile(const std::string& fileName, int32_t& fd, int64_t& size);
+    int32_t OpenFileAsFd(const std::string& fileName, int32_t& fd, int64_t& size);
 };
 } // namespace Media
 } // namespace OHOS
