@@ -16,25 +16,19 @@
 #include "account_listener.h"
 #include "account_observer.h"
 #include "os_account_manager.h"
-#include "media_log.h"
-
-namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "AccountListener"};
-}
-
 
 namespace OHOS {
 namespace Media {
 
 AccountListener::AccountListener(const AccountSA::OsAccountSubscribeInfo &subscribeInfo)
     : AccountSA::OsAccountSubscriber(subscribeInfo)
-{}
+{
+}
 
 AccountListener::~AccountListener() {}
 
 void AccountListener::OnAccountsSwitch(const int &newId, const int &oldId)
 {
-    MEDIA_LOGI("accounts switch");
     AccountObserver::GetInstance().OnAccountsSwitch();
 }
 

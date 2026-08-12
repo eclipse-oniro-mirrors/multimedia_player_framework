@@ -31,14 +31,15 @@
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
+using namespace OHOS::Rosen;
 
 namespace OHOS {
 namespace Media {
 /**
-* @tc.name: CheckCaptureMode_001
-* @tc.desc: captureMode < CAPTURE_HOME_SCREEN
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckCaptureMode_001
+ * @tc.desc: captureMode < CAPTURE_HOME_SCREEN
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_001, TestSize.Level2)
 {
     int32_t ret = screenCaptureServer_->CheckCaptureMode(CaptureMode::CAPTURE_INVAILD);
@@ -46,14 +47,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_001, TestSize.Level2)
 }
 
 /**
- * @tc.name: CheckCaptureMode_002
- * @tc.desc: captureMode is invalid value greater than CAPTURE_SPECIFIED_APP
- * @tc.type: FUNC
- */
+  * @tc.name: CheckCaptureMode_002
+  * @tc.desc: captureMode is invalid value greater than CAPTURE_SPECIFIED_APP
+  * @tc.type: FUNC
+  */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_002, TestSize.Level2)
 {
-    int32_t ret = screenCaptureServer_->CheckCaptureMode(static_cast<CaptureMode>
-        (CaptureMode::CAPTURE_SPECIFIED_APP + 1));
+    int32_t ret = screenCaptureServer_->CheckCaptureMode(
+        static_cast<CaptureMode>(CaptureMode::CAPTURE_SPECIFIED_APP + 1));
     ASSERT_NE(ret, MSERR_OK);
 }
 
@@ -96,25 +97,23 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_002, TestSize.
 }
 
 /**
-* @tc.name: CheckAudioCapParam_002
-* @tc.desc: audioSource > APP_PLAYBACK
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckAudioCapParam_002
+ * @tc.desc: audioSource > APP_PLAYBACK
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioCapParam_002, TestSize.Level2)
 {
-    AudioCaptureInfo micCapInfo = {
-        .audioSampleRate = 16000,
+    AudioCaptureInfo micCapInfo = {.audioSampleRate = 16000,
         .audioChannels = 2,
-        .audioSource = static_cast<AudioCaptureSourceType>(AudioCaptureSourceType::APP_PLAYBACK + 1)
-    };
+        .audioSource = static_cast<AudioCaptureSourceType>(AudioCaptureSourceType::APP_PLAYBACK + 1)};
     ASSERT_NE(screenCaptureServer_->CheckAudioCapParam(micCapInfo), MSERR_OK);
 }
 
 /**
-* @tc.name: CheckVideoEncParam_006
-* @tc.desc: videoCodec < VIDEO_DEFAULT
-* @tc.type: FUNC
-*/
+ * @tc.name: CheckVideoEncParam_006
+ * @tc.desc: videoCodec < VIDEO_DEFAULT
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_006, TestSize.Level2)
 {
     SetValidConfig();
@@ -217,5 +216,5 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAppVersionForUnsupport_004, TestS
     bool ret = screenCaptureServer_->CheckAppVersionForUnsupport(DMError::DM_OK);
     EXPECT_EQ(ret, false);
 }
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

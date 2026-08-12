@@ -21,7 +21,6 @@
 #include <chrono>
 #include <atomic>
 #include "incall_observer_callback.h"
-#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
@@ -44,7 +43,6 @@ private:
     std::atomic<bool> inCall_{false};
     std::mutex mutex_;
     bool Init();
-    TaskQueue taskQue_;
 };
 } // namespace Media
 } // namespace OHOS

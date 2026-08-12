@@ -71,10 +71,12 @@ namespace Media {
 namespace ScreenCaptureTestParam {
 constexpr uint32_t RECORDER_TIME = 2;
 }
+
 class ScreenCaptureServerFunctionTest : public testing::Test {
 public:
     virtual void SetUp();
     virtual void TearDown();
+    void WaitForTaskComplete();
     void SetMockBuilder(ScreenCaptureServer *server);
     int32_t SetInvalidConfig();
     std::shared_ptr<AVBuffer> CreateWatermarkBuffer();

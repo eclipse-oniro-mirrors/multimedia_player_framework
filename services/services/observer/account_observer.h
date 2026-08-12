@@ -20,7 +20,6 @@
 #include "os_account_subscribe_info.h"
 #include "os_account_subscriber.h"
 #include "account_listener.h"
-#include "task_queue.h"
 
 namespace OHOS {
 namespace Media {
@@ -41,7 +40,6 @@ private:
     std::atomic<bool> isAccountListenerDied_ = true;
     std::shared_ptr<AccountListener> accountListener_ = nullptr;
     std::mutex mutex_;
-    TaskQueue taskQue_;
 };
 } // namespace Media
 } // namespace OHOS
