@@ -425,6 +425,8 @@ int32_t PlayerServiceStub::SetSource(const std::string &url)
 {
     MediaTrace trace("PlayerServiceStub::SetSource(url)");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(!UriHelper::IsFdUrl(url) && !UriHelper::IsFileUrl(url),
+        MSERR_INVALID_VAL, "not support fileurl and fd url");
     return playerServer_->SetSource(url);
 }
 
@@ -469,6 +471,8 @@ int32_t PlayerServiceStub::AddSubSource(const std::string &url)
 {
     MediaTrace trace("PlayerServiceStub::AddSubSource(url)");
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(!UriHelper::IsFdUrl(url) && !UriHelper::IsFileUrl(url),
+        MSERR_INVALID_VAL, "not support fileurl and fd url");
     return playerServer_->AddSubSource(url);
 }
 

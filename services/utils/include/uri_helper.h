@@ -73,6 +73,8 @@ public:
     static std::string GetProtocolFromURL(const std::string &url);
     static std::string GetHostnameFromURL(const std::string &url);
     static bool IsNetworkUrl(const std::string &url);
+    static bool IsFdUrl(const std::string &url);
+    static bool IsFileUrl(const std::string &url);
 
 private:
     void FormatMeForUri(const std::string_view &uri) noexcept;

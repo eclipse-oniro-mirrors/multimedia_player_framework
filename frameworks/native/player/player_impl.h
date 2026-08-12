@@ -154,12 +154,16 @@ private:
     void NotifyPlaybackContentChange();
     MediaSourceIterator FindSourceInList(const std::string &id);
     int32_t DealWithSwitchingOpt();
-    bool IsFileUrl(const std::string &url) const;
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     int32_t ParseFileName(const std::string& uri, std::string &fileName);
-    int32_t OpenFile(const std::string& fileName);
+    int32_t OpenFile(const std::string& fileName, int32_t& fd, int64_t& size);
     int32_t CheckFileStat(const std::string& fileName);
     int64_t GetFileSize(const std::string& fileName);
+    int32_t ParseUriInfo(const std::string& uri, int32_t& fd, int64_t& offset, int64_t& size);
+    int64_t GetFileSize(int32_t fd);
+    bool IsNumber(const std::string& str);
+    int32_t SetSourceByFd(int32_t& fd, int64_t& offset, int64_t& size);
+    int32_t AddSubSourceByFd(int32_t& fd, int64_t& offset, int64_t& size);
     std::recursive_mutex recMutex_;
     int64_t mCurrentPosition = INT64_MIN;
     PlayerSeekMode mCurrentSeekMode = PlayerSeekMode::SEEK_PREVIOUS_SYNC;
@@ -169,6 +173,7 @@ private:
     int32_t prevTrackIndex_ = INT32_MIN;
     std::shared_ptr<PlayerCallback> callback_;
     std::unique_ptr<FdsanFd> fdsanFd_ = nullptr;
+    std::unique_ptr<FdsanFd> subFdsanFd_ = nullptr;
 
     std::shared_ptr<IPlayerService> playerService_ = nullptr;
     sptr<Surface> surface_ = nullptr;

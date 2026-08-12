@@ -322,5 +322,15 @@ std::string UriHelper::GetProtocolFromURL(const std::string &url)
     }
     return "";
 }
+
+bool UriHelper::IsFdUrl(const std::string &url)
+{
+    return url.find("fd://") != std::string::npos;
+}
+
+bool UriHelper::IsFileUrl(const std::string &url)
+{
+    return url.find("://") == std::string::npos || url.find("file://") == 0;
+}
 } // namespace Media
 } // namespace OHOS
