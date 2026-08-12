@@ -3697,8 +3697,8 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     int32_t ret = SyncAudioCaptures();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SyncAudioCaptures failed");
 #ifdef SUPPORT_CALL
-    CHECK_AND_RETURN_RET_LOG(!(isMicrophone && isInTelCall_.load()), MSERR_UNKNOWN_INCALL,
-        "Mic unavailable due to call");
+    CHECK_AND_RETURN_RET_LOG(!(isMicrophone && providers_->GetInCallObserver().IsInCall(true)),
+        MSERR_UNKNOWN_INCALL, "Mic unavailable due to call");
 #endif
     cbProxy_->OnStateChange(isMicrophone ? AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER
         : AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER);
