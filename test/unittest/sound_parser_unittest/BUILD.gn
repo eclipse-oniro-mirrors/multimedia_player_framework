@@ -55,6 +55,7 @@ ohos_unittest("sound_parser_unittest") {
     "ability_runtime:abilitykit_native",
     "audio_framework:audio_client",
     "audio_framework:audio_renderer",
+    "av_codec:av_codec_client",
     "bundle_framework:appexecfwk_base",
     "c_utils:utils",
     "ffrt:libffrt",
@@ -66,6 +67,7 @@ ohos_unittest("sound_parser_unittest") {
     "hitrace:hitrace_meter",
     "init:libbegetutil",
     "ipc:ipc_core",
+    "media_foundation:media_foundation",
     "qos_manager:qos",
   ]
 

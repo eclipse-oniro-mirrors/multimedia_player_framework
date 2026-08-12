@@ -395,7 +395,9 @@ int32_t AudioStream::Stop()
             callback_->OnPlayFinished(streamID_);
         }
     } else {
-        MEDIA_LOGI("AudioStream::Stop called while not playing.");
+        bool isAudioRendererValid = audioRenderer_ != nullptr;
+        MEDIA_LOGE("AudioStream::Stop failed, isAudioRendererValid is %{public}d, streamState_ is %{public}d",
+            isAudioRendererValid, streamState_.load());
     }
     MEDIA_LOGI("Stop end, streamID is %{public}d", streamID_);
     return MSERR_OK;

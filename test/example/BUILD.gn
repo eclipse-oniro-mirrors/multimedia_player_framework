@@ -54,6 +54,7 @@ ohos_executable("audio_haptic_test") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "media_foundation:media_foundation",
   ]
 
   subsystem_name = "multimedia"

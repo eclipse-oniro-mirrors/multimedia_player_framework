@@ -68,6 +68,7 @@ ohos_unittest("recorder_unit_test") {
     "graphic_surface:surface",
     "graphic_surface:sync_fence",
     "hilog:libhilog",
+    "media_foundation:media_foundation",
     "graphic_2d:librender_service_client",
   ]
 
