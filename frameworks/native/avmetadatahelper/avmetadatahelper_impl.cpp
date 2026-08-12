@@ -32,9 +32,8 @@
 #include "securec.h"
 #include "scope_guard.h"
 #include "uri_helper.h"
-#include "v1_0/hdr_static_metadata.h"
 #include "v1_0/buffer_handle_meta_key_type.h"
-
+#include "v1_0/hdr_static_metadata.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "MetaHelperImpl" };
@@ -813,8 +812,8 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ParseFileName failed");
         int32_t fd = -1;
         int64_t size = -1;
-        ret = OpenFile(fileName, fd, size);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OpenFile failed");
+        ret = OpenFileAsFd(fileName, fd, size);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OpenFileAsFd failed");
         concurrentWorkCount_++;
         ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
         int32_t res = avMetadataHelperService_->SetSource(fd, 0, size, usage);
@@ -1329,7 +1328,7 @@ int32_t AVMetadataHelperImpl::GetFileSize(const std::string& fileName, int64_t& 
     return MSERR_OK;
 }
 
-int32_t AVMetadataHelperImpl::OpenFile(const std::string& fileName, int32_t& fd, int64_t& size)
+int32_t AVMetadataHelperImpl::OpenFileAsFd(const std::string& fileName, int32_t& fd, int64_t& size)
 {
     MEDIA_LOGD("IN");
     int32_t ret = CheckFileStat(fileName);

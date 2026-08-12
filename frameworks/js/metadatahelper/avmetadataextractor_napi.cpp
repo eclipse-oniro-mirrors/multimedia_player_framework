@@ -260,9 +260,9 @@ napi_value AVMetadataExtractorNapi::JsResolveMetadataWithTimeout(napi_env env, n
     CHECK_AND_RETURN_RET_LOG(extractor != nullptr, result, "failed to GetJsInstance.");
     promiseCtx->innerHelper_ = extractor->helper_;
     promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
     napi_status ret = napi_get_value_int64(env, args[ARG_ZERO], &promiseCtx->timeoutMs);
     CHECK_AND_RETURN_RET_LOG(ret == napi_ok, result, "failed to get timeoutMs.");
-    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
 
     if (promiseCtx->timeoutMs <= 0 || promiseCtx->timeoutMs > MAX_TIMEOUT_MS) {
         promiseCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
@@ -762,10 +762,9 @@ napi_value AVMetadataExtractorNapi::JsFetchFrameAtTimeWithTimeout(napi_env env, 
     CHECK_AND_RETURN_RET_LOG(asyncCtx, result, "AVMetadataExtractorAsyncContext is invalid");
     asyncCtx->innerHelper_ = extractor->helper_;
     asyncCtx->callbackRef = CommonNapi::CreateReference(env, args[argCallback]);
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     CHECK_AND_RETURN_RET(
         extractor->CheckParamsOfJsFetchFrameAtTimeWithTimeout(env, args, maxArgs, asyncCtx) == MSERR_OK, result);
-    
-    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     
     napi_value resource = nullptr;
     napi_create_string_utf8(env, "JsFetchFrameAtTimeWithTimeout", NAPI_AUTO_LENGTH, &resource);

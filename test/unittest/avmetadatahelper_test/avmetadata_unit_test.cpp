@@ -26,6 +26,21 @@ using namespace AVMetadataTestParam;
 namespace OHOS {
 namespace Media {
 
+void AVMetadataUnitTest::OpenFileAsFd(const std::string& fileUri, AVMetadataUnitTest::FileDescriptorInfo& fdInfo)
+{
+    if (fileUri.empty() || fileUri.find("file://") != 0) {
+        return;
+    }
+    std::string realPath = fileUri.substr(strlen("file://"));
+    fdInfo.fd = open(realPath.c_str(), O_RDONLY);
+    ASSERT_GT(fdInfo.fd, -1);
+    fdInfo.offset = 0;
+    struct stat64 st;
+    ASSERT_EQ(fstat64(fdInfo.fd, &st), 0);
+    fdInfo.size = static_cast<int64_t>(st.st_size);
+    return;
+}
+
 /**
     Function: compare metadata
     Description: test for metadata
@@ -35,15 +50,9 @@ namespace Media {
 void AVMetadataUnitTest::CheckMeta(std::string uri, std::unordered_map<int32_t, std::string> expectMeta)
 {
     auto helper = AVMetadataHelperServer::Create();
-
-    std::string file = uri.substr(strlen("file://"));
-    int32_t fileDes = open(file.c_str(), O_RDONLY);
-    ASSERT_GT(fileDes, -1);
-
-    struct stat64 st;
-    ASSERT_EQ(fstat64(fileDes, &st), 0);
-    int64_t len = static_cast<int64_t>(st.st_size);
-    int32_t ret = helper->SetSource(fileDes, 0, len, 0);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    int32_t ret = helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size, 0);
     ASSERT_EQ(ret, 0);
 
     for (auto &item : expectMeta) {
@@ -53,6 +62,7 @@ void AVMetadataUnitTest::CheckMeta(std::string uri, std::unordered_map<int32_t, 
     auto resultMetas = helper->ResolveMetadata();
     EXPECT_EQ(AVMetadataTestBase::GetInstance().CompareMetadata(resultMetas, expectMeta), true);
     helper->Release();
+    close(fdInfo.fd);
 }
 
 /**
@@ -64,7 +74,10 @@ void AVMetadataUnitTest::GetThumbnail(const std::string uri)
 {
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
 
     OutputConfiguration param = {-1, -1, PixelFormat::RGB_565};
     int64_t timeUs = 0;
@@ -86,6 +99,7 @@ void AVMetadataUnitTest::GetThumbnail(const std::string uri)
     frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     ASSERT_NE(nullptr, frame);
     helper->Release();
+    close(fdInfo.fd);
 }
 
 /**
@@ -333,9 +347,13 @@ HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0100, Function | MediumT
 
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     std::shared_ptr<AVSharedMemory> frame = helper->FetchArtPicture();
     ASSERT_EQ(51.3046875*1024, frame->GetSize());
+    close(fdInfo.fd);
 }
 
 /**
@@ -350,9 +368,13 @@ HWTEST_F(AVMetadataUnitTest, FetchArtPicture_Format_MP3_0200, Function | MediumT
 
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     std::shared_ptr<AVSharedMemory> frame = helper->FetchArtPicture();
     ASSERT_EQ(nullptr, frame);
+    close(fdInfo.fd);
 }
 
 /**
@@ -390,7 +412,10 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0100, TestSize.Level2)
         std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
 
     OutputConfiguration param = {-1, 316, PixelFormat::RGB_565};
     int64_t timeUs = 0;
@@ -432,6 +457,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0100, TestSize.Level2)
     frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     EXPECT_NE(nullptr, frame);
     helper->Release();
+    close(fdInfo.fd);
 }
 
 /**
@@ -445,7 +471,10 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0200, TestSize.Level2)
         std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
 
     OutputConfiguration param = {-1, 316, PixelFormat::RGB_565};
     int64_t timeUs = 0;
@@ -453,6 +482,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0200, TestSize.Level2)
     auto frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     EXPECT_NE(nullptr, frame);
     helper->Release();
+    close(fdInfo.fd);
 }
 
 /**
@@ -466,7 +496,10 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0300, TestSize.Level2)
         std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
 
     OutputConfiguration param = {-1, 316, PixelFormat::UNKNOWN};
     int64_t timeUs = 0;
@@ -474,6 +507,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0300, TestSize.Level2)
     auto frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     EXPECT_NE(nullptr, frame);
     helper->Release();
+    close(fdInfo.fd);
 }
 
 /**
@@ -487,7 +521,10 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0400, TestSize.Level2)
         std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
 
     OutputConfiguration param = {-1, 316, PixelFormat::RGBA_8888};
     int64_t timeUs = 0;
@@ -495,6 +532,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0400, TestSize.Level2)
     auto frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     EXPECT_NE(nullptr, frame);
     helper->Release();
+    close(fdInfo.fd);
 }
 
 /**
@@ -508,7 +546,10 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0500, Level2)
         std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_META_ONLY));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_META_ONLY));
 
     std::string value = helper->ResolveMetadata(AV_KEY_HAS_VIDEO);
     EXPECT_NE(value, " ");
@@ -519,6 +560,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_API_0500, Level2)
     auto frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     EXPECT_NE(nullptr, frame);
     helper->Release();
+    close(fdInfo.fd);
 }
 
 /**
@@ -532,8 +574,11 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0100, Level2)
         std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    EXPECT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage(100)));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size, AVMetadataUsage(100)));
     helper->Release();
+    close(fdInfo.fd);
 }
 
 /**
@@ -568,7 +613,10 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0400, Level2)
         std::string("aac_44100Hz_143kbs_stereo.aac");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
 
     std::string value = helper->ResolveMetadata(AV_KEY_HAS_VIDEO);
     EXPECT_EQ(value, "");
@@ -581,6 +629,7 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0400, Level2)
     auto frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
     EXPECT_EQ(nullptr, frame);
     helper->Release();
+    close(fdInfo.fd);
 }
 
 /**
@@ -594,11 +643,15 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0500, Level2)
         std::string("error.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     uint64_t time = 0;
     OutputConfiguration param;
     auto pixelMap = helper->FetchFrameYuv(0, time, param);
     ASSERT_EQ(pixelMap, nullptr);
+    close(fdInfo.fd);
 }
 
 /**
@@ -611,7 +664,31 @@ HWTEST_F(AVMetadataUnitTest, SetSource_API_0600, Level2)
     std::string uri = "file:///data/test/invalid.mp4";
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_NE(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    std::string realPath = fileUri.substr(strlen("file://"));
+    FileDescriptorInfo fdInfo;
+    fdInfo.fd = open(realPath.c_str(), O_RDONLY);
+    ASSERT_EQ(fdInfo.fd, -1);
+    ASSERT_NE(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+}
+
+/**
+    * @tc.number    : SetSource_API_0700
+    * @tc.name      : SetSource H264_AAC.mp4
+    * @tc.desc      : SetSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetSource_API_0700, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC.mp4");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    OutputConfiguration param = {-1, -1, PixelFormat::RGB_565};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+    auto frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    ASSERT_EQ(nullptr, frame);
 }
 
 /**
@@ -625,9 +702,13 @@ HWTEST_F(AVMetadataUnitTest, GetTimeByFrameIndex_API_0100, Level2)
         std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     uint64_t time = 0;
     ASSERT_EQ(MSERR_OK, helper->GetTimeByFrameIndex(0, time));
+    close(fdInfo.fd);
 }
 
 /**
@@ -641,11 +722,15 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0100, Level2)
         std::string("SDR.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     int64_t time = 0;
     OutputConfiguration param;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
     ASSERT_NE(pixelMap, nullptr);
+    close(fdInfo.fd);
 }
 
 /**
@@ -659,11 +744,15 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0200, Level2)
         std::string("H264_AAC.mp4");
     auto helper = AVMetadataHelperServer::Create();
     ASSERT_NE(nullptr, helper);
-    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
     int64_t time = 0;
     OutputConfiguration param;
     auto pixelMap = helper->FetchFrameYuv(time, 0, param);
     ASSERT_NE(pixelMap, nullptr);
+    close(fdInfo.fd);
 }
 } // namespace Media
 } // namespace OHOS
