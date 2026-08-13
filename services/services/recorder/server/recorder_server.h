@@ -128,6 +128,7 @@ public:
     int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) override;
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) override;
     int32_t TransmitQos(QOS::QosLevel level) override;
+    int32_t SetScreenCaptureMode() override;
 
     // IRecorderEngineObs override
     void OnError(ErrorType errorType, int32_t errorCode) override;

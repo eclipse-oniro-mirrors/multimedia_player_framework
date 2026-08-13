@@ -527,6 +527,9 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
         if (hasWatermark_) {
             videoEncoderFilter_->SetWatermarkMode();
         }
+        if (isScreenCaptureMode_) {
+            videoEncoderFilter_->SetScreenCaptureMode();
+        }
         videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
             MSERR_VID_ENC_CONFIG_FAILED, "videoEncoderFilter Configure fail");
@@ -1410,6 +1413,13 @@ Status HiRecorderImpl::SetUserMeta(const std::shared_ptr<Meta> &usermeta)
 int32_t HiRecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 {
     muteWhenInterrupted_ = muteWhenInterrupted;
+    return static_cast<int32_t>(Status::OK);
+}
+
+int32_t HiRecorderImpl::SetScreenCaptureMode()
+{
+    MEDIA_LOG_I("HiRecorderImpl::SetScreenCaptureMode");
+    isScreenCaptureMode_ = true;
     return static_cast<int32_t>(Status::OK);
 }
 

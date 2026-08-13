@@ -1361,6 +1361,22 @@ int32_t RecorderServer::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
     return result.Value();
 }
 
+int32_t RecorderServer::SetScreenCaptureMode()
+{
+    MEDIA_LOGI("SetScreenCaptureMode in");
+    std::lock_guard<std::mutex> lock(mutex_);
+    MediaTrace trace("RecorderServer::SetScreenCaptureMode");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->SetScreenCaptureMode();
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+ 
+    auto result = task->GetResult();
+    return result.Value();
+}
+
 void RecorderServer::SetMetaDataReport()
 {
     std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();
