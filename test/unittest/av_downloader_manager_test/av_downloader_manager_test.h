@@ -22,6 +22,7 @@
 #include <memory>
 #include <vector>
 #include <map>
+#include <algorithm>
 #include "av_downloader_manager.h"
 #include "av_downloader_manager_impl.h"
 #include "downloader.h"
@@ -42,7 +43,7 @@ public:
     MOCK_METHOD(uint64_t, GetCurrentTaskId, (), (override));
     MOCK_METHOD(int32_t, SetUrl, (const std::string &url), (override));
     MOCK_METHOD(int32_t, SetOutputPath, (const std::string &path), (override));
-    MOCK_METHOD(int32_t, SetHeader, (const std::map<std::string, std::string> &header), (override));
+    MOCK_METHOD(int32_t, SetHeader, ((const std::map<std::string, std::string>)& header), (override));
     MOCK_METHOD(int32_t, SetConfig, (const MediaDownload::DownloadConfig &config), (override));
     MOCK_METHOD(int32_t, AddFileTask, (const std::string &url, const std::string &path,
         const MediaDownload::DownloadConfig &config), (override));
@@ -65,6 +66,9 @@ protected:
         return simulatedNetworkType_;
     }
 public:
+    using AVDownloaderManagerImpl::taskMap_;
+    using AVDownloaderManagerImpl::downloaderMap_;
+    using AVDownloaderManagerImpl::pendingTaskQueue_;
     MediaSourceUtils::NetConnType simulatedNetworkType_ = MediaSourceUtils::NetConnType::NET_CONN_WIFI;
     bool TestIsNetworkAllowDownload(MediaSourceUtils::NetConnType newType)
     {

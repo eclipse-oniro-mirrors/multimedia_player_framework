@@ -22,11 +22,13 @@
 #include <map>
 #include <unordered_map>
 #include <fstream>
+#include <list>
 #include <mutex>
-#include <queue>
 #include <memory>
 #include <atomic>
+#include <functional>
 #include <tuple>
+#include <algorithm>
 #include "download_task.h"
 #include "downloader.h"
 #include "refbase.h"
@@ -89,6 +91,7 @@ private:
     void GenerateMappingFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo);
     uint32_t WriteMappingEntries(std::ofstream& f, std::shared_ptr<AVDownloadTaskInfo> taskInfo,
         std::streamoff baseOffset);
+    bool ReadFileData(const std::string &filePath, std::vector<uint8_t> &buffer, size_t readSize);
     void ParseSingleFile(uint64_t downloaderId, DownloadFileInfo &fileInfo,
         std::shared_ptr<AVDownloadTaskInfo> taskInfo, std::vector<DownloadFileInfo> &filesToAdd,
         std::shared_ptr<AVDownloaderManagerImpl> manager);
@@ -137,22 +140,25 @@ public:
 
     std::map<std::string, std::shared_ptr<AVDownloadTaskInfo>> taskMap_;
     std::map<std::string, std::shared_ptr<MediaDownload::Downloader>> downloaderMap_;
-    std::queue<std::pair<std::string, std::string>> pendingTaskQueue_;      // Downloader队列
+    std::list<std::pair<std::string, std::string>> pendingTaskQueue_;      // Downloader队列
     std::unique_ptr<MediaDownload::MessageQueue> messageQueue_;     // 消息队列
     std::atomic<int32_t> requestTimeoutMs_ {30000};
     std::atomic<bool> allowCellularAccess_ {false};
-    std::atomic<int32_t> activeDownloaderCount_ {0};
 protected:
     virtual MediaSourceUtils::NetConnType GetNetworkType();
 private:
     std::string GetDefaultCacheDir(const std::string& url);
     void HandleMessage(const MediaDownload::Message &msg);
-    void HandleTaskAdded(std::string taskId, std::string url,
-        std::shared_ptr<MediaDownload::Downloader> downloader, std::string filePath);
+    void HandleTaskAdded(std::string taskId, std::string url);
     void StartNetworkListening();
     void StopNetworkListening();
     void OnNetworkChanged(MediaSourceUtils::NetConnType newType);
+    void OnNetworkRestored();
+    void OnNetworkLost();
     bool IsNetworkAllowDownload(MediaSourceUtils::NetConnType newType);
+    int32_t GetActiveCountLocked() const;
+    int32_t RetryWithDeadline(std::shared_ptr<MediaDownload::Downloader> downloader,
+        std::function<int32_t()> operation);
 
     std::weak_ptr<AVDownloaderManagerCallback> callback_;
     std::mutex cbMutex_;

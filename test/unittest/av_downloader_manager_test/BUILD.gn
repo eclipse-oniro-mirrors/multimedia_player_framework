@@ -49,6 +49,9 @@ ohos_unittest("av_downloader_manager_test") {
     "googletest:gmock",
     "hilog:libhilog",
     "media_foundation:media_foundation",
+    "netmanager_base:net_conn_manager_if",
+    "openssl:libcrypto_shared",
+    "zlib:shared_libz",
   ]
 
   deps = [
@@ -61,7 +64,11 @@ ohos_unittest("av_downloader_manager_test") {
 
   sources = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/av_downloader_manager/av_downloader_manager.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/av_downloader_manager/source_parse_agent.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils/network_utils.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils/path_utils.cpp",
     "av_downloader_manager_test.cpp",
     "source_parse_agent_test.cpp",

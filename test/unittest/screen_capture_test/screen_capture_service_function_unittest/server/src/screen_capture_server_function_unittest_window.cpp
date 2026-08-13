@@ -70,9 +70,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_003, T
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
-    screenCaptureServer_->isGetAppMissionId_ = false;
     std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
-    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_004, TestSize.Level2)
@@ -118,9 +117,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_006, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
-    screenCaptureServer_->isGetAppMissionId_ = false;
     std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
-    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_007, TestSize.Level2)
@@ -414,7 +412,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_004, Tes
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->missionIds_ = {100};
+    screenCaptureServer_->missionInfos_ = {{100, true}};
     screenCaptureServer_->isPresentPickerPopWindow_ = true;
     std::string choice = "{\"choice\": \"true\", \"displayId\": 0, \"missionId\": 100}";
     ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
@@ -434,7 +432,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_005, Tes
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->missionIds_ = {100};
+    screenCaptureServer_->missionInfos_ = {{100, true}};
     screenCaptureServer_->isPresentPickerPopWindow_ = true;
     std::string choice = "{\"choice\": \"true\", \"displayId\": 0, \"missionId\": 100}";
     ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
@@ -454,7 +452,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_006, Tes
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->missionIds_ = {100};
+    screenCaptureServer_->missionInfos_ = {{100, true}};
     screenCaptureServer_->isPresentPickerPopWindow_ = true;
     std::string choice = "{\"choice\": \"true\", \"displayId\": 0, \"missionId\": 100}";
     ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_UNKNOWN);
@@ -473,14 +471,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_007, Tes
         AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    screenCaptureServer_->missionIds_ = {100};
     screenCaptureServer_->isPresentPickerPopWindow_ = true;
     std::string choice = "{\"choice\": \"true\", \"displayId\": 0, \"missionId\": 100}";
-    ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
-    screenCaptureServer_->captureConfig_.captureMode = CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->missionIds_ = {50, 100};
-    screenCaptureServer_->isPresentPickerPopWindow_ = true;
-    choice = "{\"choice\": \"true\", \"displayId\": 0, \"missionId\": [50, 100]}";
     ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
     screenCaptureServer_->StopScreenCapture();
     screenCaptureServer_->Release();
@@ -553,7 +545,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_002, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_EQ(screenCaptureServer_->displayIds_[0], 1);
+    ASSERT_EQ(screenCaptureServer_->missionInfos_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_WINDOW);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_003, TestSize.Level2)
@@ -573,7 +566,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_004, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_EQ(screenCaptureServer_->missionIds_[0], 1);
+    ASSERT_EQ(screenCaptureServer_->missionInfos_[0].missionId, 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_005, TestSize.Level2)
@@ -583,7 +576,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_005, TestSize.Leve
     Json::Reader reader;
     reader.parse(rawString, root);
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_EQ(screenCaptureServer_->missionIds_[0], 1);
+    ASSERT_EQ(screenCaptureServer_->missionInfos_[0].missionId, 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_006, TestSize.Level2)
@@ -620,7 +613,19 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareUserSelectionInfo_001, TestSize
 {
     ScreenCaptureUserSelectionInfo selectionInfo;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->PrepareUserSelectionInfo(selectionInfo);
+    bool isApp;
+    {
+        std::lock_guard<std::mutex> lock(screenCaptureServer_->captureIdsMutex_);
+        isApp = !screenCaptureServer_->missionInfos_.empty();
+    }
+    if (isApp || screenCaptureServer_->captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_WINDOW) {
+        selectionInfo.selectType = isApp ? ScreenCaptureServer::SELECT_TYPE_APP
+                                        : ScreenCaptureServer::SELECT_TYPE_WINDOW;
+        selectionInfo.displayIds = {screenCaptureServer_->GetDisplayIdOfWindows()};
+    } else {
+        selectionInfo.selectType = ScreenCaptureServer::SELECT_TYPE_SCREEN;
+        selectionInfo.displayIds = screenCaptureServer_->displayIds_;
+    }
     ASSERT_EQ(selectionInfo.selectType, 1);
 }
 
@@ -629,31 +634,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareUserSelectionInfo_002, TestSize
     ScreenCaptureUserSelectionInfo selectionInfo;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     screenCaptureServer_->displayIds_ = {1};
-    screenCaptureServer_->PrepareUserSelectionInfo(selectionInfo);
+    bool isApp;
+    {
+        std::lock_guard<std::mutex> lock(screenCaptureServer_->captureIdsMutex_);
+        isApp = !screenCaptureServer_->missionInfos_.empty();
+    }
+    if (isApp || screenCaptureServer_->captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_WINDOW) {
+        selectionInfo.selectType = isApp ? ScreenCaptureServer::SELECT_TYPE_APP
+                                        : ScreenCaptureServer::SELECT_TYPE_WINDOW;
+        selectionInfo.displayIds = {screenCaptureServer_->GetDisplayIdOfWindows()};
+    } else {
+        selectionInfo.selectType = ScreenCaptureServer::SELECT_TYPE_SCREEN;
+        selectionInfo.displayIds = screenCaptureServer_->displayIds_;
+    }
     ASSERT_EQ(selectionInfo.displayIds.size(), 1);
     ASSERT_EQ(selectionInfo.displayIds.front(), 1);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, PrepareUserSelectionInfo_003, TestSize.Level2)
-{
-    screenCaptureServer_->SetAppMissionIds(1);
-    ScreenCaptureUserSelectionInfo selectionInfo;
-    screenCaptureServer_->PrepareUserSelectionInfo(selectionInfo);
-    ASSERT_EQ(selectionInfo.selectType, 2);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, PrivateWindowListenerInScreenCapture_001, TestSize.Level2)
-{
-    screenCaptureServer_->RegisterPrivateWindowListener();
-    screenCaptureServer_->displayListener_->OnPrivateWindow(true);
-    ASSERT_NE(screenCaptureServer_->displayListener_, nullptr);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, PrivateWindowListenerInScreenCapture_002, TestSize.Level2)
-{
-    screenCaptureServer_->RegisterPrivateWindowListener();
-    screenCaptureServer_->displayListener_->OnPrivateWindow(false);
-    ASSERT_NE(screenCaptureServer_->displayListener_, nullptr);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, DestroyPopWindow_001, TestSize.Level2)
@@ -682,22 +677,22 @@ HWTEST_F(ScreenCaptureServerFunctionTest, DestroyPopWindow_003, TestSize.Level2)
 HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_001, TestSize.Level2)
 {
     uint64_t defaultDisplayIdValue = 0;
-    screenCaptureServer_->missionIds_ = {};
-    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(defaultDisplayIdValue), defaultDisplayIdValue);
+    screenCaptureServer_->missionInfos_ = {};
+    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(), defaultDisplayIdValue);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_002, TestSize.Level2)
 {
     uint64_t defaultDisplayIdValue = 0;
-    screenCaptureServer_->missionIds_ = {0};
-    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(defaultDisplayIdValue), defaultDisplayIdValue);
+    screenCaptureServer_->missionInfos_ = {{0, true}};
+    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(), defaultDisplayIdValue);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_003, TestSize.Level2)
 {
     uint64_t defaultDisplayIdValue = 0;
-    screenCaptureServer_->SetAppMissionIds(1);
-    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(defaultDisplayIdValue), defaultDisplayIdValue);
+    screenCaptureServer_->missionInfos_.push_back({1, true});
+    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(), defaultDisplayIdValue);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, GetAVScreenCaptureConfigurableParameters_001, TestSize.Level2)
@@ -724,7 +719,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_001, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -734,7 +729,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_002, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -744,7 +739,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_003, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1, 2};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -754,7 +749,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_004, TestSize.Leve
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1, 2};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 
@@ -763,8 +758,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_005, TestSize.Leve
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->appMissionIds_ = {1};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen("test_screen", nullptr);
+    screenCaptureServer_->missionInfos_ = {{1, true}};
+    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
 }
 

@@ -21,7 +21,6 @@ ohos_unittest("media_source_napi_test") {
 
   include_dirs = [
     "../",
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/mediasource",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
     "$MEDIA_PLAYER_ROOT_DIR/services/include",
   ]
@@ -53,9 +52,6 @@ ohos_unittest("media_source_napi_test") {
   ]
 
   sources = [
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/mediasource/media_source_loader_callback.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/mediasource/media_source_loading_request_napi.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/mediasource/media_source_napi.cpp",
     "media_source_loading_request_napi_test.cpp",
     "media_source_napi_test.cpp",
   ]

@@ -265,6 +265,7 @@ ohos_shared_library("media_client") {
     "hitrace:hitrace_meter",
     "hitrace:libhitracechain",
     "image_framework:image_native",
+    "image_framework:image_utils",
     "init:libbegetutil",
     "ipc:ipc_single",
     "netmanager_base:net_conn_manager_if",

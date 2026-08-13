@@ -76,6 +76,7 @@ public:
     void Resume();
     void SetInnerCapture(std::shared_ptr<AudioCapturerWrapper> capture);
     void SetMicCapture(std::shared_ptr<AudioCapturerWrapper> capture);
+    inline AVScreenCaptureMixMode GetType() const { return type_; }
 
 private:
     int64_t GetCurrentTimeNs();

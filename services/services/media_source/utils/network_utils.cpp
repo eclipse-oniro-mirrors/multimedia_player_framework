@@ -73,10 +73,18 @@ public:
     int32_t NetAvailable(sptr<NetHandle> &netHandle) override
     {
         MEDIA_LOGI("NetAvailable, netId: %{public}d", netHandle != nullptr ? netHandle->GetNetId() : -1);
-        std::lock_guard<std::mutex> lock(owner_.mutex_);
+        NetworkUtils::NetworkChangeCallback cb;
         NetConnType newType = owner_.DetectNetworkType();
-        owner_.NotifyCallback(newType);
-        owner_.currentNetType_ = newType;
+        {
+            std::lock_guard<std::mutex> lock(owner_.mutex_);
+            if (owner_.networkChangeCallback_ != nullptr && owner_.currentNetType_ != newType) {
+                cb = owner_.networkChangeCallback_;
+            }
+            owner_.currentNetType_ = newType;
+        }
+        if (cb) {
+            cb(newType);
+        }
         return NETMANAGER_SUCCESS;
     }
 
@@ -84,14 +92,22 @@ public:
         const sptr<NetAllCapabilities> &netAllCap) override
     {
         MEDIA_LOGI("NetCapabilitiesChange, netId: %{public}d", netHandle != nullptr ? netHandle->GetNetId() : -1);
-        std::lock_guard<std::mutex> lock(owner_.mutex_);
+        NetworkUtils::NetworkChangeCallback cb;
         NetConnType newType = NET_CONN_UNKNOWN;
         if (netAllCap != nullptr && !netAllCap->bearerTypes_.empty()) {
             MEDIA_LOGI("NetCapabilitiesChange, netAllCap not null");
             newType = ConvertBearerType(*netAllCap->bearerTypes_.begin());
         }
-        owner_.NotifyCallback(newType);
-        owner_.currentNetType_ = newType;
+        {
+            std::lock_guard<std::mutex> lock(owner_.mutex_);
+            if (owner_.networkChangeCallback_ != nullptr && owner_.currentNetType_ != newType) {
+                cb = owner_.networkChangeCallback_;
+            }
+            owner_.currentNetType_ = newType;
+        }
+        if (cb) {
+            cb(newType);
+        }
         return NETMANAGER_SUCCESS;
     }
 
@@ -106,18 +122,34 @@ public:
     int32_t NetLost(sptr<NetHandle> &netHandle) override
     {
         MEDIA_LOGI("NetLost, netId: %{public}d", netHandle != nullptr ? netHandle->GetNetId() : -1);
-        std::lock_guard<std::mutex> lock(owner_.mutex_);
-        owner_.NotifyCallback(NET_CONN_NONE);
-        owner_.currentNetType_ = NET_CONN_NONE;
+        NetworkUtils::NetworkChangeCallback cb;
+        {
+            std::lock_guard<std::mutex> lock(owner_.mutex_);
+            if (owner_.networkChangeCallback_ != nullptr && owner_.currentNetType_ != NET_CONN_NONE) {
+                cb = owner_.networkChangeCallback_;
+            }
+            owner_.currentNetType_ = NET_CONN_NONE;
+        }
+        if (cb) {
+            cb(NET_CONN_NONE);
+        }
         return NETMANAGER_SUCCESS;
     }
 
     int32_t NetUnavailable() override
     {
         MEDIA_LOGI("NetUnavailable");
-        std::lock_guard<std::mutex> lock(owner_.mutex_);
-        owner_.NotifyCallback(NET_CONN_NONE);
-        owner_.currentNetType_ = NET_CONN_NONE;
+        NetworkUtils::NetworkChangeCallback cb;
+        {
+            std::lock_guard<std::mutex> lock(owner_.mutex_);
+            if (owner_.networkChangeCallback_ != nullptr && owner_.currentNetType_ != NET_CONN_NONE) {
+                cb = owner_.networkChangeCallback_;
+            }
+            owner_.currentNetType_ = NET_CONN_NONE;
+        }
+        if (cb) {
+            cb(NET_CONN_NONE);
+        }
         return NETMANAGER_SUCCESS;
     }
 
@@ -142,8 +174,7 @@ NetworkUtils& NetworkUtils::GetInstance()
     return instance;
 }
 
-NetworkUtils::NetworkUtils()
-    : currentNetType_(NET_CONN_NONE)
+NetworkUtils::NetworkUtils() : currentNetType_(NET_CONN_NONE)
 {
     RefreshNetworkState();
     MEDIA_LOGI("NetworkUtils created, initial type: %{public}d", currentNetType_);
@@ -151,7 +182,6 @@ NetworkUtils::NetworkUtils()
 
 NetworkUtils::~NetworkUtils()
 {
-    UnregisterNetworkChangeCallback();
     MEDIA_LOGI("NetworkUtils destroyed");
 }
 
@@ -186,43 +216,49 @@ void NetworkUtils::RefreshNetworkState()
 
 NetConnType NetworkUtils::GetCurrentNetworkType()
 {
+    NetConnType newType = DetectNetworkType();
     std::lock_guard<std::mutex> lock(mutex_);
-    RefreshNetworkState();
+    currentNetType_ = newType;
     return currentNetType_;
 }
 
 bool NetworkUtils::IsCellularConnected()
 {
+    NetConnType newType = DetectNetworkType();
     std::lock_guard<std::mutex> lock(mutex_);
-    RefreshNetworkState();
+    currentNetType_ = newType;
     return currentNetType_ == NET_CONN_CELLULAR;
 }
 
 bool NetworkUtils::IsWifiConnected()
 {
+    NetConnType newType = DetectNetworkType();
     std::lock_guard<std::mutex> lock(mutex_);
-    RefreshNetworkState();
+    currentNetType_ = newType;
     return currentNetType_ == NET_CONN_WIFI;
 }
 
 bool NetworkUtils::IsEthernetConnected()
 {
+    NetConnType newType = DetectNetworkType();
     std::lock_guard<std::mutex> lock(mutex_);
-    RefreshNetworkState();
+    currentNetType_ = newType;
     return currentNetType_ == NET_CONN_ETHERNET;
 }
 
 bool NetworkUtils::IsBluetoothConnected()
 {
+    NetConnType newType = DetectNetworkType();
     std::lock_guard<std::mutex> lock(mutex_);
-    RefreshNetworkState();
+    currentNetType_ = newType;
     return currentNetType_ == NET_CONN_BLUETOOTH;
 }
 
 bool NetworkUtils::IsVpnConnected()
 {
+    NetConnType newType = DetectNetworkType();
     std::lock_guard<std::mutex> lock(mutex_);
-    RefreshNetworkState();
+    currentNetType_ = newType;
     return currentNetType_ == NET_CONN_VPN;
 }
 
@@ -250,7 +286,6 @@ bool NetworkUtils::IsDefaultNetMetered()
 
 ConnProperties NetworkUtils::GetConnectionProperties()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
     ConnProperties props;
 
     NetHandle netHandle;
@@ -266,6 +301,8 @@ ConnProperties NetworkUtils::GetConnectionProperties()
         MEDIA_LOGW("GetConnectionProperties failed, ret: %{public}d", ret);
         return props;
     }
+
+    std::lock_guard<std::mutex> lock(mutex_);
 
     props.ifaceName = linkInfo.ifaceName_;
     props.domain = linkInfo.domain_;
@@ -322,6 +359,7 @@ void NetworkUtils::UnregisterNetworkChangeCallback()
         int32_t ret = NetConnClient::GetInstance().UnregisterNetConnCallback(g_netConnCallback);
         if (ret != NETMANAGER_SUCCESS) {
             MEDIA_LOGW("UnregisterNetConnCallback failed, ret: %{public}d", ret);
+            return;
         }
         g_netConnCallback = nullptr;
         callbackRegistered_ = false;

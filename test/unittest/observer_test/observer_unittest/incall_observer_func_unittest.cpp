@@ -32,20 +32,7 @@ class InCallObserverTestCallBack : public InCallObserverCallBack {
 public:
     InCallObserverTestCallBack() {}
     ~InCallObserverTestCallBack() {}
-    bool StopAndRelease(AVScreenCaptureStateCode state)
-    {
-        return true;
-    }
-    bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
-    {
-        return true;
-    }
-    void Release() {}
-    bool TelCallStateUpdated(bool isInCall)
-    {
-        return true;
-    }
-    bool NotifyTelCallStateUpdated(bool isInCall)
+    bool OnTelCallStateUpdated(bool isInCall) override
     {
         return true;
     }
@@ -55,20 +42,7 @@ class InCallObserverTestFalseCallBack : public InCallObserverCallBack {
 public:
     InCallObserverTestFalseCallBack() {}
     ~InCallObserverTestFalseCallBack() {}
-    bool StopAndRelease(AVScreenCaptureStateCode state)
-    {
-        return false;
-    }
-    bool NotifyStopAndRelease(AVScreenCaptureStateCode state)
-    {
-        return false;
-    }
-    void Release() {}
-    bool TelCallStateUpdated(bool isInCall)
-    {
-        return false;
-    }
-    bool NotifyTelCallStateUpdated(bool isInCall)
+    bool OnTelCallStateUpdated(bool isInCall) override
     {
         return false;
     }
@@ -120,8 +94,6 @@ HWTEST_F(InCallObserverInnerUnitTest, RegisterInCallObserverCallBack_01, TestSiz
     auto inCallObserverCallBack = std::make_shared<InCallObserverTestCallBack>();
     ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(inCallObserverCallBack));
     InCallObserver::GetInstance().UnregisterInCallObserverCallBack(inCallObserverCallBack);
-    ASSERT_TRUE(inCallObserverCallBack->StopAndRelease(
-        AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL));
 }
 
 /**

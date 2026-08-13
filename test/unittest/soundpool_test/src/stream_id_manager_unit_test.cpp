@@ -311,7 +311,7 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_013, TestSize.Level2)
     MEDIA_LOGI("streamId_function_013 before");
     streamIDManager_->InitThreadPool();
     // streamID不存在
-    EXPECT_EQ(MSERR_INVALID_VAL, streamIDManager_->StopAudioStream(999));
+    EXPECT_EQ(MSERR_SOUNDPOOL_STREAM_NOT_FOUND, streamIDManager_->StopAudioStream(999));
     MEDIA_LOGI("streamId_function_013 after");
 }
 

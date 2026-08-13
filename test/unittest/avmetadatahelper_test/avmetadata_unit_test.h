@@ -43,6 +43,13 @@ public:
     {
         UNITTEST_INFO_LOG("AVMetadataUnitTest::TearDown");
     };
+    struct FileDescriptorInfo {
+        int32_t fd = -1;
+        int64_t offset = 0;
+        int64_t size = 0;
+    };
+
+    void OpenFileAsFd(const std::string& fileUri, FileDescriptorInfo& fdInfo);
     void CheckMeta(std::string uri, std::unordered_map<int32_t, std::string> expectMeta);
     void GetThumbnail(const std::string uri);
     const ::testing::TestInfo *testInfo_ = nullptr;

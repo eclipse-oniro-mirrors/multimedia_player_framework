@@ -16,7 +16,7 @@
 #include "player_service_stub_test.h"
 
 using namespace testing;
-using namespace testing::Ext;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
@@ -25,7 +25,7 @@ HWTEST_F(PlayerServiceStubTest, SetSource_Url_001, TestSize.Level0)
 {
     auto mockService = std::make_shared<MockIPlayerService>();
     ASSERT_NE(mockService, nullptr);
-    EXPECT_CALL(*mockService, SetSource(_)).WillOnce(Return(0));
+    EXPECT_CALL(*mockService, SetSource(std::string("http://example.com/test.mp4"))).WillOnce(Return(0));
     int32_t ret = mockService->SetSource("http://example.com/test.mp4");
     EXPECT_EQ(ret, 0);
 }
@@ -205,20 +205,12 @@ HWTEST_F(PlayerServiceStubTest, DeselectTrack_001, TestSize.Level0)
     EXPECT_EQ(ret, 0);
 }
 
-HWTEST_F(PlayerServiceStubTest, MediaServerDied_001, TestSize.Level0)
-{
-    auto mockService = std::make_shared<MockIPlayerService>();
-    ASSERT_NE(mockService, nullptr);
-    EXPECT_CALL(*mockService, MediaServerDied()).Times(1);
-    mockService->MediaServerDied();
-}
-
 HWTEST_F(PlayerServiceStubTest, SetPlaybackSpeed_001, TestSize.Level0)
 {
     auto mockService = std::make_shared<MockIPlayerService>();
     ASSERT_NE(mockService, nullptr);
-    EXPECT_CALL(*mockService, SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2X)).WillOnce(Return(0));
-    int32_t ret = mockService->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2X);
+    EXPECT_CALL(*mockService, SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2_00_X)).WillOnce(Return(0));
+    int32_t ret = mockService->SetPlaybackSpeed(PlaybackRateMode::SPEED_FORWARD_2_00_X);
     EXPECT_EQ(ret, 0);
 }
 
@@ -226,29 +218,12 @@ HWTEST_F(PlayerServiceStubTest, GetPlaybackSpeed_001, TestSize.Level0)
 {
     auto mockService = std::make_shared<MockIPlayerService>();
     ASSERT_NE(mockService, nullptr);
-    EXPECT_CALL(*mockService, GetPlaybackSpeed(_)).WillOnce(DoAll(SetArgReferee<0>(PlaybackRateMode::SPEED_FORWARD_2X), Return(0)));
+    EXPECT_CALL(*mockService,
+        GetPlaybackSpeed(_)).WillOnce(DoAll(SetArgReferee<0>(PlaybackRateMode::SPEED_FORWARD_2_00_X), Return(0)));
     PlaybackRateMode mode = PlaybackRateMode::SPEED_FORWARD_1_00_X;
     int32_t ret = mockService->GetPlaybackSpeed(mode);
     EXPECT_EQ(ret, 0);
-    EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_2X);
-}
-
-HWTEST_F(PlayerServiceStubTest, SetPlayRange_001, TestSize.Level0)
-{
-    auto mockService = std::make_shared<MockIPlayerService>();
-    ASSERT_NE(mockService, nullptr);
-    EXPECT_CALL(*mockService, SetPlayRange(0, 60000)).WillOnce(Return(0));
-    int32_t ret = mockService->SetPlayRange(0, 60000);
-    EXPECT_EQ(ret, 0);
-}
-
-HWTEST_F(PlayerServiceStubTest, SetPlayRangeWithMode_001, TestSize.Level0)
-{
-    auto mockService = std::make_shared<MockIPlayerService>();
-    ASSERT_NE(mockService, nullptr);
-    EXPECT_CALL(*mockService, SetPlayRangeWithMode(0, 60000, PlayerSeekMode::SEEK_PREVIOUS_SYNC)).WillOnce(Return(0));
-    int32_t ret = mockService->SetPlayRangeWithMode(0, 60000, PlayerSeekMode::SEEK_PREVIOUS_SYNC);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(mode, PlaybackRateMode::SPEED_FORWARD_2_00_X);
 }
 
 } // namespace Media

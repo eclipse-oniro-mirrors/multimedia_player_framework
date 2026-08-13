@@ -14,19 +14,20 @@
  */
 
 #include "incall_observer.h"
-#include <unistd.h>
-#include <functional>
+
 #include "call_manager_client.h"
-#include "media_log.h"
-#include "media_errors.h"
-#include "media_telephony_listener.h"
 #include "hisysevent.h"
+#include "media_errors.h"
+#include "media_log.h"
+#include "media_telephony_listener.h"
+#include "telephony_errors.h"
 #include "telephony_observer_client.h"
 #include "telephony_types.h"
-#include "telephony_errors.h"
+#include <functional>
+#include <unistd.h>
 
 namespace {
-    constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "InCallObserver"};
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "InCallObserver"};
 }
 
 using namespace OHOS;
@@ -34,15 +35,14 @@ using namespace OHOS::Telephony;
 namespace OHOS {
 namespace Media {
 
-InCallObserver& InCallObserver::GetInstance()
+InCallObserver &InCallObserver::GetInstance()
 {
     static InCallObserver instance;
     return instance;
 }
 
-InCallObserver::InCallObserver(): taskQue_("IncallObs")
+InCallObserver::InCallObserver()
 {
-    taskQue_.Start();
     Init();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
 }
@@ -50,7 +50,6 @@ InCallObserver::InCallObserver(): taskQue_("IncallObs")
 InCallObserver::~InCallObserver()
 {
     UnRegisterObserver();
-    taskQue_.Stop();
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
@@ -68,46 +67,34 @@ bool InCallObserver::RegisterInCallObserverCallBack(std::weak_ptr<InCallObserver
 {
     MEDIA_LOGI("InCallObserver::RegisterInCallObserverCallBack START.");
     std::unique_lock<std::mutex> lock(mutex_);
-    auto task = std::make_shared<TaskHandler<bool>>([&, this, callback] {
-        auto callbackPtr = callback.lock();
-        if (callbackPtr) {
-            inCallObserverCallBacks_.push_back(callback);
-            return true;
-        }
-        MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
-        return false;
-    });
-    int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, false, "RegisterInCallObserverCallBack: EnqueueTask failed.");
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET_LOG(result.HasResult(), false, "RegisterInCallObserverCallBack: GetResult failed.");
-    MEDIA_LOGI("InCallObserver::RegisterInCallObserverCallBack vecSize: %{public}d",
-        static_cast<int32_t>(inCallObserverCallBacks_.size()));
-    return result.Value();
+    auto callbackPtr = callback.lock();
+    if (callbackPtr) {
+        inCallObserverCallBacks_.push_back(callback);
+        MEDIA_LOGI("InCallObserver::RegisterInCallObserverCallBack vecSize: %{public}d",
+            static_cast<int32_t>(inCallObserverCallBacks_.size()));
+        return true;
+    }
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "InCallObserver CallBack is null", FAKE_POINTER(this));
+    return false;
 }
 
 void InCallObserver::UnregisterInCallObserverCallBack(std::weak_ptr<InCallObserverCallBack> callback)
 {
     MEDIA_LOGI("InCallObserver::UnregisterInCallObserverCallBack START.");
     std::unique_lock<std::mutex> lock(mutex_);
-    auto task = std::make_shared<TaskHandler<void>>([&, this, callback] {
-        auto unregisterCallBack = callback.lock();
-        for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end();) {
-            auto iterCallback = (*iter).lock();
-            if (iterCallback == unregisterCallBack || iterCallback == nullptr) {
-                MEDIA_LOGD("0x%{public}06" PRIXPTR "UnregisterInCallObserverCallBack",
-                    FAKE_POINTER(iterCallback.get()));
-                iter = inCallObserverCallBacks_.erase(iter);
-            } else {
-                iter++;
-            }
+    auto unregisterCallBack = callback.lock();
+    CHECK_AND_RETURN(unregisterCallBack != nullptr);
+    for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end();) {
+        auto iterCallback = iter->lock();
+        if (iterCallback == unregisterCallBack || iterCallback == nullptr) {
+            MEDIA_LOGD("0x%{public}06" PRIXPTR "UnregisterInCallObserverCallBack", FAKE_POINTER(iterCallback.get()));
+            iter = inCallObserverCallBacks_.erase(iter);
+        } else {
+            iter++;
         }
-        MEDIA_LOGI("UnregisterInCallObserverCallBack END. inCallObserverCallBacks_.size(): %{public}d",
-            static_cast<int32_t>(inCallObserverCallBacks_.size()));
-    });
-    taskQue_.EnqueueTask(task);
-    MEDIA_LOGI("InCallObserver::UnregisterInCallObserverCallBack END.");
+    }
+    MEDIA_LOGI("UnregisterInCallObserverCallBack END. inCallObserverCallBacks_.size(): %{public}d",
+        static_cast<int32_t>(inCallObserverCallBacks_.size()));
 }
 
 bool InCallObserver::OnCallStateUpdated(bool inCall)
@@ -121,13 +108,11 @@ bool InCallObserver::OnCallStateUpdated(bool inCall)
     inCall_.store(inCall);
     bool ret = true;
     for (auto iter = inCallObserverCallBacks_.begin(); iter != inCallObserverCallBacks_.end(); iter++) {
-        auto callbackPtr = (*iter).lock();
+        auto callbackPtr = iter->lock();
         MEDIA_LOGD("0x%{public}06" PRIXPTR "OnCallStateUpdated", FAKE_POINTER(callbackPtr.get()));
         if (callbackPtr) {
-            MEDIA_LOGD("0x%{public}06" PRIXPTR "OnCallStateUpdated NotifyTelCallStateUpdated start",
-                FAKE_POINTER(callbackPtr.get()));
-            ret &= callbackPtr->NotifyTelCallStateUpdated(inCall);
-            MEDIA_LOGD("OnCallStateUpdated NotifyTelCallStateUpdated ret: %{public}d.", ret);
+            ret &= callbackPtr->OnTelCallStateUpdated(inCall);
+            MEDIA_LOGD("OnCallStateUpdated OnTelCallStateUpdated ret: %{public}d.", ret);
         }
     }
     return ret;

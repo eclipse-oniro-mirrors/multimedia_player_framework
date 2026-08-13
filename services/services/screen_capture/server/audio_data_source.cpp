@@ -17,7 +17,6 @@
 #include "locale_config.h"
 #include "media_log.h"
 #include "media_utils.h"
-#include "screen_capture_server_base.h"
 #include "screen_capture_server.h"
 
 namespace {
@@ -55,23 +54,6 @@ void AudioDataSource::SetAudioRendererState(uint32_t state)
 bool AudioDataSource::IsInWaitMicSyncState()
 {
     return isInWaitMicSyncState_.load();
-}
-
-int32_t AudioDataSource::RegisterAudioRendererEventListener(const int32_t clientPid,
-    const std::shared_ptr<AudioRendererStateChangeCallback> &callback)
-{
-    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "audio callback is null");
-    int32_t ret = AudioStreamManager::GetInstance()->RegisterAudioRendererEventListener(clientPid, callback);
-    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
-    AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(audioRendererChangeInfos);
-    screenCaptureServer_->AudioRendererStateUpdate(audioRendererChangeInfos);
-    return ret;
-}
-
-int32_t AudioDataSource::UnregisterAudioRendererEventListener(const int32_t clientPid)
-{
-    MEDIA_LOGI("client id: %{public}d", clientPid);
-    return AudioStreamManager::GetInstance()->UnregisterAudioRendererEventListener(clientPid);
 }
 
 void AudioDataSource::SetVideoFirstFramePts(int64_t firstFramePts)

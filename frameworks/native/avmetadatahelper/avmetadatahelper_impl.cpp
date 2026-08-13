@@ -23,6 +23,7 @@
 #include "hisysevent.h"
 #include "image_source.h"
 #include "image_type.h"
+#include "image_utils.h"
 #include "i_media_service.h"
 #include "media_errors.h"
 #include "media_log.h"
@@ -31,9 +32,8 @@
 #include "securec.h"
 #include "scope_guard.h"
 #include "uri_helper.h"
-#include "v1_0/hdr_static_metadata.h"
 #include "v1_0/buffer_handle_meta_key_type.h"
-
+#include "v1_0/hdr_static_metadata.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "MetaHelperImpl" };
@@ -562,7 +562,7 @@ std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(
     if (!options.useDMA) {
         pixelMap = CreatePixelmapWithSDR(surfaceBuffer, pixelMapInfo, options, isColorSpaceInfoObtained);
         CHECK_AND_RETURN_RET_LOG(pixelMap != nullptr, nullptr, "Create non-DMA pixelMap failed");
-        SetPixelMapYuvInfo(surfaceBuffer, pixelMap, pixelMapInfo, false);
+        ImageUtils::UpdateYUVDataInfo(*pixelMap);
         return pixelMap;
     }
     
@@ -666,7 +666,8 @@ int32_t AVMetadataHelperImpl::CopySurfaceBufferToPixelMap(sptr<SurfaceBuffer> &s
     srcPtr = static_cast<uint8_t *>(surfaceBuffer->GetVirAddr()) + uvOffset;
     
     // copy src UV plane to dst, height(UV) = height(Y) / 2
-    for (int32_t uv = 0; uv < displayHeight / 2; uv++) {
+    lineByteCount = ((displayWidth + 1) / UV_DIV_BASE) * UV_DIV_BASE;  // adapt to the case that width is odd
+    for (int32_t uv = 0; uv < (displayHeight + 1) / UV_DIV_BASE; uv++) {  // adapt to the case that height is odd
         auto ret = memcpy_s(dstPtr, lineByteCount, srcPtr, lineByteCount);
         TRUE_LOG(ret != EOK, MEDIA_LOGW, "Memcpy UV component failed.");
         srcPtr += stride;
@@ -811,8 +812,8 @@ int32_t AVMetadataHelperImpl::SetSource(const std::string &uri, int32_t usage)
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ParseFileName failed");
         int32_t fd = -1;
         int64_t size = -1;
-        ret = OpenFile(fileName, fd, size);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OpenFile failed");
+        ret = OpenFileAsFd(fileName, fd, size);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "OpenFileAsFd failed");
         concurrentWorkCount_++;
         ReportSceneCode(AV_META_SCENE_BATCH_HANDLE);
         int32_t res = avMetadataHelperService_->SetSource(fd, 0, size, usage);
@@ -1327,7 +1328,7 @@ int32_t AVMetadataHelperImpl::GetFileSize(const std::string& fileName, int64_t& 
     return MSERR_OK;
 }
 
-int32_t AVMetadataHelperImpl::OpenFile(const std::string& fileName, int32_t& fd, int64_t& size)
+int32_t AVMetadataHelperImpl::OpenFileAsFd(const std::string& fileName, int32_t& fd, int64_t& size)
 {
     MEDIA_LOGD("IN");
     int32_t ret = CheckFileStat(fileName);

@@ -86,6 +86,8 @@ enum CaptureMode : int32_t {
     CAPTURE_SPECIFIED_SCREEN = 1,
     /* capture a specified window */
     CAPTURE_SPECIFIED_WINDOW = 2,
+    /* capture virtual extended screen */
+    CAPTURE_VIRTUAL_EXTENDED_SCREEN = 3,
     CAPTURE_INVAILD = -1
 };
 

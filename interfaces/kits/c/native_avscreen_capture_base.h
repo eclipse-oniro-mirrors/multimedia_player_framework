@@ -66,6 +66,10 @@ typedef enum OH_CaptureMode {
     OH_CAPTURE_SPECIFIED_SCREEN = 1,
     /* capture a specified window */
     OH_CAPTURE_SPECIFIED_WINDOW = 2,
+    /* @brief Create a virtual extended screen and capture the contents of that screen
+     * @since 26.1.0
+     */
+    OH_CAPTURE_VIRTUAL_EXTENDED_SCREEN = 3,
     OH_CAPTURE_INVAILD = -1
 } OH_CaptureMode;
 
