@@ -2217,7 +2217,7 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const DatabaseTool &datab
 
     int32_t result = SUCCESS;
     auto simcardSettingAsset = GetSimcardSettingAssetByToneHapticsType(databaseTool, toneHapticsType);
-    if (simcardSettingAsset == nullptr || simcardSettingAsset->GetToneFile().empty()) {
+    if (simcardSettingAsset == nullptr || simcardSettingAsset->GetVibrateMode() != VIBRATE_TYPE_STANDARD) {
         result = GetDefaultToneHapticsSettings(databaseTool, toneUri, toneHapticsType, settings);
         if (result != SUCCESS) {
             MEDIA_LOGE("GetToneHapticsSettings: get defaultTone haptics settings fail");
