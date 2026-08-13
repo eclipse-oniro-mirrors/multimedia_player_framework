@@ -94,6 +94,7 @@ public:
     ~MemStoppedState() override = default;
     int32_t MemStateRecover() override;
     int32_t MemStateRelease() override;
+    int32_t MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra) override;
 };
 
 class PlayerServerMem::MemPlaybackCompletedState
