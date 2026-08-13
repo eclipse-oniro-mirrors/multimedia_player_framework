@@ -3118,6 +3118,10 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     isMicrophoneSwitchTurnOn_ = isMicrophone;
     int32_t ret = SyncAudioCaptures();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SyncAudioCaptures failed");
+#ifdef SUPPORT_CALL
+    CHECK_AND_RETURN_RET_LOG(!(isMicrophone && providers_->GetInCallObserver().IsInCall(true)),
+        MSERR_UNKNOWN_INCALL, "Mic unavailable due to call");
+#endif
     cbProxy_->OnStateChange(isMicrophone ? AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER
         : AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER);
     MEDIA_LOGI("SetMicrophoneEnabled OK.");
@@ -3178,6 +3182,17 @@ int32_t ScreenCaptureServer::AudioRendererStateUpdate(
     return SyncAudioCaptures();
 }
 
+void ScreenCaptureServer::StopMicAudio()
+{
+    if (micAudioCapture_ && micAudioCapture_->IsRecording()) {
+        usleep(AUDIO_CHANGE_TIME);
+    }
+    if (micAudioCapture_) {
+        MEDIA_LOGI("StopMicAudioCapture");
+        micAudioCapture_->Stop();
+    }
+}
+
 int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
 {
     std::lock_guard<std::mutex> lock(audioMutex_);
@@ -3205,13 +3220,7 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
         FAKE_POINTER(this), newState, state, IsMicrophoneSwitchTurnOn(), micStop, micStart, innerStart, ignoreMicError);
 
     if (micStop) {
-        if (micAudioCapture_ && micAudioCapture_->IsRecording()) {
-            usleep(AUDIO_CHANGE_TIME);
-        }
-        if (micAudioCapture_) {
-            MEDIA_LOGI("StopMicAudioCapture");
-            micAudioCapture_->Stop();
-        }
+        StopMicAudio();
     }
     if (micStart) {
         int32_t micRet = StartMicAudioCapture(state & AUDIO_STATE_VOIP);
@@ -3226,7 +3235,12 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
     if (innerStart) {
         ret = StartInnerAudioCapture();
     }
-
+#ifdef SUPPORT_CALL
+    if ((state & AUDIO_STATE_TEL) && isMicrophoneSwitchTurnOn_) {
+        MEDIA_LOGI("Mic unavailable due to call");
+        cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+    }
+#endif
     return ret;
 }
 

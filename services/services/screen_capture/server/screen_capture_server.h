@@ -213,6 +213,7 @@ private:
     void ConvertTaskIdsToMissionIds();
     void SetupCaptureListeners();
     void CloseFd();
+    void StopMicAudio();
     void ReleaseInner();
     void GetDumpFlag();
 
