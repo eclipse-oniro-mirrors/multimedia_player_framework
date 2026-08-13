@@ -75,7 +75,7 @@ public:
     static bool IsNetworkUrl(const std::string &url);
     static bool IsFdUrl(const std::string &url);
     static bool IsFileUrl(const std::string &url);
-
+    static bool StrToLong(const std::string_view& str, int64_t& value);
 private:
     void FormatMeForUri(const std::string_view &uri) noexcept;
     void FormatMeForFd() noexcept;

@@ -2934,7 +2934,7 @@ int32_t PlayerServer::PrepareInner()
 
 bool PlayerServer::CheckNetWorkPermission(const std::string &url)
 {
-    if (url.find("http") != std::string::npos) {
+    if (UriHelper::IsNetworkUrl(url)) {
         int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
         if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
             MEDIA_LOGE("user do not have the right to access INTERNET");

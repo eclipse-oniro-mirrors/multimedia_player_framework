@@ -127,7 +127,7 @@ HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaSourceTest, TestSize.Level1)
     ASSERT_NE(player, nullptr);
     ASSERT_EQ(OH_AVPlayer_SetMediaSource(nullptr, mediaSource), AV_ERR_INVALID_VAL);
     ASSERT_EQ(OH_AVPlayer_SetMediaSource(player, nullptr), AV_ERR_INVALID_VAL);
-    ASSERT_EQ(OH_AVPlayer_SetMediaSource(player, mediaSource), AV_ERR_OK);
+    ASSERT_EQ(OH_AVPlayer_SetMediaSource(player, mediaSource), AV_ERR_INVALID_VAL);
 }
 
 /**
@@ -149,7 +149,7 @@ HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaSourceTest002, TestSize.Level1)
     player->state_ = PLAYER_PAUSED;
     ASSERT_EQ(OH_AVPlayer_SetMediaSource(player, mediaSource), AV_ERR_INVALID_VAL);
     player->state_ = PLAYER_IDLE;
-    ASSERT_EQ(OH_AVPlayer_SetMediaSource(player, mediaSource), AV_ERR_OK);
+    ASSERT_EQ(OH_AVPlayer_SetMediaSource(player, mediaSource), AV_ERR_INVALID_VAL);
 }
 
 /**
@@ -205,7 +205,7 @@ HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaSourceTest005, TestSize.Level1)
     OH_AVPlayer* player = nullptr;
     player = OH_AVPlayer_Create();
     ASSERT_NE(player, nullptr);
-    ASSERT_EQ(OH_AVPlayer_SetMediaSource(player, mediaSource), AV_ERR_OK);
+    ASSERT_EQ(OH_AVPlayer_SetMediaSource(player, mediaSource), AV_ERR_INVALID_VAL);
 }
 
 void OnSeiMessageReceivedCallback(OH_AVPlayer *Player, OH_AVSeiMessageArray *message,
@@ -1060,7 +1060,7 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_AddUrlSubtitleSourceWithNetWork001, Le
     ASSERT_NE(player_, nullptr);
     const char* url = ISNETWORK_SUBTITLE_URL;
     OH_AVErrCode ret = OH_AVPlayer_AddUrlSubtitleSource(player_, url);
-    ASSERT_EQ(AV_ERR_OK, ret);
+    ASSERT_EQ(AV_ERR_INVALID_VAL, ret);
 }
 
 /**

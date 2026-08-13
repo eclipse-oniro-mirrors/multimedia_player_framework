@@ -43,24 +43,11 @@ constexpr int64_t CREATE_AVPLAYER_WARNING_MS = 30;
 constexpr int64_t RESET_WARNING_MS = 30;
 constexpr int64_t RELEASE_WARNING_MS = 200;
 const int32_t TIME_OUT_SECOND = 15;
+constexpr int32_t FD_INDEX = 1;
 constexpr int32_t FDPOS = 2;
 constexpr size_t SIZE_INDEX = 3;
-
-bool StrToLong(const std::string_view& str, int64_t& value)
-{
-    CHECK_AND_RETURN_RET_LOG(!str.empty() && (isdigit(str.front()) || (str.front() == '-')),
-        false, "no valid string.");
-    std::string valStr(str);
-    char* end = nullptr;
-    errno = 0;
-    long long result = strtoll(valStr.c_str(), &end, 10); /* 10 means decimal */
-    CHECK_AND_RETURN_RET_LOG(result >= LLONG_MIN && result <= LLONG_MAX, false,
-        "call StrToLong func false,  input str is: %{public}s!", valStr.c_str());
-    CHECK_AND_RETURN_RET_LOG(end != valStr.c_str() && end[0] == '\0' && errno != ERANGE, false,
-        "call StrToLong func false,  input str is: %{public}s!", valStr.c_str());
-    value = result;
-    return true;
-}
+constexpr int32_t FD_OFFSET_SIZE_LENGTH = 4;
+constexpr int32_t OFFSET_INDEX = 2;
 }
 
 namespace OHOS {
@@ -187,16 +174,9 @@ int32_t PlayerImpl::SetSource(const std::string &url)
 
     if (UriHelper::IsFileUrl(url)) {
         // file url
-        std::string realUriPath;
-        int32_t result = GetRealPath(url, realUriPath);
-        CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "SetSource error: GetRealPath error");
-        std::string uri = "file://" + realUriPath;
-        std::string fileName;
-        int32_t ret = ParseFileName(uri, fileName);
-        CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, MSERR_INVALID_VAL);
         int32_t fd = -1;
         int64_t size = -1;
-        ret = OpenFile(fileName, fd, size);
+        int32_t ret = OpenFile(url, fd, size);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "open file failed");
         return SetSourceByFd(fd, 0, size);
     } else if (UriHelper::IsFdUrl(url)) {
@@ -253,16 +233,9 @@ int32_t PlayerImpl::AddSubSource(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
     if (UriHelper::IsFileUrl(url)) {
         // file url
-        std::string realUriPath;
-        int32_t result = GetRealPath(url, realUriPath);
-        CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "SetSource error: GetRealPath error");
-        std::string uri = "file://" + realUriPath;
-        std::string fileName;
-        int32_t ret = ParseFileName(uri, fileName);
-        CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, MSERR_INVALID_VAL);
         int32_t fd = -1;
         int64_t size = -1;
-        ret = OpenFile(fileName, fd, size);
+        int32_t ret = OpenFile(url, fd, size);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "open file failed");
         return AddSubSourceByFd(fd, 0, size);
     } else if (UriHelper::IsFdUrl(url)) {
@@ -1762,10 +1735,17 @@ int32_t PlayerImpl::ParseFileName(const std::string& uri, std::string &fileName)
     return MSERR_OK;
 }
 
-int32_t PlayerImpl::OpenFile(const std::string& fileName, int32_t& fd, int64_t& size)
+int32_t PlayerImpl::OpenFile(const std::string& url, int32_t& fd, int64_t& size)
 {
     MEDIA_LOGD("IN");
-    int32_t ret = CheckFileStat(fileName);
+    std::string realUriPath;
+    int32_t result = GetRealPath(url, realUriPath);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "SetSource error: GetRealPath error");
+    std::string uri = "file://" + realUriPath;
+    std::string fileName;
+    int32_t ret = ParseFileName(uri, fileName);
+    CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, MSERR_INVALID_VAL);
+    ret = CheckFileStat(fileName);
     CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, ret);
     fd = open(fileName.c_str(), O_RDONLY);
     CHECK_AND_RETURN_RET_NOLOG(fd != -1, MSERR_INVALID_VAL);
@@ -1796,33 +1776,31 @@ int32_t PlayerImpl::ParseUriInfo(const std::string& uri, int32_t& fd, int64_t& o
     }
     std::smatch fdUriMatch;
     CHECK_AND_RETURN_RET_LOG(std::regex_match(uri, fdUriMatch, std::regex("^fd://(.*)\\?offset=(.*)&size=(.*)")) ||
-        std::regex_match(uri, fdUriMatch, std::regex("^fd://(.*)")),
-        MSERR_INVALID_VAL, "Invalid fd uri format");
+        std::regex_match(uri, fdUriMatch, std::regex("^fd://(.*)")), MSERR_INVALID_VAL, "Invalid fd uri format");
     CHECK_AND_RETURN_RET_LOG(fdUriMatch.size() >= FDPOS && IsNumber(fdUriMatch[1].str()),
         MSERR_INVALID_VAL, "Invalid fd uri format");
-    std::string fdStr = fdUriMatch[1].str();
+    std::string fdStr = fdUriMatch[FD_INDEX].str();
     CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd) && fd != -1 && FileSystem::IsRegularFile(fd),
         MSERR_INVALID_VAL, "Invalid fd: %{public}d", fd);
-    uint64_t fileSize = GetFileSize(fd);
-    if (fdUriMatch.size() == 4) { // 4：4 sub match
-        std::string offsetStr = fdUriMatch[2].str(); // 2: sub match offset subscript
-        CHECK_AND_RETURN_RET_LOG(StrToLong(offsetStr, offset), MSERR_INVALID_VAL,
-            "Failed to read offset.");
-        if (static_cast<uint64_t>(offset) > fileSize) {
-            offset = static_cast<int64_t>(fileSize);
-        }
-        int64_t tempSize = 0;
-        std::string sizeStr = fdUriMatch[SIZE_INDEX].str();
-        CHECK_AND_RETURN_RET_LOG(StrToLong(sizeStr, tempSize), MSERR_INVALID_VAL,
-            "Failed to read size.");
-        size = static_cast<uint64_t>(tempSize);
-        uint64_t remainingSize = fileSize - static_cast<uint64_t>(offset);
-        if (size > remainingSize) {
-            size = remainingSize;
-        }
-    } else {
+    int64_t fileSize = GetFileSize(fd);
+    if (fdUriMatch.size() != FD_OFFSET_SIZE_LENGTH) {
         size = fileSize;
         offset = 0;
+        return MSERR_OK;
+    }
+    // 4：4 sub match
+    std::string offsetStr = fdUriMatch[OFFSET_INDEX].str(); // 2: sub match offset subscript
+    CHECK_AND_RETURN_RET_LOG(UriHelper::StrToLong(offsetStr, offset), MSERR_INVALID_VAL,
+        "Failed to read offset.");
+    if (offset > fileSize) {
+        offset = fileSize;
+    }
+    std::string sizeStr = fdUriMatch[SIZE_INDEX].str();
+    CHECK_AND_RETURN_RET_LOG(UriHelper::StrToLong(sizeStr, size), MSERR_INVALID_VAL,
+        "Failed to read size.");
+    int64_t remainingSize = fileSize - offset;
+    if (size > remainingSize) {
+        size = remainingSize;
     }
     return MSERR_OK;
 }
@@ -1832,13 +1810,9 @@ int64_t PlayerImpl::GetFileSize(int32_t fd)
     int64_t fileSize = 0;
     struct stat s {};
     int ret = fstat(fd, &s);
-    if (ret == 0) {
-        fileSize = static_cast<int64_t>(s.st_size);
-        CHECK_AND_RETURN_RET_LOG(fileSize != 0, fileSize, "fileSize 0, fstat ret 0");
-        return fileSize;
-    } else {
-        MEDIA_LOGW("GetFileSize error ret %{public}d, errno %{public}d", ret, errno);
-    }
+    CHECK_AND_RETURN_RET_LOG(ret == 0, fileSize, "GetFileSize error ret %{public}d, errno %{public}d", ret, errno);
+    fileSize = static_cast<int64_t>(s.st_size);
+    CHECK_AND_RETURN_RET_LOG(fileSize != 0, fileSize, "fileSize 0, fstat ret 0");
     return fileSize;
 }
 
@@ -1847,7 +1821,7 @@ bool PlayerImpl::IsNumber(const std::string& str)
     return str.find_first_not_of("0123456789") == std::string::npos;
 }
 
-int32_t SetSourceByFd(int32_t fd, int64_t offset, int64_t size)
+int32_t PlayerImpl::SetSourceByFd(int32_t fd, int64_t offset, int64_t size)
 {
     if (!fdsanFd_) {
         fdsanFd_ = std::make_unique<FdsanFd>(fd);
@@ -1859,7 +1833,7 @@ int32_t SetSourceByFd(int32_t fd, int64_t offset, int64_t size)
     return ret;
 }
 
-int32_t AddSubSourceByFd(int32_t fd, int64_t offset, int64_t size)
+int32_t PlayerImpl::AddSubSourceByFd(int32_t fd, int64_t offset, int64_t size)
 {
     if (!subFdsanFd_) {
         subFdsanFd_ = std::make_unique<FdsanFd>(fd);
@@ -1867,7 +1841,7 @@ int32_t AddSubSourceByFd(int32_t fd, int64_t offset, int64_t size)
         subFdsanFd_->Reset(fd);
     }
     int32_t ret = MSERR_OK;
-    LISTENER(ret = playerService_->AddSubSource(fd, offset, fileSize), "setSource url", false, TIME_OUT_SECOND);
+    LISTENER(ret = playerService_->AddSubSource(fd, offset, size), "setSource url", false, TIME_OUT_SECOND);
     return ret;
 }
 } // namespace Media

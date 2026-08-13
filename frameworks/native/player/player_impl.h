@@ -156,9 +156,8 @@ private:
     int32_t DealWithSwitchingOpt();
     int32_t GetRealPath(const std::string &url, std::string &realUrlPath) const;
     int32_t ParseFileName(const std::string& uri, std::string &fileName);
-    int32_t OpenFile(const std::string& fileName, int32_t& fd, int64_t& size);
+    int32_t OpenFile(const std::string& url, int32_t& fd, int64_t& size);
     int32_t CheckFileStat(const std::string& fileName);
-    int64_t GetFileSize(const std::string& fileName);
     int32_t ParseUriInfo(const std::string& uri, int32_t& fd, int64_t& offset, int64_t& size);
     int64_t GetFileSize(int32_t fd);
     bool IsNumber(const std::string& str);
