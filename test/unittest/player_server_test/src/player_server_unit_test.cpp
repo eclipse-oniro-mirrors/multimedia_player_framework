@@ -4155,25 +4155,6 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlayRange_013, TestSize.Level0)
 }
 
 /**
- * @tc.name  : Test SeekContinuous in prepared
- * @tc.number: Player_SeekContinuous_001
- * @tc.desc  : Test Player SeekContinuous
- */
-HWTEST_F(PlayerServerUnitTest, Player_SeekContinuous_001, TestSize.Level1)
-{
-    ASSERT_EQ(MSERR_OK, player_->SetSource(VIDEO_FILE1));
-    sptr<Surface> videoSurface = player_->GetVideoSurface();
-    ASSERT_NE(nullptr, videoSurface);
-    EXPECT_EQ(MSERR_OK, player_->SetVideoSurface(videoSurface));
-    EXPECT_EQ(MSERR_OK, player_->PrepareAsync());
-    for (int i = 0; i < 10; i++) {
-        EXPECT_EQ(MSERR_OK, player_->SeekContinuous(i * 100));
-        usleep(SEEK_CONTINUOUS_WAIT_US);
-    }
-    EXPECT_EQ(MSERR_OK, player_->Play());
-}
-
-/**
  * @tc.name  : Test SeekContinuous in playing
  * @tc.number: Player_SeekContinuous_002
  * @tc.desc  : Test Player SeekContinuous

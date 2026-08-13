@@ -25,33 +25,16 @@
 #include "i_standard_player_service.h"
 #include "i_standard_player_listener.h"
 #include "player_service_proxy.h"
+#include "player_service_stub.h"
+#include "media_errors.h"
 
 namespace OHOS {
 namespace Media {
 
-class MockRemoteObject : public IRemoteObject {
+class MockRemoteObject : public PlayerServiceStub {
 public:
-    explicit MockRemoteObject() : IRemoteObject(u"MockRemoteObject") {}
-    ~MockRemoteObject() = default;
-
     MOCK_METHOD(int, SendRequest, (uint32_t code, MessageParcel &data,
         MessageParcel &reply, MessageOption &option), (override));
-
-    MOCK_METHOD(bool, IsProxyObject, (), (override));
-
-    MOCK_METHOD(int32_t, GetRefCount, (), (override));
-
-    MOCK_METHOD(int, Release, (), (override));
-
-    MOCK_METHOD(sptr<IRemoteBroker>, AsInterface, (), (override));
-
-    MOCK_METHOD(bool, Marshalling, (MessageParcel &parcel), (override));
-
-    MOCK_METHOD(void, ExtendObjectInterfaceClassId, (uint16_t classId), (override));
-
-    MOCK_METHOD(int32_t, GetObjectInterfaceClassId, (), (override));
-
-    MOCK_METHOD(const std::u16string, GetObjectDescriptor, (), (override));
 };
 
 class PlayerServiceProxyTest : public testing::Test {
@@ -60,7 +43,7 @@ public:
     static void TearDownTestCase(void) {}
     void SetUp(void) override
     {
-        mockRemote_ = sptr<MockRemoteObject>::MakeRaw();
+        mockRemote_ = new MockRemoteObject();
         proxy_ = new PlayerServiceProxy(mockRemote_);
     }
     void TearDown(void) override

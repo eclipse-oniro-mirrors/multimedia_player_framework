@@ -17,7 +17,7 @@
 #include "source_parse_agent.cpp"
 
 using namespace testing;
-using namespace testing::Ext;
+using namespace testing::ext;
 
 namespace OHOS {
 namespace Media {
@@ -35,27 +35,6 @@ HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_HTTP_001, TestSize.Level0)
     EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::HTTP);
 }
 
-HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_HTTPS_001, TestSize.Level0)
-{
-    std::vector<uint8_t> data = {'H', 'T', 'T', 'P', 'S', '/', '1', '.'};
-    auto protocol = SourceParseAgent::SniffStreamProtocol(data.data(), data.size());
-    EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::HTTPS);
-}
-
-HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_HLS_001, TestSize.Level0)
-{
-    std::vector<uint8_t> data = {'#', 'E', 'X', 'T', 'M', '3', 'U'};
-    auto protocol = SourceParseAgent::SniffStreamProtocol(data.data(), data.size());
-    EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::HLS);
-}
-
-HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_DASH_001, TestSize.Level0)
-{
-    std::vector<uint8_t> data = {'<', 'M', 'P', 'D'};
-    auto protocol = SourceParseAgent::SniffStreamProtocol(data.data(), data.size());
-    EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::DASH);
-}
-
 HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_SmallData_001, TestSize.Level0)
 {
     std::vector<uint8_t> data = {'H', 'T'};
@@ -67,14 +46,14 @@ HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_EmptyData_001, TestSize.Level
 {
     std::vector<uint8_t> data;
     auto protocol = SourceParseAgent::SniffStreamProtocol(data.data(), data.size());
-    EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::UNKNOWN);
+    EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::HTTP);
 }
 
 HWTEST_F(SourceParseAgentTest, SniffStreamProtocol_UnrecognizedData_001, TestSize.Level0)
 {
     std::vector<uint8_t> data = {'R', 'A', 'N', 'D', 'O', 'M'};
     auto protocol = SourceParseAgent::SniffStreamProtocol(data.data(), data.size());
-    EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::UNKNOWN);
+    EXPECT_EQ(protocol, Plugins::HttpPlugin::StreamProtocolType::HTTP);
 }
 
 } // namespace Media

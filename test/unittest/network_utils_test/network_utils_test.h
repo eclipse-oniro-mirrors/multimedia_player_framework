@@ -35,7 +35,6 @@ public:
     void TearDown(void) {}
 
 protected:
-    NetworkUtils& networkUtils_;
 };
 
 } // namespace Media

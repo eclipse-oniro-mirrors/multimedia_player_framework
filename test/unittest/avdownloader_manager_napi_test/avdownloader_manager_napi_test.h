@@ -21,9 +21,7 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <map>
 #include "av_downloader_manager.h"
-#include "avdownloader_manager_napi.h"
 
 namespace OHOS {
 namespace Media {
@@ -44,6 +42,28 @@ public:
     MOCK_METHOD(int32_t, Release, (), (override));
 };
 
+class TestCallback : public AVDownloaderManagerCallback {
+public:
+    void OnStatusChange(const std::string &taskId, AVDownloadTaskState state) override
+    {
+        lastTaskId_ = taskId;
+        lastState_ = state;
+        statusCallCount_++;
+    }
+    void OnProgressChange(const std::string &taskId, double progress) override
+    {
+        lastTaskId_ = taskId;
+        lastProgress_ = progress;
+        progressCallCount_++;
+    }
+
+    std::string lastTaskId_;
+    AVDownloadTaskState lastState_ = AVDownloadTaskState::INIT;
+    double lastProgress_ = 0.0;
+    int32_t statusCallCount_ = 0;
+    int32_t progressCallCount_ = 0;
+};
+
 class AVDownloaderManagerNapiTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
@@ -53,6 +73,7 @@ public:
 
 protected:
     std::shared_ptr<MockAVDownloaderManager> mockManager_;
+    std::shared_ptr<TestCallback> callback_;
 };
 
 } // namespace Media
