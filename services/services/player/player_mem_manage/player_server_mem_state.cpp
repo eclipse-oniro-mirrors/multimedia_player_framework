@@ -125,6 +125,12 @@ int32_t PlayerServerMem::MemInitializedState::MemPlayerCbRecover(PlayerOnInfoTyp
     return MSERR_OK;
 }
 
+int32_t PlayerServerMem::MemStoppedState::MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra)
+{
+    playerServerMem_.RecoverToInitialized(type, extra);
+    return MSERR_OK;
+}
+
 int32_t PlayerServerMem::MemPreparingState::MemStateRecover()
 {
     return MemRecoverToPrepared();
