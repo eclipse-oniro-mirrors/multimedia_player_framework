@@ -102,13 +102,30 @@ int32_t PlayerServerMem::MemInitializedState::MemStateRecover()
     return MemRecoverToInitialized();
 }
 
+int32_t PlayerServerMem::MemStoppedState::MemStateRecover()
+{
+    return MemRecoverToInitialized();
+}
+
 int32_t PlayerServerMem::MemInitializedState::MemStateRelease()
 {
     playerServerMem_.GetPlayerServerConfig();
     return MSERR_OK;
 }
 
+int32_t PlayerServerMem::MemStoppedState::MemStateRelease()
+{
+    playerServerMem_.GetPlayerServerConfig();
+    return MSERR_OK;
+}
+
 int32_t PlayerServerMem::MemInitializedState::MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra)
+{
+    playerServerMem_.RecoverToInitialized(type, extra);
+    return MSERR_OK;
+}
+
+int32_t PlayerServerMem::MemStoppedState::MemPlayerCbRecover(PlayerOnInfoType type, int32_t extra)
 {
     playerServerMem_.RecoverToInitialized(type, extra);
     return MSERR_OK;

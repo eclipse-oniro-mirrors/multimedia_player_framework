@@ -845,6 +845,7 @@ int32_t PlayerServer::OnStop(bool sync)
     auto stopTask = std::make_shared<TaskHandler<void>>([this]() {
         auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
         (void)currState->Stop();
+        ChangeState(stoppedState_);
     });
 
     (void)taskMgr_.LaunchTask(stopTask, PlayerServerTaskType::STATE_CHANGE, "stop");
