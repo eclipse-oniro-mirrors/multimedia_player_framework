@@ -167,7 +167,7 @@ napi_value ScreenCaptureMonitorNapi::JsGetScreenCaptureMonitor(napi_env env, nap
     status = napi_create_async_work(env, nullptr, resource,
         [](napi_env env, void *data) {
             MEDIA_LOGD("JsGetScreenCaptureMonitor execute");
-            ScreenCaptureMonitor::GetInstance()->Init();
+            ScreenCaptureMonitor::GetInstance();
             auto ctx = reinterpret_cast<ScreenCaptureMonitorAsyncContext *>(data);
             CHECK_AND_RETURN_LOG(ctx != nullptr, "asyncCtx is nullptr!");
         },

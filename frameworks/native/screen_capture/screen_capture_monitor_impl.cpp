@@ -27,6 +27,7 @@ namespace Media {
 ScreenCaptureMonitor *ScreenCaptureMonitor::GetInstance()
 {
     static ScreenCaptureMonitorImpl screenCaptureMonitorImpl;
+    ScreenCaptureMonitorImpl::Init();
     return &screenCaptureMonitorImpl;
 }
 
