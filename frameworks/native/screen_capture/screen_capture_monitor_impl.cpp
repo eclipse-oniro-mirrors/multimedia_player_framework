@@ -64,6 +64,7 @@ bool ScreenCaptureMonitor::IsSystemScreenRecorderWorking()
 int32_t ScreenCaptureMonitorImpl::Init()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     if (!screenCaptureMonitorService_) {
         screenCaptureMonitorService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureMonitorService();
     }
@@ -76,6 +77,7 @@ void ScreenCaptureMonitorImpl::RegisterScreenCaptureMonitorListener(
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " RegisterMonitorListener in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(listener != nullptr, "input listener is nullptr.");
     CHECK_AND_RETURN_LOG(screenCaptureMonitorService_ != nullptr, "screen capture monitor service does not exist..");
     screenCaptureMonitorService_->RegisterScreenCaptureMonitorListener(listener);
@@ -85,6 +87,7 @@ void ScreenCaptureMonitorImpl::UnregisterScreenCaptureMonitorListener(
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener)
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " UnregisterMonitorListener in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(listener != nullptr, "input listener is nullptr.");
     CHECK_AND_RETURN_LOG(screenCaptureMonitorService_ != nullptr, "screen capture monitor service does not exist..");
     screenCaptureMonitorService_->UnregisterScreenCaptureMonitorListener(listener);
@@ -93,6 +96,7 @@ void ScreenCaptureMonitorImpl::UnregisterScreenCaptureMonitorListener(
 std::list<int32_t> ScreenCaptureMonitorImpl::IsScreenCaptureWorking()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " IsScreenCaptureWorking in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, {},
         "screen capture monitor service does not exist.");
     return screenCaptureMonitorService_->IsScreenCaptureWorking();
@@ -101,6 +105,7 @@ std::list<int32_t> ScreenCaptureMonitorImpl::IsScreenCaptureWorking()
 bool ScreenCaptureMonitorImpl::IsSystemScreenRecorder(int32_t pid)
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " IsSystemScreenRecorder in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, false,
         "screen capture monitor service does not exist.");
     return screenCaptureMonitorService_->IsSystemScreenRecorder(pid);
@@ -110,6 +115,7 @@ bool ScreenCaptureMonitorImpl::IsSystemScreenRecorderWorking()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " IsSystemScreenRecorderWorking in",
         FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, false,
         "screen capture monitor service does not exist.");
     return screenCaptureMonitorService_->IsSystemScreenRecorderWorking();
@@ -117,6 +123,7 @@ bool ScreenCaptureMonitorImpl::IsSystemScreenRecorderWorking()
 
 void ScreenCaptureMonitorImpl::ScreenCaptureMonitorServiceDied()
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     if (screenCaptureMonitorService_ != nullptr) {
         (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureMonitorService(screenCaptureMonitorService_);
         screenCaptureMonitorService_ = nullptr;
