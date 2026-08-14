@@ -30,6 +30,7 @@ namespace Media {
 const int ERROR = -1;
 const int TYPEERROR = -2;
 const int SUCCESS = 0;
+const int UNSUPPORTED_ERROR = -5;
 const int32_t TONE_CATEGORY = -13;
 const int32_t SYSPARA_SIZE = 128;
 void SystemSoundManagerUnitNextTest::SetUpTestCase(void) {}
@@ -2545,6 +2546,78 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_008, TestSize.
         RINGTONE_COLUMN_SHOT_TONE_TYPE, RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
         targetToneType, SOURCE_TYPE_PRESET);
     EXPECT_GT(result, 0);
+}
+/**
+ * @tc.name  : GetToneHapticsSettings_UnsupportedVibrator
+ * @tc.number: GetToneHapticsSettings_001
+ * @tc.desc  : Test GetToneHapticsSettings returns UNSUPPORTED_ERROR when SUPPORT_VIBRATOR is not defined
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetToneHapticsSettings_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.isProxy = true;
+    databaseTool.dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    ASSERT_NE(databaseTool.dataShareHelper, nullptr);
+
+    std::string toneUri = "test_uri";
+    ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
+    ToneHapticsSettings settings;
+    int32_t result = systemSoundManagerImpl_->GetToneHapticsSettings(
+        databaseTool, toneUri, toneHapticsType, settings);
+    EXPECT_EQ(result, UNSUPPORTED_ERROR);
+}
+
+/**
+ * @tc.name  : GetToneHapticsSettings_NotInitialized
+ * @tc.number: GetToneHapticsSettings_002
+ * @tc.desc  : Test GetToneHapticsSettings when databaseTool is not initialized
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetToneHapticsSettings_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = false;
+    databaseTool.dataShareHelper = nullptr;
+
+    std::string toneUri = "test_uri";
+    ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
+    ToneHapticsSettings settings;
+    int32_t result = systemSoundManagerImpl_->GetToneHapticsSettings(
+        databaseTool, toneUri, toneHapticsType, settings);
+    EXPECT_EQ(result, UNSUPPORTED_ERROR);
+}
+
+/**
+ * @tc.name  : GetSimcardSettingAssetByToneHapticsType_NotProxy
+ * @tc.number: GetSimcardSettingAssetByToneHapticsType_002
+ * @tc.desc  : Test GetSimcardSettingAssetByToneHapticsType when isProxy is false
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetSimcardSettingAssetByToneHapticsType_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.isProxy = false;
+    databaseTool.dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
+    ASSERT_NE(databaseTool.dataShareHelper, nullptr);
+    ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
+    std::unique_ptr<SimcardSettingAsset> result =
+        systemSoundManagerImpl_->GetSimcardSettingAssetByToneHapticsType(databaseTool, toneHapticsType);
+    EXPECT_NE(result, nullptr);
 }
 } // namespace Media
 } // namespace OHOS
