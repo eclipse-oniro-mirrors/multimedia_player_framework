@@ -35,6 +35,7 @@ public:
     int32_t Init();
     void ScreenCaptureMonitorServiceDied();
 private:
+    int32_t InitInner();
     std::mutex mutex_;
     std::shared_ptr<IScreenCaptureMonitorService> screenCaptureMonitorService_ = nullptr;
 };
