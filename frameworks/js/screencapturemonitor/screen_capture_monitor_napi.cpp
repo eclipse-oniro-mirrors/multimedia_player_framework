@@ -162,9 +162,23 @@ napi_value ScreenCaptureMonitorNapi::JsGetScreenCaptureMonitor(napi_env env, nap
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
     asyncCtx->ctorFlag = true;
 
-    auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncCtx.get(), napi_eprio_immediate);
-    if (ret != napi_status::napi_ok) {
-        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsGetScreenCaptureMonitor", NAPI_AUTO_LENGTH, &resource);
+    status = napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            MEDIA_LOGD("JsGetScreenCaptureMonitor execute callback");
+            auto ctx = reinterpret_cast<ScreenCaptureMonitorAsyncContext *>(data);
+            CHECK_AND_RETURN_LOG(ctx != nullptr, "asyncCtx is nullptr!");
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("failed to napi_create_async_work, status = %{public}d", status);
+        return result;
+    }
+    status = napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated);
+    if (status != napi_ok) {
+        MEDIA_LOGE("failed to napi_queue_async_work_with_qos, status = %{public}d", status);
+        napi_delete_async_work(env, asyncCtx->work);
         return result;
     }
     asyncCtx.release();
