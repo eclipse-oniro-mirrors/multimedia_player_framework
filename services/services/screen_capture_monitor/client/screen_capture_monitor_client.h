@@ -37,6 +37,7 @@ public:
     void MediaServerDied();
     bool IsSystemScreenRecorder(int32_t pid) override;
     bool IsSystemScreenRecorderWorking() override;
+    bool IsServiceAlive() override;
 
 private:
     int32_t CreateListenerObject();

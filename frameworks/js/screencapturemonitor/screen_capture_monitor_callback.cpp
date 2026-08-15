@@ -124,10 +124,6 @@ void ScreenCaptureMonitorCallback::OnJsCaptureCallBack(ScreenCaptureMonitorJsCal
 
     auto task = [jsCb]() {
         std::string request = jsCb->callbackName;
-        if (jsCb->captureEvent == ScreenCaptureMonitorEvent::SCREENCAPTURE_DIED) {
-            MEDIA_LOGI("ScreenCaptureMonitorCallback::ScreenCaptureMonitorServiceDied S");
-            ScreenCaptureMonitor::GetInstance()->ScreenCaptureMonitorServiceDied();
-        }
         do {
             std::shared_ptr<AutoRef> ref = jsCb->autoRef.lock();
             CHECK_AND_BREAK_LOG(ref != nullptr, "%{public}s AutoRef is nullptr", request.c_str());

@@ -32,6 +32,7 @@ public:
         sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener) = 0;
     virtual bool IsSystemScreenRecorder(int32_t pid) = 0;
     virtual bool IsSystemScreenRecorderWorking() = 0;
+    virtual bool IsServiceAlive() = 0;
 };
 
 class IInnerScreenCaptureMonitorService : public IScreenCaptureMonitorService {

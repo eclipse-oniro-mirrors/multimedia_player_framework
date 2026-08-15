@@ -27,7 +27,6 @@ namespace Media {
 ScreenCaptureMonitor *ScreenCaptureMonitor::GetInstance()
 {
     static ScreenCaptureMonitorImpl screenCaptureMonitorImpl;
-    screenCaptureMonitorImpl.Init();
     return &screenCaptureMonitorImpl;
 }
 
@@ -64,9 +63,11 @@ bool ScreenCaptureMonitor::IsSystemScreenRecorderWorking()
 int32_t ScreenCaptureMonitorImpl::InitInner()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
-    if (!screenCaptureMonitorService_) {
-        screenCaptureMonitorService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureMonitorService();
+    if (screenCaptureMonitorService_ != nullptr) {
+        CHECK_AND_RETURN_RET(!screenCaptureMonitorService_->IsServiceAlive(), MSERR_OK);
+        (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureMonitorService(screenCaptureMonitorService_);
     }
+    screenCaptureMonitorService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureMonitorService();
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, MSERR_UNKNOWN,
         "failed to create ScreenCaptureMonitor service");
     return MSERR_OK;
@@ -94,7 +95,7 @@ void ScreenCaptureMonitorImpl::UnregisterScreenCaptureMonitorListener(
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " UnregisterMonitorListener in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(listener != nullptr, "input listener is nullptr.");
-    CHECK_AND_RETURN_LOG(InitInner() == MSERR_OK, "screen capture monitor service does not exist..");
+    CHECK_AND_RETURN_LOG(screenCaptureMonitorService_ != nullptr, "screen capture monitor service does not exist..");
     screenCaptureMonitorService_->UnregisterScreenCaptureMonitorListener(listener);
 }
 
@@ -126,16 +127,6 @@ bool ScreenCaptureMonitorImpl::IsSystemScreenRecorderWorking()
     return screenCaptureMonitorService_->IsSystemScreenRecorderWorking();
 }
 
-void ScreenCaptureMonitorImpl::ScreenCaptureMonitorServiceDied()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (screenCaptureMonitorService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureMonitorService(screenCaptureMonitorService_);
-        screenCaptureMonitorService_ = nullptr;
-    }
-    MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " ScreenCaptureMonitorServiceDied", FAKE_POINTER(this));
-}
-
 ScreenCaptureMonitorImpl::ScreenCaptureMonitorImpl()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
@@ -144,7 +135,12 @@ ScreenCaptureMonitorImpl::ScreenCaptureMonitorImpl()
 ScreenCaptureMonitorImpl::~ScreenCaptureMonitorImpl()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
-    ScreenCaptureMonitorServiceDied();
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN(screenCaptureMonitorService_ == nullptr);
+    MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " DestroyScreenCaptureMonitorService",
+        FAKE_POINTER(this));
+    (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureMonitorService(screenCaptureMonitorService_);
+    screenCaptureMonitorService_ = nullptr;
 }
 } // namespace Media
 } // namespace OHOS

@@ -92,7 +92,10 @@ public:
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitorListener> listener);
     bool IsSystemScreenRecorder(int32_t pid);
     bool IsSystemScreenRecorderWorking();
-    virtual void ScreenCaptureMonitorServiceDied() {};
+    virtual int32_t Init()
+    {
+        return 0;
+    };
     virtual ~ScreenCaptureMonitor() = default;
 #endif
 };
