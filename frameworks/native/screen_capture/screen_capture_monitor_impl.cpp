@@ -79,7 +79,6 @@ int32_t ScreenCaptureMonitorImpl::InitInner()
 int32_t ScreenCaptureMonitorImpl::Init()
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    MEDIA_LOGD("test inner");
     return InitInner();
 }
 
