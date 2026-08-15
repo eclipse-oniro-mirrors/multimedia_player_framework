@@ -49,6 +49,26 @@ namespace {
             napi_throw(env, error);
         }
     }
+
+    napi_value ThrowAndReturnUndefined(napi_env env, int32_t code, const std::string &msg)
+    {
+        MEDIA_LOGE("%{public}s", msg.c_str());
+        napi_value error = nullptr;
+        napi_status status = CommonNapi::CreateError(env, code, msg, error);
+        if (status == napi_ok && error != nullptr) {
+            napi_throw(env, error);
+        }
+        napi_value result = nullptr;
+        napi_get_undefined(env, &result);
+        return result;
+    }
+
+    void ResolveUndefined(napi_env env, napi_deferred deferred)
+    {
+        napi_value undefined = nullptr;
+        napi_get_undefined(env, &undefined);
+        napi_resolve_deferred(env, deferred, undefined);
+    }
 }
 
 thread_local napi_ref AVAdsControllerNapi::constructor_ = nullptr;
@@ -190,47 +210,35 @@ napi_value AVAdsControllerNapi::JsCreateAVAdsController(napi_env env, napi_callb
     napi_deferred deferred = nullptr;
     napi_value promise = nullptr;
     napi_status status = napi_create_promise(env, &deferred, &promise);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok && deferred != nullptr, nullptr, "Failed to create promise");
+    if (status != napi_ok || deferred == nullptr) {
+        return ThrowAndReturnUndefined(env, ERR_ADS_PARAM_INVALID, "Failed to create promise");
+    }
 
     napi_value args[1] = { nullptr };
     size_t argCount = 1;
-    napi_value jsThis = nullptr;
-    status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
-    if (status != napi_ok) {
-        MEDIA_LOGE("failed to napi_get_cb_info");
-        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID, "failed to napi_get_cb_info");
-        return promise;
-    }
-
-    if (argCount < 1) {
-        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID, "Invalid arguments, expected 1 (AVPlayer)");
-        return promise;
+    status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
+    if (status != napi_ok || argCount < 1) {
+        return ThrowAndReturnUndefined(env, ERR_ADS_PARAM_INVALID, "Invalid arguments, expected 1 (AVPlayer)");
     }
 
     napi_valuetype type = napi_undefined;
     status = napi_typeof(env, args[0], &type);
     if (status != napi_ok || type != napi_object) {
-        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID, "First argument must be AVPlayer");
-        return promise;
+        return ThrowAndReturnUndefined(env, ERR_ADS_PARAM_INVALID, "First argument must be AVPlayer");
     }
 
     AVPlayerNapi *jsPlayer = nullptr;
     status = napi_unwrap(env, args[0], reinterpret_cast<void **>(&jsPlayer));
-    if (status != napi_ok || jsPlayer == nullptr) {
-        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID,
-            "The player object corresponding to player does not exist or is invalid");
-        return promise;
-    }
-
-    if (jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
-        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID,
-            "The player object corresponding to player does not exist or is invalid");
+    if (status != napi_ok || jsPlayer == nullptr || jsPlayer->GetCurrentState() == AVPlayerState::STATE_RELEASED) {
+        MEDIA_LOGE("The player object corresponding to player does not exist or is invalid");
+        ResolveUndefined(env, deferred);
         return promise;
     }
 
     napi_value instance = CreateInstance(env, args[0]);
     if (instance == nullptr) {
-        RejectPromise(env, deferred, ERR_ADS_PARAM_INVALID, "Failed to create AVAdsController");
+        MEDIA_LOGE("Failed to create AVAdsController");
+        ResolveUndefined(env, deferred);
         return promise;
     }
 
