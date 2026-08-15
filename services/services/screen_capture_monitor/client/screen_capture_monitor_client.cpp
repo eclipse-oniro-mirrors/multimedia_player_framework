@@ -151,5 +151,11 @@ bool ScreenCaptureMonitorClient::IsSystemScreenRecorderWorking()
         "ScreenCaptureMonitor service does not exist.");
     return screenCaptureMonitorProxy_->IsSystemScreenRecorderWorking();
 }
+
+bool ScreenCaptureMonitorClient::IsServiceAlive()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return screenCaptureMonitorProxy_ != nullptr;
+}
 } // namespace Media
 } // namespace OHOS

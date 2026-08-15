@@ -32,8 +32,7 @@ public:
     void UnregisterScreenCaptureMonitorListener(sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> listener);
     bool IsSystemScreenRecorder(int32_t pid);
     bool IsSystemScreenRecorderWorking();
-    int32_t Init();
-    void ScreenCaptureMonitorServiceDied();
+    int32_t Init() override;
 private:
     int32_t InitInner();
     std::mutex mutex_;

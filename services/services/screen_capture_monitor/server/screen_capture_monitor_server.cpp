@@ -192,5 +192,10 @@ bool ScreenCaptureMonitorServer::IsSystemScreenRecorderWorking()
     MEDIA_LOGI("IsSystemScreenRecorderWorking result: %{public}d", result);
     return result;
 }
+
+bool ScreenCaptureMonitorServer::IsServiceAlive()
+{
+    return true;
+}
 } // namespace Media
 } // namespace OHOS

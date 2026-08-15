@@ -27,7 +27,6 @@ namespace Media {
 ScreenCaptureMonitor *ScreenCaptureMonitor::GetInstance()
 {
     static ScreenCaptureMonitorImpl screenCaptureMonitorImpl;
-    screenCaptureMonitorImpl.Init();
     return &screenCaptureMonitorImpl;
 }
 
@@ -64,9 +63,14 @@ bool ScreenCaptureMonitor::IsSystemScreenRecorderWorking()
 int32_t ScreenCaptureMonitorImpl::InitInner()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
-    if (!screenCaptureMonitorService_) {
-        screenCaptureMonitorService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureMonitorService();
+    if (screenCaptureMonitorService_ != nullptr) {
+        if (screenCaptureMonitorService_->IsServiceAlive()) {
+            return MSERR_OK;
+        }
+        (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureMonitorService(screenCaptureMonitorService_);
+        screenCaptureMonitorService_ = nullptr;
     }
+    screenCaptureMonitorService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureMonitorService();
     CHECK_AND_RETURN_RET_LOG(screenCaptureMonitorService_ != nullptr, MSERR_UNKNOWN,
         "failed to create ScreenCaptureMonitor service");
     return MSERR_OK;
@@ -75,6 +79,7 @@ int32_t ScreenCaptureMonitorImpl::InitInner()
 int32_t ScreenCaptureMonitorImpl::Init()
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGD("test inner");
     return InitInner();
 }
 
