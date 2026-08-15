@@ -64,7 +64,7 @@ int32_t ScreenCaptureMonitorImpl::InitInner()
 {
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " Init in", FAKE_POINTER(this));
     if (screenCaptureMonitorService_ != nullptr) {
-    CHECK_AND_RETURN_RET(!screenCaptureMonitorService_->IsServiceAlive(), MSERR_OK);
+        CHECK_AND_RETURN_RET(!screenCaptureMonitorService_->IsServiceAlive(), MSERR_OK);
         (void)MediaServiceFactory::GetInstance().DestroyScreenCaptureMonitorService(screenCaptureMonitorService_);
     }
     screenCaptureMonitorService_ = MediaServiceFactory::GetInstance().CreateScreenCaptureMonitorService();
