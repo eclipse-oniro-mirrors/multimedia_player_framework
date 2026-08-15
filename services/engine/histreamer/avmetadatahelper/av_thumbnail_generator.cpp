@@ -606,8 +606,8 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         bufferIndex_ = index;
         avBuffer_ = buffer;
     }
-    MEDIA_LOGI("dstTime %{public}" PRId64 " resTime %{public}" PRId64, seekTime_, buffer->pts_);
-    MEDIA_LOGI("dstTime %{public}" PRId64 " avBuffer_resTime %{public}" PRId64, seekTime_, avBuffer_->pts_);
+    MEDIA_LOGI("dstTime=%{public}lu|resTime=%{public}lu|avBuffer_resTime=%{public}lu", seekTime_, buffer->pts_,
+        avBuffer_->pts_);
     cond_.notify_all();
     PauseFetchFrame();
 }
