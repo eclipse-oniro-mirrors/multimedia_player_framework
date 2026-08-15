@@ -955,7 +955,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0500, Level2)
 
 /**
     * @tc.number    : FetchFrameYuv_API_0600
-    * @tc.name      : FetchFrameYuv 6M.mp4
+    * @tc.name      : FetchFrameYuv 6M.ts
     * @tc.desc      : FetchFrameYuv API
 */
 HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0600, Level2)
@@ -976,7 +976,7 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0600, Level2)
 
 /**
     * @tc.number    : FetchFrameYuv_API_0700
-    * @tc.name      : FetchFrameYuv 6M.mp4
+    * @tc.name      : FetchFrameYuv 6M.ts
     * @tc.desc      : FetchFrameYuv API
 */
 HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0700, Level2)
