@@ -95,7 +95,7 @@ void ScreenCaptureMonitorImpl::UnregisterScreenCaptureMonitorListener(
     MEDIA_LOGD("ScreenCaptureMonitorImpl:0x%{public}06" PRIXPTR " UnregisterMonitorListener in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_LOG(listener != nullptr, "input listener is nullptr.");
-    CHECK_AND_RETURN_LOG(InitInner() == MSERR_OK, "screen capture monitor service does not exist..");
+    CHECK_AND_RETURN_LOG(screenCaptureMonitorService_ != nullptr, "screen capture monitor service does not exist..");
     screenCaptureMonitorService_->UnregisterScreenCaptureMonitorListener(listener);
 }
 
