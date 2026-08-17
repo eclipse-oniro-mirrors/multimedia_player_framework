@@ -16,20 +16,37 @@
 #include "media_source_napi.h"
 #include "media_log.h"
 #include "media_dfx.h"
+#include "common_napi.h"
+
+namespace OHOS {
+namespace Media {
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaSourceNapi"};
 constexpr uint32_t MAX_MEDIA_STREAM_ARRAY_LENGTH = 10;
 constexpr int32_t ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE = 5411007;
-}
 
-static void ThrowError(napi_env env, int32_t code, const std::string &errMessage)
+napi_value ThrowAndReturnUndefined(napi_env env, int32_t code, const std::string &msg)
 {
-    napi_throw_error(env, std::to_string(code).c_str(), errMessage.c_str());
+    MEDIA_LOGE("%{public}s", msg.c_str());
+    napi_value error = nullptr;
+    napi_status status = CommonNapi::CreateError(env, code, msg, error);
+    if (status == napi_ok && error != nullptr) {
+        napi_throw(env, error);
+    }
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    return result;
 }
 
-namespace OHOS {
-namespace Media {
+void ResolveUndefined(napi_env env, napi_deferred deferred)
+{
+    CHECK_AND_RETURN_LOG(deferred != nullptr, "deferred is nullptr, cannot resolve undefined");
+    napi_value undefined = nullptr;
+    napi_get_undefined(env, &undefined);
+    napi_resolve_deferred(env, deferred, undefined);
+}
+}
 using namespace FunctionName;
 const std::string CLASS_NAME = "MediaSource";
 thread_local napi_ref MediaSourceNapi::constructor_ = nullptr;
@@ -188,29 +205,31 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithFd(napi_env env, napi_callbac
     napi_value args[1] = { nullptr };
     napi_value jsMediaSource = nullptr;
     napi_get_undefined(env, &jsMediaSource);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
     napi_status status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to napi_get_cb_info");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
  
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        return nullptr;
+        return result;
     }
  
     napi_value constructor = nullptr;
     napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
     if (ret != napi_ok || constructor == nullptr) {
-        return nullptr;
+        return result;
     }
     napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
  
     std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
     if (mediaSource == nullptr) {
         MEDIA_LOGE("JsCreateMediaSourceWithFd GetMediaSource fail");
-        return nullptr;
+        return result;
     }
     if (!CommonNapi::GetFdArgument(env, args[0], mediaSource->fd)) {
         MEDIA_LOGE("JsCreateMediaSourceWithFd GetFdArgument fail");
-        return nullptr;
+        return result;
     }
     mediaSource->SetID(AVMediaSourceTmp::GenerateUniqueId());
     MEDIA_LOGD("JsCreateMediaSourceWithFd fd: %{public}d, offset: %{public}" PRIi64 ", length: %{public}" PRIi64,
@@ -225,41 +244,42 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithDataSource(napi_env env, napi
     napi_value args[1] = { nullptr };
     napi_value jsMediaSource = nullptr;
     napi_get_undefined(env, &jsMediaSource);
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
     napi_status status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to napi_get_cb_info");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
  
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        return nullptr;
+        return result;
     }
  
     napi_value constructor = nullptr;
     napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
     if (ret != napi_ok || constructor == nullptr) {
-        return nullptr;
+        return result;
     }
     napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
  
     std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
     if (mediaSource == nullptr) {
         MEDIA_LOGE("JsCreateMediaSourceWithDataSource GetMediaSource fail");
-        return nullptr;
+        return result;
     }
  
     if (!CommonNapi::GetPropertyInt64(env, args[0], "fileSize", mediaSource->dataSrc.fileSize)) {
         MEDIA_LOGE("JsCreateMediaSourceWithDataSource GetPropertyInt64 fail");
-        return nullptr;
+        return result;
     }
  
     napi_value callback = nullptr;
     napi_get_named_property(env, args[0], "callback", &callback);
  
-    // Create persistent reference for callback to use across NAPI calls
     if (callback != nullptr) {
         status = napi_create_reference(env, callback, 1, &mediaSource->dataSrc.callback);
         if (status != napi_ok || mediaSource->dataSrc.callback == nullptr) {
             MEDIA_LOGE("JsCreateMediaSourceWithDataSource failed to create callback reference");
-            return nullptr;
+            return result;
         }
     }
  
@@ -326,47 +346,54 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithStreamData(napi_env env, napi
 
 napi_value MediaSourceNapi::JsCreateMediaSourceWithDirectory(napi_env env, napi_callback_info info)
 {
-    MEDIA_LOGD("JsCreateMediaSourceWithDirectory In");
+    napi_deferred deferred = nullptr;
+    napi_value promise = nullptr;
+    napi_status status = napi_create_promise(env, &deferred, &promise);
+    if (status != napi_ok || deferred == nullptr) {
+        return ThrowAndReturnUndefined(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "Failed to create promise");
+    }
+
     size_t argCount = 1;
     napi_value args[1] = { nullptr };
-    napi_value jsMediaSource = nullptr;
-    napi_get_undefined(env, &jsMediaSource);
-    napi_status status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
-    if (status != napi_ok) {
-        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "failed to napi_get_cb_info");
-        return nullptr;
+    status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
+    if (status != napi_ok || argCount < 1) {
+        return ThrowAndReturnUndefined(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "Invalid arguments, expected 1");
     }
 
     napi_valuetype valueType = napi_undefined;
-    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
-        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "Invalid parameter: directory path must be string");
-        return nullptr;
+    if (napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+        return ThrowAndReturnUndefined(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "directory path must be string");
     }
 
     std::string directoryPath = CommonNapi::GetStringArgument(env, args[0]);
     if (directoryPath.empty()) {
-        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "Directory path is empty");
-        return nullptr;
+        return ThrowAndReturnUndefined(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "Directory path is empty");
     }
 
     napi_value constructor = nullptr;
-    napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
-    if (ret != napi_ok || constructor == nullptr) {
-        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "failed to get constructor");
-        return nullptr;
+    status = napi_get_reference_value(env, constructor_, &constructor);
+    if (status != napi_ok || constructor == nullptr) {
+        return ThrowAndReturnUndefined(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "failed to get constructor");
     }
-    napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
+
+    napi_value jsMediaSource = nullptr;
+    status = napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
+    if (status != napi_ok || jsMediaSource == nullptr) {
+        return ThrowAndReturnUndefined(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE,
+            "failed to create media source instance");
+    }
 
     std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
     if (mediaSource == nullptr) {
         MEDIA_LOGE("JsCreateMediaSourceWithDirectory GetMediaSource fail");
-        ThrowError(env, ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE, "failed to create media source");
-        return nullptr;
+        ResolveUndefined(env, deferred);
+        return promise;
     }
+
     mediaSource->directoryPath = directoryPath;
     mediaSource->SetID(AVMediaSourceTmp::GenerateUniqueId());
-    MEDIA_LOGD("JsCreateMediaSourceWithDirectory path=%{public}s", mediaSource->directoryPath.c_str());
-    return jsMediaSource;
+    napi_resolve_deferred(env, deferred, jsMediaSource);
+    return promise;
 }
 
 napi_value MediaSourceNapi::JsSetMimeType(napi_env env, napi_callback_info info)
