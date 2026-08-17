@@ -39,6 +39,7 @@ public:
     MediaSourceImpl(array_view<::ohos::multimedia::media::MediaStream> streams);
     MediaSourceImpl(::ohos::multimedia::media::AVFileDescriptor fd);
     MediaSourceImpl(::ohos::multimedia::media::AVDataSrcDescriptor dataSrc);
+    MediaSourceImpl(string_view directoryPath);
     int64_t GetImplPtr();
     void SetMimeType(::ohos::multimedia::media::AVMimeTypes mimeType);
     void SetMediaResourceLoaderDelegate(::ohos::multimedia::media::MediaSourceLoader const& resourceLoader);
@@ -55,6 +56,9 @@ private:
  
     static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithDataSource(
         ::ohos::multimedia::media::AVDataSrcDescriptor dataSrc);
+
+    static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithDirectorySync(
+        string_view directoryPath);
 
     std::shared_ptr<AVMediaSourceTmp> mediaSource_ {nullptr};
     std::shared_ptr<MediaSourceLoaderCallback> mediaSourceLoaderCb_ {nullptr};
