@@ -31,6 +31,7 @@
 #endif
 #include "fd_utils.h"
 #include "osal/utils/steady_clock.h"
+#include "uri_helper.h"
 #include "directory_ex.h"
 #include "osal/filesystem/file_system.h"
 
