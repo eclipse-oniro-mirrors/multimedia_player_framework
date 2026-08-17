@@ -135,6 +135,7 @@ ohos_unittest("video_editor_unit_test") {
     "googletest:gmock_main",
     "egl:libEGL",
     "opengles:libGLES",
+    "bounds_checking_function:libsec_shared",
   ]
 
   defines = []
