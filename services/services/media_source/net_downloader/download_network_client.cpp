@@ -363,8 +363,16 @@ std::shared_ptr<Plugins::HttpPlugin::NetworkClient> NetworkClient::CreateAndInit
     auto status = clientImpl->Init();
     if (status != Status::OK) {
         MEDIA_LOGE("CreateAndInitClient failed: Init failed, status=%{public}d", static_cast<int>(status));
-        clientImpl->Deinit();
         clientImpl->Close(false);
+        clientImpl->Deinit();
+        return nullptr;
+    }
+
+    status = clientImpl->Open(url_, header_, timeoutMs_);
+    if (status != Status::OK) {
+        MEDIA_LOGE("CreateAndInitClient failed: Open failed, status=%{public}d", static_cast<int>(status));
+        clientImpl->Close(false);
+        clientImpl->Deinit();
         return nullptr;
     }
 
@@ -399,19 +407,6 @@ int32_t NetworkClient::DoDownload(int64_t startPos)
     SetClientImpl(clientImpl);
     connected_.store(true);
 
-#if (!defined(__aarch64__) && !defined(__x86_64__))
-    auto openStatus = clientImpl->Open(url_, header_, timeoutMs_);
-    if (openStatus != Status::OK) {
-        MEDIA_LOGE("DoDownload failed: Open failed, status=%{public}d", static_cast<int>(openStatus));
-        SetClientImpl(nullptr);
-        clientImpl->Deinit();
-        clientImpl->Close(false);
-        CloseOutputFd();
-        connected_.store(false);
-        return DOWNLOAD_ERROR_NETWORK;
-    }
-#endif
-
     auto sourceInfo = BuildRequestInfo(startPos);
     auto handleResponseCb = [this](const int32_t clientCode, const int32_t serverCode,
         const std::string &ca, const Status ret) {
@@ -420,8 +415,8 @@ int32_t NetworkClient::DoDownload(int64_t startPos)
 
     auto status = clientImpl->RequestData(startPos, -1, sourceInfo, handleResponseCb);
     SetClientImpl(nullptr);
-    clientImpl->Deinit();
     clientImpl->Close(false);
+    clientImpl->Deinit();
     CloseOutputFd();
     connected_.store(false);
 
