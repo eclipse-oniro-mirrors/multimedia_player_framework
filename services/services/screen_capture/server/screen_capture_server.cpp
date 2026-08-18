@@ -288,6 +288,9 @@ int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &ap
     appInfo_.appTokenId = appInfo.appTokenId;
     appInfo_.appFullTokenId = appInfo.appFullTokenId;
     appName_ = GetClientBundleName(appInfo_.appUid);
+    int32_t userId = -1;
+    AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
+    appUserId_.store(userId);
     isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
     ScreenCaptureServerManager::GetInstance().UpdateServerAppUid(sessionId_, appInfo_.appUid);
     ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appInfo_.appUid);
@@ -2092,7 +2095,7 @@ int32_t ScreenCaptureServer::StartPicker()
     want.SetParam("excludedWindowIDs", JoinVector(excludedWindowIDsVec_));
     want.SetParam("pickerMode", static_cast<int>(pickerMode_));
     SendConfigToUIParams(want);
-    auto ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, GetCallerUserId());
+    auto ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, appUserId_.load());
     MEDIA_LOGI("StartPicker ret=%{public}d", ret);
     return ret == ERR_OK ? MSERR_OK : MSERR_UNKNOWN;
 #elif defined(SUPPORT_PICKER_PHONE_PAD)
@@ -2169,16 +2172,9 @@ int32_t ScreenCaptureServer::StartPrivacyWindow(const std::string &cmdStr)
                         GetScreenCaptureSystemParam()["const.multimedia.screencapture.dialogconnectionabilityname"]);
     connection_ = sptr<UIExtensionAbilityConnection>::MakeSptr(cmdStr);
     auto ret = OHOS::AAFwk::ExtensionManagerClient::GetInstance().ConnectServiceExtensionAbility(want, connection_,
-        nullptr, GetCallerUserId());
+        nullptr, appUserId_.load());
     MEDIA_LOGI("StartPrivacyWindow ret=%{public}d", ret);
     return ret == ERR_OK ? MSERR_OK : MSERR_UNKNOWN;
-}
-
-int32_t ScreenCaptureServer::GetCallerUserId()
-{
-    int32_t userId = -1;
-    AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
-    return userId;
 }
 
 int32_t ScreenCaptureServer::StartAuthWindow()
@@ -2368,7 +2364,7 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetUnremovable(true);
     request.SetInProgress(true);
-    request.SetOwnerUserId(GetCallerUserId());
+    request.SetOwnerUserId(appUserId_.load());
 
     std::shared_ptr<PixelMap> pixelMapTotalSpr;
     if (isSystemUI2_) {
@@ -3708,7 +3704,7 @@ bool ScreenCaptureServer::DestroyPrivacySheet()
     want.SetParam("appLabel", callingLabel_);
     want.SetParam("sessionId", sessionId_);
     want.SetParam("terminateSelf", true);
-    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, GetCallerUserId());
+    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, appUserId_.load());
     MEDIA_LOGI("DestroyPrivacySheet StartAbility end %{public}d", ret);
     if (ret != ERR_OK) {
         MEDIA_LOGE("Failed to start ability to destroy privacy sheet, error code : %{public}d", ret);
@@ -3733,7 +3729,7 @@ bool ScreenCaptureServer::DestroyPopWindow()
         want.SetParam("appLabel", callingLabel_);
         want.SetParam("sessionId", sessionId_);
         want.SetParam("terminateSelf", true); // inform picker to terminateSelf
-        ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, GetCallerUserId());
+        ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, appUserId_.load());
         MEDIA_LOGI("Destroy picker end %{public}d, DeviceType: PC", ret);
         return ret == ERR_OK;
     }
@@ -3893,7 +3889,7 @@ void ScreenCaptureServer::SetupPublishRequest(NotificationRequest &request)
     request.SetContent(notificationContent);
     request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetInProgress(true);
-    request.SetOwnerUserId(GetCallerUserId());
+    request.SetOwnerUserId(appUserId_.load());
     request.SetNotificationId(notificationId_);
     request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetRemoveAllowed(false);

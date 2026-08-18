@@ -237,7 +237,6 @@ private:
     int32_t RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow);
     int32_t StartPrivacyWindow(const std::string &cmdStr);
     int32_t StartAuthWindow();
-    int32_t GetCallerUserId();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
     Rosen::ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
     int32_t ReportAVScreenCaptureUserChoiceImpl(const std::string &content);
@@ -321,6 +320,7 @@ private:
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
     std::atomic<bool> stopAcquireAudioBufferFromAudio_ = false;
+    std::atomic<int32_t> appUserId_{-1};
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
