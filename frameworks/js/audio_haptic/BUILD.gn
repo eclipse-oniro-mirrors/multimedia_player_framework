@@ -53,6 +53,7 @@ ohos_shared_library("audiohaptic_napi") {
     "c_utils:utils",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "libuv:uv",
     "media_foundation:media_foundation",
     "napi:ace_napi",
     "node:node_header_notice",

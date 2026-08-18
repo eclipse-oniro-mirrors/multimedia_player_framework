@@ -96,6 +96,7 @@ ohos_shared_library("media_soundpool") {
     "ipc:ipc_core",
     "media_foundation:media_foundation",
     "napi:ace_napi",
+    "node:node_header_notice",
     "qos_manager:qos",
     "resource_management:global_resmgr",
   ]

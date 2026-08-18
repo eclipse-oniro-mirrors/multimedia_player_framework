@@ -64,6 +64,7 @@ ohos_shared_library("cj_avplayer_ffi") {
     "napi:ace_napi",
     "napi:cj_bind_ffi",
     "napi:cj_bind_native",
+    "node:node_header_notice",
     "qos_manager:qos",
     "graphic_surface:surface",
     "c_utils:utils",
