@@ -237,6 +237,7 @@ private:
     int32_t RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow);
     int32_t StartPrivacyWindow(const std::string &cmdStr);
     int32_t StartAuthWindow();
+    int32_t GetCallerUserId();
     void SetCaptureConfig(CaptureMode captureMode, int32_t missionId = -1); // -1 invalid
     Rosen::ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
     int32_t ReportAVScreenCaptureUserChoiceImpl(const std::string &content);
