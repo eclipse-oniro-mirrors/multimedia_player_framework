@@ -541,13 +541,13 @@ Status AVMetadataHelperImpl::GetColorSpaceWithDefaultValue(sptr<SurfaceBuffer> &
 std::shared_ptr<PixelMap> AVMetadataHelperImpl::CreatePixelMapFromSurfaceBuffer(sptr<SurfaceBuffer> &surfaceBuffer,
     PixelMapInfo &pixelMapInfo)
 {
-    MEDIA_LOGI("pixelMapInfo: hdr=%{public}d|width=%{public}d|height=%{public}d|outputHeight=%{public}d, "
-        "ColorSpaceInfo: primaries=%{public}d|matrix=%{public}d|range=%{public}u", pixelMapInfo.isHdr,
-        pixelMapInfo.width, pixelMapInfo.height, pixelMapInfo.outputHeight, pixelMapInfo.primaries, pixelMapInfo.matrix,
-        pixelMapInfo.srcRange);
+    MEDIA_LOGI("pixelMapInfo: hdr=%{public}d|width=%{public}d|height=%{public}d|outputHeight=%{public}d",
+        pixelMapInfo.isHdr, pixelMapInfo.width, pixelMapInfo.height, pixelMapInfo.outputHeight);
     CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, nullptr, "surfaceBuffer is nullptr");
     Status isColorSpaceInfoObtained = convertColorSpace_ ? GetColorSpace(surfaceBuffer, pixelMapInfo) :
         GetColorSpaceWithDefaultValue(surfaceBuffer, pixelMapInfo);
+    MEDIA_LOGI("ColorSpaceInfo: primaries=%{public}d|matrix=%{public}d|range=%{public}u", pixelMapInfo.primaries,
+        pixelMapInfo.matrix, pixelMapInfo.srcRange);
     
     InitializationOptions options = {
         .size = { .width = pixelMapInfo.width, .height = pixelMapInfo.height },

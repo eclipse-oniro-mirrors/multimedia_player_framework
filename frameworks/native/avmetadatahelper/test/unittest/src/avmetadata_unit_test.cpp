@@ -1069,6 +1069,48 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_0900, Level2)
 }
 
 /**
+    * @tc.number    : FetchFrameYuv_API_1000
+    * @tc.name      : FetchFrameYuv 6M.ts
+    * @tc.desc      : FetchFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_1000, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("6M.ts");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 0;
+    PixelMapParams param;
+    param.isSupportFlip = true;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 3840);
+    ASSERT_EQ(pixelMap->GetHeight(), 2160);
+}
+
+/**
+    * @tc.number    : FetchFrameYuv_API_1100
+    * @tc.name      : FetchFrameYuv 6M.ts
+    * @tc.desc      : FetchFrameYuv API
+*/
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_API_1100, Level2)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("6M.ts");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_EQ(MSERR_OK, helper->SetSource(uri, 0, 0, AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    int64_t time = 2000000;
+    PixelMapParams param;
+    param.isSupportFlip = true;
+    auto pixelMap = helper->FetchFrameYuv(time, 0, param);
+    ASSERT_NE(nullptr, pixelMap);
+    ASSERT_EQ(pixelMap->GetWidth(), 3840);
+    ASSERT_EQ(pixelMap->GetHeight(), 2160);
+}
+
+/**
     * @tc.number    : FetchScaledFrameYuv_API_0100
     * @tc.name      : FetchScaledFrameYuv H264_AAC.mp4 custom scaling
     * @tc.desc      : FetchScaledFrameYuv API

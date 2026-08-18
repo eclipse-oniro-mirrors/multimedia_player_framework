@@ -505,7 +505,9 @@ int64_t AVThumbnailGenerator::ReadLoop()
     CHECK_AND_RETURN_RET_LOG(mediaDemuxer_ != nullptr, StopTask(), "mediaDemuxer is nullptr");
 
     auto readSampleRes = mediaDemuxer_->ReadSample(trackIndex_, emptyBuffer);
-    if (readSampleRes != Status::OK && readSampleRes != Status::END_OF_STREAM && readSampleRes != Status::ERROR_AGAIN) {
+    MEDIA_LOGD("readSampleRes is %{public}d", readSampleRes);
+    if (readSampleRes != Status::OK && readSampleRes != Status::END_OF_STREAM && readSampleRes != Status::ERROR_AGAIN &&
+        readSampleRes != Status::ERROR_NO_MEMORY) {
         {
             std::unique_lock<std::mutex> lock(mutex_);
             readErrorFlag_.store(true);
@@ -604,8 +606,8 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         bufferIndex_ = index;
         avBuffer_ = buffer;
     }
-    MEDIA_LOGI("dstTime %{public}" PRId64 " resTime %{public}" PRId64, seekTime_, buffer->pts_);
-    MEDIA_LOGI("dstTime %{public}" PRId64 " avBuffer_resTime %{public}" PRId64, seekTime_, avBuffer_->pts_);
+    MEDIA_LOGI("dstTime=%{public}lld|resTime=%{public}lld|avBuffer_resTime=%{public}lld", seekTime_, buffer->pts_,
+        avBuffer_->pts_);
     cond_.notify_all();
     PauseFetchFrame();
 }
@@ -734,7 +736,6 @@ std::shared_ptr<AVBuffer> AVThumbnailGenerator::FetchFrameYuv(int64_t timeUs, in
             [this] { return hasFetchedFrame_.load() || readErrorFlag_.load() || stopProcessing_.load(); });
     }
 
-    MEDIA_LOGI("FetchFrameYuv, retry fetch frame");
     if (hasReceivedCodecErrCodeOfUnsupported_.load()) {
         stopProcessing_.store(false);
         SwitchToSoftWareDecoder();
