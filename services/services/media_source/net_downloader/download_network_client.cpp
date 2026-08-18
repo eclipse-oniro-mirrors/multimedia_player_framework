@@ -371,6 +371,16 @@ int32_t NetworkClient::DoDownload(int64_t startPos)
 
     connected_.store(true);
 
+    auto openStatus = clientImpl->Open(url_, header_, timeoutMs_);
+    if (openStatus != Status::OK) {
+        MEDIA_LOGE("DoDownload failed: Open failed, status=%{public}d", static_cast<int>(openStatus));
+        clientImpl->Close(false);
+        clientImpl->Deinit();
+        CloseOutputFd();
+        connected_.store(false);
+        return DOWNLOAD_ERROR_NETWORK;
+    }
+
     auto sourceInfo = BuildRequestInfo(startPos);
     auto handleResponseCb = [this](const int32_t clientCode, const int32_t serverCode,
         const std::string &ca, const Status ret) {
@@ -378,8 +388,8 @@ int32_t NetworkClient::DoDownload(int64_t startPos)
     };
 
     auto status = clientImpl->RequestData(startPos, -1, sourceInfo, handleResponseCb);
-    clientImpl->Deinit();
     clientImpl->Close(false);
+    clientImpl->Deinit();
     CloseOutputFd();
     connected_.store(false);
 
