@@ -3153,7 +3153,7 @@ napi_value AVPlayerNapi::JsGetMediaSources(napi_env env, napi_callback_info info
 {
     MediaTrace trace("AVPlayerNapi::getMediaSources");
     napi_value result = nullptr;
-    napi_create_array(env, &result);
+    napi_get_undefined(env, &result);
     MEDIA_LOGI("JsGetMediaSources In");
 
     AVPlayerNapi *jsPlayer = AVPlayerNapi::GetJsInstance(env, info);

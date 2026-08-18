@@ -205,31 +205,29 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithFd(napi_env env, napi_callbac
     napi_value args[1] = { nullptr };
     napi_value jsMediaSource = nullptr;
     napi_get_undefined(env, &jsMediaSource);
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
     napi_status status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to napi_get_cb_info");
  
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        return result;
+        return nullptr;
     }
  
     napi_value constructor = nullptr;
     napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
     if (ret != napi_ok || constructor == nullptr) {
-        return result;
+        return nullptr;
     }
     napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
  
     std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
     if (mediaSource == nullptr) {
         MEDIA_LOGE("JsCreateMediaSourceWithFd GetMediaSource fail");
-        return result;
+        return nullptr;
     }
     if (!CommonNapi::GetFdArgument(env, args[0], mediaSource->fd)) {
         MEDIA_LOGE("JsCreateMediaSourceWithFd GetFdArgument fail");
-        return result;
+        return nullptr;
     }
     mediaSource->SetID(AVMediaSourceTmp::GenerateUniqueId());
     MEDIA_LOGD("JsCreateMediaSourceWithFd fd: %{public}d, offset: %{public}" PRIi64 ", length: %{public}" PRIi64,
@@ -244,32 +242,30 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithDataSource(napi_env env, napi
     napi_value args[1] = { nullptr };
     napi_value jsMediaSource = nullptr;
     napi_get_undefined(env, &jsMediaSource);
-    napi_value result = nullptr;
-    napi_get_undefined(env, &result);
     napi_status status = napi_get_cb_info(env, info, &argCount, args, nullptr, nullptr);
-    CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, nullptr, "failed to napi_get_cb_info");
  
     napi_valuetype valueType = napi_undefined;
     if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
-        return result;
+        return nullptr;
     }
  
     napi_value constructor = nullptr;
     napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
     if (ret != napi_ok || constructor == nullptr) {
-        return result;
+        return nullptr;
     }
     napi_new_instance(env, constructor, 0, nullptr, &jsMediaSource);
  
     std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsMediaSource);
     if (mediaSource == nullptr) {
         MEDIA_LOGE("JsCreateMediaSourceWithDataSource GetMediaSource fail");
-        return result;
+        return nullptr;
     }
  
     if (!CommonNapi::GetPropertyInt64(env, args[0], "fileSize", mediaSource->dataSrc.fileSize)) {
         MEDIA_LOGE("JsCreateMediaSourceWithDataSource GetPropertyInt64 fail");
-        return result;
+        return nullptr;
     }
  
     napi_value callback = nullptr;
@@ -279,7 +275,7 @@ napi_value MediaSourceNapi::JsCreateMediaSourceWithDataSource(napi_env env, napi
         status = napi_create_reference(env, callback, 1, &mediaSource->dataSrc.callback);
         if (status != napi_ok || mediaSource->dataSrc.callback == nullptr) {
             MEDIA_LOGE("JsCreateMediaSourceWithDataSource failed to create callback reference");
-            return result;
+            return nullptr;
         }
     }
  
