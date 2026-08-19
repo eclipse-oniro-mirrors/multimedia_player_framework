@@ -332,14 +332,14 @@ int32_t AVMetadataHelperServiceStub::GetTimeByFrameIndex(uint32_t index, uint64_
 {
     MEDIA_LOGI("GetTimeByFrameIndex");
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, 0, "avmetadatahelper server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->GetTimeByFrameIndex(index, time);
 }
 
 int32_t AVMetadataHelperServiceStub::GetFrameIndexByTime(uint64_t time, uint32_t &index)
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, 0, "avmetadatahelper server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(avMetadateHelperServer_ != nullptr, MSERR_NO_MEMORY, "avmetadatahelper server is nullptr");
     return avMetadateHelperServer_->GetFrameIndexByTime(time, index);
 }
 
