@@ -2619,5 +2619,342 @@ HWTEST(SystemSoundManagerUnitNextTest, GetSimcardSettingAssetByToneHapticsType_0
         systemSoundManagerImpl_->GetSimcardSettingAssetByToneHapticsType(databaseTool, toneHapticsType);
     EXPECT_NE(result, nullptr);
 }
+
+/**
+ * @tc.name  : IsToneAlreadySet_NullAsset_ReturnsFalse
+ * @tc.number: IsToneAlreadySet_001
+ * @tc.desc  : Test IsToneAlreadySet returns false when ringtoneAsset is null.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    std::unique_ptr<RingtoneAsset> nullAsset = nullptr;
+    SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
+    EXPECT_FALSE(impl->IsToneAlreadySet(nullAsset, params, 0));
+}
+
+/**
+ * @tc.name  : IsToneAlreadySet_RingtoneBitSet_ReturnsTrue
+ * @tc.number: IsToneAlreadySet_002
+ * @tc.desc  : Test IsToneAlreadySet returns true when ringtone bit already set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    auto asset = std::make_unique<RingtoneAsset>();
+    ASSERT_NE(asset, nullptr);
+    SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
+    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params, 1)); // SIM_CARD_0 bit
+}
+
+/**
+ * @tc.name  : IsToneAlreadySet_RingtoneBitNotSet_ReturnsFalse
+ * @tc.number: IsToneAlreadySet_003
+ * @tc.desc  : Test IsToneAlreadySet returns false when ringtone bit not set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    auto asset = std::make_unique<RingtoneAsset>();
+    ASSERT_NE(asset, nullptr);
+    SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
+    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params, 0));
+}
+
+/**
+ * @tc.name  : IsToneAlreadySet_NotificationSet_ReturnsTrue
+ * @tc.number: IsToneAlreadySet_004
+ * @tc.desc  : Test IsToneAlreadySet returns true when notification already set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_004, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    auto asset = std::make_unique<RingtoneAsset>();
+    ASSERT_NE(asset, nullptr);
+    asset->SetNotificationtoneType(NOTIFICATION_TONE_TYPE);
+    SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_NOTIFICATION, TONE_TYPE_NOTIFICATION };
+    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params, 0));
+}
+
+/**
+ * @tc.name  : IsToneAlreadySet_NotificationNotSet_ReturnsFalse
+ * @tc.number: IsToneAlreadySet_005
+ * @tc.desc  : Test IsToneAlreadySet returns false when notification not set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_005, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    auto asset = std::make_unique<RingtoneAsset>();
+    ASSERT_NE(asset, nullptr);
+    asset->SetNotificationtoneType(NOTIFICATION_TONE_TYPE_NOT);
+    SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_NOTIFICATION, TONE_TYPE_NOTIFICATION };
+    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params, 0));
+}
+
+/**
+ * @tc.name  : IsToneAlreadySet_ShotBitSet_ReturnsTrue
+ * @tc.number: IsToneAlreadySet_006
+ * @tc.desc  : Test IsToneAlreadySet returns true when shot tone bit already set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_006, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    auto asset = std::make_unique<RingtoneAsset>();
+    ASSERT_NE(asset, nullptr);
+    SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION };
+    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params, 1)); // SIM_CARD_0 bit
+}
+
+/**
+ * @tc.name  : IsToneAlreadySet_ShotBitNotSet_ReturnsFalse
+ * @tc.number: IsToneAlreadySet_007
+ * @tc.desc  : Test IsToneAlreadySet returns false when shot tone bit not set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_007, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    auto asset = std::make_unique<RingtoneAsset>();
+    ASSERT_NE(asset, nullptr);
+    SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION };
+    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params, 0));
+}
+
+/**
+ * @tc.name  : IsToneAlreadySet_UnknownType_ReturnsFalse
+ * @tc.number: IsToneAlreadySet_008
+ * @tc.desc  : Test IsToneAlreadySet returns false for unknown toneTypeQuery.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_008, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    auto asset = std::make_unique<RingtoneAsset>();
+    ASSERT_NE(asset, nullptr);
+    SetToneUriParams params = { TONE_TYPE_SHOT, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION };
+    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params, 1));
+}
+
+/**
+ * @tc.name  : QueryUriForErrorType_UriFound_ReturnsTypeError
+ * @tc.number: QueryUriForErrorType_001
+ * @tc.desc  : Test QueryUriForErrorType returns TYPEERROR when uri exists.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, QueryUriForErrorType_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    MockResultSetConfig config;
+    config.hasRows = true;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+    int32_t result = impl->QueryUriForErrorType(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), "test_uri");
+    EXPECT_EQ(result, TYPEERROR);
+}
+
+/**
+ * @tc.name  : QueryUriForErrorType_UriNotFound_ReturnsError
+ * @tc.number: QueryUriForErrorType_002
+ * @tc.desc  : Test QueryUriForErrorType returns ERROR when uri not found.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, QueryUriForErrorType_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    MockResultSetConfig config;
+    config.hasRows = false;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+    int32_t result = impl->QueryUriForErrorType(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), "test_uri");
+    EXPECT_EQ(result, ERROR);
+}
+
+/**
+ * @tc.name  : SetToneUriInternal_RingtoneAlreadySet_ReturnsSuccess
+ * @tc.number: SetToneUriInternal_AlreadySet_001
+ * @tc.desc  : Test SetToneUriInternal returns SUCCESS and skips update when ringtone already set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SetToneUriInternal_AlreadySet_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 1;
+    config.ringtoneType = 1; // SIM_CARD_0 bit already set
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
+    int32_t result = impl->SetToneUriInternal(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), "test_uri", params);
+    EXPECT_EQ(result, SUCCESS);
+}
+
+/**
+ * @tc.name  : SetToneUriInternal_NotificationAlreadySet_ReturnsSuccess
+ * @tc.number: SetToneUriInternal_AlreadySet_002
+ * @tc.desc  : Test SetToneUriInternal returns SUCCESS and skips update when notification already set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SetToneUriInternal_AlreadySet_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 1;
+    config.notificationToneType = NOTIFICATION_TONE_TYPE;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_NOTIFICATION, TONE_TYPE_NOTIFICATION };
+    int32_t result = impl->SetToneUriInternal(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), "test_uri", params);
+    EXPECT_EQ(result, SUCCESS);
+}
+
+/**
+ * @tc.name  : SetToneUriInternal_RingtoneNotSet_ProceedsUpdate
+ * @tc.number: SetToneUriInternal_Update_001
+ * @tc.desc  : Test SetToneUriInternal proceeds to update when ringtone bit not set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SetToneUriInternal_Update_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 1;
+    config.sourceType = SOURCE_TYPE_INVALID;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.ringtoneType = 0; // not set
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
+    SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
+    int32_t result = impl->SetToneUriInternal(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), "test_uri", params);
+    EXPECT_EQ(result, SUCCESS);
+}
+
+/**
+ * @tc.name  : SetToneUriInternal_ShotNotSet_ProceedsUpdateShot
+ * @tc.number: SetToneUriInternal_Update_002
+ * @tc.desc  : Test SetToneUriInternal proceeds to UpdateShotToneUri when shot bit not set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SetToneUriInternal_Update_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 1;
+    config.sourceType = SOURCE_TYPE_INVALID;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.shottoneType = 0; // not set
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
+    SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION };
+    int32_t result = impl->SetToneUriInternal(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), "test_uri", params);
+    EXPECT_EQ(result, SUCCESS);
+}
+
+/**
+ * @tc.name  : SetToneUriInternal_NotificationNotSet_ProceedsUpdateNotification
+ * @tc.number: SetToneUriInternal_Update_003
+ * @tc.desc  : Test SetToneUriInternal proceeds to UpdateNotificationToneUri when notification not set.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SetToneUriInternal_Update_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 1;
+    config.sourceType = SOURCE_TYPE_INVALID;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.notificationToneType = NOTIFICATION_TONE_TYPE_NOT; // not set
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
+    SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_NOTIFICATION, TONE_TYPE_NOTIFICATION };
+    int32_t result = impl->SetToneUriInternal(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), "test_uri", params);
+    EXPECT_EQ(result, SUCCESS);
+}
+
+/**
+ * @tc.name  : SetToneUriInternal_AssetNotFound_ReturnsError
+ * @tc.number: SetToneUriInternal_NotFound_001
+ * @tc.desc  : Test SetToneUriInternal returns ERROR when asset not found by uri+toneType.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SetToneUriInternal_NotFound_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    MockResultSetConfig config;
+    config.hasRows = false;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
+    int32_t result = impl->SetToneUriInternal(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), "test_uri", params);
+    EXPECT_EQ(result, ERROR);
+}
+
+/**
+ * @tc.name  : SetToneUriInternal_DefaultBranch_ReturnsError
+ * @tc.number: SetToneUriInternal_Default_002
+ * @tc.desc  : Test SetToneUriInternal default switch branch returns ERROR.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SetToneUriInternal_Default_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 1;
+    config.sourceType = SOURCE_TYPE_INVALID;
+    config.toneType = TONE_TYPE_RINGTONE;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    SetToneUriParams params = { TONE_TYPE_SHOT, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
+    int32_t result = impl->SetToneUriInternal(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), "test_uri", params);
+    EXPECT_EQ(result, ERROR);
+}
 } // namespace Media
 } // namespace OHOS

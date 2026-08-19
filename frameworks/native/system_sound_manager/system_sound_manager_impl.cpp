@@ -483,12 +483,45 @@ int32_t SystemSoundManagerImpl::UpdateRingtoneUri(std::shared_ptr<DataShare::Dat
     return UpdateToneTypeUri(dataShareHelper, params);
 }
 
+bool SystemSoundManagerImpl::IsToneAlreadySet(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
+    const SetToneUriParams &params, uint32_t storedToneType)
+{
+    CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, false, "Invalid ringtone asset.");
+    if (params.toneTypeQuery == TONE_TYPE_RINGTONE) {
+        uint32_t targetBit = RingtoneTypeToBitMask(static_cast<RingtoneType>(params.systemToneOrRingtoneType));
+        return (storedToneType & targetBit) != 0;
+    }
+    if (params.toneTypeQuery == TONE_TYPE_NOTIFICATION) {
+        if (params.systemToneOrRingtoneType == SYSTEM_TONE_TYPE_NOTIFICATION) {
+            return ringtoneAsset->GetNotificationtoneType() == NOTIFICATION_TONE_TYPE;
+        }
+        uint32_t targetBit = SystemToneTypeToBitMask(static_cast<SystemToneType>(params.systemToneOrRingtoneType));
+        return (storedToneType & targetBit) != 0;
+    }
+    return false;
+}
+
+int32_t SystemSoundManagerImpl::QueryUriForErrorType(
+    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const std::string &uri)
+{
+    DataShare::DatashareBusinessError businessError;
+    DataShare::DataSharePredicates uriOnlyPredicates;
+    uriOnlyPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
+    auto resultSetByUri = dataShareHelper->Query(RINGTONEURI, uriOnlyPredicates, COLUMNS, &businessError);
+    auto resultsByUri = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSetByUri));
+    CHECK_AND_RETURN_RET_LOG(resultsByUri != nullptr, ERROR, "query failed, ringtone library error.");
+    unique_ptr<RingtoneAsset> ringtoneAssetByUri = resultsByUri->GetFirstObject();
+    if (resultsByUri != nullptr) {
+        resultsByUri->Close();
+    }
+    return (ringtoneAssetByUri != nullptr) ? TYPEERROR : ERROR;
+}
+
 int32_t SystemSoundManagerImpl::SetToneUriInternal(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     const std::string &uri, const SetToneUriParams &params)
 {
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
-
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
     queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, params.toneTypeQuery);
 
@@ -501,6 +534,13 @@ int32_t SystemSoundManagerImpl::SetToneUriInternal(std::shared_ptr<DataShare::Da
         uint32_t storedToneType = (params.toneTypeQuery == TONE_TYPE_RINGTONE) ?
             static_cast<uint32_t>(ringtoneAsset->GetRingtoneType()) :
             static_cast<uint32_t>(ringtoneAsset->GetShottoneType());
+
+        if (IsToneAlreadySet(ringtoneAsset, params, storedToneType)) {
+            MEDIA_LOGI("Tone already set, skip update. toneTypeQuery %{public}d, type %{public}d",
+                params.toneTypeQuery, params.systemToneOrRingtoneType);
+            results->Close();
+            return SUCCESS;
+        }
 
         int32_t toneId = ringtoneAsset->GetId();
         int32_t changedRows = 0;
@@ -518,29 +558,13 @@ int32_t SystemSoundManagerImpl::SetToneUriInternal(std::shared_ptr<DataShare::Da
                 changedRows = ERROR;
                 break;
         }
-        if (results != nullptr) {
-            results->Close();
-        }
+        results->Close();
         SetExtRingtoneUri(uri, ringtoneAsset->GetTitle(), params.systemToneOrRingtoneType,
             params.setExtToneType, changedRows);
         return changedRows > 0 ? SUCCESS : ERROR;
     }
-    if (results != nullptr) {
-        results->Close();
-    }
-
-    DataShare::DataSharePredicates uriOnlyPredicates;
-    uriOnlyPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
-    auto resultSetByUri = dataShareHelper->Query(RINGTONEURI, uriOnlyPredicates, COLUMNS, &businessError);
-    auto resultsByUri = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSetByUri));
-    CHECK_AND_RETURN_RET_LOG(resultsByUri != nullptr, ERROR, "query failed, ringtone library error.");
-
-    unique_ptr<RingtoneAsset> ringtoneAssetByUri = resultsByUri->GetFirstObject();
-    if (resultsByUri != nullptr) {
-        resultsByUri->Close();
-    }
-
-    return (ringtoneAssetByUri != nullptr) ? TYPEERROR : ERROR;
+    results->Close();
+    return QueryUriForErrorType(dataShareHelper, uri);
 }
 
 int32_t SystemSoundManagerImpl::SetNoRingToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
