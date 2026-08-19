@@ -63,6 +63,7 @@ public:
     void RemovePlayerStubFromMap(sptr<IRemoteObject> object, pid_t pid);
     void DestroyStubObjectForPid(pid_t pid);
     int32_t Dump(int32_t fd, const std::vector<std::u16string> &args);
+    int32_t DumpLocked(int32_t fd, const std::vector<std::u16string> &args);
     void DestroyDumper(StubType type, sptr<IRemoteObject> object);
     void DestroyDumperForPid(pid_t pid);
     void NotifyMemMgrLoaded();
