@@ -1060,7 +1060,7 @@ HWTEST_F(AVPlayerMp4UnitTest, OH_AVPlayer_AddUrlSubtitleSourceWithNetWork001, Le
     ASSERT_NE(player_, nullptr);
     const char* url = ISNETWORK_SUBTITLE_URL;
     OH_AVErrCode ret = OH_AVPlayer_AddUrlSubtitleSource(player_, url);
-    ASSERT_EQ(AV_ERR_OK, ret);
+    ASSERT_EQ(AV_ERR_INVALID_VAL, ret);
 }
 
 /**

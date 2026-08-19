@@ -19,6 +19,7 @@
 #include <sstream>
 #include <algorithm>
 #include <cinttypes> 
+#include <regex>
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -30,7 +31,9 @@
 #endif
 #include "fd_utils.h"
 #include "osal/utils/steady_clock.h"
+#include "uri_helper.h"
 #include "directory_ex.h"
+#include "osal/filesystem/file_system.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerImpl"};
@@ -41,6 +44,11 @@ constexpr int64_t CREATE_AVPLAYER_WARNING_MS = 30;
 constexpr int64_t RESET_WARNING_MS = 30;
 constexpr int64_t RELEASE_WARNING_MS = 200;
 const int32_t TIME_OUT_SECOND = 15;
+constexpr int32_t FD_INDEX = 1;
+constexpr int32_t FDPOS = 2;
+constexpr size_t SIZE_INDEX = 3;
+constexpr int32_t FD_OFFSET_SIZE_LENGTH = 4;
+constexpr int32_t OFFSET_INDEX = 2;
 }
 
 namespace OHOS {
@@ -165,16 +173,20 @@ int32_t PlayerImpl::SetSource(const std::string &url)
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
 
-    if (IsFileUrl(url)) {
+    if (UriHelper::IsFileUrl(url)) {
         // file url
-        std::string realUriPath;
-        int32_t result = GetRealPath(url, realUriPath);
-        CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "SetSource error: GetRealPath error");
-        std::string uri = "file://" + realUriPath;
-        std::string fileName;
-        int32_t ret = ParseFileName(uri, fileName);
+        int32_t fd = -1;
+        int64_t size = -1;
+        int32_t ret = OpenFile(url, fd, size);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "open file failed");
+        return SetSourceByFd(fd, 0, size);
+    } else if (UriHelper::IsFdUrl(url)) {
+        int32_t fd = -1;
+        int64_t offset = 0;
+        int64_t size = -1;
+        int32_t ret = ParseUriInfo(url, fd, offset, size);
         CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, MSERR_INVALID_VAL);
-        return OpenFile(fileName);
+        return SetSourceByFd(fd, offset, size);
     }
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetSource(url), "SetSource url", false, TIME_OUT_SECOND);
@@ -220,6 +232,21 @@ int32_t PlayerImpl::AddSubSource(const std::string &url)
         FAKE_POINTER(this), url.c_str());
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     CHECK_AND_RETURN_RET_LOG(!url.empty(), MSERR_INVALID_VAL, "url is empty..");
+    if (UriHelper::IsFileUrl(url)) {
+        // file url
+        int32_t fd = -1;
+        int64_t size = -1;
+        int32_t ret = OpenFile(url, fd, size);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "open file failed");
+        return AddSubSourceByFd(fd, 0, size);
+    } else if (UriHelper::IsFdUrl(url)) {
+        int32_t fd = -1;
+        int64_t offset = 0;
+        int64_t size = -1;
+        int32_t ret = ParseUriInfo(url, fd, offset, size);
+        CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, MSERR_INVALID_VAL);
+        return AddSubSourceByFd(fd, offset, size);
+    }
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->AddSubSource(url), "AddSubSource url", false, TIME_OUT_SECOND);
     return ret;
@@ -1654,11 +1681,6 @@ int32_t PlayerImpl::DisableAllAdsMediaSource()
     return playerService_->DisableAllAdsMediaSource();
 }
 
-bool PlayerImpl::IsFileUrl(const std::string &url) const
-{
-    return url.find("://") == std::string::npos || url.find("file://") == 0;
-}
-
 int32_t PlayerImpl::GetRealPath(const std::string &url, std::string &realUrlPath) const
 {
     std::string fileHead = "file://";
@@ -1714,20 +1736,21 @@ int32_t PlayerImpl::ParseFileName(const std::string& uri, std::string &fileName)
     return MSERR_OK;
 }
 
-int32_t PlayerImpl::OpenFile(const std::string& fileName)
+int32_t PlayerImpl::OpenFile(const std::string& url, int32_t& fd, int64_t& size)
 {
     MEDIA_LOGD("IN");
-    int32_t ret = CheckFileStat(fileName);
+    std::string realUriPath;
+    int32_t result = GetRealPath(url, realUriPath);
+    CHECK_AND_RETURN_RET_LOG(result == MSERR_OK, result, "SetSource error: GetRealPath error");
+    std::string uri = "file://" + realUriPath;
+    std::string fileName;
+    int32_t ret = ParseFileName(uri, fileName);
+    CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, MSERR_INVALID_VAL);
+    ret = CheckFileStat(fileName);
     CHECK_AND_RETURN_RET_NOLOG(ret == MSERR_OK, ret);
-    int fd = open(fileName.c_str(), O_RDONLY);
+    fd = open(fileName.c_str(), O_RDONLY);
     CHECK_AND_RETURN_RET_NOLOG(fd != -1, MSERR_INVALID_VAL);
-    int64_t fileSize = GetFileSize(fileName);
-    if (!fdsanFd_) {
-        fdsanFd_ = std::make_unique<FdsanFd>(fd);
-    } else {
-        fdsanFd_->Reset(fd);
-    }
-    LISTENER(ret = playerService_->SetSource(fd, 0, fileSize), "setSource url", false, TIME_OUT_SECOND);
+    size = GetFileSize(fd);
     return ret;
 }
 
@@ -1746,16 +1769,81 @@ int32_t PlayerImpl::CheckFileStat(const std::string& fileName)
     return MSERR_OK;
 }
 
-int64_t PlayerImpl::GetFileSize(const std::string& fileName)
+int32_t PlayerImpl::ParseUriInfo(const std::string& uri, int32_t& fd, int64_t& offset, int64_t& size)
+{
+    if (uri.empty()) {
+        MEDIA_LOGE("uri is empty");
+        return MSERR_INVALID_VAL;
+    }
+    std::smatch fdUriMatch;
+    CHECK_AND_RETURN_RET_LOG(std::regex_match(uri, fdUriMatch, std::regex("^fd://(.*)\\?offset=(.*)&size=(.*)")) ||
+        std::regex_match(uri, fdUriMatch, std::regex("^fd://(.*)")), MSERR_INVALID_VAL, "Invalid fd uri format");
+    CHECK_AND_RETURN_RET_LOG(fdUriMatch.size() >= FDPOS && IsNumber(fdUriMatch[1].str()),
+        MSERR_INVALID_VAL, "Invalid fd uri format");
+    std::string fdStr = fdUriMatch[FD_INDEX].str();
+    CHECK_AND_RETURN_RET_LOG(StrToInt(fdStr, fd) && fd != -1 && FileSystem::IsRegularFile(fd),
+        MSERR_INVALID_VAL, "Invalid fd: %{public}d", fd);
+    int64_t fileSize = GetFileSize(fd);
+    if (fdUriMatch.size() != FD_OFFSET_SIZE_LENGTH) {
+        size = fileSize;
+        offset = 0;
+        return MSERR_OK;
+    }
+    // 4：4 sub match
+    std::string offsetStr = fdUriMatch[OFFSET_INDEX].str(); // 2: sub match offset subscript
+    CHECK_AND_RETURN_RET_LOG(UriHelper::StrToLong(offsetStr, offset), MSERR_INVALID_VAL,
+        "Failed to read offset.");
+    if (offset > fileSize) {
+        offset = fileSize;
+    }
+    std::string sizeStr = fdUriMatch[SIZE_INDEX].str();
+    CHECK_AND_RETURN_RET_LOG(UriHelper::StrToLong(sizeStr, size), MSERR_INVALID_VAL,
+        "Failed to read size.");
+    int64_t remainingSize = fileSize - offset;
+    if (size > remainingSize) {
+        size = remainingSize;
+    }
+    return MSERR_OK;
+}
+
+int64_t PlayerImpl::GetFileSize(int32_t fd)
 {
     int64_t fileSize = 0;
-    if (!fileName.empty()) {
-        struct stat fileStatus {};
-        if (stat(fileName.c_str(), &fileStatus) == 0) {
-            fileSize = static_cast<int64_t>(fileStatus.st_size);
-        }
-    }
+    struct stat s {};
+    int ret = fstat(fd, &s);
+    CHECK_AND_RETURN_RET_LOG(ret == 0, fileSize, "GetFileSize error ret %{public}d, errno %{public}d", ret, errno);
+    fileSize = static_cast<int64_t>(s.st_size);
+    CHECK_AND_RETURN_RET_LOG(fileSize != 0, fileSize, "fileSize 0, fstat ret 0");
     return fileSize;
+}
+
+bool PlayerImpl::IsNumber(const std::string& str)
+{
+    return str.find_first_not_of("0123456789") == std::string::npos;
+}
+
+int32_t PlayerImpl::SetSourceByFd(int32_t fd, int64_t offset, int64_t size)
+{
+    if (!fdsanFd_) {
+        fdsanFd_ = std::make_unique<FdsanFd>(fd);
+    } else {
+        fdsanFd_->Reset(fd);
+    }
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->SetSource(fd, offset, size), "setSource url", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::AddSubSourceByFd(int32_t fd, int64_t offset, int64_t size)
+{
+    if (!subFdsanFd_) {
+        subFdsanFd_ = std::make_unique<FdsanFd>(fd);
+    } else {
+        subFdsanFd_->Reset(fd);
+    }
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->AddSubSource(fd, offset, size), "setSource url", false, TIME_OUT_SECOND);
+    return ret;
 }
 } // namespace Media
 } // namespace OHOS

@@ -304,6 +304,7 @@ int32_t PlayerServer::AddSubSource(const std::string &url)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr!");
+    CHECK_AND_RETURN_RET_NOLOG(CheckNetWorkPermission(url), MSERR_INVALID_OPERATION);
 
     if (subtitleTrackNum_ >= MAX_SUBTITLE_TRACK_NUN) {
         MEDIA_LOGE("Can not add sub source, subtitle track num is %{public}u, exceed the max num.", subtitleTrackNum_);
@@ -1474,6 +1475,7 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
 
     std::string uri = mediaSource_->url;
     MEDIA_LOGI("server url: %{public}s", mediaSource_->url.c_str());
+    CHECK_AND_RETURN_RET_NOLOG(CheckNetWorkPermission(uri), MSERR_INVALID_OPERATION);
     std::string mimeType = mediaSource_->GetMimeType();
     size_t pos1 = uri.find("?");
     size_t pos2 = uri.find("offset=");
@@ -2929,6 +2931,21 @@ int32_t PlayerServer::PrepareInner()
     }
     MEDIA_LOGE("Can not Prepare, currentState is %{public}s", GetStatusDescription(lastOpStatus_).c_str());
     return MSERR_INVALID_OPERATION;
+}
+
+bool PlayerServer::CheckNetWorkPermission(const std::string &url)
+{
+    if (UriHelper::IsNetworkUrl(url)) {
+        int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
+        if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
+            MEDIA_LOGE("user do not have the right to access INTERNET");
+            OnErrorMessage(MSERR_USER_NO_PERMISSION, "user do not have the right to access INTERNET");
+            FaultSourceEventWrite(appName_, instanceId_, "player_framework",
+                static_cast<int8_t>(SourceType::SOURCE_TYPE_URI), url, "user do not have the right to access INTERNET");
+            return false;
+        }
+    }
+    return true;
 }
 } // namespace Media
 } // namespace OHOS

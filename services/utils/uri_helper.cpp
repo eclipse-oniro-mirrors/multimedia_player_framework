@@ -322,5 +322,31 @@ std::string UriHelper::GetProtocolFromURL(const std::string &url)
     }
     return "";
 }
+
+bool UriHelper::IsFdUrl(const std::string &url)
+{
+    return url.find("fd://") == 0;
+}
+
+bool UriHelper::IsFileUrl(const std::string &url)
+{
+    return url.find("://") == std::string::npos || url.find("file://") == 0;
+}
+
+bool UriHelper::StrToLong(const std::string_view& str, int64_t& value)
+{
+    CHECK_AND_RETURN_RET_LOG(!str.empty() && (isdigit(str.front()) || (str.front() == '-')),
+        false, "no valid string.");
+    std::string valStr(str);
+    char* end = nullptr;
+    errno = 0;
+    long long result = strtoll(valStr.c_str(), &end, 10); /* 10 means decimal */
+    CHECK_AND_RETURN_RET_LOG(result >= LLONG_MIN && result <= LLONG_MAX, false,
+        "call StrToLong func false,  input str is: %{public}s!", valStr.c_str());
+    CHECK_AND_RETURN_RET_LOG(end != valStr.c_str() && end[0] == '\0' && errno != ERANGE, false,
+        "call StrToLong func false,  input str is: %{public}s!", valStr.c_str());
+    value = result;
+    return true;
+}
 } // namespace Media
 } // namespace OHOS
