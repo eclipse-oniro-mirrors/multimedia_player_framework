@@ -252,6 +252,10 @@ private:
 
     bool IsSystemToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
         const SystemToneType &systemToneType);
+    bool IsToneAlreadySet(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
+        const SetToneUriParams &params, uint32_t storedToneType);
+    int32_t QueryUriForErrorType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &uri);
     static Uri AssembleUri(const std::string &key, std::string tableType = "");
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperProxy(std::string tableType = "");
     int32_t GetStringValue(const std::string &key, std::string &value, std::string tableType = "");
