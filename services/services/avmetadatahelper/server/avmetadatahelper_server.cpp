@@ -13,9 +13,11 @@
  * limitations under the License.
  */
 
+#include "accesstoken_kit.h"
 #include "avmetadatahelper_server.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_permission.h"
 #include "engine_factory_repo.h"
 #include "uri_helper.h"
 #include "media_dfx.h"
@@ -124,6 +126,9 @@ int32_t AVMetadataHelperServer::SetUrlSource(const std::string &uri, const std::
 {
     MediaTrace trace("AVMetadataHelperServer::SetUrlSource");
     std::unique_lock<std::mutex> lock(mutex_);
+    int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
+    CHECK_AND_RETURN_RET_LOG(permissionResult == Security::AccessToken::PERMISSION_GRANTED, MSERR_USER_NO_PERMISSION,
+        "user does not have Internet permission");
     MEDIA_LOGD("Current uri is : %{private}s", uri.c_str());
     CHECK_AND_RETURN_RET_LOG(!uri.empty(), MSERR_INVALID_VAL, "uri is empty");
     struct AsyncResult {
