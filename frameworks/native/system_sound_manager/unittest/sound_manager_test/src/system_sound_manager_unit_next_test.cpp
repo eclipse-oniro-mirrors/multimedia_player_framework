@@ -1028,7 +1028,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_001, TestSize.
     uint32_t targetToneType = 1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(dataShareHelper,
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        targetToneType, SOURCE_TYPE_CUSTOMISED);
+        targetToneType);
     EXPECT_GE(result, 0);
 }
 
@@ -1050,7 +1050,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_002, TestSize.
     uint32_t targetToneType = 1u << (SYSTEM_TONE_TYPE_SIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0);
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(dataShareHelper,
         RINGTONE_COLUMN_SHOT_TONE_TYPE, RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
-        targetToneType, SOURCE_TYPE_CUSTOMISED);
+        targetToneType);
     EXPECT_GE(result, 0);
 }
 
@@ -1072,7 +1072,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_003, TestSize.
     uint32_t esim0Target = 1u << (RINGTONE_TYPE_ESIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(dataShareHelper,
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        esim0Target, SOURCE_TYPE_CUSTOMISED);
+        esim0Target);
     EXPECT_GE(result, 0);
 }
 
@@ -1091,7 +1091,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_001, TestSize.L
     auto dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     ASSERT_NE(dataShareHelper, nullptr);
 
-    int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(dataShareHelper, SOURCE_TYPE_CUSTOMISED);
+    int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(dataShareHelper);
     EXPECT_GE(result, 0);
 }
 
@@ -2310,7 +2310,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_002, TestSize.L
         .WillByDefault(Return(std::shared_ptr<DataShare::DataShareResultSet>(nullptr)));
 
     int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(
-        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), SOURCE_TYPE_CUSTOMISED);
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper));
     EXPECT_EQ(result, 0);
 }
 
@@ -2339,7 +2339,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_003, TestSize.L
     EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
 
     int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(
-        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), SOURCE_TYPE_CUSTOMISED);
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper));
     EXPECT_GT(result, 0);
 }
 
@@ -2368,7 +2368,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_004, TestSize.L
     EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
 
     int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(
-        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), SOURCE_TYPE_PRESET);
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper));
     EXPECT_GT(result, 0);
 }
 
@@ -2393,7 +2393,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_005, TestSize.L
     EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
 
     int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(
-        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), SOURCE_TYPE_CUSTOMISED);
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper));
     EXPECT_EQ(result, 0);
 }
 
@@ -2417,7 +2417,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_004, TestSize.
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        targetToneType, SOURCE_TYPE_CUSTOMISED);
+        targetToneType);
     EXPECT_EQ(result, 0);
 }
 
@@ -2449,7 +2449,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_005, TestSize.
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        targetToneType, SOURCE_TYPE_CUSTOMISED);
+        targetToneType);
     EXPECT_GT(result, 0);
 }
 
@@ -2481,7 +2481,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_006, TestSize.
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        targetToneType, SOURCE_TYPE_PRESET);
+        targetToneType);
     EXPECT_GT(result, 0);
 }
 
@@ -2513,7 +2513,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_007, TestSize.
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        targetToneType, SOURCE_TYPE_CUSTOMISED);
+        targetToneType);
     EXPECT_GT(result, 0);
 }
 
@@ -2544,7 +2544,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_008, TestSize.
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
         RINGTONE_COLUMN_SHOT_TONE_TYPE, RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
-        targetToneType, SOURCE_TYPE_PRESET);
+        targetToneType);
     EXPECT_GT(result, 0);
 }
 /**
