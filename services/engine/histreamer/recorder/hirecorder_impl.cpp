@@ -528,7 +528,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
             videoEncoderFilter_->SetWatermarkMode();
         }
         if (isScreenCaptureMode_) {
-            videoEncoderFilter_->SetScreenCaptureMode();
+            videoEncoderFilter_->setStabilizationMode(enableStabilization_);
         }
         videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
@@ -1416,10 +1416,10 @@ int32_t HiRecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
     return static_cast<int32_t>(Status::OK);
 }
 
-int32_t HiRecorderImpl::SetScreenCaptureMode()
+int32_t HiRecorderImpl::setStabilizationMode(bool enableStabilization)
 {
-    MEDIA_LOG_I("HiRecorderImpl::SetScreenCaptureMode");
-    isScreenCaptureMode_ = true;
+    MEDIA_LOG_I("HiRecorderImpl::setStabilizationMode");
+    enableStabilization_ = enableStabilization;
     return static_cast<int32_t>(Status::OK);
 }
 

@@ -239,7 +239,7 @@ public:
     /**
      * Set screen capture mode for recording isolation
      */
-    virtual int32_t SetScreenCaptureMode() { return MSERR_OK; }
+    virtual int32_t SetScreenCaptureMode(bool enableStabilization) { return MSERR_OK; }
 };
 } // namespace Media
 } // namespace OHOS
