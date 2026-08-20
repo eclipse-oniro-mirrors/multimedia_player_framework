@@ -164,6 +164,12 @@ int32_t MediaServerManager::Dump(int32_t fd, const std::vector<std::u16string> &
     return OHOS::NO_ERROR;
 }
 
+int32_t MediaServerManager::DumpLocked(int32_t fd, const std::vector<std::u16string> &args)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return Dump(fd, args);
+}
+
 MediaServerManager::MediaServerManager()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
