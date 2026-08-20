@@ -305,15 +305,13 @@ ToneAttrs SystemSoundManagerImpl::QueryToneAttrsByType(const DatabaseTool &datab
     return toneAttrs;
 }
 
-int32_t SystemSoundManagerImpl::ClearNotificationToneType(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, SourceType sourceType)
+int32_t SystemSoundManagerImpl::ClearNotificationToneType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper)
 {
     int32_t result = 0;
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
-    queryPredicates.SetWhereClause(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE + " = ? AND " +
-        RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE + " = ? ");
-    queryPredicates.SetWhereArgs({to_string(NOTIFICATION_TONE_TYPE), to_string(sourceType)});
+    queryPredicates.SetWhereClause(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE + " = ? ");
+    queryPredicates.SetWhereArgs({to_string(NOTIFICATION_TONE_TYPE)});
 
     auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
@@ -346,16 +344,14 @@ int32_t SystemSoundManagerImpl::ClearNotificationToneType(
     return result;
 }
 
-int32_t SystemSoundManagerImpl::ClearBitFromToneTypeColumn(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-    const std::string &typeColumnName, const std::string &sourceTypeColumnName,
-    uint32_t targetToneType, SourceType sourceType)
+int32_t SystemSoundManagerImpl::ClearBitFromToneTypeColumn(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    const std::string &typeColumnName, const std::string &sourceTypeColumnName, uint32_t targetToneType)
 {
     int32_t result = 0;
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
-    queryPredicates.SetWhereClause(typeColumnName + " & ? != 0 AND " + sourceTypeColumnName + " = ? ");
-    queryPredicates.SetWhereArgs({to_string(targetToneType), to_string(sourceType)});
+    queryPredicates.SetWhereClause(typeColumnName + " & ? != 0 ");
+    queryPredicates.SetWhereArgs({to_string(targetToneType)});
 
     auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
@@ -455,9 +451,9 @@ void SystemSoundManagerImpl::InitDefaultToneHapticsMap()
 int32_t SystemSoundManagerImpl::UpdateToneTypeUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     const UpdateToneTypeParams &params)
 {
-    // Step 1: Clear targetToneType from all CUSTOMISED rows
+    // Step 1: Clear targetToneType from all rows
     ClearBitFromToneTypeColumn(dataShareHelper, params.typeColumnName, params.sourceTypeColumnName,
-        params.targetToneType, SOURCE_TYPE_CUSTOMISED);
+        params.targetToneType);
 
     // Step 2: Set new target type on the target tone
     uint32_t finalType = params.targetToneType | params.storedToneType;
@@ -574,9 +570,7 @@ int32_t SystemSoundManagerImpl::SetNoRingToneUri(std::shared_ptr<DataShare::Data
     int32_t result = 0;
     uint32_t targetToneType = RingtoneTypeToBitMask(ringtoneType);
     result += ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_RING_TONE_TYPE,
-        RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE, targetToneType, SOURCE_TYPE_CUSTOMISED);
-    result += ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_RING_TONE_TYPE,
-        RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE, targetToneType, SOURCE_TYPE_PRESET);
+        RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE, targetToneType);
     return result;
 }
 
@@ -792,7 +786,7 @@ int32_t SystemSoundManagerImpl::UpdateShotToneUri(std::shared_ptr<DataShare::Dat
 int32_t SystemSoundManagerImpl::UpdateNotificationToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     const int32_t &toneId)
 {
-    ClearNotificationToneType(dataShareHelper, SOURCE_TYPE_CUSTOMISED);
+    ClearNotificationToneType(dataShareHelper);
 
     DataSharePredicates updatePredicates;
     DataShareValuesBucket updateValuesBucket;
@@ -809,14 +803,11 @@ int32_t SystemSoundManagerImpl::SetNoSystemToneUri(std::shared_ptr<DataShare::Da
     int32_t result = 0;
     MEDIA_LOGI("Set no audio uri for system tone type %{public}d", systemToneType);
     if (systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION) {
-        result += ClearNotificationToneType(dataShareHelper, SOURCE_TYPE_CUSTOMISED);
-        result += ClearNotificationToneType(dataShareHelper, SOURCE_TYPE_PRESET);
+        result += ClearNotificationToneType(dataShareHelper);
     } else {
         uint32_t targetToneType = SystemToneTypeToBitMask(systemToneType);
         result += ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_SHOT_TONE_TYPE,
-            RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE, targetToneType, SOURCE_TYPE_CUSTOMISED);
-        result += ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_SHOT_TONE_TYPE,
-            RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE, targetToneType, SOURCE_TYPE_PRESET);
+            RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE, targetToneType);
     }
     MEDIA_LOGI("SetNoSystemToneUri result: changedRows %{public}d", result);
     return result;
