@@ -85,7 +85,7 @@ public:
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
     Status SetUserMeta(const std::shared_ptr<Meta> &userMeta);
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
-    int32_t setStabilizationMode(bool enableStabilization);
+    int32_t SetStabilizationMode(bool enableStabilization);
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height);
 
 private:

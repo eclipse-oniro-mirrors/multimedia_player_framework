@@ -643,7 +643,7 @@ public:
     virtual int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta) = 0;
     virtual int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) = 0;
     virtual int32_t TransmitQos(QOS::QosLevel level) = 0;
-    virtual int32_t setStabilizationMode(bool enableStabilization) { return MSERR_OK; }
+    virtual int32_t SetStabilizationMode(bool enableStabilization) { return MSERR_OK; }
 };
 } // namespace Media
 } // namespace OHOS

@@ -1361,14 +1361,14 @@ int32_t RecorderServer::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
     return result.Value();
 }
 
-int32_t RecorderServer::setStabilizationMode(bool enableStabilization)
+int32_t RecorderServer::SetStabilizationMode(bool enableStabilization)
 {
-    MEDIA_LOGI("setStabilizationMode in");
+    MEDIA_LOGI("SetStabilizationMode in");
     std::lock_guard<std::mutex> lock(mutex_);
-    MediaTrace trace("RecorderServer::setStabilizationMode");
+    MediaTrace trace("RecorderServer::SetStabilizationMode");
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        return recorderEngine_->setStabilizationMode(enableStabilization);
+        return recorderEngine_->SetStabilizationMode(enableStabilization);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
