@@ -478,13 +478,20 @@ void StreamIDManagerWithSameSoundInterrupt::RemoveInvalidStreams()
     };
     std::unique_lock lock(streamIDManagerLock_);
     std::vector<std::shared_ptr<AudioStream>> streamsToBeReleased;
+    std::set<int32_t> sortedSoundIDs;  // To release audio stream from old to new
+    for (const auto& pair : soundID2Stream_) {
+        sortedSoundIDs.insert(pair.first);
+    }
     for (const StreamState &state : statesToCheck) {
-        for (auto it = soundID2Stream_.begin(); it != soundID2Stream_.end();) {
+        for (const int32_t &soundID : sortedSoundIDs) {
             if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
                 lock.unlock();
                 AddReleaseTask(streamsToBeReleased);
                 return;
             }
+            auto it = soundID2Stream_.find(soundID);
+            CHECK_AND_CONTINUE_LOG(it != soundID2Stream_.end(), "%{public}d does not exist in soundID2Stream_",
+                soundID);
             if (it->second != nullptr && state == it->second->GetStreamState()) {
                 streamsToBeReleased.push_back(it->second);
                 it = soundID2Stream_.erase(it);

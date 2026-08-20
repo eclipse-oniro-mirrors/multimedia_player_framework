@@ -391,6 +391,14 @@ int32_t AudioStream::Stop(StopTrigger stopTrigger)
             std::chrono::steady_clock::now().time_since_epoch()).count();
         audioPlayCompletedCostTimeMs_.store(currentTimeMs - audioStartTimeMs_.load());
         MEDIA_LOGI("The playback process takes %{public}lu", audioPlayCompletedCostTimeMs_.load());
+        if (audioPlayCompletedCostTimeMs_.load() < MIN_SINGLE_PLAYBACK_DURATION_MS) {
+            MEDIA_LOGE("Invalid Stop");
+            if (callback_ != nullptr) {
+                MEDIA_LOGI("AudioStream::Stop, call OnPlayFinished");
+                callback_->OnPlayFinished(streamID_);
+            }
+            return MSERR_INVALID_STATE;
+        }
     }
     if (audioRenderer_ != nullptr && streamState_.load() == StreamState::PLAYING) {
         SoundPoolXCollie soundPoolXCollie("AudioStream audioRenderer::Pause or Stop time out",
@@ -401,11 +409,7 @@ int32_t AudioStream::Stop(StopTrigger stopTrigger)
             MEDIA_LOGI("streamCallback_ call OnPlayFinished.");
             streamCallback_->OnPlayFinished(streamID_);
         }
-        if (stopTrigger == StopTrigger::PLAYBACK_INTERRUPTED || (stopTrigger == StopTrigger::PLAYBACK_COMPLETED &&
-            audioPlayCompletedCostTimeMs_.load() >= MIN_SINGLE_PLAYBACK_DURATION_MS)) {
-            MEDIA_LOGE("AudioRenderer Stop");
-            audioRenderer_->Stop();
-        }
+        audioRenderer_->Stop();
         soundPoolXCollie.CancelXCollieTimer();
         pcmBufferFrameIndex_ = 0;
         if (callback_ != nullptr) {
