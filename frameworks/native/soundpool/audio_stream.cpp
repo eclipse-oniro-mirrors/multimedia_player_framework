@@ -24,6 +24,8 @@
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "AudioStream"};
     static const int32_t ERROE_GLOBAL_ID = -1;
+    // Min time from start to end of audio playback(5ms per audio frame)
+    static const int64_t MIN_SINGLE_PLAYBACK_DURATION_MS = 5;
 }
 
 namespace OHOS {
@@ -270,6 +272,8 @@ int32_t AudioStream::DoPlayWithNoInterrupt()
     streamState_.store(StreamState::PLAYING);
     audioRenderer_->SetPitch(std::clamp(playParameters_.pitch, MINPITCH, MAXPITCH));
     lastPitch_ = playParameters_.pitch;
+    audioStartTimeMs_.store(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count());
     if (!audioRenderer_->Start()) {
         MEDIA_LOGI("AudioStream::DoPlayWithNoInterrupt, audioRenderer_->Start()");
         soundPoolXCollie.CancelXCollieTimer();
@@ -321,6 +325,8 @@ int32_t AudioStream::DoPlayWithSameSoundInterrupt()
     audioRenderer_->SetLoopTimes(currentLoop_);  // avoid calling during stream playing
     audioRenderer_->SetPitch(std::clamp(playParameters_.pitch, MINPITCH, MAXPITCH));
     lastPitch_ = playParameters_.pitch;
+    audioStartTimeMs_.store(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count());
     if (!audioRenderer_->Start()) {
         MEDIA_LOGI("AudioStream::DoPlayWithSameSoundInterrupt, audioRenderer_->Start()");
         streamState_.store(StreamState::RELEASED);
@@ -340,6 +346,8 @@ int32_t AudioStream::RestartAudioStream()
     if (streamState_.load() == StreamState::PREPARED || streamState_.load() == StreamState::STOPPED) {
         streamState_.store(StreamState::PLAYING);
     }
+    audioStartTimeMs_.store(std::chrono::duration_cast<std::chrono::milliseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count());
     if (!audioRenderer_->ResetStaticPlayPosition()) {
         MEDIA_LOGI("AudioStream::RestartAudioStream, audioRenderer_->ResetStaticPlayPosition()");
         streamState_.store(StreamState::RELEASED);
@@ -373,11 +381,17 @@ int32_t AudioStream::HandleRendererNotStart()
     return MSERR_INVALID_VAL;
 }
 
-int32_t AudioStream::Stop()
+int32_t AudioStream::Stop(StopTrigger stopTrigger)
 {
     MediaTrace trace("AudioStream::Stop");
     std::lock_guard lock(streamLock_);
     MEDIA_LOGI("AudioStream::Stop, streamID is %{public}d", streamID_);
+    if (stopTrigger == StopTrigger::PLAYBACK_COMPLETED) {
+        int64_t currentTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+        audioPlayCompletedCostTimeMs_.store(currentTimeMs - audioStartTimeMs_.load());
+        MEDIA_LOGI("The playback process takes %{public}lu", audioPlayCompletedCostTimeMs_.load());
+    }
     if (audioRenderer_ != nullptr && streamState_.load() == StreamState::PLAYING) {
         SoundPoolXCollie soundPoolXCollie("AudioStream audioRenderer::Pause or Stop time out",
             [](void *) {
@@ -387,7 +401,11 @@ int32_t AudioStream::Stop()
             MEDIA_LOGI("streamCallback_ call OnPlayFinished.");
             streamCallback_->OnPlayFinished(streamID_);
         }
-        audioRenderer_->Stop();
+        if (stopTrigger == StopTrigger::PLAYBACK_INTERRUPTED || (stopTrigger == StopTrigger::PLAYBACK_COMPLETED &&
+            audioPlayCompletedCostTimeMs_.load() >= MIN_SINGLE_PLAYBACK_DURATION_MS)) {
+            MEDIA_LOGE("AudioRenderer Stop");
+            audioRenderer_->Stop();
+        }
         soundPoolXCollie.CancelXCollieTimer();
         pcmBufferFrameIndex_ = 0;
         if (callback_ != nullptr) {
@@ -565,7 +583,7 @@ void AudioStream::OnStaticBufferEvent(AudioStandard::StaticBufferEventId eventId
             break;
         case AudioStandard::StaticBufferEventId::LOOP_END_EVENT:
             MEDIA_LOGI("LOOP_END_EVENT");
-            Stop();
+            Stop(StopTrigger::PLAYBACK_COMPLETED);
             break;
         default:
             break;

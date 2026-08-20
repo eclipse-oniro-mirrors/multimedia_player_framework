@@ -54,6 +54,12 @@ enum class StreamState : int32_t {
     STOPPED = 4,
     RELEASED = 5,
 };
+
+enum class StopTrigger : uint8_t {
+    PLAYBACK_COMPLETED = 0,
+    PLAYBACK_INTERRUPTED = 1,
+};
+
 const float MAXPITCH = 4;
 const float MINPITCH = 0.25;
 class AudioStream :
@@ -73,7 +79,7 @@ public:
         const PlayParams &playParams);
     int32_t DoPlayWithNoInterrupt();
     int32_t DoPlayWithSameSoundInterrupt();
-    int32_t Stop();
+    int32_t Stop(StopTrigger stopTrigger = StopTrigger::PLAYBACK_INTERRUPTED);
     int32_t Release();
 
     void OnFirstFrameWriting(uint64_t latency) override;
@@ -138,6 +144,8 @@ private:
     int32_t currentLoop_ = 0;
     int32_t priority_ = 0;
     int32_t rendererFlags_ = 0;
+    std::atomic<int64_t> audioStartTimeMs_{0};
+    std::atomic<int64_t> audioPlayCompletedCostTimeMs_{0};
 
     size_t pcmBufferFrameIndex_ = 0;
     int64_t sourceDurationMs_ = 0;
