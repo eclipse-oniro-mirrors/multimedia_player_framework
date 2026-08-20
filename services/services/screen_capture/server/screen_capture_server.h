@@ -320,6 +320,7 @@ private:
     std::vector<uint64_t> surfaceIdList_ = {};
     std::vector<uint8_t> surfaceTypeList_ = {};
     std::atomic<bool> stopAcquireAudioBufferFromAudio_ = false;
+    std::atomic<int32_t> appUserId_{-1};
 
     int32_t sessionId_ = 0;
     int32_t notificationId_ = 0;
