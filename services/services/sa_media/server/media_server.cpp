@@ -202,7 +202,7 @@ int32_t MediaServer::Dump(int32_t fd, const std::vector<std::u16string> &args)
 {
     CHECK_AND_RETURN_RET_LOG(fd > 0, OHOS::INVALID_OPERATION, "Failed to check fd.");
 
-    auto ret = MediaServerManager::GetInstance().Dump(fd, args);
+    auto ret = MediaServerManager::GetInstance().DumpLocked(fd, args);
     CHECK_AND_RETURN_RET_LOG(ret == NO_ERROR,
         OHOS::INVALID_OPERATION, "Failed to call MediaServerManager::Dump.");
     return OHOS::NO_ERROR;
