@@ -1425,21 +1425,16 @@ int32_t ScreenCaptureServer::StartScreenCaptureFile()
             consumer_ = nullptr;
         }
     };
-    ret = CreateVirtualScreen(consumer_);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen failed, ret:%{public}d, dataType:%{public}d",
-        ret, captureConfig_.dataType);
 
-    ON_SCOPE_EXIT(1) {
-        DestroyVirtualScreen();
-    };
-
-    ON_SCOPE_EXIT(2) { StopAudioCapture(); }; // 2:stop audio
+    ON_SCOPE_EXIT(1) { StopAudioCapture(); };
     ret = SyncAudioCaptures(true);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SyncAudioCaptures failed, ret:%{public}d", ret);
     MEDIA_LOGI("StartScreenCaptureFile RecorderServer S");
     ret = recorder_->Start();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "recorder start failed, ret:%{public}d", ret);
-    CANCEL_SCOPE_EXIT_GUARD(2); // 2:stop audio
+    ret = CreateVirtualScreen(consumer_);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CreateVirtualScreen failed, ret:%{public}d, dataType:%{public}d",
+        ret, captureConfig_.dataType);
     CANCEL_SCOPE_EXIT_GUARD(1);
     CANCEL_SCOPE_EXIT_GUARD(0);
 
@@ -2479,16 +2474,17 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
     CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_UNKNOWN, "MakeSptr surfaceCb_ failed");
     consumer_->RegisterConsumerListener(surfaceCb_);
     MEDIA_LOGD("StartStreamHomeVideoCapture producerSurface_: %{public}" PRIu64, producerSurface_->GetUniqueId());
-    int32_t ret = CreateVirtualScreen(producerSurface_);
+    int32_t ret = MSERR_OK;
+    if (!isSurfaceMode_) {
+        ret = (static_cast<ScreenCapBufferConsumerListener*>(surfaceCb_.GetRefPtr()))->StartBufferThread();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "start buffer thread failed");
+    }
+    ret = CreateVirtualScreen(producerSurface_);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "create virtual screen without input surface failed");
     CANCEL_SCOPE_EXIT_GUARD(0);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartStreamHomeVideoCapture OK.", FAKE_POINTER(this));
     MEDIA_LOGI("ScreenCaptureServer:StartStreamHomeVideoCapture surfaceCb_: 0x%{public}06" PRIXPTR,
         FAKE_POINTER(surfaceCb_.GetRefPtr()));
-    if (!isSurfaceMode_) {
-        ret = (static_cast<ScreenCapBufferConsumerListener*>(surfaceCb_.GetRefPtr()))->StartBufferThread();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "start buffer thread failed");
-    }
     return MSERR_OK;
 }
 
@@ -3122,13 +3118,19 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     }
     CHECK_AND_RETURN_RET_LOG(captureConfig_.audioInfo.micCapInfo.state ==
         AVScreenCaptureParamValidationState::VALIDATION_VALID, MSERR_OK, "No Microphone Config");
+#ifdef SUPPORT_CALL
+    if (isMicrophone && providers_->GetInCallObserver().IsInCall(true)) {
+        cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+        return MSERR_UNKNOWN_INCALL;
+    }
+#endif
+    bool oldFlag = isMicrophoneSwitchTurnOn_;
     isMicrophoneSwitchTurnOn_ = isMicrophone;
     int32_t ret = SyncAudioCaptures();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SyncAudioCaptures failed");
-#ifdef SUPPORT_CALL
-    CHECK_AND_RETURN_RET_LOG(!(isMicrophone && providers_->GetInCallObserver().IsInCall(true)),
-        MSERR_UNKNOWN_INCALL, "Mic unavailable due to call");
-#endif
+    if (ret != MSERR_OK) {
+        isMicrophoneSwitchTurnOn_ = oldFlag;
+        return ret;
+    }
     cbProxy_->OnStateChange(isMicrophone ? AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNMUTED_BY_USER
         : AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_MUTED_BY_USER);
     MEDIA_LOGI("SetMicrophoneEnabled OK.");
@@ -3189,15 +3191,17 @@ int32_t ScreenCaptureServer::AudioRendererStateUpdate(
     return SyncAudioCaptures();
 }
 
-void ScreenCaptureServer::StopMicAudio()
+bool ScreenCaptureServer::StopMicAudio()
 {
-    if (micAudioCapture_ && micAudioCapture_->IsRecording()) {
+    bool isRecording = micAudioCapture_ && micAudioCapture_->IsRecording();
+    if (isRecording) {
         usleep(AUDIO_CHANGE_TIME);
     }
     if (micAudioCapture_) {
         MEDIA_LOGI("StopMicAudioCapture");
         micAudioCapture_->Stop();
     }
+    return isRecording;
 }
 
 int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
@@ -3225,9 +3229,17 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
                "isMicrophoneSwitchTurnOn_=%{public}d micStop=%{public}d micStart=%{public}d innerStart=%{public}d "
                "ignoreMicError=%{public}d",
         FAKE_POINTER(this), newState, state, IsMicrophoneSwitchTurnOn(), micStop, micStart, innerStart, ignoreMicError);
-
-    if (micStop) {
-        StopMicAudio();
+    int32_t ret = MSERR_OK;
+    if (innerStart) {
+        ret = StartInnerAudioCapture();
+    }
+    if (micStop && StopMicAudio()) {
+#ifdef SUPPORT_CALL
+    if ((state & AUDIO_STATE_TEL) && isMicrophoneSwitchTurnOn_) {
+        MEDIA_LOGI("Mic unavailable due to call");
+        cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+    }
+#endif
     }
     if (micStart) {
         int32_t micRet = StartMicAudioCapture(state & AUDIO_STATE_VOIP);
@@ -3238,16 +3250,6 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
             innerStart = true;
         }
     }
-    int32_t ret = MSERR_OK;
-    if (innerStart) {
-        ret = StartInnerAudioCapture();
-    }
-#ifdef SUPPORT_CALL
-    if ((state & AUDIO_STATE_TEL) && isMicrophoneSwitchTurnOn_) {
-        MEDIA_LOGI("Mic unavailable due to call");
-        cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
-    }
-#endif
     return ret;
 }
 
@@ -3504,10 +3506,6 @@ int32_t ScreenCaptureServer::StopAudioCapture()
     if (innerAudioCapture_) {
         innerAudioCapture_->Stop();
     }
-    if (audioSource_) {
-        audioSource_->SetInnerCapture(nullptr);
-        audioSource_->SetMicCapture(nullptr);
-    }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopAudioCapture end.", FAKE_POINTER(this));
     return MSERR_OK;
 }
@@ -3518,14 +3516,6 @@ int32_t ScreenCaptureServer::StartMicAudioCapture(bool isVoip)
         "micCapInfo.state:%{public}d, isVoip:%{public}d.",
         FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state, isVoip);
     CHECK_AND_RETURN_RET(!(micAudioCapture_ && micAudioCapture_->IsRecording()), MSERR_OK);
-#ifdef SUPPORT_CALL
-    uint32_t audioRendererState = audioSource_ ? audioSource_->GetAudioRendererState() : 0;
-    if ((audioRendererState & AUDIO_STATE_TEL) || providers_->GetInCallObserver().IsInCall(true)) {
-        MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " skip starting micAudioCapture", FAKE_POINTER(this));
-        cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
-        return MSERR_OK;
-    }
-#endif
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
         if (micAudioCapture_ == nullptr) {
             std::string threadName = captureConfig_.dataType == DataType::ORIGINAL_STREAM
