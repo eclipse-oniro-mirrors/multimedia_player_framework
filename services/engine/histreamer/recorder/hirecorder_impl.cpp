@@ -527,7 +527,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
         if (hasWatermark_) {
             videoEncoderFilter_->SetWatermarkMode();
         }
-        if (isScreenCaptureMode_) {
+        if (enableStabilization_) {
             videoEncoderFilter_->SetStabilizationMode(enableStabilization_);
         }
         videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
