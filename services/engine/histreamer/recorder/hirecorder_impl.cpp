@@ -527,9 +527,7 @@ int32_t HiRecorderImpl::PrepareVideoEncoder()
         if (hasWatermark_) {
             videoEncoderFilter_->SetWatermarkMode();
         }
-        if (enableStabilization_) {
-            videoEncoderFilter_->SetStabilizationMode(enableStabilization_);
-        }
+        videoEncoderFilter_->SetStabilizationMode(enableStabilization_);
         videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
         FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
             MSERR_VID_ENC_CONFIG_FAILED, "videoEncoderFilter Configure fail");
