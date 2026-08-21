@@ -241,9 +241,9 @@ public:
      */
     virtual int32_t SetStabilizationMode(bool enableStabilization)
     {
- 	    (void)enableStabilization;
- 	    return MSERR_OK;
- 	}
+        (void)enableStabilization;
+        return MSERR_OK;
+    }
 };
 } // namespace Media
 } // namespace OHOS
