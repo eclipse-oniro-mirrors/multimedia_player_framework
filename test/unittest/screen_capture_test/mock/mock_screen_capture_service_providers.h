@@ -26,7 +26,7 @@ class MockScreenCaptureServiceProviders : public IScreenCaptureServiceProviders 
 public:
     IInnerScreenCaptureMonitorService &GetScreenCaptureMonitor() override;
     std::shared_ptr<IRecorderService> CreateRecorder() override;
-    MOCK_METHOD(int32_t, UpdateSettingsValue, (const std::string &key, const std::string &value), (override));
+    MOCK_METHOD(int32_t, TryUpdateSettingsValue, (const std::string &key, const std::string &value), (override));
 #ifdef SUPPORT_CALL
     InCallObserver &GetInCallObserver() override;
 #endif

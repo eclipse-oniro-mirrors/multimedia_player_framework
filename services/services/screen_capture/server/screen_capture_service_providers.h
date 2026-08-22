@@ -31,7 +31,7 @@ public:
     virtual ~IScreenCaptureServiceProviders() = default;
     virtual IInnerScreenCaptureMonitorService &GetScreenCaptureMonitor() = 0;
     virtual std::shared_ptr<IRecorderService> CreateRecorder() = 0;
-    virtual int32_t UpdateSettingsValue(const std::string &key, const std::string &value) = 0;
+    virtual int32_t TryUpdateSettingsValue(const std::string &key, const std::string &value) = 0;
 #ifdef SUPPORT_CALL
     virtual InCallObserver &GetInCallObserver() = 0;
 #endif
