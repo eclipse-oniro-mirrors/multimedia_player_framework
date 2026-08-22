@@ -36,9 +36,9 @@ public:
         return RecorderServer::Create();
     }
 
-    int32_t UpdateSettingsValue(const std::string &key, const std::string &value) override
+    int32_t TryUpdateSettingsValue(const std::string &key, const std::string &value) override
     {
-        return OHOS::Media::UpdateSettingsValue(key, value);
+        return OHOS::Media::TryUpdateSettingsValue(key, value);
     }
 
 #ifdef SUPPORT_CALL

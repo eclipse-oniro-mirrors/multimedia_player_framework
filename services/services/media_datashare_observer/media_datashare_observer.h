@@ -35,8 +35,6 @@ public:
     void OnReceiveEvent(const EventFwk::CommonEventData &data) override;
 
 private:
-    void UpdateSettingsValueAsync();
-
     std::future<void> future_;
 };
 
@@ -54,7 +52,7 @@ private:
     std::shared_ptr<MediaDatashareObserver> datashareObserver_ = nullptr;
 };
 
-int32_t UpdateSettingsValue(const std::string &key, const std::string &value);
+int32_t TryUpdateSettingsValue(const std::string &key, const std::string &value);
 } // namespace Media
 } // namespace OHOS
 #endif // MEDIA_DATASHARE_OBSERVER_H

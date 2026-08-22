@@ -3809,7 +3809,7 @@ void ScreenCaptureServer::ReleaseInner()
             MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner Stop done, sessionId:%{public}d",
                 FAKE_POINTER(this), sessionId_);
             if (isSystemRecorder_.load()) {
-                providers_->UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
+                providers_->TryUpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
             }
         }
         skipPrivacyWindowIDsVec_.clear();

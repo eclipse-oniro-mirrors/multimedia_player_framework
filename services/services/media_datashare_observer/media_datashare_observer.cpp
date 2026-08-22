@@ -33,17 +33,6 @@ static constexpr int32_t UPDATE_SETTINGS_RETRY_COUNT = 10;
 namespace OHOS {
 namespace Media {
 
-void MediaDatashareObserver::UpdateSettingsValueAsync()
-{
-    future_ = std::async(std::launch::async, []() {
-        for (int32_t i = 0; i < UPDATE_SETTINGS_RETRY_COUNT; i++) {
-            int32_t ret = UpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
-            MEDIA_LOGI("UpdateSettingsValue retry %{public}d, ret=%{public}d", i + 1, ret);
-            CHECK_AND_BREAK(ret == MSERR_INVALID_VAL);
-        }
-    });
-}
-
 void MediaDatashareObserver::OnReceiveEvent(const EventFwk::CommonEventData &data)
 {
     auto const &want = data.GetWant();
@@ -51,7 +40,9 @@ void MediaDatashareObserver::OnReceiveEvent(const EventFwk::CommonEventData &dat
     MEDIA_LOGI("MediaDatashareObserver::OnReceiveEvent action: %{public}s", action.c_str());
     CHECK_AND_RETURN(action == EventFwk::CommonEventSupport::COMMON_EVENT_DATA_SHARE_READY);
     MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent");
-    UpdateSettingsValueAsync();
+    future_ = std::async(std::launch::async, []() {
+        TryUpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
+    });
     MEDIA_LOGI("MediaDatashareObserver::HandleDataShareReadyEvent update end");
 }
 
@@ -117,6 +108,17 @@ int32_t UpdateSettingsValue(const std::string &key, const std::string &value)
     dataShareHelper->NotifyChange(uri);
     dataShareHelper->Release();
     return MSERR_OK;
+}
+
+int32_t TryUpdateSettingsValue(const std::string &key, const std::string &value)
+{
+    int32_t ret = MSERR_INVALID_VAL;
+    for (int32_t i = 0; i < UPDATE_SETTINGS_RETRY_COUNT; i++) {
+        ret = UpdateSettingsValue(key, value);
+        MEDIA_LOGI("UpdateSettingsValue retry %{public}d, ret=%{public}d", i + 1, ret);
+        CHECK_AND_BREAK(ret == MSERR_INVALID_VAL);
+    }
+    return ret;
 }
 } // namespace Media
 } // namespace OHOS
