@@ -65,10 +65,6 @@ void SetupMixModeSource(ScreenCaptureServer *server)
 }
 } // namespace
 
-/**
- * @tc.name    : NotifyMicOn_Success_001
- * @tc.desc    : Turn on mic (not in call), expect MIC_UNMUTED_BY_USER notification
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyMicOn_Success_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
@@ -84,10 +80,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyMicOn_Success_001, TestSize.Leve
     ASSERT_FALSE(recorder->Contains(SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE));
 }
 
-/**
- * @tc.name    : NotifyMicOff_Success_001
- * @tc.desc    : Turn off mic (was on), expect MIC_MUTED_BY_USER notification
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyMicOff_Success_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
@@ -104,10 +96,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyMicOff_Success_001, TestSize.Lev
     ASSERT_FALSE(recorder->Contains(SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE));
 }
 
-/**
- * @tc.name    : NotifyTelCallStart_MicRunning_001
- * @tc.desc    : TEL call starts while mic is running, expect MIC_UNAVAILABLE
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicRunning_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
@@ -130,10 +118,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicRunning_001, Tes
     ASSERT_TRUE(recorder->Contains(SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE));
 }
 
-/**
- * @tc.name    : NotifyTelCallStart_MicNotRunning_001
- * @tc.desc    : TEL call starts, mic switch on but mic stopped, expect no MIC_UNAVAILABLE
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicNotRunning_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
@@ -156,10 +140,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicNotRunning_001, 
     ASSERT_FALSE(recorder->Contains(SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE));
 }
 
-/**
- * @tc.name    : NotifyTelCallStart_MicSwitchOff_001
- * @tc.desc    : TEL call starts, mic switch is off, expect no MIC_UNAVAILABLE
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicSwitchOff_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
