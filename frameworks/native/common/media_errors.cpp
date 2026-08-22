@@ -581,7 +581,7 @@ std::string MSExtErrorToString(MediaServiceExtErrCode code)
     }
 
     if (code > MSERR_EXT_EXTEND_START) {
-        return "extend error:" + std::to_string(static_cast<int32_t>(code - MSERR_EXTEND_START));
+        return "extend error:" + std::to_string(static_cast<int32_t>(code - MSERR_EXT_EXTEND_START));
     }
 
     return "invalid error code:" + std::to_string(static_cast<int32_t>(code));
