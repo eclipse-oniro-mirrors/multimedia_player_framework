@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-#include <algorithm>
-
 #include "screen_capture_monitor_server.h"
 #include "screen_capture_server_function_unittest.h"
 #include "screen_capture_server_manager.h"
@@ -30,13 +28,6 @@ constexpr int32_t ROOT_UID = 0;
 
 namespace OHOS {
 namespace Media {
-namespace {
-inline size_t CountForegroundMissions(const std::vector<MissionInfo> &missions)
-{
-    return static_cast<size_t>(std::count_if(missions.begin(), missions.end(),
-        [](const MissionInfo &m) { return m.isForeground; }));
-}
-}
 
 /**
  * @tc.name: LimitIdGenerator_001
@@ -341,130 +332,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateSCNewInstance_003, TestSize.Leve
 }
 
 /**
- * @tc.name: CheckFirstStartPidInstance_001
- * @tc.desc: no running capture, first pid instance
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstStartPidInstance_001, TestSize.Level2)
-{
-    screenCaptureServer_->appInfo_.appPid = 1;
-    ASSERT_EQ(screenCaptureServer_->IsFirstStartPidInstance(screenCaptureServer_->appInfo_.appPid), true);
-}
-
-/**
- * @tc.name: CheckFirstStartPidInstance_002
- * @tc.desc: pid already running, not first instance
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstStartPidInstance_002, TestSize.Level2)
-{
-    auto &monitorServer = ScreenCaptureMonitorServer::GetInstance();
-    int32_t pid = 1;
-    monitorServer.CallOnScreenCaptureStarted(pid);
-    ASSERT_EQ(screenCaptureServer_->IsFirstStartPidInstance(pid), false);
-    ASSERT_EQ(screenCaptureServer_->FirstPidUpdatePrivacyUsingPermissionState(pid), true);
-    monitorServer.CallOnScreenCaptureFinished(pid);
-    ASSERT_EQ(screenCaptureServer_->IsLastStartedPidInstance(pid), true);
-}
-
-/**
- * @tc.name: CheckFirstPidUpdatePrivacyUsingPermissionState_001
- * @tc.desc: no running capture, first pid instance, ROOT_UID
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckFirstPidUpdatePrivacyUsingPermissionState_001, TestSize.Level2)
-{
-    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
-    server->appInfo_.appUid = ROOT_UID;
-    server->appInfo_.appPid = 1;
-    ASSERT_EQ(server->IsFirstStartPidInstance(server->appInfo_.appPid), true);
-    ASSERT_EQ(server->FirstPidUpdatePrivacyUsingPermissionState(server->appInfo_.appPid), true);
-}
-
-/**
- * @tc.name: CheckLastStartedPidInstance_001
- * @tc.desc: multiple running captures, not last instance
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckLastStartedPidInstance_001, TestSize.Level2)
-{
-    auto &monitorServer = ScreenCaptureMonitorServer::GetInstance();
-    int32_t pid = 1;
-    monitorServer.CallOnScreenCaptureStarted(pid);
-    monitorServer.CallOnScreenCaptureStarted(pid);
-    monitorServer.CallOnScreenCaptureFinished(pid);
-    ASSERT_EQ(screenCaptureServer_->IsLastStartedPidInstance(pid), false);
-    ASSERT_EQ(screenCaptureServer_->LastPidUpdatePrivacyUsingPermissionState(pid), true);
-    monitorServer.CallOnScreenCaptureFinished(pid);
-}
-
-/**
- * @tc.name: CheckLastPidUpdatePrivacyUsingPermissionState_001
- * @tc.desc: one running capture, last instance
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckLastPidUpdatePrivacyUsingPermissionState_001, TestSize.Level2)
-{
-    auto &monitorServer = ScreenCaptureMonitorServer::GetInstance();
-    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
-    server->appInfo_.appUid = ROOT_UID;
-    server->appInfo_.appPid = 1;
-    monitorServer.CallOnScreenCaptureStarted(server->appInfo_.appPid);
-    monitorServer.CallOnScreenCaptureFinished(server->appInfo_.appPid);
-    ASSERT_EQ(server->IsLastStartedPidInstance(server->appInfo_.appPid), true);
-    ASSERT_EQ(server->LastPidUpdatePrivacyUsingPermissionState(server->appInfo_.appPid), true);
-}
-
-/**
- * @tc.name: StopScreenCaptureByEvent_001
- * @tc.desc: StopScreenCaptureByEvent_001
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureByEvent_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
-    ASSERT_EQ(
-        screenCaptureServer_->StopScreenCaptureByEvent(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER),
-        MSERR_OK);
-}
-
-/**
- * @tc.name: StopScreenCapture_001
- * @tc.desc: StopScreenCapture_001
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCapture_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
-/**
- * @tc.name: CheckPrivacyWindowSkipPermission_001
- * @tc.desc: CheckPrivacyWindowSkipPermission_001
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckPrivacyWindowSkipPermission_001, TestSize.Level2)
-{
-    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
-    server->appInfo_.appUid = ROOT_UID;
-    server->appInfo_.appPid = 1;
-    ASSERT_EQ(server->CheckPrivacyWindowSkipPermission(), false);
-}
-
-/**
- * @tc.name: ProcessSCServerSaUid_001
- * @tc.desc: check SCServerSaUid
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, ProcessSCServerSaUid_001, TestSize.Level2)
-{
-    int32_t saUid = ROOT_UID + 1;
-    screenCaptureServer_->saUid_ = saUid;
-    ASSERT_EQ(screenCaptureServer_->saUid_, saUid);
-}
-
-/**
  * @tc.name: ProcesssaUidAppUidMap_001
  * @tc.desc: check AddSaAppInfoMap
  * @tc.type: FUNC
@@ -725,133 +592,155 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_001, TestSize.Level
     ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid].second, 0);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ProcessCurDisplayId_001, TestSize.Level2)
+/**
+ * @tc.name    : RemoveScreenCaptureServerMap_002
+ * @tc.number  : RemoveScreenCaptureServerMap_002
+ * @tc.desc    : Test RemoveScreenCaptureServerMap with invalid sessionId (returnId == -1 branch)
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, RemoveScreenCaptureServerMap_002, TestSize.Level2)
 {
-    uint64_t curWindowInDisplayId = 0;
-    screenCaptureServer_->curWindowInDisplayId_.store(curWindowInDisplayId);
-    ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_.load(), curWindowInDisplayId);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    int32_t invalidSessionId = 999;
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->sessionId_ = invalidSessionId;
+    ScreenCaptureServerManager::GetInstance().serverMap_[invalidSessionId] = {server, 0, DataType::INVAILD};
+    int32_t sizeBefore = ScreenCaptureServerManager::GetInstance().serverMap_.size();
+    ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(invalidSessionId);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeBefore - 1);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestSize.Level2)
+/**
+ * @tc.name    : UpdateServerAppUid_001
+ * @tc.number  : UpdateServerAppUid_001
+ * @tc.desc    : Test UpdateServerAppUid with existing sessionId (found branch)
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateServerAppUid_001, TestSize.Level2)
 {
-    ScreenCaptureRect *area = nullptr;
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
-        nullptr);
-    screenCaptureServer_->NotifyCaptureContentChanged(
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, area);
-    screenCaptureServer_->NotifyCaptureContentChanged(
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
-    ASSERT_EQ(screenCaptureServer_->curWindowEvent_,
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    int32_t sessionId = ScreenCaptureServerManager::GetInstance().GetNewSessionId();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->sessionId_ = sessionId;
+    int32_t originalUid = 100;
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, originalUid);
+    int32_t newUid = 200;
+    ScreenCaptureServerManager::GetInstance().UpdateServerAppUid(sessionId, newUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_[sessionId].appUid, newUid);
+    ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(sessionId);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_002, TestSize.Level2)
+/**
+ * @tc.name    : UpdateServerAppUid_002
+ * @tc.number  : UpdateServerAppUid_002
+ * @tc.desc    : Test UpdateServerAppUid with non-existent sessionId (not found branch)
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateServerAppUid_002, TestSize.Level2)
 {
-    std::unique_ptr<ScreenCaptureRect> area = std::make_unique<ScreenCaptureRect>();
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    area->x = 0;
-    area->y = 0;
-    area->width = 1;
-    area->height = 1;
-    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
-        area.get());
-    screenCaptureServer_->NotifyCaptureContentChanged(
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE, nullptr);
-    screenCaptureServer_->NotifyCaptureContentChanged(
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE, nullptr);
-    ASSERT_EQ(screenCaptureServer_->curWindowEvent_,
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    int32_t nonExistentSessionId = 888;
+    int32_t sizeBefore = ScreenCaptureServerManager::GetInstance().serverMap_.size();
+    ScreenCaptureServerManager::GetInstance().UpdateServerAppUid(nonExistentSessionId, 300);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeBefore);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_004, TestSize.Level2)
+/**
+ * @tc.name    : UpdateServerDataType_001
+ * @tc.number  : UpdateServerDataType_001
+ * @tc.desc    : Test UpdateServerDataType with non-existent sessionId (not found branch)
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateServerDataType_001, TestSize.Level2)
 {
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
-    screenCaptureServer_->NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE,
-        nullptr);
-    ASSERT_EQ(screenCaptureServer_->curWindowEvent_,
-        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    int32_t nonExistentSessionId = 777;
+    int32_t sizeBefore = ScreenCaptureServerManager::GetInstance().serverMap_.size();
+    ScreenCaptureServerManager::GetInstance().UpdateServerDataType(nonExistentSessionId, DataType::ORIGINAL_STREAM);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeBefore);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, SetDefaultDisplayIdOfWindows_001, TestSize.Level2)
+/**
+ * @tc.name    : CanScreenCaptureInstanceBeCreate_003
+ * @tc.number  : CanScreenCaptureInstanceBeCreate_003
+ * @tc.desc    : Test CanScreenCaptureInstanceBeCreate when serverMap exceeds maxSessionId_ (false branch)
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CanScreenCaptureInstanceBeCreate_003, TestSize.Level2)
 {
-    screenCaptureServer_->missionInfos_ = {{80, true}};
-    screenCaptureServer_->curWindowInDisplayId_.store(SCREEN_ID_INVALID);
-    uint64_t displayId = screenCaptureServer_->GetDisplayIdOfWindows();
-    ASSERT_NE(displayId, SCREEN_ID_INVALID);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    int32_t maxId = ScreenCaptureServerManager::GetInstance().maxSessionId_;
+    for (int32_t i = 1; i <= maxId + 1; i++) {
+        ScreenCaptureServerManager::GetInstance().serverMap_[i] = {{}, i, DataType::INVAILD};
+    }
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(0), false);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AppMissionId_001, TestSize.Level2)
+/**
+ * @tc.name    : RemoveSaAppInfoMap_002
+ * @tc.number  : RemoveSaAppInfoMap_002
+ * @tc.desc    : Test RemoveSaAppInfoMap with saUid == -1 (early return branch)
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_002, TestSize.Level2)
 {
-    EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 0);
-    EXPECT_EQ(CountForegroundMissions(screenCaptureServer_->missionInfos_), 0);
-    screenCaptureServer_->virtualScreenId_ = 1;
-    screenCaptureServer_->missionInfos_.push_back({0, true});
-    EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 1);
-    EXPECT_EQ(CountForegroundMissions(screenCaptureServer_->missionInfos_), 1);
-    screenCaptureServer_->missionInfos_.push_back({0, true});
-    EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 2);
-    EXPECT_EQ(CountForegroundMissions(screenCaptureServer_->missionInfos_), 2);
-    screenCaptureServer_->missionInfos_ = {{0, true}, {1, true}, {2, true}};
-    EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 3);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+    int32_t saUid = 100;
+    int32_t appUid = 200;
+    ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appUid);
+    int32_t sizeBefore = ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.size();
+    ScreenCaptureServerManager::GetInstance().RemoveSaAppInfoMap(-1);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.size(), sizeBefore);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AppMissionId_002, TestSize.Level2)
+/**
+ * @tc.name    : RemoveSaAppInfoMap_003
+ * @tc.number  : RemoveSaAppInfoMap_003
+ * @tc.desc    : Test RemoveSaAppInfoMap with count > 1 (decrement without erase branch)
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_003, TestSize.Level2)
 {
-    EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 0);
-    EXPECT_EQ(CountForegroundMissions(screenCaptureServer_->missionInfos_), 0);
-    std::vector<uint64_t> allIds;
-    screenCaptureServer_->missionInfos_.push_back({0, true});
-    screenCaptureServer_->missionInfos_.push_back({1, true});
-    screenCaptureServer_->UpdateMissionData(0, Rosen::SessionState::STATE_DISCONNECT, allIds);
-    EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 1);
-    EXPECT_EQ(CountForegroundMissions(screenCaptureServer_->missionInfos_), 1);
-    screenCaptureServer_->UpdateMissionData(1, Rosen::SessionState::STATE_DISCONNECT, allIds);
-    EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 0);
-    EXPECT_EQ(CountForegroundMissions(screenCaptureServer_->missionInfos_), 0);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+    int32_t saUid = 200;
+    int32_t appUid = 300;
+    ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appUid);
+    ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid].second, 2);
+    ScreenCaptureServerManager::GetInstance().RemoveSaAppInfoMap(saUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.count(saUid), 1);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid].second, 1);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_001, TestSize.Level2)
+/**
+ * @tc.name    : RemoveSaAppInfoMap_004
+ * @tc.number  : RemoveSaAppInfoMap_004
+ * @tc.desc    : Test RemoveSaAppInfoMap with non-existent saUid (not found branch)
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_004, TestSize.Level2)
 {
-    Json::Value appInformation;
-    appInformation["bundleName"] = "bundleName_001";
-    appInformation["appIndex"] = 0;
-    screenCaptureServer_->ParseAppMissionIds(appInformation);
-    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
-    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+    int32_t nonExistentSaUid = 999;
+    ScreenCaptureServerManager::GetInstance().RemoveSaAppInfoMap(nonExistentSaUid);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.size(), 0);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_002, TestSize.Level2)
+/**
+ * @tc.name    : CheckSCServerSpecifiedDataTypeNum_003
+ * @tc.number  : CheckSCServerSpecifiedDataTypeNum_003
+ * @tc.desc    : Test CheckSCServerSpecifiedDataTypeNum with non-matching appUid (count stays 0)
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckSCServerSpecifiedDataTypeNum_003, TestSize.Level2)
 {
-    Json::Value appInformation;
-    appInformation["bundleName"] = "bundleName_002";
-    appInformation["appIndex"] = 0;
-    screenCaptureServer_->ParseAppMissionIds(appInformation);
-    screenCaptureServer_->missionInfos_.push_back({1, true});
-    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
-    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_003, TestSize.Level2)
-{
-    Json::Value appInformation;
-    appInformation["bundleName"] = "bundleName_003";
-    appInformation["appIndex"] = 0;
-    screenCaptureServer_->missionInfos_.push_back({1, true});
-    screenCaptureServer_->ParseAppMissionIds(appInformation);
-    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
-    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_004, TestSize.Level2)
-{
-    Json::Value appInformation;
-    appInformation["bundleName"] = "bundleName_004";
-    appInformation["appIndex"] = 0;
-    screenCaptureServer_->ParseAppMissionIds(appInformation);
-    screenCaptureServer_->missionInfos_.push_back({1, true});
-    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
-    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    UniqueIDGenerator gIdGenerator(20);
+    int32_t sessionId = gIdGenerator.GetNewID();
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->sessionId_ = sessionId;
+    server->appInfo_.appUid = 100;
+    server->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
+    ScreenCaptureServerManager::GetInstance().UpdateServerDataType(sessionId, server->captureConfig_.dataType);
+    ASSERT_EQ(
+        ScreenCaptureServerManager::GetInstance().CheckSCServerSpecifiedDataTypeNum(999, DataType::ORIGINAL_STREAM),
+        true);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
 }
 } // namespace Media
 } // namespace OHOS

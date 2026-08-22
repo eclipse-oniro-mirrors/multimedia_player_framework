@@ -15,20 +15,22 @@
 #ifndef SCREEN_CAPTURE_SERVER_FUNCTION_UNITTEST_H
 #define SCREEN_CAPTURE_SERVER_FUNCTION_UNITTEST_H
 
-#include <fcntl.h>
-#include <iostream>
-#include <string>
-#include <nativetoken_kit.h>
+#include "accesstoken_kit.h"
 #include "media_errors.h"
 #include "media_utils.h"
-#include "accesstoken_kit.h"
-#include "token_setproc.h"
-#include "screen_capture_listener_proxy.h"
-#include "screen_capture_listener_callback.h"
-#include "screen_capture_server.h"
 #include "mock/mock_audio_capturer.h"
 #include "mock/mock_screen_capture_service_providers.h"
+#include "screen_capture_listener_callback.h"
+#include "screen_capture_listener_proxy.h"
+#include "screen_capture_server.h"
+#include "token_setproc.h"
 #include "gtest/gtest.h"
+#include <algorithm>
+#include <fcntl.h>
+#include <iostream>
+#include <nativetoken_kit.h>
+#include <string>
+#include <vector>
 
 extern "C" {
 OHOS::Media::IScreenCaptureService *CreateScreenCaptureServer(OHOS::Media::IScreenCaptureServiceProviders *providers);
@@ -47,8 +49,7 @@ using ScreenCaptureServerPtr = std::unique_ptr<OHOS::Media::ScreenCaptureServer,
 inline ScreenCaptureServerPtr MakeScreenCaptureServer()
 {
     auto providers = OHOS::Media::CreateMockProviders();
-    auto *raw = static_cast<OHOS::Media::ScreenCaptureServer *>(
-        CreateScreenCaptureServer(providers.release()));
+    auto *raw = static_cast<OHOS::Media::ScreenCaptureServer *>(CreateScreenCaptureServer(providers.release()));
     return ScreenCaptureServerPtr(raw, ScreenCaptureServerDeleter());
 }
 
@@ -96,6 +97,7 @@ public:
     std::shared_ptr<AudioCapturerWrapper> CreateTestWrapper(AudioCaptureInfo &audioInfo, const std::string &name,
         bool isInner = true);
     void SetupAudioDataSource(AVScreenCaptureMixMode mode);
+    size_t CountForegroundMissions(const std::vector<MissionInfo> &missions);
 
 protected:
     ScreenCaptureServerPtr screenCaptureServer_;
