@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2025-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -78,6 +78,14 @@ public:
         return local == LOCAL_FD;
     }
 #endif
+
+    static void CloseFdSafely(int32_t& fd)
+    {
+        if (fd != -1) {
+            (void)::close(fd);
+            fd = -1;
+        }
+    }
 
 private:
     // The HMDFS I/O control code

@@ -144,6 +144,8 @@ private:
     void HandleListEOSInfo(bool &notifyEOS);
     void SelectAndSwitchAfterRemove(bool isLast, MediaSourceIterator nextIt);
     int32_t SetSourceTask(int32_t fd, int64_t offset, int64_t size);
+    int32_t SetMediaSourceByFd(int32_t fd, int64_t offset, int64_t size,
+        const std::shared_ptr<AVMediaSource> &srcMediaSource, AVPlayStrategy strategy);
     bool IsInListMode() const;
     bool ShouldLoopCurrent() const;
     bool ShouldShuffle() const;

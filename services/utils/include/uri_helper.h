@@ -56,7 +56,7 @@ public:
     };
 
     explicit UriHelper(const std::string_view &uri);
-    UriHelper(int32_t fd, int64_t offset, int64_t size);
+    UriHelper(int32_t fd, int64_t offset, int64_t size, bool needAdoptFd = false);
     ~UriHelper();
 
     uint8_t UriType() const;

@@ -117,7 +117,8 @@ UriHelper::UriHelper(const std::string_view &uri)
     FormatMeForUri(uri);
 }
 
-UriHelper::UriHelper(int32_t fd, int64_t offset, int64_t size) : fd_(dup(fd)), offset_(offset), size_(size)
+UriHelper::UriHelper(int32_t fd, int64_t offset, int64_t size, bool needAdoptFd)
+    : fd_(needAdoptFd ? fd : dup(fd)), offset_(offset), size_(size)
 {
     FormatMeForFd();
 }

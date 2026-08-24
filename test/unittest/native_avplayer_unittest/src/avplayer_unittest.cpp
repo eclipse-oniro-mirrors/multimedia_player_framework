@@ -33,6 +33,7 @@
 #include "media_log.h"
 #include "avsei_message_impl.h"
 #include "avmedia_source.h"
+#include "scoped_hap_token.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVPlayerUnitTest"};
@@ -116,6 +117,7 @@ int64_t GetFileSize(const string &fileName)
  */
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaSourceTest, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
     const char* url = "http://example.com/video.mp4";
     OH_AVHttpHeader* header = OH_AVHttpHeader_Create();
     ASSERT_NE(header, nullptr);
@@ -137,6 +139,7 @@ HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaSourceTest, TestSize.Level1)
  */
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaSourceTest002, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
     const char* url = "http://example.com/video.mp4";
     OH_AVHttpHeader* header = OH_AVHttpHeader_Create();
     ASSERT_NE(header, nullptr);
@@ -196,6 +199,7 @@ HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaSourceTest004, TestSize.Level1)
  */
 HWTEST_F(AVPlayerUnitTest, OH_AVPlayer_SetMediaSourceTest005, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
     const char* url = "http://example.com/video.mp4";
     OH_AVHttpHeader* header = OH_AVHttpHeader_Create();
     ASSERT_NE(header, nullptr);

@@ -1474,9 +1474,14 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
     strategy_ = strategy;
 
     std::string uri = mediaSource_->url;
-    MEDIA_LOGI("server url: %{public}s", mediaSource_->url.c_str());
-    CHECK_AND_RETURN_RET_NOLOG(CheckNetWorkPermission(uri), MSERR_INVALID_OPERATION);
+    MEDIA_LOGI("server url: %{private}s", mediaSource_->url.c_str());
     std::string mimeType = mediaSource_->GetMimeType();
+
+    if (!mediaSource_->IsFileDescriptorSet() && !mediaSource_->IsDataSourceSet() &&
+        (mediaSource_->sourceLoader_ == nullptr || mimeType == AVMimeType::APPLICATION_M3U8)) {
+        CHECK_AND_RETURN_RET(CheckNetWorkPermission(uri, true), MSERR_INVALID_OPERATION);
+    }
+
     size_t pos1 = uri.find("?");
     size_t pos2 = uri.find("offset=");
     size_t pos3 = uri.find("&");
@@ -1498,6 +1503,16 @@ int32_t PlayerServer::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
 
         auto uriHelper = std::make_unique<UriHelper>(fd, offset, size);
         CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed ro read fd.");
+        uriHelper_ = std::move(uriHelper);
+        mediaSource_->url = uriHelper_->FormattedUri();
+    }
+
+    if (mediaSource_->IsFileDescriptorSet()) {
+        // For fd source, adopt binder dup fd by needAdoptFd without extra dup,
+        // UriHelper destructor will close it on HandleReset/Release.
+        const auto &fdesc = mediaSource_->GetFileDescriptor();
+        auto uriHelper = std::make_unique<UriHelper>(fdesc.fd, fdesc.offset, fdesc.size, true /* needAdoptFd */);
+        CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read fd.");
         uriHelper_ = std::move(uriHelper);
         mediaSource_->url = uriHelper_->FormattedUri();
     }
@@ -2933,9 +2948,9 @@ int32_t PlayerServer::PrepareInner()
     return MSERR_INVALID_OPERATION;
 }
 
-bool PlayerServer::CheckNetWorkPermission(const std::string &url)
+bool PlayerServer::CheckNetWorkPermission(const std::string &url, bool isForceCheck)
 {
-    if (UriHelper::IsNetworkUrl(url)) {
+    if (isForceCheck || UriHelper::IsNetworkUrl(url)) {
         int32_t permissionResult = MediaPermission::CheckNetWorkPermission(appUid_, appPid_, appTokenId_);
         if (permissionResult != Security::AccessToken::PERMISSION_GRANTED) {
             MEDIA_LOGE("user do not have the right to access INTERNET");

@@ -36,6 +36,8 @@
 #endif
 #include "media_source_loader_proxy.h"
 #include "audio_background_adapter.h"
+#include "fd_utils.h"
+#include "scope_guard.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerServiceStub"};
@@ -1269,7 +1271,20 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     int32_t fd = -1;
     std::string mimeType;
     int32_t ret = ReadAVMediaSourceFromParcel(data, mediaSource, fd, mimeType);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadAVMediaSourceFromParcel failed");
+    if (ret != MSERR_OK) {
+        FdUtils::CloseFdSafely(fd);
+        return ret;
+    }
+
+    // fd and fdSrcFd are owned from ReadAVMediaSourceFromParcel success;
+    // close both on error paths via ON_SCOPE_EXIT
+    ON_SCOPE_EXIT(fdGuard) {
+        FdUtils::CloseFdSafely(fd);
+
+        CHECK_AND_RETURN_NOLOG(mediaSource != nullptr && mediaSource->IsFileDescriptorSet());
+        (void)::close(mediaSource->GetFileDescriptor().fd);
+    };
+
     if (sourceLoader_ != nullptr) {
         mediaSource->sourceLoader_ = std::move(sourceLoader_);
     }
@@ -1277,9 +1292,6 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     ret = ReadMediaStreamListFromMessageParcel(data, mediaSource);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("ReadMediaStreamListFromMessageParcel failed");
-        if (fd != -1) {
-            (void)::close(fd);
-        }
         return ret;
     }
 
@@ -1288,8 +1300,16 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     bool enableOfflineCache = data.ReadBool();
     mediaSource->enableOfflineCache(enableOfflineCache);
 
-    reply.WriteInt32(SetMediaSource(mediaSource, strategy));
+    // Stub-layer URL security check after deserialization: reject file/fd URLs (aligned with SetSource stub guard)
+    ret = ValidateMediaSourceUrl(mediaSource, mimeType, fd);
+    if (ret != MSERR_OK) {
+        return ret;
+    }
 
+    reply.WriteInt32(SetMediaSource(mediaSource, strategy));
+    CANCEL_SCOPE_EXIT_GUARD(fdGuard);
+
+    // Success: only M3U8 fd needs closing here; others are adopted by UriHelper
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fd != -1) {
         (void)::close(fd);
     }
@@ -1315,17 +1335,42 @@ int32_t PlayerServiceStub::ReadAVMediaSourceFromParcel(MessageParcel &data,
     fd = ReadM3U8FdFromParcel(data, param.isUrlSource, mimeType);
 
     ret = ReadFdSourceFromParcel(data, param.isFdSource, param.fileDesc);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadFdSourceFromParcel failed");
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("ReadFdSourceFromParcel failed");
+        FdUtils::CloseFdSafely(fd);
+        CHECK_AND_RETURN_RET_NOLOG(!param.isFdSource, ret);
+        FdUtils::CloseFdSafely(param.fileDesc.fd);
+        return ret;
+    }
+
     ret = ReadDataSourceFromParcel(data, param.isDataSource, param.dataSourceObject);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadDataSourceFromParcel failed");
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("ReadDataSourceFromParcel failed");
+        FdUtils::CloseFdSafely(fd);
+        CHECK_AND_RETURN_RET_NOLOG(!param.isFdSource, ret);
+        FdUtils::CloseFdSafely(param.fileDesc.fd);
+        return ret;
+    }
 
     param.directoryPath = param.isDirectorySource ? data.ReadString() : "";
 
     mediaSource = CreateAVMediaSource(param);
-    CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr");
-    mediaSource->SetMimeType(mimeType);
-    ret = UpdateM3U8FdUrl(mediaSource, mimeType, fd);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("mediaSource is nullptr");
+        FdUtils::CloseFdSafely(fd);
+        CHECK_AND_RETURN_RET_NOLOG(!param.isFdSource, MSERR_INVALID_VAL);
+        FdUtils::CloseFdSafely(param.fileDesc.fd);
+        return MSERR_INVALID_VAL;
+    }
 
+    mediaSource->SetMimeType(mimeType);
+
+    ret = UpdateM3U8FdUrl(mediaSource, mimeType, fd);
+    if (ret != MSERR_OK) {
+        FdUtils::CloseFdSafely(fd);
+        CHECK_AND_RETURN_RET_NOLOG(!param.isFdSource, ret);
+        FdUtils::CloseFdSafely(param.fileDesc.fd);
+    }
     return ret;
 }
 
@@ -1349,7 +1394,27 @@ int32_t PlayerServiceStub::ReadUrlSourceFromParcel(MessageParcel &data, bool isU
     }
     return MSERR_OK;
 }
- 
+
+int32_t PlayerServiceStub::ValidateMediaSourceUrl(
+    const std::shared_ptr<AVMediaSource> &mediaSource, const std::string &mimeType, int32_t fd)
+{
+    if (mediaSource == nullptr) {
+        return MSERR_INVALID_VAL;
+    }
+    if (mediaSource->IsFileDescriptorSet() || mediaSource->IsDataSourceSet() ||
+        mimeType == AVMimeType::APPLICATION_M3U8) {
+        return MSERR_OK;
+    }
+
+    auto mediaStreams = mediaSource->GetAVPlayMediaStreamList();
+    const std::string &url = mediaStreams.empty() ? mediaSource->url : mediaStreams[0].url;
+    if (UriHelper::IsFileUrl(url) || UriHelper::IsFdUrl(url)) {
+        MEDIA_LOGE("SetMediaSource rejected: file/fd URL not allowed, url: %{private}s", url.c_str());
+        return MSERR_INVALID_VAL;
+    }
+    return MSERR_OK;
+}
+
 int32_t PlayerServiceStub::ReadM3U8FdFromParcel(MessageParcel &data, bool isUrlSource, const std::string &mimeType)
 {
     if (!isUrlSource || mimeType != AVMimeType::APPLICATION_M3U8) {
@@ -1417,16 +1482,30 @@ std::shared_ptr<AVMediaSource> PlayerServiceStub::CreateMediaSourceFromDirectory
 int32_t PlayerServiceStub::UpdateM3U8FdUrl(std::shared_ptr<AVMediaSource> &mediaSource,
     const std::string &mimeType, int32_t fd)
 {
-    if (mediaSource == nullptr || mimeType != AVMimeType::APPLICATION_M3U8 || fd == -1) {
+    if (mediaSource == nullptr || mimeType != AVMimeType::APPLICATION_M3U8) {
         return MSERR_OK;
     }
-    
+
     std::string uri = mediaSource->url;
     size_t fdHeadPos = uri.find("fd://");
-    size_t fdTailPos = uri.find("?");
-    if (fdHeadPos != std::string::npos && fdTailPos != std::string::npos) {
-        mediaSource->url = "fd://" + std::to_string(fd) + uri.substr(fdTailPos);
+    if (fdHeadPos != 0) {
+        return MSERR_OK; // Non-fd:// URL (e.g. http:// M3U8), no replacement needed
     }
+
+    // fd:// URL requires valid binder fd for replacement; fd=-1 means no fd was passed via binder
+    if (fd == -1) {
+        MEDIA_LOGE("M3U8 fd URL requires valid binder fd, but fd=-1, url: %{private}s", uri.c_str());
+        return MSERR_INVALID_VAL;
+    }
+
+    // fd:// URL must contain ?offset=&size= format to prevent fd injection
+    size_t fdTailPos = uri.find("?");
+    if (fdTailPos == std::string::npos || fdHeadPos >= fdTailPos) {
+        MEDIA_LOGE("M3U8 fd URL missing query params, rejected: %{private}s", uri.c_str());
+        return MSERR_INVALID_VAL;
+    }
+
+    mediaSource->url = "fd://" + std::to_string(fd) + uri.substr(fdTailPos);
     return MSERR_OK;
 }
 
@@ -2194,8 +2273,13 @@ int32_t PlayerServiceStub::AddAdsMediaSource(MessageParcel &data, MessageParcel 
     int32_t fd = -1;
     std::string mimeType;
     int32_t ret = ReadAVMediaSourceFromParcel(data, mediaSource, fd, mimeType);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ReadAVMediaSourceFromParcel failed");
- 
+
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("ReadAVMediaSourceFromParcel failed");
+        FdUtils::CloseFdSafely(fd);
+        return ret;
+    }
+
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fd != -1) {
         (void)::close(fd);
     }

@@ -169,8 +169,8 @@ HWTEST_F(PlayerImplUnitTest, OnInfo_002, TestSize.Level0)
     //Test IsInListMode() == true
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     auto ret = playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -212,8 +212,8 @@ HWTEST_F(PlayerImplUnitTest, OnInfo_004, TestSize.Level0)
     
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     auto ret = playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -258,8 +258,8 @@ HWTEST_F(PlayerImplUnitTest, OnInfo_005, TestSize.Level0)
     
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     auto ret = playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -540,8 +540,8 @@ HWTEST_F(PlayerImplUnitTest, AddPlaybackMediaSource_001, TestSize.Level0)
 
     std::string generateId;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto mediaSource = std::make_shared<AVMediaSource>("url1", headers);
-    auto mediaSource2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto mediaSource = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto mediaSource2 = std::make_shared<AVMediaSource>("http://url2", headers);
     mediaSource->SetID("url1");
     mediaSource2->SetID("url2");
     auto ret = playerImpl_->AddPlaybackMediaSource(mediaSource, "", generateId);
@@ -572,7 +572,7 @@ HWTEST_F(PlayerImplUnitTest, AddPlaybackMediaSource_002, TestSize.Level0)
     std::string generateId;
     std::map<std::string, std::string> headers = {{"test", "val"}};
     FileDescriptor fileDescriptor {10, 0, 100};
-    auto mediaSource = std::make_shared<AVMediaSource>("url1", headers);
+    auto mediaSource = std::make_shared<AVMediaSource>("http://url1", headers);
     auto mediaSource2 = std::make_shared<AVMediaSource>(fileDescriptor);
     mediaSource->SetID("url1");
     mediaSource2->SetID("fd");
@@ -605,9 +605,9 @@ HWTEST_F(PlayerImplUnitTest, RemovePlaybackMediaSource_001, TestSize.Level0)
 
     std::string id1, id2, id3;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
-    auto src3 = std::make_shared<AVMediaSource>("url3", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
+    auto src3 = std::make_shared<AVMediaSource>("http://url3", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     src3->SetID("url3");
@@ -645,8 +645,8 @@ HWTEST_F(PlayerImplUnitTest, RemovePlaybackMediaSource_002, TestSize.Level0)
 
     std::string id1, id2, id3;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
 
@@ -671,7 +671,7 @@ HWTEST_F(PlayerImplUnitTest, ClearPlaybackList_001, TestSize.Level0)
 
     std::string generateId;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto mediaSource = std::make_shared<AVMediaSource>("url1", headers);
+    auto mediaSource = std::make_shared<AVMediaSource>("http://url1", headers);
     mediaSource->SetID("url1");
     playerImpl_->AddPlaybackMediaSource(mediaSource, "", generateId);
 
@@ -696,7 +696,7 @@ HWTEST_F(PlayerImplUnitTest, GetInfo_001, TestSize.Level0)
 
     std::string srcId;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto mediaSource = std::make_shared<AVMediaSource>("url1", headers);
+    auto mediaSource = std::make_shared<AVMediaSource>("http://url1", headers);
     mediaSource->SetID("url1");
     std::string curId;
     auto ret = playerImpl_->GetCurrentMediaSource(curId);
@@ -736,8 +736,8 @@ HWTEST_F(PlayerImplUnitTest, AdvanceToNextMediaSource_001, TestSize.Level0)
 
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -775,8 +775,8 @@ HWTEST_F(PlayerImplUnitTest, AdvanceToPrevMediaSource_001, TestSize.Level0)
 
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -814,7 +814,7 @@ HWTEST_F(PlayerImplUnitTest, AdvanceToMediaSource_001, TestSize.Level0)
 
     std::string id1;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
     src1->SetID("url1");
     auto ret = playerImpl_->AdvanceToMediaSource("any_id");
     EXPECT_EQ(ret, MSERR_INVALID_STATE);
@@ -869,8 +869,8 @@ HWTEST_F(PlayerImplUnitTest, HandleListStateInfo_001, TestSize.Level0)
     int32_t extra = 0;
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -917,8 +917,8 @@ HWTEST_F(PlayerImplUnitTest, HandleListStateInfo_002, TestSize.Level0)
     int32_t extra = 0;
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -961,7 +961,7 @@ HWTEST_F(PlayerImplUnitTest, HandleListEOSInfo_001, TestSize.Level0)
 
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
     src1->SetID("url1");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
     playerImpl_->curSrcId_ = id1;
@@ -1003,8 +1003,8 @@ HWTEST_F(PlayerImplUnitTest, SelectAndSwitchAfterRemove_001, TestSize.Level0)
 
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -1040,7 +1040,7 @@ HWTEST_F(PlayerImplUnitTest, StateQueryFunctions_001, TestSize.Level0)
     EXPECT_EQ(playerImpl_->IsInListMode(), false);
     std::string id;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src = std::make_shared<AVMediaSource>("url1", headers);
+    auto src = std::make_shared<AVMediaSource>("http://url1", headers);
     src->SetID("url1");
     playerImpl_->AddPlaybackMediaSource(src, "", id);
     EXPECT_EQ(playerImpl_->IsInListMode(), true);
@@ -1086,8 +1086,8 @@ HWTEST_F(PlayerImplUnitTest, SelectNextIndex_001, TestSize.Level0)
     PlayerImpl::MediaSourceIterator nextIdx;
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -1127,7 +1127,7 @@ HWTEST_F(PlayerImplUnitTest, SwitchSetMediaSource_001, TestSize.Level0)
 
     std::string id1;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
     src1->SetID("url1");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
     auto it = playerImpl_->FindSourceInList(id1);
@@ -1158,7 +1158,7 @@ HWTEST_F(PlayerImplUnitTest, SwitchToIndex_001, TestSize.Level0)
 
     std::string id1;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
     src1->SetID("url1");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
     auto it = playerImpl_->FindSourceInList(id1);
@@ -1201,7 +1201,7 @@ HWTEST_F(PlayerImplUnitTest, FindSourceInList_001, TestSize.Level0)
 
     std::string id1;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
     src1->SetID("url1");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
 
@@ -1262,8 +1262,8 @@ HWTEST_F(PlayerImplUnitTest, Pause_001, TestSize.Level0)
 
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -1299,8 +1299,8 @@ HWTEST_F(PlayerImplUnitTest, Stop_001, TestSize.Level0)
 
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -1332,8 +1332,8 @@ HWTEST_F(PlayerImplUnitTest, IsLooping_001, TestSize.Level0)
 
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -1359,8 +1359,8 @@ HWTEST_F(PlayerImplUnitTest, SetLooping_001, TestSize.Level0)
 
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
@@ -1396,8 +1396,8 @@ HWTEST_F(PlayerImplUnitTest, AdvanceToNextMediaSource_003, TestSize.Level0)
 
     std::string id1, id2;
     std::map<std::string, std::string> headers = {{"test", "val"}};
-    auto src1 = std::make_shared<AVMediaSource>("url1", headers);
-    auto src2 = std::make_shared<AVMediaSource>("url2", headers);
+    auto src1 = std::make_shared<AVMediaSource>("http://url1", headers);
+    auto src2 = std::make_shared<AVMediaSource>("http://url2", headers);
     src1->SetID("url1");
     src2->SetID("url2");
     playerImpl_->AddPlaybackMediaSource(src1, "", id1);
