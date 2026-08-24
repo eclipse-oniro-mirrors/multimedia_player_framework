@@ -16,6 +16,14 @@ import("//foundation/multimedia/player_framework/config.gni")
 
 module_output_path = "player_framework/ScreenCapture/observer"
 
+group("observer_unit_tests") {
+  testonly = true
+  deps = [ ":account_observer_unit_test" ]
+  if (player_framework_support_screen_capture_stopbycall) {
+    deps += [ ":incall_observer_unit_test" ]
+  }
+}
+
 ohos_unittest("incall_observer_unit_test") {
   module_out_path = module_output_path
 
@@ -45,11 +53,11 @@ ohos_unittest("incall_observer_unit_test") {
   }
 
   deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
-    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
 
   external_deps = [
@@ -68,9 +76,9 @@ ohos_unittest("incall_observer_unit_test") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "init:libbegetutil",
+    "media_foundation:media_foundation",
     "qos_manager:qos",
     "window_manager:libdm",
-    "media_foundation:media_foundation",
   ]
   if (player_framework_support_screen_capture &&
       player_framework_support_screen_capture_stopbycall) {
@@ -116,11 +124,11 @@ ohos_unittest("account_observer_unit_test") {
   }
 
   deps = [
+    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_dfx",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx:media_service_log_dfx",
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
-    "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
 
   external_deps = [
@@ -138,15 +146,15 @@ ohos_unittest("account_observer_unit_test") {
     "c_utils:utils",
     "call_manager:tel_call_manager_api",
     "core_service:tel_core_service_api",
+    "eventhandler:libeventhandler",
     "graphic_surface:surface",
     "hilog:libhilog",
     "init:libbegetutil",
+    "media_foundation:media_foundation",
     "os_account:os_account_innerkits",
     "qos_manager:qos",
     "state_registry:tel_state_registry_api",
     "window_manager:libdm",
-    "eventhandler:libeventhandler",
-    "media_foundation:media_foundation",
   ]
 
   defines = []

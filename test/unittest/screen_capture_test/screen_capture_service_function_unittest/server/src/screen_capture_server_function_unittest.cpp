@@ -42,6 +42,7 @@
 #include "incall_observer.h"
 #endif
 
+using testing::Return;
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
@@ -70,6 +71,7 @@ void ScreenCaptureServerFunctionTest::SetHapPermission()
 
 void ScreenCaptureServerFunctionTest::SetUp()
 {
+    ON_CALL(GetMockMediaUtils(), IsSACalling()).WillByDefault(Return(false));
     SetHapPermission();
     screenCaptureServer_ = MakeScreenCaptureServer();
     ASSERT_NE(screenCaptureServer_, nullptr);

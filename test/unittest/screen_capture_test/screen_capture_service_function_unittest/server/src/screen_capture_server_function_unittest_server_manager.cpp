@@ -13,10 +13,12 @@
  * limitations under the License.
  */
 
+#include "mock/mock_media_utils.h"
 #include "screen_capture_monitor_server.h"
 #include "screen_capture_server_function_unittest.h"
 #include "screen_capture_server_manager.h"
 
+using testing::Return;
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
@@ -592,11 +594,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_001, TestSize.Level
     ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid].second, 0);
 }
 
-/**
- * @tc.name    : RemoveScreenCaptureServerMap_002
- * @tc.number  : RemoveScreenCaptureServerMap_002
- * @tc.desc    : Test RemoveScreenCaptureServerMap with invalid sessionId (returnId == -1 branch)
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, RemoveScreenCaptureServerMap_002, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
@@ -609,11 +606,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RemoveScreenCaptureServerMap_002, Test
     ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeBefore - 1);
 }
 
-/**
- * @tc.name    : UpdateServerAppUid_001
- * @tc.number  : UpdateServerAppUid_001
- * @tc.desc    : Test UpdateServerAppUid with existing sessionId (found branch)
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateServerAppUid_001, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
@@ -628,11 +620,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateServerAppUid_001, TestSize.Level
     ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(sessionId);
 }
 
-/**
- * @tc.name    : UpdateServerAppUid_002
- * @tc.number  : UpdateServerAppUid_002
- * @tc.desc    : Test UpdateServerAppUid with non-existent sessionId (not found branch)
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateServerAppUid_002, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
@@ -642,11 +629,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateServerAppUid_002, TestSize.Level
     ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeBefore);
 }
 
-/**
- * @tc.name    : UpdateServerDataType_001
- * @tc.number  : UpdateServerDataType_001
- * @tc.desc    : Test UpdateServerDataType with non-existent sessionId (not found branch)
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateServerDataType_001, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
@@ -656,11 +638,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateServerDataType_001, TestSize.Lev
     ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeBefore);
 }
 
-/**
- * @tc.name    : CanScreenCaptureInstanceBeCreate_003
- * @tc.number  : CanScreenCaptureInstanceBeCreate_003
- * @tc.desc    : Test CanScreenCaptureInstanceBeCreate when serverMap exceeds maxSessionId_ (false branch)
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, CanScreenCaptureInstanceBeCreate_003, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
@@ -672,11 +649,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CanScreenCaptureInstanceBeCreate_003, 
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
 }
 
-/**
- * @tc.name    : RemoveSaAppInfoMap_002
- * @tc.number  : RemoveSaAppInfoMap_002
- * @tc.desc    : Test RemoveSaAppInfoMap with saUid == -1 (early return branch)
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_002, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
@@ -689,11 +661,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_002, TestSize.Level
     ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
 }
 
-/**
- * @tc.name    : RemoveSaAppInfoMap_003
- * @tc.number  : RemoveSaAppInfoMap_003
- * @tc.desc    : Test RemoveSaAppInfoMap with count > 1 (decrement without erase branch)
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_003, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
@@ -708,11 +675,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_003, TestSize.Level
     ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
 }
 
-/**
- * @tc.name    : RemoveSaAppInfoMap_004
- * @tc.number  : RemoveSaAppInfoMap_004
- * @tc.desc    : Test RemoveSaAppInfoMap with non-existent saUid (not found branch)
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_004, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
@@ -721,11 +683,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RemoveSaAppInfoMap_004, TestSize.Level
     ASSERT_EQ(ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.size(), 0);
 }
 
-/**
- * @tc.name    : CheckSCServerSpecifiedDataTypeNum_003
- * @tc.number  : CheckSCServerSpecifiedDataTypeNum_003
- * @tc.desc    : Test CheckSCServerSpecifiedDataTypeNum with non-matching appUid (count stays 0)
- */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckSCServerSpecifiedDataTypeNum_003, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
@@ -741,6 +698,58 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckSCServerSpecifiedDataTypeNum_003,
         ScreenCaptureServerManager::GetInstance().CheckSCServerSpecifiedDataTypeNum(999, DataType::ORIGINAL_STREAM),
         true);
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_002, TestSize.Level2)
+{
+    int32_t saUid = 1;
+    int32_t appUid = -1;
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_003, TestSize.Level2)
+{
+    ON_CALL(GetMockMediaUtils(), IsSACalling()).WillByDefault(Return(true));
+    int32_t saUid = 100;
+    int32_t appUid = 200;
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), true);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_006, TestSize.Level2)
+{
+    ON_CALL(GetMockMediaUtils(), IsSACalling()).WillByDefault(Return(true));
+    int32_t saUid = 100;
+    int32_t registeredAppUid = 200;
+    int32_t queryAppUid = 201;
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {registeredAppUid, 0};
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, queryAppUid), false);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_007, TestSize.Level2)
+{
+    ON_CALL(GetMockMediaUtils(), IsSACalling()).WillByDefault(Return(true));
+    int32_t saUid = 100;
+    int32_t appUid = 200;
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {appUid,
+        ScreenCaptureServerManager::GetInstance().maxSessionPerUid_};
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), false);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckIsSAUidValid_008, TestSize.Level2)
+{
+    ON_CALL(GetMockMediaUtils(), IsSACalling()).WillByDefault(Return(true));
+    int32_t saUid = 100;
+    int32_t appUid = 200;
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {appUid, 1};
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appUid), true);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
 }
 } // namespace Media
 } // namespace OHOS

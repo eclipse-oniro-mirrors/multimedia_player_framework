@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "media_utils.h"
 #include "mock/mock_audio_capturer.h"
+#include "mock/mock_media_utils.h"
 #include "mock/mock_screen_capture_service_providers.h"
 #include "screen_capture_listener_callback.h"
 #include "screen_capture_listener_proxy.h"

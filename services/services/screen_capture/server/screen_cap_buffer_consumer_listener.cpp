@@ -108,8 +108,8 @@ void ScreenCapBufferConsumerListener::SurfaceBufferThreadRun()
 int32_t ScreenCapBufferConsumerListener::StartBufferThread()
 {
     if (isSurfaceCbInThreadStopped_.load()) {
+        isSurfaceCbInThreadStopped_.store(false);
         surfaceCbInThread_ = new (std::nothrow) std::thread([this]() {
-            isSurfaceCbInThreadStopped_.store(false);
             this->SurfaceBufferThreadRun();
             isSurfaceCbInThreadStopped_.store(true);
         });
