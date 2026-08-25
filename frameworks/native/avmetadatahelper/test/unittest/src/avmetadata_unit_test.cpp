@@ -1377,6 +1377,8 @@ HWTEST_F(AVMetadataUnitTest, SetUrlSource_API_0300, Level2)
     ASSERT_EQ(true, helper->CreateAVMetadataHelper());
     ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
     uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("HDR.mp4");
+    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    uri = "https://XXX";
     ASSERT_EQ(MSERR_USER_NO_PERMISSION, helper->SetUrlSource(uri, header));
     helper->Release();
 }

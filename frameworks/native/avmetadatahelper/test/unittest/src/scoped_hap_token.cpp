@@ -46,7 +46,7 @@ ScopedHapToken::ScopedHapToken(const std::vector<std::string> &permissions, cons
 {
     oldTokenId_ = GetSelfTokenID();
     managerTokenId_ = GetFoundationTokenId();
-    if (managerTokenId_ == 0 || SetSelfTokendID(managerTokenId_) != 0) {
+    if (managerTokenId_ == 0 || SetSelfTokenID(managerTokenId_) != 0) {
         MEDIA_LOGE("get or set foundation token failed");
         return;
     }
@@ -75,7 +75,7 @@ ScopedHapToken::ScopedHapToken(const std::vector<std::string> &permissions, cons
         .apl = APL_SYSTEM_BASIC,
         .domain = "test.domain.avmetadata_unit_test",
         .permList = {},
-        .permStateList = permStateList
+        .permStateList = perStateList
     };
 
     AccessTokenIDEx tokenIdEx = AccessTokenKit::AllocHapToken(info, policy);
