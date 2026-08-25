@@ -288,6 +288,9 @@ int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &ap
     appInfo_.appTokenId = appInfo.appTokenId;
     appInfo_.appFullTokenId = appInfo.appFullTokenId;
     appName_ = GetClientBundleName(appInfo_.appUid);
+    int32_t userId = -1;
+    AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
+    appUserId_.store(userId);
     isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
     ScreenCaptureServerManager::GetInstance().UpdateServerAppUid(sessionId_, appInfo_.appUid);
     ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appInfo_.appUid);
