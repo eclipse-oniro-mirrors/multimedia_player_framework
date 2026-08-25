@@ -250,15 +250,30 @@ napi_value AVDownloaderManagerNapi::CreateAVDownloaderManager(napi_env env, napi
 {
     MEDIA_LOGD("CreateAVDownloaderManager In");
 
-    napi_value constructor = nullptr;
-    napi_status ret = napi_get_reference_value(env, constructor_, &constructor);
-    CHECK_AND_RETURN_RET_LOG(ret == napi_ok && constructor != nullptr, nullptr, "failed to get constructor");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
 
-    napi_value instance = nullptr;
-    ret = napi_new_instance(env, constructor, 0, nullptr, &instance);
-    CHECK_AND_RETURN_RET_LOG(ret == napi_ok && instance != nullptr, nullptr, "failed to new instance");
+    std::unique_ptr<MediaAsyncContext> asyncContext = std::make_unique<MediaAsyncContext>(env);
 
-    return instance;
+    napi_value jsThis = nullptr;
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
+
+    asyncContext->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    asyncContext->deferred = CommonNapi::CreatePromise(env, asyncContext->callbackRef, result);
+    asyncContext->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
+    asyncContext->ctorFlag = true;
+
+    auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncContext.get(), napi_eprio_immediate);
+    if (ret != napi_status::napi_ok) {
+        MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
+    } else {
+        asyncContext.release();
+    }
+
+    return result;
 }
 
 napi_value AVDownloaderManagerNapi::AllowsCellularAccess(napi_env env, napi_callback_info info)
