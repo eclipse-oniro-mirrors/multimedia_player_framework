@@ -1362,6 +1362,26 @@ HWTEST_F(AVMetadataUnitTest, SetUrlSource_API_0200, Level2)
 }
 
 /**
+    * @tc.number    : SetUrlSource_API_0300
+    * @tc.name      : SetUrlSource test permission
+    * @tc.desc      : SetUrlSource API
+*/
+HWTEST_F(AVMetadataUnitTest, SetUrlSource_API_0300, Level2)
+{
+    std::string uri = "";
+    std::map<std::string, std::string> header;
+    header.emplace("User-Agent", "User-Agent-Value");
+    header.emplace("Date", "2025 08:20:45");
+    std::shared_ptr<AVMetadataMock> helper = std::make_shared<AVMetadataMock>();
+    ASSERT_NE(nullptr, helper);
+    ASSERT_EQ(true, helper->CreateAVMetadataHelper());
+    ASSERT_NE(MSERR_OK, helper->SetUrlSource(uri, header));
+    uri = AVMetadataTestBase::GetInstance().GetMountPath() + std::string("HDR.mp4");
+    ASSERT_EQ(MSERR_USER_NO_PERMISSION, helper->SetUrlSource(uri, header));
+    helper->Release();
+}
+
+/**
     * @tc.number    : SetAVMetadataCaller_API_0100
     * @tc.name      : SetAVMetadataCaller test url
     * @tc.desc      : SetAVMetadataCaller API

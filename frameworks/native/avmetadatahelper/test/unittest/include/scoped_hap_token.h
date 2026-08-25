@@ -39,10 +39,10 @@ public:
 
 private:
     uint64_t oldTokenId_ = 0;
-    unint64_t managerTokenId_ = 0;
+    uint64_t managerTokenId_ = 0;
     Security::AccessToken::AccessTokenID accessTokenId_ = 0;
     bool isValid_ = false;
 };  
-} // namesapce Media
-} // namesapce OHOS
+} // namespace Media
+} // namespace OHOS
 #endif // SCOPED_HAP_TOKEN_H

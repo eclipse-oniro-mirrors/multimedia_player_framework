@@ -54,6 +54,8 @@ ohos_unittest("avmetadata_unit_test") {
     "qos_manager:qos",
     "window_manager:libwm",
     "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken_shared",
+    "access_token:libtokensetproc_shared",
   ]
 
   deps = [

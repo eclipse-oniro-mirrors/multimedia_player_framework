@@ -40,7 +40,7 @@ uint64_t GetFoundationTokenId()
     uint64_t tokenId = strtoull(tokenIdStr.c_str(), &end, 10);
     return end != tokenIdStr.c_str() ? tokenId : 0;
 }
-}  // namespace
+} // namespace
 
 ScopedHapToken::ScopedHapToken(const std::vector<std::string> &permissions, const std::string &bundleName)
 {
@@ -56,7 +56,7 @@ ScopedHapToken::ScopedHapToken(const std::vector<std::string> &permissions, cons
         .bundleName = bundleName,
         .instIndex = 0,
         .appIDDesc = bundleName,
-        .apiVersion = 8;
+        .apiVersion = 8,
         .isSystemApp = true
     };
 
@@ -80,7 +80,7 @@ ScopedHapToken::ScopedHapToken(const std::vector<std::string> &permissions, cons
 
     AccessTokenIDEx tokenIdEx = AccessTokenKit::AllocHapToken(info, policy);
     accessTokenId_ = tokenIdEx.tokenIdExStruct.tokenID;
-    isValid_ = accessTokenId_ != 0 && SetSelfTokenID(tokenIdEx.tokenIDEX) == 0 &&
+    isValid_ = accessTokenId_ != 0 && SetSelfTokenID(tokenIdEx.tokenIDEx) == 0 &&
         GetSelfTokenID() == tokenIdEx.tokenIDEx;
     if (!isValid_) {
         MEDIA_LOGE("alloc or set hap token failed");
@@ -89,7 +89,7 @@ ScopedHapToken::ScopedHapToken(const std::vector<std::string> &permissions, cons
 
 ScopedHapToken::~ScopedHapToken()
 {
-    if (managerTokenId_ != 0 SetSelfTokenID(managerTokenId_) == 0 && accessTokenId_ != 0) {
+    if (managerTokenId_ != 0 && SetSelfTokenID(managerTokenId_) == 0 && accessTokenId_ != 0) {
         (void)AccessTokenKit::DeleteToken(accessTokenId_);
     }
     (void)SetSelfTokenID(oldTokenId_);
