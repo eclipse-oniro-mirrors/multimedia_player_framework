@@ -342,7 +342,7 @@ HWTEST_F(PlayerServerUnitTest, Player_SetPlaybackRate_006, TestSize.Level1)
     ASSERT_NE(playerServer, nullptr);
     playerServer->lastOpStatus_ = PlayerStates::PLAYER_STARTED;
     playerServer->isLiveStream_ = true;
-    ASSERT_EQ(MSERR_INVALID_OPERATION, player_->SetPlaybackRate(0.0));
+    ASSERT_EQ(MSERR_INVALID_VAL, player_->SetPlaybackRate(0.0));
 }
 
 /**
