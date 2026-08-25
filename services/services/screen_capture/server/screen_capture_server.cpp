@@ -1289,8 +1289,7 @@ void ScreenCaptureServer::InitAppInfo()
     AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
     appUserId_.store(userId);
     isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR "InitAppInfo end. uid: %{public}d",
-        FAKE_POINTER(this), appInfo_.appUid);
+    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitAppInfo end.", FAKE_POINTER(this));
 }
 
 int64_t ScreenCaptureServer::GetCurrentMillisecond()
