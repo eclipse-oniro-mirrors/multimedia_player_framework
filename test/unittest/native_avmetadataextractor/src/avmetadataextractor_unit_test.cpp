@@ -15,19 +15,19 @@
 
 #include <fcntl.h>
 #include <fstream>
+
+#include "avmedia_source.h"
 #include "avmetadata_extractor.h"
 #include "avmetadata_extractor_base.h"
 #include "avmetadataextractor_unit_test.h"
-#include "native_player_magic.h"
-#include "native_mfmagic.h"
 #include "gtest/gtest.h"
 #include "media_errors.h"
-
+#include "native_media_source_impl.h"
+#include "native_mfmagic.h"
+#include "native_player_magic.h"
 #include "pixel_map.h"
 #include "pixelmap_native_impl.h"
-
-#include "avmedia_source.h"
-#include "native_media_source_impl.h"
+#include "scoped_hap_token.h"
 
 using namespace std;
 using namespace OHOS;
@@ -616,6 +616,9 @@ HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_CancelAllFetchFram
  */
 HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_SetMediaSource_0100, TestSize.Level2)
 {
+    ScopedHapToken token({ "ohos.permission.INTERNET" });
+    bool isValid = token.IsValid();
+    ASSERT_EQ(true, isValid);
     OH_AVMetadataExtractor* metadataextractor = OH_AVMetadataExtractor_Create();
     ASSERT_NE(nullptr, metadataextractor);
 
@@ -683,6 +686,27 @@ HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_SetMediaSource_040
 
     auto res = OH_AVMetadataExtractor_SetMediaSource(metadataextractor, avMediaSource);
     EXPECT_EQ(AV_ERR_OK, res);
+    OH_AVMetadataExtractor_Release(metadataextractor);
+}
+
+/**
+ * @tc.name: AVMetadataExtractor_SetMediaSource_0500
+ * @tc.desc: Test set up a data source using media source.
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_SetMediaSource_0500, TestSize.Level2)
+{
+    OH_AVMetadataExtractor* metadataextractor = OH_AVMetadataExtractor_Create();
+    ASSERT_NE(nullptr, metadataextractor);
+
+    const char* url = "http://example.com/video.mp4";
+    OH_AVHttpHeader* header = OH_AVHttpHeader_Create();
+    ASSERT_NE(header, nullptr);
+    OH_AVMediaSource* mediaSource = OH_AVMediaSource_CreateWithUrl(url, header);
+    ASSERT_NE(mediaSource, nullptr);
+
+    auto res = OH_AVMetadataExtractor_SetMediaSource(metadataextractor, mediaSource);
+    EXPECT_EQ(MSERR_USER_NO_PERMISSION, res);
     OH_AVMetadataExtractor_Release(metadataextractor);
 }
 

@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
+#include "avmetadata_unit_test.h"
 #include "gtest/gtest.h"
 #include "media_errors.h"
-#include "avmetadata_unit_test.h"
 #include "scoped_hap_token.h"
 
 using namespace std;
