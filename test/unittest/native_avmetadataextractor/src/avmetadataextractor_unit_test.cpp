@@ -706,7 +706,7 @@ HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_SetMediaSource_050
     ASSERT_NE(mediaSource, nullptr);
 
     auto res = OH_AVMetadataExtractor_SetMediaSource(metadataextractor, mediaSource);
-    EXPECT_EQ(static_cast<int64_t>(MSERR_USER_NO_PERMISSION), static_cast<int64_t>(res));
+    EXPECT_EQ(AV_ERR_INVALID_VAL, res);
     OH_AVMetadataExtractor_Release(metadataextractor);
 }
 
