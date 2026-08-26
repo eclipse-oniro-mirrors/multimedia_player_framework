@@ -29,6 +29,7 @@ ohos_unittest("native_avmetadataextractor_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/mediasource",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/avmetadatahelper",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/common",
+    "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/avmetadatahelper/test/unittest/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
