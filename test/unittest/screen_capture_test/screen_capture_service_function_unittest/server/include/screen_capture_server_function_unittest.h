@@ -190,15 +190,15 @@ public:
     {
     }
     virtual ~ScreenCaptureServerUnittestCallbackMock() = default;
-    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode);
-    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type);
-    void OnVideoBufferAvailable(bool isReady);
-    void OnStateChange(AVScreenCaptureStateCode stateCode);
-    void OnDisplaySelected(uint64_t displayId);
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area);
-    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo);
-    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect);
-    void Stop();
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override {}
+    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override {}
+    void OnVideoBufferAvailable(bool isReady) override {}
+    void OnStateChange(AVScreenCaptureStateCode stateCode) override {}
+    void OnDisplaySelected(uint64_t displayId) override {}
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area) override {}
+    void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override {}
+    void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override {}
+    void Stop() {}
 };
 } // namespace Media
 } // namespace OHOS

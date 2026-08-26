@@ -3993,25 +3993,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckPrivacyWindowSkipPermission_001, 
     ASSERT_EQ(server->CheckPrivacyWindowSkipPermission(), false);
 }
 
-/**
- * @tc.name: ProcessSCServerSaUid_001
- * @tc.desc: check SCServerSaUid
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, ProcessSCServerSaUid_001, TestSize.Level2)
-{
-    int32_t saUid = ROOT_UID + 1;
-    screenCaptureServer_->saUid_ = saUid;
-    ASSERT_EQ(screenCaptureServer_->saUid_, saUid);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ProcessCurDisplayId_001, TestSize.Level2)
-{
-    uint64_t curWindowInDisplayId = 0;
-    screenCaptureServer_->curWindowInDisplayId_.store(curWindowInDisplayId);
-    ASSERT_EQ(screenCaptureServer_->curWindowInDisplayId_.load(), curWindowInDisplayId);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_001, TestSize.Level2)
 {
     ScreenCaptureRect *area = nullptr;
@@ -4132,6 +4113,116 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_004, TestSize.Level
     screenCaptureServer_->missionInfos_.push_back({1, true});
     screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_SetDisplayId_Single_001, TestSize.Level2)
+{
+    uint64_t displayId = 42;
+    screenCaptureServer_->SetDisplayId(displayId);
+    EXPECT_FALSE(screenCaptureServer_->displayIds_.empty());
+    EXPECT_EQ(screenCaptureServer_->displayIds_.back(), displayId);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_SetDisplayId_Vector_001, TestSize.Level2)
+{
+    std::vector<uint64_t> ids = {1, 2, 3};
+    screenCaptureServer_->SetDisplayId(std::move(ids));
+    EXPECT_EQ(screenCaptureServer_->displayIds_.size(), 3u);
+    EXPECT_EQ(screenCaptureServer_->displayIds_[0], 1u);
+    EXPECT_EQ(screenCaptureServer_->displayIds_[2], 3u);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_IsState_VariousStates_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ALIVE));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ACTIVE));
+
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_RUNNING));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ACTIVE));
+
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::PAUSED;
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_PAUSED));
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_ACTIVE));
+
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    EXPECT_TRUE(screenCaptureServer_->IsState(CAP_INIT));
+    EXPECT_FALSE(screenCaptureServer_->IsState(CAP_ALIVE));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_HandleNotificationButtonResponse_Mic_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    auto before = screenCaptureServer_->isMicrophoneSwitchTurnOn_.load();
+    screenCaptureServer_->HandleNotificationButtonResponse("microphone_enabled");
+    EXPECT_EQ(screenCaptureServer_->isMicrophoneSwitchTurnOn_.load(), before);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_SetAndCheckSaLimit_FailLimit_001, TestSize.Level2)
+{
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    std::vector<std::shared_ptr<ScreenCaptureServer>> serverList;
+    UniqueIDGenerator gIdGenerator(20);
+    for (int32_t i = 0; i <= ScreenCaptureServerManager::GetInstance().maxSessionPerUid_; i++) {
+        auto server = MakeScreenCaptureServerShared();
+        serverList.push_back(server);
+        int32_t sessionId = gIdGenerator.GetNewID();
+        server->sessionId_ = sessionId;
+        server->appInfo_.appUid = 0;
+        ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, 0);
+    }
+    OHOS::AudioStandard::AppInfo appInfo;
+    appInfo.appUid = 0;
+    appInfo.appPid = 0;
+    appInfo.appTokenId = 0;
+    appInfo.appFullTokenId = 0;
+    EXPECT_EQ(screenCaptureServer_->SetAndCheckSaLimit(appInfo), MSERR_INVALID_OPERATION);
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_SetAndCheckSaLimit_IsSAUidInvalid_001, TestSize.Level2)
+{
+    ScreenCaptureServerManager::GetInstance().serverMap_.clear();
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+    int32_t appUid = 100;
+    int32_t saUid = -1;
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {appUid + 1, 0};
+    OHOS::AudioStandard::AppInfo appInfo;
+    appInfo.appUid = appUid;
+    EXPECT_EQ(screenCaptureServer_->SetAndCheckSaLimit(appInfo), MSERR_INVALID_OPERATION);
+    ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_IsCaptureScreen_001, TestSize.Level2)
+{
+    screenCaptureServer_->sourceDisplayIds_ = {1, 2, 3};
+    EXPECT_TRUE(screenCaptureServer_->IsCaptureScreen(2));
+    EXPECT_FALSE(screenCaptureServer_->IsCaptureScreen(99));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_ChangeMirrorScreen_InvalidScreenId_001, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = -1;
+    screenCaptureServer_->sourceDisplayIds_ = {};
+    screenCaptureServer_->ChangeMirrorScreen();
+    EXPECT_TRUE(screenCaptureServer_->sourceDisplayIds_.empty());
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_ChangeMirrorScreen_EmptyDisplayIds_001, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = 100;
+    screenCaptureServer_->displayIds_.clear();
+    screenCaptureServer_->sourceDisplayIds_ = {};
+    screenCaptureServer_->ChangeMirrorScreen();
+    EXPECT_TRUE(screenCaptureServer_->sourceDisplayIds_.empty());
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_NotifyWindowVisible_InvalidMissionId_001, TestSize.Level2)
+{
+    auto before = screenCaptureServer_->curWindowEvent_.load();
+    screenCaptureServer_->NotifyWindowVisible(static_cast<uint64_t>(std::numeric_limits<int32_t>::max()) + 1);
+    EXPECT_EQ(screenCaptureServer_->curWindowEvent_.load(), before);
 }
 } // namespace Media
 } // namespace OHOS

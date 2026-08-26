@@ -162,5 +162,33 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicSwitchOff_001, T
     ASSERT_FALSE(recorder->Contains(SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE));
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleNotificationButtonResponse_001, TestSize.Level2)
+{
+    auto stateBefore = screenCaptureServer_->captureState_.load();
+    screenCaptureServer_->HandleNotificationButtonResponse("unknown_button");
+    EXPECT_EQ(screenCaptureServer_->captureState_.load(), stateBefore);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleNotificationButtonResponse_002, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    screenCaptureServer_->HandleNotificationButtonResponse("stop");
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STOPPED);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleNotificationButtonResponse_003, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->HandleNotificationButtonResponse("pause");
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::CREATED);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, HandleNotificationButtonResponse_004, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->HandleNotificationButtonResponse("resume");
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::CREATED);
+}
+
 } // namespace Media
 } // namespace OHOS
