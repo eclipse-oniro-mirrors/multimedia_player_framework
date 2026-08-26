@@ -1287,7 +1287,7 @@ void ScreenCaptureServer::InitAppInfo()
     appName_ = GetClientBundleName(appInfo_.appUid);
     int32_t userId = -1;
     AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
-    appUserId_.store(userId);
+    appUserId_.store(userId <= 0 ? -1 : userId);
     isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitAppInfo end.", FAKE_POINTER(this));
 }
@@ -2093,7 +2093,8 @@ int32_t ScreenCaptureServer::StartPicker()
     want.SetParam("excludedWindowIDs", JoinVector(excludedWindowIDsVec_));
     want.SetParam("pickerMode", static_cast<int>(pickerMode_));
     SendConfigToUIParams(want);
-    auto ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, appUserId_.load());
+    auto ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want,
+        AAFwk::DEFAULT_INVAL_VALUE, appUserId_.load());
     MEDIA_LOGI("StartPicker ret=%{public}d", ret);
     return ret == ERR_OK ? MSERR_OK : MSERR_UNKNOWN;
 #elif defined(SUPPORT_PICKER_PHONE_PAD)
@@ -2362,7 +2363,9 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetUnremovable(true);
     request.SetInProgress(true);
-    request.SetOwnerUserId(appUserId_.load());
+    if (appUserId_ != -1) {
+        request.SetOwnerUserId(appUserId_.load());
+    }
 
     std::shared_ptr<PixelMap> pixelMapTotalSpr;
     if (isSystemUI2_) {
@@ -3695,7 +3698,8 @@ bool ScreenCaptureServer::DestroyPrivacySheet()
     want.SetParam("appLabel", callingLabel_);
     want.SetParam("sessionId", sessionId_);
     want.SetParam("terminateSelf", true);
-    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, appUserId_.load());
+    ErrCode ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want,
+        AAFwk::DEFAULT_INVAL_VALUE, appUserId_.load());
     MEDIA_LOGI("DestroyPrivacySheet StartAbility end %{public}d", ret);
     if (ret != ERR_OK) {
         MEDIA_LOGE("Failed to start ability to destroy privacy sheet, error code : %{public}d", ret);
@@ -3720,7 +3724,8 @@ bool ScreenCaptureServer::DestroyPopWindow()
         want.SetParam("appLabel", callingLabel_);
         want.SetParam("sessionId", sessionId_);
         want.SetParam("terminateSelf", true); // inform picker to terminateSelf
-        ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want, appUserId_.load());
+        ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want,
+        AAFwk::DEFAULT_INVAL_VALUE, appUserId_.load());
         MEDIA_LOGI("Destroy picker end %{public}d, DeviceType: PC", ret);
         return ret == ERR_OK;
     }
@@ -3880,7 +3885,9 @@ void ScreenCaptureServer::SetupPublishRequest(NotificationRequest &request)
     request.SetContent(notificationContent);
     request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetInProgress(true);
-    request.SetOwnerUserId(appUserId_.load());
+    if (appUserId_ != -1) {
+        request.SetOwnerUserId(appUserId_.load());
+    }
     request.SetNotificationId(notificationId_);
     request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetRemoveAllowed(false);
