@@ -310,6 +310,9 @@ int32_t ScreenCaptureServer::SetAndCheckLimit()
     CHECK_AND_RETURN_RET_LOG(
         ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid()),
         MSERR_INVALID_OPERATION, "SetAndCheckLimit failed, cannot create ScreenCapture Instance.");
+    int32_t userId = -1;
+    AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
+    appUserId_.store(userId);
     return MSERR_OK;
 }
 
@@ -1285,9 +1288,6 @@ void ScreenCaptureServer::InitAppInfo()
     appInfo_.appUid = IPCSkeleton::GetCallingUid();
     appInfo_.appPid = IPCSkeleton::GetCallingPid();
     appName_ = GetClientBundleName(appInfo_.appUid);
-    int32_t userId = -1;
-    AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
-    appUserId_.store(userId <= 0 ? -1 : userId);
     isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitAppInfo end.", FAKE_POINTER(this));
 }
