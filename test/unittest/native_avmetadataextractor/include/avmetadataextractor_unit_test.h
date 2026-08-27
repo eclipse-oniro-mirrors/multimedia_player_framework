@@ -15,8 +15,8 @@
 #ifndef NATIVE_METADATA_EXTRACTOR_UNIT_TEST_H
 #define NATIVE_METADATA_EXTRACTOR_UNIT_TEST_H
 
-#include "gtest/gtest.h"
 #include "avmetadata_extractor.h"
+#include "gtest/gtest.h"
 
 class NativeMetadataExtractorUnitTest : public testing::Test {
 public:

@@ -15,8 +15,8 @@
 #ifndef AVMETADATA_UNIT_TEST_H
 #define AVMETADATA_UNIT_TEST_H
 
-#include "gtest/gtest.h"
 #include "avmetadata_mock.h"
+#include "gtest/gtest.h"
 
 namespace OHOS {
 namespace Media {

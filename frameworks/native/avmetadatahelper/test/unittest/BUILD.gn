@@ -24,6 +24,9 @@ ohos_unittest("avmetadata_unit_test") {
     "//foundation/multimedia/player_framework/services/utils/include",
     "//foundation/multimedia/player_framework/frameworks/native/player",
     "//foundation/multimedia/player_framework/test/unittest/common/include",
+    "//foundation/multimedia/player_framework/services/include",
+    "//foundation/multimedia/player_framework/services/services/engine_intf",
+    "//foundation/multimedia/player_framework/services/services/avmetadatahelper/server",
   ]
 
   cflags = [
@@ -35,6 +38,7 @@ ohos_unittest("avmetadata_unit_test") {
     sources = [
       "src/avmetadata_mock.cpp",
       "src/avmetadata_unit_test.cpp",
+      "src/scoped_ut_token.cpp",
     ]
   }
 
@@ -49,11 +53,15 @@ ohos_unittest("avmetadata_unit_test") {
     "netmanager_base:net_security_config_if",
     "qos_manager:qos",
     "window_manager:libwm",
+    "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken_shared",
+    "access_token:libtokensetproc_shared",
   ]
 
   deps = [
     "//foundation/multimedia/player_framework/interfaces/inner_api/native:media_client",
     "//foundation/multimedia/player_framework/services/utils:media_service_utils",
+    "//foundation/multimedia/player_framework/services/services:media_service",
   ]
   defines = []
   if (player_framework_check_video_is_hdr_vivid) {
