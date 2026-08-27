@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef SCOPED_HAP_TOKEN_H
-#define SCOPED_HAP_TOKEN_H
+#ifndef SCOPED_UT_TOKEN_H
+#define SCOPED_UT_TOKEN_H
 
 #include <memory>
 #include <string>
@@ -29,11 +29,11 @@
 namespace OHOS {
 namespace Media {
 
-class ScopedHapToken {
+class ScopedUTToken {
 public:
-    explicit ScopedHapToken(const std::vector<std::string> &permissions,
+    explicit ScopedUTToken(const std::vector<std::string> &permissions,
         const std::string &bundleName = "com.ohos.test.avmetadata_unit_test");
-    ~ScopedHapToken();
+    ~ScopedUTToken();
 
     bool IsValid() const;
 
@@ -45,4 +45,4 @@ private:
 };
 } // namespace Media
 } // namespace OHOS
-#endif // SCOPED_HAP_TOKEN_H
+#endif // SCOPED_UT_TOKEN_H

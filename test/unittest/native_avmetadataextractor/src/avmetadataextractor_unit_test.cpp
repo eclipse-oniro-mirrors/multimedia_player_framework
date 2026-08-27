@@ -27,7 +27,7 @@
 #include "native_player_magic.h"
 #include "pixel_map.h"
 #include "pixelmap_native_impl.h"
-#include "scoped_hap_token.h"
+#include "scoped_ut_token.h"
 
 using namespace std;
 using namespace OHOS;
@@ -616,7 +616,7 @@ HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_CancelAllFetchFram
  */
 HWTEST_F(NativeMetadataExtractorUnitTest, AVMetadataExtractor_SetMediaSource_0100, TestSize.Level2)
 {
-    ScopedHapToken token({ "ohos.permission.INTERNET" });
+    ScopedUTToken token({ "ohos.permission.INTERNET" });
     bool isValid = token.IsValid();
     ASSERT_EQ(true, isValid);
     OH_AVMetadataExtractor* metadataextractor = OH_AVMetadataExtractor_Create();

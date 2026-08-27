@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "scoped_hap_token.h"
+#include "scoped_ut_token.h"
 #include "media_log.h"
 
 using namespace OHOS::Security::AccessToken;
@@ -21,7 +21,7 @@ using namespace OHOS::Security::AccessToken;
 namespace OHOS {
 namespace Media {
 namespace {
-constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "ScopedHapToken" };
+constexpr HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_METADATA, "ScopedUTToken" };
 constexpr std::string_view TOKEN_ID_KEY = "\"tokenID\": ";
 
 uint64_t GetFoundationTokenId()
@@ -42,7 +42,7 @@ uint64_t GetFoundationTokenId()
 }
 } // namespace
 
-ScopedHapToken::ScopedHapToken(const std::vector<std::string> &permissions, const std::string &bundleName)
+ScopedUTToken::ScopedUTToken(const std::vector<std::string> &permissions, const std::string &bundleName)
 {
     oldTokenId_ = GetSelfTokenID();
     managerTokenId_ = GetFoundationTokenId();
@@ -87,7 +87,7 @@ ScopedHapToken::ScopedHapToken(const std::vector<std::string> &permissions, cons
     }
 }
 
-ScopedHapToken::~ScopedHapToken()
+ScopedUTToken::~ScopedUTToken()
 {
     if (managerTokenId_ != 0 && SetSelfTokenID(managerTokenId_) == 0 && accessTokenId_ != 0) {
         (void)AccessTokenKit::DeleteToken(accessTokenId_);
@@ -95,7 +95,7 @@ ScopedHapToken::~ScopedHapToken()
     (void)SetSelfTokenID(oldTokenId_);
 }
 
-bool ScopedHapToken::IsValid() const
+bool ScopedUTToken::IsValid() const
 {
     return isValid_;
 }

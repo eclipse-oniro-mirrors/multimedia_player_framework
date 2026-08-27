@@ -38,7 +38,7 @@ ohos_unittest("avmetadata_unit_test") {
     sources = [
       "src/avmetadata_mock.cpp",
       "src/avmetadata_unit_test.cpp",
-      "src/scoped_hap_token.cpp",
+      "src/scoped_ut_token.cpp",
     ]
   }
 

@@ -52,7 +52,7 @@ ohos_unittest("native_avmetadataextractor_unit_test") {
   if (player_framework_support_metadata) {
     sources = [
       "src/avmetadataextractor_unit_test.cpp",
-      "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/avmetadatahelper/test/unittest/src/scoped_hap_token.cpp",
+      "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/avmetadatahelper/test/unittest/src/scoped_ut_token.cpp",
     ]
   }
   deps = [
