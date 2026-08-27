@@ -16,6 +16,7 @@
 #include "screen_capture_monitor_impl.h"
 #include "media_log.h"
 #include "media_errors.h"
+#include "media_utils.h"
 #include "i_media_service.h"
 
 namespace {
@@ -75,6 +76,8 @@ int32_t ScreenCaptureMonitorImpl::InitInner()
 
 int32_t ScreenCaptureMonitorImpl::Init()
 {
+    CHECK_AND_RETURN_RET_LOG(HasSystemPermission(), MSERR_INVALID_OPERATION,
+        "is not system app failed to create ScreenCaptureMonitor service");
     std::lock_guard<std::mutex> lock(mutex_);
     return InitInner();
 }

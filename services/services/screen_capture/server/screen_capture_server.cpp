@@ -1840,6 +1840,7 @@ int32_t ScreenCaptureServer::InitRecorderMix()
     ret = listenerManager_->RegisterListeners(LF_AUDIO_RENDERER, {.appPid = appInfo_.appPid});
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterListeners LF_AUDIO_RENDERER failed");
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> infos;
+    AudioStandard::AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(infos);
     OnAudioRendererStateChanged(infos);
     ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
     return ret;
@@ -2726,7 +2727,7 @@ int32_t ScreenCaptureServer::MakeVirtualScreenExtended()
     CHECK_AND_RETURN_RET_LOG(!displayIds_.empty(), MSERR_INVALID_VAL, "displayIds_ empty");
     ScreenId mainScreenId = displayIds_.front();
     auto mainScreen = Rosen::DisplayManager::GetInstance().GetDisplayById(mainScreenId);
-    CHECK_AND_RETURN_RET_LOG(mainScreen != nullptr, MSERR_INVALID_VAL, "screen id is invalid");
+    CHECK_AND_RETURN_RET_LOG(mainScreen != nullptr, MSERR_INVALID_VAL, "Invalid displayId");
     auto mainRsId = Rosen::SCREEN_ID_INVALID;
     auto secondRsId = Rosen::SCREEN_ID_INVALID;
     CHECK_AND_RETURN_RET_LOG(Rosen::DisplayManager::GetInstance().ConvertScreenIdToRsScreenId(mainScreenId, mainRsId) &&
@@ -3235,10 +3236,10 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
     }
     if (micStop && StopMicAudio()) {
 #ifdef SUPPORT_CALL
-    if ((state & AUDIO_STATE_TEL) && isMicrophoneSwitchTurnOn_) {
-        MEDIA_LOGI("Mic unavailable due to call");
-        cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
-    }
+        if ((state & AUDIO_STATE_TEL) && isMicrophoneSwitchTurnOn_) {
+            MEDIA_LOGI("Mic unavailable due to call");
+            cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+        }
 #endif
     }
     if (micStart) {
