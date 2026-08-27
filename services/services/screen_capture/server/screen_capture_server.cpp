@@ -288,9 +288,7 @@ int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &ap
     appInfo_.appTokenId = appInfo.appTokenId;
     appInfo_.appFullTokenId = appInfo.appFullTokenId;
     appName_ = GetClientBundleName(appInfo_.appUid);
-    int32_t userId = -1;
-    AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
-    appUserId_.store(userId);
+    InitAppUserId();
     isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
     ScreenCaptureServerManager::GetInstance().UpdateServerAppUid(sessionId_, appInfo_.appUid);
     ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appInfo_.appUid);
@@ -310,10 +308,15 @@ int32_t ScreenCaptureServer::SetAndCheckLimit()
     CHECK_AND_RETURN_RET_LOG(
         ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid()),
         MSERR_INVALID_OPERATION, "SetAndCheckLimit failed, cannot create ScreenCapture Instance.");
+    InitAppUserId();
+    return MSERR_OK;
+}
+
+void ScreenCaptureServer::InitAppUserId()
+{
     int32_t userId = -1;
     AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
     appUserId_.store(userId);
-    return MSERR_OK;
 }
 
 void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
