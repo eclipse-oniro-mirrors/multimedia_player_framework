@@ -3728,7 +3728,7 @@ bool ScreenCaptureServer::DestroyPopWindow()
         want.SetParam("sessionId", sessionId_);
         want.SetParam("terminateSelf", true); // inform picker to terminateSelf
         ret = AAFwk::AbilityManagerClient::GetInstance()->StartAbility(want,
-        AAFwk::DEFAULT_INVAL_VALUE, appUserId_.load());
+            AAFwk::DEFAULT_INVAL_VALUE, appUserId_.load());
         MEDIA_LOGI("Destroy picker end %{public}d, DeviceType: PC", ret);
         return ret == ERR_OK;
     }
