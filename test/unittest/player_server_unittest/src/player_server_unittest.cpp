@@ -21,6 +21,7 @@
 #include "av_common.h"
 #include "meta/video_types.h"
 #include "meta/format.h"
+#include "scoped_hap_token.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -447,6 +448,8 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_007, TestSize.Level1)
  */
 HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_008, TestSize.Level1)
 {
+    ScopedHapToken internetToken({"ohos.permission.INTERNET"});
+    SyncPlayerServerToken(player_->player_);
     auto playerServer = static_pointer_cast<PlayerServer>(player_->player_);
     ASSERT_NE(playerServer, nullptr);
     std::map<std::string, std::string> header = {};

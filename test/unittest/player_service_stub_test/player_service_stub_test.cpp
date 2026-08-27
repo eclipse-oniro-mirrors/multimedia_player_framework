@@ -16,6 +16,9 @@
 #include "player_service_stub_test.h"
 #include "media_errors.h"
 #include "player_service_proxy.h"
+#include <fcntl.h>
+#include <unistd.h>
+#include "scoped_hap_token.h"
 
 namespace OHOS {
 namespace Media {
@@ -34,6 +37,23 @@ constexpr int32_t TEST_MIN_VIDEO_HEIGHT = 360;
 constexpr int32_t TEST_MAX_AUDIO_BITRATE = 320;
 constexpr int32_t TEST_MIN_AUDIO_BITRATE = 64;
 constexpr int32_t TEST_MAX_AUDIO_CHANNELS = 2;
+
+void WriteDefaultPlayStrategy(MessageParcel &data)
+{
+    data.WriteUint32(0); // preferredWidth
+    data.WriteUint32(0); // preferredHeight
+    data.WriteUint32(0); // preferredBufferDuration
+    data.WriteDouble(-1.0); // preferredBufferDurationForPlaying
+    data.WriteDouble(-1.0); // thresholdForAutoQuickPlay
+    data.WriteBool(false); // preferredHdr
+    data.WriteBool(false); // showFirstFrameOnPrepare
+    data.WriteBool(false); // enableSuperResolution
+    data.WriteBool(false); // enableCameraPostprocessing
+    data.WriteInt32(0); // mutedMediaType
+    data.WriteString(""); // preferredAudioLanguage
+    data.WriteString(""); // preferredSubtitleLanguage
+    data.WriteBool(false); // keepDecodingOnMute
+}
 
 AVPlayTrackSelectionFilter CreateTrackSelectionFilter()
 {
@@ -136,6 +156,7 @@ HWTEST_F(PlayerServiceStubTest, DoIpcRecovery, TestSize.Level1)
  */
 HWTEST_F(PlayerServiceStubTest, SetMediaSource_001, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
     sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
     EXPECT_NE(playerServiceStub, nullptr);
 
@@ -144,15 +165,31 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_001, TestSize.Level1)
     MessageOption option;
     // sourceType: 0x01 表示 URL 源
     data.WriteUint8(0x01);
-    std::string url = "fd://abc?d";
+    std::string url = "fd://0?offset=0&size=0";
     data.WriteString(url);
     auto headerSize = 0;
     data.WriteUint32(headerSize);
     std::string mimeType = "application/m3u8";
     data.WriteString(mimeType);
 
+    // fd
+    int32_t fd = open("/dev/null", O_RDONLY);
+    ASSERT_GE(fd, 0);
+    data.WriteFileDescriptor(fd);
+
+    // mediaStreamLength
+    data.WriteUint32(0);
+
+    WriteDefaultPlayStrategy(data);
+
+    // enableOfflineCache
+    data.WriteBool(false);
+
     int ret = playerServiceStub->SetMediaSource(data, reply);
     EXPECT_EQ(ret, 0);
+    int32_t setResult = reply.ReadInt32();
+    EXPECT_EQ(setResult, 0);
+    close(fd);
     playerServiceStub = nullptr;
 }
 
@@ -163,6 +200,7 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_001, TestSize.Level1)
  */
 HWTEST_F(PlayerServiceStubTest, SetMediaSource_002, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
     sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
     EXPECT_NE(playerServiceStub, nullptr);
 
@@ -178,8 +216,18 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_002, TestSize.Level1)
     std::string mimeType = "application/m3u8";
     data.WriteString(mimeType);
 
+    // fd
+    data.WriteFileDescriptor(-1);
+
+    // mediaStreamLength
+    data.WriteUint32(0);
+
+    WriteDefaultPlayStrategy(data);
+
     int ret = playerServiceStub->SetMediaSource(data, reply);
     EXPECT_EQ(ret, 0);
+    int32_t setResult = reply.ReadInt32();
+    EXPECT_EQ(setResult, 0);
     playerServiceStub = nullptr;
 }
 
@@ -190,6 +238,7 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_002, TestSize.Level1)
  */
 HWTEST_F(PlayerServiceStubTest, SetMediaSource_003, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
     sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
     EXPECT_NE(playerServiceStub, nullptr);
 
@@ -206,7 +255,7 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_003, TestSize.Level1)
     data.WriteString(mimeType);
 
     int ret = playerServiceStub->SetMediaSource(data, reply);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
     playerServiceStub = nullptr;
 }
 
@@ -217,6 +266,7 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_003, TestSize.Level1)
  */
 HWTEST_F(PlayerServiceStubTest, SetMediaSource_004, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
     sptr<PlayerServiceStub> playerServiceStub = PlayerServiceStub::Create();
     EXPECT_NE(playerServiceStub, nullptr);
 
@@ -233,7 +283,7 @@ HWTEST_F(PlayerServiceStubTest, SetMediaSource_004, TestSize.Level1)
     data.WriteString(mimeType);
 
     int ret = playerServiceStub->SetMediaSource(data, reply);
-    EXPECT_EQ(ret, 0);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
     playerServiceStub = nullptr;
 }
 

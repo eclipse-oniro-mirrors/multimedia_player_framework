@@ -45,6 +45,7 @@ ohos_unittest("player_server_unittest") {
     sources = [
       "src/player_server_mock.cpp",
       "src/player_server_unittest.cpp",
+      "../common/src/scoped_hap_token.cpp",
     ]
   }
 
@@ -57,6 +58,8 @@ ohos_unittest("player_server_unittest") {
   external_deps = [
     "ability_runtime:ability_connect_callback_stub",
     "access_token:libaccesstoken_sdk",
+    "access_token:libnativetoken_shared",
+    "access_token:libtokensetproc_shared",
     "access_token:libtokenid_sdk",
     "audio_framework:audio_client",
     "av_codec:av_codec_client",

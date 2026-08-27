@@ -20,6 +20,8 @@
 #include "audio_effect.h"
 #include "av_common.h"
 #include "meta/video_types.h"
+#include "ipc_skeleton.h"
+#include "scoped_hap_token.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -560,6 +562,8 @@ void PlayerServerUnitTest::MediaServiceExtErrCodeAPI9Test(MediaServiceExtErrCode
  */
 HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_001, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
+    SyncPlayerServerToken(player_->player_);
     std::map<std::string, std::string> header = {
         {"key1", "value1"},
         {"key2", "value2"},
@@ -589,6 +593,8 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_002, TestSize.Level1)
  */
 HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_003, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
+    SyncPlayerServerToken(player_->player_);
     std::map<std::string, std::string> header = {
         {"key1", "value1"},
         {"key2", "value2"},
@@ -607,6 +613,8 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_003, TestSize.Level1)
  */
 HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_004, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
+    SyncPlayerServerToken(player_->player_);
     std::map<std::string, std::string> header = {
         {"key1", "value1"},
         {"key2", "value2"},
@@ -626,6 +634,8 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_004, TestSize.Level1)
  */
 HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_005, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
+    SyncPlayerServerToken(player_->player_);
     std::map<std::string, std::string> header = {
         {"key1", "value1"},
         {"key2", "value2"},
@@ -645,6 +655,8 @@ HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_005, TestSize.Level1)
  */
 HWTEST_F(PlayerServerUnitTest, Player_SetMediaSource_006, TestSize.Level1)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
+    SyncPlayerServerToken(player_->player_);
     std::map<std::string, std::string> header = {
     };
     struct AVPlayStrategy strategy = {1080, 920, 10000, false};

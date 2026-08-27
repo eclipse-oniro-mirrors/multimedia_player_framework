@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cinttypes> 
 #include <regex>
+#include "av_common.h"
 #include "i_media_service.h"
 #include "media_log.h"
 #include "media_errors.h"
@@ -1121,6 +1122,40 @@ int32_t PlayerImpl::SetMediaSource(const std::shared_ptr<AVMediaSource> &mediaSo
     MEDIA_LOGD("PlayerImpl:0x%{public}06" PRIXPTR " SetMediaSource in(dataSrc)", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, MSERR_INVALID_VAL, "mediaSource is nullptr!");
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+
+    // Client-side protocol handling for non-M3U8, non-fd, non-DataSource URL sources (same as SetSource)
+    if (!mediaSource->IsFileDescriptorSet() && !mediaSource->IsDataSourceSet() &&
+        mediaSource->mimeType_ != AVMimeType::APPLICATION_M3U8 && mediaSource->directoryPath_.empty() &&
+        mediaSource->GetAVPlayMediaStreamList().empty()) {
+        // file://: open file on client side and pass fd via WriteFileDescriptor (same as SetSource)
+        if (UriHelper::IsFileUrl(mediaSource->url)) {
+            int32_t fd = -1;
+            int64_t size = -1;
+            int32_t ret = OpenFile(mediaSource->url, fd, size);
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_VAL, "open file failed");
+
+            // file:// fd is opened by PlayerImpl, needs FdsanFd for lifecycle management
+            if (!fdsanFd_) {
+                fdsanFd_ = std::make_unique<FdsanFd>(fd);
+            } else {
+                fdsanFd_->Reset(fd);
+            }
+            return SetMediaSourceByFd(fd, 0, size, mediaSource, strategy);
+        }
+
+        // fd://: extract fd and pass via WriteFileDescriptor, return error if fd read fails
+        // Same approach as SetSource(url) with UriHelper::IsFdUrl + ParseUriInfo
+        // fd:// is owned by the caller, PlayerImpl does not take ownership, no FdsanFd needed
+        if (UriHelper::IsFdUrl(mediaSource->url)) {
+            int32_t fd = -1;
+            int64_t offset = 0;
+            int64_t size = -1;
+            int32_t ret = ParseUriInfo(mediaSource->url, fd, offset, size);
+            CHECK_AND_RETURN_RET(ret == MSERR_OK, MSERR_INVALID_VAL);
+            return SetMediaSourceByFd(fd, offset, size, mediaSource, strategy);
+        }
+    }
+
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->SetMediaSource(mediaSource, strategy), "SetMediaSource", false, TIME_OUT_SECOND);
     return ret;
@@ -1843,6 +1878,22 @@ int32_t PlayerImpl::AddSubSourceByFd(int32_t fd, int64_t offset, int64_t size)
     }
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->AddSubSource(fd, offset, size), "setSource url", false, TIME_OUT_SECOND);
+    return ret;
+}
+
+int32_t PlayerImpl::SetMediaSourceByFd(int32_t fd, int64_t offset, int64_t size,
+    const std::shared_ptr<AVMediaSource> &srcMediaSource, AVPlayStrategy strategy)
+{
+    FileDescriptor fileDesc{fd, offset, size};
+    auto fdMediaSource = std::make_shared<AVMediaSource>(fileDesc);
+    if (srcMediaSource) {
+        fdMediaSource->mimeType_ = srcMediaSource->mimeType_;
+        fdMediaSource->header = srcMediaSource->header;
+        fdMediaSource->enableOfflineCache(srcMediaSource->GetenableOfflineCache());
+    }
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->SetMediaSource(fdMediaSource, strategy),
+             "SetMediaSource", false, TIME_OUT_SECOND);
     return ret;
 }
 } // namespace Media

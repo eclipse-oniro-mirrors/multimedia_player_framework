@@ -301,7 +301,7 @@ private:
     void UpdateFlvLivePauseTime();
     void SetParameter();
     void InitPcmCallback();
-    bool CheckNetWorkPermission(const std::string &url);
+    bool CheckNetWorkPermission(const std::string &url, bool isForceCheck = false);
 
 #ifdef SUPPORT_VIDEO
     sptr<Surface> surface_ = nullptr;

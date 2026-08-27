@@ -21,6 +21,7 @@
 #include "audio_effect.h"
 #include "av_common.h"
 #include "meta/video_types.h"
+#include "scoped_hap_token.h"
 
 using namespace std;
 using namespace testing::ext;
@@ -294,6 +295,12 @@ HWTEST_F(PlayerUnitTest, Player_SetMediaSource_006, TestSize.Level0)
  */
 HWTEST_F(PlayerUnitTest, Player_SetMediaSource_008, TestSize.Level0)
 {
+    ScopedHapToken token({"ohos.permission.INTERNET"});
+    player_->Reset();
+    player_->Release();
+    EXPECT_TRUE(player_->CreatePlayer());
+    EXPECT_EQ(MSERR_OK, player_->SetPlayerCallback(callback_));
+
     std::map<std::string, std::string> header = {
     };
     struct AVPlayStrategy strategy = {720, 1280, 0, false};

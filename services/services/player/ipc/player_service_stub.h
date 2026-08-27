@@ -251,6 +251,8 @@ private:
     void WriteTrackSelectionFilterInner(MessageParcel &reply, const AVPlayTrackSelectionFilter &filter);
     int32_t ReadUrlSourceFromParcel(MessageParcel &data, bool isUrlSource, std::string &url,
         std::map<std::string, std::string> &header);
+    int32_t ValidateMediaSourceUrl(const std::shared_ptr<AVMediaSource> &mediaSource,
+        const std::string &mimeType, int32_t fd);
     int32_t ReadM3U8FdFromParcel(MessageParcel &data, bool isUrlSource, const std::string &mimeType);
     int32_t ReadFdSourceFromParcel(MessageParcel &data, bool isFdSource, FileDescriptor &fileDesc);
     int32_t ReadDataSourceFromParcel(MessageParcel &data, bool isDataSource,
