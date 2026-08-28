@@ -30,7 +30,7 @@ public:
     virtual void OnError(int32_t errorType, int32_t errorCode) = 0;
     virtual void OnInfo(int32_t type, int32_t extra) = 0;
     virtual void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) = 0;
-    virtual void OnPhotoAssertAvailable(const std::string &uri) = 0;
+    virtual void OnPhotoAssetAvailable(const std::string &uri) = 0;
     /**
      * IPC code ID
      */

@@ -67,7 +67,7 @@ void AVRecorderCallback::ClearCallbackReference()
 
 void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &msg)
 {
-    AVRecordJsCallback *cb = nullptr;
+    std::unique_ptr<AVRecordJsCallback> cb = nullptr;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (refMap_.find(AVRecorderEvent::EVENT_ERROR) == refMap_.end()) {
@@ -75,19 +75,18 @@ void AVRecorderCallback::SendErrorCallback(int32_t errCode, const std::string &m
             return;
         }
 
-        cb = new(std::nothrow) AVRecordJsCallback();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb = std::make_unique<AVRecordJsCallback>();
         cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_ERROR);
         cb->callbackName = AVRecorderEvent::EVENT_ERROR;
         cb->errorCode = errCode;
         cb->errorMsg = msg;
     }
-    return OnJsErrorCallBack(cb);
+    return OnJsErrorCallBack(std::move(cb));
 }
 
 void AVRecorderCallback::SendStateCallback(const std::string &state, const StateChangeReason &reason)
 {
-    AVRecordJsCallback *cb = nullptr;
+    std::unique_ptr<AVRecordJsCallback> cb = nullptr;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         currentState_ = state;
@@ -96,19 +95,18 @@ void AVRecorderCallback::SendStateCallback(const std::string &state, const State
             return;
         }
 
-        cb = new(std::nothrow) AVRecordJsCallback();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb = std::make_unique<AVRecordJsCallback>();
         cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_STATE_CHANGE);
         cb->callbackName = AVRecorderEvent::EVENT_STATE_CHANGE;
         cb->reason = reason;
         cb->state = state;
     }
-    return OnJsStateCallBack(cb);
+    return OnJsStateCallBack(std::move(cb));
 }
 
 void AVRecorderCallback::SendAudioCaptureChangeCallback(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
-    AVRecordJsCallback *cb = nullptr;
+    std::unique_ptr<AVRecordJsCallback> cb = nullptr;
     {
         MEDIA_LOGI("AVRecorderCallback SendAudioCaptureChangeCallback is start");
         std::lock_guard<std::mutex> lock(mutex_);
@@ -117,33 +115,31 @@ void AVRecorderCallback::SendAudioCaptureChangeCallback(const AudioRecorderChang
             return;
         }
 
-        cb = new(std::nothrow) AVRecordJsCallback();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb = std::make_unique<AVRecordJsCallback>();
         cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE);
         cb->callbackName = AVRecorderEvent::EVENT_AUDIO_CAPTURE_CHANGE;
         cb->audioRecorderChangeInfo = audioRecorderChangeInfo;
     }
-    return OnJsAudioCaptureChangeCallback(cb);
+    return OnJsAudioCaptureChangeCallback(std::move(cb));
 }
 
-void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri)
+void AVRecorderCallback::SendPhotoAssetAvailableCallback(const std::string &uri)
 {
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-    AVRecordJsCallback *cb = nullptr;
+    std::unique_ptr<AVRecordJsCallback> cb = nullptr;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (refMap_.find(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE) == refMap_.end()) {
-            MEDIA_LOGW("can not find PhotoAssertAvailable callback");
+            MEDIA_LOGW("can not find PhotoAssetAvailable callback");
             return;
         }
 
-        cb = new(std::nothrow) AVRecordJsCallback();
-        CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
+        cb = std::make_unique<AVRecordJsCallback>();
         cb->autoRef = refMap_.at(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE);
         cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
         cb->uri = uri;
     }
-    return OnJsPhotoAssertAvailableCallback(cb);
+    return OnJsPhotoAssetAvailableCallback(std::move(cb));
 #endif
 }
 
@@ -190,19 +186,15 @@ void AVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &aud
     SendAudioCaptureChangeCallback(audioRecorderChangeInfo);
 }
 
-void AVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
+void AVRecorderCallback::OnPhotoAssetAvailable(const std::string &uri)
 {
-    MEDIA_LOGI("OnPhotoAssertAvailable() is called");
-    SendPhotoAssertAvailableCallback(uri);
+    MEDIA_LOGI("OnPhotoAssetAvailable() is called");
+    SendPhotoAssetAvailableCallback(uri);
 }
 
-void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
+void AVRecorderCallback::OnJsStateCallBack(std::unique_ptr<AVRecordJsCallback> jsCb) const
 {
-    ON_SCOPE_EXIT(0) {
-        delete jsCb;
-    };
-
-    auto task = [event = jsCb]() {
+    auto task = [event = std::move(jsCb)]() {
         std::string request = event->callbackName;
         do {
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
@@ -232,23 +224,16 @@ void AVRecorderCallback::OnJsStateCallBack(AVRecordJsCallback *jsCb) const
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
-        delete event;
     };
     auto ret = napi_send_event(env_, task, napi_eprio_immediate,
         AVRecorderCallbackNapiTask::ON_JS_STATE_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
 }
 
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *jsCb) const
+void AVRecorderCallback::OnJsPhotoAssetAvailableCallback(std::unique_ptr<AVRecordJsCallback> jsCb) const
 {
-    ON_SCOPE_EXIT(0) {
-        delete jsCb;
-    };
-
-    auto task = [event = jsCb]() {
+    auto task = [event = std::move(jsCb)]() {
         std::string request = event->callbackName;
         do {
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
@@ -274,24 +259,17 @@ void AVRecorderCallback::OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *js
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
-        delete event;
     };
     auto ret = napi_send_event(env_, task, napi_eprio_immediate,
-        AVRecorderCallbackNapiTask::ON_JS_PHOTO_ASSERT_AVAILABLE_CALLBACK.c_str());
+        AVRecorderCallbackNapiTask::ON_JS_PHOTO_ASSET_AVAILABLE_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
 }
 #endif
 
-void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb) const
+void AVRecorderCallback::OnJsAudioCaptureChangeCallback(std::unique_ptr<AVRecordJsCallback> jsCb) const
 {
     MEDIA_LOGI("AVRecorderCallback OnJsAudioCaptureChangeCallback is start");
-    ON_SCOPE_EXIT(0) {
-        delete jsCb;
-    };
-
-    auto task = [event = jsCb]() {
+    auto task = [event = std::move(jsCb)]() {
         std::string request = event->callbackName;
         do {
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
@@ -316,22 +294,15 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
-        delete event;
     };
     auto ret = napi_send_event(env_, task, napi_eprio_immediate,
         AVRecorderCallbackNapiTask::ON_JS_AUDIO_CAPTURE_CHANGE_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
 }
 
-void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
+void AVRecorderCallback::OnJsErrorCallBack(std::unique_ptr<AVRecordJsCallback> jsCb) const
 {
-    ON_SCOPE_EXIT(0) {
-        delete jsCb;
-    };
-
-    auto task = [event = jsCb]() {
+    auto task = [event = std::move(jsCb)]() {
         std::string request = event->callbackName;
         do {
             std::shared_ptr<AutoRef> ref = event->autoRef.lock();
@@ -358,18 +329,14 @@ void AVRecorderCallback::OnJsErrorCallBack(AVRecordJsCallback *jsCb) const
             nstatus = CommonNapi::FillErrorArgs(ref->env_, event->errorCode, args[0]);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "create error callback failed");
 
-            // Call back function
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, 1, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
         } while (0);
-        delete event;
     };
     auto ret = napi_send_event(env_, task, napi_eprio_immediate,
         AVRecorderCallbackNapiTask::ON_JS_ERROR_CALLBACK.c_str());
     CHECK_AND_RETURN_LOG(ret == napi_status::napi_ok, "failed to napi_send_event task");
-
-    CANCEL_SCOPE_EXIT_GUARD(0);
 }
 
 napi_status AudioCaptureChangeInfoJsCallback::GetJsResult(napi_env env, napi_value &result)

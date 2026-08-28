@@ -78,7 +78,7 @@ void RecorderListenerProxy::OnAudioCaptureChange(const AudioRecorderChangeInfo &
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on audio capture change failed, error: %{public}d", error);
 }
 
-void RecorderListenerProxy::OnPhotoAssertAvailable(const std::string &uri)
+void RecorderListenerProxy::OnPhotoAssetAvailable(const std::string &uri)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -121,10 +121,10 @@ void RecorderListenerCallback::OnAudioCaptureChange(const AudioRecorderChangeInf
     listener_->OnAudioCaptureChange(audioRecorderChangeInfo);
 }
 
-void RecorderListenerCallback::OnPhotoAssertAvailable(const std::string &uri)
+void RecorderListenerCallback::OnPhotoAssetAvailable(const std::string &uri)
 {
     CHECK_AND_RETURN(listener_ != nullptr);
-    listener_->OnPhotoAssertAvailable(uri);
+    listener_->OnPhotoAssetAvailable(uri);
 }
 } // namespace Media
 } // namespace OHOS

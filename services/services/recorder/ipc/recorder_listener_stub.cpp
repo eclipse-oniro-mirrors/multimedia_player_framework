@@ -63,7 +63,7 @@ int RecorderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
         }
         case RecorderListenerMsg::ON_PHOTO_ASSERT_AVAILABLE: {
             std::string uri = data.ReadString();
-            OnPhotoAssertAvailable(uri);
+            OnPhotoAssetAvailable(uri);
             return MSERR_OK;
         }
         default: {
@@ -96,10 +96,10 @@ void RecorderListenerStub::OnAudioCaptureChange(const AudioRecorderChangeInfo &a
     callback_->OnAudioCaptureChange(audioRecorderChangeInfo);
 }
 
-void RecorderListenerStub::OnPhotoAssertAvailable(const std::string &uri)
+void RecorderListenerStub::OnPhotoAssetAvailable(const std::string &uri)
 {
     CHECK_AND_RETURN(callback_ != nullptr);
-    callback_->OnPhotoAssertAvailable(uri);
+    callback_->OnPhotoAssetAvailable(uri);
 }
 
 void RecorderListenerStub::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)

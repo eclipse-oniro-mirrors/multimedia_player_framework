@@ -132,7 +132,7 @@ void AVRecorderCallback::OnTaiheStateCallBack(AVRecordTaiheCallback *taiheCb) co
 }
 
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-void AVRecorderCallback::OnTaihePhotoAssertAvailableCallback(AVRecordTaiheCallback *taiheCb) const
+void AVRecorderCallback::OnTaihePhotoAssetAvailableCallback(AVRecordTaiheCallback *taiheCb) const
 {
     auto task = [event = taiheCb]() {
         do {
@@ -208,14 +208,14 @@ void AVRecorderCallback::SendAudioCaptureChangeCallback(const OHOS::Media::Audio
     OnTaiheAudioCaptureChangeCallback(cb);
 }
 
-void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri)
+void AVRecorderCallback::SendPhotoAssetAvailableCallback(const std::string &uri)
 {
 #ifdef SUPPORT_RECORDER_CREATE_FILE
     AVRecordTaiheCallback *cb = nullptr;
     {
         std::lock_guard<std::mutex> lock(mutex_);
         if (refMap_.find(AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE) == refMap_.end()) {
-            MEDIA_LOGW("can not find PhotoAssertAvailable callback");
+            MEDIA_LOGW("can not find PhotoAssetAvailable callback");
             return;
         }
 
@@ -225,7 +225,7 @@ void AVRecorderCallback::SendPhotoAssertAvailableCallback(const std::string &uri
         cb->callbackName = AVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE;
         cb->uri = uri;
     }
-    OnTaihePhotoAssertAvailableCallback(cb);
+    OnTaihePhotoAssetAvailableCallback(cb);
 #endif
 }
 
@@ -300,10 +300,10 @@ void AVRecorderCallback::OnAudioCaptureChange(const OHOS::Media::AudioRecorderCh
     SendAudioCaptureChangeCallback(audioRecorderChangeInfo);
 }
 
-void AVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
+void AVRecorderCallback::OnPhotoAssetAvailable(const std::string &uri)
 {
-    MEDIA_LOGI("OnPhotoAssertAvailable() is called");
-    SendPhotoAssertAvailableCallback(uri);
+    MEDIA_LOGI("OnPhotoAssetAvailable() is called");
+    SendPhotoAssetAvailableCallback(uri);
 }
 
 ::ohos::multimedia::audio::AudioCapturerChangeInfo AVRecorderCallback::GetAudioCapturerChangeInfo(

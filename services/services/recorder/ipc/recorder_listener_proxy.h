@@ -31,7 +31,7 @@ public:
     void OnError(RecorderErrorType errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
     void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
-    void OnPhotoAssertAvailable(const std::string &uri) override;
+    void OnPhotoAssetAvailable(const std::string &uri) override;
 
 private:
     sptr<IStandardRecorderListener> listener_ = nullptr;
@@ -45,7 +45,7 @@ public:
     void OnError(int32_t errorType, int32_t errorCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
     void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
-    void OnPhotoAssertAvailable(const std::string &uri) override;
+    void OnPhotoAssetAvailable(const std::string &uri) override;
 
 private:
     static inline BrokerDelegator<RecorderListenerProxy> delegator_;

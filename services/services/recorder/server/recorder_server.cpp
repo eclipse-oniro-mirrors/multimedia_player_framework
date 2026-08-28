@@ -1036,7 +1036,7 @@ int32_t RecorderServer::Stop(bool block)
 #ifdef SUPPORT_RECORDER_CREATE_FILE
         if (config_.fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE && config_.uri != "" &&
             recorderCb_ != nullptr) {
-            recorderCb_->OnPhotoAssertAvailable(config_.uri);
+            recorderCb_->OnPhotoAssetAvailable(config_.uri);
         }
 #endif
     }
