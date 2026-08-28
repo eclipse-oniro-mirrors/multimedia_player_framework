@@ -63,11 +63,11 @@ private:
         AudioRecorderChangeInfo audioRecorderChangeInfo;
         std::string uri = "unknown";
     };
-    void OnJsErrorCallBack(std::unique_ptr<AVRecordJsCallback> jsCb) const;
-    void OnJsStateCallBack(std::unique_ptr<AVRecordJsCallback> jsCb) const;
-    void OnJsAudioCaptureChangeCallback(std::unique_ptr<AVRecordJsCallback> jsCb) const;
+    void OnJsErrorCallBack(std::shared_ptr<AVRecordJsCallback> jsCb) const;
+    void OnJsStateCallBack(std::shared_ptr<AVRecordJsCallback> jsCb) const;
+    void OnJsAudioCaptureChangeCallback(std::shared_ptr<AVRecordJsCallback> jsCb) const;
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-    void OnJsPhotoAssetAvailableCallback(std::unique_ptr<AVRecordJsCallback> jsCb) const;
+    void OnJsPhotoAssetAvailableCallback(std::shared_ptr<AVRecordJsCallback> jsCb) const;
 #endif
     napi_env env_ = nullptr;
     std::mutex mutex_;
