@@ -48,6 +48,8 @@ private:
     MediaDatashareObserverRegister() = default;
     ~MediaDatashareObserverRegister();
     DISALLOW_COPY_AND_MOVE(MediaDatashareObserverRegister);
+
+    std::future<void> future_;
     std::mutex mutex_;
     std::shared_ptr<MediaDatashareObserver> datashareObserver_ = nullptr;
 };
