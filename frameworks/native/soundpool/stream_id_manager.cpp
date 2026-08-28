@@ -478,12 +478,12 @@ void StreamIDManagerWithSameSoundInterrupt::RemoveInvalidStreams()
     };
     std::unique_lock lock(streamIDManagerLock_);
     std::vector<std::shared_ptr<AudioStream>> streamsToBeReleased;
-    std::vector<int32_t> sortedSoundIDsByStreamIDs;  // To release audio stream from old to new
-    sortedSoundIDsByStreamIDs.reserve(soundID2Stream_.size());
+    std::vector<int32_t> sortedSoundIDs;  // To release audio stream from old to new
+    sortedSoundIDs.reserve(soundID2Stream_.size());
     for (const auto& pair : soundID2Stream_) {
-        sortedSoundIDsByStreamIDs.push_back(pair.first);
+        sortedSoundIDs.push_back(pair.first);
     }
-    std::sort(sortedSoundIDsByStreamIDs.begin(), sortedSoundIDsByStreamIDs.end(),
+    std::sort(sortedSoundIDs.begin(), sortedSoundIDs.end(),
         [this](int32_t a, int32_t b) {  // sort by streamID
             if (soundID2Stream_.find(a) != soundID2Stream_.end() && soundID2Stream_[a] != nullptr &&
                 soundID2Stream_.find(b) != soundID2Stream_.end() && soundID2Stream_[b] != nullptr) {
@@ -493,7 +493,7 @@ void StreamIDManagerWithSameSoundInterrupt::RemoveInvalidStreams()
         });
 
     for (const StreamState &state : statesToCheck) {
-        for (const int32_t &soundID : sortedSoundIDsByStreamIDs) {
+        for (const int32_t &soundID : sortedSoundIDs) {
             if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
                 lock.unlock();
                 AddReleaseTask(streamsToBeReleased);
