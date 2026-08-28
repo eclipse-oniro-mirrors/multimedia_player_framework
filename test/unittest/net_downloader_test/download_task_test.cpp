@@ -20,6 +20,9 @@
 #include <map>
 #include <thread>
 #include <fstream>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include "net_downloader_test_common.h"
 #include "downloader.h"
 #include "download_task.h"
@@ -446,27 +449,41 @@ HWTEST_F(DownloadTaskTest, Start_Http416_001, TestSize.Level0)
     g_httpServer->SetResponseHeaderDelay(0);
 }
 
-HWTEST_F(DownloadTaskTest, Start_Http416_NoContentRange_001, TestSize.Level0)
+HWTEST_F(DownloadTaskTest, Start_Http416_ContentRange_SizeMismatch_001, TestSize.Level0)
 {
+    g_httpServer->SetResponseDelay(0);
+    g_httpServer->SetResponseHeaderDelay(0);
+
+    const std::string serverFile = "/data/test/media/net_downloader/big_file.mp4";
+    struct stat st;
+    ASSERT_EQ(stat(serverFile.c_str(), &st), 0);
+    int64_t serverSize = static_cast<int64_t>(st.st_size);
+    ASSERT_GT(serverSize, 0);
+
+    g_httpServer->SetCustom416Response("bytes */" + std::to_string(serverSize + 100));
+
     DownloadTaskInfo info;
     info.taskId = 1;
     info.url = BIG_FILE_URL;
-    info.outputPath = testDir_ + "/416_no_header_test.mp4";
+    info.outputPath = testDir_ + "/416_size_mismatch.mp4";
     info.header = {};
 
+    int fd = open(info.outputPath.c_str(), O_CREAT | O_WRONLY | O_TRUNC, 0644);
+    ASSERT_GE(fd, 0);
+    ASSERT_EQ(ftruncate(fd, serverSize), 0);
+    close(fd);
+
     DownloadConfig config;
-    config.progressCallbackIntervalMs = 100;
     auto callback = std::make_shared<StubDownloadTaskCallback>();
 
     auto task = std::make_shared<DownloadTask>(info, config, callback);
-    
     (void)task->Start();
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));
-    
-    DownloadState state = task->GetState();
-    EXPECT_TRUE(state == DOWNLOAD_FAILED || state == DOWNLOAD_COMPLETED);
-    
+
+    EXPECT_EQ(task->GetState(), DOWNLOAD_FAILED);
+
     (void)task->Cancel();
+    g_httpServer->SetCustom416Response("");
 }
 
 HWTEST_F(DownloadTaskTest, Resume_ThreadDetach_001, TestSize.Level0)

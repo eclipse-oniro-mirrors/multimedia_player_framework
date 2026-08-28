@@ -71,6 +71,7 @@ private:
     void StopProgressThread(std::thread& progressThread, std::atomic<bool>& progressRunning,
         std::mutex& progressMutex, std::condition_variable& progressCv);
     void CheckDownloadResult(bool success);
+    void NotifyDownloadResult(DownloadState newState, bool isNetworkError);
     void NotifyFinish();
     void InitClient();
     void ExecuteDownload();

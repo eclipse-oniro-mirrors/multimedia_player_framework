@@ -39,6 +39,16 @@ class DownloadTaskCallback;
 
 class NetworkClient;
 
+// curl 连接级错误码，表示网络连接断开/切换场景（DNS解析失败、连接拒绝、SSL握手失败、发送/接收失败）
+constexpr std::array<int32_t, 5> HTTP_NETWORK_CONNECTION_ERROR_CODES = {6, 7, 35, 55, 56};
+inline bool IsNetworkConnectionError(int32_t code)
+{
+    for (auto it : HTTP_NETWORK_CONNECTION_ERROR_CODES) {
+        if (it == code) return true;
+    }
+    return false;
+}
+
 struct DownloadContext {
     NetworkClient* parent;
     std::atomic<bool> requestSuccess{false};

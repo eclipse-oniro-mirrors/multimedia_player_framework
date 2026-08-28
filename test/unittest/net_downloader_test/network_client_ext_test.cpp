@@ -389,7 +389,8 @@ HWTEST_F(NetworkClientExtTest, Handle416WithoutContentRange_StartPosPositive_001
     client->Handle416WithoutContentRange();
     
     auto ctx = client->GetContext();
-    EXPECT_FALSE(ctx->requestSuccess.load());
+    EXPECT_TRUE(ctx->requestSuccess.load());
+    EXPECT_EQ(ctx->totalSize.load(), 1024);
 }
 
 HWTEST_F(NetworkClientExtTest, Handle416WithoutContentRange_StartPosZero_001, TestSize.Level0)
@@ -452,7 +453,8 @@ HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_WithoutContentR
     client->ProcessHttp416RangeNotSatisfiable();
     
     auto ctx = client->GetContext();
-    EXPECT_FALSE(ctx->requestSuccess.load());
+    EXPECT_TRUE(ctx->requestSuccess.load());
+    EXPECT_EQ(ctx->totalSize.load(), 500);
 }
 
 HWTEST_F(NetworkClientExtTest, ProcessHttp416RangeNotSatisfiable_WithoutContentRange_ZeroStart_001, TestSize.Level0)

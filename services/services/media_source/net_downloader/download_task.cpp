@@ -284,12 +284,13 @@ void DownloadTask::StopProgressThread(std::thread& progressThread, std::atomic<b
 void DownloadTask::CheckDownloadResult(bool success)
 {
     DownloadState newState;
+    bool isNetworkError = !success && IsNetworkConnectionError(lastErrorCode_.load());
     {
         std::lock_guard<std::mutex> lock(stateMutex_);
         DownloadState current = state_.load();
         if (success && current != DOWNLOAD_PAUSING && current != DOWNLOAD_CANCELING) {
             newState = DOWNLOAD_COMPLETED;
-        } else if (current == DOWNLOAD_PAUSING) {
+        } else if (current == DOWNLOAD_PAUSING || isNetworkError) {
             newState = DOWNLOAD_PAUSED;
             resumePos_.store(downloadedSize_.load());
         } else if (current == DOWNLOAD_CANCELING) {
@@ -300,34 +301,44 @@ void DownloadTask::CheckDownloadResult(bool success)
         }
         state_.store(newState);
     }
+    NotifyDownloadResult(newState, isNetworkError);
+}
 
+void DownloadTask::NotifyDownloadResult(DownloadState newState, bool isNetworkError)
+{
     auto cb = callback_.lock();
-    if (cb) {
-        switch (newState) {
-            case DOWNLOAD_COMPLETED:
-                MEDIA_LOGI("Download completed");
-                {
-                    DownloadProgress progress = GetProgress();
-                    progress.downloadSpeed = CalculateSpeed();
-                    cb->OnProgress(progress);
-                    cb->OnStateChanged(DOWNLOAD_COMPLETED);
-                    cb->OnCompleted(downloadedSize_.load());
-                }
-                break;
-            case DOWNLOAD_PAUSED:
-                cb->OnStateChanged(DOWNLOAD_PAUSED);
-                break;
-            case DOWNLOAD_CANCELED:
-                cb->OnStateChanged(DOWNLOAD_CANCELED);
-                break;
-            case DOWNLOAD_FAILED:
-                MEDIA_LOGE("Download failed, errorType=%{public}d", lastErrorType_.load());
-                cb->OnStateChanged(DOWNLOAD_FAILED);
-                cb->OnFailed(lastErrorType_.load(), lastErrorCode_.load(), "Download failed");
-                break;
-            default:
-                break;
-        }
+    if (cb == nullptr) {
+        return;
+    }
+    switch (newState) {
+        case DOWNLOAD_COMPLETED:
+            MEDIA_LOGI("Download completed");
+            {
+                DownloadProgress progress = GetProgress();
+                progress.downloadSpeed = CalculateSpeed();
+                cb->OnProgress(progress);
+                cb->OnStateChanged(DOWNLOAD_COMPLETED);
+                cb->OnCompleted(downloadedSize_.load());
+            }
+            break;
+        case DOWNLOAD_PAUSED:
+            cb->OnStateChanged(DOWNLOAD_PAUSED);
+            if (isNetworkError) {
+                MEDIA_LOGI("Download paused due to network connection error, taskId=%{public}" PRIu64
+                    ", code=%{public}d", taskId_, lastErrorCode_.load());
+                cb->OnFailed(lastErrorType_.load(), lastErrorCode_.load(), "Network connection error");
+            }
+            break;
+        case DOWNLOAD_CANCELED:
+            cb->OnStateChanged(DOWNLOAD_CANCELED);
+            break;
+        case DOWNLOAD_FAILED:
+            MEDIA_LOGE("Download failed, errorType=%{public}d", lastErrorType_.load());
+            cb->OnStateChanged(DOWNLOAD_FAILED);
+            cb->OnFailed(lastErrorType_.load(), lastErrorCode_.load(), "Download failed");
+            break;
+        default:
+            break;
     }
 }
 

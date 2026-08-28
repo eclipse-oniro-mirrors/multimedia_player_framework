@@ -129,9 +129,9 @@ OnProgressChange(taskId, progress) // 进度变化
 
 ```cpp
 OnStateChanged(downloaderId, state)     // DownloaderImpl 状态变化
-OnCompleted(downloaderId, downloadedSize) // 下载完成（触发解析或映射生成）
+OnCompleted(downloaderId, downloadedSize) // 下载完成（未嗅探则补嗅探；触发解析或映射生成）
 OnFailed(downloaderId, errorType, errorCode, errorMsg)  // 下载失败
-OnProgress(downloaderId, progress)       // 进度更新（触发协议嗅探）
+OnProgress(downloaderId, progress)       // 进度更新（达到嗅探阈值触发协议嗅探）
 OnFileCompleted(downloaderId, url, fileSize)  // 单文件完成
 ```
 
@@ -153,6 +153,8 @@ ProcessNextPendingTask（唯一出队启动点）
       ├─ DOWNLOAD_IDLE   → 初始化 + downloader->Start()
       └─ 其他 → continue（跳过）
 ```
+
+循环内无 `break`，单次调用可启动多个任务直到 `GetActiveCountLocked() >= MAX`。这保证 `OnNetworkRestored` 后并发恢复到 MAX 而非退化为 1（仅发一条 `MSG_PROCESS_NEXT_TASK`）。
 
 `GetActiveCountLocked()` 使用 `std::count_if` 实时统计 RUNNING 状态的任务数（不维护计数器变量）。
 
@@ -193,7 +195,8 @@ OnNetworkRestored()
   └─ 所有 PAUSED 任务 → 入队 QUEUED → PostMessage(MSG_PROCESS_NEXT_TASK)
 
 OnNetworkLost()
-  └─ 所有 RUNNING 任务 → downloader->Pause() → NotifyStatusChangeLocked(PAUSED)
+  ├─ QUEUED 任务 → 移出 pendingTaskQueue_ → NotifyStatusChangeLocked(PAUSED)
+  └─ RUNNING 任务 → downloader->Pause() → NotifyStatusChangeLocked(PAUSED)
 ```
 
 `IsNetworkAllowDownload` 判定规则：
@@ -203,7 +206,7 @@ OnNetworkLost()
 
 ### OnFailed 网络状态检查
 
-`DownloadTaskCallback::OnFailed` 在设 ERROR 前检查当前网络状态：
+网络连接错误码（curl 6/7/35/55/56）在 `DownloaderImpl::OnFailed` 层已设 `DOWNLOAD_PAUSED` 并返回，**不进入** `av_downloader_manager::DownloadTaskCallback::OnFailed`。此处网络检查仅覆盖非网络错误码发生时网络恰好已断开的场景：
 
 ```cpp
 if (!manager->IsNetworkAllowDownload(manager->GetNetworkType())) {
@@ -213,8 +216,6 @@ if (!manager->IsNetworkAllowDownload(manager->GetNetworkType())) {
 }
 // 网络正常 → 真正的非网络错误 → 设 ERROR + 释放 + 调度下一个
 ```
-
-覆盖场景：下载失败（非网络错误码）时网络恰好已断开。`GetNetworkType()` 探测实时网络状态。
 
 ### Pause/Cancel 重试机制
 
@@ -242,13 +243,24 @@ REMOVING 状态防止其他入口（OnNetworkRestored、ProcessNextPendingTask�
 
 ```
 OnProgress（首次达到嗅探阈值）
-  └─ SniffStreamProtocol → 读取文件头部 → 检测 HTTP/HLS/DASH
+  └─ SniffStreamProtocol → SniffProtocolFromFile → 读取文件头部 → 检测 HTTP/HLS/DASH
      └─ HLS/DASH → fileList[0].needParse = true
 
 OnCompleted（单文件下载完成）
+  ├─ !protocolSniffed → SniffProtocolFromFile（完成时补嗅探，见下）
   ├─ 无需解析 → GenerateMappingFile + ProcessDownloadFinish
   └─ 需解析 → ParseFiles → SubmitRemainingTasks → Start()
 ```
+
+### 续传重加完整 m3u8 的完成时补嗅探
+
+续传重加场景下根 m3u8 已完整落盘，下载以 416→完成收尾、本次会话下载 0 字节，运行时嗅探（`OnProgress`→`SniffStreamProtocol`，门控 `downloadedSize >= sniffSize`）不会触发，导致 `needParse` 保持 false、m3u8 不被解析、分片 URL 不被发现。
+
+修复：`OnCompleted` 在 `!protocolSniffed` 时调用 `SniffProtocolFromFile` 从已完整落盘的根文件补嗅探，设置 `detectedProtocol`/`protocolSniffed`，对 HLS/DASH 置 `fileList.front().needParse = true`，使 m3u8 进入正常解析→提交分片流程。已下载分片随之经 `SubmitRemainingTasks` 提交并走 416→完成。`!protocolSniffed` 保证仅首次（根文件完成）补嗅探，分片完成时跳过。
+
+`SniffProtocolFromFile` 是从 `SniffStreamProtocol` 抽出的复用内核（读文件→嗅探→设状态→按需 `GenerateMappingFile`），供运行时嗅探与完成时补嗅探共用。`ReadFileData` 已硬化为读 `min(sniffSize, fileSize)`，支持小于 sniffSize 的小 m3u8（既有缺陷：小文件 `readLen < readSize` 即返回 false 导致嗅探失败）。
+
+**读端与写端的 page cache 可见性**：嗅探用独立读 fd 重新打开被下载中的文件读取头部，依赖写端 `write()` 返回即写入内核 page cache、对其他读端立即可见这一常规文件语义。写端（`net_downloader` 的 `NetworkClient::WriteData`）刻意用裸 `write()` 而非带缓冲 stdio（`FILE*`/`fwrite`），且 `downloadedSize` 在 `write()` 成功后才递增——故 `OnProgress` 见 `downloadedSize >= sniffSize` 时，对应字节必已在 page cache，读端必然读到。无需 `fflush`/`fsync`（前者排空用户态 stdio 缓冲，后者保证落盘持久性，均与跨 fd 可见性无关）。若写端改用 stdio，须先 `fflush`，否则嗅探读端将读不到未刷新字节。
 
 ### 映射文件生成
 

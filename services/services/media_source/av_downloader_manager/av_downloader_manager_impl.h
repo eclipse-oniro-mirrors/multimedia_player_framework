@@ -98,6 +98,7 @@ private:
     bool ReadFileToBuffer(const std::string &filePath, std::vector<uint8_t> &buffer);
     void SniffStreamProtocol(uint64_t downloaderId, const MediaDownload::DownloadProgress &progress,
         std::string currentFilePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo);
+    void SniffProtocolFromFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo, const std::string &filePath);
     void ApplySniffedProtocol(uint64_t downloaderId, const uint8_t* data, size_t size,
         const std::string& filePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo);
     void SubmitRemainingTasks(std::shared_ptr<MediaDownload::Downloader> downloader,

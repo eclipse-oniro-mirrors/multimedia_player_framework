@@ -15,6 +15,7 @@
 
 #include "av_downloader_manager_test.h"
 #include "media_errors.h"
+#include "net_downloader_test_common.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -699,6 +700,86 @@ HWTEST_F(AVDownloaderManagerTest, SniffStreamProtocol_PathTraversal_001, TestSiz
     progress.downloadedSize = 4096;
     callback->SniffStreamProtocol(1, progress, "/cache/../etc/passwd", taskInfo);
     EXPECT_FALSE(taskInfo->protocolSniffed);
+}
+
+HWTEST_F(AVDownloaderManagerTest, ReadFileData_SmallFile_ReadsFullContent_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
+
+    std::string testDir = MediaDownload::TestCommon::GetTestCacheDir("readfile_small");
+    ASSERT_FALSE(testDir.empty());
+    std::string filePath = testDir + "/small.m3u8";
+    std::vector<uint8_t> content = {'#', 'E', 'X', 'T', 'M', '3', 'U', '\n'};
+    ASSERT_LT(content.size(), static_cast<size_t>(256));
+    ASSERT_TRUE(MediaDownload::TestCommon::CreateTestFile(filePath, content));
+
+    std::vector<uint8_t> buffer;
+    bool ret = callback->ReadFileData(filePath, buffer, 256);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(buffer.size(), content.size());
+    EXPECT_EQ(buffer, content);
+
+    MediaDownload::TestCommon::CleanupTestDirectory(testDir);
+}
+
+HWTEST_F(AVDownloaderManagerTest, ReadFileData_NormalFile_ReadsSniffSize_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+    auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
+
+    std::string testDir = MediaDownload::TestCommon::GetTestCacheDir("readfile_normal");
+    ASSERT_FALSE(testDir.empty());
+    std::string filePath = testDir + "/normal.bin";
+    std::vector<uint8_t> content(512, 'A');
+    ASSERT_TRUE(MediaDownload::TestCommon::CreateTestFile(filePath, content));
+
+    std::vector<uint8_t> buffer;
+    bool ret = callback->ReadFileData(filePath, buffer, 256);
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(buffer.size(), static_cast<size_t>(256));
+    std::vector<uint8_t> expected(content.begin(), content.begin() + 256);
+    EXPECT_EQ(buffer, expected);
+
+    MediaDownload::TestCommon::CleanupTestDirectory(testDir);
+}
+
+HWTEST_F(AVDownloaderManagerTest, OnCompleted_SniffAtCompletion_WhenNotSniffed_001, TestSize.Level0)
+{
+    auto manager = std::make_shared<TestableAVDownloaderManager>();
+    ASSERT_NE(manager, nullptr);
+
+    std::string testDir = MediaDownload::TestCommon::GetTestCacheDir("oncompleted_sniff");
+    ASSERT_FALSE(testDir.empty());
+    std::string m3u8Path = testDir + "/test.m3u8";
+    std::vector<uint8_t> content(300, '#');
+    ASSERT_TRUE(MediaDownload::TestCommon::CreateTestFile(m3u8Path, content));
+
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "1";
+    taskInfo->cacheDir = testDir;
+    DownloadFileInfo fileInfo;
+    fileInfo.url = "http://example.com/test.m3u8";
+    fileInfo.filePath = m3u8Path;
+    fileInfo.needParse = true;
+    taskInfo->fileList.push_back(fileInfo);
+    manager->taskMap_["1"] = taskInfo;
+
+    auto mockDownloader = std::make_shared<MockDownloader>();
+    EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(0);
+    EXPECT_CALL(*mockDownloader, AddFileTask(_, _, _)).Times(0);
+    EXPECT_CALL(*mockDownloader, Start()).WillOnce(Return(0));
+    manager->downloaderMap_["1"] = mockDownloader;
+
+    auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
+    callback->OnCompleted(1, 0);
+
+    EXPECT_TRUE(taskInfo->protocolSniffed);
+    EXPECT_EQ(taskInfo->detectedProtocol, Plugins::HttpPlugin::StreamProtocolType::HTTP);
+
+    MediaDownload::TestCommon::CleanupTestDirectory(testDir);
 }
 
 HWTEST_F(AVDownloaderManagerTest, GetFilePath_NormalFilename_002, TestSize.Level0)
