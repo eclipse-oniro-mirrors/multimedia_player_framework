@@ -84,7 +84,6 @@ void ReportAVScreenCaptureUserChoiceSync(int32_t sessionId, string_view choice)
     asyncCtx->controller_ = ScreenCaptureControllerFactory::CreateScreenCaptureController();
     CHECK_AND_RETURN_LOG(asyncCtx->controller_ != nullptr, "failed to get controller_");
     asyncCtx->controller_->ReportAVScreenCaptureUserChoice(sessionId, static_cast<std::string>(choice));
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
@@ -114,7 +113,6 @@ string GetAVScreenCaptureConfigurableParametersSync(int32_t sessionId)
         set_business_error(MSERR_EXT_API20_SESSION_NOT_EXIST, "session does not exist.");
         return res;
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return MediaTaiheUtils::ToTaiheString(resultStr);
@@ -449,7 +447,6 @@ void AVScreenCaptureRecorderImpl::InitSync(::ohos::multimedia::media::AVScreenCa
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
@@ -491,7 +488,6 @@ void AVScreenCaptureRecorderImpl::ExecuteByPromise(const std::string &opt)
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
@@ -584,7 +580,6 @@ void AVScreenCaptureRecorderImpl::SkipPrivacyModeSync(::taihe::array_view<int32_
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("%{public}s End", option.c_str());
 }
@@ -646,7 +641,6 @@ void AVScreenCaptureRecorderImpl::PresentPickerSync()
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", option.c_str());
 }
@@ -672,7 +666,6 @@ void AVScreenCaptureRecorderImpl::SetMicEnabledSync(bool enable)
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", option.c_str());
 }
@@ -740,7 +733,6 @@ void AVScreenCaptureRecorderImpl::SetCanvasRotationSync(bool canvasRotation)
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", option.c_str());
 }
@@ -784,7 +776,6 @@ void AVScreenCaptureRecorderImpl::SetPickerModeSync(::ohos::multimedia::media::P
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", option.c_str());
 }
@@ -811,7 +802,6 @@ void AVScreenCaptureRecorderImpl::ExcludePickerWindowsSync(::taihe::array_view<i
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", option.c_str());
 }
@@ -934,7 +924,6 @@ int32_t AVScreenCaptureRecorderImpl::AddWatermarkSync(::ohos::multimedia::image:
             watermarkCount = asyncCtx->addWatermarkCount_;
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return watermarkCount;
