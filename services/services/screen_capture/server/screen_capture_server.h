@@ -246,6 +246,7 @@ private:
     void PrepareSelectWindow(Json::Value &root);
     bool IsSkipPrivacyWindow();
     void BuildCommonParams(Json::Value &root);
+    void InitAppUserId();
 
 #ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     bool IsPickerPopUp();
