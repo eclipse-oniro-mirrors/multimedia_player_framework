@@ -21,6 +21,7 @@ ohos_unittest("av_downloader_manager_test") {
 
   include_dirs = [
     "../",
+    "$MEDIA_PLAYER_ROOT_DIR/test/unittest/net_downloader_test/common",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/av_downloader_manager",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader",

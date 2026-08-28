@@ -71,6 +71,11 @@ void DownloadTaskCallback::OnCompleted(uint64_t downloaderId, int64_t downloaded
         return;
     }
     auto& taskInfo = taskIter->second;
+    // 续传重加：m3u8 已完整(416→完成、0 字节)时运行时嗅探(OnProgress)不会触发；
+    // 在完成时补嗅探，确保 HLS/DASH 的 needParse 被设置，分片才会被解析下载。
+    if (!taskInfo->protocolSniffed && !taskInfo->fileList.empty()) {
+        SniffProtocolFromFile(taskInfo, taskInfo->fileList.front().filePath);
+    }
     bool hasFilesToParse = false;
     for (auto& info : taskInfo->fileList) {
         info.downloaded = true;
@@ -488,50 +493,67 @@ bool DownloadTaskCallback::ReadFileData(const std::string &filePath, std::vector
         MEDIA_LOGE("ReadFileData: failed to fdopen");
         return false;
     }
-    buffer.resize(readSize);
-    size_t readLen = fread(buffer.data(), 1, readSize, fp);
-    fclose(fp);
-    MEDIA_LOGI("ReadFileData: readLen=%{public}zu", readLen);
-    return readLen >= readSize;
+    struct stat st;
+    if (fstat(fd, &st) != 0 || st.st_size <= 0) {
+        (void)fclose(fp);
+        MEDIA_LOGE("ReadFileData: fstat failed or empty file, path=%{public}s", filePath.c_str());
+        return false;
+    }
+    size_t intendedReadSize = std::min(static_cast<size_t>(st.st_size), readSize);
+    buffer.resize(intendedReadSize);
+    size_t readLen = fread(buffer.data(), 1, intendedReadSize, fp);
+    (void)fclose(fp);
+    MEDIA_LOGI("ReadFileData: readLen=%{public}zu, intended=%{public}zu", readLen, intendedReadSize);
+    return readLen == intendedReadSize && intendedReadSize > 0;
+}
+
+void DownloadTaskCallback::SniffProtocolFromFile(std::shared_ptr<AVDownloadTaskInfo> taskInfo,
+    const std::string &filePath)
+{
+    if (taskInfo == nullptr) {
+        return;
+    }
+    SourceParseAgent::Create();
+    size_t sniffSize = SourceParseAgent::GetSniffBufferSize();
+    std::vector<uint8_t> buffer;
+    bool sniffed = false;
+    if (ReadFileData(filePath, buffer, sniffSize)) {
+        auto protocol = SourceParseAgent::SniffStreamProtocol(buffer.data(), buffer.size());
+        taskInfo->detectedProtocol = protocol;
+        taskInfo->protocolSniffed = true;
+        taskInfo->currentFilePath = filePath;
+        if (protocol == Plugins::HttpPlugin::StreamProtocolType::HLS ||
+            protocol == Plugins::HttpPlugin::StreamProtocolType::DASH) {
+            if (!taskInfo->fileList.empty()) {
+                taskInfo->fileList.front().needParse = true;
+                MEDIA_LOGI("SniffProtocolFromFile: protocol is HLS/DASH, needParse, file=%{public}s",
+                    filePath.c_str());
+            }
+        }
+        MEDIA_LOGI("SniffProtocolFromFile: protocol=%{public}d, file=%{public}s",
+            static_cast<int>(protocol), filePath.c_str());
+        sniffed = true;
+    } else {
+        MEDIA_LOGE("SniffProtocolFromFile: ReadFileData failed, file=%{public}s", filePath.c_str());
+    }
+    SourceParseAgent::Destroy();
+    if (sniffed && taskInfo->protocolSniffed && !taskInfo->mappingFileCreated &&
+        taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::HLS &&
+        taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::DASH) {
+        GenerateMappingFile(taskInfo);
+    }
 }
 
 void DownloadTaskCallback::SniffStreamProtocol(uint64_t downloaderId, const MediaDownload::DownloadProgress &progress,
     std::string currentFilePath, std::shared_ptr<AVDownloadTaskInfo> taskInfo)
 {
-    SourceParseAgent::Create();
     size_t sniffSize = SourceParseAgent::GetSniffBufferSize();
-    do {
-        if (progress.downloadedSize < static_cast<int64_t>(sniffSize)) {
-            break;
-        }
-
-        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", downloadedSize=%{public}" PRId64 " >= sniffSize=%{public}zu, sniff",
-            downloaderId, progress.downloadedSize, sniffSize);
-
-        std::vector<uint8_t> buffer;
-        if (!ReadFileData(currentFilePath, buffer, sniffSize)) {
-            break;
-        }
-
-        auto protocol = SourceParseAgent::SniffStreamProtocol(buffer.data(), buffer.size());
-        taskInfo->detectedProtocol = protocol;
-        taskInfo->protocolSniffed = true;
-        taskInfo->currentFilePath = currentFilePath;
-        if (protocol == Plugins::HttpPlugin::StreamProtocolType::HLS ||
-            protocol == Plugins::HttpPlugin::StreamProtocolType::DASH) {
-            if (!taskInfo->fileList.empty()) {
-                taskInfo->fileList.front().needParse = true;
-                MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol is HLS/DASH, needParse", downloaderId);
-            }
-        }
-        MEDIA_LOGI("TaskId: %{public}" PRIu64 ", protocol: %{public}d", downloaderId, static_cast<int>(protocol));
-    } while (0);
-    SourceParseAgent::Destroy();
-    if (taskInfo->protocolSniffed && !taskInfo->mappingFileCreated &&
-        taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::HLS &&
-        taskInfo->detectedProtocol != Plugins::HttpPlugin::StreamProtocolType::DASH) {
-        GenerateMappingFile(taskInfo);
+    if (progress.downloadedSize < static_cast<int64_t>(sniffSize)) {
+        return;
     }
+    MEDIA_LOGI("TaskId: %{public}" PRIu64 ", downloadedSize=%{public}" PRId64 " >= sniffSize=%{public}zu, sniff",
+        downloaderId, progress.downloadedSize, sniffSize);
+    SniffProtocolFromFile(taskInfo, currentFilePath);
 }
 
 std::shared_ptr<AVDownloaderManager> AVDownloaderManagerFactory::Create()
@@ -1135,7 +1157,6 @@ void AVDownloaderManagerImpl::ProcessNextPendingTask()
             MEDIA_LOGE("ProcessNextPendingTask: Start/Resume failed for taskId=%{public}s, ret=%{public}d",
                 taskId.c_str(), ret);
         }
-        break;
     }
 }
 
@@ -1238,9 +1259,17 @@ void AVDownloaderManagerImpl::OnNetworkRestored()
 
 void AVDownloaderManagerImpl::OnNetworkLost()
 {
-    MEDIA_LOGI("OnNetworkLost: network lost, pausing running tasks");
+    MEDIA_LOGI("OnNetworkLost: network lost, pausing running and queued tasks");
     std::lock_guard<std::mutex> lock(mapMutex_);
     for (auto& pair : taskMap_) {
+        if (pair.second->state == AVDownloadTaskState::QUEUED) {
+            pendingTaskQueue_.remove_if(
+                [&pair](const auto& item) { return item.second == pair.first; });
+            pair.second->state = AVDownloadTaskState::PAUSED;
+            NotifyStatusChangeLocked(pair.first, AVDownloadTaskState::PAUSED);
+            MEDIA_LOGI("OnNetworkLost: paused queued taskId=%{public}s", pair.first.c_str());
+            continue;
+        }
         if (pair.second->state != AVDownloadTaskState::RUNNING) {
             continue;
         }

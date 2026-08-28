@@ -53,13 +53,6 @@ constexpr int32_t HTTP_PARTIAL_CONTENT = 206;
 constexpr int32_t HTTP_RANGE_NOT_SATISFIABLE = 416;
 const std::string HTTP_HEADER_CONTENT_LENGTH = "content-length";
 const std::string HTTP_HEADER_CONTENT_RANGE = "content-range";
-constexpr std::array<int32_t, 5> HTTP_NETWORK_ERROR_CODES = {6, 7, 35, 55, 56};
-constexpr auto IsNetworkErrorCode = [](int32_t code) {
-    for (auto it : HTTP_NETWORK_ERROR_CODES) {
-        if (it == code) return true;
-    }
-    return false;
-};
 }
 
 NetworkClient::NetworkClient(const std::string &url, const std::map<std::string, std::string> &header,
@@ -297,6 +290,9 @@ size_t NetworkClient::WriteData(DownloadContext* ctx, NetworkClient* client, voi
         return dataLen;
     }
 
+    // 必须用裸 write()，不可改用 stdio(FILE*/fwrite)：av_downloader_manager 的协议嗅探会在下载过程中
+    // 用独立读 fd 重新打开本文件读取头部，依赖 write() 返回即写入内核 page cache、对其他读端立即可见
+    // 这一常规文件语义。若改用带缓冲 stdio，须先 fflush，否则嗅探读端将读不到未刷新的字节。
     ssize_t writeLen = write(ctx->outputFd, buffer, dataLen);
     if (writeLen < 0 || static_cast<size_t>(writeLen) != dataLen) {
         MEDIA_LOGE("RxBodyCallback: write failed, errno=%{public}d", errno);
@@ -457,7 +453,7 @@ void NetworkClient::HandleResponse(const int32_t clientCode, const int32_t serve
         } else {
             ProcessHttpError(serverCode);
         }
-    } else if (IsNetworkErrorCode(clientCode)) {
+    } else if (IsNetworkConnectionError(clientCode)) {
         ProcessHttpError(clientCode);
     } else {
         ProcessStatusError(ret);
@@ -494,10 +490,16 @@ void NetworkClient::ProcessHttp416RangeNotSatisfiable()
 
 void NetworkClient::Handle416WithoutContentRange()
 {
-    MEDIA_LOGE("416 response: no Content-Range header, cannot verify download completeness");
-    ctx_->requestSuccess.store(false);
-    if (errorCallback_) {
-        errorCallback_(DOWNLOAD_ERROR_NETWORK, HTTP_RANGE_NOT_SATISFIABLE);
+    if (startPos_ > 0) {
+        MEDIA_LOGI("416 without Content-Range on resume: treat as complete, startPos=%{public}" PRId64, startPos_);
+        ctx_->requestSuccess.store(true);
+        ctx_->totalSize.store(startPos_);
+    } else {
+        MEDIA_LOGE("416 without Content-Range on fresh request (startPos=0): mark failed");
+        ctx_->requestSuccess.store(false);
+        if (errorCallback_) {
+            errorCallback_(DOWNLOAD_ERROR_NETWORK, HTTP_RANGE_NOT_SATISFIABLE);
+        }
     }
 }
 

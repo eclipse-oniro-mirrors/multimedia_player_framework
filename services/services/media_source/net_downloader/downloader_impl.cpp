@@ -46,13 +46,6 @@ constexpr int32_t MIN_URL_LENGTH = 10;
 constexpr int32_t MAX_URL_LENGTH = 8192;
 constexpr size_t MAX_TASK_QUEUE_SIZE = 100000;
 constexpr int32_t FULL_PROGRESS_PERCENT = 100;
-constexpr std::array<int32_t, 5> HTTP_NETWORK_ERROR_CODES = {6, 7, 35, 55, 56};
-constexpr auto IsNetworkErrorCode = [](int32_t code) {
-    for (auto it : HTTP_NETWORK_ERROR_CODES) {
-        if (it == code) return true;
-    }
-    return false;
-};
 std::atomic<uint64_t> g_downloaderIdCounter{1};
 std::atomic<uint64_t> g_taskIdCounter{1};
 
@@ -534,6 +527,12 @@ int32_t DownloaderImpl::Resume()
         return DOWNLOAD_ERROR_INVALID_OPERATION;
     }
 
+    auto networkType = MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
+    if (!IsNetworkAllowDownload(networkType)) {
+        MEDIA_LOGE("Resume failed: network not available, downloaderId=%{public}" PRIu64, downloaderId_);
+        return DOWNLOAD_ERROR_NETWORK;
+    }
+
     std::shared_ptr<DownloadTask> localTask;
     {
         std::lock_guard<std::mutex> lockTask(taskMutex_);
@@ -790,15 +789,13 @@ void DownloaderImpl::OnCompleted(int64_t downloadedSize)
 void DownloaderImpl::OnFailed(DownloadErrorType errorType, int32_t errorCode, const std::string &errorMsg)
 {
     MEDIA_LOGI("DownloaderImpl::OnFailed enter");
-    if (IsNetworkErrorCode(errorCode)) {    // 网络切换
-        Message msg;
-        msg.type = MSG_TASK_NET_CHANGE;
-        msg.errorType = errorType;
-        msg.errorCode = errorCode;
-        msg.errorMsg = errorMsg;
-        if (schedulerQueue_ != nullptr) {
-            schedulerQueue_->PostMessage(msg);
-        }
+    if (IsNetworkConnectionError(errorCode)) {
+        // 网络切换 → 统一设为 PAUSED（Task 层已设 PAUSED）
+        // 由 OnNetworkChanged 回调在网络恢复时拉起 Resume
+        MEDIA_LOGI("OnFailed: network connection error, downloaderId=%{public}" PRIu64 ", errorCode=%{public}d",
+            downloaderId_, errorCode);
+        state_.store(DOWNLOAD_PAUSED);
+        NotifyStateChanged(DOWNLOAD_PAUSED);
         return;
     }
     {
@@ -926,12 +923,12 @@ void DownloaderImpl::HandleTaskCanceled()
     MEDIA_LOGI("HandleTaskCanceled done");
 }
 
-void DownloaderImpl::HandleTaskNetChanged()     // 网络切换，暂停
+void DownloaderImpl::HandleTaskNetChanged() // 网络切换，暂停
 {
     MEDIA_LOGI("HandleTaskNetChanged: enter");
     state_.store(DOWNLOAD_PAUSED);
     auto networkType = MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
-    if (!IsNetworkAllowDownload(networkType)) {    // 当前网络不允许下载
+    if (!IsNetworkAllowDownload(networkType)) { // 当前网络不允许下载
         MEDIA_LOGE("HandleTaskNetChanged: network not available");
         NotifyStateChanged(DOWNLOAD_PAUSED);
     } else {
