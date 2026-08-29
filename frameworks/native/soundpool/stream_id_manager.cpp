@@ -841,7 +841,7 @@ void StreamIDManagerWithNoInterrupt::PrintSoundID2Stream()
             CHECK_AND_CONTINUE_LOG(stream != nullptr, "soundID is %{public}d, stream is nullptr", mem.first);
             oss << "[" << stream->GetStreamID() << ", " << static_cast<int32_t>(stream->GetStreamState()) << "] ";
         }
-        oss <<"]\n"
+        oss << "]\n";
     }
     MEDIA_LOGI("PrintSoundID2Stream, soundID2MultiStreams_:\n", oss.str().c_str());
 }
