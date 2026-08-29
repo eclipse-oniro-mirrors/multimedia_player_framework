@@ -206,7 +206,7 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_TASK_QUEUE_ERROR_5400102, "Framework internal error."},
     {MSERR_RECORDER_ENGINE_ERROR_5400103, "Framework internal error."},
     {MSERR_AUDIOCODEC_FILEFORMAT_MATCH_ERROR_401,
-        "Parameter config.profile.audioCodec(mp3) is not compatible with config.profile.audioCodec(mp4)."},
+        "Parameter config.profile.audioCodec(mp3) is not compatible with config.profile.fileFormat(mp4)."},
     {MSERR_AUDIO_G711MU_MATCH_ERROR_401,
         "The G711-mulaw audio encoding format supports the sample rate of 8000 and bit rate of 64000 only."},
     {MSERR_SET_META_CONFIGS_FAILED_5400103, "Framework internal error."},

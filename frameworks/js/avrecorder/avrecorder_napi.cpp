@@ -286,7 +286,7 @@ RetInfo GetRetInfo(int32_t msErrCode, const std::string &operation, const std::s
         message = "[" + operation + "] " + MSErrorToString(errCode);
     } else {
         if (extErrCode == MSERR_EXT_API9_INVALID_PARAMETER) {
-            message = MSExtErrorAPI9ToString(extErrCode, operation, param);
+            message = MSExtErrorAPI9ToString(extErrCode, param, "");
         } else if (extErrCode == MSERR_EXT_API9_OPERATE_NOT_PERMIT) {
             message = MSExtErrorAPI9ToString(extErrCode, operation, recorderState);
         } else {
@@ -662,13 +662,14 @@ napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
         CHECK_AND_RETURN_RET_LOG(getMapRet && recordMeta.size() != 0, result, "recordMeta has no data");
 
         asyncCtx->task_ = std::make_shared<TaskHandler<RetInfo>>([jsRecorder, recordMeta]() {
+            const std::string &option = AVRecordergOpt::SET_METADATA;
             int32_t ret = jsRecorder->SetMetadata(recordMeta);
-            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, opt, ""), "SetMetadataTask failed");
+            CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, GetRetInfo(ret, option, ""), "SetMetadataTask failed");
             return RetInfo(MSERR_EXT_API9_OK, "");
         });
         (void)jsRecorder->taskQue_->EnqueueTask(asyncCtx->task_);
     } else {
-        asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "", asyncCtx->napi->GetRecorderState());
+        asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "", jsRecorder->GetRecorderState());
     }
 
     napi_value resource = nullptr;
