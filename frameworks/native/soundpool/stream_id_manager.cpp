@@ -593,7 +593,7 @@ void StreamIDManagerWithSameSoundInterrupt::PrintSoundID2Stream()
     for (const auto &mem : soundID2Stream_) {
         CHECK_AND_CONTINUE_LOG(mem.second != nullptr, "soundID is %{public}d, stream is nullptr", mem.first);
         oss << "soundID=" << mem.first << "|streamID="<<mem.second->GetStreamID()
-            << "|state=" << mem.second->GetStreamState() << "\n";
+            << "|state=" << static_cast<int32_t>(mem.second->GetStreamState()) << "\n";
     }
     MEDIA_LOGI("PrintSoundID2Stream, soundID2Stream_:\n", oss.str().c_str());
 }
@@ -839,7 +839,7 @@ void StreamIDManagerWithNoInterrupt::PrintSoundID2Stream()
         oss << "soundID=" << mem.first << "|streamID to state=[";
         for (const auto &stream : mem.second) {
             CHECK_AND_CONTINUE_LOG(stream != nullptr, "soundID is %{public}d, stream is nullptr", mem.first);
-            oss << "[" << stream->GetStreamID() << ", " << stream->GetStreamState() << "] ";
+            oss << "[" << stream->GetStreamID() << ", " << static_cast<int32_t>(stream->GetStreamState()) << "] ";
         }
         oss <<"]\n"
     }
