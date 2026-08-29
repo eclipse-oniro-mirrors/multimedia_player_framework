@@ -370,6 +370,9 @@ std::shared_ptr<TaskHandler<AdsTaskRet>> AVAdsControllerImpl::AddAdsMediaSourceT
     CHECK_AND_RETURN_RET_LOG(playerInstance != nullptr, nullptr, "player instance is null");
     CHECK_AND_RETURN_RET_LOG(taskQueue != nullptr, nullptr, "task queue is null");
     auto task = std::make_shared<TaskHandler<AdsTaskRet>>([playerInstance, mediaSource, startMs, &outId]() {
+        if (playerInstance == nullptr) {
+            return AdsTaskRet(ERR_ADS_PARAM_INVALID, "playerInstance is null");
+        }
         int32_t ret = playerInstance->AddAdsMediaSource(mediaSource, startMs, outId);
         if (ret != MSERR_OK) {
             return AdsTaskRet(ERR_ADS_PARAM_INVALID, "addAdsMediaSource failed");
