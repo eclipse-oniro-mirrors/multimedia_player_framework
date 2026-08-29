@@ -753,6 +753,11 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
     std::vector<std::shared_ptr<AudioStream>> streamsToBeReleased;
     for (auto &mem : soundID2MultiStreams_) {
         std::list<std::shared_ptr<AudioStream>> &streams = mem.second;
+        if (streams.empty()) {
+            soundID2MultiStreams_.erase(mem);
+            MEDIA_LOGI("remove mem which soundID is %{public}d", mem);
+            continue;
+        }
         for (auto it = streams.begin(); it != streams.end();) {
             if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
                 lock.unlock();
