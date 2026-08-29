@@ -789,11 +789,11 @@ int32_t PlayerServerMem::LocalResourceRelease()
     recoverConfig_.currState = itSatetMap->second;
     auto ret = recoverConfig_.currState->MemStateRelease();
     CHECK_AND_RETURN_RET(ret != MSERR_INVALID_STATE, MSERR_OK);
-    
-    playerCb_ = nullptr;
+
     ClearConfigInfo();
     ret = PlayerServer::Reset();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "PlayerServer::Reset fail");
+    playerCb_ = nullptr;
 
     isReleaseMemByManage_ = true;
     MEDIA_LOGI("exit");
