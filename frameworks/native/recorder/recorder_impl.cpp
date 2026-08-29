@@ -48,13 +48,13 @@ int32_t RecorderImpl::Init()
 
 int32_t RecorderImpl::GetAVRecorderConfig(ConfigMap &configMap)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->GetAVRecorderConfig(configMap);
 }
 
 int32_t RecorderImpl::GetLocation(Location &location)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->GetLocation(location);
 }
 
@@ -78,7 +78,7 @@ int32_t RecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoSource in, source is %{public}d, sourceId is %{public}d",
         FAKE_POINTER(this), source, sourceId);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoSource(source, sourceId);
 }
 
@@ -86,7 +86,7 @@ int32_t RecorderImpl::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEncoder in, sourceId is %{public}d, "
         "encoder is %{public}d", FAKE_POINTER(this), sourceId, encoder);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoEncoder(sourceId, encoder);
 }
 
@@ -94,7 +94,7 @@ int32_t RecorderImpl::SetVideoSize(int32_t sourceId, int32_t width, int32_t heig
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoSize in, sourceId is %{public}d, width is %{public}d, "
         "height is %{public}d", FAKE_POINTER(this), sourceId, width, height);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoSize(sourceId, width, height);
 }
 
@@ -102,7 +102,7 @@ int32_t RecorderImpl::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoFrameRate in, sourceId is %{public}d, "
         "frameRate is %{public}d", FAKE_POINTER(this), sourceId, frameRate);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoFrameRate(sourceId, frameRate);
 }
 
@@ -110,7 +110,7 @@ int32_t RecorderImpl::RecorderImpl::SetVideoEncodingBitRate(int32_t sourceId, in
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEncodingBitRate in, sourceId is %{public}d, "
         "rate is %{public}d", FAKE_POINTER(this), sourceId, rate);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoEncodingBitRate(sourceId, rate);
 }
 
@@ -118,7 +118,7 @@ int32_t RecorderImpl::RecorderImpl::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoIsHdr in, sourceId is %{public}d, isHdr is %{public}d",
         FAKE_POINTER(this), sourceId, isHdr);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoIsHdr(sourceId, isHdr);
 }
 
@@ -126,7 +126,7 @@ int32_t RecorderImpl::RecorderImpl::SetVideoEnableTemporalScale(int32_t sourceId
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEnableTemporalScale in, sourceId is %{public}d, "
         "enableTemporalScale is %{public}d", FAKE_POINTER(this), sourceId, enableTemporalScale);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
@@ -134,7 +134,7 @@ int32_t RecorderImpl::RecorderImpl::SetVideoEnableStableQualityMode(int32_t sour
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEnableStableQualityMode in, sourceId is %{public}d, "
         "enableStableQualityMode is %{public}d", FAKE_POINTER(this), sourceId, enableStableQualityMode);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
 }
 
@@ -142,7 +142,7 @@ int32_t RecorderImpl::RecorderImpl::SetVideoEnableBFrame(int32_t sourceId, bool 
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoEnableBFrame in, sourceId is %{public}d, "
         "enableBFrame is %{public}d", FAKE_POINTER(this), sourceId, enableBFrame);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoEnableBFrame(sourceId, enableBFrame);
 }
 
@@ -150,7 +150,7 @@ int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetCaptureRate in, sourceId is %{public}d, "
         "fps is %{public}lf", FAKE_POINTER(this), sourceId, fps);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetCaptureRate(sourceId, fps);
 }
 
@@ -158,7 +158,7 @@ sptr<OHOS::Surface> RecorderImpl::GetSurface(int32_t sourceId)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetSurface in, sourceId is %{public}d",
         FAKE_POINTER(this), sourceId);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, nullptr, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, nullptr, "recorderService_ is nullptr.");
     surface_ = recorderService_->GetSurface(sourceId);
     return surface_;
 }
@@ -167,7 +167,7 @@ sptr<OHOS::Surface> RecorderImpl::GetMetaSurface(int32_t sourceId)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " GetMetaSurface in, sourceId is %{public}d",
         FAKE_POINTER(this), sourceId);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, nullptr, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, nullptr, "recorderService_ is nullptr.");
     metaSurface_ = recorderService_->GetMetaSurface(sourceId);
     return metaSurface_;
 }
@@ -176,7 +176,7 @@ int32_t RecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioSource in, source is %{public}d, sourceId is %{public}d",
         FAKE_POINTER(this), source, sourceId);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetAudioSource(source, sourceId);
 }
 
@@ -184,7 +184,7 @@ int32_t RecorderImpl::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncoder in, sourceId is %{public}d, "
         "encoder is %{public}d", FAKE_POINTER(this), sourceId, encoder);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetAudioEncoder(sourceId, encoder);
 }
 
@@ -192,7 +192,7 @@ int32_t RecorderImpl::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioSampleRate in, sourceId is %{public}d, "
         "rate is %{public}d", FAKE_POINTER(this), sourceId, rate);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetAudioSampleRate(sourceId, rate);
 }
 
@@ -200,7 +200,7 @@ int32_t RecorderImpl::SetAudioChannels(int32_t sourceId, int32_t num)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioChannels in, sourceId is %{public}d, num is %{public}d",
         FAKE_POINTER(this), sourceId, num);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetAudioChannels(sourceId, num);
 }
 
@@ -208,7 +208,7 @@ int32_t RecorderImpl::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioEncodingBitRate in, sourceId is %{public}d, "
         "bitRate is %{public}d", FAKE_POINTER(this), sourceId, bitRate);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetAudioEncodingBitRate(sourceId, bitRate);
 }
 
@@ -216,7 +216,7 @@ int32_t RecorderImpl::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetAudioAacProfile in, sourceId is %{public}d, "
         "aacProfile is %{public}d", FAKE_POINTER(this), sourceId, aacProfile);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetAudioAacProfile(sourceId, aacProfile);
 }
 
@@ -224,7 +224,7 @@ int32_t RecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetMetaSource in, source is %{public}d, sourceId is %{public}d",
         FAKE_POINTER(this), source, sourceId);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetMetaSource(source, sourceId);
 }
 
@@ -232,25 +232,25 @@ int32_t RecorderImpl::SetMetaConfigs(int32_t sourceId)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetMetaConfigs in, sourceId is %{public}d",
         FAKE_POINTER(this), sourceId);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetMetaConfigs(sourceId);
 }
 
 int32_t RecorderImpl::SetDataSource(DataSourceType dataType, int32_t &sourceId)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetDataSource(dataType, sourceId);
 }
 
 int32_t RecorderImpl::SetUserCustomInfo(Meta &userCustomInfo)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetUserCustomInfo(userCustomInfo);
 }
 
 int32_t RecorderImpl::SetGenre(std::string &genre)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetGenre(genre);
 }
 
@@ -258,7 +258,7 @@ int32_t RecorderImpl::SetMaxDuration(int32_t duration)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetMaxDuration in, duration is %{public}d",
         FAKE_POINTER(this), duration);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetMaxDuration(duration);
 }
 
@@ -266,21 +266,21 @@ int32_t RecorderImpl::SetOutputFormat(OutputFormatType format)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetOutputFormat in, format is %{public}d",
         FAKE_POINTER(this), format);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetOutputFormat(format);
 }
 
 int32_t RecorderImpl::SetOutputFile(int32_t fd)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetOutputFile in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetOutputFile(fd);
 }
 
 int32_t RecorderImpl::SetFileGenerationMode(FileGenerationMode mode)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetFileGenerationMode in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetFileGenerationMode(mode);
 }
 
@@ -288,7 +288,7 @@ int32_t RecorderImpl::SetFileGenerationMode(FileGenerationMode mode)
 int32_t RecorderImpl::SetNextOutputFile(int32_t fd)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetNextOutputFile in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetNextOutputFile(fd);
 }
 
@@ -296,14 +296,14 @@ int32_t RecorderImpl::SetMaxFileSize(int64_t size)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetMaxFileSize in, size is %{public}" PRIi64 "",
         FAKE_POINTER(this), size);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetMaxFileSize(size);
 }
 
 void RecorderImpl::SetLocation(float latitude, float longitude)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetLocation in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist.");
+    CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorderService_ is nullptr.");
     recorderService_->SetLocation(latitude, longitude);
     return;
 }
@@ -312,7 +312,7 @@ void RecorderImpl::SetOrientationHint(int32_t rotation)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetOrientationHint in, rotation is %{public}d",
         FAKE_POINTER(this), rotation);
-    CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorder service does not exist.");
+    CHECK_AND_RETURN_LOG(recorderService_ != nullptr, "recorderService_ is nullptr.");
     recorderService_->SetOrientationHint(rotation);
     return;
 }
@@ -321,21 +321,21 @@ int32_t RecorderImpl::SetRecorderCallback(const std::shared_ptr<RecorderCallback
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetRecorderCallback in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_INVALID_VAL, "input callback is nullptr.");
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetRecorderCallback(callback);
 }
 
 int32_t RecorderImpl::Prepare()
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Prepare in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->Prepare();
 }
 
 int32_t RecorderImpl::Start()
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Start in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     if (surface_) {
         std::string surfaceAppFwkType = surface_->GetSurfaceAppFrameworkType();
         if (APP_USE_COMPATIBLE_MODE == surfaceAppFwkType) {
@@ -353,14 +353,14 @@ int32_t RecorderImpl::Start()
 int32_t RecorderImpl::Pause()
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Pause in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->Pause();
 }
 
 int32_t RecorderImpl::Resume()
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Resume in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->Resume();
 }
 
@@ -368,21 +368,21 @@ int32_t RecorderImpl::Stop(bool block)
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Stop in, block is %{public}d",
         FAKE_POINTER(this), block);
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->Stop(block);
 }
 
 int32_t RecorderImpl::Reset()
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->Reset();
 }
 
 int32_t RecorderImpl::Release()
 {
     MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " Release in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     (void)recorderService_->Release();
     (void)MediaServiceFactory::GetInstance().DestroyRecorderService(recorderService_);
     recorderService_ = nullptr;
@@ -392,62 +392,62 @@ int32_t RecorderImpl::Release()
 
 int32_t RecorderImpl::SetFileSplitDuration(FileSplitType type, int64_t timestamp, uint32_t duration)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetFileSplitDuration(type, timestamp, duration);
 }
 
 int32_t RecorderImpl::SetParameter(int32_t sourceId, const Format &format)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetParameter(sourceId, format);
 }
 
 int32_t RecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->GetCurrentCapturerChangeInfo(changeInfo);
 }
 
 int32_t RecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->GetAvailableEncoder(encoderInfo);
 }
 
 int32_t RecorderImpl::GetMaxAmplitude(int32_t &amplitude)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->GetMaxAmplitude(amplitude);
 }
 
 int32_t RecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->IsWatermarkSupported(isWatermarkSupported);
 }
 
 int32_t RecorderImpl::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetWatermark(waterMarkBuffer);
 }
 
 int32_t RecorderImpl::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
     int32_t &watermarkCount)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
 }
 
 int32_t RecorderImpl::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetUserMeta(userMeta);
 }
 
 int32_t RecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_INVALID_OPERATION, "recorder service does not exist.");
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
 }
 } // namespace Media

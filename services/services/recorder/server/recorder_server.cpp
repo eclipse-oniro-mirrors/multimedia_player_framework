@@ -14,6 +14,7 @@
  */
 
 #include "recorder_server.h"
+#include <unordered_map>
 #include "map"
 #include "media_log.h"
 #include "media_errors.h"
@@ -97,6 +98,25 @@ RecorderServer::~RecorderServer()
     }
 }
 
+int32_t TransformTaskQueueErrCode(int32_t taskQErrCode)
+{
+    static const std::unordered_map<int32_t, int32_t> map = {
+        {MSERR_INVALID_VAL,       MSERR_TASK_QUEUE_ERROR_401},
+        {MSERR_INVALID_OPERATION, MSERR_TASK_QUEUE_ERROR_5400102},
+    };
+    auto it = map.find(taskQErrCode);
+    return (it != map.end()) ? it->second : taskQErrCode;
+}
+
+int32_t TransformEngineStatusCode(int32_t statusCode)
+{
+    if (statusCode == static_cast<int32_t>(Status::OK)) {
+        return MSERR_OK;
+    } else {
+        return MSERR_RECORDER_ENGINE_ERROR_5400103;
+    }
+}
+
 int32_t RecorderServer::Init()
 {
     MediaTrace trace("RecorderServer::Init");
@@ -118,7 +138,7 @@ int32_t RecorderServer::Init()
         return MSERR_OK;
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
@@ -173,18 +193,18 @@ int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId
         FAKE_POINTER(this), source, sourceId);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.videoSource = source;
     config_.withVideo = true;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetVideoSource(source, sourceId);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
@@ -193,18 +213,18 @@ int32_t RecorderServer::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encod
         FAKE_POINTER(this), sourceId, encoder);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.videoCodec = encoder;
     VidEnc vidEnc(encoder);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, vidEnc);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
@@ -213,7 +233,7 @@ int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t he
         "height(%{public}d)", FAKE_POINTER(this), sourceId, width, height);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.width = width;
     config_.height = height;
     VidRectangle vidSize(width, height);
@@ -221,11 +241,11 @@ int32_t RecorderServer::SetVideoSize(int32_t sourceId, int32_t width, int32_t he
         return recorderEngine_->Configure(sourceId, vidSize);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
@@ -234,18 +254,18 @@ int32_t RecorderServer::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
         "frameRate(%{public}d)", FAKE_POINTER(this), sourceId, frameRate);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.frameRate = frameRate;
     VidFrameRate vidFrameRate(frameRate);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, vidFrameRate);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
@@ -254,18 +274,18 @@ int32_t RecorderServer::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
         "rate(%{public}d)", FAKE_POINTER(this), sourceId, rate);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.bitRate = rate;
     VidBitRate vidBitRate(rate);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, vidBitRate);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetVideoIsHdr(int32_t sourceId, bool isHdr)
@@ -274,18 +294,18 @@ int32_t RecorderServer::SetVideoIsHdr(int32_t sourceId, bool isHdr)
         FAKE_POINTER(this), sourceId, isHdr);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.isHdr = isHdr;
     VidIsHdr vidIsHdr(isHdr);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, vidIsHdr);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale)
@@ -294,18 +314,18 @@ int32_t RecorderServer::SetVideoEnableTemporalScale(int32_t sourceId, bool enabl
         "enableTemporalScale(%{public}d)", FAKE_POINTER(this), sourceId, enableTemporalScale);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.enableTemporalScale = enableTemporalScale;
     VidEnableTemporalScale vidEnableTemporalScale(enableTemporalScale);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, vidEnableTemporalScale);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode)
@@ -314,18 +334,18 @@ int32_t RecorderServer::SetVideoEnableStableQualityMode(int32_t sourceId, bool e
         "enableStableQualityMode(%{public}d)", FAKE_POINTER(this), sourceId, enableStableQualityMode);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.enableStableQualityMode = enableStableQualityMode;
     VidEnableStableQualityMode vidEnableStableQualityMode(enableStableQualityMode);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, vidEnableStableQualityMode);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
  
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
@@ -334,18 +354,18 @@ int32_t RecorderServer::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame
         "enableBFrame(%{public}d)", FAKE_POINTER(this), sourceId, enableBFrame);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.enableBFrame = enableBFrame;
     VidEnableBFrame vidEnableBFrame(enableBFrame);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, vidEnableBFrame);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
  
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetMetaSource(MetaSourceType source, int32_t &sourceId)
@@ -355,7 +375,7 @@ int32_t RecorderServer::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
 
     config_.metaSource = source;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
@@ -363,11 +383,11 @@ int32_t RecorderServer::SetMetaSource(MetaSourceType source, int32_t &sourceId)
     });
 
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetMetaMimeType(int32_t sourceId, const std::string_view &type)
@@ -377,7 +397,7 @@ int32_t RecorderServer::SetMetaMimeType(int32_t sourceId, const std::string_view
 
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
 
     config_.metaMimeType = type;
     MetaMimeType metaMimeType(type);
@@ -386,11 +406,11 @@ int32_t RecorderServer::SetMetaMimeType(int32_t sourceId, const std::string_view
     });
 
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetMetaTimedKey(int32_t sourceId, const std::string_view &timedKey)
@@ -400,7 +420,7 @@ int32_t RecorderServer::SetMetaTimedKey(int32_t sourceId, const std::string_view
 
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
 
     config_.metaTimedKey = timedKey;
     MetaTimedKey metaTimedKey(timedKey);
@@ -408,11 +428,11 @@ int32_t RecorderServer::SetMetaTimedKey(int32_t sourceId, const std::string_view
         return recorderEngine_->Configure(sourceId, metaTimedKey);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetMetaSourceTrackMime(int32_t sourceId, const std::string_view &srcTrackMime)
@@ -421,7 +441,7 @@ int32_t RecorderServer::SetMetaSourceTrackMime(int32_t sourceId, const std::stri
         "sourceTrackMime(%{public}s)", FAKE_POINTER(this), sourceId, srcTrackMime.data());
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
 
     config_.metaSrcTrackMime = srcTrackMime;
     MetaSourceTrackMime metaSrcTrackMime(srcTrackMime);
@@ -429,11 +449,11 @@ int32_t RecorderServer::SetMetaSourceTrackMime(int32_t sourceId, const std::stri
         return recorderEngine_->Configure(sourceId, metaSrcTrackMime);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
@@ -441,18 +461,18 @@ int32_t RecorderServer::SetCaptureRate(int32_t sourceId, double fps)
     MEDIA_LOGI("SetCaptureRate sourceId(%{public}d), fps(%{public}lf)", sourceId, fps);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.captureRate = fps;
     CaptureRate captureRate(fps);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, captureRate);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 sptr<OHOS::Surface> RecorderServer::GetSurface(int32_t sourceId)
@@ -500,7 +520,7 @@ int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId
         FAKE_POINTER(this), source, sourceId);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
 
     config_.audioSource = source;
     config_.withAudio = true;
@@ -508,28 +528,28 @@ int32_t RecorderServer::SetAudioSource(AudioSourceType source, int32_t &sourceId
         return recorderEngine_->SetAudioSource(source, sourceId);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
 
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetAudioDataSource(audioSource, sourceId);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
@@ -538,21 +558,21 @@ int32_t RecorderServer::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encod
         FAKE_POINTER(this), sourceId, encoder);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.audioCodec = encoder;
     AudEnc audEnc(encoder);
     MEDIA_LOGD("set audio encoder sourceId:%{public}d, encoder:%{public}d", sourceId, encoder);
-    CHECK_AND_RETURN_RET_LOG(!(encoder == AUDIO_MPEG && config_.format == FORMAT_MPEG_4), MSERR_INVALID_VAL,
-        "mp3 is not supported for mp4 recording");
+    CHECK_AND_RETURN_RET_LOG(!(encoder == AUDIO_MPEG && config_.format == FORMAT_MPEG_4),
+        MSERR_AUDIOCODEC_FILEFORMAT_MATCH_ERROR_401, "mp3 is not supported for mp4 recording");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, audEnc);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetAudioSampleRate(int32_t sourceId, int32_t rate)
@@ -561,7 +581,7 @@ int32_t RecorderServer::SetAudioSampleRate(int32_t sourceId, int32_t rate)
         FAKE_POINTER(this), sourceId, rate);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.audioSampleRate = rate;
     AudSampleRate audSampleRate(rate);
     MEDIA_LOGD("set audio sampleRate sourceId:%{public}d, rate:%{public}d", sourceId, rate);
@@ -569,11 +589,11 @@ int32_t RecorderServer::SetAudioSampleRate(int32_t sourceId, int32_t rate)
         return recorderEngine_->Configure(sourceId, audSampleRate);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetAudioChannels(int32_t sourceId, int32_t num)
@@ -582,18 +602,18 @@ int32_t RecorderServer::SetAudioChannels(int32_t sourceId, int32_t num)
         FAKE_POINTER(this), sourceId, num);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.audioChannel = num;
     AudChannel audChannel(num);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, audChannel);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
@@ -602,21 +622,21 @@ int32_t RecorderServer::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRat
         "bitRate(%{public}d)", FAKE_POINTER(this), sourceId, bitRate);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.audioBitRate = bitRate;
     AudBitRate audBitRate(bitRate);
     // 64000 audiobitrate from audioencorder
     CHECK_AND_RETURN_RET_LOG(!(config_.audioCodec == AUDIO_G711MU && config_.audioBitRate != 64000),
-        MSERR_INVALID_VAL, "G711-mulaw only support samplerate 8000 and audiobitrate 64000");
+        MSERR_AUDIO_G711MU_MATCH_ERROR_401, "G711-mulaw only support samplerate 8000 and audiobitrate 64000");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, audBitRate);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile)
@@ -625,18 +645,18 @@ int32_t RecorderServer::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfi
         "aacProfile(%{public}d)", FAKE_POINTER(this), sourceId, aacProfile);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.aacProfile = aacProfile;
     AacEnc aacEnc(aacProfile);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(sourceId, aacEnc);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetMetaConfigs(int32_t sourceId)
@@ -644,15 +664,15 @@ int32_t RecorderServer::SetMetaConfigs(int32_t sourceId)
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaConfigs in, sourceId(%{public}d)",
         FAKE_POINTER(this), sourceId);
     int32_t ret = SetMetaMimeType(sourceId, Plugins::MimeType::TIMED_METADATA);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_SET_META_CONFIGS_FAILED_5400103,
         "set meta mime type failed, ret: %{public}d", ret);
     if (config_.metaSource == MetaSourceType::VIDEO_META_MAKER_INFO) {
         ret = SetMetaTimedKey(sourceId, VID_DEBUG_INFO_KEY);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_SET_META_CONFIGS_FAILED_5400103,
             "set meta key failed, ret: %{public}d", ret);
         auto sourceTrackMime = GetVideoMime(config_.videoCodec);
         ret = SetMetaSourceTrackMime(sourceId, sourceTrackMime);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_EXT_OPERATE_NOT_PERMIT,
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_SET_META_CONFIGS_FAILED_5400103,
             "set meta source track mime failed, ret: %{public}d", ret);
     }
     return MSERR_OK;
@@ -671,7 +691,7 @@ int32_t RecorderServer::SetUserCustomInfo(Meta &userCustomInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
 
     config_.customInfo = userCustomInfo;
     CustomInfo userCustom(userCustomInfo);
@@ -679,18 +699,18 @@ int32_t RecorderServer::SetUserCustomInfo(Meta &userCustomInfo)
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, userCustom);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetGenre(std::string &genre)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
 
     config_.genre = genre;
     GenreInfo genreInfo(genre);
@@ -698,11 +718,11 @@ int32_t RecorderServer::SetGenre(std::string &genre)
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, genreInfo);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetMaxDuration(int32_t duration)
@@ -711,18 +731,18 @@ int32_t RecorderServer::SetMaxDuration(int32_t duration)
         FAKE_POINTER(this), duration);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.maxDuration = duration;
     MaxDuration maxDuration(duration);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, maxDuration);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
@@ -731,19 +751,19 @@ int32_t RecorderServer::SetOutputFormat(OutputFormatType format)
         FAKE_POINTER(this), format);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.format = format;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetOutputFormat(format);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_CONFIGURED : REC_INITIALIZED);
-    return ret;
+    int32_t statusCode = result.Value();
+    status_ = (statusCode == static_cast<int32_t>(Status::OK) ? REC_CONFIGURED : REC_INITIALIZED);
+    return TransformEngineStatusCode(statusCode);
 }
 
 int32_t RecorderServer::SetOutputFile(int32_t fd)
@@ -752,18 +772,18 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
         FAKE_POINTER(this), fd, lseek(fd, 0, SEEK_CUR));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.url = fd;
     OutFd outFileFd(fd);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetFileGenerationMode(FileGenerationMode mode)
@@ -772,10 +792,10 @@ int32_t RecorderServer::SetFileGenerationMode(FileGenerationMode mode)
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetFileGenerationMode in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     CHECK_AND_RETURN_RET_LOG(config_.withVideo, MSERR_INVALID_OPERATION, "Audio-only scenarios are not supported");
     CHECK_AND_RETURN_RET_LOG(MeidaLibraryAdapter::CreateMediaLibrary(config_.url, config_.uri),
-        MSERR_UNKNOWN, "get fd failed");
+        MSERR_CREATE_MEDIA_FILE_FAILED_5400103, "get fd failed");
     MEDIA_LOGD("video Fd:%{public}d", config_.url);
     config_.fileGenerationMode = mode;
     OutFd outFileFd(config_.url);
@@ -783,11 +803,11 @@ int32_t RecorderServer::SetFileGenerationMode(FileGenerationMode mode)
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, outFileFd);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 #endif
     return MSERR_INVALID_OPERATION;
 }
@@ -797,17 +817,17 @@ int32_t RecorderServer::SetNextOutputFile(int32_t fd)
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetNextOutputFile in", FAKE_POINTER(this));
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     NextOutFd nextFileFd(fd);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, nextFileFd);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetMaxFileSize(int64_t size)
@@ -816,18 +836,18 @@ int32_t RecorderServer::SetMaxFileSize(int64_t size)
         FAKE_POINTER(this), size);
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.maxFileSize = size;
     MaxFileSize maxFileSize(size);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Configure(DUMMY_SOURCE_ID, maxFileSize);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 void RecorderServer::SetLocation(float latitude, float longitude)
@@ -881,18 +901,18 @@ int32_t RecorderServer::SetRecorderCallback(const std::shared_ptr<RecorderCallba
         recorderCb_ = callback;
     }
 
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     std::shared_ptr<IRecorderEngineObs> obs = shared_from_this();
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         MEDIA_LOGI("RecorderServer recorderEngine_->SetObs start.");
         return recorderEngine_->SetObs(obs);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::Prepare()
@@ -907,19 +927,19 @@ int32_t RecorderServer::Prepare()
         return MSERR_INVALID_OPERATION;
     }
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Prepare();
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_PREPARED : REC_ERROR);
+    int32_t statusCode = result.Value();
+    status_ = (statusCode == static_cast<int32_t>(Status::OK) ? REC_PREPARED : REC_ERROR);
     SetMediaKitReport(status_);
-    return ret;
+    return TransformEngineStatusCode(statusCode);
 }
 
 int32_t RecorderServer::Start()
@@ -939,25 +959,25 @@ int32_t RecorderServer::Start()
     }
 #endif
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     CHECK_AND_RETURN_RET_LOG(config_.fileGenerationMode == APP_CREATE || CheckCameraOutputState(),
         MSERR_INVALID_OPERATION, "CheckCameraOutputState failed");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Start();
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
+    int32_t statusCode = result.Value();
+    status_ = (statusCode == static_cast<int32_t>(Status::OK) ? REC_RECORDING : REC_ERROR);
     if (status_ == REC_RECORDING) {
         int64_t endTime = GetCurrentMillisecond();
         statisticalEventInfo_.startLatency = static_cast<int32_t>(endTime - startTime_);
     }
     SetMediaKitReport(status_);
-    return ret;
+    return TransformEngineStatusCode(statusCode);
 }
 
 int32_t RecorderServer::Pause()
@@ -970,19 +990,19 @@ int32_t RecorderServer::Pause()
         return MSERR_INVALID_OPERATION;
     }
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Pause();
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_PAUSED : REC_ERROR);
+    int32_t statusCode = result.Value();
+    status_ = (statusCode == static_cast<int32_t>(Status::OK) ? REC_PAUSED : REC_ERROR);
     SetMediaKitReport(status_);
-    return ret;
+    return TransformEngineStatusCode(statusCode);
 }
 
 int32_t RecorderServer::Resume()
@@ -995,19 +1015,19 @@ int32_t RecorderServer::Resume()
         return MSERR_INVALID_OPERATION;
     }
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Resume();
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_RECORDING : REC_ERROR);
+    int32_t statusCode = result.Value();
+    status_ = (statusCode == static_cast<int32_t>(Status::OK) ? REC_RECORDING : REC_ERROR);
     SetMediaKitReport(status_);
-    return ret;
+    return TransformEngineStatusCode(statusCode);
 }
 
 int32_t RecorderServer::Stop(bool block)
@@ -1017,18 +1037,18 @@ int32_t RecorderServer::Stop(bool block)
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop in", FAKE_POINTER(this));
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION);
 
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Stop(block);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    ret = result.Value();
-    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop out ret: %{public}d", FAKE_POINTER(this), ret);
-    status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+    int32_t statusCode = result.Value();
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop out ret: %{public}d", FAKE_POINTER(this), statusCode);
+    status_ = (statusCode == static_cast<int32_t>(Status::OK) ? REC_INITIALIZED : REC_ERROR);
     if (status_ == REC_INITIALIZED) {
         int64_t endTime = GetCurrentMillisecond();
         statisticalEventInfo_.recordDuration = static_cast<int32_t>(endTime - startTime_ -
@@ -1044,7 +1064,7 @@ int32_t RecorderServer::Stop(bool block)
 #ifdef SUPPORT_POWER_MANAGER
     UnregisterShutdownCallbackIfNeeded();
 #endif
-    return ret;
+    return TransformEngineStatusCode(statusCode);
 }
 
 int32_t RecorderServer::Reset()
@@ -1052,22 +1072,22 @@ int32_t RecorderServer::Reset()
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::Reset");
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Reset in", FAKE_POINTER(this));
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->Reset();
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    ret = result.Value();
-    status_ = (ret == MSERR_OK ? REC_INITIALIZED : REC_ERROR);
+    int32_t statusCode = result.Value();
+    status_ = (statusCode == static_cast<int32_t>(Status::OK) ? REC_INITIALIZED : REC_ERROR);
     if (status_ == REC_INITIALIZED) {
         watermarkCount_ = 0;
     }
     SetMediaKitReport(status_);
-    return ret;
+    return TransformEngineStatusCode(statusCode);
 }
 
 int32_t RecorderServer::Release()
@@ -1177,64 +1197,64 @@ int32_t RecorderServer::GetLocation(Location &location)
 int32_t RecorderServer::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->GetCurrentCapturerChangeInfo(changeInfo);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->GetAvailableEncoder(encoderInfo);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::GetMaxAmplitude(int32_t &amplitude)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
         MSERR_INVALID_STATE);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->GetMaxAmplitude(amplitude);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::IsWatermarkSupported(bool &isWatermarkSupported)
 {
     MEDIA_LOGI("IsWatermarkSupported in");
     std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->IsWatermarkSupported(isWatermarkSupported);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
@@ -1243,16 +1263,16 @@ int32_t RecorderServer::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::SetWatermark");
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetWatermark(waterMarkBuffer);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
@@ -1268,16 +1288,16 @@ int32_t RecorderServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
         "Invalid watermark height");
     auto ret = GetWatermarkCount(watermarkCount);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to add watermark, watermarks is over five.");
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->AddWatermark(watermarkBuffer, width, height);
     });
     ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::GetWatermarkCount(int32_t &watermarkCount)
@@ -1297,12 +1317,12 @@ int32_t RecorderServer::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     MediaTrace trace("RecorderServer::SetUserMeta");
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
         MSERR_INVALID_STATE);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<Status>>([&, this] {
         return recorderEngine_->SetUserMeta(userMeta);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     int32_t result;
     Status statusCode = task->GetResult().Value();
@@ -1336,7 +1356,7 @@ int32_t RecorderServer::TransmitQos(QOS::QosLevel level)
         return MSERR_OK;
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
@@ -1349,16 +1369,16 @@ int32_t RecorderServer::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::SetWillMuteWhenInterrupted");
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED && status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
     });
     int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
 
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    return result.Value();
+    return TransformEngineStatusCode(result.Value());
 }
 
 int32_t RecorderServer::SetStabilizationMode(bool enableStabilization)

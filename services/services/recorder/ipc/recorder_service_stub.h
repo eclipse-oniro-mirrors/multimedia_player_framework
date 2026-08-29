@@ -159,7 +159,7 @@ private:
     int32_t pid_ = 0;
     AudioSourceType audioSourceType_ = AUDIO_SOURCE_INVALID;
     bool needAudioPermissionCheck = false;
-    const std::set<uint32_t> AUDIO_REQUEST = {SET_AUDIO_SOURCE, SET_AUDIO_ENCODER, SET_AUDIO_ENCODER,
+    const std::set<uint32_t> AUDIO_REQUEST = {SET_AUDIO_SOURCE, SET_AUDIO_ENCODER,
         SET_AUDIO_CHANNELS, SET_AUDIO_ENCODING_BIT_RATE};
     const std::set<uint32_t> COMMON_REQUEST = {SET_LISTENER_OBJ, SET_DATA_SOURCE, SET_MAX_DURATION,
         SET_OUTPUT_FORMAT, SET_OUTPUT_FILE, SET_LOCATION, SET_ORIENTATION_HINT,

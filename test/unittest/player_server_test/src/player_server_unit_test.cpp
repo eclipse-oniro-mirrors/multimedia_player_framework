@@ -329,7 +329,7 @@ std::string ErrorMessageNoPermission(const std::string& param1, const std::strin
 std::string ErrorMessageInvalidParameter(const std::string& param1, const std::string& param2)
 {
     (void)param2;
-    std::string message = "The Parameter " + param1 + " is invalid. Please check the type and range.";
+    std::string message = "The parameter " + param1 + " is invalid. Please check the type and range.";
     return message;
 }
 
@@ -349,8 +349,7 @@ std::string ErrorMessageNoMemory(const std::string& param1, const std::string& p
 
 std::string ErrorMessageOperateNotPermit(const std::string& param1, const std::string& param2)
 {
-    (void)param2;
-    std::string message = "The operate " + param1 + " failed due to not permit in current state.";
+    std::string message = "The operate " + param1 + " failed due to not permit in current state (" + param2 + ").";
     return message;
 }
 
@@ -371,7 +370,7 @@ std::string ErrorMessageServiceDied(const std::string& param1, const std::string
 {
     (void)param1;
     (void)param2;
-    std::string message = "Media Serviced Died.";
+    std::string message = "Media service died.";
     return message;
 }
 
@@ -386,7 +385,7 @@ std::string ErrorMessageAudioInterruped(const std::string& param1, const std::st
 {
     (void)param1;
     (void)param2;
-    std::string message = "Audio Interrupted by other process.";
+    std::string message = "Audio interrupted by other process.";
     return message;
 }
 

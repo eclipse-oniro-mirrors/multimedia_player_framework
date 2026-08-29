@@ -407,6 +407,7 @@ private:
     void CancelCallback();
     void RemoveSurface();
 
+    std::string GetRecorderState();
     int32_t CheckStateMachine(const std::string &opt);
     int32_t CheckRepeatOperation(const std::string &opt);
     int32_t GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
@@ -430,9 +431,9 @@ private:
     bool GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetSourceIdAndQuality(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
         napi_value sourceIdArgs, napi_value qualityArgs, const std::string &opt);
-    RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
-    RetInfo Configure(std::shared_ptr<AVRecorderConfig> config);
-    RetInfo ConfigureUrl(std::shared_ptr<AVRecorderConfig> config);
+    RetInfo SetProfile(const std::string &operation, std::shared_ptr<AVRecorderConfig> config);
+    RetInfo Configure(const std::string &operation, std::shared_ptr<AVRecorderConfig> config);
+    RetInfo ConfigureUrl(const std::string &operation, std::shared_ptr<AVRecorderConfig> config);
     int32_t ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig,
         std::shared_ptr<Meta> &meta);
 
@@ -466,8 +467,8 @@ struct AVRecorderAsyncContext : public MediaAsyncContext {
     explicit AVRecorderAsyncContext(napi_env env) : MediaAsyncContext(env) {}
     ~AVRecorderAsyncContext() = default;
 
-    void AVRecorderSignError(int32_t errCode, const std::string &operate,
-        const std::string &param, const std::string &add = "");
+    void AVRecorderSignError(int32_t msErrCode, const std::string &operation, const std::string &param = "",
+        const std::string &recorderState = "", const std::string &add = "");
 
     AVRecorderNapi *napi = nullptr;
     std::shared_ptr<AVRecorderConfig> config_ = nullptr;

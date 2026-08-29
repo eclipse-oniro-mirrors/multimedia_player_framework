@@ -416,7 +416,7 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Denied_SetAudioSource, TestSiz
     data.WriteInt32(static_cast<int32_t>(AudioSourceType::AUDIO_INNER));
 
     int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_AUDIO_SOURCE, data, reply, option);
-    EXPECT_EQ(ret, MSERR_EXT_API9_NO_PERMISSION);
+    EXPECT_EQ(ret, MSERR_NO_PERMISSION_5400102);
     EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_SOURCE_INVALID);
 }
 
@@ -440,7 +440,7 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Denied_OtherAudioRequest, Test
     data.WriteInterfaceToken(stub->GetDescriptor());
 
     int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_AUDIO_ENCODER, data, reply, option);
-    EXPECT_EQ(ret, MSERR_EXT_API9_NO_PERMISSION);
+    EXPECT_EQ(ret, MSERR_NO_PERMISSION_5400102);
     EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_INNER);
 }
 
@@ -464,7 +464,7 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Granted_CommonNoAudioCheck, Te
     data.WriteInt32(static_cast<int32_t>(OutputFormatType::FORMAT_MPEG_4));
 
     int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_OUTPUT_FORMAT, data, reply, option);
-    EXPECT_NE(ret, MSERR_EXT_API9_NO_PERMISSION);
+    EXPECT_NE(ret, MSERR_NO_PERMISSION_5400102);
 }
 
 /**
@@ -488,7 +488,7 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Denied_CommonWithAudioCheck, T
     data.WriteInterfaceToken(stub->GetDescriptor());
 
     int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::PREPARE, data, reply, option);
-    EXPECT_EQ(ret, MSERR_EXT_API9_NO_PERMISSION);
+    EXPECT_EQ(ret, MSERR_NO_PERMISSION_5400102);
     EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_INNER);
 }
 
@@ -511,7 +511,7 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_Granted_NonAudioNonCommon, Tes
     data.WriteInt32(static_cast<int32_t>(VideoSourceType::VIDEO_SOURCE_SURFACE_ES));
 
     int32_t ret = stub->OnRemoteRequest(IStandardRecorderService::SET_VIDEO_SOURCE, data, reply, option);
-    EXPECT_NE(ret, MSERR_EXT_API9_NO_PERMISSION);
+    EXPECT_NE(ret, MSERR_NO_PERMISSION_5400102);
 }
 } // namespace Media
 } // namespace OHOS

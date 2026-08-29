@@ -177,6 +177,43 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_UNKNOWN_CREATE_AUDIO_RENDER,
         "possible caused by audio format not support, too many audio streams, or audio server system error"
         "(such as audio server died)"},
+    {MSERR_NULL_POINTER_5400101, "Framework internal error."},
+    {MSERR_NULL_POINTER_5400102, "Framework internal error."},
+    {MSERR_FRAMEWORK_ERROR_401, "Framework internal error."},
+    {MSERR_FRAMEWORK_ERROR_5400101, "Framework internal error."},
+    {MSERR_FRAMEWORK_ERROR_5400103, "Framework internal error."},
+    {MSERR_IPC_ERROR_5400102, "Framework internal error."},
+    {MSERR_API_FUNC_NOT_FOUND_5400102, "Framework internal error."},
+    {MSERR_GET_AUDIO_CAPTURER_INFO_FAILED_401, "Framework internal error."},
+    {MSERR_GET_MAX_AMPLITUDE_FAILED_401, "Framework internal error."},
+    {MSERR_GET_AVAILABLE_ENCODER_FAILED_401, "Framework internal error."},
+    {MSERR_SET_WILL_MUTE_WHEN_INTERRUPTED_FAILED_5400103, "Framework internal error."},
+    {MSERR_GET_INPUT_SURFACE_FAILED_5400102, "Failed to get input surface."},
+    {MSERR_GET_ROTATION_FAILED_401, "Failed to get the config.rotation parameter value."},
+    {MSERR_GET_ROTATION_FAILED_5400103, "Failed to get the config.rotation parameter value."},
+    {MSERR_GET_AUDIO_SOURCE_TYPE_FAILED_401, "Failed to get the config.audioSourceType parameter value."},
+    {MSERR_GET_AUDIO_SOURCE_TYPE_FAILED_5400103, "Failed to get the config.audioSourceType parameter value."},
+    {MSERR_GET_VIDEO_SOURCE_TYPE_FAILED_401, "Failed to get the config.videoSourceType parameter value."},
+    {MSERR_GET_VIDEO_SOURCE_TYPE_FAILED_5400103, "Failed to get the config.videoSourceType parameter value."},
+    {MSERR_GET_META_SOURCE_TYPES_FAILED_5400103, "Failed to get the config.metaSourceTypes parameter value."},
+    {MSERR_NO_PERMISSION_5400102, "User do not have the required permissions for the current operation."},
+    {MSERR_NO_SOURCE_TYPE_401,
+        "At least one of config.audioSourceType and config.videoSourceType should be specified."},
+    {MSERR_ISHDR_VIDEOCODEC_MATCH_ERROR_5400106,
+        "If the value of config.profile.isHdr is true, the value of config.profile.videoCodec should be video/hevc."},
+    {MSERR_GET_AVAILABLE_ENCODERS_SIZE_ERROR_5400102, "The number of returned encoders is out of range."},
+    {MSERR_TASK_QUEUE_ERROR_401, "Framework internal error."},
+    {MSERR_TASK_QUEUE_ERROR_5400102, "Framework internal error."},
+    {MSERR_RECORDER_ENGINE_ERROR_5400103, "Framework internal error."},
+    {MSERR_AUDIOCODEC_FILEFORMAT_MATCH_ERROR_401,
+        "Parameter config.profile.audioCodec(mp3) is not compatible with config.profile.fileFormat(mp4)."},
+    {MSERR_AUDIO_G711MU_MATCH_ERROR_401,
+        "The G711-mulaw audio encoding format supports the sample rate of 8000 and bit rate of 64000 only."},
+    {MSERR_SET_META_CONFIGS_FAILED_5400103, "Framework internal error."},
+    {MSERR_CREATE_MEDIA_FILE_FAILED_5400103, "Failed to create file in media library."},
+    {MSERR_AVCODEC_TIMEOUT_NO_VIDEO_FRAME_RECEIVED_5400103,
+        "The codec timed out because no video frames were received."},
+    {MSERR_CHECK_CAMERA_OUTPUT_STATUS_FAILED_5400102, "Check camera output status failed."},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -418,6 +455,38 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_INVALID_OPERATION_STARTED,           MSERR_EXT_API9_OPERATE_NOT_PERMIT},
     {MSERR_UNKNOWN_UNSUPPORT,                   MSERR_EXT_API9_IO},
     {MSERR_UNKNOWN_CREATE_AUDIO_RENDER,         MSERR_EXT_API9_UNSUPPORT_FORMAT},
+    {MSERR_NULL_POINTER_5400101,                MSERR_EXT_API9_NO_MEMORY},
+    {MSERR_NULL_POINTER_5400102,                MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_FRAMEWORK_ERROR_401,                 MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_FRAMEWORK_ERROR_5400101,             MSERR_EXT_API9_NO_MEMORY},
+    {MSERR_FRAMEWORK_ERROR_5400103,             MSERR_EXT_API9_IO},
+    {MSERR_IPC_ERROR_5400102,                   MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_API_FUNC_NOT_FOUND_5400102,          MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_GET_AUDIO_CAPTURER_INFO_FAILED_401,  MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_GET_MAX_AMPLITUDE_FAILED_401,        MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_GET_AVAILABLE_ENCODER_FAILED_401,    MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_SET_WILL_MUTE_WHEN_INTERRUPTED_FAILED_5400103, MSERR_EXT_API9_IO},
+    {MSERR_GET_INPUT_SURFACE_FAILED_5400102,    MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_GET_ROTATION_FAILED_401,             MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_GET_ROTATION_FAILED_5400103,         MSERR_EXT_API9_IO},
+    {MSERR_GET_AUDIO_SOURCE_TYPE_FAILED_401,    MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_GET_AUDIO_SOURCE_TYPE_FAILED_5400103, MSERR_EXT_API9_IO},
+    {MSERR_GET_VIDEO_SOURCE_TYPE_FAILED_401,    MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_GET_VIDEO_SOURCE_TYPE_FAILED_5400103, MSERR_EXT_API9_IO},
+    {MSERR_GET_META_SOURCE_TYPES_FAILED_5400103, MSERR_EXT_API9_IO},
+    {MSERR_NO_PERMISSION_5400102,               MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_NO_SOURCE_TYPE_401,                  MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_ISHDR_VIDEOCODEC_MATCH_ERROR_5400106, MSERR_EXT_API9_UNSUPPORT_FORMAT},
+    {MSERR_GET_AVAILABLE_ENCODERS_SIZE_ERROR_5400102, MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_TASK_QUEUE_ERROR_401,                MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_TASK_QUEUE_ERROR_5400102,            MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_RECORDER_ENGINE_ERROR_5400103,       MSERR_EXT_API9_IO},
+    {MSERR_AUDIOCODEC_FILEFORMAT_MATCH_ERROR_401, MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_AUDIO_G711MU_MATCH_ERROR_401,        MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_SET_META_CONFIGS_FAILED_5400103,     MSERR_EXT_API9_IO},
+    {MSERR_CREATE_MEDIA_FILE_FAILED_5400103,    MSERR_EXT_API9_IO},
+    {MSERR_AVCODEC_TIMEOUT_NO_VIDEO_FRAME_RECEIVED_5400103, MSERR_EXT_API9_IO},
+    {MSERR_CHECK_CAMERA_OUTPUT_STATUS_FAILED_5400102, MSERR_EXT_API9_OPERATE_NOT_PERMIT},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
@@ -478,7 +547,7 @@ std::string ErrorMessageNoPermission(const std::string& param1, const std::strin
 std::string ErrorMessageInvalidParameter(const std::string& param1, const std::string& param2)
 {
     (void)param2;
-    std::string message = "The Parameter " + param1 + " is invalid. Please check the type and range.";
+    std::string message = "The parameter " + param1 + " is invalid. Please check the type and range.";
     return message;
 }
 
@@ -498,8 +567,7 @@ std::string ErrorMessageNoMemory(const std::string& param1, const std::string& p
 
 std::string ErrorMessageOperateNotPermit(const std::string& param1, const std::string& param2)
 {
-    (void)param2;
-    std::string message = "The operate " + param1 + " failed due to not permit in current state.";
+    std::string message = "The operate " + param1 + " failed due to not permit in current state (" + param2 + ").";
     return message;
 }
 
@@ -520,7 +588,7 @@ std::string ErrorMessageServiceDied(const std::string& param1, const std::string
 {
     (void)param1;
     (void)param2;
-    std::string message = "Media Serviced Died.";
+    std::string message = "Media service died.";
     return message;
 }
 
@@ -535,7 +603,7 @@ std::string ErrorMessageAudioInterruped(const std::string & param1, const std::s
 {
     (void)param1;
     (void)param2;
-    std::string message = "Audio Interrupted by other process.";
+    std::string message = "Audio interrupted by other process.";
     return message;
 }
 

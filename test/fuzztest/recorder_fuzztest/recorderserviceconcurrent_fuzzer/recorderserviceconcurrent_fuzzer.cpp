@@ -41,7 +41,7 @@ enum RecorderServiceMsg {
     SET_ORIENTATION_HINT = 1,
     SET_VIDEO_ENCODER = 2,
     SET_VIDEO_SIZE = 3,
-    SET_VIDEO_FARAME_RATE = 4,
+    SET_VIDEO_FRAME_RATE = 4,
     SET_VIDEO_ENCODING_BIT_RATE = 5,
     SET_AUDIO_ENCODING_BIT_RATE = 6,
     SET_VIDEO_IS_HDR = 7,
@@ -93,7 +93,7 @@ int FuzzRecorderConconcurrentTestOne(FuzzedDataProvider& provider, int code)
             recoderServer->SetVideoSize(sourceId, VIDEO_WIDTH, VIDEO_HEIGHT);
             break;
         }
-        case SET_VIDEO_FARAME_RATE: {
+        case SET_VIDEO_FRAME_RATE: {
             int32_t sourceId = provider.ConsumeIntegral<uint32_t>();
             recoderServer->SetVideoFrameRate(sourceId, VIDEO_FRAME_RATE);
             break;

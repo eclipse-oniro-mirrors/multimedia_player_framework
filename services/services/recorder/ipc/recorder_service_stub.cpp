@@ -75,7 +75,7 @@ void RecorderServiceStub::FillRecFuncPart1()
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEncoder(data, reply); };
     recFuncs_[SET_VIDEO_SIZE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoSize(data, reply); };
-    recFuncs_[SET_VIDEO_FARAME_RATE] =
+    recFuncs_[SET_VIDEO_FRAME_RATE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoFrameRate(data, reply); };
     recFuncs_[SET_VIDEO_ENCODING_BIT_RATE] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEncodingBitRate(data, reply); };
@@ -217,11 +217,12 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
         // none audio request no need to check permission in recorder server
     }
     if (permissionResult == Security::AccessToken::PERMISSION_DENIED) {
-        MEDIA_LOGE("user do not have the correct permission");
+        MEDIA_LOGE("User do not have the required permissions for the current operation.");
         if (code == SET_AUDIO_SOURCE) {
+            std::lock_guard<std::mutex> lock(stmutex_);
             audioSourceType_ = AUDIO_SOURCE_INVALID;
         }
-        return MSERR_EXT_API9_NO_PERMISSION;
+        return MSERR_NO_PERMISSION_5400102;
     }
 
     auto itFunc = recFuncs_.find(code);
@@ -255,92 +256,92 @@ int32_t RecorderServiceStub::SetListenerObject(const sptr<IRemoteObject> &object
     std::shared_ptr<RecorderCallback> callback = std::make_shared<RecorderListenerCallback>(listener);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "failed to new RecorderListenerCallback");
 
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     (void)recorderServer_->SetRecorderCallback(callback);
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetVideoSource(VideoSourceType source, int32_t &sourceId)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoSource(source, sourceId);
 }
 
 int32_t RecorderServiceStub::SetVideoEncoder(int32_t sourceId, VideoCodecFormat encoder)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoEncoder(sourceId, encoder);
 }
 
 int32_t RecorderServiceStub::SetVideoSize(int32_t sourceId, int32_t width, int32_t height)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoSize(sourceId, width, height);
 }
 
 int32_t RecorderServiceStub::SetVideoFrameRate(int32_t sourceId, int32_t frameRate)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoFrameRate(sourceId, frameRate);
 }
 
 int32_t RecorderServiceStub::SetVideoEncodingBitRate(int32_t sourceId, int32_t rate)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoEncodingBitRate(sourceId, rate);
 }
 
 int32_t RecorderServiceStub::SetVideoIsHdr(int32_t sourceId, bool isHdr)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoIsHdr(sourceId, isHdr);
 }
 
 int32_t RecorderServiceStub::SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
 }
 
 int32_t RecorderServiceStub::SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
 }
 
 int32_t RecorderServiceStub::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoEnableBFrame(sourceId, enableBFrame);
 }
 
 int32_t RecorderServiceStub::SetMetaConfigs(int32_t sourceId)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetMetaConfigs(sourceId);
 }
 
 int32_t RecorderServiceStub::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetMetaSource(source, sourceId);
 }
 
 int32_t RecorderServiceStub::SetMetaMimeType(int32_t sourceId, const std::string_view &type)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetMetaMimeType(sourceId, type);
 }
 
 int32_t RecorderServiceStub::SetMetaTimedKey(int32_t sourceId, const std::string_view &timedKey)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetMetaTimedKey(sourceId, timedKey);
 }
 
 int32_t RecorderServiceStub::SetMetaSourceTrackMime(int32_t sourceId, const std::string_view &srcTrackMime)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetMetaSourceTrackMime(sourceId, srcTrackMime);
 }
 
@@ -358,208 +359,208 @@ sptr<OHOS::Surface> RecorderServiceStub::GetMetaSurface(int32_t sourceId)
 
 int32_t RecorderServiceStub::SetAudioSource(AudioSourceType source, int32_t &sourceId)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetAudioSource(source, sourceId);
 }
 
 int32_t RecorderServiceStub::SetAudioEncoder(int32_t sourceId, AudioCodecFormat encoder)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetAudioEncoder(sourceId, encoder);
 }
 
 int32_t RecorderServiceStub::SetAudioSampleRate(int32_t sourceId, int32_t rate)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetAudioSampleRate(sourceId, rate);
 }
 
 int32_t RecorderServiceStub::SetAudioChannels(int32_t sourceId, int32_t num)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetAudioChannels(sourceId, num);
 }
 
 int32_t RecorderServiceStub::SetAudioEncodingBitRate(int32_t sourceId, int32_t bitRate)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetAudioEncodingBitRate(sourceId, bitRate);
 }
 
 int32_t RecorderServiceStub::SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetAudioAacProfile(sourceId, aacProfile);
 }
 
 int32_t RecorderServiceStub::SetDataSource(DataSourceType dataType, int32_t &sourceId)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetDataSource(dataType, sourceId);
 }
 
 int32_t RecorderServiceStub::SetUserCustomInfo(Meta &userCustomInfo)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetUserCustomInfo(userCustomInfo);
 }
 
 int32_t RecorderServiceStub::SetGenre(std::string &genre)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetGenre(genre);
 }
 
 int32_t RecorderServiceStub::SetMaxDuration(int32_t duration)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetMaxDuration(duration);
 }
 
 int32_t RecorderServiceStub::SetOutputFormat(OutputFormatType format)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetOutputFormat(format);
 }
 
 int32_t RecorderServiceStub::SetOutputFile(int32_t fd)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetOutputFile(fd);
 }
 
 int32_t RecorderServiceStub::SetFileGenerationMode(FileGenerationMode mode)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetFileGenerationMode(mode);
 }
 
 int32_t RecorderServiceStub::SetLocation(float latitude, float longitude)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     recorderServer_->SetLocation(latitude, longitude);
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetOrientationHint(int32_t rotation)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     recorderServer_->SetOrientationHint(rotation);
     return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::Prepare()
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->Prepare();
 }
 
 int32_t RecorderServiceStub::Start()
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->Start();
 }
 
 int32_t RecorderServiceStub::Pause()
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->Pause();
 }
 
 int32_t RecorderServiceStub::Resume()
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->Resume();
 }
 
 int32_t RecorderServiceStub::Stop(bool block)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->Stop(block);
 }
 
 int32_t RecorderServiceStub::Reset()
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->Reset();
 }
 
 int32_t RecorderServiceStub::Release()
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->Release();
 }
 
 int32_t RecorderServiceStub::DumpInfo(int32_t fd)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return std::static_pointer_cast<RecorderServer>(recorderServer_)->DumpInfo(fd);
 }
 
 int32_t RecorderServiceStub::GetAVRecorderConfig(ConfigMap &configMap)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->GetAVRecorderConfig(configMap);
 }
 
 int32_t RecorderServiceStub::GetLocation(Location &location)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->GetLocation(location);
 }
 
 int32_t RecorderServiceStub::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->GetCurrentCapturerChangeInfo(changeInfo);
 }
 
 int32_t RecorderServiceStub::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->GetAvailableEncoder(encoderInfo);
 }
 
 int32_t RecorderServiceStub::GetMaxAmplitude(int32_t &amplitude)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->GetMaxAmplitude(amplitude);
 }
 
 int32_t RecorderServiceStub::IsWatermarkSupported(bool &isWatermarkSupported)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->IsWatermarkSupported(isWatermarkSupported);
 }
 
 int32_t RecorderServiceStub::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetWatermark(waterMarkBuffer);
 }
 
 int32_t RecorderServiceStub::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
     int32_t &watermarkCount)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
 }
 
 int32_t RecorderServiceStub::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
 }
 
 int32_t RecorderServiceStub::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetUserMeta(userMeta);
 }
 
 int32_t RecorderServiceStub::TransmitQos(QOS::QosLevel level)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NO_MEMORY, "recorder server is nullptr");
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->TransmitQos(level);
 }
 

@@ -15,6 +15,7 @@
 
 #include "avrecorder_callback.h"
 #include <uv.h>
+#include <unordered_map>
 #include "media_errors.h"
 #include "scope_guard.h"
 #include "media_log.h"
@@ -24,6 +25,32 @@
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_RECORDER, "AVRecorderCallback"};
+
+    struct ErrorMapEntry {
+        int32_t extCode;
+        std::string msg;
+    };
+
+    const std::unordered_map<int32_t, ErrorMapEntry> ERROR_MAP = {
+        {OHOS::Media::MSERR_DATA_SOURCE_IO_ERROR, {OHOS::Media::MSERR_EXT_API9_TIMEOUT,
+            "The video input stream timed out. Please confirm that the input stream is normal."}},
+        {OHOS::Media::MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR, {OHOS::Media::MSERR_EXT_API9_TIMEOUT,
+            "Read data from audio timeout, please confirm whether the audio module is normal."}},
+        {OHOS::Media::MSERR_DATA_SOURCE_ERROR_UNKNOWN, {OHOS::Media::MSERR_EXT_API9_IO, "Video input data is abnormal."
+             " Please confirm that the pts, width, height, size and other data are normal."}},
+        {OHOS::Media::MSERR_AUD_INTERRUPT, {OHOS::Media::MSERR_EXT_API9_AUDIO_INTERRUPTED,
+            "Recording failed due to audio interruption."}},
+        {OHOS::Media::MSERR_VID_ENC_FAILED, {OHOS::Media::MSERR_EXT_API9_IO, "Video encoder error happened."}},
+        {OHOS::Media::MSERR_AUD_ENC_INIT_FAILED, {OHOS::Media::MSERR_EXT_API9_IO, "Failed to init audio encoder."}},
+        {OHOS::Media::MSERR_VID_ENC_INIT_FAILED, {OHOS::Media::MSERR_EXT_API9_IO, "Failed to init video encoder."}},
+        {OHOS::Media::MSERR_SERVICE_DIED, {OHOS::Media::MSERR_EXT_API9_IO, "Media service died."}},
+        {OHOS::Media::MSERR_AUDIO_BITRATE_LE_ZERO_ERROR_5400103, {OHOS::Media::MSERR_EXT_API9_IO,
+            "Audio bitrate cannot be less than or equal to 0."}},
+        {OHOS::Media::MSERR_VIDEO_BITRATE_LE_ZERO_ERROR_5400103, {OHOS::Media::MSERR_EXT_API9_IO,
+            "Video bitrate cannot be less than or equal to 0."}},
+    };
+
+    const ErrorMapEntry DEFAULT_ERROR = { OHOS::Media::MSERR_EXT_API9_IO, "Framework internal error." };
 }
 
 namespace OHOS {
@@ -157,21 +184,9 @@ void AVRecorderCallback::OnError(RecorderErrorType errorType, int32_t errCode)
 {
     MEDIA_LOGI("OnError is called, name: %{public}d, error message: %{public}d", errorType, errCode);
     SendStateCallback(AVRecorderState::STATE_ERROR, StateChangeReason::BACKGROUND);
-    if (errCode == MSERR_DATA_SOURCE_IO_ERROR) {
-        SendErrorCallback(MSERR_EXT_API9_TIMEOUT,
-            "The video input stream timed out. Please confirm that the input stream is normal.");
-    } else if (errCode == MSERR_DATA_SOURCE_OBTAIN_MEM_ERROR) {
-        SendErrorCallback(MSERR_EXT_API9_TIMEOUT,
-            "Read data from audio timeout, please confirm whether the audio module is normal.");
-    } else if (errCode == MSERR_DATA_SOURCE_ERROR_UNKNOWN) {
-        SendErrorCallback(MSERR_EXT_API9_IO, "Video input data is abnormal."
-            " Please confirm that the pts, width, height, size and other data are normal.");
-    } else if (errCode == MSERR_AUD_INTERRUPT) {
-        SendErrorCallback(MSERR_EXT_API9_AUDIO_INTERRUPTED,
-            "Record failed by audio interrupt.");
-    } else {
-        SendErrorCallback(MSERR_EXT_API9_IO, "IO error happened.");
-    }
+    auto it = ERROR_MAP.find(errCode);
+    const ErrorMapEntry &entry = (it != ERROR_MAP.end()) ? it->second : DEFAULT_ERROR;
+    SendErrorCallback(entry.extCode, entry.msg);
 }
 
 void AVRecorderCallback::OnInfo(int32_t type, int32_t extra)
