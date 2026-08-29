@@ -754,8 +754,8 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
     for (auto &mem : soundID2MultiStreams_) {
         std::list<std::shared_ptr<AudioStream>> &streams = mem.second;
         if (streams.empty()) {
-            soundID2MultiStreams_.erase(mem);
-            MEDIA_LOGI("remove mem which soundID is %{public}d", mem);
+            MEDIA_LOGI("remove mem which soundID is %{public}d", mem.first);
+            soundID2MultiStreams_.erase(mem.first);
             continue;
         }
         for (auto it = streams.begin(); it != streams.end();) {
