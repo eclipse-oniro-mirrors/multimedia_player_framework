@@ -595,7 +595,7 @@ void StreamIDManagerWithSameSoundInterrupt::PrintSoundID2Stream()
         oss << "soundID=" << mem.first << "|streamID="<<mem.second->GetStreamID()
             << "|state=" << static_cast<int32_t>(mem.second->GetStreamState()) << "\n";
     }
-    MEDIA_LOGI("PrintSoundID2Stream, soundID2Stream_:\n", oss.str().c_str());
+    MEDIA_LOGI("PrintSoundID2Stream, soundID2Stream_:\n%{public}s", oss.str().c_str());
 }
 
 int32_t StreamIDManagerWithSameSoundInterrupt::SetPlay(int32_t soundID, int32_t streamID,
@@ -843,7 +843,7 @@ void StreamIDManagerWithNoInterrupt::PrintSoundID2Stream()
         }
         oss << "]\n";
     }
-    MEDIA_LOGI("PrintSoundID2Stream, soundID2MultiStreams_:\n", oss.str().c_str());
+    MEDIA_LOGI("PrintSoundID2Stream, soundID2MultiStreams_:\n%{public}s", oss.str().c_str());
 }
 
 int32_t StreamIDManagerWithNoInterrupt::SetPlay(int32_t soundID, int32_t streamID,
