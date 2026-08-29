@@ -751,11 +751,11 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
 {
     std::unique_lock lock(streamIDManagerLock_);
     std::vector<std::shared_ptr<AudioStream>> streamsToBeReleased;
-    for (auto &mem : soundID2MultiStreams_) {
-        std::list<std::shared_ptr<AudioStream>> &streams = mem.second;
+    for (auto iter = soundID2MultiStreams_.begin(); iter != soundID2MultiStreams_.end();) {
+        std::list<std::shared_ptr<AudioStream>> &streams = iter->second;
         if (streams.empty()) {
-            MEDIA_LOGI("remove mem which soundID is %{public}d", mem.first);
-            soundID2MultiStreams_.erase(mem.first);
+            MEDIA_LOGI("remove mem which soundID is %{public}d", iter->first);
+            iter = soundID2MultiStreams_.erase(iter);
             continue;
         }
         for (auto it = streams.begin(); it != streams.end();) {
@@ -772,6 +772,7 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
             }
             it++;
         }
+        ++iter;
     }
     lock.unlock();
     AddReleaseTask(streamsToBeReleased);
