@@ -532,9 +532,32 @@ HWTEST_F(StreamIDManagerUnitTest, streamId_function_025, TestSize.Level2)
     streamIDManager_->currentStreamsNum_.store(3); // 低于MAX_NUMBER_OF_HELD_STREAMS (6)
     
     streamIDManager_->RemoveInvalidStreams();
-    // 低于限制时应该保留
-    EXPECT_EQ(1, streamIDManager_->soundID2Stream_.size());
+    EXPECT_EQ(0, streamIDManager_->soundID2Stream_.size());
     MEDIA_LOGI("streamId_function_025 after");
+}
+
+/**
+ * @tc.name: streamId_function_026
+ * @tc.desc: function test RemoveInvalidStreams with streams under limit
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(StreamIDManagerUnitTest, streamId_function_026, TestSize.Level2)
+{
+    MEDIA_LOGI("streamId_function_026 before");
+    streamIDManager_->InitThreadPool();
+    Format format;
+    int32_t soundID = 1;
+    int32_t streamID = 1;
+    
+    auto audioStream = std::make_shared<AudioStream>(format, soundID, streamID, nullptr);
+    audioStream->SetStreamState(StreamState::STOPPED);
+    streamIDManager_->soundID2Stream_.emplace(soundID, audioStream);
+    streamIDManager_->currentStreamsNum_.store(3); // 低于MAX_NUMBER_OF_HELD_STREAMS (6)
+    
+    streamIDManager_->RemoveInvalidStreams();
+    EXPECT_EQ(1, streamIDManager_->soundID2Stream_.size());
+    MEDIA_LOGI("streamId_function_026 after");
 }
 
 /**

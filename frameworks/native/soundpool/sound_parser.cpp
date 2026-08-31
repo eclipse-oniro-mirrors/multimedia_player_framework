@@ -524,6 +524,9 @@ void SoundParser::SoundParserListener::OnSoundDecodeCompleted(const std::shared_
     if (std::shared_ptr<SoundParser> soundPaser = soundParserInner_.lock()) {
         if (!soundPaser->isRawFile_) {
             std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
+            soundData_ = fullPcmBuffer;
+            isSoundParserCompleted_.store(true);
+            return;
         }
         soundData_ = fullPcmBuffer;
         isSoundParserCompleted_.store(true);
@@ -535,6 +538,8 @@ void SoundParser::SoundParserListener::SetSoundBufferTotalSize(size_t soundBuffe
     if (std::shared_ptr<SoundParser> soundPaser = soundParserInner_.lock()) {
         if (!soundPaser->isRawFile_) {
             std::unique_lock<ffrt::mutex> lock(soundPaser->soundParserLock_);
+            soundBufferTotalSize_ = soundBufferTotalSize;
+            return;
         }
         soundBufferTotalSize_ = soundBufferTotalSize;
     }

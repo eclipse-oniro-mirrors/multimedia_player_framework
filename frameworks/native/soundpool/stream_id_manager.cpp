@@ -478,20 +478,36 @@ void StreamIDManagerWithSameSoundInterrupt::RemoveInvalidStreams()
     };
     std::unique_lock lock(streamIDManagerLock_);
     std::vector<std::shared_ptr<AudioStream>> streamsToBeReleased;
+    std::vector<int32_t> sortedSoundIDs;  // To release audio stream from old to new
+    sortedSoundIDs.reserve(soundID2Stream_.size());
+    for (const auto& pair : soundID2Stream_) {
+        sortedSoundIDs.push_back(pair.first);
+    }
+    std::sort(sortedSoundIDs.begin(), sortedSoundIDs.end(),
+        [this](int32_t a, int32_t b) {  // sort by streamID
+            if (soundID2Stream_.find(a) != soundID2Stream_.end() && soundID2Stream_[a] != nullptr &&
+                soundID2Stream_.find(b) != soundID2Stream_.end() && soundID2Stream_[b] != nullptr) {
+                return soundID2Stream_[a]->GetStreamID() < soundID2Stream_[b]->GetStreamID();
+            }
+            return false;
+        });
+
     for (const StreamState &state : statesToCheck) {
-        for (auto it = soundID2Stream_.begin(); it != soundID2Stream_.end();) {
-            if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
+        for (const int32_t &soundID : sortedSoundIDs) {
+            if (state != StreamState::RELEASED && currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
                 lock.unlock();
                 AddReleaseTask(streamsToBeReleased);
                 return;
             }
+            auto it = soundID2Stream_.find(soundID);
+            CHECK_AND_CONTINUE_LOG(it != soundID2Stream_.end(), "%{public}d does not exist in soundID2Stream_",
+                soundID);
             if (it->second != nullptr && state == it->second->GetStreamState()) {
                 streamsToBeReleased.push_back(it->second);
-                it = soundID2Stream_.erase(it);
+                soundID2Stream_.erase(it);
                 currentStreamsNum_--;
                 continue;
             }
-            it++;
         }
     }
     lock.unlock();
@@ -571,11 +587,15 @@ int32_t StreamIDManagerWithSameSoundInterrupt::CreateAudioStream(int32_t soundID
 
 void StreamIDManagerWithSameSoundInterrupt::PrintSoundID2Stream()
 {
+    static std::ostringstream oss;
+    oss.str("");
+    oss.clear();
     for (const auto &mem : soundID2Stream_) {
         CHECK_AND_CONTINUE_LOG(mem.second != nullptr, "soundID is %{public}d, stream is nullptr", mem.first);
-        MEDIA_LOGI("PrintSoundID2Stream, soundID is %{public}d, streamID is %{public}d, state is %{public}d",
-            mem.first, mem.second->GetStreamID(), mem.second->GetStreamState());
+        oss << "soundID=" << mem.first << "|streamID="<<mem.second->GetStreamID()
+            << "|state=" << static_cast<int32_t>(mem.second->GetStreamState()) << "\n";
     }
+    MEDIA_LOGI("PrintSoundID2Stream, soundID2Stream_:\n%{public}s", oss.str().c_str());
 }
 
 int32_t StreamIDManagerWithSameSoundInterrupt::SetPlay(int32_t soundID, int32_t streamID,
@@ -731,8 +751,13 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
 {
     std::unique_lock lock(streamIDManagerLock_);
     std::vector<std::shared_ptr<AudioStream>> streamsToBeReleased;
-    for (auto &mem : soundID2MultiStreams_) {
-        std::list<std::shared_ptr<AudioStream>> &streams = mem.second;
+    for (auto iter = soundID2MultiStreams_.begin(); iter != soundID2MultiStreams_.end();) {
+        std::list<std::shared_ptr<AudioStream>> &streams = iter->second;
+        if (streams.empty()) {
+            MEDIA_LOGI("remove mem which soundID is %{public}d", iter->first);
+            iter = soundID2MultiStreams_.erase(iter);
+            continue;
+        }
         for (auto it = streams.begin(); it != streams.end();) {
             if (currentStreamsNum_.load() <= MAX_NUMBER_OF_HELD_STREAMS) {
                 lock.unlock();
@@ -747,6 +772,7 @@ bool StreamIDManagerWithNoInterrupt::InnerProcessOfRemoveInvalidStreams(const St
             }
             it++;
         }
+        ++iter;
     }
     lock.unlock();
     AddReleaseTask(streamsToBeReleased);
@@ -812,13 +838,18 @@ int32_t StreamIDManagerWithNoInterrupt::CreateAudioStream(int32_t soundID, int32
 
 void StreamIDManagerWithNoInterrupt::PrintSoundID2Stream()
 {
+    static std::ostringstream oss;
+    oss.str("");
+    oss.clear();
     for (const auto &mem : soundID2MultiStreams_) {
+        oss << "soundID=" << mem.first << "|streamID to state=[";
         for (const auto &stream : mem.second) {
             CHECK_AND_CONTINUE_LOG(stream != nullptr, "soundID is %{public}d, stream is nullptr", mem.first);
-            MEDIA_LOGI("PrintSoundID2Stream, soundID is %{public}d, streamID is %{public}d, state is %{public}d",
-                mem.first, stream->GetStreamID(), stream->GetStreamState());
+            oss << "[" << stream->GetStreamID() << ", " << static_cast<int32_t>(stream->GetStreamState()) << "] ";
         }
+        oss << "]\n";
     }
+    MEDIA_LOGI("PrintSoundID2Stream, soundID2MultiStreams_:\n%{public}s", oss.str().c_str());
 }
 
 int32_t StreamIDManagerWithNoInterrupt::SetPlay(int32_t soundID, int32_t streamID,
