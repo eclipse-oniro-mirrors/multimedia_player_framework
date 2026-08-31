@@ -89,6 +89,8 @@ ohos_shared_library("native_avscreen_capture") {
 
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client" ]
 
+  version_script = "native_avscreen_capture.versionscript"
+
   external_deps = [
     "audio_framework:audio_client",
     "av_codec:av_codec_client",
