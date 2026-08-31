@@ -66,6 +66,7 @@ public:
     int32_t Resume();
     int32_t Cancel();
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height);
+    int32_t AddVideoResize(int32_t width, int32_t height);
     void OnEvent(const Event &event);
     Status OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
         Pipeline::StreamType outType);
@@ -186,6 +187,8 @@ private:
     int32_t errCode_ = 0;
     std::string errMsg_ = "success";
     std::mutex ignoreErrorMutex_;
+    std::mutex handleCompleteMutex_;
+    std::mutex muxerMutex_;
     bool ignoreError_ = false;
 };
 } // namespace MEDIA
