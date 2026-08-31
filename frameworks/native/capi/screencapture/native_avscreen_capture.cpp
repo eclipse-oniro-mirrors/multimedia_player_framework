@@ -300,10 +300,12 @@ private:
         if (format != nullptr) {
             if (rsRect.x >= 0 && rsRect.y >= 0 && rsRect.w >= 0 && rsRect.h >= 0) {
                 int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
-                bool res =
-                    (OH_AVFormat_SetIntBuffer(format, OH_SCREEN_CAPTURE_CONTENT_RECT, rectData, sizeof(rectData)) &&
-                     OH_AVBuffer_SetParameter(reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format));
-                TRUE_LOG(!res, MEDIA_LOGE, "OH_AVFormat_SetIntBuffer or OH_AVBuffer_SetParameter failed.");
+                bool formatRes = OH_AVFormat_SetIntBuffer(format, OH_SCREEN_CAPTURE_CONTENT_RECT,
+                    rectData, sizeof(rectData));
+                OH_AVErrCode paramRes = OH_AVBuffer_SetParameter(
+                    reinterpret_cast<OH_AVBuffer*>(ohAvBuffer.GetRefPtr()), format);
+                TRUE_LOG(!formatRes || paramRes != AV_ERR_OK, MEDIA_LOGE,
+                    "OH_AVFormat_SetIntBuffer or OH_AVBuffer_SetParameter failed.");
             }
             OH_AVFormat_Destroy(format);
         }
@@ -957,9 +959,9 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
     CHECK_AND_RETURN_RET_LOG(sufacebuffer != nullptr, nullptr, "AcquireVideoBuffer failed!");
 
     OH_NativeBuffer* nativebuffer = sufacebuffer->SurfaceBufferToNativeBuffer();
-    OH_NativeBuffer_Reference(nativebuffer);
     std::unique_lock<std::mutex> lock(g_bufferMutex);
     referencedBuffer_.push(nativebuffer);
+    OH_NativeBuffer_Reference(nativebuffer);
     MEDIA_LOGD("return and reference the nativebuffer");
 
     return nativebuffer;
