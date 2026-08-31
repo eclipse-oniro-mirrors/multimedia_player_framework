@@ -73,7 +73,7 @@ void MediaServer::OnStart()
     AddSystemAbilityListener(MEMORY_MANAGER_SA_ID);
     AddSystemAbilityListener(AUDIO_POLICY_SERVICE_ID);
 #ifdef SUPPORT_SCREEN_CAPTURE
-    MediaDatashareObserverRegister::GetInstance().Subscribe();
+    AddSystemAbilityListener(COMMON_EVENT_SERVICE_ID);
 #endif
 }
 
@@ -156,6 +156,10 @@ void MediaServer::OnAddSystemAbility(int32_t systemAbilityId, const std::string 
         MediaServerManager::GetInstance().NotifyMemMgrLoaded();
     } else if (systemAbilityId == AUDIO_POLICY_SERVICE_ID) {
         AudioBackgroundAdapter::Instance().OnAudioRestart();
+    } else if (systemAbilityId == COMMON_EVENT_SERVICE_ID) {
+#ifdef SUPPORT_SCREEN_CAPTURE
+        MediaDatashareObserverRegister::GetInstance().Subscribe();
+#endif
     }
 }
 

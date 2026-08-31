@@ -69,6 +69,10 @@ bool MediaDatashareObserverRegister::Subscribe()
     datashareObserver_ = std::shared_ptr<MediaDatashareObserver>(tempObserver);
     bool result = EventFwk::CommonEventManager::SubscribeCommonEvent(datashareObserver_);
     MEDIA_LOGI("MediaDatashareObserverRegister::Subscribe result: %{public}d", result);
+    CHECK_AND_RETURN_RET(!result, result);
+    future_ = std::async(std::launch::async, []() {
+        TryUpdateSettingsValue(SHOW_TOUCH_HINT_KEY, "");
+    });
     return result;
 }
 
