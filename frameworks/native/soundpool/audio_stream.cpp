@@ -390,7 +390,7 @@ int32_t AudioStream::Stop(StopTrigger stopTrigger)
         int64_t currentTimeMs = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::steady_clock::now().time_since_epoch()).count();
         audioPlayCompletedCostTimeMs_.store(currentTimeMs - audioStartTimeMs_.load());
-        MEDIA_LOGI("The playback process takes %{public}lld", audioPlayCompletedCostTimeMs_.load());
+        MEDIA_LOGI("The playback process takes %{public}ld", audioPlayCompletedCostTimeMs_.load());
         if (audioPlayCompletedCostTimeMs_.load() < MIN_SINGLE_PLAYBACK_DURATION_MS) {
             MEDIA_LOGE("Invalid Stop");
             if (callback_ != nullptr) {
