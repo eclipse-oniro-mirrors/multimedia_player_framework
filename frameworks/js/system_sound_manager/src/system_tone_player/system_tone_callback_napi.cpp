@@ -135,7 +135,7 @@ void SystemTonePlayerCallbackNapi::RemoveCallbackReference(const std::string &ca
     if (callbackName == PLAY_FINISHED_CALLBACK_NAME) {
         if (args == nullptr) {
             playFinishedCallbackMap_.clear();
-            MEDIA_LOGI("remove playFinished all cb succeed");
+            MEDIA_LOGI("SubEvent op=off_all kit=AudioKit event=playFinished, remove playFinished all cb succeed");
             return;
         }
         for (auto &playFinishedCallback : playFinishedCallbackMap_) {
@@ -151,7 +151,7 @@ void SystemTonePlayerCallbackNapi::RemoveCallbackReference(const std::string &ca
     } else if (callbackName == ERROR_CALLBACK_NAME) {
         if (args == nullptr) {
             errorCallback_.clear();
-            MEDIA_LOGI("remove error all cb succeed");
+            MEDIA_LOGI("SubEvent op=off_all kit=AudioKit event=error, remove error all cb succeed");
             return;
         }
         auto it = std::find_if(errorCallback_.begin(), errorCallback_.end(),
