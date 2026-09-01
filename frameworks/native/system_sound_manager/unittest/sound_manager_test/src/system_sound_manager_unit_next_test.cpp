@@ -2317,7 +2317,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_002, TestSize.L
 /**
  * @tc.name  : ClearNotificationToneType_CustomisedNotification
  * @tc.number: ClearNotificationToneType_003
- * @tc.desc  : Test ClearNotificationToneType with customised notification tone (Delete branch)
+ * @tc.desc  : Test ClearNotificationToneType with customised notification tone (Update branch, clear mark)
  */
 HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_003, TestSize.Level0)
 {
@@ -2335,8 +2335,8 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearNotificationToneType_003, TestSize.L
     auto resultSet = CreateMockResultSet(config);
     auto mockHelper = CreateMockHelperWithResultSet(resultSet);
 
-    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(AtLeast(1));
-    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
 
     int32_t result = systemSoundManagerImpl_->ClearNotificationToneType(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper));
@@ -2424,7 +2424,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_004, TestSize.
 /**
  * @tc.name  : ClearBitFromToneTypeColumn_RemainingZeroCustomised
  * @tc.number: ClearBitFromToneTypeColumn_005
- * @tc.desc  : Test ClearBitFromToneTypeColumn with remaining==0 and customised source type (Delete branch)
+ * @tc.desc  : Test ClearBitFromToneTypeColumn with remaining==0 and customised source type (Update branch, clear mark)
  */
 HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_005, TestSize.Level0)
 {
@@ -2442,8 +2442,8 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_005, TestSize.
     auto resultSet = CreateMockResultSet(config);
     auto mockHelper = CreateMockHelperWithResultSet(resultSet);
 
-    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(AtLeast(1));
-    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+    EXPECT_CALL(*mockHelper, Update(_, _, _)).Times(AtLeast(1));
 
     uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(

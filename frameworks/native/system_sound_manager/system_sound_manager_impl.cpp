@@ -84,7 +84,6 @@ const int IO_ERROR = -3;
 const int TYPEERROR = -2;
 const int ERROR = -1;
 const int SUCCESS = 0;
-const int32_t SYSTEM_TONE_SALT = 10000;
 const int32_t EXT_PROXY_UID = 1000;
 const int32_t EXT_PROXY_SID = 66849;
 const int32_t CMD_SET_EXT_RINGTONE_URI = 6;
@@ -322,20 +321,10 @@ int32_t SystemSoundManagerImpl::ClearNotificationToneType(std::shared_ptr<DataSh
         DataSharePredicates predicates;
         predicates.SetWhereClause(RINGTONE_COLUMN_TONE_ID + " = ? ");
         predicates.SetWhereArgs({to_string(asset->GetId())});
-        if (asset->GetSourceType() == SOURCE_TYPE_CUSTOMISED && asset->GetToneType() == TONE_TYPE_NOTIFICATION) {
-            int32_t deleteResult = dataShareHelper->Delete(RINGTONEURI, predicates);
-            result += deleteResult;
-            std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
-                "", "", "", CUSTOMISED, TONE_CATEGORY_NOTIFICATION);
-            SetToneAttrs(toneAttrs, asset);
-            SendCustomizedToneEvent(false, toneAttrs, static_cast<off_t>(asset->GetSize()),
-                asset->GetMimeType(), deleteResult > 0 ? SYSTEM_TONE_SALT + SUCCESS : SYSTEM_TONE_SALT + ERROR);
-        } else {
-            DataShareValuesBucket updateValuesBucket;
-            updateValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
-            updateValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE, SOURCE_TYPE_INVALID);
-            result += dataShareHelper->Update(RINGTONEURI, predicates, updateValuesBucket);
-        }
+        DataShareValuesBucket updateValuesBucket;
+        updateValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
+        updateValuesBucket.Put(RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE, SOURCE_TYPE_INVALID);
+        result += dataShareHelper->Update(RINGTONEURI, predicates, updateValuesBucket);
         asset = results->GetNextObject();
     }
     if (results != nullptr) {
@@ -373,21 +362,9 @@ int32_t SystemSoundManagerImpl::ClearBitFromToneTypeColumn(std::shared_ptr<DataS
         updatePredicates.SetWhereArgs({to_string(asset->GetId())});
 
         if (remaining == 0) {
-            if (asset->GetSourceType() == SOURCE_TYPE_CUSTOMISED) {
-                int32_t deleteResult = dataShareHelper->Delete(RINGTONEURI, updatePredicates);
-                result += deleteResult;
-                int32_t category = (typeColumnName == RINGTONE_COLUMN_RING_TONE_TYPE) ?
-                    TONE_CATEGORY_RINGTONE : TONE_CATEGORY_TEXT_MESSAGE;
-                std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
-                    "", "", "", CUSTOMISED, category);
-                SetToneAttrs(toneAttrs, asset);
-                SendCustomizedToneEvent(false, toneAttrs, static_cast<off_t>(asset->GetSize()),
-                    asset->GetMimeType(), deleteResult > 0 ? SYSTEM_TONE_SALT + SUCCESS : SYSTEM_TONE_SALT + ERROR);
-            } else {
-                updateValuesBucket.Put(typeColumnName, RING_TONE_TYPE_NOT);
-                updateValuesBucket.Put(sourceTypeColumnName, SOURCE_TYPE_INVALID);
-                result += dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
-            }
+            updateValuesBucket.Put(typeColumnName, RING_TONE_TYPE_NOT);
+            updateValuesBucket.Put(sourceTypeColumnName, SOURCE_TYPE_INVALID);
+            result += dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
         } else {
             updateValuesBucket.Put(typeColumnName, static_cast<int32_t>(remaining));
             result += dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
@@ -2939,9 +2916,8 @@ std::string SystemSoundManagerImpl::OpenHapticsFile(
 void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::shared_ptr<ToneAttrs> &toneAttrs,
     off_t fileSize, std::string mimeType, int result)
 {
-    bool isSystemOperation = (result == SYSTEM_TONE_SALT + SUCCESS || result == SYSTEM_TONE_SALT + ERROR);
-    int32_t realResult = isSystemOperation ? (result - SYSTEM_TONE_SALT) : result;
-    std::string appName = isSystemOperation ? "SYSTEM" : GetBundleName();
+    int32_t realResult = result;
+    std::string appName = GetBundleName();
     auto now = std::chrono::system_clock::now();
     time_t rawtime = std::chrono::system_clock::to_time_t(now);
     std::shared_ptr<Media::MediaMonitor::EventBean> bean = std::make_shared<Media::MediaMonitor::EventBean>(
