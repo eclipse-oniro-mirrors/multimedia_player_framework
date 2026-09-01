@@ -960,8 +960,9 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
 
     OH_NativeBuffer* nativebuffer = sufacebuffer->SurfaceBufferToNativeBuffer();
     std::unique_lock<std::mutex> lock(g_bufferMutex);
+    auto errCode = OH_NativeBuffer_Reference(nativebuffer);
+    CHECK_AND_RETURN_RET_LOG(errCode == 0, nullptr, "Reference failed!");
     referencedBuffer_.push(nativebuffer);
-    OH_NativeBuffer_Reference(nativebuffer);
     MEDIA_LOGD("return and reference the nativebuffer");
 
     return nativebuffer;
