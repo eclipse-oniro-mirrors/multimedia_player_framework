@@ -16,86 +16,51 @@
 #ifndef AUDIODATASOURCE_FUZZER
 #define AUDIODATASOURCE_FUZZER
 
-#include <cstdint>
-#include <memory>
-#include <string>
-#include <vector>
-#include <atomic>
-#include <mutex>
-#include <fuzzer/FuzzedDataProvider.h>
-#include "audio_data_source.h"
-#include "cache_buffer.h"
-#include "screen_capture_server.h"
-#include "screen_capture_service_providers.h"
+#include "audio_capturer_wrapper.h"
+#include "audio_data_source_generic.h"
+#include "audio_info.h"
 #include "avbuffer.h"
 #include "avsharedmemory.h"
 #include "media_data_source.h"
-#include "audio_capturer_wrapper.h"
-#include "audio_info.h"
+#include "screen_capture_server.h"
+#include "screen_capture_service_providers.h"
+#include <atomic>
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
 #define FUZZ_PROJECT_NAME "audiodatasource_fuzzer"
-
-inline std::shared_ptr<OHOS::Media::ScreenCaptureServer> MakeScreenCaptureServerShared()
-{
-    return std::make_shared<OHOS::Media::ScreenCaptureServer>(OHOS::Media::CreateDefaultProviders());
-}
 
 namespace OHOS {
 namespace Media {
 
-AudioCaptureSourceType PickAudioSource(FuzzedDataProvider &fdp);
-AudioCodecFormat PickAudioCodecFormat(FuzzedDataProvider &fdp);
-VideoSourceType PickVideoSource(FuzzedDataProvider &fdp);
-AVScreenCaptureMixMode PickMixMode();
-AudioCaptureInfo CreateAudioCaptureInfo(FuzzedDataProvider &fdp);
-AudioInfo CreateAudioInfo(FuzzedDataProvider &fdp);
-VideoInfo CreateVideoInfo(FuzzedDataProvider &fdp);
-CaptureMode PickCaptureMode(FuzzedDataProvider &fdp);
-DataType PickDataType(FuzzedDataProvider &fdp);
-void SetConfig(AVScreenCaptureConfig &config, FuzzedDataProvider &fdp);
-
 class AudioDataSourceFuzzer {
 public:
-
-    bool FuzzAudioRendererStateUpdate();
-    bool FuzzGetAudioRendererState();
-    bool FuzzAudioRendererStateUpdateVoIP();
-    bool FuzzHasVoIPStream();
-    bool FuzzSetAndGetAppPid();
-    bool FuzzSetVideoFirstFramePts();
-    bool FuzzSetAudioFirstFramePts();
-    bool FuzzReadAtMixMode();
-    bool FuzzReadAtMicMode();
-    bool FuzzReadAtInnerMode();
-    bool FuzzReadAt(uint32_t bufferSize);
+    bool FuzzReadAt();
     bool FuzzGetSize();
-    bool FuzzMixModeBufferWrite(uint32_t innerBufferSize, uint32_t micBufferSize);
-    bool FuzzWriteInnerAudio(uint32_t bufferSize);
-    bool FuzzWriteMicAudio(uint32_t bufferSize);
-    bool FuzzWriteMixAudio(uint32_t innerBufferSize, uint32_t micBufferSize);
-    bool FuzzInnerMicAudioSync(uint32_t innerBufferSize, uint32_t micBufferSize);
-    bool FuzzVideoAudioSyncMixMode(uint32_t innerBufferSize, uint32_t micBufferSize);
-    bool FuzzVideoAudioSyncInnerMode(uint32_t bufferSize);
-    bool FuzzGetFirstAudioTime(uint32_t innerBufferSize, uint32_t micBufferSize);
-    bool FuzzReadWriteAudioBufferMixCore(uint32_t innerBufferSize, uint32_t micBufferSize);
-    bool FuzzReadWriteAudioBufferMix(uint32_t innerBufferSize, uint32_t micBufferSize);
-    bool FuzzHandlePastMicBuffer(uint32_t bufferSize);
-    bool FuzzHandleSwitchToSpeakerOptimise(uint32_t innerBufferSize, uint32_t micBufferSize);
-    bool FuzzHandleBufferTimeStamp(uint32_t innerBufferSize, uint32_t micBufferSize);
+    bool FuzzSetVideoFirstFramePts();
+    bool FuzzPauseResume();
+    bool FuzzStop();
+    bool FuzzOnBufferAvailable();
+    bool FuzzSetCapture();
+    bool FuzzReadAudioBuffer();
     bool FuzzLostFrameNum();
+    bool FuzzAlignOrCombine();
+    bool FuzzCombine();
+    bool FuzzMixAudio();
 
 private:
-    std::shared_ptr<CacheBuffer> CreateCacheBufferInner(int64_t timestamp, uint32_t bufferSize);
-    std::shared_ptr<CacheBuffer> CreateCacheBufferMic(int64_t timestamp, uint32_t bufferSize);
-    std::shared_ptr<AVBuffer> CreateAVBuffer(uint32_t bufferSize);
-    std::shared_ptr<AudioRendererChangeInfo> CreateAudioRendererChangeInfo();
+    std::shared_ptr<CacheBuffer> CreateAudioBuffer(int64_t timestamp);
+    std::shared_ptr<AVBuffer> CreateAVBuffer();
     void Init();
     void Release();
 
-    std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
+    std::shared_ptr<AudioDataSourceGeneric> audioSource_;
+    int32_t datasize = 2048;
     std::vector<uint8_t> AVbuf;
-    FuzzedDataProvider *fdp_ = nullptr;
 };
 bool FuzzAudioDataSourceCase(uint8_t *data, size_t size);
-}
-}
+} // namespace Media
+} // namespace OHOS
 #endif // AUDIODATASOURCE_FUZZER

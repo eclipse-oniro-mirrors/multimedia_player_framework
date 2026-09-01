@@ -70,11 +70,6 @@ private:
     int contentChangedCount_ = 0;
 };
 
-void SetupMixModeSource(ScreenCaptureServer *server)
-{
-    server->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, server);
-    server->audioSource_->SetAudioRendererState(0);
-}
 } // namespace
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyMicOn_Success_001, TestSize.Level2)
@@ -119,7 +114,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicRunning_001, Tes
 
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
-    SetupMixModeSource(screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto micWrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture",
         false);
     micWrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
@@ -141,7 +136,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicNotRunning_001, 
 
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
-    SetupMixModeSource(screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto micWrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture",
         false);
     micWrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_STOPED;
@@ -163,7 +158,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicSwitchOff_001, T
 
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->isMicrophoneSwitchTurnOn_ = false;
-    SetupMixModeSource(screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto micWrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture",
         false);
     micWrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;

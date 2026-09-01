@@ -98,7 +98,7 @@ public:
     void SetSCMicAudioCaptureAndPushData(std::shared_ptr<CacheBuffer> micAudioBuffer);
     std::shared_ptr<AudioCapturerWrapper> CreateTestWrapper(AudioCaptureInfo &audioInfo, const std::string &name,
         bool isInner = true);
-    void SetupAudioDataSource(AVScreenCaptureMixMode mode);
+    void SetupAudioDataSource(AudioCombinePolicy policy);
     size_t CountForegroundMissions(const std::vector<MissionInfo> &missions);
 
 protected:

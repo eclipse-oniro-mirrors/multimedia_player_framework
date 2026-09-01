@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-#include "audio_data_source.h"
+#include "audio_data_source_generic.h"
 #include "media_errors.h"
 #include "media_log.h"
 #include "media_utils.h"
@@ -415,8 +415,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAudioRendererStateCha
     MEDIA_LOGI("ServerCallback_OnAudioRendererStateChanged_Stopped_001 start");
     ASSERT_NE(screenCaptureServer_, nullptr);
 
-    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE,
-        screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::PASSTHROUGH);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
     std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> changeInfos;
     screenCaptureServer_->OnAudioRendererStateChanged(changeInfos);
@@ -428,8 +427,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAudioRendererStateCha
     MEDIA_LOGI("ServerCallback_OnAudioRendererStateChanged_VoIPMatch_001 start");
     ASSERT_NE(screenCaptureServer_, nullptr);
 
-    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE,
-        screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::PASSTHROUGH);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_
         ->appName_ = GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];

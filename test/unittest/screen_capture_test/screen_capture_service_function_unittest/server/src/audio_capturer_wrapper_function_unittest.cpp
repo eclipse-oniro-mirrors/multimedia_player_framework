@@ -49,7 +49,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_001, TestSiz
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
@@ -60,7 +60,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_002, TestSiz
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
@@ -73,7 +73,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_003, TestSiz
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture", false);
     ASSERT_EQ(screenCaptureServer_->micAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
@@ -86,7 +86,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_004, TestSiz
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "OS_MicAudioCapture", false);
     ASSERT_EQ(screenCaptureServer_->micAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
@@ -100,7 +100,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_005, TestSiz
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     sleep(RECORDER_TIME);
@@ -114,7 +114,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnInterrupt_001, T
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     AudioStandard::InterruptEvent interruptEvent;
@@ -128,7 +128,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -143,7 +143,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -158,7 +158,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUseUpBuffer_001, T
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::INNER_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::PASSTHROUGH);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -178,7 +178,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -191,7 +191,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -205,7 +205,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_AlreadyRecor
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_UNKNOWN);
@@ -217,7 +217,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -230,7 +230,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -252,7 +252,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperAcquireAudioBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -267,7 +267,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperReleaseAudioBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -280,7 +280,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperReleaseAudioBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -293,7 +293,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperReleaseAudioBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -311,7 +311,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperDropBufferUntil_00
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -334,7 +334,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUseUpAllLeftBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -349,7 +349,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStateAndSetters_00
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -369,7 +369,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperCreateCacheBuffer_
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -389,7 +389,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperCreateCacheBuffer_
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -410,7 +410,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_001, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -426,7 +426,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_002, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -441,7 +441,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_003, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -475,7 +475,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_004, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -509,7 +509,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperPartiallyPrintLog_
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -524,7 +524,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_005, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -539,7 +539,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_006, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -563,7 +563,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_007, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -586,7 +586,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_008, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -612,7 +612,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_009, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -641,7 +641,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUseUpAllLeftBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -658,7 +658,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperDropBufferUntil_00
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -674,7 +674,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperSetupCapturerCallb
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -688,7 +688,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperSetupCapturerCallb
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -702,7 +702,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperSetupCapturerCallb
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -716,7 +716,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperBuildCapturerOptio
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -748,7 +748,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperSetInnerStreamUsag
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -765,7 +765,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -782,7 +782,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_VoIPConcurre
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -806,7 +806,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperCreateCacheBuffer_
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -825,7 +825,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_010, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -856,7 +856,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_011, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -887,7 +887,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperSetBufferAvailable
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -905,7 +905,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperDropBufferUntil_00
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -925,7 +925,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_CreateNull_0
     AcwFlagGuard guard;
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
     g_acwCreateMockFlags.returnNull = true;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_),
@@ -941,7 +941,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_StartFail_00
     AcwFlagGuard guard;
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
     g_acwCreateMockFlags.startFail = true;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_),
@@ -957,7 +957,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_SetupCallbac
     AcwFlagGuard guard;
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "OS_InnerAudioCapture", true);
     g_acwCreateMockFlags.setCapturerCallbackFail = true;
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_),
@@ -973,7 +973,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_AudioSourceC
     AcwFlagGuard guard;
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -996,7 +996,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperStart_SysParamNoVo
     AcwFlagGuard guard;
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -1018,7 +1018,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperBuildCapturerOptio
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -1033,7 +1033,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperNotifyBufferAvaila
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -1050,7 +1050,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUseUpAllLeftBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -1069,7 +1069,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperReleaseAudioBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -1084,7 +1084,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUseUpAllLeftBuffer
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;
@@ -1100,7 +1100,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_012, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = std::make_shared<AudioCapturerWrapper>(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo,
         screenCaptureServer_->cbProxy_, std::string("OS_InnerAudioCapture"), screenCaptureServer_->contentFilter_);
     screenCaptureServer_->innerAudioCapture_ = wrapper;

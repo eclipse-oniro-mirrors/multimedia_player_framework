@@ -387,8 +387,7 @@ int32_t ScreenCaptureServerFunctionTest::InitStreamScreenCaptureServer()
 
 int32_t ScreenCaptureServerFunctionTest::StartFileAudioCapture()
 {
-    screenCaptureServer_->audioSource_ =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     MEDIA_LOGI("StartFileAudioCapture start");
     int32_t ret = screenCaptureServer_->SyncAudioCaptures();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SyncAudioCaptures failed, ret:%{public}d, dataType:%{public}d", ret,
@@ -398,8 +397,7 @@ int32_t ScreenCaptureServerFunctionTest::StartFileAudioCapture()
 
 int32_t ScreenCaptureServerFunctionTest::StartStreamAudioCapture()
 {
-    screenCaptureServer_->audioSource_ =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     MEDIA_LOGI("StartStreamAudioCapture start");
     int32_t ret = screenCaptureServer_->SyncAudioCaptures();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "SyncAudioCaptures failed, ret:%{public}d, dataType:%{public}d", ret,
@@ -422,9 +420,9 @@ std::shared_ptr<AudioCapturerWrapper> ScreenCaptureServerFunctionTest::CreateTes
     return wrapper;
 }
 
-void ScreenCaptureServerFunctionTest::SetupAudioDataSource(AVScreenCaptureMixMode mode)
+void ScreenCaptureServerFunctionTest::SetupAudioDataSource(AudioCombinePolicy policy)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(mode, screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(policy, false);
 }
 
 size_t ScreenCaptureServerFunctionTest::CountForegroundMissions(const std::vector<MissionInfo> &missions)
@@ -662,92 +660,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
-    screenCaptureServer_->AudioRendererStateUpdate(audioRendererChangeInfos);
-    screenCaptureServer_->AudioRendererStateUpdate(audioRendererChangeInfos);
-    screenCaptureServer_->audioSource_->SetAudioRendererState(AUDIO_STATE_VOIP);
-    screenCaptureServer_->AudioRendererStateUpdate(audioRendererChangeInfos);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_002, TestSize.Level2)
-{
-    SetInvalidConfig();
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
-    screenCaptureServer_->AudioRendererStateUpdate(audioRendererChangeInfos);
-    ASSERT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_HEADSET, 0);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_003, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
-    for (int i = 0; i < 7; ++i) {
-        std::shared_ptr<AudioRendererChangeInfo> changeInfo = std::make_shared<AudioRendererChangeInfo>();
-        audioRendererChangeInfos.push_back(changeInfo);
-    }
-    audioRendererChangeInfos.push_back(nullptr);
-    audioRendererChangeInfos[0]->outputDeviceInfo.deviceType_ = DEVICE_TYPE_WIRED_HEADSET;
-    audioRendererChangeInfos[1]->outputDeviceInfo.deviceType_ = DEVICE_TYPE_WIRED_HEADPHONES;
-    audioRendererChangeInfos[2]->outputDeviceInfo.deviceType_ = DEVICE_TYPE_BLUETOOTH_SCO;
-    audioRendererChangeInfos[3]->outputDeviceInfo.deviceType_ = DEVICE_TYPE_BLUETOOTH_A2DP;
-    audioRendererChangeInfos[4]->outputDeviceInfo.deviceType_ = DEVICE_TYPE_USB_HEADSET;
-    audioRendererChangeInfos[5]->outputDeviceInfo.deviceType_ = DEVICE_TYPE_USB_ARM_HEADSET;
-    audioRendererChangeInfos[6]->outputDeviceInfo.deviceType_ = DEVICE_TYPE_SPEAKER;
-    screenCaptureServer_->audioSource_->SetAudioRendererState(AUDIO_STATE_HEADSET);
-    ASSERT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_004, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
-    audioRendererChangeInfos.push_back(nullptr);
-    for (int i = 0; i < 3; ++i) {
-        std::shared_ptr<AudioRendererChangeInfo> changeInfo = std::make_shared<AudioRendererChangeInfo>();
-        audioRendererChangeInfos.push_back(changeInfo);
-    }
-    audioRendererChangeInfos[1]->rendererState = RendererState::RENDERER_STOPPED;
-    audioRendererChangeInfos[2]->rendererState = RendererState::RENDERER_RUNNING;
-    audioRendererChangeInfos[2]->rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_MEDIA;
-    audioRendererChangeInfos[3]->rendererState = RendererState::RENDERER_RUNNING;
-    audioRendererChangeInfos[3]->rendererInfo.streamUsage =
-        AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION;
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_005, TestSize.Level2)
-{
-    SetInvalidConfig();
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
-    screenCaptureServer_->audioSource_->SetAudioRendererState(AUDIO_STATE_HEADSET);
-    screenCaptureServer_->AudioRendererStateUpdate(audioRendererChangeInfos);
-    screenCaptureServer_->audioSource_->SetAudioRendererState(0);
     screenCaptureServer_->AudioRendererStateUpdate(audioRendererChangeInfos);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
@@ -1230,11 +1142,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_001, TestSize.L
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(true);
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    screenCaptureServer_->audioSource_->SetAudioRendererState(0);
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     sleep(RECORDER_TIME / 2);
@@ -1248,11 +1158,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_002, TestSize.L
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(true);
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(
-        AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    screenCaptureServer_->audioSource_->SetAudioRendererState(AUDIO_STATE_VOIP);
     screenCaptureServer_->StartInnerAudioCapture();
     screenCaptureServer_->StartMicAudioCapture(false);
     sleep(RECORDER_TIME / 2);
@@ -1700,7 +1608,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_005, TestSize.
     SetRecorderInfo("screen_capture_micoff_005.mp4", recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    SetupAudioDataSource(AVScreenCaptureMixMode::MIX_MODE);
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->cbProxy_,
         std::string("InnerAudioCapture_005"), screenCaptureServer_->contentFilter_);

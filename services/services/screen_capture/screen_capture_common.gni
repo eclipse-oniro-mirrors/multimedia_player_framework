@@ -21,7 +21,7 @@ _sc =
 
 screen_capture_sources = [
   "$_sc/server/audio_capturer_wrapper.cpp",
-  "$_sc/server/audio_data_source.cpp",
+  "$_sc/server/audio_data_source_generic.cpp",
   "$_sc/server/limitIdGenerator.cpp",
   "$_sc/server/screen_cap_buffer_consumer_listener.cpp",
   "$_sc/server/screen_capture_callback_proxy.cpp",

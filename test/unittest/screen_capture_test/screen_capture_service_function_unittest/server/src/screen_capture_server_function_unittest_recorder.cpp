@@ -617,8 +617,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureRecorder_MixModeWaitM
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
     screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "InnAd", true);
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     wrapper->availBuffers_.push_back(MakeTestCacheBuffer(AudioCaptureSourceType::ALL_PLAYBACK));
