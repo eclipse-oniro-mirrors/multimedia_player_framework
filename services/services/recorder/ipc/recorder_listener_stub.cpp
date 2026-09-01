@@ -61,7 +61,7 @@ int RecorderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
             OnAudioCaptureChange(audioRecorderChangeInfo);
             return MSERR_OK;
         }
-        case RecorderListenerMsg::ON_PHOTO_ASSERT_AVAILABLE: {
+        case RecorderListenerMsg::ON_PHOTO_ASSET_AVAILABLE: {
             std::string uri = data.ReadString();
             OnPhotoAssetAvailable(uri);
             return MSERR_OK;

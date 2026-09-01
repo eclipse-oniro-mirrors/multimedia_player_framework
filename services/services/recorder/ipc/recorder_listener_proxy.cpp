@@ -88,7 +88,7 @@ void RecorderListenerProxy::OnPhotoAssetAvailable(const std::string &uri)
     CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
  
     data.WriteString(uri);
-    int error = Remote()->SendRequest(RecorderListenerMsg::ON_PHOTO_ASSERT_AVAILABLE, data, reply, option);
+    int error = Remote()->SendRequest(RecorderListenerMsg::ON_PHOTO_ASSET_AVAILABLE, data, reply, option);
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "on photo assert available failed, error: %{public}d", error);
 }
 

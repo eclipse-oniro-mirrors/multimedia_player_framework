@@ -38,7 +38,7 @@ public:
         ON_ERROR = 0,
         ON_INFO = 1,
         ON_AUDIO_CAPTURE_CHANGE = 2,
-        ON_PHOTO_ASSERT_AVAILABLE = 3,
+        ON_PHOTO_ASSET_AVAILABLE = 3,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardRecorderListener");

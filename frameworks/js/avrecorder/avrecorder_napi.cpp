@@ -1436,6 +1436,7 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = AVRecorderNapi::GetPromiseTask(asyncCtx->napi, opt);
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+        asyncCtx->opt_ = opt;
     } else {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -1452,12 +1453,12 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             } else {
-                if (opt == AVRecordergOpt::GETINPUTSURFACE) {
+                if (asyncCtx->opt_ == AVRecordergOpt::GETINPUTSURFACE) {
                     asyncCtx->JsResult = std::make_unique<MediaJsResultString>(result.Value().second);
                 }
             }
         }
-        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
