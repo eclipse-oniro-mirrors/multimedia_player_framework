@@ -258,5 +258,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnRendererStateChange_CallbackPath, Te
     WaitForTaskComplete();
     EXPECT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_VOIP, AUDIO_STATE_VOIP);
 }
+// ===================== TelCallStateUpdated (L3283-3309) =====================
+
+#ifdef SUPPORT_CALL
+HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_EnqueueOk_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    EXPECT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
+    WaitForTaskComplete();
+}
+#endif
+
 } // namespace Media
 } // namespace OHOS

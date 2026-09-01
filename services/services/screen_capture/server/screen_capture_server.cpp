@@ -3524,16 +3524,17 @@ int32_t ScreenCaptureServer::SetScreenScaleMode()
 
 int32_t ScreenCaptureServer::StopAudioCapture()
 {
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopAudioCapture start.", FAKE_POINTER(this));
     std::lock_guard<std::mutex> audioLock(audioMutex_);
+    int32_t retMic = MSERR_OK;
+    int32_t retInner = MSERR_OK;
     if (micAudioCapture_) {
-        micAudioCapture_->Stop();
+        retMic = micAudioCapture_->Stop();
     }
     if (innerAudioCapture_) {
-        innerAudioCapture_->Stop();
+        retInner = innerAudioCapture_->Stop();
     }
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopAudioCapture end.", FAKE_POINTER(this));
-    return MSERR_OK;
+    int32_t ret = (retMic == MSERR_OK && retInner == MSERR_OK) ? MSERR_OK : MSERR_STOP_FAILED;
+    return ret;
 }
 
 int32_t ScreenCaptureServer::StartMicAudioCapture(bool isVoip)

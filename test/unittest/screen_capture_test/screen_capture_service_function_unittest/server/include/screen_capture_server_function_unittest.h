@@ -82,6 +82,7 @@ public:
     void SetMockBuilder(ScreenCaptureServer *server);
     int32_t SetInvalidConfig();
     std::shared_ptr<AVBuffer> CreateWatermarkBuffer();
+    std::shared_ptr<CacheBuffer> MakeTestCacheBuffer(AudioCaptureSourceType type);
     int32_t SetValidConfig();
     int32_t SetInvalidConfigFile(RecorderInfo &recorderInfo);
     int32_t SetValidConfigFile(RecorderInfo &recorderInfo);
