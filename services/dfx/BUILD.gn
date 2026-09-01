@@ -61,6 +61,7 @@ ohos_shared_library("media_service_log_dfx") {
   ]
 
   external_deps = [
+    "bounds_checking_function:libsec_shared",
     "c_utils:utils",
     "hilog:libhilog",
   ]
