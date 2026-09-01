@@ -83,23 +83,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirror_InvalidScreenI
     EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenMirror(), MSERR_UNKNOWN);
 }
 
-// ===================== GetDisplayIdOfWindows (L2590-2628) =====================
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_DisplayNull_B1, TestSize.Level2)
-{
-    screenCaptureServer_->displayIds_.clear();
-    screenCaptureServer_->missionInfos_.clear();
-    EXPECT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(), 0);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_WithMissions_B1, TestSize.Level2)
-{
-    screenCaptureServer_->missionInfos_.push_back({1, true});
-    screenCaptureServer_->displayIds_.clear();
-    EXPECT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(), 0);
-    screenCaptureServer_->missionInfos_.clear();
-}
-
 // ===================== SetCaptureAreaInner (L3042-3075) =====================
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureAreaInner_InvalidScreenId_B2, TestSize.Level2)

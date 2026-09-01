@@ -654,5 +654,23 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AddWatermark_NotCaptureFile_001, TestS
     screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     EXPECT_EQ(screenCaptureServer_->AddWatermark(buffer, width, height, watermarkCount), MSERR_UNKNOWN);
 }
+
+// ===================== SetPickerMode (L3011-3024) =====================
+
+/**
+ * @tc.name: SetPickerMode_001
+ * @tc.desc: SetPickerMode param validation: valid mode passes, out-of-range returns MSERR_INVALID_VAL
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, SetPickerMode_001, TestSize.Level2)
+{
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+    EXPECT_EQ(screenCaptureServer_->SetPickerMode(PickerMode::SCREEN_AND_WINDOW), MSERR_OK);
+#else
+    EXPECT_EQ(screenCaptureServer_->SetPickerMode(PickerMode::SCREEN_AND_WINDOW), MSERR_UNKNOWN_UNSUPPORT);
+#endif
+    EXPECT_EQ(screenCaptureServer_->SetPickerMode(static_cast<PickerMode>(-1)), MSERR_INVALID_VAL);
+    EXPECT_EQ(screenCaptureServer_->SetPickerMode(static_cast<PickerMode>(7)), MSERR_INVALID_VAL);
+}
 } // namespace Media
 } // namespace OHOS

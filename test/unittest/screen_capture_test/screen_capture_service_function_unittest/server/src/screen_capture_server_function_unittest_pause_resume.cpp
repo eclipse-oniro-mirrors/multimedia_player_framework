@@ -567,5 +567,19 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseVideoCapture_ConsumerStart_B2, Te
     EXPECT_FALSE(screenCaptureServer_->isConsumerStart_);
 }
 
+/**
+ * @tc.name: ResumeVideoCapture_ValidScreenId_B2
+ * @tc.desc: ResumeVideoCapture with valid virtualScreenId_ enters MakeVirtualScreenMirror path (L4094 true)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, ResumeVideoCapture_ValidScreenId_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
+    screenCaptureServer_->virtualScreenId_ = 100;
+    screenCaptureServer_->isConsumerStart_ = false;
+    EXPECT_EQ(screenCaptureServer_->ResumeVideoCapture(), MSERR_OK);
+    EXPECT_TRUE(screenCaptureServer_->isConsumerStart_);
+}
+
 } // namespace Media
 } // namespace OHOS
