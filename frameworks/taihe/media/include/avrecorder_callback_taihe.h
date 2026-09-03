@@ -33,7 +33,7 @@ public:
     void SendStateCallback(const std::string &state, const OHOS::Media::StateChangeReason &reason);
     void SendErrorCallback(int32_t errCode, const std::string &msg);
     void SendAudioCaptureChangeCallback(const OHOS::Media::AudioRecorderChangeInfo &audioRecorderChangeInfo);
-    void SendPhotoAssertAvailableCallback(const std::string &uri);
+    void SendPhotoAssetAvailableCallback(const std::string &uri);
     void SaveCallbackReference(const std::string &name, std::weak_ptr<AutoRef> ref);
     void CancelCallbackReference(const std::string &name);
     std::string GetState();
@@ -43,7 +43,7 @@ protected:
     void OnError(RecorderErrorType errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
     void OnAudioCaptureChange(const OHOS::Media::AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
-    void OnPhotoAssertAvailable(const std::string &uri) override;
+    void OnPhotoAssetAvailable(const std::string &uri) override;
 
 private:
     struct AVRecordTaiheCallback {
@@ -56,15 +56,16 @@ private:
         OHOS::Media::AudioRecorderChangeInfo audioRecorderChangeInfo;
         std::string uri = "unknown";
     };
-    void OnTaiheStateCallBack(AVRecordTaiheCallback *taiheCb) const;
-    void OnTaiheErrorCallBack(AVRecordTaiheCallback *taiheCb) const;
+    void OnTaiheStateCallBack(std::shared_ptr<AVRecordTaiheCallback> taiheCb) const;
+    void OnTaiheErrorCallBack(std::shared_ptr<AVRecordTaiheCallback> taiheCb) const;
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-    void OnTaihePhotoAssertAvailableCallback(AVRecordTaiheCallback *jsCb) const;
+    void OnTaihePhotoAssetAvailableCallback(std::shared_ptr<AVRecordTaiheCallback> jsCb) const;
 #endif
-    void OnTaiheAudioCaptureChangeCallback(AVRecordTaiheCallback *taiheCb) const;
-    ::ohos::multimedia::audio::AudioDeviceDescriptor GetDeviceInfo(AVRecordTaiheCallback *taiheCb) const;
+    void OnTaiheAudioCaptureChangeCallback(std::shared_ptr<AVRecordTaiheCallback> taiheCb) const;
+    ::ohos::multimedia::audio::AudioDeviceDescriptor GetDeviceInfo(
+        std::shared_ptr<AVRecordTaiheCallback> taiheCb) const;
     ::ohos::multimedia::audio::AudioCapturerChangeInfo GetAudioCapturerChangeInfo(
-        AVRecordTaiheCallback *taiheCb) const;
+        std::shared_ptr<AVRecordTaiheCallback> taiheCb) const;
 
     std::mutex mutex_;
     std::string currentState_ = AVRecorderState::STATE_IDLE;

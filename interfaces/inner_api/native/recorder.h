@@ -421,7 +421,7 @@ public:
         (void)audioRecorderChangeInfo;
     }
     
-    virtual void OnPhotoAssertAvailable(const std::string &uri)
+    virtual void OnPhotoAssetAvailable(const std::string &uri)
     {
         (void)uri;
     }

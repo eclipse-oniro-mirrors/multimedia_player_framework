@@ -684,13 +684,9 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
         return static_cast<int32_t>(Status::OK);
     }
     // real stop operations
-    int32_t ret = MSERR_OK;
-    ret = TransRecorderStatus(HandleStopOperation());
+    int32_t ret = TransRecorderStatus(HandleStopOperation());
     // clear all configurations and remove all filters
     ClearAllConfiguration();
-    if (ret == MSERR_OK) {
-        OnStateChanged(StateId::INIT);
-    }
     return ret;
 }
 
@@ -836,7 +832,9 @@ Status HiRecorderImpl::HandleEncodedAudioOrVideoCallback(std::shared_ptr<Pipelin
 
         muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
+        Status ret = muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "SetOutputParameter failed, ret: %{public}d",
+            static_cast<int32_t>(ret));
         muxerFilter_->SetParameter(muxerFormat_);
         muxerFilter_->SetUserMeta(userMeta_);
         muxerFilter_->SetMaxDuration(maxDuration_);

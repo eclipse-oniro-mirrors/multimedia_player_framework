@@ -348,7 +348,7 @@ napi_value AVRecorderNapi::JsPrepare(napi_env env, napi_callback_info info)
 
         if (asyncCtx->task_) {
             auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
@@ -401,7 +401,7 @@ napi_value AVRecorderNapi::JsSetOrientationHint(napi_env env, napi_callback_info
 
         if (asyncCtx->task_) {
             auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
@@ -452,11 +452,11 @@ napi_value AVRecorderNapi::JsSetWatermark(napi_env env, napi_callback_info info)
 
         if (asyncCtx->task_) {
             auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
-        MEDIA_LOGI("The js thread of setWatermark finishes execution and returns");
+        MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", opt.c_str());
     }, MediaAsyncContext::CompleteCallback, static_cast<void *>(asyncCtx.get()), &asyncCtx->work));
     NAPI_CALL(env, napi_queue_async_work_with_qos(env, asyncCtx->work, napi_qos_user_initiated));
     asyncCtx.release();
@@ -490,7 +490,6 @@ napi_value AVRecorderNapi::JsAddWatermark(napi_env env, napi_callback_info info)
         if (asyncCtx->napi->GetWatermarkParam(asyncCtx, env, args[0], args[1]) == MSERR_OK) {
             asyncCtx->task_ = AVRecorderNapi::AddWatermarkTask(asyncCtx);
             (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
-            asyncCtx->opt_ = opt;
         }
     } else {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "", asyncCtx->napi->GetRecorderState());
@@ -501,14 +500,12 @@ napi_value AVRecorderNapi::JsAddWatermark(napi_env env, napi_callback_info info)
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
+        CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
+        auto result = asyncCtx->task_->GetResult();
+        if (result.HasResult()) {
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-
-            if ((result.Value().first == MSERR_EXT_API9_OK) &&
-                (asyncCtx->opt_ == AVRecordergOpt::ADD_WATERMARK)) {
+            } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(asyncCtx->addWatermarkCount_);
             }
         }
@@ -680,7 +677,7 @@ napi_value AVRecorderNapi::JsSetMetadata(napi_env env, napi_callback_info info)
 
         if (asyncCtx->task_) {
             auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
@@ -781,9 +778,10 @@ napi_value AVRecorderNapi::JsGetInputMetaSurface(napi_env env, napi_callback_inf
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
+        CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
 
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
+        auto result = asyncCtx->task_->GetResult();
+        if (result.HasResult()) {
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             } else {
@@ -880,8 +878,9 @@ napi_value AVRecorderNapi::JsGetAVRecorderProfile(napi_env env, napi_callback_in
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
+        CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
+        auto result = asyncCtx->task_->GetResult();
+        if (result.HasResult()) {
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             } else {
@@ -987,7 +986,7 @@ napi_value AVRecorderNapi::JsSetAVRecorderConfig(napi_env env, napi_callback_inf
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
         if (asyncCtx->task_) {
             auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
@@ -1023,7 +1022,6 @@ napi_value AVRecorderNapi::JsGetAVRecorderConfig(napi_env env, napi_callback_inf
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = AVRecorderNapi::GetAVRecorderConfigTask(asyncCtx);
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
-        asyncCtx->opt_ = opt;
     } else {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "", asyncCtx->napi->GetRecorderState());
     }
@@ -1033,14 +1031,12 @@ napi_value AVRecorderNapi::JsGetAVRecorderConfig(napi_env env, napi_callback_inf
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
+        CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
+        auto result = asyncCtx->task_->GetResult();
+        if (result.HasResult()) {
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-
-            if ((result.Value().first == MSERR_EXT_API9_OK) &&
-                (asyncCtx->opt_ == AVRecordergOpt::GET_AV_RECORDER_CONFIG)) {
+            } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsAVRecorderConfig>(asyncCtx->config_);
             }
         }
@@ -1075,7 +1071,6 @@ napi_value AVRecorderNapi::JsGetCurrentAudioCapturerInfo(napi_env env, napi_call
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = AVRecorderNapi::GetCurrentCapturerChangeInfoTask(asyncCtx);
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
-        asyncCtx->opt_ = opt;
     } else {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "", asyncCtx->napi->GetRecorderState());
     }
@@ -1085,14 +1080,12 @@ napi_value AVRecorderNapi::JsGetCurrentAudioCapturerInfo(napi_env env, napi_call
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
+        CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
+        auto result = asyncCtx->task_->GetResult();
+        if (result.HasResult()) {
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-
-            if ((result.Value().first == MSERR_EXT_API9_OK) &&
-                (asyncCtx->opt_ == AVRecordergOpt::GET_CURRENT_AUDIO_CAPTURER_INFO)) {
+            } else {
                 asyncCtx->JsResult = std::make_unique<AudioCaptureChangeInfoJsCallback>(asyncCtx->changeInfo_);
             }
         }
@@ -1126,7 +1119,6 @@ napi_value AVRecorderNapi::JsGetAudioCapturerMaxAmplitude(napi_env env,  napi_ca
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = AVRecorderNapi::GetMaxAmplitudeTask(asyncCtx);
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
-        asyncCtx->opt_ = opt;
     } else {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "", asyncCtx->napi->GetRecorderState());
     }
@@ -1136,14 +1128,12 @@ napi_value AVRecorderNapi::JsGetAudioCapturerMaxAmplitude(napi_env env,  napi_ca
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
+        CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
+        auto result = asyncCtx->task_->GetResult();
+        if (result.HasResult()) {
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-
-            if ((result.Value().first == MSERR_EXT_API9_OK) &&
-                (asyncCtx->opt_ == AVRecordergOpt::GET_MAX_AMPLITUDE)) {
+            } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultInt>(asyncCtx->maxAmplitude_);
             }
         }
@@ -1177,7 +1167,6 @@ napi_value AVRecorderNapi::JsGetAvailableEncoder(napi_env env,  napi_callback_in
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = AVRecorderNapi::GetEncoderInfoTask(asyncCtx);
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
-        asyncCtx->opt_ = opt;
     } else {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "", asyncCtx->napi->GetRecorderState());
     }
@@ -1187,14 +1176,12 @@ napi_value AVRecorderNapi::JsGetAvailableEncoder(napi_env env,  napi_callback_in
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
+        CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
+        auto result = asyncCtx->task_->GetResult();
+        if (result.HasResult()) {
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-
-            if ((result.Value().first == MSERR_EXT_API9_OK) &&
-                (asyncCtx->opt_ == AVRecordergOpt::GET_ENCODER_INFO)) {
+            } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsEncoderInfo>(asyncCtx->encoderInfo_);
             }
         }
@@ -1345,7 +1332,6 @@ napi_value AVRecorderNapi::JsIsWatermarkSupported(napi_env env, napi_callback_in
     if (asyncCtx->napi->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = AVRecorderNapi::IsWatermarkSupportedTask(asyncCtx);
         (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
-        asyncCtx->opt_ = opt;
     } else {
         asyncCtx->AVRecorderSignError(MSERR_INVALID_STATE, opt, "", asyncCtx->napi->GetRecorderState());
     }
@@ -1355,14 +1341,12 @@ napi_value AVRecorderNapi::JsIsWatermarkSupported(napi_env env, napi_callback_in
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
+        CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
+        auto result = asyncCtx->task_->GetResult();
+        if (result.HasResult()) {
             if (result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-
-            if ((result.Value().first == MSERR_EXT_API9_OK) &&
-                (asyncCtx->opt_ == AVRecordergOpt::IS_WATERMARK_SUPPORTED)) {
+            } else {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultBoolean>(asyncCtx->isWatermarkSupported_);
             }
         }
@@ -1414,7 +1398,7 @@ napi_value AVRecorderNapi::JsSetWillMuteWhenInterrupted(napi_env env, napi_callb
 
         if (asyncCtx->task_) {
             auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
@@ -1497,14 +1481,13 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
     NAPI_CALL(env, napi_create_async_work(env, nullptr, resource, [](napi_env env, void* data) {
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
-
-        if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            }
-
-            if ((result.Value().first == MSERR_EXT_API9_OK) && (asyncCtx->opt_ == AVRecordergOpt::GETINPUTSURFACE)) {
+        CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
+        auto result = asyncCtx->task_->GetResult();
+        CHECK_AND_RETURN_LOG(result.HasResult(), "asyncCtx->task_ result has no value!");
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            asyncCtx->SignError(result.Value().first, result.Value().second);
+        } else {
+            if (asyncCtx->opt_ == AVRecordergOpt::GETINPUTSURFACE) {
                 asyncCtx->JsResult = std::make_unique<MediaJsResultString>(result.Value().second);
             }
         }

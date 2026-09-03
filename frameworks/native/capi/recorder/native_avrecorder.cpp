@@ -195,9 +195,9 @@ public:
     }
 
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-    void OnPhotoAssertAvailable(const std::string &uri) override
+    void OnPhotoAssetAvailable(const std::string &uri) override
     {
-        MEDIA_LOGI("OnPhotoAssertAvailable() is called, uri: %{public}s", uri.c_str());
+        MEDIA_LOGI("OnPhotoAssetAvailable() is called, uri: %{public}s", uri.c_str());
         OH_AVRecorder *recorder = nullptr;
         std::shared_ptr<NativeRecorderUriCallback> callback;
         {
@@ -616,6 +616,7 @@ OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder,
 {
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAudioCapturerMaxAmplitude in.");
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
+    CHECK_AND_RETURN_RET_LOG(amplitude != nullptr, AV_ERR_INVALID_VAL, "output amplitude is nullptr!");
 
     struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
