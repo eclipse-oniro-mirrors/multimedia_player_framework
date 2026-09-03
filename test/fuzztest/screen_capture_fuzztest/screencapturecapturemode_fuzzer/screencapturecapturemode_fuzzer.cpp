@@ -16,6 +16,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <unistd.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -77,15 +79,14 @@ bool ScreenCaptureCaptureModeFuzzer::FuzzScreenCaptureCaptureMode(uint8_t *data,
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr int32_t captureModeList = 4;
-    constexpr uint32_t recorderTime = 3;
+    constexpr int32_t captureModeList = 3;
     const CaptureMode captureMode_[captureModeList] {
         CAPTURE_HOME_SCREEN,
         CAPTURE_SPECIFIED_SCREEN,
         CAPTURE_SPECIFIED_WINDOW,
-        CAPTURE_INVAILD
     };
-    int32_t capturemodesubscript = abs(*reinterpret_cast<int32_t *>(data) % (captureModeList));
+    FuzzedDataProvider fdp(data, size);
+    uint32_t capturemodesubscript = fdp.ConsumeIntegralInRange<uint32_t>(0, captureModeList - 1);
     config.captureMode = captureMode_[capturemodesubscript];
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
@@ -95,7 +96,8 @@ bool ScreenCaptureCaptureModeFuzzer::FuzzScreenCaptureCaptureMode(uint8_t *data,
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

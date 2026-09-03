@@ -74,7 +74,6 @@ bool ScreenCaptureMultiDisplayIdNdkFuzzer::ScreenCaptureMultiDisplayIdNdk(uint8_
     if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
-    constexpr uint32_t recorderTime = 5;
     // set random data
     g_baseFuzzData = data;
     g_baseFuzzSize = size;
@@ -84,15 +83,19 @@ bool ScreenCaptureMultiDisplayIdNdkFuzzer::ScreenCaptureMultiDisplayIdNdk(uint8_
     SetConfig(config);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
- 
+
     vector<uint64_t> displayIds;
     size_t count = GetData<size_t>() % MIN_DISPLAY_COUNT;
+    if (count == 0) {
+        count = 1;
+    }
     for (size_t i = 0; i < count; i++) {
         displayIds.emplace_back(GetData<uint64_t>());
     }
     OH_MultiDisplayCapability capability;
     OH_AVScreenCapture_GetMultiDisplayCaptureCapability(screenCapture, &displayIds[0], count, &capability);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_PresentPicker(screenCapture);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);

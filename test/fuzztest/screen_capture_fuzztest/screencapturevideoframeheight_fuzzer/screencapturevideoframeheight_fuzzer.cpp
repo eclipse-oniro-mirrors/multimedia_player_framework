@@ -21,6 +21,7 @@
 #include "directory_ex.h"
 #include "screen_capture.h"
 #include "screencapturevideoframeheight_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -76,8 +77,8 @@ bool ScreenCaptureVideoFrameHeightFuzzer::FuzzScreenCaptureVideoFrameHeight(uint
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
-    config.videoInfo.videoCapInfo.videoFrameHeight = *reinterpret_cast<int32_t *>(data);
+    FuzzedDataProvider fdp(data, size);
+    config.videoInfo.videoCapInfo.videoFrameHeight = fdp.ConsumeIntegral<uint32_t>();
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
@@ -86,7 +87,8 @@ bool ScreenCaptureVideoFrameHeightFuzzer::FuzzScreenCaptureVideoFrameHeight(uint
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

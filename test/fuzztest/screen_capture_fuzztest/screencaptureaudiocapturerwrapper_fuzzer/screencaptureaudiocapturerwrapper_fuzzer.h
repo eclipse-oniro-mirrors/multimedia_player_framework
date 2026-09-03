@@ -23,6 +23,7 @@
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "test_screen_capture.h"
 
 #define FUZZ_PROJECT_NAME "screencaptureaudiocapturerwrapper_fuzzer"
@@ -34,7 +35,7 @@ public:
     ScreenCaptureAudioCapturerWrapperFuzzer();
     ~ScreenCaptureAudioCapturerWrapperFuzzer();
     
-    void SetConfig(RecorderInfo &recorderInfo);
+    void SetConfig(RecorderInfo &recorderInfo, FuzzedDataProvider &fdp);
     bool FuzzScreenAudioCapturerWrapper(uint8_t *data, size_t size);
     AVScreenCaptureConfig config_;
 };

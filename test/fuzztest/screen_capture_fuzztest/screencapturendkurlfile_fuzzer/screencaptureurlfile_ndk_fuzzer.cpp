@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_log.h"
@@ -88,16 +89,16 @@ bool ScreenCaptureUrlFileNdkFuzzer::FuzzScreenCaptureUrlFileNdk(uint8_t *data, s
     if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
+    FuzzedDataProvider fdp(data, size);
     screenCapture = OH_AVScreenCapture_Create();
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
     constexpr int32_t urlRange = 4096;
     constexpr int32_t urlRangeMin = 0;
     constexpr int32_t urlRangeMax = 1024;
 
-    int32_t randomUrl = (*reinterpret_cast<int32_t *>(data)) % (urlRange);
+    int32_t randomUrl = fdp.ConsumeIntegralInRange<uint32_t>(0, urlRange - 1);
     MEDIA_LOGI("FuzzTest ScreenCaptureUrlFileNdkFuzzer randomUrl: %{public}d ", randomUrl);
 
     OH_RecorderInfo recorderInfo;
@@ -117,7 +118,8 @@ bool ScreenCaptureUrlFileNdkFuzzer::FuzzScreenCaptureUrlFileNdk(uint8_t *data, s
 
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;

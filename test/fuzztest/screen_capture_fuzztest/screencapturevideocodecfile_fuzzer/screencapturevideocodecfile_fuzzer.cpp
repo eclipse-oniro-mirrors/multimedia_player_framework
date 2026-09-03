@@ -23,6 +23,7 @@
 #include "directory_ex.h"
 #include "screen_capture.h"
 #include "screencapturevideocodecfile_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -97,14 +98,14 @@ bool ScreenCaptureVideoCodecFileFuzzer::FuzzScreenCaptureVideoCodecFile(uint8_t 
     AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t videoCodecList = 4;
-    constexpr uint32_t recorderTime = 3;
     const VideoCodecFormat videoCodec[videoCodecList] {
         VIDEO_DEFAULT,
         H264,
         MPEG4,
         VIDEO_CODEC_FORMAT_BUTT,
     };
-    int32_t randomNum = abs((*reinterpret_cast<int32_t *>(data)) % (videoCodecList));
+    FuzzedDataProvider fdp(data, size);
+    int32_t randomNum = abs(fdp.ConsumeIntegral<int32_t>() % (videoCodecList));
     MEDIA_LOGI("FuzzTest ScreenCaptureVideoCodecFileFuzzer randomNum: %{public}d ", randomNum);
 
     config.videoInfo.videoEncInfo.videoCodec = videoCodec[randomNum];
@@ -119,7 +120,8 @@ bool ScreenCaptureVideoCodecFileFuzzer::FuzzScreenCaptureVideoCodecFile(uint8_t 
 
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

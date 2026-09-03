@@ -15,6 +15,8 @@
 
 #include <cmath>
 #include <iostream>
+#include <unistd.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -28,54 +30,69 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-    ScreenCaptureAudioChannelsFuzzer::ScreenCaptureAudioChannelsFuzzer() {}
+ScreenCaptureAudioChannelsFuzzer::ScreenCaptureAudioChannelsFuzzer()
+{
+}
 
-    ScreenCaptureAudioChannelsFuzzer::~ScreenCaptureAudioChannelsFuzzer() {}
+ScreenCaptureAudioChannelsFuzzer::~ScreenCaptureAudioChannelsFuzzer()
+{
+}
 
-    void SetConfig(AVScreenCaptureConfig &config)
-    {
-        AudioCaptureInfo miccapinfo = {.audioSampleRate = 48000, .audioChannels = 2, .audioSource = SOURCE_DEFAULT};
+void SetConfig(AVScreenCaptureConfig &config)
+{
+    AudioCaptureInfo miccapinfo = {
+        .audioSampleRate = 48000,
+        .audioChannels = 2,
+        .audioSource = SOURCE_DEFAULT
+    };
 
-        VideoCaptureInfo videocapinfo = {
-            .videoFrameWidth = 720, .videoFrameHeight = 1280, .videoSource = VIDEO_SOURCE_SURFACE_RGBA};
+    VideoCaptureInfo videocapinfo = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 1280,
+        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
+    };
 
-        AudioInfo audioinfo = {
-            .micCapInfo = miccapinfo,
-        };
+    AudioInfo audioinfo = {
+        .micCapInfo = miccapinfo,
+    };
 
-        VideoInfo videoinfo = {.videoCapInfo = videocapinfo};
+    VideoInfo videoinfo = {
+        .videoCapInfo = videocapinfo
+    };
 
-        config = {
-            .captureMode = CAPTURE_HOME_SCREEN,
-            .dataType = ORIGINAL_STREAM,
-            .audioInfo = audioinfo,
-            .videoInfo = videoinfo,
-        };
+    config = {
+        .captureMode = CAPTURE_HOME_SCREEN,
+        .dataType = ORIGINAL_STREAM,
+        .audioInfo = audioinfo,
+        .videoInfo = videoinfo,
+    };
+}
+
+bool ScreenCaptureAudioChannelsFuzzer::FuzzScreenCaptureAudioChannels(uint8_t *data, size_t size)
+{
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
     }
+    bool retFlags = TestScreenCapture::CreateScreenCapture();
+    RETURN_IF(retFlags, false);
 
-    bool ScreenCaptureAudioChannelsFuzzer::FuzzScreenCaptureAudioChannels(uint8_t *data, size_t size)
-    {
-        if (data == nullptr || size < sizeof(int32_t)) {
-            return false;
-        }
-        bool retFlags = TestScreenCapture::CreateScreenCapture();
-        RETURN_IF(retFlags, false);
+    AVScreenCaptureConfig config;
+    SetConfig(config);
+    FuzzedDataProvider fdp(data, size);
+    config.audioInfo.micCapInfo.audioChannels = fdp.ConsumeIntegral<int32_t>();
 
-        AVScreenCaptureConfig config;
-        SetConfig(config);
-        constexpr uint32_t recorderTime = 3;
-        config.audioInfo.micCapInfo.audioChannels = *reinterpret_cast<int32_t *>(data);
-
-        std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj = std::make_shared<TestScreenCaptureCallbackTest>();
-        TestScreenCapture::SetMicrophoneEnabled(true);
-        TestScreenCapture::SetScreenCaptureCallback(callbackobj);
-        TestScreenCapture::Init(config);
-        TestScreenCapture::StartScreenCapture();
-        sleep(recorderTime);
-        TestScreenCapture::StopScreenCapture();
-        TestScreenCapture::Release();
-        return true;
-    }
+    std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
+        = std::make_shared<TestScreenCaptureCallbackTest>();
+    TestScreenCapture::SetMicrophoneEnabled(true);
+    TestScreenCapture::SetScreenCaptureCallback(callbackobj);
+    TestScreenCapture::Init(config);
+    TestScreenCapture::StartScreenCapture();
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
+    TestScreenCapture::StopScreenCapture();
+    TestScreenCapture::Release();
+    return true;
+}
 } // namespace Media
 
 bool FuzzTestScreenCaptureAudioChannels(uint8_t *data, size_t size)
@@ -90,7 +107,7 @@ bool FuzzTestScreenCaptureAudioChannels(uint8_t *data, size_t size)
     ScreenCaptureAudioChannelsFuzzer testScreenCapture;
     return testScreenCapture.FuzzScreenCaptureAudioChannels(data, size);
 }
-}  // namespace OHOS
+} // namespace OHOS
 
 /* Fuzzer entry point */
 extern "C" int LLVMFuzzerTestOneInput(uint8_t *data, size_t size)

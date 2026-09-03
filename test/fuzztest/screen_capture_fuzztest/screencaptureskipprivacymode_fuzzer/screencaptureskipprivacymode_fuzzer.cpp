@@ -21,6 +21,7 @@
 #include "directory_ex.h"
 #include "screen_capture.h"
 #include "screencaptureskipprivacymode_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -74,19 +75,20 @@ bool ScreenCaptureSkipPrivacyModeFuzzer::FuzzScreenCaptureSkipPrivacyMode(uint8_
     bool retFlags = TestScreenCapture::CreateScreenCapture();
     RETURN_IF(retFlags, false);
 
+    FuzzedDataProvider fdp(data, size);
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
     std::vector<uint64_t> windowIDsVec;
-    windowIDsVec.push_back(*reinterpret_cast<uint64_t *>(data));
+    windowIDsVec.push_back(fdp.ConsumeIntegral<uint64_t>());
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
     TestScreenCapture::SkipPrivacyMode(windowIDsVec);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

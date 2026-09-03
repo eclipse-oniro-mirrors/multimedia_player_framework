@@ -21,6 +21,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "screencaptureaudiobitratefile_ndk_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -89,13 +90,13 @@ bool ScreenCaptureAudioBitrateFileNdkFuzzer::FuzzScreenCaptureAudioBitrateFileNd
     if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
+    FuzzedDataProvider fdp(data, size);
     screenCapture = OH_AVScreenCapture_Create();
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
 
-    int32_t randomBitrate = *reinterpret_cast<int32_t *>(data);
+    int32_t randomBitrate = fdp.ConsumeIntegral<int32_t>();
     MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitrateFileNdkFuzzer randomBitrate: %{public}d ", randomBitrate);
     config.audioInfo.audioEncInfo.audioBitrate = randomBitrate;
 
@@ -110,7 +111,8 @@ bool ScreenCaptureAudioBitrateFileNdkFuzzer::FuzzScreenCaptureAudioBitrateFileNd
 
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;

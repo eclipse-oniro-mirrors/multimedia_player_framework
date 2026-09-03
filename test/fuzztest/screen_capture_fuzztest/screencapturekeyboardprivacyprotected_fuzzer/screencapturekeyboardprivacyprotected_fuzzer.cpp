@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -79,12 +80,13 @@ bool ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyPr
     if (!screenCaptureServer_) {
         return 0;
     }
+    FuzzedDataProvider fdp(data, size);
     g_baseFuzzData = data;
     g_baseFuzzSize = size;
     g_baseFuzzPos = 0;
-    Rosen::ScreenId virtualScreenId = 1;
-    bool systemPrivacyProtectionSwitch = true;
-    bool appPrivacyProtectionSwitch = true;
+    uint64_t virtualScreenId = fdp.ConsumeIntegral<uint64_t>();
+    bool systemPrivacyProtectionSwitch = fdp.ConsumeBool();
+    bool appPrivacyProtectionSwitch = fdp.ConsumeBool();
     screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
         appPrivacyProtectionSwitch);
 
@@ -93,14 +95,14 @@ bool ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyPr
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 5;
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     screenCaptureServer_->Release();

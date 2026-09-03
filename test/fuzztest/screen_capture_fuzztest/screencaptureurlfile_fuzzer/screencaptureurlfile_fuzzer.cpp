@@ -22,6 +22,7 @@
 #include "directory_ex.h"
 #include "screen_capture.h"
 #include "screencaptureurlfile_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -94,12 +95,12 @@ bool ScreenCaptureUrlFileFuzzer::FuzzScreenCaptureUrlFile(uint8_t *data, size_t 
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
     constexpr int32_t urlRange = 4096;
     constexpr int32_t urlRangeMin = 0;
     constexpr int32_t urlRangeMax = 1024;
 
-    int32_t randomUrl = (*reinterpret_cast<int32_t *>(data)) % (urlRange);
+    FuzzedDataProvider fdp(data, size);
+    int32_t randomUrl = fdp.ConsumeIntegral<int32_t>() % (urlRange);
     MEDIA_LOGI("FuzzTest ScreenCaptureUrlFileFuzzer randomUrl: %{public}d ", randomUrl);
 
     RecorderInfo recorderInfo;
@@ -113,10 +114,11 @@ bool ScreenCaptureUrlFileFuzzer::FuzzScreenCaptureUrlFile(uint8_t *data, size_t 
     }
     recorderInfo.fileFormat = "mp4";
     config.recorderInfo = recorderInfo;
-    
+
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -37,7 +38,7 @@ ScreenCaptureSaAppInfoFuzzer::~ScreenCaptureSaAppInfoFuzzer()
 {
 }
 
-void SetConfig(AVScreenCaptureConfig &config)
+void SetConfig(AVScreenCaptureConfig &config, FuzzedDataProvider &fdp)
 {
     AudioCaptureInfo miccapinfo = {
         .audioSampleRate = 48000,
@@ -60,8 +61,8 @@ void SetConfig(AVScreenCaptureConfig &config)
     };
 
     config = {
-        .captureMode = CAPTURE_HOME_SCREEN,
-        .dataType = ORIGINAL_STREAM,
+        .captureMode = static_cast<CaptureMode>(fdp.ConsumeIntegral<uint32_t>()),
+        .dataType = static_cast<DataType>(fdp.ConsumeIntegral<uint32_t>()),
         .audioInfo = audioinfo,
         .videoInfo = videoinfo,
     };
@@ -73,17 +74,18 @@ bool ScreenCaptureSaAppInfoFuzzer::FuzzScreenCaptureSaAppInfo(uint8_t *data, siz
         return false;
     }
 
+    FuzzedDataProvider fdp(data, size);
     OHOS::AudioStandard::AppInfo appInfo;
     appInfo.appTokenId = IPCSkeleton::GetCallingTokenID();
     appInfo.appFullTokenId = IPCSkeleton::GetCallingFullTokenID();
     appInfo.appUid = IPCSkeleton::GetCallingUid();
-    appInfo.appPid = *reinterpret_cast<int32_t *>(data);
+    appInfo.appPid = fdp.ConsumeIntegral<int32_t>();
 
     bool retFlags = TestScreenCapture::CreateScreenCapture(appInfo);
     RETURN_IF(retFlags, false);
 
     AVScreenCaptureConfig config;
-    SetConfig(config);
+    SetConfig(config, fdp);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
     TestScreenCapture::StopScreenCapture();

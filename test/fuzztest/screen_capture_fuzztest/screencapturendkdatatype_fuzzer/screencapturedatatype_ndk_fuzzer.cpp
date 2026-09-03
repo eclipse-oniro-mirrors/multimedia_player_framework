@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_log.h"
@@ -90,18 +91,18 @@ bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data,
     }
     screenCapture = OH_AVScreenCapture_Create();
 
+    FuzzedDataProvider fdp(data, size);
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t dataTypeList = 4;
     constexpr int32_t dataTypeCaptureFile = 2;
-    constexpr uint32_t recorderTime = 3;
     const OH_DataType dataType_[dataTypeList] {
         OH_ORIGINAL_STREAM,
         OH_ENCODED_STREAM,
         OH_CAPTURE_FILE,
         OH_INVAILD
     };
-    int32_t datatypesubscript = (static_cast<int32_t>(*data)) % (dataTypeList);
+    int32_t datatypesubscript = fdp.ConsumeIntegralInRange<uint32_t>(0, dataTypeList - 1);
     MEDIA_LOGI("FuzzTest ScreenCaptureDataTypeNdkFuzzer datatypesubscript: %{public}d ", datatypesubscript);
 
     OH_RecorderInfo recorderInfo;
@@ -128,7 +129,8 @@ bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data,
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;

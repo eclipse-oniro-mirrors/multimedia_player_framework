@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -76,17 +77,18 @@ bool ScreenCaptureRemoveWhiteListWindowsFuzzer::FuzzScreenCaptureRemoveWhiteList
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
-    
+
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
     std::vector<uint64_t> windowIDsVec;
-    windowIDsVec.push_back(*reinterpret_cast<uint64_t *>(data));
+    FuzzedDataProvider fdp(data, size);
+    windowIDsVec.push_back(fdp.ConsumeIntegral<uint64_t>());
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
     TestScreenCapture::RemoveWhiteListWindows(windowIDsVec);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

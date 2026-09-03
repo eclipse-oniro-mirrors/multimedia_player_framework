@@ -15,6 +15,8 @@
 
 #include <cmath>
 #include <iostream>
+#include <unistd.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_log.h"
@@ -34,65 +36,91 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
-    ScreenCaptureAudioBitRateFileFuzzer::ScreenCaptureAudioBitRateFileFuzzer() {}
+ScreenCaptureAudioBitRateFileFuzzer::ScreenCaptureAudioBitRateFileFuzzer()
+{
+}
 
-    ScreenCaptureAudioBitRateFileFuzzer::~ScreenCaptureAudioBitRateFileFuzzer() {}
+ScreenCaptureAudioBitRateFileFuzzer::~ScreenCaptureAudioBitRateFileFuzzer()
+{
+}
 
-    void SetConfig(AVScreenCaptureConfig &config)
-    {
-        AudioCaptureInfo innerCapInfo = {.audioSampleRate = 48000, .audioChannels = 2, .audioSource = ALL_PLAYBACK};
+void SetConfig(AVScreenCaptureConfig &config)
+{
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 48000,
+        .audioChannels = 2,
+        .audioSource = ALL_PLAYBACK
+    };
 
-        AudioEncInfo audioEncInfo = {.audioBitrate = 48000, .audioCodecformat = AudioCodecFormat::AAC_LC};
+    AudioEncInfo audioEncInfo = {
+        .audioBitrate = 48000,
+        .audioCodecformat = AudioCodecFormat::AAC_LC
+    };
 
-        VideoCaptureInfo videoCapInfo = {
-            .videoFrameWidth = 720, .videoFrameHeight = 1080, .videoSource = VIDEO_SOURCE_SURFACE_RGBA};
+    VideoCaptureInfo videoCapInfo = {
+        .videoFrameWidth = 720,
+        .videoFrameHeight = 1080,
+        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
+    };
 
-        VideoEncInfo videoEncInfo = {
-            .videoCodec = VideoCodecFormat::MPEG4, .videoBitrate = 2000000, .videoFrameRate = 30};
+    VideoEncInfo videoEncInfo = {
+        .videoCodec = VideoCodecFormat::MPEG4,
+        .videoBitrate = 2000000,
+        .videoFrameRate = 30
+    };
 
-        AudioInfo audioInfo = {.innerCapInfo = innerCapInfo, .audioEncInfo = audioEncInfo};
+    AudioInfo audioInfo = {
+        .innerCapInfo = innerCapInfo,
+        .audioEncInfo = audioEncInfo
+    };
 
-        VideoInfo videoInfo = {.videoCapInfo = videoCapInfo, .videoEncInfo = videoEncInfo};
+    VideoInfo videoInfo = {
+        .videoCapInfo = videoCapInfo,
+        .videoEncInfo = videoEncInfo
+    };
 
-        config = {
-            .captureMode = CAPTURE_HOME_SCREEN,
-            .dataType = CAPTURE_FILE,
-            .audioInfo = audioInfo,
-            .videoInfo = videoInfo,
-        };
+    config = {
+        .captureMode = CAPTURE_HOME_SCREEN,
+        .dataType = CAPTURE_FILE,
+        .audioInfo = audioInfo,
+        .videoInfo = videoInfo,
+    };
+}
+
+
+
+bool ScreenCaptureAudioBitRateFileFuzzer::FuzzScreenCaptureAudioBitRateFile(uint8_t *data, size_t size)
+{
+    if (data == nullptr || size < sizeof(int32_t)) {
+        return false;
     }
+    bool retFlags = TestScreenCapture::CreateScreenCapture();
+    RETURN_IF(retFlags, false);
 
-    bool ScreenCaptureAudioBitRateFileFuzzer::FuzzScreenCaptureAudioBitRateFile(uint8_t *data, size_t size)
-    {
-        if (data == nullptr || size < sizeof(int32_t)) {
-            return false;
-        }
-        bool retFlags = TestScreenCapture::CreateScreenCapture();
-        RETURN_IF(retFlags, false);
+    AVScreenCaptureConfig config;
+    SetConfig(config);
 
-        AVScreenCaptureConfig config;
-        SetConfig(config);
-        constexpr uint32_t recorderTime = 3;
+    FuzzedDataProvider fdp(data, size);
+    uint32_t randomBitrate = fdp.ConsumeIntegral<uint32_t>();
+    MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitRateFileFuzzer randomBitrate: %{public}u ", randomBitrate);
+    config.audioInfo.audioEncInfo.audioBitrate = randomBitrate;
 
-        int32_t randomBitrate = *reinterpret_cast<int32_t *>(data);
-        MEDIA_LOGI("FuzzTest ScreenCaptureAudioBitRateFileFuzzer randomBitrate: %{public}d ", randomBitrate);
-        config.audioInfo.audioEncInfo.audioBitrate = randomBitrate;
+    RecorderInfo recorderInfo;
+    const std::string screenCaptureRoot = "/data/test/media/";
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_audiobitrate_file_01.mp4").c_str(),
+        O_RDWR | O_CREAT, 0777);
+    recorderInfo.url = "fd://" + to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    config.recorderInfo = recorderInfo;
 
-        RecorderInfo recorderInfo;
-        const std::string screenCaptureRoot = "/data/test/media/";
-        int32_t outputFd =
-            open((screenCaptureRoot + "screen_capture_fuzz_audiobitrate_file_01.mp4").c_str(), O_RDWR | O_CREAT, 0777);
-        recorderInfo.url = "fd://" + to_string(outputFd);
-        recorderInfo.fileFormat = "mp4";
-        config.recorderInfo = recorderInfo;
-
-        TestScreenCapture::Init(config);
-        TestScreenCapture::StartScreenCapture();
-        sleep(recorderTime);
-        TestScreenCapture::StopScreenCapture();
-        TestScreenCapture::Release();
-        return true;
-    }
+    TestScreenCapture::Init(config);
+    TestScreenCapture::StartScreenCapture();
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
+    TestScreenCapture::StopScreenCapture();
+    TestScreenCapture::Release();
+    return true;
+}
 } // namespace Media
 
 bool FuzzTestScreenCaptureAudioBitRateFile(uint8_t *data, size_t size)

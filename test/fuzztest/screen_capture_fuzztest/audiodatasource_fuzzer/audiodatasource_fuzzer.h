@@ -22,6 +22,7 @@
 #include <vector>
 #include <atomic>
 #include <mutex>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "audio_data_source.h"
 #include "screen_capture_server.h"
 #include "screen_capture_service_providers.h"
@@ -39,6 +40,9 @@ inline std::shared_ptr<OHOS::Media::ScreenCaptureServer> MakeScreenCaptureServer
 
 namespace OHOS {
 namespace Media {
+
+void SetConfig(AVScreenCaptureConfig &config, FuzzedDataProvider &fdp);
+
 class AudioDataSourceFuzzer {
 public:
 
@@ -52,34 +56,34 @@ public:
     bool FuzzReadAtMixMode();
     bool FuzzReadAtMicMode();
     bool FuzzReadAtInnerMode();
-    bool FuzzReadAt();
+    bool FuzzReadAt(uint32_t bufferSize);
     bool FuzzGetSize();
-    bool FuzzMixModeBufferWrite();
-    bool FuzzWriteInnerAudio();
-    bool FuzzWriteMicAudio();
-    bool FuzzWriteMixAudio();
-    bool FuzzInnerMicAudioSync();
-    bool FuzzVideoAudioSyncMixMode();
-    bool FuzzVideoAudioSyncInnerMode();
-    bool FuzzGetFirstAudioTime();
-    bool FuzzReadWriteAudioBufferMixCore();
-    bool FuzzReadWriteAudioBufferMix();
-    bool FuzzHandlePastMicBuffer();
-    bool FuzzHandleSwitchToSpeakerOptimise();
-    bool FuzzHandleBufferTimeStamp();
+    bool FuzzMixModeBufferWrite(uint32_t innerBufferSize, uint32_t micBufferSize);
+    bool FuzzWriteInnerAudio(uint32_t bufferSize);
+    bool FuzzWriteMicAudio(uint32_t bufferSize);
+    bool FuzzWriteMixAudio(uint32_t innerBufferSize, uint32_t micBufferSize);
+    bool FuzzInnerMicAudioSync(uint32_t innerBufferSize, uint32_t micBufferSize);
+    bool FuzzVideoAudioSyncMixMode(uint32_t innerBufferSize, uint32_t micBufferSize);
+    bool FuzzVideoAudioSyncInnerMode(uint32_t bufferSize);
+    bool FuzzGetFirstAudioTime(uint32_t innerBufferSize, uint32_t micBufferSize);
+    bool FuzzReadWriteAudioBufferMixCore(uint32_t innerBufferSize, uint32_t micBufferSize);
+    bool FuzzReadWriteAudioBufferMix(uint32_t innerBufferSize, uint32_t micBufferSize);
+    bool FuzzHandlePastMicBuffer(uint32_t bufferSize);
+    bool FuzzHandleSwitchToSpeakerOptimise(uint32_t innerBufferSize, uint32_t micBufferSize);
+    bool FuzzHandleBufferTimeStamp(uint32_t innerBufferSize, uint32_t micBufferSize);
     bool FuzzLostFrameNum();
 
 private:
-    std::shared_ptr<AudioBuffer> CreateAudioBufferInner(int64_t timestamp);
-    std::shared_ptr<AudioBuffer> CreateAudioBufferMic(int64_t timestamp);
-    std::shared_ptr<AVBuffer> CreateAVBuffer();
+    std::shared_ptr<AudioBuffer> CreateAudioBufferInner(int64_t timestamp, uint32_t bufferSize);
+    std::shared_ptr<AudioBuffer> CreateAudioBufferMic(int64_t timestamp, uint32_t bufferSize);
+    std::shared_ptr<AVBuffer> CreateAVBuffer(uint32_t bufferSize);
     std::shared_ptr<AudioRendererChangeInfo> CreateAudioRendererChangeInfo();
     void Init();
     void Release();
 
     std::shared_ptr<ScreenCaptureServer> screenCaptureServer_;
-    int32_t datasize = 2048;
     std::vector<uint8_t> AVbuf;
+    FuzzedDataProvider *fdp_ = nullptr;
 };
 bool FuzzAudioDataSourceCase(uint8_t *data, size_t size);
 }

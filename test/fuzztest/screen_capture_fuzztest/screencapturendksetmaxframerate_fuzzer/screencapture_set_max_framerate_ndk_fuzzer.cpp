@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -71,11 +72,11 @@ bool ScreenCaptureSetMaxFrameRateNdkFuzzer::FuzzScreenCaptureSetMaxFrameRateNdk(
     if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
+    FuzzedDataProvider fdp(data, size);
     screenCapture = OH_AVScreenCapture_Create();
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
 
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
@@ -84,8 +85,9 @@ bool ScreenCaptureSetMaxFrameRateNdkFuzzer::FuzzScreenCaptureSetMaxFrameRateNdk(
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    OH_AVScreenCapture_SetMaxVideoFrameRate(screenCapture, *reinterpret_cast<int32_t *>(data));
-    sleep(recorderTime);
+    OH_AVScreenCapture_SetMaxVideoFrameRate(screenCapture, fdp.ConsumeIntegralInRange<int32_t>(0, 70));
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;

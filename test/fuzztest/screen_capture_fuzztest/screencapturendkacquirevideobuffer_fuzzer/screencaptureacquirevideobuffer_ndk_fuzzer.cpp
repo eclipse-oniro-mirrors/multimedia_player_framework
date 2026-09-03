@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -100,12 +101,19 @@ bool ScreenCaptureAcquireVideoBufferNdkFuzzer::FuzzScreenCaptureAcquireVideoBuff
     g_size = size;
     g_pos = 0;
 
+    FuzzedDataProvider fdp(data, size);
     int32_t fence = GetData<int32_t>();
     int64_t timestamp = GetData<int64_t>();
     OH_Rect damage = GetData<OH_Rect>();
+    if (damage.width <= 0) {
+        damage.width = 1;
+    }
+    if (damage.height <= 0) {
+        damage.height = 1;
+    }
 
-    OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
-    OH_AVScreenCapture_SetCanvasRotation(screenCapture, true);
+    OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, fdp.ConsumeBool());
+    OH_AVScreenCapture_SetCanvasRotation(screenCapture, fdp.ConsumeBool());
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
     OH_NativeBuffer *nativeBuffer = OH_AVScreenCapture_AcquireVideoBuffer(screenCapture, &fence, &timestamp, &damage);

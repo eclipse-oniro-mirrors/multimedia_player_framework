@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "directory_ex.h"
 #include "screencaptureshowcursor_ndk_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -71,13 +72,13 @@ bool ScreenCaptureShowCursorNdkFuzzer::FuzzScreenCaptureShowCursorNdk(
     if (data == nullptr || size < sizeof(bool)) {
         return false;
     }
+    FuzzedDataProvider fdp(data, size);
     screenCapture = OH_AVScreenCapture_Create();
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
 
-    OH_AVScreenCapture_ShowCursor(screenCapture, *reinterpret_cast<bool *>(data));
+    OH_AVScreenCapture_ShowCursor(screenCapture, fdp.ConsumeBool());
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;
@@ -85,7 +86,8 @@ bool ScreenCaptureShowCursorNdkFuzzer::FuzzScreenCaptureShowCursorNdk(
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;

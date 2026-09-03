@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -76,14 +77,14 @@ bool ScreenCaptureVideoSourceTypeNdkFuzzer::FuzzScreenCaptureVideoSourceTypeNdk(
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t videoSourceTypeList = 5;
-    constexpr uint32_t recorderTime = 3;
     const OH_VideoSourceType videoSourceType[videoSourceTypeList] {
         OH_VIDEO_SOURCE_SURFACE_YUV,
         OH_VIDEO_SOURCE_SURFACE_ES,
         OH_VIDEO_SOURCE_SURFACE_RGBA,
         OH_VIDEO_SOURCE_BUTT
     };
-    int32_t vsourcesubscript = abs(*reinterpret_cast<int32_t *>(data) % (videoSourceTypeList));
+    FuzzedDataProvider fdp(data, size);
+    uint32_t vsourcesubscript = fdp.ConsumeIntegralInRange<uint32_t>(0, videoSourceTypeList - 1);
     config.videoInfo.videoCapInfo.videoSource = videoSourceType[vsourcesubscript];
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
@@ -95,7 +96,8 @@ bool ScreenCaptureVideoSourceTypeNdkFuzzer::FuzzScreenCaptureVideoSourceTypeNdk(
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;
