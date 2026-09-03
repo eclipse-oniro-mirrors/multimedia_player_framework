@@ -70,8 +70,8 @@ public:
     bool FuzzLostFrameNum();
 
 private:
-    std::shared_ptr<AudioBuffer> CreateAudioBufferInner(int64_t timestamp);
-    std::shared_ptr<AudioBuffer> CreateAudioBufferMic(int64_t timestamp);
+    std::shared_ptr<CacheBuffer> CreateAudioBufferInner(int64_t timestamp);
+    std::shared_ptr<CacheBuffer> CreateAudioBufferMic(int64_t timestamp);
     std::shared_ptr<AVBuffer> CreateAVBuffer();
     std::shared_ptr<AudioRendererChangeInfo> CreateAudioRendererChangeInfo();
     void Init();

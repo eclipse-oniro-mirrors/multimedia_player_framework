@@ -93,8 +93,8 @@ public:
     int32_t SetScreenCaptureObserver();
     int32_t StartFileAudioCapture();
     int32_t StartStreamAudioCapture();
-    void SetSCInnerAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> innerAudioBuffer);
-    void SetSCMicAudioCaptureAndPushData(std::shared_ptr<AudioBuffer> micAudioBuffer);
+    void SetSCInnerAudioCaptureAndPushData(std::shared_ptr<CacheBuffer> innerAudioBuffer);
+    void SetSCMicAudioCaptureAndPushData(std::shared_ptr<CacheBuffer> micAudioBuffer);
     std::shared_ptr<AudioCapturerWrapper> CreateTestWrapper(AudioCaptureInfo &audioInfo, const std::string &name,
         bool isInner = true);
     void SetupAudioDataSource(AVScreenCaptureMixMode mode);

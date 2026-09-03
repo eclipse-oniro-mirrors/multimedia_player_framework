@@ -99,28 +99,26 @@ void AudioDataSourceFuzzer::Release()
     }
 }
 
-std::shared_ptr<AudioBuffer> AudioDataSourceFuzzer::CreateAudioBufferInner(int64_t timestamp)
+std::shared_ptr<CacheBuffer> AudioDataSourceFuzzer::CreateAudioBufferInner(int64_t timestamp)
 {
     AudioCaptureSourceType type = static_cast<AudioCaptureSourceType>(GetData<uint8_t>() % 4);
-    uint8_t *innerBuffer = (uint8_t *)malloc(sizeof(uint8_t) * datasize);
-    auto audioBuffer = std::make_shared<AudioBuffer>(innerBuffer,
-        datasize, timestamp, type);
-    if (audioBuffer == nullptr) {
+    auto buf = std::make_unique<uint8_t[]>(datasize);
+    auto cacheBuf = std::make_shared<CacheBuffer>(std::move(buf), datasize, timestamp, type);
+    if (cacheBuf == nullptr) {
         return nullptr;
     }
-    return audioBuffer;
+    return cacheBuf;
 }
 
-std::shared_ptr<AudioBuffer> AudioDataSourceFuzzer::CreateAudioBufferMic(int64_t timestamp)
+std::shared_ptr<CacheBuffer> AudioDataSourceFuzzer::CreateAudioBufferMic(int64_t timestamp)
 {
     AudioCaptureSourceType type = static_cast<AudioCaptureSourceType>(GetData<uint8_t>() % 4);
-    uint8_t *micBuffer = (uint8_t *)malloc(sizeof(uint8_t) * datasize);
-    auto audioBuffer = std::make_shared<AudioBuffer>(micBuffer,
-        datasize, timestamp, type);
-    if (audioBuffer == nullptr) {
+    auto buf = std::make_unique<uint8_t[]>(datasize);
+    auto cacheBuf = std::make_shared<CacheBuffer>(std::move(buf), datasize, timestamp, type);
+    if (cacheBuf == nullptr) {
         return nullptr;
     }
-    return audioBuffer;
+    return cacheBuf;
 }
 
 std::shared_ptr<AVBuffer> AudioDataSourceFuzzer::CreateAVBuffer()
@@ -282,8 +280,7 @@ bool AudioDataSourceFuzzer::FuzzReadAtMixMode()
     std::shared_ptr<AudioDataSource> audioDataSource =
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
 
-    uint32_t length = GetData<uint32_t>() % 1024;
-    audioDataSource->ReadAtMixMode(length);
+    audioDataSource->ReadAtMixMode();
     Release();
     return true;
 }
@@ -294,8 +291,7 @@ bool AudioDataSourceFuzzer::FuzzReadAtMicMode()
     std::shared_ptr<AudioDataSource> audioDataSource =
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, screenCaptureServer_.get());
 
-    uint32_t length = GetData<uint32_t>() % 1024;
-    audioDataSource->ReadAtMicMode(length);
+    audioDataSource->ReadAtMicMode();
     Release();
     return true;
 }
@@ -306,8 +302,7 @@ bool AudioDataSourceFuzzer::FuzzReadAtInnerMode()
     std::shared_ptr<AudioDataSource> audioDataSource =
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
 
-    uint32_t length = GetData<uint32_t>() % 1024;
-    audioDataSource->ReadAtInnerMode(length);
+    audioDataSource->ReadAtInnerMode();
     Release();
     return true;
 }
@@ -366,8 +361,7 @@ bool AudioDataSourceFuzzer::FuzzWriteInnerAudio()
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateAudioBufferInner(GetData<int64_t>());
-    uint32_t length = GetData<uint32_t>() % 1024;
-    audioDataSource->WriteInnerAudio(length, innerAudioBuffer);
+    audioDataSource->WriteInnerAudio(innerAudioBuffer);
     Release();
     return true;
 }
@@ -379,8 +373,7 @@ bool AudioDataSourceFuzzer::FuzzWriteMicAudio()
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, screenCaptureServer_.get());
 
     auto micAudioBuffer = CreateAudioBufferMic(GetData<int64_t>());
-    uint32_t length = GetData<uint32_t>() % 1024;
-    audioDataSource->WriteMicAudio(length, micAudioBuffer);
+    audioDataSource->WriteMicAudio(micAudioBuffer);
     Release();
     return true;
 }
@@ -393,8 +386,7 @@ bool AudioDataSourceFuzzer::FuzzWriteMixAudio()
 
     auto innerAudioBuffer = CreateAudioBufferInner(GetData<int64_t>());
     auto micAudioBuffer = CreateAudioBufferMic(GetData<int64_t>());
-    uint32_t length = GetData<uint32_t>() % 1024;
-    audioDataSource->WriteMixAudio(length, innerAudioBuffer, micAudioBuffer);
+    audioDataSource->WriteMixAudio(innerAudioBuffer, micAudioBuffer);
     Release();
     return true;
 }
@@ -407,8 +399,7 @@ bool AudioDataSourceFuzzer::FuzzInnerMicAudioSync()
 
     auto innerAudioBuffer = CreateAudioBufferInner(GetData<int64_t>());
     auto micAudioBuffer = CreateAudioBufferMic(GetData<int64_t>());
-    uint32_t length = GetData<uint32_t>() % 1024;
-    audioDataSource->InnerMicAudioSync(length, innerAudioBuffer, micAudioBuffer);
+    audioDataSource->InnerMicAudioSync(innerAudioBuffer, micAudioBuffer);
     Release();
     return true;
 }
@@ -421,9 +412,8 @@ bool AudioDataSourceFuzzer::FuzzVideoAudioSyncMixMode()
 
     auto innerAudioBuffer = CreateAudioBufferInner(GetData<int64_t>());
     auto micAudioBuffer = CreateAudioBufferMic(GetData<int64_t>());
-    uint32_t length = GetData<uint32_t>() % 1024;
     int64_t timeWindow = GetData<int64_t>();
-    audioDataSource->VideoAudioSyncMixMode(length, timeWindow, innerAudioBuffer, micAudioBuffer);
+    audioDataSource->VideoAudioSyncMixMode(timeWindow, innerAudioBuffer, micAudioBuffer);
     Release();
     return true;
 }
@@ -435,9 +425,8 @@ bool AudioDataSourceFuzzer::FuzzVideoAudioSyncInnerMode()
         std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateAudioBufferInner(GetData<int64_t>());
-    uint32_t length = GetData<uint32_t>() % 1024;
     int64_t timeWindow = GetData<int64_t>();
-    audioDataSource->VideoAudioSyncInnerMode(length, timeWindow, innerAudioBuffer);
+    audioDataSource->VideoAudioSyncInnerMode(timeWindow, innerAudioBuffer);
     Release();
     return true;
 }
@@ -465,8 +454,7 @@ bool AudioDataSourceFuzzer::FuzzReadWriteAudioBufferMixCore()
 
     auto innerAudioBuffer = CreateAudioBufferInner(GetData<int64_t>());
     auto micAudioBuffer = CreateAudioBufferMic(GetData<int64_t>());
-    uint32_t length = GetData<uint32_t>() % 1024;
-    audioDataSource->ReadWriteAudioBufferMixCore(length, innerAudioBuffer, micAudioBuffer);
+    audioDataSource->ReadWriteAudioBufferMixCore(innerAudioBuffer, micAudioBuffer);
     Release();
     return true;
 }
@@ -479,8 +467,7 @@ bool AudioDataSourceFuzzer::FuzzReadWriteAudioBufferMix()
 
     auto innerAudioBuffer = CreateAudioBufferInner(GetData<int64_t>());
     auto micAudioBuffer = CreateAudioBufferMic(GetData<int64_t>());
-    uint32_t length = GetData<uint32_t>() % 1024;
-    audioDataSource->ReadWriteAudioBufferMix(length, innerAudioBuffer, micAudioBuffer);
+    audioDataSource->ReadWriteAudioBufferMix(innerAudioBuffer, micAudioBuffer);
     Release();
     return true;
 }
