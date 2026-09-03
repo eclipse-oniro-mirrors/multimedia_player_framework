@@ -1447,15 +1447,13 @@ napi_value AVRecorderNapi::ExecuteByPromise(napi_env env, napi_callback_info inf
         AVRecorderAsyncContext* asyncCtx = reinterpret_cast<AVRecorderAsyncContext *>(data);
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
         CHECK_AND_RETURN_LOG(asyncCtx->task_ != nullptr, "asyncCtx->task_ is nullptr!");
-
         auto result = asyncCtx->task_->GetResult();
-        if (result.HasResult()) {
-            if (result.Value().first != MSERR_EXT_API9_OK) {
-                asyncCtx->SignError(result.Value().first, result.Value().second);
-            } else {
-                if (asyncCtx->opt_ == AVRecordergOpt::GETINPUTSURFACE) {
-                    asyncCtx->JsResult = std::make_unique<MediaJsResultString>(result.Value().second);
-                }
+        CHECK_AND_RETURN_LOG(result.HasResult(), "asyncCtx->task_ result has no value!");
+        if (result.Value().first != MSERR_EXT_API9_OK) {
+            asyncCtx->SignError(result.Value().first, result.Value().second);
+        } else {
+            if (asyncCtx->opt_ == AVRecordergOpt::GETINPUTSURFACE) {
+                asyncCtx->JsResult = std::make_unique<MediaJsResultString>(result.Value().second);
             }
         }
         MEDIA_LOGI("The js thread of %{public}s finishes execution and returns", asyncCtx->opt_.c_str());
