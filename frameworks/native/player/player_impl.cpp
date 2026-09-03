@@ -382,6 +382,8 @@ int32_t PlayerImpl::Reset()
     prevTrackIndex_ = INT32_MIN;
     int32_t ret = MSERR_OK;
     LISTENER(ret = playerService_->Reset(), "Reset", false, TIME_OUT_SECOND);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to reset");
+    fdsanFd_ = nullptr;
     return ret;
 }
 
@@ -392,6 +394,7 @@ int32_t PlayerImpl::Release()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     LISTENER((void)playerService_->Release(), "Release", false, TIME_OUT_SECOND);
     (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+    fdsanFd_ = nullptr;
     playerService_ = nullptr;
     return MSERR_OK;
 }
@@ -403,6 +406,7 @@ int32_t PlayerImpl::ReleaseSync()
     CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     LISTENER((void)playerService_->ReleaseSync(), "ReleaseSync", false, TIME_OUT_SECOND);
     (void)MediaServiceFactory::GetInstance().DestroyPlayerService(playerService_);
+    fdsanFd_ = nullptr;
     playerService_ = nullptr;
     return MSERR_OK;
 }
