@@ -155,8 +155,14 @@ void ScreenCaptureAudioCapturerWrapperFuzzer::TestCapturerWrapperOperations(
     audioCapturerWrapper->Start(appInfo);
 
     ScreenCaptureContentFilter contentFilter;
-    contentFilter.filteredAudioContents.insert(
-        AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
+    if (fdp.ConsumeBool()) {
+        contentFilter.filteredAudioContents.insert(
+            AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO);
+    }
+    if (fdp.ConsumeBool()) {
+        contentFilter.filteredAudioContents.insert(
+            AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
+    }
     audioCapturerWrapper->UpdateAudioCapturerConfig(contentFilter);
     audioCapturerWrapper->GetAudioCapturerState();
     int32_t logLevel = fdp.ConsumeIntegralInRange<int32_t>(0, 1);
@@ -196,8 +202,9 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     SetConfig(recorderInfo, fdp);
     std::shared_ptr<ScreenCaptureCallBack> callbackObj = std::make_shared<TestScreenCaptureCallbackTest>();
     ScreenCaptureContentFilter contentFilter;
+    std::string capturerName = fdp.ConsumeRandomLengthString(64);
     shared_ptr<AudioCapturerWrapper> audioCapturerWrapper =
-        make_shared<AudioCapturerWrapper>(config_.audioInfo.innerCapInfo, callbackObj, string("name1"), contentFilter);
+        make_shared<AudioCapturerWrapper>(config_.audioInfo.innerCapInfo, callbackObj, capturerName, contentFilter);
     TestCapturerWrapperOperations(audioCapturerWrapper, fdp);
     close(outputFd);
     return true;

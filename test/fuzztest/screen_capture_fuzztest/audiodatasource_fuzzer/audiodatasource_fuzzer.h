@@ -43,6 +43,9 @@ namespace OHOS {
 namespace Media {
 
 AudioCaptureSourceType PickAudioSource(FuzzedDataProvider &fdp);
+AudioCodecFormat PickAudioCodecFormat(FuzzedDataProvider &fdp);
+VideoSourceType PickVideoSource(FuzzedDataProvider &fdp);
+AVScreenCaptureMixMode PickMixMode();
 AudioCaptureInfo CreateAudioCaptureInfo(FuzzedDataProvider &fdp);
 AudioInfo CreateAudioInfo(FuzzedDataProvider &fdp);
 VideoInfo CreateVideoInfo(FuzzedDataProvider &fdp);
