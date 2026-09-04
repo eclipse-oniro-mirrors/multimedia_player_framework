@@ -100,7 +100,7 @@ void ScreenCaptureDataTypeNdkFuzzer::ApplyDataTypeConfig(
 
     OH_RecorderInfo recorderInfo;
     const std::string screenCaptureRoot = "/data/test/media/";
-    int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_ndk_datatype_file_01.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_datatype_file_01.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     std::string fileUrl = "fd://" + to_string(outputFd);
     recorderInfo.url = const_cast<char *>(fileUrl.c_str());
