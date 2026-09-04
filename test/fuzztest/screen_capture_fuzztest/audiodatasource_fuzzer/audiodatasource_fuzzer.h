@@ -24,6 +24,7 @@
 #include <mutex>
 #include <fuzzer/FuzzedDataProvider.h>
 #include "audio_data_source.h"
+#include "cache_buffer.h"
 #include "screen_capture_server.h"
 #include "screen_capture_service_providers.h"
 #include "avbuffer.h"
@@ -74,8 +75,8 @@ public:
     bool FuzzLostFrameNum();
 
 private:
-    std::shared_ptr<AudioBuffer> CreateAudioBufferInner(int64_t timestamp, uint32_t bufferSize);
-    std::shared_ptr<AudioBuffer> CreateAudioBufferMic(int64_t timestamp, uint32_t bufferSize);
+    std::shared_ptr<CacheBuffer> CreateCacheBufferInner(int64_t timestamp, uint32_t bufferSize);
+    std::shared_ptr<CacheBuffer> CreateCacheBufferMic(int64_t timestamp, uint32_t bufferSize);
     std::shared_ptr<AVBuffer> CreateAVBuffer(uint32_t bufferSize);
     std::shared_ptr<AudioRendererChangeInfo> CreateAudioRendererChangeInfo();
     void Init();
