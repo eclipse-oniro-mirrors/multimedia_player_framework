@@ -249,7 +249,7 @@ void ScreenCaptureServer::OnCaptureContentChanged(bool isMirrorChanged)
         return;
     }
     windowInfoOption.windowId = interestWindowId_;
-    auto ret = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
+    auto ret = Rosen::WindowManager::GetInstance(appUserId_).ListWindowInfo(windowInfoOption, infos);
     CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK && !infos.empty() && infos.front() != nullptr,
         "ListWindowInfo failed.");
     CHECK_AND_RETURN(curWindowEvent_ != AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
@@ -317,6 +317,8 @@ void ScreenCaptureServer::InitAppUserId()
     int32_t userId = -1;
     AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
     appUserId_.store(userId == 0 ? -1 : userId);
+    listenerManager_->SetAppUserId(appUserId_);
+    MEDIA_LOGI("InitAppUserId() appUserId_： %{public}d", appUserId_.load());
 }
 
 void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
@@ -689,7 +691,7 @@ void ScreenCaptureServer::NotifyWindowVisible(uint64_t missionId)
     WindowInfoOption opt;
     opt.windowId = static_cast<int32_t>(missionId);
     std::vector<sptr<WindowInfo>> infos;
-    auto ret = Rosen::WindowManager::GetInstance().ListWindowInfo(opt, infos);
+    auto ret = Rosen::WindowManager::GetInstance(appUserId_).ListWindowInfo(opt, infos);
     CHECK_AND_RETURN_LOG(ret == Rosen::WMError::WM_OK && !infos.empty() && infos.front() != nullptr, "");
     NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE,
         reinterpret_cast<ScreenCaptureRect *>(&(infos.front()->windowLayoutInfo.rect)));
@@ -1501,7 +1503,7 @@ void ScreenCaptureServer::UpdateHighlightOutline(bool isStarted)
             MEDIA_LOGE("Get media service failed");
             return;
         }
-        Rosen::WMError res = Rosen::WindowManager::GetInstance().UpdateOutline(mediaService, outlineParams);
+        Rosen::WMError res = Rosen::WindowManager::GetInstance(appUserId_).UpdateOutline(mediaService, outlineParams);
         if (res == Rosen::WMError::WM_OK) {
             MEDIA_LOGI("UpdateHighlightOutline sussess");
         } else {
@@ -1782,7 +1784,7 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
             Rosen::WindowInfoOption windowInfoOption;
             windowInfoOption.windowId = static_cast<int32_t>(missionInfos_.front().missionId);
             std::vector<sptr<Rosen::WindowInfo>> infos;
-            auto wmRet = Rosen::WindowManager::GetInstance().ListWindowInfo(windowInfoOption, infos);
+            auto wmRet = Rosen::WindowManager::GetInstance(appUserId_).ListWindowInfo(windowInfoOption, infos);
             isPickerModePopUp_ = (wmRet != Rosen::WMError::WM_OK || infos.empty() || infos.front() == nullptr ||
                 infos.front()->windowMetaInfo.pid != appInfo_.appPid);
             MEDIA_LOGI("list window info ret:%{public}d, isPickerModePopUp:%{public}d", wmRet,
@@ -2367,9 +2369,7 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
     request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetUnremovable(true);
     request.SetInProgress(true);
-    if (appUserId_ != -1) {
-        request.SetOwnerUserId(appUserId_.load());
-    }
+    request.SetOwnerUserId(appUserId_.load());
 
     std::shared_ptr<PixelMap> pixelMapTotalSpr;
     if (isSystemUI2_) {
@@ -2609,7 +2609,7 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows()
     }
     if (captureConfig_.captureMode == CAPTURE_SPECIFIED_APP && displayIds_.empty()) {
         Rosen::FocusChangeInfo focusedWindowInfo;
-        Rosen::WindowManager::GetInstance().GetFocusWindowInfo(focusedWindowInfo);
+        Rosen::WindowManager::GetInstance(appUserId_).GetFocusWindowInfo(focusedWindowInfo);
         uint64_t focusId = static_cast<uint64_t>(focusedWindowInfo.windowId_);
         if (std::find(missionIds.begin(), missionIds.end(), focusId) != missionIds.end()) {
             displayIds_.clear();
@@ -2618,7 +2618,7 @@ uint64_t ScreenCaptureServer::GetDisplayIdOfWindows()
         }
     }
     std::unordered_map<uint64_t, uint64_t> windowDisplayIdMap;
-    Rosen::WindowManager::GetInstance().GetDisplayIdByWindowId(missionIds, windowDisplayIdMap);
+    Rosen::WindowManager::GetInstance(appUserId_).GetDisplayIdByWindowId(missionIds, windowDisplayIdMap);
     for (auto rit = missionIds.rbegin(); rit != missionIds.rend(); ++rit) {
         auto it = windowDisplayIdMap.find(*rit);
         if (it == windowDisplayIdMap.end()) {
@@ -3910,9 +3910,7 @@ void ScreenCaptureServer::SetupPublishRequest(NotificationRequest &request)
     request.SetContent(notificationContent);
     request.SetCreatorUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetInProgress(true);
-    if (appUserId_ != -1) {
-        request.SetOwnerUserId(appUserId_.load());
-    }
+    request.SetOwnerUserId(appUserId_.load());
     request.SetNotificationId(notificationId_);
     request.SetOwnerUid(AV_SCREEN_CAPTURE_SESSION_UID);
     request.SetRemoveAllowed(false);

@@ -122,6 +122,11 @@ int32_t ScreenCaptureListenerManager::UnregisterListeners(uint32_t listenerFlags
     return MSERR_OK;
 }
 
+void ScreenCaptureListenerManager::SetAppUserId(int32_t appUserId)
+{
+    appUserId_.store(appUserId);
+}
+
 int32_t ScreenCaptureListenerManager::RegisterAudioRendererEventListener()
 {
     CHECK_AND_RETURN_RET_LOG(registerParams_.appPid > 0, MSERR_INVALID_OPERATION, "appPid is invalid");
@@ -164,7 +169,7 @@ void ScreenCaptureListenerManager::SetupSceneSessionManagerDeathRecipient()
         return;
     }
 
-    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
+    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(appUserId_).GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_LOG(sceneSessionManager != nullptr, "sceneSessionManager is nullptr");
 
     lifecycleListenerDeathRecipient_ = sptr<SceneSessionDeathRecipient>::MakeSptr(weak_from_this());
@@ -210,7 +215,7 @@ int32_t ScreenCaptureListenerManager::RegisterWindowLifecycleListener()
         return MSERR_OK;
     }
 
-    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
+    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(appUserId_).GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION, "sceneSessionManager is nullptr");
 
     windowLifecycleListener_ = sptr<SessionLifecycleListenerWrapper>::MakeSptr(eventListener_);
@@ -233,7 +238,7 @@ int32_t ScreenCaptureListenerManager::UnregisterWindowLifecycleListener()
         return MSERR_OK;
     }
 
-    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
+    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(appUserId_).GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION, "sceneSessionManager is nullptr");
 
     if (lifecycleListenerDeathRecipient_) {
@@ -270,7 +275,7 @@ int32_t ScreenCaptureListenerManager::RegisterWindowInfoChangedListener()
 
     std::unordered_set<Rosen::WindowInfoKey> observedInfo;
     observedInfo.insert(Rosen::WindowInfoKey::DISPLAY_ID);
-    Rosen::WMError ret = Rosen::WindowManager::GetInstance().RegisterWindowInfoChangeCallback(observedInfo,
+    Rosen::WMError ret = Rosen::WindowManager::GetInstance(appUserId_).RegisterWindowInfoChangeCallback(observedInfo,
         windowInfoChangedListener_);
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
         "RegisterWindowInfoChangeCallback failed");
@@ -288,7 +293,7 @@ int32_t ScreenCaptureListenerManager::UnregisterWindowInfoChangedListener()
 
     std::unordered_set<Rosen::WindowInfoKey> observedInfo;
     observedInfo.insert(Rosen::WindowInfoKey::DISPLAY_ID);
-    Rosen::WMError ret = Rosen::WindowManager::GetInstance().UnregisterWindowInfoChangeCallback(observedInfo,
+    Rosen::WMError ret = Rosen::WindowManager::GetInstance(appUserId_).UnregisterWindowInfoChangeCallback(observedInfo,
         windowInfoChangedListener_);
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
         "UnregisterWindowInfoChangeCallback failed");
@@ -650,7 +655,7 @@ void AudioRendererCallbackWrapper::OnRendererStateChange(
 
 int32_t ScreenCaptureListenerManager::RegisterAppLifecycleListener()
 {
-    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
+    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(appUserId_).GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
         "sceneSessionManager is nullptr, RegisterAppLifecycleListener failed.");
 
@@ -681,7 +686,7 @@ int32_t ScreenCaptureListenerManager::UnregisterAppLifecycleListener()
         return MSERR_OK;
     }
 
-    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance().GetSceneSessionManagerLiteProxy();
+    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(appUserId_).GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
         "sceneSessionManager is nullptr, UnregisterAppLifecycleListener failed.");
 
