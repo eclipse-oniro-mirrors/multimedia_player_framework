@@ -78,12 +78,13 @@ bool ScreenCaptureAcquireAudioBufferNdkFuzzer::FuzzScreenCaptureAcquireAudioBuff
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t audioSourceTypesList = 5;
-    std::unique_ptr<OH_AudioBuffer, decltype(&free)> audioBuffer(
-        static_cast<OH_AudioBuffer*>(malloc(sizeof(OH_AudioBuffer))), &free);
-    if (audioBuffer == nullptr) {
+    OH_AudioBuffer* rawBuffer = static_cast<OH_AudioBuffer*>(malloc(sizeof(OH_AudioBuffer)));
+    if (rawBuffer == nullptr) {
         cout << "audio buffer is nullptr" << endl;
         return false;
     }
+    std::unique_ptr<OH_AudioBuffer, decltype(&free)> audioBuffer(rawBuffer, &free);
+
     const OH_AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
         OH_SOURCE_INVALID,
         OH_SOURCE_DEFAULT,
