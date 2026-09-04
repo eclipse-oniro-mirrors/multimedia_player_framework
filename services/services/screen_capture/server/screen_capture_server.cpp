@@ -527,6 +527,7 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
             curWindowEvent_ = AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE;
             listenerFlags |= LF_WIN_LIFECYCLE | LF_WIN_INFO;
             params.windowIdList = {interestWindowId_};
+            params.appUserId = appUserId_.load();
         }
     }
     ret = listenerManager_->RegisterListeners(listenerFlags, params);
@@ -545,7 +546,7 @@ int32_t ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformatio
         "bundleNameJson or appIndexJson isNull");
 
     int32_t ret = listenerManager_->RegisterListeners(LF_APP_LIFECYCLE,
-        {.appBundleName = bundleNameJson.asString(), .appIndex = appIndexJson.asInt()});
+        {.appBundleName = bundleNameJson.asString(), .appIndex = appIndexJson.asInt(), .appUserId = appUserId_.load()});
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OK, "RegisterListeners LF_APP_LIFECYCLE failed");
     SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP, -1);
     isGetAppMissionId_ = false;
@@ -1672,7 +1673,8 @@ void ScreenCaptureServer::PostStartScreenCapture(bool isSuccess)
             listenerFlags |= LF_WIN_LIFECYCLE | LF_WIN_INFO | LF_RECORD_DISP;
         }
     }
-    auto ret = listenerManager_->RegisterListeners(listenerFlags, {.windowIdList = {interestWindowId_}});
+    auto ret = listenerManager_->RegisterListeners(listenerFlags,
+        {.windowIdList = {interestWindowId_}, .appUserId = appUserId_.load()});
     CHECK_AND_RETURN_LOG(ret == MSERR_OK, "PostStartScreenCapture RegisterListeners failed");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " PostStartScreenCapture end.", FAKE_POINTER(this));
 }

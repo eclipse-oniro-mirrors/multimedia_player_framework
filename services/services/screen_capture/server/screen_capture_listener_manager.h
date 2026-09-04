@@ -190,6 +190,7 @@ struct ListenerRegisterParams {
     int32_t appPid = -1;
     std::string appBundleName;
     int32_t appIndex = 0;
+    int32_t appUserId = -1;
 };
 
 class ScreenCaptureListenerManager : public std::enable_shared_from_this<ScreenCaptureListenerManager> {
@@ -201,7 +202,6 @@ public:
     int32_t RegisterListeners(uint32_t listenerFlags, const ListenerRegisterParams &params);
     int32_t UnregisterListeners(uint32_t listenerFlags = LF_ALL);
     void OnSceneSessionManagerDied();
-    void SetAppUserId(int32_t appUserId);
 
 private:
     template <typename Func>
@@ -264,7 +264,6 @@ private:
     std::shared_ptr<AudioRendererCallbackWrapper> audioRendererCallback_;
 
     ListenerRegisterParams registerParams_;
-    std::atomic<int32_t> appUserId_{-1};
     std::mutex mutex_;
 };
 } // namespace OHOS::Media
