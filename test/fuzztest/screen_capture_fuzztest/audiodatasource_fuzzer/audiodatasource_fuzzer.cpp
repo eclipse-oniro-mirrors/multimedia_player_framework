@@ -47,6 +47,40 @@ AudioCaptureSourceType PickAudioSource(FuzzedDataProvider &fdp)
     return audioSources[idx];
 }
 
+AudioCodecFormat PickAudioCodecFormat(FuzzedDataProvider &fdp)
+{
+    static const AudioCodecFormat audioCodecFormats[] = {
+        AudioCodecFormat::AUDIO_DEFAULT,
+        AudioCodecFormat::AAC_LC,
+    };
+    constexpr uint32_t count = sizeof(audioCodecFormats) / sizeof(audioCodecFormats[0]);
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, count - 1);
+    return audioCodecFormats[idx];
+}
+
+VideoSourceType PickVideoSource(FuzzedDataProvider &fdp)
+{
+    static const VideoSourceType videoSourceTypes[] = {
+        VIDEO_SOURCE_SURFACE_YUV,
+        VIDEO_SOURCE_SURFACE_ES,
+        VIDEO_SOURCE_SURFACE_RGBA,
+    };
+    constexpr uint32_t count = sizeof(videoSourceTypes) / sizeof(videoSourceTypes[0]);
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, count - 1);
+    return videoSourceTypes[idx];
+}
+
+AVScreenCaptureMixMode PickMixMode()
+{
+    static const AVScreenCaptureMixMode mixModes[] = {
+        AVScreenCaptureMixMode::MIX_MODE,
+        AVScreenCaptureMixMode::MIC_MODE,
+        AVScreenCaptureMixMode::INNER_MODE,
+    };
+    uint32_t idx = GetData<uint32_t>() % (sizeof(mixModes) / sizeof(mixModes[0]));
+    return mixModes[idx];
+}
+
 AudioCaptureInfo CreateAudioCaptureInfo(FuzzedDataProvider &fdp)
 {
     return {
@@ -63,7 +97,7 @@ AudioInfo CreateAudioInfo(FuzzedDataProvider &fdp)
         .innerCapInfo = CreateAudioCaptureInfo(fdp),
         .audioEncInfo = {
             .audioBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 96000),
-            .audioCodecformat = AudioCodecFormat::AAC_LC
+            .audioCodecformat = PickAudioCodecFormat(fdp)
         },
     };
 }
@@ -74,7 +108,7 @@ VideoInfo CreateVideoInfo(FuzzedDataProvider &fdp)
         .videoCapInfo = {
             .videoFrameWidth = fdp.ConsumeIntegralInRange<int32_t>(1, 3840),
             .videoFrameHeight = fdp.ConsumeIntegralInRange<int32_t>(1, 2160),
-            .videoSource = VIDEO_SOURCE_SURFACE_RGBA
+            .videoSource = PickVideoSource(fdp)
         }
     };
 }
@@ -196,7 +230,7 @@ bool AudioDataSourceFuzzer::FuzzAudioRendererStateUpdate()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     int32_t numInfos = GetData<uint32_t>() % 10;
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
@@ -217,7 +251,7 @@ bool AudioDataSourceFuzzer::FuzzGetAudioRendererState()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     int32_t numInfos = GetData<uint32_t>() % 10;
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
@@ -240,7 +274,7 @@ bool AudioDataSourceFuzzer::FuzzAudioRendererStateUpdateVoIP()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     int32_t numInfos = GetData<uint32_t>() % 10;
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
@@ -261,7 +295,7 @@ bool AudioDataSourceFuzzer::FuzzHasVoIPStream()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     int32_t numInfos = GetData<uint32_t>() % 10;
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
@@ -284,7 +318,7 @@ bool AudioDataSourceFuzzer::FuzzSetAndGetAppPid()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     int32_t appPid = GetData<int32_t>();
     audioDataSource->SetAppPid(appPid);
@@ -299,7 +333,7 @@ bool AudioDataSourceFuzzer::FuzzSetVideoFirstFramePts()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     int64_t pts = GetData<int64_t>();
     audioDataSource->SetVideoFirstFramePts(pts);
@@ -311,7 +345,7 @@ bool AudioDataSourceFuzzer::FuzzSetAudioFirstFramePts()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     int64_t pts = GetData<int64_t>();
     audioDataSource->SetAudioFirstFramePts(pts);
@@ -323,7 +357,7 @@ bool AudioDataSourceFuzzer::FuzzReadAtMixMode()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     audioDataSource->ReadAtMixMode();
     Release();
@@ -334,7 +368,7 @@ bool AudioDataSourceFuzzer::FuzzReadAtMicMode()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     audioDataSource->ReadAtMicMode();
     Release();
@@ -345,7 +379,7 @@ bool AudioDataSourceFuzzer::FuzzReadAtInnerMode()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     audioDataSource->ReadAtInnerMode();
     Release();
@@ -355,7 +389,7 @@ bool AudioDataSourceFuzzer::FuzzReadAtInnerMode()
 bool AudioDataSourceFuzzer::FuzzReadAt(uint32_t bufferSize)
 {
     Init();
-    AVScreenCaptureMixMode mode = static_cast<AVScreenCaptureMixMode>(GetData<int32_t>() % 3);
+    AVScreenCaptureMixMode mode = PickMixMode();
     std::shared_ptr<AudioDataSource> audioDataSource =
         std::make_unique<AudioDataSource>(mode, screenCaptureServer_.get());
 
@@ -370,7 +404,7 @@ bool AudioDataSourceFuzzer::FuzzGetSize()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     int64_t sizeResult = 0;
     uint8_t eventType = GetData<uint8_t>() % 2;
@@ -389,7 +423,7 @@ bool AudioDataSourceFuzzer::FuzzMixModeBufferWrite(uint32_t innerBufferSize, uin
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), innerBufferSize);
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), micBufferSize);
     audioDataSource->MixModeBufferWrite(innerAudioBuffer, micAudioBuffer);
@@ -403,7 +437,7 @@ bool AudioDataSourceFuzzer::FuzzWriteInnerAudio(uint32_t bufferSize)
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), bufferSize);
     audioDataSource->WriteInnerAudio(innerAudioBuffer);
@@ -415,7 +449,7 @@ bool AudioDataSourceFuzzer::FuzzWriteMicAudio(uint32_t bufferSize)
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIC_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), bufferSize);
     audioDataSource->WriteMicAudio(micAudioBuffer);
@@ -427,7 +461,7 @@ bool AudioDataSourceFuzzer::FuzzWriteMixAudio(uint32_t innerBufferSize, uint32_t
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), innerBufferSize);
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), micBufferSize);
@@ -440,7 +474,7 @@ bool AudioDataSourceFuzzer::FuzzInnerMicAudioSync(uint32_t innerBufferSize, uint
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), innerBufferSize);
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), micBufferSize);
@@ -453,7 +487,7 @@ bool AudioDataSourceFuzzer::FuzzVideoAudioSyncMixMode(uint32_t innerBufferSize, 
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), innerBufferSize);
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), micBufferSize);
@@ -467,7 +501,7 @@ bool AudioDataSourceFuzzer::FuzzVideoAudioSyncInnerMode(uint32_t bufferSize)
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::INNER_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), bufferSize);
     int64_t timeWindow = GetData<int64_t>();
@@ -480,7 +514,7 @@ bool AudioDataSourceFuzzer::FuzzGetFirstAudioTime(uint32_t innerBufferSize, uint
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), innerBufferSize);
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), micBufferSize);
@@ -495,7 +529,7 @@ bool AudioDataSourceFuzzer::FuzzReadWriteAudioBufferMixCore(uint32_t innerBuffer
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), innerBufferSize);
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), micBufferSize);
@@ -508,7 +542,7 @@ bool AudioDataSourceFuzzer::FuzzReadWriteAudioBufferMix(uint32_t innerBufferSize
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), innerBufferSize);
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), micBufferSize);
@@ -521,7 +555,7 @@ bool AudioDataSourceFuzzer::FuzzHandlePastMicBuffer(uint32_t bufferSize)
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), bufferSize);
     audioDataSource->HandlePastMicBuffer(micAudioBuffer);
@@ -533,7 +567,7 @@ bool AudioDataSourceFuzzer::FuzzHandleSwitchToSpeakerOptimise(uint32_t innerBuff
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), innerBufferSize);
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), micBufferSize);
@@ -546,7 +580,7 @@ bool AudioDataSourceFuzzer::FuzzHandleBufferTimeStamp(uint32_t innerBufferSize, 
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     auto innerAudioBuffer = CreateCacheBufferInner(GetData<int64_t>(), innerBufferSize);
     auto micAudioBuffer = CreateCacheBufferMic(GetData<int64_t>(), micBufferSize);
@@ -559,7 +593,7 @@ bool AudioDataSourceFuzzer::FuzzLostFrameNum()
 {
     Init();
     std::shared_ptr<AudioDataSource> audioDataSource =
-        std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE, screenCaptureServer_.get());
+        std::make_unique<AudioDataSource>(PickMixMode(), screenCaptureServer_.get());
 
     int64_t timestamp = GetData<int64_t>();
     int64_t lostFrameNum = audioDataSource->LostFrameNum(timestamp);
