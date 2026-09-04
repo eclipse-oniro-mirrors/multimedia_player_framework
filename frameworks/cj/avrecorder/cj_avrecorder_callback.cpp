@@ -51,7 +51,7 @@ void CJAVRecorderCallback::Register(const int32_t type, int64_t id)
             InitAudioRecorderChange(id);
             break;
         case CJAVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE:
-            InitPhotoAssertAvailable(id);
+            InitPhotoAssetAvailable(id);
             break;
         default:
             MEDIA_LOGE("invalid type");
@@ -73,7 +73,7 @@ void CJAVRecorderCallback::UnRegister(const int32_t type)
             onAudioCapturerChange = nullptr;
             break;
         case CJAVRecorderEvent::EVENT_PHOTO_ASSET_AVAILABLE:
-            onPhotoAssertAvailable = nullptr;
+            onPhotoAssetAvailable = nullptr;
             break;
         default:
             MEDIA_LOGE("invalid type");
@@ -185,16 +185,16 @@ void CJAVRecorderCallback::OnAudioCaptureChange(const AudioRecorderChangeInfo &a
     FreeCArrDeviceDescriptor(cInfo.deviceDescriptors);
 }
 
-void CJAVRecorderCallback::OnPhotoAssertAvailable(const std::string &uri)
+void CJAVRecorderCallback::OnPhotoAssetAvailable(const std::string &uri)
 {
     std::function<void(int64_t)> cb;
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        if (!onPhotoAssertAvailable) {
-            MEDIA_LOGE("onPhotoAssertAvailable is null");
+        if (!onPhotoAssetAvailable) {
+            MEDIA_LOGE("onPhotoAssetAvailable is null");
             return;
         }
-        cb = onPhotoAssertAvailable;
+        cb = onPhotoAssetAvailable;
     }
     if (uri.empty()) {
         MEDIA_LOGE("uri is empty");
@@ -230,10 +230,10 @@ void CJAVRecorderCallback::InitAudioRecorderChange(int64_t id)
     };
 }
 
-void CJAVRecorderCallback::InitPhotoAssertAvailable(int64_t id)
+void CJAVRecorderCallback::InitPhotoAssetAvailable(int64_t id)
 {
     auto callback = reinterpret_cast<void(*)(const int64_t)>(id);
-    onPhotoAssertAvailable = [lambda = CJLambda::Create(callback)](int64_t value) -> void {
+    onPhotoAssetAvailable = [lambda = CJLambda::Create(callback)](int64_t value) -> void {
         lambda(value);
     };
 }

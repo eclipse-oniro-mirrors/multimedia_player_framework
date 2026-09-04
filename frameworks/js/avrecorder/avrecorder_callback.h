@@ -16,6 +16,7 @@
 #define AVRECORDER_CALLBACK_H
 
 #include "avrecorder_napi.h"
+#include <memory>
 #include "recorder.h"
 #include "av_common.h"
 #include "napi/native_api.h"
@@ -26,7 +27,7 @@ namespace OHOS {
 namespace Media {
 namespace AVRecorderCallbackNapiTask {
 const std::string ON_JS_STATE_CALLBACK = "AVRecorderCallback::OnJsStateCallBack";
-const std::string ON_JS_PHOTO_ASSERT_AVAILABLE_CALLBACK = "AVRecorderCallback::OnJsPhotoAssertAvailableCallback";
+const std::string ON_JS_PHOTO_ASSET_AVAILABLE_CALLBACK = "AVRecorderCallback::OnJsPhotoAssetAvailableCallback";
 const std::string ON_JS_AUDIO_CAPTURE_CHANGE_CALLBACK = "AVRecorderCallback::OnJsAudioCaptureChangeCallback";
 const std::string ON_JS_ERROR_CALLBACK = "AVRecorderCallback::OnJsErrorCallBack";
 }
@@ -42,14 +43,14 @@ public:
     void SendErrorCallback(int32_t errCode, const std::string &msg);
     void SendStateCallback(const std::string &state, const StateChangeReason &reason);
     void SendAudioCaptureChangeCallback(const AudioRecorderChangeInfo &audioRecorderChangeInfo);
-    void SendPhotoAssertAvailableCallback(const std::string &uri);
+    void SendPhotoAssetAvailableCallback(const std::string &uri);
     std::string GetState();
 
 protected:
     void OnError(RecorderErrorType errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
     void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
-    void OnPhotoAssertAvailable(const std::string &uri) override;
+    void OnPhotoAssetAvailable(const std::string &uri) override;
 
 private:
     struct AVRecordJsCallback {
@@ -62,11 +63,11 @@ private:
         AudioRecorderChangeInfo audioRecorderChangeInfo;
         std::string uri = "unknown";
     };
-    void OnJsErrorCallBack(AVRecordJsCallback *jsCb) const;
-    void OnJsStateCallBack(AVRecordJsCallback *jsCb) const;
-    void OnJsAudioCaptureChangeCallback(AVRecordJsCallback *jsCb) const;
+    void OnJsErrorCallBack(std::shared_ptr<AVRecordJsCallback> jsCb) const;
+    void OnJsStateCallBack(std::shared_ptr<AVRecordJsCallback> jsCb) const;
+    void OnJsAudioCaptureChangeCallback(std::shared_ptr<AVRecordJsCallback> jsCb) const;
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-    void OnJsPhotoAssertAvailableCallback(AVRecordJsCallback *jsCb) const;
+    void OnJsPhotoAssetAvailableCallback(std::shared_ptr<AVRecordJsCallback> jsCb) const;
 #endif
     napi_env env_ = nullptr;
     std::mutex mutex_;

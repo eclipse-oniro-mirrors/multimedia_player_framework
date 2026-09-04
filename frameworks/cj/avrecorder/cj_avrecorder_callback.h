@@ -55,18 +55,18 @@ protected:
     void OnError(RecorderErrorType errorType, int32_t errCode) override;
     void OnInfo(int32_t type, int32_t extra) override;
     void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
-    void OnPhotoAssertAvailable(const std::string &uri) override;
+    void OnPhotoAssetAvailable(const std::string &uri) override;
 
 private:
     std::function<void(CErrorInfo)> onError = nullptr;
     std::function<void(CAudioCapturerChangeInfo)> onAudioCapturerChange = nullptr;
     std::function<void(CStateChangeHandler)> onStateChange = nullptr;
-    std::function<void(int64_t)> onPhotoAssertAvailable = nullptr;
+    std::function<void(int64_t)> onPhotoAssetAvailable = nullptr;
 
     void InitError(int64_t id);
     void InitStateChange(int64_t id);
     void InitAudioRecorderChange(int64_t id);
-    void InitPhotoAssertAvailable(int64_t id);
+    void InitPhotoAssetAvailable(int64_t id);
 
     std::mutex mutex_;
     std::string currentState_ = CjAVRecorderState::STATE_IDLE;

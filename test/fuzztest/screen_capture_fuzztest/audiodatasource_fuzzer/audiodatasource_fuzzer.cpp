@@ -151,7 +151,7 @@ std::shared_ptr<AudioBuffer> AudioDataSourceFuzzer::CreateAudioBufferMic(int64_t
         free(micBuffer);
         return nullptr;
     }
-    return audioBuffer;
+    return cacheBuf;
 }
 
 std::shared_ptr<AVBuffer> AudioDataSourceFuzzer::CreateAVBuffer(uint32_t bufferSize)

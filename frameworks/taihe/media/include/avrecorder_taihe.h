@@ -265,7 +265,7 @@ public:
     int32_t CheckStateMachine(const std::string &opt);
     int32_t CheckRepeatOperation(const std::string &opt);
     void ExecuteByPromise(const std::string &opt);
-    optional<string> GetInputSurfaceExecuteByPromise(const std::string &opt);
+    optional<string> ExecuteByPromiseString(const std::string &opt);
     void RemoveSurface();
     std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     int32_t GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,

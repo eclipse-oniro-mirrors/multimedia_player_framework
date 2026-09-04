@@ -16,17 +16,41 @@
 #ifndef MOCK_AUDIO_CAPTURER_H
 #define MOCK_AUDIO_CAPTURER_H
 
+#include "audio_capturer.h"
 #include <gmock/gmock.h>
 #include <memory>
-#include "audio_capturer.h"
 
-using testing::Return;
 using testing::_;
 using testing::DoAll;
+using testing::Return;
 using testing::SetArgReferee;
 
 namespace OHOS {
 namespace Media {
+
+// Test-only switches to steer the mock AudioCapturer::Create. Set a flag before
+// calling Start/CreateAudioCapturer; Create reads & resets it (one-shot, so a
+// forgotten flag never leaks into a later test). AcwFlagGuard (declared at the
+// top of a test) also resets on scope exit, covering ASSERT-failure paths.
+struct AcwCreateMockFlags {
+    bool returnNull = false;
+    bool startFail = false;
+    bool setCapturerCallbackFail = false;
+    bool setCaptureModeFail = false;
+    bool setCapturerReadCallbackFail = false;
+    bool setAudioSourceConcurrencyFail = false;
+};
+inline AcwCreateMockFlags g_acwCreateMockFlags;
+inline void ResetAcwCreateMockFlags()
+{
+    g_acwCreateMockFlags = AcwCreateMockFlags{};
+}
+struct AcwFlagGuard {
+    ~AcwFlagGuard()
+    {
+        ResetAcwCreateMockFlags();
+    }
+};
 
 class MockAudioCapturer : public AudioStandard::AudioCapturer {
 public:
@@ -38,21 +62,19 @@ public:
     MOCK_METHOD(bool, Release, (), (override));
     MOCK_METHOD(int32_t, Read, (uint8_t &, size_t, bool), (override));
     MOCK_METHOD(int32_t, GetBufferSize, (size_t &), (override, const));
-    MOCK_METHOD(bool, GetTimeStampInfo,
-        (AudioStandard::Timestamp &, AudioStandard::Timestamp::Timestampbase), (override, const));
-    MOCK_METHOD(bool, GetAudioTime,
-        (AudioStandard::Timestamp &, AudioStandard::Timestamp::Timestampbase), (override, const));
-    MOCK_METHOD(int32_t, SetCapturerCallback,
-        (const std::shared_ptr<AudioStandard::AudioCapturerCallback> &), (override));
-    MOCK_METHOD(int32_t, UpdatePlaybackCaptureConfig,
-        (const AudioStandard::AudioPlaybackCaptureConfig &), (override));
-    MOCK_METHOD(int32_t, SetAudioSourceConcurrency,
-        (const std::vector<AudioStandard::SourceType> &), (override));
+    MOCK_METHOD(bool, GetTimeStampInfo, (AudioStandard::Timestamp &, AudioStandard::Timestamp::Timestampbase),
+        (override, const));
+    MOCK_METHOD(bool, GetAudioTime, (AudioStandard::Timestamp &, AudioStandard::Timestamp::Timestampbase),
+        (override, const));
+    MOCK_METHOD(int32_t, SetCapturerCallback, (const std::shared_ptr<AudioStandard::AudioCapturerCallback> &),
+        (override));
+    MOCK_METHOD(int32_t, UpdatePlaybackCaptureConfig, (const AudioStandard::AudioPlaybackCaptureConfig &), (override));
+    MOCK_METHOD(int32_t, SetAudioSourceConcurrency, (const std::vector<AudioStandard::SourceType> &), (override));
     MOCK_METHOD(AudioStandard::CapturerState, GetStatus, (), (override, const));
     MOCK_METHOD(bool, Pause, (), (override, const));
     MOCK_METHOD(bool, Flush, (), (override, const));
-    MOCK_METHOD(void, SetAudioCapturerErrorCallback,
-        (std::shared_ptr<AudioStandard::AudioCapturerErrorCallback>), (override));
+    MOCK_METHOD(void, SetAudioCapturerErrorCallback, (std::shared_ptr<AudioStandard::AudioCapturerErrorCallback>),
+        (override));
     MOCK_METHOD(void, SetFastStatusChangeCallback,
         (const std::shared_ptr<AudioStandard::AudioCapturerFastStatusChangeCallback> &), (override));
     MOCK_METHOD(void, SetPlaybackCaptureStartStateCallback,
@@ -74,8 +96,8 @@ public:
     MOCK_METHOD(int32_t, SetBufferDuration, (uint64_t), (override, const));
     MOCK_METHOD(int32_t, SetCaptureMode, (AudioStandard::AudioCaptureMode), (override));
     MOCK_METHOD(AudioStandard::AudioCaptureMode, GetCaptureMode, (), (override, const));
-    MOCK_METHOD(int32_t, SetCapturerReadCallback,
-        (const std::shared_ptr<AudioStandard::AudioCapturerReadCallback> &), (override));
+    MOCK_METHOD(int32_t, SetCapturerReadCallback, (const std::shared_ptr<AudioStandard::AudioCapturerReadCallback> &),
+        (override));
     MOCK_METHOD(int32_t, GetBufferDesc, (AudioStandard::BufferDesc &), (override));
     MOCK_METHOD(int32_t, Enqueue, (const AudioStandard::BufferDesc &), (override));
     MOCK_METHOD(int32_t, Clear, (), (override, const));
@@ -95,8 +117,8 @@ public:
     MOCK_METHOD(int32_t, GetCurrentInputDevices, (AudioStandard::AudioDeviceDescriptor &), (override, const));
     MOCK_METHOD(int32_t, GetCurrentCapturerChangeInfo, (AudioStandard::AudioCapturerChangeInfo &), (override, const));
     MOCK_METHOD(std::vector<sptr<AudioStandard::MicrophoneDescriptor>>, GetCurrentMicrophones, (), (override, const));
-    MOCK_METHOD(int32_t, GetAudioTimestampInfo,
-        (AudioStandard::Timestamp &, AudioStandard::Timestamp::Timestampbase), (override, const));
+    MOCK_METHOD(int32_t, GetAudioTimestampInfo, (AudioStandard::Timestamp &, AudioStandard::Timestamp::Timestampbase),
+        (override, const));
     MOCK_METHOD(uint32_t, GetOverflowCount, (), (override, const));
     MOCK_METHOD(int32_t, SetInputDevice, (AudioStandard::DeviceType), (override, const));
     MOCK_METHOD(int32_t, SetInterruptStrategy, (AudioStandard::InterruptStrategy), (override));

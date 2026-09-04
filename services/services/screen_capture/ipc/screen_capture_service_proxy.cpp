@@ -390,19 +390,26 @@ int32_t ScreenCaptureServiceProxy::AcquireAudioBuffer(std::shared_ptr<AudioBuffe
             MEDIA_LOGE("audioBufferLen is invalid");
             return MSERR_INVALID_VAL;
         }
-        auto buffer = reply.ReadBuffer(audioBufferLen);
-        CHECK_AND_RETURN_RET_LOG(buffer != nullptr, MSERR_INVALID_VAL, "read buffer failed");
-        uint8_t* audiobuffer = static_cast<uint8_t *>(malloc(audioBufferLen));
-        CHECK_AND_RETURN_RET_LOG(audiobuffer != nullptr, MSERR_NO_MEMORY, "audio buffer malloc failed");
-        memset_s(audiobuffer, audioBufferLen, 0, audioBufferLen);
-        if (memcpy_s(audiobuffer, audioBufferLen, buffer, audioBufferLen) != EOK) {
-            MEDIA_LOGE("audioBuffer memcpy_s fail");
-        }
         AudioCaptureSourceType sourceType = static_cast<AudioCaptureSourceType>(reply.ReadInt32());
         if ((sourceType > APP_PLAYBACK) || (sourceType < SOURCE_INVALID)) {
             sourceType = type;
         }
         int64_t audioTime = reply.ReadInt64();
+        uint8_t *audiobuffer = static_cast<uint8_t *>(malloc(audioBufferLen));
+        CHECK_AND_RETURN_RET_LOG(audiobuffer != nullptr, MSERR_NO_MEMORY, "audio buffer malloc failed");
+        if (memset_s(audiobuffer, audioBufferLen, 0, audioBufferLen) != EOK) {
+            MEDIA_LOGE("audioBuffer memset_s fail");
+            free(audiobuffer);
+            return MSERR_UNKNOWN;
+        }
+        auto buffer = reply.ReadBuffer(audioBufferLen);
+        if (buffer != nullptr) {
+            if (memcpy_s(audiobuffer, audioBufferLen, buffer, audioBufferLen) != EOK) {
+                MEDIA_LOGE("audioBuffer memcpy_s fail");
+                free(audiobuffer);
+                return MSERR_UNKNOWN;
+            }
+        }
         audioBuffer = std::make_shared<AudioBuffer>(audiobuffer, audioBufferLen, audioTime, sourceType);
     }
     return ret;
@@ -804,7 +811,7 @@ int32_t ScreenCaptureServiceProxy::GetMultiDisplayCaptureCapability(const std::v
         "displayIds size is exceed max range");
     token = data.WriteUInt64Vector(displayIds);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write displayIds!");
- 
+
     int error = Remote()->SendRequest(GET_MULTI_DISPLAY_CAPTURE_CAPABILITY, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "GetMultiDisplayCaptureCapability failed, error: %{public}d", error);
