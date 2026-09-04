@@ -42,6 +42,12 @@ inline std::shared_ptr<OHOS::Media::ScreenCaptureServer> MakeScreenCaptureServer
 namespace OHOS {
 namespace Media {
 
+AudioCaptureSourceType PickAudioSource(FuzzedDataProvider &fdp);
+AudioCaptureInfo CreateAudioCaptureInfo(FuzzedDataProvider &fdp);
+AudioInfo CreateAudioInfo(FuzzedDataProvider &fdp);
+VideoInfo CreateVideoInfo(FuzzedDataProvider &fdp);
+CaptureMode PickCaptureMode(FuzzedDataProvider &fdp);
+DataType PickDataType(FuzzedDataProvider &fdp);
 void SetConfig(AVScreenCaptureConfig &config, FuzzedDataProvider &fdp);
 
 class AudioDataSourceFuzzer {

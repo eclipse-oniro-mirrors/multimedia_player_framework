@@ -67,8 +67,7 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
         .videoInfo = videoinfo,
     };
 }
- 
- 
+
 bool ScreenCaptureMultiDisplayIdNdkFuzzer::ScreenCaptureMultiDisplayIdNdk(uint8_t *data, size_t size)
 {
     if (data == nullptr || size < sizeof(int32_t)) {

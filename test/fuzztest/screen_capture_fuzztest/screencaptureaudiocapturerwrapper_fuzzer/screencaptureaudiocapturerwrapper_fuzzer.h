@@ -24,6 +24,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fuzzer/FuzzedDataProvider.h>
+#include "audio_capturer_wrapper.h"
+#include "cache_buffer.h"
 #include "test_screen_capture.h"
 
 #define FUZZ_PROJECT_NAME "screencaptureaudiocapturerwrapper_fuzzer"
@@ -34,8 +36,18 @@ class ScreenCaptureAudioCapturerWrapperFuzzer : public TestScreenCapture {
 public:
     ScreenCaptureAudioCapturerWrapperFuzzer();
     ~ScreenCaptureAudioCapturerWrapperFuzzer();
-    
+
+    AudioCaptureSourceType PickAudioSource(FuzzedDataProvider &fdp);
+    AudioCodecFormat PickAudioCodecFormat(FuzzedDataProvider &fdp);
+    VideoSourceType PickVideoSourceType(FuzzedDataProvider &fdp);
+    VideoCodecFormat PickVideoCodecFormat(FuzzedDataProvider &fdp);
+    CaptureMode PickCaptureMode(FuzzedDataProvider &fdp);
+    AudioCaptureInfo CreateAudioCaptureInfo(FuzzedDataProvider &fdp);
+    AudioInfo CreateAudioInfo(FuzzedDataProvider &fdp);
+    VideoInfo CreateVideoInfo(FuzzedDataProvider &fdp);
     void SetConfig(RecorderInfo &recorderInfo, FuzzedDataProvider &fdp);
+    void TestCapturerWrapperOperations(const std::shared_ptr<AudioCapturerWrapper> &audioCapturerWrapper,
+        FuzzedDataProvider &fdp);
     bool FuzzScreenAudioCapturerWrapper(uint8_t *data, size_t size);
     AVScreenCaptureConfig config_;
 };

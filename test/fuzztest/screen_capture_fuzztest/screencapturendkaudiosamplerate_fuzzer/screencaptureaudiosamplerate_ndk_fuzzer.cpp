@@ -77,7 +77,9 @@ bool ScreenCaptureAudioSampleRateNdkFuzzer::FuzzScreenCaptureAudioSampleRateNdk(
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
     config.audioInfo.micCapInfo.audioSampleRate = fdp.ConsumeIntegral<int32_t>();
-    OH_AudioCaptureSourceType audioSource = static_cast<OH_AudioCaptureSourceType>(fdp.ConsumeIntegralInRange<uint32_t>(0, 2));
+    constexpr uint32_t maxAudioSourceType = 2;
+    auto audioSource = static_cast<OH_AudioCaptureSourceType>(
+        fdp.ConsumeIntegralInRange<uint32_t>(0, maxAudioSourceType));
     config.audioInfo.micCapInfo.audioSource = audioSource;
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);

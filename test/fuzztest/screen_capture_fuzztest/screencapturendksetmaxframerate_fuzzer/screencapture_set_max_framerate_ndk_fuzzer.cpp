@@ -85,7 +85,8 @@ bool ScreenCaptureSetMaxFrameRateNdkFuzzer::FuzzScreenCaptureSetMaxFrameRateNdk(
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    OH_AVScreenCapture_SetMaxVideoFrameRate(screenCapture, fdp.ConsumeIntegralInRange<int32_t>(0, 70));
+    constexpr int32_t maxFrameRate = 70;
+    OH_AVScreenCapture_SetMaxVideoFrameRate(screenCapture, fdp.ConsumeIntegralInRange<int32_t>(0, maxFrameRate));
     constexpr uint32_t recorderTime = 300000;
     usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);

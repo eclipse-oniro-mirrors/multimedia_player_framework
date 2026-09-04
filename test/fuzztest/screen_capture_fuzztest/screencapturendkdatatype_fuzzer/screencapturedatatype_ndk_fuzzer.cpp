@@ -84,16 +84,9 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
     };
 }
 
-bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data, size_t size)
+void ScreenCaptureDataTypeNdkFuzzer::ApplyDataTypeConfig(
+    OH_AVScreenCaptureConfig &config, FuzzedDataProvider &fdp)
 {
-    if (data == nullptr || size < sizeof(OH_DataType)) {
-        return false;
-    }
-    screenCapture = OH_AVScreenCapture_Create();
-
-    FuzzedDataProvider fdp(data, size);
-    OH_AVScreenCaptureConfig config;
-    SetConfig(config);
     constexpr int32_t dataTypeList = 4;
     constexpr int32_t dataTypeCaptureFile = 2;
     const OH_DataType dataType_[dataTypeList] {
@@ -112,14 +105,17 @@ bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data,
     std::string fileUrl = "fd://" + to_string(outputFd);
     recorderInfo.url = const_cast<char *>(fileUrl.c_str());
     recorderInfo.fileFormat = OH_ContainerFormatType::CFT_MPEG_4;
-    
+
     if (datatypesubscript == dataTypeCaptureFile) {
         config.dataType = dataType_[datatypesubscript];
         config.recorderInfo = recorderInfo;
     } else {
         config.dataType = dataType_[datatypesubscript];
     }
+}
 
+void ScreenCaptureDataTypeNdkFuzzer::RunCaptureSession(OH_AVScreenCaptureConfig &config)
+{
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
     OH_AVScreenCapture_SetCanvasRotation(screenCapture, true);
     OH_AVScreenCaptureCallback callback;
@@ -133,6 +129,20 @@ bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data,
     usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
+}
+
+bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data, size_t size)
+{
+    if (data == nullptr || size < sizeof(OH_DataType)) {
+        return false;
+    }
+    screenCapture = OH_AVScreenCapture_Create();
+
+    FuzzedDataProvider fdp(data, size);
+    OH_AVScreenCaptureConfig config;
+    SetConfig(config);
+    ApplyDataTypeConfig(config, fdp);
+    RunCaptureSession(config);
     return true;
 }
 } // namespace Media

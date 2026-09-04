@@ -76,8 +76,7 @@ bool ScreenCaptureAddWhiteListWindowsFuzzer::FuzzScreenCaptureAddWhiteListWindow
     RETURN_IF(retFlags, false);
     AVScreenCaptureConfig config;
     SetConfig(config);
-    
-    
+
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
     FuzzedDataProvider fdp(data, size);

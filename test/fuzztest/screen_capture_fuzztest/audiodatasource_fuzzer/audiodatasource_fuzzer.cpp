@@ -36,63 +36,79 @@ using namespace Media;
 namespace OHOS {
 namespace Media {
 
-void SetConfig(AVScreenCaptureConfig &config, FuzzedDataProvider &fdp)
+AudioCaptureSourceType PickAudioSource(FuzzedDataProvider &fdp)
 {
     static const AudioCaptureSourceType audioSources[] = {
         SOURCE_DEFAULT,
         MIC,
         ALL_PLAYBACK,
     };
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(audioSources) / sizeof(audioSources[0]) - 1);
+    return audioSources[idx];
+}
+
+AudioCaptureInfo CreateAudioCaptureInfo(FuzzedDataProvider &fdp)
+{
+    return {
+        .audioSampleRate = fdp.ConsumeIntegralInRange<int32_t>(8000, 96000),
+        .audioChannels = fdp.ConsumeIntegralInRange<int32_t>(1, 8),
+        .audioSource = PickAudioSource(fdp)
+    };
+}
+
+AudioInfo CreateAudioInfo(FuzzedDataProvider &fdp)
+{
+    return {
+        .micCapInfo = CreateAudioCaptureInfo(fdp),
+        .innerCapInfo = CreateAudioCaptureInfo(fdp),
+        .audioEncInfo = {
+            .audioBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 96000),
+            .audioCodecformat = AudioCodecFormat::AAC_LC
+        },
+    };
+}
+
+VideoInfo CreateVideoInfo(FuzzedDataProvider &fdp)
+{
+    return {
+        .videoCapInfo = {
+            .videoFrameWidth = fdp.ConsumeIntegralInRange<int32_t>(1, 3840),
+            .videoFrameHeight = fdp.ConsumeIntegralInRange<int32_t>(1, 2160),
+            .videoSource = VIDEO_SOURCE_SURFACE_RGBA
+        }
+    };
+}
+
+CaptureMode PickCaptureMode(FuzzedDataProvider &fdp)
+{
     static const CaptureMode captureModes[] = {
         CaptureMode::CAPTURE_HOME_SCREEN,
         CaptureMode::CAPTURE_SPECIFIED_SCREEN,
         CaptureMode::CAPTURE_SPECIFIED_WINDOW,
         CaptureMode::CAPTURE_SPECIFIED_APP,
     };
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(captureModes) / sizeof(captureModes[0]) - 1);
+    return captureModes[idx];
+}
+
+DataType PickDataType(FuzzedDataProvider &fdp)
+{
     static const DataType dataTypes[] = {
         DataType::ORIGINAL_STREAM,
         DataType::ENCODED_STREAM,
         DataType::CAPTURE_FILE,
     };
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(dataTypes) / sizeof(dataTypes[0]) - 1);
+    return dataTypes[idx];
+}
 
-    AudioCaptureInfo micCapinfo = {
-        .audioSampleRate = fdp.ConsumeIntegralInRange<int32_t>(8000, 96000),
-        .audioChannels = fdp.ConsumeIntegralInRange<int32_t>(1, 8),
-        .audioSource = audioSources[fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(audioSources) / sizeof(audioSources[0]) - 1)]
-    };
-
-    AudioCaptureInfo innerCapInfo = {
-        .audioSampleRate = fdp.ConsumeIntegralInRange<int32_t>(8000, 96000),
-        .audioChannels = fdp.ConsumeIntegralInRange<int32_t>(1, 8),
-        .audioSource = audioSources[fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(audioSources) / sizeof(audioSources[0]) - 1)]
-    };
-
-    VideoCaptureInfo videocapinfo = {
-        .videoFrameWidth = fdp.ConsumeIntegralInRange<int32_t>(1, 3840),
-        .videoFrameHeight = fdp.ConsumeIntegralInRange<int32_t>(1, 2160),
-        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
-    };
-
-    AudioEncInfo audioEncInfo = {
-        .audioBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 96000),
-        .audioCodecformat = AudioCodecFormat::AAC_LC
-    };
-
-    AudioInfo audioinfo = {
-        .micCapInfo = micCapinfo,
-        .innerCapInfo = innerCapInfo,
-        .audioEncInfo = audioEncInfo,
-    };
-
-    VideoInfo videoinfo = {
-        .videoCapInfo = videocapinfo
-    };
-
+void SetConfig(AVScreenCaptureConfig &config, FuzzedDataProvider &fdp)
+{
     config = {
-        .captureMode = captureModes[fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(captureModes) / sizeof(captureModes[0]) - 1)],
-        .dataType = dataTypes[fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(dataTypes) / sizeof(dataTypes[0]) - 1)],
-        .audioInfo = audioinfo,
-        .videoInfo = videoinfo,
+        .captureMode = PickCaptureMode(fdp),
+        .dataType = PickDataType(fdp),
+        .audioInfo = CreateAudioInfo(fdp),
+        .videoInfo = CreateVideoInfo(fdp),
     };
 }
 

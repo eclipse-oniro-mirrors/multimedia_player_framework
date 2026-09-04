@@ -40,79 +40,141 @@ ScreenCaptureAudioCapturerWrapperFuzzer::~ScreenCaptureAudioCapturerWrapperFuzze
 {
 }
 
-void ScreenCaptureAudioCapturerWrapperFuzzer::SetConfig(RecorderInfo &recorderInfo, FuzzedDataProvider &fdp)
+AudioCaptureSourceType ScreenCaptureAudioCapturerWrapperFuzzer::PickAudioSource(FuzzedDataProvider &fdp)
 {
     static const AudioCaptureSourceType audioSources[] = {
         AudioCaptureSourceType::SOURCE_DEFAULT,
         AudioCaptureSourceType::MIC,
         AudioCaptureSourceType::ALL_PLAYBACK,
     };
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(audioSources) / sizeof(audioSources[0]) - 1);
+    return audioSources[idx];
+}
+
+AudioCodecFormat ScreenCaptureAudioCapturerWrapperFuzzer::PickAudioCodecFormat(FuzzedDataProvider &fdp)
+{
     static const AudioCodecFormat audioCodecFormats[] = {
         AudioCodecFormat::AUDIO_DEFAULT,
         AudioCodecFormat::AAC_LC,
     };
-    static const VideoCodecFormat videoCodecFormats[] = {
-        VideoCodecFormat::VIDEO_DEFAULT,
-        VideoCodecFormat::H264,
-    };
+    constexpr uint32_t count = sizeof(audioCodecFormats) / sizeof(audioCodecFormats[0]);
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, count - 1);
+    return audioCodecFormats[idx];
+}
+
+VideoSourceType ScreenCaptureAudioCapturerWrapperFuzzer::PickVideoSourceType(FuzzedDataProvider &fdp)
+{
     static const VideoSourceType videoSourceTypes[] = {
         VideoSourceType::VIDEO_SOURCE_SURFACE_YUV,
         VideoSourceType::VIDEO_SOURCE_SURFACE_ES,
         VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA,
     };
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(videoSourceTypes) / sizeof(videoSourceTypes[0]) - 1);
+    return videoSourceTypes[idx];
+}
 
-    AudioEncInfo audioEncInfo = {
-        .audioBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 96000),
-        .audioCodecformat = audioCodecFormats[fdp.ConsumeIntegralInRange<uint32_t>(0,
-            sizeof(audioCodecFormats) / sizeof(audioCodecFormats[0]) - 1)]
+VideoCodecFormat ScreenCaptureAudioCapturerWrapperFuzzer::PickVideoCodecFormat(FuzzedDataProvider &fdp)
+{
+    static const VideoCodecFormat videoCodecFormats[] = {
+        VideoCodecFormat::VIDEO_DEFAULT,
+        VideoCodecFormat::H264,
     };
-    AudioCaptureInfo micCapInfo = {
-        .audioSampleRate = fdp.ConsumeIntegralInRange<int32_t>(8000, 96000),
-        .audioChannels = fdp.ConsumeIntegralInRange<int32_t>(1, 8),
-        .audioSource = audioSources[fdp.ConsumeIntegralInRange<uint32_t>(0,
-            sizeof(audioSources) / sizeof(audioSources[0]) - 1)]
-    };
-    AudioCaptureInfo innerCapInfo = {
-        .audioSampleRate = fdp.ConsumeIntegralInRange<int32_t>(8000, 96000),
-        .audioChannels = fdp.ConsumeIntegralInRange<int32_t>(1, 8),
-        .audioSource = audioSources[fdp.ConsumeIntegralInRange<uint32_t>(0,
-            sizeof(audioSources) / sizeof(audioSources[0]) - 1)],
-    };
-    VideoCaptureInfo videoCapInfo = {
-        .videoFrameWidth = fdp.ConsumeIntegralInRange<int32_t>(1, 3840),
-        .videoFrameHeight = fdp.ConsumeIntegralInRange<int32_t>(1, 2160),
-        .videoSource = videoSourceTypes[fdp.ConsumeIntegralInRange<uint32_t>(0,
-            sizeof(videoSourceTypes) / sizeof(videoSourceTypes[0]) - 1)]
-    };
-    VideoEncInfo videoEncInfo = {
-        .videoCodec = videoCodecFormats[fdp.ConsumeIntegralInRange<uint32_t>(0,
-            sizeof(videoCodecFormats) / sizeof(videoCodecFormats[0]) - 1)],
-        .videoBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 4000000),
-        .videoFrameRate = fdp.ConsumeIntegralInRange<int32_t>(1, 120)
-    };
-    AudioInfo audioInfo = {
-        .micCapInfo = micCapInfo,
-        .innerCapInfo = innerCapInfo,
-        .audioEncInfo = audioEncInfo
-    };
-    VideoInfo videoInfo = {
-        .videoCapInfo = videoCapInfo,
-        .videoEncInfo = videoEncInfo
-    };
+    constexpr uint32_t count = sizeof(videoCodecFormats) / sizeof(videoCodecFormats[0]);
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, count - 1);
+    return videoCodecFormats[idx];
+}
+
+CaptureMode ScreenCaptureAudioCapturerWrapperFuzzer::PickCaptureMode(FuzzedDataProvider &fdp)
+{
     static const CaptureMode captureModes[] = {
         CaptureMode::CAPTURE_HOME_SCREEN,
         CaptureMode::CAPTURE_SPECIFIED_SCREEN,
         CaptureMode::CAPTURE_SPECIFIED_WINDOW,
         CaptureMode::CAPTURE_SPECIFIED_APP,
     };
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(captureModes) / sizeof(captureModes[0]) - 1);
+    return captureModes[idx];
+}
+
+AudioCaptureInfo ScreenCaptureAudioCapturerWrapperFuzzer::CreateAudioCaptureInfo(FuzzedDataProvider &fdp)
+{
+    return {
+        .audioSampleRate = fdp.ConsumeIntegralInRange<int32_t>(8000, 96000),
+        .audioChannels = fdp.ConsumeIntegralInRange<int32_t>(1, 8),
+        .audioSource = PickAudioSource(fdp)
+    };
+}
+
+AudioInfo ScreenCaptureAudioCapturerWrapperFuzzer::CreateAudioInfo(FuzzedDataProvider &fdp)
+{
+    return {
+        .micCapInfo = CreateAudioCaptureInfo(fdp),
+        .innerCapInfo = CreateAudioCaptureInfo(fdp),
+        .audioEncInfo = {
+            .audioBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 96000),
+            .audioCodecformat = PickAudioCodecFormat(fdp)
+        }
+    };
+}
+
+VideoInfo ScreenCaptureAudioCapturerWrapperFuzzer::CreateVideoInfo(FuzzedDataProvider &fdp)
+{
+    return {
+        .videoCapInfo = {
+            .videoFrameWidth = fdp.ConsumeIntegralInRange<int32_t>(1, 3840),
+            .videoFrameHeight = fdp.ConsumeIntegralInRange<int32_t>(1, 2160),
+            .videoSource = PickVideoSourceType(fdp)
+        },
+        .videoEncInfo = {
+            .videoCodec = PickVideoCodecFormat(fdp),
+            .videoBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 4000000),
+            .videoFrameRate = fdp.ConsumeIntegralInRange<int32_t>(1, 120)
+        }
+    };
+}
+
+void ScreenCaptureAudioCapturerWrapperFuzzer::SetConfig(RecorderInfo &recorderInfo, FuzzedDataProvider &fdp)
+{
     config_ = {
-        .captureMode = captureModes[fdp.ConsumeIntegralInRange<uint32_t>(0,
-            sizeof(captureModes) / sizeof(captureModes[0]) - 1)],
+        .captureMode = PickCaptureMode(fdp),
         .dataType = static_cast<DataType>(fdp.ConsumeIntegralInRange<int32_t>(0, 2)),
-        .audioInfo = audioInfo,
-        .videoInfo = videoInfo,
+        .audioInfo = CreateAudioInfo(fdp),
+        .videoInfo = CreateVideoInfo(fdp),
         .recorderInfo = recorderInfo
     };
+}
+
+void ScreenCaptureAudioCapturerWrapperFuzzer::TestCapturerWrapperOperations(
+    const shared_ptr<AudioCapturerWrapper> &audioCapturerWrapper, FuzzedDataProvider &fdp)
+{
+    OHOS::AudioStandard::AppInfo appInfo;
+    appInfo.appTokenId = IPCSkeleton::GetCallingTokenID();
+    appInfo.appFullTokenId = IPCSkeleton::GetCallingFullTokenID();
+    appInfo.appUid = IPCSkeleton::GetCallingUid();
+    appInfo.appPid = IPCSkeleton::GetCallingPid();
+    audioCapturerWrapper->Start(appInfo);
+
+    ScreenCaptureContentFilter contentFilter;
+    contentFilter.filteredAudioContents.insert(
+        AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
+    audioCapturerWrapper->UpdateAudioCapturerConfig(contentFilter);
+    audioCapturerWrapper->GetAudioCapturerState();
+    int32_t logLevel = fdp.ConsumeIntegralInRange<int32_t>(0, 1);
+    audioCapturerWrapper->PartiallyPrintLog(logLevel, "CaptureAudio read audio buffer failed ");
+    audioCapturerWrapper->SetIsMute(GetData<bool>());
+    audioCapturerWrapper->UseUpAllLeftBufferUntil(GetData<int64_t>());
+    shared_ptr<CacheBuffer> cacheBuf;
+    audioCapturerWrapper->AcquireAudioBuffer(cacheBuf);
+    audioCapturerWrapper->DropBufferUntil(GetData<int64_t>());
+    audioCapturerWrapper->ReleaseAudioBuffer();
+    audioCapturerWrapper->IsRecording();
+    audioCapturerWrapper->IsStop();
+    audioCapturerWrapper->Stop();
+    audioCapturerWrapper->SetIsInVoIPCall(GetData<bool>());
+    audioCapturerWrapper->IsInVoIPCall();
+    audioCapturerWrapper->Start(appInfo);
+    audioCapturerWrapper->ReleaseAudioBuffer();
+    audioCapturerWrapper->Stop();
 }
 
 bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uint8_t *data, size_t size)
@@ -136,37 +198,12 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     ScreenCaptureContentFilter contentFilter;
     shared_ptr<AudioCapturerWrapper> audioCapturerWrapper =
         make_shared<AudioCapturerWrapper>(config_.audioInfo.innerCapInfo, callbackObj, string("name1"), contentFilter);
-    OHOS::AudioStandard::AppInfo appInfo;
-    appInfo.appTokenId = IPCSkeleton::GetCallingTokenID();
-    appInfo.appFullTokenId = IPCSkeleton::GetCallingFullTokenID();
-    appInfo.appUid = IPCSkeleton::GetCallingUid();
-    appInfo.appPid = IPCSkeleton::GetCallingPid();
-    audioCapturerWrapper->Start(appInfo);
-    contentFilter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
-    audioCapturerWrapper->UpdateAudioCapturerConfig(contentFilter);
-    audioCapturerWrapper->GetAudioCapturerState();
-    int32_t logLevel = fdp.ConsumeIntegralInRange<int32_t>(0, 1);
-    audioCapturerWrapper->PartiallyPrintLog(logLevel, "CaptureAudio read audio buffer failed ");
-    audioCapturerWrapper->SetIsMute(GetData<bool>());
-    audioCapturerWrapper->UseUpAllLeftBufferUntil(GetData<int64_t>());
-    shared_ptr<CacheBuffer> cacheBuf;
-    audioCapturerWrapper->AcquireAudioBuffer(cacheBuf);
-    audioCapturerWrapper->DropBufferUntil(GetData<int64_t>());
-    audioCapturerWrapper->ReleaseAudioBuffer();
-    audioCapturerWrapper->IsRecording();
-    audioCapturerWrapper->IsStop();
-    audioCapturerWrapper->Stop();
-    audioCapturerWrapper->SetIsInVoIPCall(GetData<bool>());
-    audioCapturerWrapper->IsInVoIPCall();
-    audioCapturerWrapper->Start(appInfo);
-    audioCapturerWrapper->ReleaseAudioBuffer();
-    audioCapturerWrapper->Stop();
+    TestCapturerWrapperOperations(audioCapturerWrapper, fdp);
     close(outputFd);
     return true;
 }
 
 } // namespace Media
-
 
 bool FuzzTestScreenAudioCapturerWrapper(uint8_t *data, size_t size)
 {
