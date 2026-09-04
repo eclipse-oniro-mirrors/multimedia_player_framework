@@ -19,6 +19,7 @@
 #include <cctype>
 #include <fstream>
 
+#include "bundle_mgr_interface.h"
 #include "config_policy_utils.h"
 #include "file_ex.h"
 #include "nlohmann/json.hpp"
