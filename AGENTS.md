@@ -1,286 +1,248 @@
-# AGENTS.md - Coding Agent Guidelines for multimedia_player_framework
+# AGENTS.md
 
-## 简介 / Introduction
+This file provides guidance to CodeAgent when working with code in this repository.
 
-本仓库是OpenHarmony媒体组件（multimedia_player_framework），提供音视频播放、录制、转码、录屏等媒体服务的API实现。代码主要使用C++，采用GN（Generate Ninja）构建系统。
+## 项目概述
 
-This is the OpenHarmony multimedia player framework repository. It provides APIs for audio/video playback, recording, transcoding, screen capture, and related media services. The codebase is primarily C++ using the GN build system.
+Multimedia Player Framework 是 OpenHarmony 多媒体子系统组件，提供音视频播放、录制、转码、录屏等媒体服务的API实现。采用六层架构（API 接入层 → IPC 通信层 → 引擎选择层 → Pipeline 流水线层 → InnerAPI 契约层 → 原子能力+插件层）。
 
-## 目录结构 / Directory Structure
+## 技术栈
+
+- **语言**：C++（核心服务/引擎）、ArkTS/JS（客户端 API）、C（Native API / OH_ 系列接口）
+- **构建系统**：GN + Ninja
+- **进程间通信**：OHOS IPC（MessageParcel / IRemoteStub / SystemAbility）
+- **媒体引擎**：Histreamer（Pipeline 架构）、LPP（硬件加速）、ffmpeg（解封装/解码）
+- **插件机制**：dlopen 动态加载、PluginManager 注册发现
+- **日志与打点**：HiLog、HiSysEvent、HiAppEvent、XCollie
+- **目标系统**：OpenHarmony 系统
+
+## 知识库使用规范
+
+项目知识按模块存放在 `knowledge/` 目录下，每个模块独立子目录：
 
 ```
-/foundation/multimedia/player_framework
-├── interfaces                           # 外部接口层 / Interface layer
-│   ├── kits                             # 应用接口 / Application interface (JS/NAPI, C API)
-│   └── inner_api                        # 系统内部件接口 / Internal APIs
-├── frameworks                           # 部件无独立进程的实现 / Client implementation
-│   ├── js                               # JS NAPI实现 / JS NAPI bindings
-│   ├── native                           # Native C++实现 / Native C++ implementation
-│   ├── taihe                            # Taihe框架实现 / Taihe framework
-│   └── cj                               # CJ语言绑定 / CJ language bindings
-├── services                             # 服务C/S实现 / Service implementation
-│   ├── services                         # 服务框架 / Service framework (player, recorder, etc.)
-│   ├── engine                           # 引擎实现 / Engine implementation
-│   │   └── histreamer                   # HiStreamer引擎 / HiStreamer engine
-│   ├── utils                            # 子系统基础资源 / Common utilities
-│   ├── dfx                              # DFX诊断功能 / DFX diagnostics
-├── test                                 # 测试代码 / Test code
-│   ├── unittest                         # 单元测试 / Unit tests
-│   ├── fuzztest                         # 模糊测试 / Fuzz tests
-│   └── example                          # 示例代码 / Example code
-├── config.gni                           # 构建配置和特性开关 / Build config and feature flags
-├── BUILD.gn                             # 编译入口 / Build entry
-└── bundle.json                          # 部件描述文件 / Component description
+knowledge/
+├── AVPlayer/          # 播放器模块（已有）
+├── AVRecorder/        # 录制模块（待建设）
+├── AVTranscoder/      # 转码模块（待建设）
+├── AVMetadata/        # 元数据模块（待建设）
+└── ...                # 其他模块按需扩展
 ```
 
-## 构建命令 / Build Commands
+### 加载规范
 
-### 全量构建 / Full Build
-```bash
-# 构建完整媒体包 / Build full media packages
-./build.sh --product-name <product_name> --build-target media_packages
+- **启动时加载**：当前模块的 `glossary.md`（术语表）和 `business-context.md`（业务背景）
+- **按需加载**：当前模块的 `architecture.md`（架构设计及约束）、`coding-standards.md`（编码规范）
 
-# 构建服务组 / Build service group
-./build.sh --product-name <product_name> --build-target media_services_package
+### 术语查询流程
 
-# 构建框架组（客户端库）/ Build framework group (client libraries)
-./build.sh --product-name <product_name> --build-target napi_packages
-./build.sh --product-name <product_name> --build-target capi_packages
+遇到不了解的术语词汇时：
+
+1. 优先在当前模块的 **glossary.md** 中查询
+2. 若 glossary 提供了 entity 链接，按需从当前模块的 **entities/** 目录加载术语的详细介绍
+3. 若当前模块无该术语，查阅对应技术文档
+
+### 编辑前声明流程
+
+编辑代码前，必须先声明以下信息：
+
+1. **所属模块**：AVPlayer / AVRecorder / AVTranscoder / AVMetadata / 跨模块
+2. **任务类别**：API 变更 / 引擎开发 / IPC 修改 / Pipeline 调整 / 内存管理 / DFX 增强 / Bug 修复 / 其他
+3. **已读知识文档**：列出已阅读的对应模块 `knowledge/<module>/` 下的相关文档
+4. **发现的约束**：从已读文档中提取适用于本次修改的约束规则（引用项目宪法编号或编码铁律编号）
+
+未完成声明前，不得开始编辑代码。
+
+## 知识索引
+
+### AVPlayer 模块（播放器）
+
+知识目录：`knowledge/AVPlayer/`
+
+```
+knowledge/AVPlayer/
+├── glossary.md                              # 术语表
+├── business-context.md                      # 业务背景
+├── architecture.md                          # 架构设计及约束
+├── coding-standards.md                      # 编码规范
+├── entities/
+│   ├── api-layer.md                         # API 接入层实体
+│   ├── service-layer.md                     # 服务层实体
+│   ├── ipc-layer-entities.md                # IPC 层实体
+│   ├── engine-layer-entities.md             # 引擎层实体
+│   └── engine-factory-and-selection.md      # 引擎工厂与选择
+└── technologies/
+    ├── player-lifecycle.md                  # 播放器完整生命周期
+    ├── seek-architecture.md                 # Seek 完整架构
+    ├── ipc-communication.md                 # IPC 通信与回调机制
+    ├── playback-features.md                 # 播放控制特性
+    ├── memory-and-background.md             # 内存管理与后台策略
+    ├── error-handling-and-dfx.md            # 错误处理与 DFX 诊断
+    ├── av-sync-and-buffer.md                # 音视频同步与缓冲区管理
+    ├── pipeline-architecture.md             # Pipeline 架构与数据流转
+    ├── design-patterns.md                   # 设计模式与架构解耦
+    ├── media-source-and-protocol.md         # 媒体源与协议
+    ├── evolution.md                         # 模块演进记录
+    ├── flows.md                             # 关键流程详解
+    └── screen-capture-features.md           # 屏幕录制特性
 ```
 
-## 测试命令 / Test Commands
+| 场景 | 先读 | 加载时机 |
+|------|------|---------|
+| 理解业务术语 | glossary.md | 启动加载 |
+| 理解系统定位与外部依赖 | business-context.md | 启动加载 |
+| 模块设计 / 引擎开发 / 架构变更 | architecture.md | 按需加载 |
+| 编码前必读 | coding-standards.md | 按需加载 |
+| API 接入层实体与约束 | entities/api-layer.md | |
+| 服务层实体 | entities/service-layer.md | |
+| IPC 层实体 | entities/ipc-layer-entities.md | |
+| 引擎层实体 | entities/engine-layer-entities.md | |
+| 引擎工厂注册与打分选择 | entities/engine-factory-and-selection.md | |
+| 播放器完整生命周期 | technologies/player-lifecycle.md | |
+| Seek 完整架构 | technologies/seek-architecture.md | |
+| IPC 通信与回调机制 | technologies/ipc-communication.md | |
+| 播放控制特性 | technologies/playback-features.md | |
+| 内存管理与后台策略 | technologies/memory-and-background.md | |
+| 错误处理与 DFX 诊断 | technologies/error-handling-and-dfx.md | |
+| 音视频同步与缓冲区管理 | technologies/av-sync-and-buffer.md | |
+| Pipeline 架构与数据流转 | technologies/pipeline-architecture.md | |
+| 设计模式与架构解耦 | technologies/design-patterns.md | |
+| 媒体源与协议 | technologies/media-source-and-protocol.md | |
+| 模块演进记录 | technologies/evolution.md | |
+| 关键流程详解 | technologies/flows.md | |
+| 屏幕录制特性 | technologies/screen-capture-features.md | |
 
-### 运行所有单元测试 / Run All Unit Tests
-```bash
-./build.sh --product-name <product_name> --build-target media_unit_test
+### AVRecorder 模块（录制）
+
+知识目录：`knowledge/AVRecorder/`（待建设）
+
+```
+knowledge/AVRecorder/
+├── glossary.md                              # 术语表
+├── business-context.md                      # 业务背景
+├── architecture.md                          # 架构设计及约束
+├── coding-standards.md                      # 编码规范
+├── entities/
+│   └── ...                                  # 待建设
+└── technologies/
+    └── ...                                  # 待建设
 ```
 
-### 运行单个单元测试 / Run a Single Unit Test
-测试定义在`test/unittest/*/BUILD.gn`中。运行指定测试：
-```bash
-# 构建指定测试目标 / Build specific test target
-./build.sh --product-name <product_name> --build-target hiplayer_impl_unit_test
+### AVTranscoder 模块（转码）
 
-# 构建完成后运行测试二进制 / Run test binary after build
-# 测试二进制通常位于 out/<product>/tests/unittest/player_framework/
+知识目录：`knowledge/AVTranscoder/`（待建设）
+
+```
+knowledge/AVTranscoder/
+├── glossary.md                              # 术语表
+├── business-context.md                      # 业务背景
+├── architecture.md                          # 架构设计及约束
+├── coding-standards.md                      # 编码规范
+├── entities/
+│   └── ...                                  # 待建设
+└── technologies/
+    └── ...                                  # 待建设
 ```
 
-### 运行模糊测试 / Run Fuzz Tests
-```bash
-./build.sh --product-name <product_name> --build-target media_fuzz_test
+### AVMetadata 模块（元数据/缩略图）
+
+知识目录：`knowledge/AVMetadata/`（待建设）
+
+```
+knowledge/AVMetadata/
+├── glossary.md                              # 术语表
+├── business-context.md                      # 业务背景
+├── architecture.md                          # 架构设计及约束
+├── coding-standards.md                      # 编码规范
+├── entities/
+│   └── ...                                  # 待建设
+└── technologies/
+    └── ...                                  # 待建设
 ```
 
-### 主要测试目标 / Key Test Targets (from test/BUILD.gn)
-- `hiplayer_impl_unit_test` - 播放器实现测试 / Player implementation tests
-- `player_server_unit_test` - 播放器服务端测试 / Player server tests
-- `avmetadatahelper_unit_test` - 元数据助手测试 / Metadata helper tests
-- `soundpool_unit_test` - SoundPool测试 / SoundPool tests
-- `screen_capture_unit_test` - 录屏测试 / Screen capture tests
-- `recorder_unit_test` - 录制器测试 / Recorder tests
-- `transcoder_unit_test` - 转码器测试 / Transcoder tests
+### 路径→文档触发规则
 
-## 代码风格指南 / Code Style Guidelines
+修改以下目录时，必须先阅读对应知识文档：
 
-### 文件头 / File Headers
-所有源文件必须包含Apache License 2.0头：
-```cpp
-/*
- * Copyright (c) 2023-2025 Huawei Device Co., Ltd.
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+#### AVPlayer 相关路径
+
+| 修改路径 | 必读文档 | 原因 |
+|----------|---------|------|
+| frameworks/native/player/ | knowledge/AVPlayer/entities/api-layer.md | API 层实体与约束，状态机调用顺序 |
+| frameworks/native/capi/player/ | knowledge/AVPlayer/entities/api-layer.md | NDK C API 封装约束，OH_AVPlayer 回调机制 |
+| frameworks/js/napi/ | knowledge/AVPlayer/entities/api-layer.md | NAPI 桥接层调用链 |
+| services/services/player/ipc/ | knowledge/AVPlayer/technologies/ipc-communication.md + knowledge/AVPlayer/entities/ipc-layer-entities.md | IPC 序列化约束、回调不可阻塞、Freeze 机制 |
+| services/services/player/ | knowledge/AVPlayer/technologies/player-lifecycle.md + knowledge/AVPlayer/entities/service-layer.md | 8 状态状态机、TaskMgr 异步约束、ConfigInfo 原子性 |
+| services/services/player/player_mem_manage/ | knowledge/AVPlayer/technologies/memory-and-background.md | 内存回收/恢复流程、前台后台策略 |
+| services/engine/histreamer/player/ | knowledge/AVPlayer/technologies/pipeline-architecture.md + knowledge/AVPlayer/entities/engine-layer-entities.md | Pipeline 统一控制约束、Filter 接口契约 |
+| services/engine/histreamer/lpp/ | knowledge/AVPlayer/entities/engine-factory-and-selection.md | LPP 引擎实体、HDI 同步机制 |
+| services/engine/ | knowledge/AVPlayer/entities/engine-factory-and-selection.md | 引擎工厂注册与打分选择，dlopen 约束 |
+| plugins/ | knowledge/AVPlayer/technologies/media-source-and-protocol.md | 插件 Sniff 注册机制、路径安全校验 |
+
+#### 其他模块路径
+
+> AVRecorder、AVTranscoder、AVMetadata 等模块的路径触发规则待对应知识库建设后补充。
+
+### 高频修改场景→源码文件映射
+
+#### AVPlayer 场景
+
+| 修改场景 | 涉及源码文件 | 必读知识文档 |
+|----------|------------|------------|
+| Seek 逻辑修改 | `hiplayer_impl.cpp`、`seek_agent.cpp`、`pipeline.cpp`、`demuxer_filter.cpp` | knowledge/AVPlayer/technologies/seek-architecture.md + knowledge/AVPlayer/entities/engine-layer-entities.md |
+| 状态机调整 | `player_server.cpp`（BaseState 子类） | knowledge/AVPlayer/technologies/player-lifecycle.md + knowledge/AVPlayer/technologies/design-patterns.md |
+| IPC 接口增删 | `player_service_stub.cpp`、`player_service_proxy.cpp`、`player_client.cpp`、`player_listener_proxy.cpp` | knowledge/AVPlayer/technologies/ipc-communication.md + knowledge/AVPlayer/entities/ipc-layer-entities.md |
+| 引擎注册/选择 | `engine_factory_repo.cpp`、`hst_engine_factory.cpp`、`lpp_engine_factory.cpp` | knowledge/AVPlayer/entities/engine-factory-and-selection.md |
+| 内存回收策略 | `player_server_mem.cpp`、`player_mem_manage.cpp` | knowledge/AVPlayer/technologies/memory-and-background.md |
+| Pipeline Filter 新增/修改 | 对应 `*_filter.cpp` + `pipeline.cpp` | knowledge/AVPlayer/technologies/pipeline-architecture.md |
+| NAPI/JS API 变更 | `avplayer_napi.cpp`、`player_impl.cpp` | knowledge/AVPlayer/entities/api-layer.md |
+| NDK C API 变更 | `avplayer.cpp`、`player_object.cpp` | knowledge/AVPlayer/entities/api-layer.md |
+| 插件新增（Source/Demuxer/Codec） | 对应 `plugins/*/` 目录 | knowledge/AVPlayer/technologies/media-source-and-protocol.md |
+| 音视频同步调整 | `media_sync_manager.cpp`、`audio_sink_plugin.cpp` | knowledge/AVPlayer/technologies/av-sync-and-buffer.md |
+| 错误码/DFX 打点 | `player_server.cpp`、`dfx_agent.cpp` | knowledge/AVPlayer/technologies/error-handling-and-dfx.md |
+
+#### 其他模块场景
+
+> AVRecorder、AVTranscoder、AVMetadata 等模块的高频修改场景映射待对应知识库建设后补充。
+
+## 架构概要
+
+### 双进程架构
+
+- **MediaServer（System Ability）**：服务端进程，承载播放器/录制器/转码器实例管理、IPC 请求处理、引擎生命周期管理
+- **应用进程**：客户端进程，通过 PlayerClient/RecorderClient 等 IPC 代理端与服务端通信
+
+### 核心处理链路
+
+```
+应用 (ArkTS/JS/CangJie/C)
+  → Bridge Layer (NAPI/FFI/C API)
+  → Native API (PlayerImpl/RecorderImpl)
+  → IPC (Binder) → Service Server (PlayerServer)
+  → EngineFactory (打分选择引擎)
+  → Engine (HiPlayerImpl / LppEngine)
+  → Pipeline (Demuxer → Decoder → Sink)
+  → HDI 硬件驱动
 ```
 
-### 头文件保护符 / Header Guards
-使用`#ifndef`风格，匹配文件路径：
-```cpp
-#ifndef HI_PLAYER_IMPL_H
-#define HI_PLAYER_IMPL_H
-...
-#endif  // HI_PLAYER_IMPL_H
-```
+### 引擎选择机制
 
-### 命名空间 / Namespaces
-使用嵌套命名空间模式，带结尾注释：
-```cpp
-namespace OHOS {
-namespace Media {
-// code here
-}  // namespace Media
-}  // namespace OHOS
-```
+4 种场景通过 EngineFactoryRepo::Score() 打分选择最优引擎：
 
-匿名命名空间用于局部常量/辅助函数：
-```cpp
-namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiPlayer" };
-}
-```
+| 场景 | 最优引擎 | 说明 |
+|------|---------|------|
+| PLAYER | Histreamer | 完整 Pipeline 能力 |
+| RECORDER | Histreamer | 录制 Pipeline |
+| TRANSCODER | Histreamer | 转码 Pipeline |
+| LPP_STREAMER | LPP | 硬件解码/渲染/同步 |
 
-### 命名规范 / Naming Conventions
+## 项目宪法
 
-| 类型/Type | 规范/Convention | 示例/Example |
-|-----------|-----------------|--------------|
-| 类/Classes | PascalCase | `HiPlayerImpl`, `PlayerServer` |
-| 函数/方法/Functions | PascalCase | `SetSource`, `GetDuration` |
-| 成员变量/Member Variables | camelCase带尾部下划线 | `hiplayer_`, `currState_` |
-| 局部变量/Local Variables | camelCase | `ret`, `bundleName` |
-| 常量/Constants | UPPER_CASE或constexpr | `MAX_MEDIA_VOLUME`, `PLAY_RANGE_DEFAULT_VALUE` |
-| 枚举/Enums | PascalCase名称, UPPER_CASE值 | `PlayerStateId::PLAYING` |
-| 宏/Macros | UPPER_CASE带下划线 | `CHECK_AND_RETURN`, `MEDIA_LOGE` |
-
-### Include顺序 / Include Order
-1. 相关头文件（如`"hiplayer_impl.h"`对应hiplayer_impl.cpp）
-2. 系统/C标准头文件（如`<cstdint>`, `<string>`）
-3. 第三方头文件
-4. 项目头文件，按字母顺序
-
-```cpp
-#include "hiplayer_impl.h"
-
-#include <chrono>
-#include <shared_mutex>
-
-#include "common/log.h"
-#include "media_errors.h"
-#include "media_utils.h"
-```
-
-### 日志 / Logging
-使用`services/utils/include/media_log.h`中的日志宏：
-```cpp
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "ComponentName" };
-
-MEDIA_LOG_I("Component initialized");
-MEDIA_LOG_E("Failed to open file: %{public}s", filename.c_str());
-MEDIA_LOG_D("Debug info: %{public}d", value);
-MEDIA_LOG_W("Warning message");
-```
-
-### 错误处理 / Error Handling
-使用`media_log.h`中的CHECK宏进行验证：
-```cpp
-CHECK_AND_RETURN(ptr != nullptr);                          // 失败返回void
-CHECK_AND_RETURN_RET(ptr != nullptr, MSERR_INVALID_VAL);   // 失败返回值
-CHECK_AND_RETURN_RET_LOG(status != Status::ERROR, MSERR_UNKNOWN, "Error: %{public}d", status);
-CHECK_AND_BREAK_LOG(condition, "Check failed");            // 循环中break
-CHECK_AND_CONTINUE(condition);                             // 循环中continue
-```
-
-错误码定义为`MSERR_*`常量（如`MSERR_OK`, `MSERR_INVALID_VAL`, `MSERR_UNKNOWN`）。
-
-### 类与继承 / Classes and Inheritance
-```cpp
-class PlayerServer
-    : public IPlayerService,
-      public IPlayerEngineObs,
-      public NoCopyable,
-      public PlayerServerStateMachine {
-public:
-    static std::shared_ptr<IPlayerService> Create();
-    PlayerServer();
-    virtual ~PlayerServer();
-    DISALLOW_COPY_AND_MOVE(PlayerServer);
-    int32_t Play() override;
-    int32_t Pause() override;
-};
-```
-
-### 函数可见性 / Function Visibility
-导出公共函数使用visibility属性：
-```cpp
-std::string __attribute__((visibility("default"))) GetClientBundleName(int32_t uid);
-```
-
-### 测试代码风格（GTest）/ Test Code Style
-```cpp
-namespace OHOS {
-namespace Media {
-using namespace std;
-using namespace testing::ext;
-
-class HiplayerImplUnitTest : public testing::Test {
-public:
-    static void SetUpTestCase(void);
-    static void TearDownTestCase(void);
-    void SetUp(void);
-    void TearDown(void);
-    std::unique_ptr<HiPlayerImpl> hiplayer_;
-};
-
-/**
- * @tc.name    : Test GetRealPath API
- * @tc.number  : GetRealPath_001
- * @tc.desc    : Test GetRealPath interface
- * @tc.require : issueI5NZAQ
- */
-HWTEST_F(HiplayerImplUnitTest, GetRealPath_001, TestSize.Level0)
-{
-    std::string url = "file://";
-    std::string realUrlPath;
-    int32_t ret = hiplayer_->GetRealPath(url, realUrlPath);
-    EXPECT_EQ(ret, MSERR_OPEN_FILE_FAILED);
-}
-}  // namespace Media
-}  // namespace OHOS
-```
-
-### 格式化 / Formatting
-- 缩进：4空格，无Tab
-- 最大行长度：100-120字符
-- 大括号：控制语句同行
-- 指针/引用：类型相邻（`std::string& name`, `int32_t* ptr`）
-
-### GN构建文件风格 / GN Build File Style
-```python
-import("//build/test.gni")
-import("//foundation/multimedia/player_framework/config.gni")
-
-module_output_path = "player_framework/player_framework/player"
-
-config("module_config") {
-  visibility = [ ":*" ]
-  cflags = [ "-O2", "-fPIC", "-Wall", "-fexceptions" ]
-  include_dirs = [ ... ]
-}
-
-ohos_unittest("test_name") {
-  module_out_path = module_output_path
-  sources = [ "test_file.cpp" ]
-  configs = [ ":module_config" ]
-  external_deps = [ "hilog:libhilog", "c_utils:utils" ]
-  deps = [ ... ]
-}
-```
-
-## 重要路径参考 / Key Paths Reference
-
-| 路径/Path | 用途/Purpose |
-|-----------|--------------|
-| `interfaces/inner_api/native/` | 公共API头文件 / Public API headers |
-| `interfaces/kits/js/` | JavaScript/NAPI绑定 / JS bindings |
-| `interfaces/kits/c/` | C API绑定 / C API bindings |
-| `frameworks/native/` | 客户端实现 / Client implementation |
-| `services/services/` | 服务实现（服务端）/ Service implementation |
-| `services/engine/histreamer/` | 播放器引擎实现 / Player engine |
-| `services/utils/include/` | 公共工具 / Common utilities |
-| `test/unittest/` | 单元测试 / Unit tests |
-| `test/fuzztest/` | 模糊测试 / Fuzz tests |
-| `config.gni` | 构建配置和特性开关 / Build config |
-
-## 重要说明 / Important Notes
-
-- 项目使用`config.gni`进行特性开关配置，检查`player_framework_support_*`变量进行条件编译
-- 使用`MSERR_OK`(0)表示成功，负值表示错误
-- 始终使用`CHECK_AND_RETURN*`宏而非原始if-return进行验证
-- 添加新代码时遵循类似文件中的现有模式
-- 测试Mock类应放在测试文件夹的`mock/`子目录中
+1. **IPC 是模块边界**：所有跨进程调用必须通过 IPC Proxy/Stub，严禁共享裸指针或引用。
+2. **引擎可替换**：新增引擎必须实现 IEngineFactory 接口并通过 dlopen 注册，严禁在服务层硬编码引擎创建逻辑。
+3. **Pipeline 统一控制**：Seek/Stop 等生命周期操作必须通过 Pipeline 统一下发，严禁引擎直接操作特定 Filter。
+4. **InnerAPI 是服务契约**：服务层与引擎层通过 InnerAPI 头文件解耦，严禁服务层直接依赖引擎实现细节。
+5. **状态机保护**：PlayerServer 所有操作必须经过 8 状态状态机校验，非法操作返回 MSERR_INVALID_STATE。
+6. **内存回收可恢复**：所有播放状态必须保存到 RecoverConfigInfo，确保内存回收后可完整恢复。
+7. **DFX 可观测**：关键路径必须有 HiSysEvent/HiAppEvent 打点，卡顿/错误必须上报。
+8. **第三方许可证合规**：ffmpeg 组件受 LGPL 许可证约束，修改 ffmpeg 封装层（DemuxerPlugin/SourcePlugin）需评估许可证影响；hcodec/fcodec 为厂商闭源库，严禁逆向或绕过 InnerAPI 直接调用厂商接口。
