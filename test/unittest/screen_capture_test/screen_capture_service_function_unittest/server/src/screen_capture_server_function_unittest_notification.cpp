@@ -26,6 +26,7 @@
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
+using namespace OHOS::Rosen;
 
 namespace OHOS {
 namespace Media {
@@ -41,9 +42,19 @@ public:
         receivedStates_.push_back(stateCode);
     }
     void OnDisplaySelected(uint64_t displayId) override {}
-    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area) override {}
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area) override
+    {
+        (void)event;
+        (void)area;
+        ++contentChangedCount_;
+    }
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) override {}
     void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) override {}
+
+    int ContentChangedCount() const
+    {
+        return contentChangedCount_;
+    }
 
     void Reset()
     {
@@ -56,6 +67,7 @@ public:
 
 private:
     std::vector<AVScreenCaptureStateCode> receivedStates_;
+    int contentChangedCount_ = 0;
 };
 
 void SetupMixModeSource(ScreenCaptureServer *server)
@@ -188,6 +200,27 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleNotificationButtonResponse_004, 
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     screenCaptureServer_->HandleNotificationButtonResponse("resume");
     EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::CREATED);
+}
+
+// ===================== OnCaptureContentChanged (L231-258) =====================
+
+// L248 false (interestWindowId_ != -1) -> L252 ListWindowInfo fails in test env ->
+// L253 returns before NotifyCaptureContentChanged. Assert NO callback fired:
+// captureState_=STARTED (CAP_ALIVE) + curWindowEvent_=HIDE(!=VISIBLE) so a premature
+// Notify at L256 would record a callback; 0 callbacks proves the L253 early-return held.
+HWTEST_F(ScreenCaptureServerFunctionTest, OnCaptureContentChanged_ListWindowInfoFail_B2, TestSize.Level2)
+{
+    auto recorder = std::make_shared<StateChangeRecorder>();
+    screenCaptureServer_->cbProxy_->SetCallback(recorder);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->sourceDisplayIds_.clear();
+    screenCaptureServer_->sourceDisplayIds_.push_back(100);
+    screenCaptureServer_->curWindowInDisplayId_ = 100;
+    screenCaptureServer_->curWindowLifecycle_ = ISessionLifecycleListener::SessionLifecycleEvent::FOREGROUND;
+    screenCaptureServer_->interestWindowId_ = 99999;
+    screenCaptureServer_->curWindowEvent_ = AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE;
+    screenCaptureServer_->OnCaptureContentChanged(false);
+    EXPECT_EQ(recorder->ContentChangedCount(), 0);
 }
 
 } // namespace Media

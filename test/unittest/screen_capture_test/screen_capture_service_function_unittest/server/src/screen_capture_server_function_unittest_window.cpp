@@ -21,6 +21,7 @@
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
 using namespace OHOS::Media;
+using namespace OHOS::Rosen;
 
 namespace OHOS {
 namespace Media {
@@ -836,6 +837,160 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureInner_SkipPrivacy_00
     screenCaptureServer_->isSystemRecorder_.store(true);
     screenCaptureServer_->isScreenCaptureAuthority_ = true;
     ASSERT_EQ(screenCaptureServer_->StartScreenCaptureInner(true), MSERR_OK);
+}
+
+// ===================== GetChoiceFromJson / GetValueFromJson (L313-348) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetChoiceFromJson_003, TestSize.Level2)
+{
+    Json::Value root;
+    std::string value;
+    screenCaptureServer_->GetChoiceFromJson(root, R"({"choice": "abc"})", "choice", value);
+    EXPECT_EQ(value, "abc");
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetChoiceFromJson_ParseFail_B2, TestSize.Level2)
+{
+    Json::Value root;
+    std::string value = "initial";
+    screenCaptureServer_->GetChoiceFromJson(root, "invalid json", "choice", value);
+    EXPECT_FALSE(root.isObject());
+    EXPECT_EQ(value, "initial");
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetChoiceFromJson_KeyNotFound_B2, TestSize.Level2)
+{
+    Json::Value root;
+    std::string value = "initial";
+    screenCaptureServer_->GetChoiceFromJson(root, R"({"otherKey": "val"})", "choice", value);
+    EXPECT_TRUE(root.isObject());
+    EXPECT_EQ(value, "initial");
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_ParseFail_B2, TestSize.Level2)
+{
+    Json::Value root;
+    bool value = true;
+    screenCaptureServer_->GetValueFromJson(root, "{invalid json", "key", value);
+    EXPECT_FALSE(value);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_KeyNotString_B2, TestSize.Level2)
+{
+    Json::Value root;
+    bool value = true;
+    screenCaptureServer_->GetValueFromJson(root, R"({"key": 123})", "key", value);
+    EXPECT_FALSE(value);
+}
+
+// ===================== UpdateMissionData (L689-727) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_BackgroundForeground_B2, TestSize.Level2)
+{
+    screenCaptureServer_->missionInfos_.clear();
+    screenCaptureServer_->missionInfos_.push_back({10, true});
+    std::vector<uint64_t> allIds;
+    auto flags = screenCaptureServer_->UpdateMissionData(10, SessionState::STATE_BACKGROUND, allIds);
+    EXPECT_EQ(flags & UPDATE_MIRROR, UPDATE_MIRROR);
+    EXPECT_FALSE(screenCaptureServer_->missionInfos_[0].isForeground);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_DisconnectForeground_B2, TestSize.Level2)
+{
+    screenCaptureServer_->missionInfos_.clear();
+    screenCaptureServer_->missionInfos_.push_back({10, true});
+    std::vector<uint64_t> allIds;
+    auto flags = screenCaptureServer_->UpdateMissionData(10, SessionState::STATE_DISCONNECT, allIds);
+    EXPECT_EQ(flags & UPDATE_MIRROR, UPDATE_MIRROR);
+    EXPECT_EQ(flags & REMOVE_WHITE_LIST, REMOVE_WHITE_LIST);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_DisconnectEmptyList_B2, TestSize.Level2)
+{
+    screenCaptureServer_->missionInfos_.clear();
+    screenCaptureServer_->missionInfos_.push_back({10, false});
+    std::vector<uint64_t> allIds;
+    auto flags = screenCaptureServer_->UpdateMissionData(10, SessionState::STATE_DISCONNECT, allIds);
+    EXPECT_EQ(flags & NOTIFY_UNAVAILABLE, NOTIFY_UNAVAILABLE);
+    EXPECT_TRUE(screenCaptureServer_->missionInfos_.empty());
+}
+
+// ===================== AddWhiteListWindows / RemoveWhiteListWindows (L2963-2997) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, AddWhiteListWindows_NotActive_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    std::vector<uint64_t> windows = {1, 2};
+    EXPECT_EQ(screenCaptureServer_->AddWhiteListWindows(windows), MSERR_INVALID_OPERATION);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, RemoveWhiteListWindows_NotActive_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    std::vector<uint64_t> windows = {1, 2};
+    EXPECT_EQ(screenCaptureServer_->RemoveWhiteListWindows(windows), MSERR_INVALID_OPERATION);
+}
+
+// ===================== SetPickerMode (L3011-3024) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetPickerMode_InvalidMode_B2, TestSize.Level2)
+{
+    EXPECT_EQ(screenCaptureServer_->SetPickerMode(static_cast<PickerMode>(-1)), MSERR_INVALID_VAL);
+}
+
+// ===================== SkipPrivacyMode / SkipPrivacyModeInner (L3439-3467) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SkipPrivacyMode_BeforeStart_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    std::vector<uint64_t> windows = {1, 2};
+    EXPECT_EQ(screenCaptureServer_->SkipPrivacyMode(windows), MSERR_OK);
+    EXPECT_EQ(screenCaptureServer_->skipPrivacyWindowIDsVec_.size(), 2u);
+}
+
+// ===================== DestroyPrivacySheet (L3705-3726) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, DestroyPrivacySheet_EmptyBundleName_B2, TestSize.Level2)
+{
+    constexpr char key[] = "const.multimedia.screencapture.screenrecorderbundlename";
+    auto &params = GetScreenCaptureSystemParam();
+    std::string saved = params[key];
+    params[key] = "";
+    screenCaptureServer_->callingLabel_ = "test";
+    bool ret = screenCaptureServer_->DestroyPrivacySheet();
+    EXPECT_FALSE(ret);
+    params[key] = saved;
+}
+
+// ===================== AddWatermark (L4129-1148) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, AddWatermark_NotCreated_B2, TestSize.Level2)
+{
+    std::shared_ptr<AVBuffer> buffer = CreateWatermarkBuffer();
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    int32_t count = 0;
+    EXPECT_EQ(screenCaptureServer_->AddWatermark(buffer, 200, 200, count), MSERR_INVALID_OPERATION_CREATE);
+}
+
+// ===================== SetScreenCaptureStrategy (L3856-3869) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenCaptureStrategy_AfterPopup_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    ScreenCaptureStrategy strategy;
+    strategy.enablePause = true;
+    EXPECT_EQ(screenCaptureServer_->SetScreenCaptureStrategy(strategy), MSERR_INVALID_OPERATION_CREATE);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenCaptureStrategy_Success_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    ScreenCaptureStrategy strategy;
+    strategy.enablePause = true;
+    strategy.keepCaptureDuringCall = true;
+    EXPECT_EQ(screenCaptureServer_->SetScreenCaptureStrategy(strategy), MSERR_OK);
+    EXPECT_TRUE(screenCaptureServer_->captureConfig_.strategy.enablePause);
 }
 } // Media
 } // OHOS

@@ -433,6 +433,14 @@ size_t ScreenCaptureServerFunctionTest::CountForegroundMissions(const std::vecto
         std::count_if(missions.begin(), missions.end(), [](const MissionInfo &m) { return m.isForeground; }));
 }
 
+std::shared_ptr<CacheBuffer> ScreenCaptureServerFunctionTest::MakeTestCacheBuffer(AudioCaptureSourceType type)
+{
+    constexpr int32_t testBufferLen = 10;
+    constexpr int64_t testBufferPts = 0;
+    auto buf = std::make_unique<uint8_t[]>(testBufferLen);
+    return std::make_shared<CacheBuffer>(std::move(buf), testBufferLen, testBufferPts, type);
+}
+
 // videoCapInfo and innerCapInfo IGNORE
 HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_001, TestSize.Level2)
 {

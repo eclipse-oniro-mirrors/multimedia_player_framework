@@ -128,5 +128,92 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetAndCheckSaLimit_002, TestSize.Level
     ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
 }
 
+// ===================== ExcludeContent (L2933-2955) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_NotAlive_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    ScreenCaptureContentFilter filter;
+    EXPECT_EQ(screenCaptureServer_->ExcludeContent(filter), MSERR_INVALID_OPERATION);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_ActiveInnerAudioNull_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->virtualScreenId_ = 1;
+    screenCaptureServer_->innerAudioCapture_ = nullptr;
+    ScreenCaptureContentFilter filter;
+    EXPECT_EQ(screenCaptureServer_->ExcludeContent(filter), MSERR_OK);
+    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+}
+
+// ===================== StopAndRelease (L3627-3639) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_NotAlive_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    EXPECT_EQ(screenCaptureServer_->StopAndRelease(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL),
+        MSERR_OK);
+}
+
+// ===================== StartStreamVideoCapture (L2422-2438) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamVideoCapture_IgnoreState_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo
+        .state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
+    EXPECT_EQ(screenCaptureServer_->StartStreamVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamVideoCapture_InvalidState_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo
+        .state = AVScreenCaptureParamValidationState::VALIDATION_INVALID;
+    EXPECT_EQ(screenCaptureServer_->StartStreamVideoCapture(), MSERR_INVALID_VAL);
+}
+
+// ===================== PostStartScreenCaptureSuccessAction (L1575-1596) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_WithDisplayId_B2, TestSize.Level2)
+{
+    screenCaptureServer_->sourceDisplayIds_.clear();
+    screenCaptureServer_->sourceDisplayIds_.push_back(100);
+    screenCaptureServer_->PostStartScreenCaptureSuccessAction();
+    EXPECT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STARTED);
+    screenCaptureServer_->sourceDisplayIds_.clear();
+}
+
+// ===================== StartScreenCapture / WithSurface (L2388-2420) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCapture_NotInitState_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    EXPECT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_INVALID_OPERATION);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureWithSurface_NotInitState_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    sptr<OHOS::Surface> surface = OHOS::Surface::CreateSurfaceAsConsumer();
+    EXPECT_EQ(screenCaptureServer_->StartScreenCaptureWithSurface(surface, false), MSERR_INVALID_OPERATION);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureWithSurface_SurfaceNull_B2, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    EXPECT_EQ(screenCaptureServer_->StartScreenCaptureWithSurface(nullptr, false), MSERR_INVALID_OPERATION);
+}
+
+// ===================== StopVideoCapture (L3571-3597) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_SurfaceCbNotNull_B2, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = -1;
+    screenCaptureServer_->consumer_ = nullptr;
+    screenCaptureServer_->isSurfaceMode_ = false;
+    screenCaptureServer_->surfaceCb_ = nullptr;
+    EXPECT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
+}
+
 } // namespace Media
 } // namespace OHOS

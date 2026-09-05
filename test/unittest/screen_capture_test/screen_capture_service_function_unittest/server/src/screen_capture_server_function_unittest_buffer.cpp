@@ -13,21 +13,21 @@
  * limitations under the License.
  */
 
-#include <unistd.h>
-#include <sys/stat.h>
+#include "image_source.h"
+#include "image_type.h"
+#include "media_dfx.h"
+#include "media_errors.h"
+#include "media_log.h"
+#include "media_utils.h"
+#include "param_wrapper.h"
+#include "pixel_map.h"
+#include "scope_guard.h"
 #include "screen_cap_buffer_consumer_listener.h"
 #include "screen_capture_server_function_unittest.h"
 #include "ui_extension_ability_connection.h"
-#include "image_source.h"
-#include "image_type.h"
-#include "pixel_map.h"
-#include "media_log.h"
-#include "media_errors.h"
-#include "media_utils.h"
 #include "uri_helper.h"
-#include "media_dfx.h"
-#include "scope_guard.h"
-#include "param_wrapper.h"
+#include <sys/stat.h>
+#include <unistd.h>
 
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
@@ -36,10 +36,10 @@ using namespace OHOS::Media;
 namespace OHOS {
 namespace Media {
 /**
-* @tc.name: AcquireVideoBuffer_001
-* @tc.desc: isDump_ = false
-* @tc.type: FUNC
-*/
+ * @tc.name: AcquireVideoBuffer_001
+ * @tc.desc: isDump_ = false
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -52,15 +52,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_001, TestSize.Level
     OHOS::Rect damage;
     OHOS::Rect rsRect;
     screenCaptureServer_->isDump_ = false;
-    ASSERT_NE(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect), MSERR_UNKNOWN);
     screenCaptureServer_->ReleaseVideoBuffer();
 }
 
 /**
-* @tc.name: AcquireVideoBuffer_002
-* @tc.desc: isDump_ = true
-* @tc.type: FUNC
-*/
+ * @tc.name: AcquireVideoBuffer_002
+ * @tc.desc: isDump_ = true
+ * @tc.type: FUNC
+ */
 HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_002, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -73,7 +73,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_002, TestSize.Level
     OHOS::Rect damage;
     OHOS::Rect rsRect;
     screenCaptureServer_->isDump_ = true;
-    ASSERT_NE(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect), MSERR_UNKNOWN);
     screenCaptureServer_->ReleaseVideoBuffer();
 }
 
@@ -131,5 +131,121 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_006, TestSize.Level2)
     screenCaptureServer_->isConsumerStart_ = true;
     ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
 }
-} // Media
-} // OHOS
+
+/**
+ * @tc.name: AcquireAudioBuffer_NotActive_001
+ * @tc.desc: AcquireAudioBuffer rejected when capture is not STARTED/RESUMED (L2819)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, AcquireAudioBuffer_NotActive_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    screenCaptureServer_->innerAudioCapture_ = nullptr;
+    std::shared_ptr<AudioBuffer> audioBuffer;
+    EXPECT_EQ(screenCaptureServer_->AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::MIC),
+        MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name: AcquireAudioBuffer_UnsupportedType_001
+ * @tc.desc: AcquireAudioBuffer returns MSERR_UNKNOWN for unsupported source type (L2832)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, AcquireAudioBuffer_UnsupportedType_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    screenCaptureServer_->innerAudioCapture_ = nullptr;
+    std::shared_ptr<AudioBuffer> audioBuffer;
+    EXPECT_EQ(screenCaptureServer_->AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::SOURCE_INVALID),
+        MSERR_UNKNOWN);
+}
+
+/**
+ * @tc.name: ReleaseAudioBuffer_NotActive_001
+ * @tc.desc: ReleaseAudioBuffer rejected when capture is not STARTED/RESUMED (L2844)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBuffer_NotActive_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    screenCaptureServer_->innerAudioCapture_ = nullptr;
+    EXPECT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::ALL_PLAYBACK), MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name: ReleaseAudioBuffer_UnsupportedType_001
+ * @tc.desc: ReleaseAudioBuffer returns MSERR_UNKNOWN for unsupported source type (L2859)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBuffer_UnsupportedType_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    screenCaptureServer_->innerAudioCapture_ = nullptr;
+    EXPECT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::SOURCE_INVALID), MSERR_UNKNOWN);
+}
+
+/**
+ * @tc.name: AcquireVideoBuffer_NotActive_001
+ * @tc.desc: AcquireVideoBuffer rejected when capture is not STARTED/RESUMED (L2870)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_NotActive_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->surfaceCb_ = nullptr;
+    sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
+    int32_t fence = 0;
+    int64_t timestamp = 0;
+    OHOS::Rect damage;
+    OHOS::Rect rsRect;
+    EXPECT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect),
+        MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name: AcquireVideoBuffer_NullSurfaceCb_001
+ * @tc.desc: AcquireVideoBuffer returns MSERR_NO_MEMORY when surfaceCb_ is null (L2873)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_NullSurfaceCb_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->surfaceCb_ = nullptr;
+    sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
+    int32_t fence = 0;
+    int64_t timestamp = 0;
+    OHOS::Rect damage;
+    OHOS::Rect rsRect;
+    EXPECT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage, rsRect),
+        MSERR_NO_MEMORY);
+}
+
+/**
+ * @tc.name: ReleaseVideoBuffer_NotActive_001
+ * @tc.desc: ReleaseVideoBuffer rejected when capture is not STARTED/RESUMED (L2915)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseVideoBuffer_NotActive_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->surfaceCb_ = nullptr;
+    EXPECT_EQ(screenCaptureServer_->ReleaseVideoBuffer(), MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name: ReleaseVideoBuffer_NullSurfaceCb_001
+ * @tc.desc: ReleaseVideoBuffer returns MSERR_NO_MEMORY when surfaceCb_ is null (L2918)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseVideoBuffer_NullSurfaceCb_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->surfaceCb_ = nullptr;
+    EXPECT_EQ(screenCaptureServer_->ReleaseVideoBuffer(), MSERR_NO_MEMORY);
+}
+} // namespace Media
+} // namespace OHOS
