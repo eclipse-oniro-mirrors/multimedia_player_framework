@@ -7,9 +7,9 @@
 | 实体名称 | 实体定义 | 核心特征 | 类型/分类 |
 |---------|---------|---------|----------|
 | AVPlayer (ArkTS/JS) | ArkTS/JS 播放器公开 API 类 | url/fdSrc/dataSrc 媒体源设置；Play/Pause/Stop/Seek/SetVolume/SetSpeed/SetLooping/SelectTrack 播放控制；on('stateChange')/on('error')/on('info')/on('seekDone') 事件回调 | 公开 API 类 |
-| OH_AVPlayer (NDK C API) | C 语言播放器公开 API | OH_AVPlayer_Create/Release 生命周期管理；OH_AVPlayer_SetURLSource/SetFDSource 媒体源设置；OH_AVPlayer_Seek/SetVolume/SetPlayerCallback 播放控制；OH_AVPlayer_SetMediaSource/SetPlaybackStrategy 高级特性 | 公开 API (C) |
-| AVRecorder (ArkTS/JS + NDK) | 音视频录制公开 API | prepare(config) 准备配置，getInputSurface 获取输入 Surface，生命周期方法；C API: OH_AVRecorder_* 函数族 | 公开 API 类 |
-| AVTranscoder (ArkTS + NDK) | 音视频转码公开 API | 转码流水线（解封装→解码→编码→封装），支持水印 | 公开 API 类 |
+| OH_AVPlayer (C API) | C 语言播放器公开 API | OH_AVPlayer_Create/Release 生命周期管理；OH_AVPlayer_SetURLSource/SetFDSource 媒体源设置；OH_AVPlayer_Seek/SetVolume/SetPlayerCallback 播放控制；OH_AVPlayer_SetMediaSource/SetPlaybackStrategy 高级特性 | 公开 API (C) |
+| AVRecorder (ArkTS/JS + C API) | 音视频录制公开 API | prepare(config) 准备配置，getInputSurface 获取输入 Surface，生命周期方法；C API: OH_AVRecorder_* 函数族 | 公开 API 类 |
+| AVTranscoder (ArkTS + C API) | 音视频转码公开 API | 转码流水线（解封装→解码→编码→封装），支持水印 | 公开 API 类 |
 | AVMetadataExtractor (ArkTS) | 元数据提取公开 API | fdSrc/dataSrc 媒体源；resolveMetadata 解析元数据，fetchAlbumCover 获取专辑封面，fetchFrameByTime 按时间获取帧 | 公开 API 类 |
 | AVMetadataHelper (内部 API) | 元数据提取内部 API | SetSource 设置源，ResolveMetadata 解析元数据，FetchFrameAtPosition 按位置获取帧 | 内部 API |
 | AVImageGenerator / OH_AVImageGenerator | 视频缩略图/关键帧提取 API | Seek + AVCodecVideoDecoder 解码，SEEK_CLOSEST 最近帧定位 | 公开 API (ArkTS + C) |
@@ -43,7 +43,7 @@
   → 流水线 → HDI
 ```
 
-**OH_AVPlayer (NDK C API) 调用链路**：
+**OH_AVPlayer (C API) 调用链路**：
 
 ```
 应用 (C)
@@ -96,9 +96,9 @@
 | 实体 | 代码路径 | 核心符号 |
 |------|---------|---------|
 | AVPlayer (ArkTS/JS) | `interfaces/kits/js/avplayer_napi.h` | AVPlayer NAPI 类 |
-| OH_AVPlayer (NDK) | `frameworks/native/capi/player/native_avplayer.cpp` | OH_AVPlayer_* 函数族、PlayerObject |
+| OH_AVPlayer (C API) | `frameworks/native/capi/player/native_avplayer.cpp` | OH_AVPlayer_* 函数族、PlayerObject |
 | AVRecorder (ArkTS) | `interfaces/kits/js/avrecorder_napi.h` | AVRecorder NAPI 类 |
-| AVRecorder (NDK) | `interfaces/kits/c/avrecorder.h` | OH_AVRecorder_* 函数族 |
+| AVRecorder (C API) | `interfaces/kits/c/avrecorder.h` | OH_AVRecorder_* 函数族 |
 | AVTranscoder | `interfaces/kits/c/avtranscoder.h` | OH_AVTranscoder_* 函数族 |
 | AVImageGenerator | `interfaces/kits/c/avimage_generator.h` | OH_AVImageGenerator_* 函数族 |
 | OH_LowPowerAudioSink | `interfaces/kits/c/lowpower_audio_sink.h` | OH_LowPowerAudioSink_* |

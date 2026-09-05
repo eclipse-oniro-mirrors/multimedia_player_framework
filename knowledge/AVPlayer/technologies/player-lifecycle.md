@@ -50,7 +50,7 @@ PlayerServer 采用 **8 状态有限状态机** 管理生命周期：
 2. **Play/Pause可逆**：STARTED ↔ PAUSED
 3. **Stop回到STOPPED**：STARTED/PAUSED → STOPPED，必须Reset后才能重新播放
 4. **Error必须Reset**：ERROR状态只能执行Reset()回到IDLE
-5. **SetSource只在IDLE**：其他状态调用SetSource()会返回错误
+5. **SetSource只在IDLE**：其它状态调用SetSource()会返回错误
 
 ## 二、完整生命周期流程
 

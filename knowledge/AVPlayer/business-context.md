@@ -4,7 +4,7 @@
 
 ## 系统定位
 
-player_framework 是 HarmonyOS 多媒体子系统的**播放/录制/转码框架层**，位于应用 API 与底层编解码能力之间：
+player_framework 是 OpenHarmony 多媒体子系统的**播放/录制/转码框架层**，位于应用 API 与底层编解码能力之间：
 
 ```
 应用层 (ArkTS / C / C++ 应用)
@@ -48,7 +48,7 @@ Media_Foundation (AVBuffer / PluginManager / FilterFactory)
 | 类别 | 技术 | 说明 |
 |------|------|------|
 | 核心语言 | C++ | 服务端、引擎、Pipeline |
-| 客户端API | C (NDK) / ArkTS / JS | AVPlayer等对外API |
+| 客户端API | C (C API) / ArkTS / JS | AVPlayer等对外API |
 | 桥接层 | NAPI / CJ-FFI / ANI | JS/ArkTS到C++的桥接 |
 | 进程间通信 | OHOS IPC (Binder) | Client-Server通信 |
 | 数据传递 | AVBufferQueue | Pipeline Filter间数据流转 |
@@ -75,7 +75,7 @@ Media_Foundation (AVBuffer / PluginManager / FilterFactory)
 │  ArkTS/JS API                           │  ← 应用开发者使用
 │  AVPlayer / AVRecorder / AVTranscoder   │
 ├─────────────────────────────────────────┤
-│  NDK C API                              │  ← Native开发者使用
+│  C API                                  │  ← Native开发者使用
 │  OH_AVPlayer / OH_AVRecorder            │
 ├─────────────────────────────────────────┤
 │  Inner API                              │  ← 系统内部使用

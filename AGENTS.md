@@ -26,7 +26,7 @@ knowledge/
 ├── AVRecorder/        # 录制模块（待建设）
 ├── AVTranscoder/      # 转码模块（待建设）
 ├── AVMetadata/        # 元数据模块（待建设）
-└── ...                # 其他模块按需扩展
+└── ...                # 其它模块按需扩展
 ```
 
 ### 加载规范
@@ -47,7 +47,7 @@ knowledge/
 编辑代码前，必须先声明以下信息：
 
 1. **所属模块**：AVPlayer / AVRecorder / AVTranscoder / AVMetadata / 跨模块
-2. **任务类别**：API 变更 / 引擎开发 / IPC 修改 / Pipeline 调整 / 内存管理 / DFX 增强 / Bug 修复 / 其他
+2. **任务类别**：API 变更 / 引擎开发 / IPC 修改 / Pipeline 调整 / 内存管理 / DFX 增强 / Bug 修复 / 其它
 3. **已读知识文档**：列出已阅读的对应模块 `knowledge/<module>/` 下的相关文档
 4. **发现的约束**：从已读文档中提取适用于本次修改的约束规则（引用项目宪法编号或编码铁律编号）
 
@@ -167,7 +167,7 @@ knowledge/AVMetadata/
 | 修改路径 | 必读文档 | 原因 |
 |----------|---------|------|
 | frameworks/native/player/ | knowledge/AVPlayer/entities/api-layer.md | API 层实体与约束，状态机调用顺序 |
-| frameworks/native/capi/player/ | knowledge/AVPlayer/entities/api-layer.md | NDK C API 封装约束，OH_AVPlayer 回调机制 |
+| frameworks/native/capi/player/ | knowledge/AVPlayer/entities/api-layer.md | C API 封装约束，OH_AVPlayer 回调机制 |
 | frameworks/js/napi/ | knowledge/AVPlayer/entities/api-layer.md | NAPI 桥接层调用链 |
 | services/services/player/ipc/ | knowledge/AVPlayer/technologies/ipc-communication.md + knowledge/AVPlayer/entities/ipc-layer-entities.md | IPC 序列化约束、回调不可阻塞、Freeze 机制 |
 | services/services/player/ | knowledge/AVPlayer/technologies/player-lifecycle.md + knowledge/AVPlayer/entities/service-layer.md | 8 状态状态机、TaskMgr 异步约束、ConfigInfo 原子性 |
@@ -177,7 +177,7 @@ knowledge/AVMetadata/
 | services/engine/ | knowledge/AVPlayer/entities/engine-factory-and-selection.md | 引擎工厂注册与打分选择，dlopen 约束 |
 | plugins/ | knowledge/AVPlayer/technologies/media-source-and-protocol.md | 插件 Sniff 注册机制、路径安全校验 |
 
-#### 其他模块路径
+#### 其它模块路径
 
 > AVRecorder、AVTranscoder、AVMetadata 等模块的路径触发规则待对应知识库建设后补充。
 
@@ -194,12 +194,12 @@ knowledge/AVMetadata/
 | 内存回收策略 | `player_server_mem.cpp`、`player_mem_manage.cpp` | knowledge/AVPlayer/technologies/memory-and-background.md |
 | Pipeline Filter 新增/修改 | 对应 `*_filter.cpp` + `pipeline.cpp` | knowledge/AVPlayer/technologies/pipeline-architecture.md |
 | NAPI/JS API 变更 | `avplayer_napi.cpp`、`player_impl.cpp` | knowledge/AVPlayer/entities/api-layer.md |
-| NDK C API 变更 | `avplayer.cpp`、`player_object.cpp` | knowledge/AVPlayer/entities/api-layer.md |
+| C API 变更 | `avplayer.cpp`、`player_object.cpp` | knowledge/AVPlayer/entities/api-layer.md |
 | 插件新增（Source/Demuxer/Codec） | 对应 `plugins/*/` 目录 | knowledge/AVPlayer/technologies/media-source-and-protocol.md |
 | 音视频同步调整 | `media_sync_manager.cpp`、`audio_sink_plugin.cpp` | knowledge/AVPlayer/technologies/av-sync-and-buffer.md |
 | 错误码/DFX 打点 | `player_server.cpp`、`dfx_agent.cpp` | knowledge/AVPlayer/technologies/error-handling-and-dfx.md |
 
-#### 其他模块场景
+#### 其它模块场景
 
 > AVRecorder、AVTranscoder、AVMetadata 等模块的高频修改场景映射待对应知识库建设后补充。
 

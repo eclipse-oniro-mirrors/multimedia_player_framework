@@ -10,7 +10,7 @@
 |------|------|------|
 | Client-Server 进程隔离 | 播放器客户端运行在应用进程，服务端运行在媒体服务进程，通过 IPC 通信 | 隔离媒体服务崩溃风险，支持多客户端共享服务端，IPC 是模块边界 |
 | 引擎工厂打分选择 | EngineFactoryRepo 通过打分机制自动选择最优引擎（Histreamer/GStreamer/LPP） | 不同场景（正常播放/低功耗/直播）需不同引擎，打分机制实现自适应选择 |
-| Pipeline Filter链 | 数据流通过 Filter 链式传递，每个 Filter 职责单一，通过 BufferQueue 连接 | 解耦数据处理环节，新增/替换 Filter 不影响链路其他部分 |
+| Pipeline Filter链 | 数据流通过 Filter 链式传递，每个 Filter 职责单一，通过 BufferQueue 连接 | 解耦数据处理环节，新增/替换 Filter 不影响链路其它部分 |
 | InnerAPI 接口边界 | Pipeline 层通过 InnerAPI 调用原子能力，不直接依赖插件实现 | 屏蔽插件实现差异，框架与原子能力可独立演进 |
 | 插件化 Sniff 机制 | Source/Demuxer/Codec 插件通过 Sniff 嗅探打分自动选择 | 支持多种媒体格式，新格式只需注册插件无需修改框架 |
 | 异步任务队列 | PlayerServer 通过 TaskMgr 异步处理所有播放操作，IPC 线程快速返回 | 减少 IPC 序列化开销，避免阻塞调用方线程 |
@@ -24,7 +24,7 @@
 │  ┌──────────────┐  ┌──────────────┐  ┌───────────────────┐  │
 │  │ AVPlayer     │  │ AVRecorder   │  │ AVTranscoder      │  │
 │  │ (ArkTS/JS/   │  │ (ArkTS/JS/   │  │ AVMetadataExtractor│  │
-│  │  NDK C API)  │  │  NDK C API)  │  │ AVImageGenerator  │  │
+│  │  C API)      │  │  C API)      │  │ AVImageGenerator  │  │
 │  └──────┬───────┘  └──────┬───────┘  └────────┬──────────┘  │
 ├─────────┼─────────────────┼───────────────────┼─────────────┤
 │         │      NAPI/CJ-FFI/ANI Bridge Layer   │             │
@@ -72,7 +72,7 @@
 
 | 模块 | 类型 | 模块职责 | 关键文件 |
 |------|------|---------|---------|
-| AVPlayer (NDK) | ohos_shared_library | C API 播放器，OH_AVPlayer_* 接口族，PlayerObject 封装 PlayerImpl | `frameworks/native/capi/player/avplayer.cpp`、`avplayer_napi.cpp` |
+| AVPlayer (C API) | ohos_shared_library | C API 播放器，OH_AVPlayer_* 接口族，PlayerObject 封装 PlayerImpl | `frameworks/native/capi/player/avplayer.cpp`、`avplayer_napi.cpp` |
 | AVPlayer (ArkTS/JS) | ohos_shared_library | NAPI 桥接层，AVPlayer/AVRecorder JS 类，TaskQueue 异步调度 | `frameworks/js/napi/player/avplayer_napi.cpp`、`avrecorder_napi.cpp` |
 | PlayerClient | ohos_shared_library | 应用进程播放器代理，持有 IPC Proxy + ListenerStub，转发调用到服务端 | `services/services/player/ipc/client/player_client.cpp` |
 | PlayerServiceStub | ohos_shared_library | IPC 服务端入口，playerFuncs_ 分发，权限校验，Freeze/UnFreeze 控制 | `services/services/player/ipc/stub/player_service_stub.cpp` |
