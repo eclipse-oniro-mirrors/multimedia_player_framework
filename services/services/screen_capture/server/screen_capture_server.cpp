@@ -2811,6 +2811,7 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(sptr<OHOS::Surf
         .missionIds_ = {},
         .virtualScreenType_ = VirtualScreenType::SCREEN_RECORDING,
         .bundleName_ = appName_,
+        .userId_ = appUserId_.load(),
     };
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitVirtualScreenOption start, name:%{public}s.",
         FAKE_POINTER(this), virScrOption.name_.c_str());
