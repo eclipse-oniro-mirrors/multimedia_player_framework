@@ -83,8 +83,7 @@ knowledge/AVPlayer/
     ├── design-patterns.md                   # 设计模式与架构解耦
     ├── media-source-and-protocol.md         # 媒体源与协议
     ├── evolution.md                         # 模块演进记录
-    ├── flows.md                             # 关键流程详解
-    └── screen-capture-features.md           # 屏幕录制特性
+    └── flows.md                             # 关键流程详解
 ```
 
 | 场景 | 先读 | 加载时机 |
@@ -110,7 +109,6 @@ knowledge/AVPlayer/
 | 媒体源与协议 | technologies/media-source-and-protocol.md | |
 | 模块演进记录 | technologies/evolution.md | |
 | 关键流程详解 | technologies/flows.md | |
-| 屏幕录制特性 | technologies/screen-capture-features.md | |
 
 ### AVRecorder 模块（录制）
 
