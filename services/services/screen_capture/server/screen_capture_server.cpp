@@ -317,8 +317,7 @@ void ScreenCaptureServer::InitAppUserId()
     int32_t userId = -1;
     AccountSA::OsAccountManager::GetOsAccountLocalIdFromUid(appInfo_.appUid, userId);
     appUserId_.store(userId == 0 ? -1 : userId);
-    listenerManager_->SetAppUserId(appUserId_);
-    MEDIA_LOGI("InitAppUserId() appUserId_： %{public}d", appUserId_.load());
+    MEDIA_LOGI("InitAppUserId() appUserId_: %{public}d", appUserId_.load());
 }
 
 void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
