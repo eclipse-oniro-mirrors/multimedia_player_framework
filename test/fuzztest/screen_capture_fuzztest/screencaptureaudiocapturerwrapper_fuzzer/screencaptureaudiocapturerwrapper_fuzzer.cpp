@@ -204,7 +204,8 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     ScreenCaptureContentFilter contentFilter;
     std::string capturerName = fdp.ConsumeRandomLengthString(64);
     shared_ptr<AudioCapturerWrapper> audioCapturerWrapper =
-        make_shared<AudioCapturerWrapper>(config_.audioInfo.innerCapInfo, callbackObj, capturerName, contentFilter);
+        make_shared<AudioCapturerWrapper>(config_.audioInfo.innerCapInfo, callbackObj, std::move(capturerName),
+            contentFilter);
     TestCapturerWrapperOperations(audioCapturerWrapper, fdp);
     close(outputFd);
     return true;
