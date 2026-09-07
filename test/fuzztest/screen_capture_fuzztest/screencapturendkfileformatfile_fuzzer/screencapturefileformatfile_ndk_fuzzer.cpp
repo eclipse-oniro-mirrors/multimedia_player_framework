@@ -16,6 +16,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_log.h"
@@ -87,20 +88,20 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
 
 bool ScreenCaptureFileFormatFileNdkFuzzer::FuzzScreenCaptureFileFormatFileNdk(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < sizeof(int32_t)) {
+    if (data == nullptr || size < sizeof(uint32_t)) {
         return false;
     }
     screenCapture = OH_AVScreenCapture_Create();
 
+    FuzzedDataProvider fdp(data, size);
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t fileformatList = 2;
-    constexpr uint32_t recorderTime = 3;
     const OH_ContainerFormatType fileformat[fileformatList] {
         CFT_MPEG_4A,
         CFT_MPEG_4
     };
-    int32_t randomNum = abs((*reinterpret_cast<int32_t *>(data)) % (fileformatList));
+    int32_t randomNum = fdp.ConsumeIntegralInRange<uint32_t>(0, fileformatList - 1);
     MEDIA_LOGI("FuzzTest ScreenCaptureFileFormatFileNdkFuzzer randomNum: %{public}d ", randomNum);
 
     OH_RecorderInfo recorderInfo;
@@ -114,7 +115,8 @@ bool ScreenCaptureFileFormatFileNdkFuzzer::FuzzScreenCaptureFileFormatFileNdk(ui
 
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;
@@ -127,7 +129,7 @@ bool FuzzTestScreenCaptureFileFormatFileNdk(uint8_t *data, size_t size)
         return true;
     }
 
-    if (size < sizeof(int32_t)) {
+    if (size < sizeof(uint32_t)) {
         return true;
     }
     ScreenCaptureFileFormatFileNdkFuzzer testScreenCapture;

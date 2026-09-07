@@ -15,6 +15,8 @@
 
 #include <cmath>
 #include <iostream>
+#include <unistd.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_log.h"
@@ -95,9 +97,9 @@ bool ScreenCaptureFileFormatFileFuzzer::FuzzScreenCaptureFileFormatFile(uint8_t 
     AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t fileformatList = 2;
-    constexpr uint32_t recorderTime = 3;
-    int32_t randomNum = (*reinterpret_cast<int32_t *>(data)) % (fileformatList);
-    MEDIA_LOGI("FuzzTest ScreenCaptureFileFormatFileFuzzer randomNum: %{public}d ", randomNum);
+    FuzzedDataProvider fdp(data, size);
+    uint32_t randomNum = fdp.ConsumeIntegralInRange<uint32_t>(0, fileformatList - 1);
+    MEDIA_LOGI("FuzzTest ScreenCaptureFileFormatFileFuzzer randomNum: %{public}u ", randomNum);
 
     RecorderInfo recorderInfo;
     const std::string screenCaptureRoot = "/data/test/media/";
@@ -108,14 +110,13 @@ bool ScreenCaptureFileFormatFileFuzzer::FuzzScreenCaptureFileFormatFile(uint8_t 
         recorderInfo.fileFormat = "m4a";
     } else if (randomNum == 1) {
         recorderInfo.fileFormat = "mp4";
-    } else {
-        return true;
     }
     config.recorderInfo = recorderInfo;
 
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

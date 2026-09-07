@@ -85,7 +85,6 @@ bool ScreenCaptureSetAreaHighlightFuzzer::FuzzScreenCaptureSetAreahighlight(uint
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3000;
     AVScreenCaptureHighlightConfig highlightConfig;
     highlightConfig.mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED;
     highlightConfig.lineThickness = GetData<uint32_t>() % MAX_LINE_THICKNESS + MIN_LINE_THICKNESS;
@@ -109,7 +108,8 @@ bool ScreenCaptureSetAreaHighlightFuzzer::FuzzScreenCaptureSetAreahighlight(uint
 
     TestScreenCapture::StartScreenCapture();
     TestScreenCapture::PresentPicker();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

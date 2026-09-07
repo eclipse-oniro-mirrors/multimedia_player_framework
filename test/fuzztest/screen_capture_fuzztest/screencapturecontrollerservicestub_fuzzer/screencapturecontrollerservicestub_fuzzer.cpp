@@ -19,6 +19,7 @@
 #include "string_ex.h"
 #include "directory_ex.h"
 #include <unistd.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "media_server.h"
 #include "media_parcel.h"
 #include "i_standard_screen_capture_controller.h"
@@ -45,6 +46,7 @@ bool ScreenCaptureControllerServiceStubFuzzer::FuzzScreenCaptureControllerOnRemo
     if (data == nullptr || size < sizeof(int64_t)) {
         return true;
     }
+    FuzzedDataProvider fdp(data, size);
     std::shared_ptr<MediaServer> mediaServer =
         std::make_shared<MediaServer>(SYSTEM_ABILITY_ID, RUN_ON_CREATE);
     sptr<IRemoteObject> listener = new(std::nothrow) MediaListenerStubFuzzer();
@@ -60,19 +62,19 @@ bool ScreenCaptureControllerServiceStubFuzzer::FuzzScreenCaptureControllerOnRemo
         return false;
     }
 
-    const int maxIpcNum = 32;
-    bool isWriteToken = data[0] % 9 != 0;
-    for (uint32_t code = 0; code <= maxIpcNum; code++) {
-        MessageParcel msg;
-        if (isWriteToken) {
-            msg.WriteInterfaceToken(screenCaptureControllerStub->GetDescriptor());
-        }
-        msg.WriteBuffer(data, size);
-        msg.RewindRead(0);
-        MessageParcel reply;
-        MessageOption option;
-        screenCaptureControllerStub->OnRemoteRequest(code, msg, reply, option);
+    const uint32_t maxIpcNum = 32;
+    bool isWriteToken = fdp.ConsumeBool();
+    uint32_t code = fdp.ConsumeIntegralInRange<uint32_t>(0, maxIpcNum);
+    MessageParcel msg;
+    if (isWriteToken) {
+        msg.WriteInterfaceToken(screenCaptureControllerStub->GetDescriptor());
     }
+    size_t bufSize = fdp.ConsumeIntegralInRange<size_t>(1, size);
+    msg.WriteBuffer(data, bufSize);
+    msg.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    screenCaptureControllerStub->OnRemoteRequest(code, msg, reply, option);
 
     return true;
 }

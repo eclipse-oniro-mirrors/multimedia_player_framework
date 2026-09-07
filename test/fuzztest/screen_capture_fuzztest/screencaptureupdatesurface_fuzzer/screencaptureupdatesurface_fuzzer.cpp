@@ -74,15 +74,15 @@ bool ScreenCaptureUpdateSurfaceFuzzer::FuzzScreenCaptureUpdateSurface(uint8_t *d
  
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
- 
+
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj = std::make_shared<TestScreenCaptureCallbackTest>();
- 
+
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
     TestScreenCapture::UpdateSurface(nullptr);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -70,12 +71,12 @@ bool ScreenCaptureVideoFrameHeightNdkFuzzer::FuzzScreenCaptureVideoFrameHeightNd
     if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
+    FuzzedDataProvider fdp(data, size);
     screenCapture = OH_AVScreenCapture_Create();
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
-    config.videoInfo.videoCapInfo.videoFrameHeight = *reinterpret_cast<int32_t *>(data);
+    config.videoInfo.videoCapInfo.videoFrameHeight = fdp.ConsumeIntegral<uint32_t>();
 
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
     OH_AVScreenCapture_SetCanvasRotation(screenCapture, true);
@@ -86,7 +87,8 @@ bool ScreenCaptureVideoFrameHeightNdkFuzzer::FuzzScreenCaptureVideoFrameHeightNd
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;

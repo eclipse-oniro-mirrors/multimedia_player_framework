@@ -22,6 +22,7 @@
 #include "directory_ex.h"
 #include "screen_capture.h"
 #include "screencapturevideoframeratefile_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -95,9 +96,9 @@ bool ScreenCaptureVideoFrameRateFileFuzzer::FuzzScreenCaptureVideoFrameRateFile(
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
 
-    int32_t randomFramerate = *reinterpret_cast<int32_t *>(data);
+    FuzzedDataProvider fdp(data, size);
+    int32_t randomFramerate = fdp.ConsumeIntegral<int32_t>();
     MEDIA_LOGI("FuzzTest ScreenCaptureVideoFrameRateFileFuzzer randomFramerate: %{public}d ", randomFramerate);
     config.videoInfo.videoEncInfo.videoFrameRate = randomFramerate;
 
@@ -111,7 +112,8 @@ bool ScreenCaptureVideoFrameRateFileFuzzer::FuzzScreenCaptureVideoFrameRateFile(
 
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

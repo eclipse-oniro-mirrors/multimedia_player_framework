@@ -16,6 +16,7 @@
 #include "screencaptureservicestub_fuzzer.h"
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "string_ex.h"
 #include "directory_ex.h"
 #include <unistd.h>
@@ -61,19 +62,19 @@ bool ScreenCaptureServiceStubFuzzer::FuzzScreenCaptureOnRemoteRequest(uint8_t *d
     }
 
     const int maxIpcNum = 32;
-    bool isWriteToken = data[0] % 9 != 0;
-    for (uint32_t code = 0; code <= maxIpcNum; code++) {
-        MessageParcel msg;
-        if (isWriteToken) {
-            msg.WriteInterfaceToken(screencaptureStub->GetDescriptor());
-        }
-        msg.WriteBuffer(data, size);
-        msg.RewindRead(0);
-        MessageParcel reply;
-        MessageOption option;
-        screencaptureStub->OnRemoteRequest(code, msg, reply, option);
+    FuzzedDataProvider fdp(data, size);
+    bool isWriteToken = fdp.ConsumeBool();
+    uint32_t code = fdp.ConsumeIntegralInRange<uint32_t>(0, maxIpcNum);
+    MessageParcel msg;
+    if (isWriteToken) {
+        msg.WriteInterfaceToken(screencaptureStub->GetDescriptor());
     }
-
+    size_t bufSize = fdp.ConsumeIntegralInRange<size_t>(1, size);
+    msg.WriteBuffer(data, bufSize);
+    msg.RewindRead(0);
+    MessageParcel reply;
+    MessageOption option;
+    screencaptureStub->OnRemoteRequest(code, msg, reply, option);
     return true;
 }
 }

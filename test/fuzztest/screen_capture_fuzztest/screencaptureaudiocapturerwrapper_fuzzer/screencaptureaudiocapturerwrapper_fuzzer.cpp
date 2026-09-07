@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -39,77 +40,133 @@ ScreenCaptureAudioCapturerWrapperFuzzer::~ScreenCaptureAudioCapturerWrapperFuzze
 {
 }
 
-void ScreenCaptureAudioCapturerWrapperFuzzer::SetConfig(RecorderInfo &recorderInfo)
+AudioCaptureSourceType ScreenCaptureAudioCapturerWrapperFuzzer::PickAudioSource(FuzzedDataProvider &fdp)
 {
-    AudioEncInfo audioEncInfo = {
-        .audioBitrate = 48000,
-        .audioCodecformat = AudioCodecFormat::AAC_LC
+    static const AudioCaptureSourceType audioSources[] = {
+        AudioCaptureSourceType::SOURCE_DEFAULT,
+        AudioCaptureSourceType::MIC,
+        AudioCaptureSourceType::ALL_PLAYBACK,
     };
-    AudioCaptureInfo micCapInfo = {
-        .audioSampleRate = 16000,
-        .audioChannels = 2,
-        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(audioSources) / sizeof(audioSources[0]) - 1);
+    return audioSources[idx];
+}
+
+AudioCodecFormat ScreenCaptureAudioCapturerWrapperFuzzer::PickAudioCodecFormat(FuzzedDataProvider &fdp)
+{
+    static const AudioCodecFormat audioCodecFormats[] = {
+        AudioCodecFormat::AUDIO_DEFAULT,
+        AudioCodecFormat::AAC_LC,
     };
-    AudioCaptureInfo innerCapInfo = {
-        .audioSampleRate = 16000,
-        .audioChannels = 2,
-        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK,
+    constexpr uint32_t count = sizeof(audioCodecFormats) / sizeof(audioCodecFormats[0]);
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, count - 1);
+    return audioCodecFormats[idx];
+}
+
+VideoSourceType ScreenCaptureAudioCapturerWrapperFuzzer::PickVideoSourceType(FuzzedDataProvider &fdp)
+{
+    static const VideoSourceType videoSourceTypes[] = {
+        VideoSourceType::VIDEO_SOURCE_SURFACE_YUV,
+        VideoSourceType::VIDEO_SOURCE_SURFACE_ES,
+        VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA,
     };
-    VideoCaptureInfo videoCapInfo = {
-        .videoFrameWidth = 720,
-        .videoFrameHeight = 1280,
-        .videoSource = VIDEO_SOURCE_SURFACE_RGBA
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(videoSourceTypes) / sizeof(videoSourceTypes[0]) - 1);
+    return videoSourceTypes[idx];
+}
+
+VideoCodecFormat ScreenCaptureAudioCapturerWrapperFuzzer::PickVideoCodecFormat(FuzzedDataProvider &fdp)
+{
+    static const VideoCodecFormat videoCodecFormats[] = {
+        VideoCodecFormat::VIDEO_DEFAULT,
+        VideoCodecFormat::H264,
     };
-    VideoEncInfo videoEncInfo = {
-        .videoCodec = VideoCodecFormat::H264,
-        .videoBitrate = 2000000,
-        .videoFrameRate = 30
+    constexpr uint32_t count = sizeof(videoCodecFormats) / sizeof(videoCodecFormats[0]);
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, count - 1);
+    return videoCodecFormats[idx];
+}
+
+CaptureMode ScreenCaptureAudioCapturerWrapperFuzzer::PickCaptureMode(FuzzedDataProvider &fdp)
+{
+    static const CaptureMode captureModes[] = {
+        CaptureMode::CAPTURE_HOME_SCREEN,
+        CaptureMode::CAPTURE_SPECIFIED_SCREEN,
+        CaptureMode::CAPTURE_SPECIFIED_WINDOW,
+        CaptureMode::CAPTURE_SPECIFIED_APP,
     };
-    AudioInfo audioInfo = {
-        .micCapInfo = micCapInfo,
-        .innerCapInfo = innerCapInfo,
-        .audioEncInfo = audioEncInfo
+    uint32_t idx = fdp.ConsumeIntegralInRange<uint32_t>(0, sizeof(captureModes) / sizeof(captureModes[0]) - 1);
+    return captureModes[idx];
+}
+
+AudioCaptureInfo ScreenCaptureAudioCapturerWrapperFuzzer::CreateAudioCaptureInfo(FuzzedDataProvider &fdp)
+{
+    return {
+        .audioSampleRate = fdp.ConsumeIntegralInRange<int32_t>(8000, 96000),
+        .audioChannels = fdp.ConsumeIntegralInRange<int32_t>(1, 8),
+        .audioSource = PickAudioSource(fdp)
     };
-    VideoInfo videoInfo = {
-        .videoCapInfo = videoCapInfo,
-        .videoEncInfo = videoEncInfo
+}
+
+AudioInfo ScreenCaptureAudioCapturerWrapperFuzzer::CreateAudioInfo(FuzzedDataProvider &fdp)
+{
+    return {
+        .micCapInfo = CreateAudioCaptureInfo(fdp),
+        .innerCapInfo = CreateAudioCaptureInfo(fdp),
+        .audioEncInfo = {
+            .audioBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 96000),
+            .audioCodecformat = PickAudioCodecFormat(fdp)
+        }
     };
+}
+
+VideoInfo ScreenCaptureAudioCapturerWrapperFuzzer::CreateVideoInfo(FuzzedDataProvider &fdp)
+{
+    return {
+        .videoCapInfo = {
+            .videoFrameWidth = fdp.ConsumeIntegralInRange<int32_t>(1, 3840),
+            .videoFrameHeight = fdp.ConsumeIntegralInRange<int32_t>(1, 2160),
+            .videoSource = PickVideoSourceType(fdp)
+        },
+        .videoEncInfo = {
+            .videoCodec = PickVideoCodecFormat(fdp),
+            .videoBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 4000000),
+            .videoFrameRate = fdp.ConsumeIntegralInRange<int32_t>(1, 120)
+        }
+    };
+}
+
+void ScreenCaptureAudioCapturerWrapperFuzzer::SetConfig(RecorderInfo &recorderInfo, FuzzedDataProvider &fdp)
+{
     config_ = {
-        .captureMode = CaptureMode::CAPTURE_HOME_SCREEN,
-        .dataType = DataType::CAPTURE_FILE,
-        .audioInfo = audioInfo,
-        .videoInfo = videoInfo,
+        .captureMode = PickCaptureMode(fdp),
+        .dataType = static_cast<DataType>(fdp.ConsumeIntegralInRange<int32_t>(0, 2)),
+        .audioInfo = CreateAudioInfo(fdp),
+        .videoInfo = CreateVideoInfo(fdp),
         .recorderInfo = recorderInfo
     };
 }
 
-bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uint8_t *data, size_t size)
+void ScreenCaptureAudioCapturerWrapperFuzzer::TestCapturerWrapperOperations(
+    const shared_ptr<AudioCapturerWrapper> &audioCapturerWrapper, FuzzedDataProvider &fdp)
 {
-    if (data == nullptr || size < 2 * sizeof(int32_t)) {  // 2 input params
-        return false;
-    }
-    g_baseFuzzData = data;
-    g_baseFuzzSize = size;
-    g_baseFuzzPos = 0;
-    RecorderInfo recorderInfo;
-    int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
-    recorderInfo.url = "fd://" + std::to_string(outputFd);
-    recorderInfo.fileFormat = "mp4";
-    SetConfig(recorderInfo);
-    std::shared_ptr<ScreenCaptureCallBack> callbackObj = std::make_shared<TestScreenCaptureCallbackTest>();
-    ScreenCaptureContentFilter contentFilter;
-    shared_ptr<AudioCapturerWrapper> audioCapturerWrapper =
-        make_shared<AudioCapturerWrapper>(config_.audioInfo.innerCapInfo, callbackObj, string("name1"), contentFilter);
     OHOS::AudioStandard::AppInfo appInfo;
     appInfo.appTokenId = IPCSkeleton::GetCallingTokenID();
     appInfo.appFullTokenId = IPCSkeleton::GetCallingFullTokenID();
     appInfo.appUid = IPCSkeleton::GetCallingUid();
     appInfo.appPid = IPCSkeleton::GetCallingPid();
     audioCapturerWrapper->Start(appInfo);
-    contentFilter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
+
+    ScreenCaptureContentFilter contentFilter;
+    if (fdp.ConsumeBool()) {
+        contentFilter.filteredAudioContents.insert(
+            AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO);
+    }
+    if (fdp.ConsumeBool()) {
+        contentFilter.filteredAudioContents.insert(
+            AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
+    }
     audioCapturerWrapper->UpdateAudioCapturerConfig(contentFilter);
     audioCapturerWrapper->GetAudioCapturerState();
-    audioCapturerWrapper->PartiallyPrintLog(1, "CaptureAudio read audio buffer failed ");
+    int32_t logLevel = fdp.ConsumeIntegralInRange<int32_t>(0, 1);
+    audioCapturerWrapper->PartiallyPrintLog(logLevel, "CaptureAudio read audio buffer failed ");
     audioCapturerWrapper->SetIsMute(GetData<bool>());
     audioCapturerWrapper->UseUpAllLeftBufferUntil(GetData<int64_t>());
     shared_ptr<CacheBuffer> cacheBuf;
@@ -124,12 +181,37 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     audioCapturerWrapper->Start(appInfo);
     audioCapturerWrapper->ReleaseAudioBuffer();
     audioCapturerWrapper->Stop();
+}
+
+bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uint8_t *data, size_t size)
+{
+    if (data == nullptr || size < 2 * sizeof(int32_t)) {  // 2 input params
+        return false;
+    }
+    FuzzedDataProvider fdp(data, size);
+    g_baseFuzzData = data;
+    g_baseFuzzSize = size;
+    g_baseFuzzPos = 0;
+    RecorderInfo recorderInfo;
+    int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
+    if (outputFd < 0) {
+        return false;
+    }
+    recorderInfo.url = "fd://" + std::to_string(outputFd);
+    recorderInfo.fileFormat = "mp4";
+    SetConfig(recorderInfo, fdp);
+    std::shared_ptr<ScreenCaptureCallBack> callbackObj = std::make_shared<TestScreenCaptureCallbackTest>();
+    ScreenCaptureContentFilter contentFilter;
+    std::string capturerName = fdp.ConsumeRandomLengthString(64);
+    shared_ptr<AudioCapturerWrapper> audioCapturerWrapper =
+        make_shared<AudioCapturerWrapper>(config_.audioInfo.innerCapInfo, callbackObj, std::move(capturerName),
+            contentFilter);
+    TestCapturerWrapperOperations(audioCapturerWrapper, fdp);
     close(outputFd);
     return true;
 }
 
 } // namespace Media
-
 
 bool FuzzTestScreenAudioCapturerWrapper(uint8_t *data, size_t size)
 {

@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_log.h"
@@ -83,42 +84,38 @@ void SetConfig(OH_AVScreenCaptureConfig &config)
     };
 }
 
-bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data, size_t size)
+void ScreenCaptureDataTypeNdkFuzzer::ApplyDataTypeConfig(
+    OH_AVScreenCaptureConfig &config, FuzzedDataProvider &fdp)
 {
-    if (data == nullptr || size < sizeof(OH_DataType)) {
-        return false;
-    }
-    screenCapture = OH_AVScreenCapture_Create();
-
-    OH_AVScreenCaptureConfig config;
-    SetConfig(config);
     constexpr int32_t dataTypeList = 4;
     constexpr int32_t dataTypeCaptureFile = 2;
-    constexpr uint32_t recorderTime = 3;
     const OH_DataType dataType_[dataTypeList] {
         OH_ORIGINAL_STREAM,
         OH_ENCODED_STREAM,
         OH_CAPTURE_FILE,
         OH_INVAILD
     };
-    int32_t datatypesubscript = (static_cast<int32_t>(*data)) % (dataTypeList);
+    int32_t datatypesubscript = fdp.ConsumeIntegralInRange<uint32_t>(0, dataTypeList - 1);
     MEDIA_LOGI("FuzzTest ScreenCaptureDataTypeNdkFuzzer datatypesubscript: %{public}d ", datatypesubscript);
 
     OH_RecorderInfo recorderInfo;
     const std::string screenCaptureRoot = "/data/test/media/";
-    int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_ndk_datatype_file_01.mp4").c_str(),
+    int32_t outputFd = open((screenCaptureRoot + "screen_capture_fuzz_datatype_file_01.mp4").c_str(),
         O_RDWR | O_CREAT, 0777);
     std::string fileUrl = "fd://" + to_string(outputFd);
     recorderInfo.url = const_cast<char *>(fileUrl.c_str());
     recorderInfo.fileFormat = OH_ContainerFormatType::CFT_MPEG_4;
-    
+
     if (datatypesubscript == dataTypeCaptureFile) {
         config.dataType = dataType_[datatypesubscript];
         config.recorderInfo = recorderInfo;
     } else {
         config.dataType = dataType_[datatypesubscript];
     }
+}
 
+void ScreenCaptureDataTypeNdkFuzzer::RunCaptureSession(OH_AVScreenCaptureConfig &config)
+{
     OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
     OH_AVScreenCapture_SetCanvasRotation(screenCapture, true);
     OH_AVScreenCaptureCallback callback;
@@ -128,9 +125,24 @@ bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data,
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
+}
+
+bool ScreenCaptureDataTypeNdkFuzzer::FuzzScreenCaptureDataTypeNdk(uint8_t *data, size_t size)
+{
+    if (data == nullptr || size < sizeof(OH_DataType)) {
+        return false;
+    }
+    screenCapture = OH_AVScreenCapture_Create();
+
+    FuzzedDataProvider fdp(data, size);
+    OH_AVScreenCaptureConfig config;
+    SetConfig(config);
+    ApplyDataTypeConfig(config, fdp);
+    RunCaptureSession(config);
     return true;
 }
 } // namespace Media

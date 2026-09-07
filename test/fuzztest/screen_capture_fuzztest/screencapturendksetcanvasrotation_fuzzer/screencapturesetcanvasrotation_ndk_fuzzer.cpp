@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -71,13 +72,13 @@ bool ScreenCaptureSetCanvasRotationNdkFuzzer::FuzzScreenCaptureSetCanvasRotation
     if (data == nullptr || size < sizeof(bool)) {
         return false;
     }
+    FuzzedDataProvider fdp(data, size);
     screenCapture = OH_AVScreenCapture_Create();
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
 
-    OH_AVScreenCapture_SetCanvasRotation(screenCapture, *reinterpret_cast<bool *>(data));
+    OH_AVScreenCapture_SetCanvasRotation(screenCapture, fdp.ConsumeBool());
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;
@@ -85,7 +86,8 @@ bool ScreenCaptureSetCanvasRotationNdkFuzzer::FuzzScreenCaptureSetCanvasRotation
     OH_AVScreenCapture_SetCallback(screenCapture, callback);
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;

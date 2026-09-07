@@ -15,6 +15,8 @@
 
 #include <cmath>
 #include <iostream>
+#include <memory>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -70,16 +72,19 @@ bool ScreenCaptureAcquireAudioBufferNdkFuzzer::FuzzScreenCaptureAcquireAudioBuff
     if (data == nullptr) {
         return false;
     }
+    FuzzedDataProvider fdp(data, size);
     screenCapture = OH_AVScreenCapture_Create();
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t audioSourceTypesList = 5;
-    OH_AudioBuffer *audioBuffer = static_cast<OH_AudioBuffer*>(malloc(sizeof(OH_AudioBuffer)));
-    if (audioBuffer == nullptr) {
+    OH_AudioBuffer* rawBuffer = static_cast<OH_AudioBuffer*>(malloc(sizeof(OH_AudioBuffer)));
+    if (rawBuffer == nullptr) {
         cout << "audio buffer is nullptr" << endl;
         return false;
     }
+    std::unique_ptr<OH_AudioBuffer, decltype(&free)> audioBuffer(rawBuffer, &free);
+
     const OH_AudioCaptureSourceType audioSourceType[audioSourceTypesList] {
         OH_SOURCE_INVALID,
         OH_SOURCE_DEFAULT,
@@ -87,13 +92,13 @@ bool ScreenCaptureAcquireAudioBufferNdkFuzzer::FuzzScreenCaptureAcquireAudioBuff
         OH_ALL_PLAYBACK,
         OH_APP_PLAYBACK,
     };
-    int32_t asourcesubscript = (static_cast<int32_t>(*data)) % (audioSourceTypesList);
-    OH_AudioCaptureSourceType type = audioSourceType[asourcesubscript];
+    OH_AudioCaptureSourceType type = audioSourceType[fdp.ConsumeIntegralInRange<uint32_t>(0, audioSourceTypesList - 1)];
 
-    OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, true);
+    OH_AVScreenCapture_SetMicrophoneEnabled(screenCapture, fdp.ConsumeBool());
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    OH_AVScreenCapture_AcquireAudioBuffer(screenCapture, &audioBuffer, type);
+    OH_AudioBuffer *rawAudioBuffer = audioBuffer.get();
+    OH_AVScreenCapture_AcquireAudioBuffer(screenCapture, &rawAudioBuffer, type);
     OH_AVScreenCapture_ReleaseAudioBuffer(screenCapture, type);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);

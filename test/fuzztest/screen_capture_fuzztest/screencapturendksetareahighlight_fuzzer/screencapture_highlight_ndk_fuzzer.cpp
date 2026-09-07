@@ -84,7 +84,7 @@ bool ScreenCaptureSetAreaHighlightNdkFuzzer::FuzzScreenCaptureSetAreahighlightNd
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3000;
+    
     OH_AVScreenCaptureHighlightConfig highlightConfig;
     highlightConfig.mode = OH_HIGHLIGHT_MODE_CLOSED;
     highlightConfig.lineThickness = GetData<uint32_t>() % MAX_LINE_THICKNESS + MIN_LINE_THICKNESS;
@@ -108,7 +108,8 @@ bool ScreenCaptureSetAreaHighlightNdkFuzzer::FuzzScreenCaptureSetAreahighlightNd
     OH_AVScreenCapture_ExcludePickerWindows(screenCapture, excludedWindows.data(), excludedWindows.size());
 
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_PresentPicker(screenCapture);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);

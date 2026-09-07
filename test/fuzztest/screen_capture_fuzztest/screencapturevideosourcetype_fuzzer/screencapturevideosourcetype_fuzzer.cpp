@@ -22,6 +22,7 @@
 #include "directory_ex.h"
 #include "screen_capture.h"
 #include "screencapturevideosourcetype_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -78,14 +79,14 @@ bool ScreenCaptureVideoSourceTypeFuzzer::FuzzScreenCaptureVideoSourceType(uint8_
     AVScreenCaptureConfig config;
     SetConfig(config);
     constexpr int32_t videoSourceTypeList = 4;
-    constexpr uint32_t recorderTime = 3;
     const VideoSourceType videoSourceType[videoSourceTypeList] {
         VIDEO_SOURCE_SURFACE_YUV,
         VIDEO_SOURCE_SURFACE_ES,
         VIDEO_SOURCE_SURFACE_RGBA,
         VIDEO_SOURCE_BUTT
     };
-    int32_t vsourcesubscript = abs(*reinterpret_cast<int32_t *>(data) % (videoSourceTypeList));
+    FuzzedDataProvider fdp(data, size);
+    int32_t vsourcesubscript = fdp.ConsumeIntegralInRange<uint32_t>(0, videoSourceTypeList - 1);
     config.videoInfo.videoCapInfo.videoSource = videoSourceType[vsourcesubscript];
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
@@ -95,7 +96,8 @@ bool ScreenCaptureVideoSourceTypeFuzzer::FuzzScreenCaptureVideoSourceType(uint8_
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

@@ -21,6 +21,7 @@
 #include "directory_ex.h"
 #include "screen_capture.h"
 #include "screencaptureshowcursor_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -76,15 +77,16 @@ bool ScreenCaptureShowCursorFuzzer::FuzzScreenCaptureShowCursor(uint8_t *data, s
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
 
+    FuzzedDataProvider fdp(data, size);
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
-    TestScreenCapture::ShowCursor(*reinterpret_cast<bool *>(data));
+    TestScreenCapture::ShowCursor(fdp.ConsumeBool());
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

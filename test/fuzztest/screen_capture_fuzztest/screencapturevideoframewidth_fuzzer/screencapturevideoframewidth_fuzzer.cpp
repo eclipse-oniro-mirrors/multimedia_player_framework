@@ -21,6 +21,7 @@
 #include "directory_ex.h"
 #include "screen_capture.h"
 #include "screencapturevideoframewidth_fuzzer.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -76,8 +77,9 @@ bool ScreenCaptureVideoFrameWidthFuzzer::FuzzScreenCaptureVideoFrameWidth(uint8_
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
-    config.videoInfo.videoCapInfo.videoFrameWidth = *reinterpret_cast<int32_t *>(data);
+    
+    FuzzedDataProvider fdp(data, size);
+    config.videoInfo.videoCapInfo.videoFrameWidth = fdp.ConsumeIntegral<uint32_t>();
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
@@ -86,7 +88,8 @@ bool ScreenCaptureVideoFrameWidthFuzzer::FuzzScreenCaptureVideoFrameWidth(uint8_
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

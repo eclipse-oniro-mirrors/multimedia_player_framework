@@ -23,6 +23,7 @@
 #include <climits>
 #include <cstdio>
 #include <cstdlib>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "test_ndk_screen_capture.h"
 
 #define FUZZ_PROJECT_NAME "screencapturedatatype_ndk_fuzzer"
@@ -33,6 +34,8 @@ class ScreenCaptureDataTypeNdkFuzzer : public TestNdkScreenCapture {
 public:
     ScreenCaptureDataTypeNdkFuzzer();
     ~ScreenCaptureDataTypeNdkFuzzer();
+    void ApplyDataTypeConfig(OH_AVScreenCaptureConfig &config, FuzzedDataProvider &fdp);
+    void RunCaptureSession(OH_AVScreenCaptureConfig &config);
     bool FuzzScreenCaptureDataTypeNdk(uint8_t *data, size_t size);
     OH_AVScreenCapture* screenCapture = nullptr;
     std::shared_ptr<TestScreenCaptureNdkCallback> screenCaptureCb = nullptr;

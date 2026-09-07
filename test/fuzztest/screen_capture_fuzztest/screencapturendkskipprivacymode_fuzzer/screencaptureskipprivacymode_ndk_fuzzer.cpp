@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -71,13 +72,13 @@ bool ScreenCaptureSkipPrivacyModeNdkFuzzer::FuzzScreenCaptureSkipPrivacyModeNdk(
     if (data == nullptr || size < sizeof(int32_t)) {
         return false;
     }
+    FuzzedDataProvider fdp(data, size);
     screenCapture = OH_AVScreenCapture_Create();
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
     std::vector<int32_t> windowIDsVec;
-    windowIDsVec.push_back(*reinterpret_cast<int32_t *>(data));
+    windowIDsVec.push_back(fdp.ConsumeIntegral<int32_t>());
     OH_AVScreenCaptureCallback callback;
     callback.onError = TestScreenCaptureNdkCallback::OnError;
     callback.onAudioBufferAvailable = TestScreenCaptureNdkCallback::OnAudioBufferAvailable;
@@ -86,7 +87,8 @@ bool ScreenCaptureSkipPrivacyModeNdkFuzzer::FuzzScreenCaptureSkipPrivacyModeNdk(
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
     OH_AVScreenCapture_SkipPrivacyMode(screenCapture, &windowIDsVec[0], static_cast<int32_t>(windowIDsVec.size()));
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;

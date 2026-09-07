@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_log.h"
@@ -93,9 +94,8 @@ bool ScreenCaptureVideoFramerateFileNdkFuzzer::FuzzScreenCaptureVideoFramerateFi
 
     OH_AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
-
-    int32_t randomFramerate = *reinterpret_cast<int32_t *>(data);
+    FuzzedDataProvider fdp(data, size);
+    uint32_t randomFramerate = fdp.ConsumeIntegralInRange<uint32_t>(0, 240);
     MEDIA_LOGI("FuzzTest ScreenCaptureVideoFramerateFileNdkFuzzer randomFramerate: %{public}d ", randomFramerate);
     config.videoInfo.videoEncInfo.videoFrameRate = randomFramerate;
 
@@ -110,7 +110,8 @@ bool ScreenCaptureVideoFramerateFileNdkFuzzer::FuzzScreenCaptureVideoFramerateFi
 
     OH_AVScreenCapture_Init(screenCapture, config);
     OH_AVScreenCapture_StartScreenCapture(screenCapture);
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     OH_AVScreenCapture_StopScreenCapture(screenCapture);
     OH_AVScreenCapture_Release(screenCapture);
     return true;

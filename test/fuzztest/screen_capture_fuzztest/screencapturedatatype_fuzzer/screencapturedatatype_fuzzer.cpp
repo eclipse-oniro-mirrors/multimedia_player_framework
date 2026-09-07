@@ -15,6 +15,8 @@
 
 #include <cmath>
 #include <iostream>
+#include <unistd.h>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_log.h"
@@ -96,15 +98,15 @@ bool ScreenCaptureDataTypeFuzzer::FuzzScreenCaptureDataType(uint8_t *data, size_
     SetConfig(config);
     constexpr int32_t dataTypeList = 4;
     constexpr int32_t dataTypeCaptureFile = 2;
-    constexpr uint32_t recorderTime = 3;
     const DataType dataType_[dataTypeList] {
         ORIGINAL_STREAM,
         ENCODED_STREAM,
         CAPTURE_FILE,
         INVAILD
     };
-    int32_t datatypesubscript = (static_cast<int32_t>(*data)) % (dataTypeList);
-    MEDIA_LOGI("FuzzTest ScreenCaptureDataTypeFuzzer datatypesubscript: %{public}d ", datatypesubscript);
+    FuzzedDataProvider fdp(data, size);
+    uint32_t datatypesubscript = fdp.ConsumeIntegralInRange<uint32_t>(0, dataTypeList - 1);
+    MEDIA_LOGI("FuzzTest ScreenCaptureDataTypeFuzzer datatypesubscript: %{public}u ", datatypesubscript);
     if (datatypesubscript == dataTypeCaptureFile) {
         config.dataType = dataType_[datatypesubscript];
         RecorderInfo recorderInfo;
@@ -125,7 +127,8 @@ bool ScreenCaptureDataTypeFuzzer::FuzzScreenCaptureDataType(uint8_t *data, size_
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    sleep(recorderTime);
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

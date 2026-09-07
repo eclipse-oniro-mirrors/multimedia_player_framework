@@ -15,6 +15,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <fuzzer/FuzzedDataProvider.h>
 #include "aw_common.h"
 #include "string_ex.h"
 #include "media_errors.h"
@@ -76,7 +77,6 @@ bool ScreenCaptureResizeCanvasFuzzer::FuzzScreenCaptureResizeCanvas(uint8_t *dat
 
     AVScreenCaptureConfig config;
     SetConfig(config);
-    constexpr uint32_t recorderTime = 3;
 
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackobj
         = std::make_shared<TestScreenCaptureCallbackTest>();
@@ -84,9 +84,11 @@ bool ScreenCaptureResizeCanvasFuzzer::FuzzScreenCaptureResizeCanvas(uint8_t *dat
     TestScreenCapture::SetScreenCaptureCallback(callbackobj);
     TestScreenCapture::Init(config);
     TestScreenCapture::StartScreenCapture();
-    TestScreenCapture::ResizeCanvas(*reinterpret_cast<int32_t *>(data),
-        *reinterpret_cast<int32_t *>(data + sizeof(int32_t)));
-    sleep(recorderTime);
+    FuzzedDataProvider fdp(data, size);
+    TestScreenCapture::ResizeCanvas(fdp.ConsumeIntegral<int32_t>(),
+        fdp.ConsumeIntegral<int32_t>());
+    constexpr uint32_t recorderTime = 300000;
+    usleep(recorderTime);
     TestScreenCapture::StopScreenCapture();
     TestScreenCapture::Release();
     return true;

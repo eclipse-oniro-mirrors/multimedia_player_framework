@@ -23,6 +23,7 @@
 #include "screencaptureserverstartcase_fuzzer.h"
 #include "i_standard_screen_capture_service.h"
 #include "screen_capture_server.h"
+#include <fuzzer/FuzzedDataProvider.h>
 
 using namespace std;
 using namespace OHOS;
@@ -87,6 +88,7 @@ bool ScreenCaptureServerStartCaseFuzzer::FuzzScreenCaptureServerStartCase(uint8_
     if (data == nullptr || size < 2 * sizeof(int32_t)) {
         return false;
     }
+    FuzzedDataProvider fdp(data, size);
     auto screenCaptureServer_ = MakeScreenCaptureServerShared();
     if (!screenCaptureServer_) {
         return false;
@@ -106,8 +108,9 @@ bool ScreenCaptureServerStartCaseFuzzer::FuzzScreenCaptureServerStartCase(uint8_
     screenCaptureServer_->SyncAudioCaptures();
     std::shared_ptr<TestScreenCaptureCallbackTest> callbackObj = std::make_shared<TestScreenCaptureCallbackTest>();
     TestScreenCapture::SetScreenCaptureCallback(callbackObj);
-    screenCaptureServer_->ResizeCanvas(*reinterpret_cast<int32_t *>(data),
-        *reinterpret_cast<int32_t *>(data + sizeof(int32_t)));
+    int32_t width = fdp.ConsumeIntegral<int32_t>();
+    int32_t height = fdp.ConsumeIntegral<int32_t>();
+    screenCaptureServer_->ResizeCanvas(width, height);
     screenCaptureServer_->StopScreenCapture();
     screenCaptureServer_->Release();
     close(outputFd);
