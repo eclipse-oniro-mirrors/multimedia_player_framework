@@ -13,9 +13,9 @@
  * limitations under the License.
  */
 
-#include "screen_capture_server_function_unittest.h"
-#include "screen_capture_monitor_server.h"
 #include "mock_screen_capture_monitor_listener.h"
+#include "screen_capture_monitor_server.h"
+#include "screen_capture_server_function_unittest.h"
 
 using namespace testing::ext;
 using namespace OHOS::Media;

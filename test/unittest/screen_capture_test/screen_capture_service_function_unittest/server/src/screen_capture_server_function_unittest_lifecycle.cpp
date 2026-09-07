@@ -215,5 +215,31 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_SurfaceCbNotNull_B2, 
     EXPECT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
 }
 
+// StartScreenCaptureFile: dataType != CAPTURE_FILE -> MSERR_INVALID_OPERATION (L1414)
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureFile_NotCaptureFile_B2, TestSize.Level2)
+{
+    SetValidConfig();
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    EXPECT_EQ(screenCaptureServer_->StartScreenCaptureFile(), MSERR_INVALID_OPERATION);
+}
+
+// StartScreenCaptureStream: dataType != ORIGINAL_STREAM -> MSERR_INVALID_OPERATION (L1402)
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureStream_NotOriginalStream_B2, TestSize.Level2)
+{
+    SetValidConfig();
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    EXPECT_EQ(screenCaptureServer_->StartScreenCaptureStream(), MSERR_INVALID_OPERATION);
+}
+
+// StartScreenCaptureFile: outputFd_ invalid -> InitRecorder fails (MSERR_INVALID_FD)
+// before reaching display/SyncAudioCaptures (L1418)
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureFile_InvalidFd_B2, TestSize.Level2)
+{
+    SetValidConfig();
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    screenCaptureServer_->outputFd_ = -1;
+    EXPECT_EQ(screenCaptureServer_->StartScreenCaptureFile(), MSERR_INVALID_FD);
+}
+
 } // namespace Media
 } // namespace OHOS

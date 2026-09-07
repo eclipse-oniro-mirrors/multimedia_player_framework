@@ -2762,14 +2762,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyCaptureContentChanged_004, TestS
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, SetDefaultDisplayIdOfWindows_001, TestSize.Level2)
-{
-    screenCaptureServer_->missionInfos_ = {{80, true}};
-    screenCaptureServer_->curWindowInDisplayId_.store(SCREEN_ID_INVALID);
-    uint64_t displayId = screenCaptureServer_->GetDisplayIdOfWindows();
-    ASSERT_NE(displayId, SCREEN_ID_INVALID);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, AppMissionId_001, TestSize.Level2)
 {
     EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 0);

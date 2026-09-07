@@ -382,5 +382,48 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopMicAudio_NotRecording_B1, TestSize
     screenCaptureServer_->micAudioCapture_ = nullptr;
 }
 
+// ===================== ExcludeContent (L2933-2961) =====================
+
+/**
+ * @tc.name: ExcludeContent_NotAlive_001
+ * @tc.desc: ExcludeContent rejected when capture is not alive (L2936)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_NotAlive_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
+    ScreenCaptureContentFilter filter;
+    EXPECT_EQ(screenCaptureServer_->ExcludeContent(filter), MSERR_INVALID_OPERATION);
+}
+
+/**
+ * @tc.name: ExcludeContent_AliveNotActive_NoInner_001
+ * @tc.desc: ExcludeContent alive but not active, innerAudioCapture_ null -> MSERR_OK (L2940 false, L2947 false)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_AliveNotActive_NoInner_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->innerAudioCapture_ = nullptr;
+    ScreenCaptureContentFilter filter;
+    filter.windowIDsVec = {1, 2};
+    EXPECT_EQ(screenCaptureServer_->ExcludeContent(filter), MSERR_OK);
+    EXPECT_EQ(screenCaptureServer_->contentFilter_.windowIDsVec, filter.windowIDsVec);
+}
+
+/**
+ * @tc.name: ExcludeContent_InnerCaptureUpdateFails_001
+ * @tc.desc: ExcludeContent with innerAudioCapture_ set, UpdateAudioCapturerConfig fails (L2947 true, L2955 true)
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_InnerCaptureUpdateFails_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    auto wrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "InnAd", true);
+    ScreenCaptureContentFilter contentFilter;
+    EXPECT_EQ(screenCaptureServer_->ExcludeContent(contentFilter), MSERR_INVALID_VAL);
+    screenCaptureServer_->innerAudioCapture_ = nullptr;
+}
+
 } // namespace Media
 } // namespace OHOS

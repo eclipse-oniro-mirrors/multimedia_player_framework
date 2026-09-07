@@ -16,9 +16,9 @@
 #ifndef MOCK_SCREEN_CAPTURE_SERVICE_PROVIDERS_H
 #define MOCK_SCREEN_CAPTURE_SERVICE_PROVIDERS_H
 
+#include "screen_capture_service_providers.h"
 #include <gmock/gmock.h>
 #include <memory>
-#include "screen_capture_service_providers.h"
 
 namespace OHOS::Media {
 

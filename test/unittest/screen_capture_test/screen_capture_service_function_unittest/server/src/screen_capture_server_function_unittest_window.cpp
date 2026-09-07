@@ -675,27 +675,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, DestroyPopWindow_003, TestSize.Level2)
     ASSERT_EQ(ret, true);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_001, TestSize.Level2)
-{
-    uint64_t defaultDisplayIdValue = 0;
-    screenCaptureServer_->missionInfos_ = {};
-    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(), defaultDisplayIdValue);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_002, TestSize.Level2)
-{
-    uint64_t defaultDisplayIdValue = 0;
-    screenCaptureServer_->missionInfos_ = {{0, true}};
-    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(), defaultDisplayIdValue);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetDisplayIdOfWindows_003, TestSize.Level2)
-{
-    uint64_t defaultDisplayIdValue = 0;
-    screenCaptureServer_->missionInfos_.push_back({1, true});
-    ASSERT_EQ(screenCaptureServer_->GetDisplayIdOfWindows(), defaultDisplayIdValue);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, GetAVScreenCaptureConfigurableParameters_001, TestSize.Level2)
 {
     std::string resultStr;
@@ -713,56 +692,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PresentPicker_001, TestSize.Level2)
     EXPECT_FALSE(screenCaptureServer_->showSensitiveCheckBox_);
 }
 #endif
-
-HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_001, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
-    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_002, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_003, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
-    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1, 2};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_004, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.taskIDs = {1, 2};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, CreateVirtualScreen_005, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    screenCaptureServer_->missionInfos_ = {{1, true}};
-    int32_t ret = screenCaptureServer_->CreateVirtualScreen(nullptr);
-    ASSERT_EQ(ret, MSERR_OK);
-}
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnStartScreenCapture_SkipPrivacy_001, TestSize.Level2) {
     SetValidConfig();

@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#include <gtest/gtest.h>
 #include "screen_capture_server_function_unittest.h"
+#include <gtest/gtest.h>
 
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;

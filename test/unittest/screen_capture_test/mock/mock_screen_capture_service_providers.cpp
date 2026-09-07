@@ -14,9 +14,9 @@
  */
 
 #include "mock_screen_capture_service_providers.h"
+#include "account_observer.h"
 #include "recorder_server.h"
 #include "screen_capture_monitor_server.h"
-#include "account_observer.h"
 #ifdef SUPPORT_CALL
 #include "incall_observer.h"
 #endif
