@@ -70,7 +70,8 @@ public:
     std::string GetCurrentFilePath() const override;
 
 private:
-    int32_t InnerStart();
+    int32_t InnerStart(const std::string &url, const std::string &outputPath,
+                        const std::map<std::string, std::string> &header, const DownloadConfig &config);
     void StartMessageQueue();
     void StartSchedulerQueue();     // 任务调度队列
     int32_t ValidateUrl(const std::string &url);
@@ -92,7 +93,12 @@ private:
     void HandleTaskCanceled();      // 处理上层的取消操作
     void HandleTaskNetChanged();
 
-    bool IsNetworkAllowDownload(MediaSourceUtils::NetConnType newType);       // 检查当前网络允许下载
+    bool IsNetworkAllowDownload(const DownloadConfig &config, MediaSourceUtils::NetConnType newType);
+
+    DownloadConfig GetConfig() const;
+    std::string GetUrl() const;
+    std::string GetOutputPath() const;
+    std::map<std::string, std::string> GetHeader() const;
 
     uint64_t downloaderId_;
     std::atomic<uint64_t> taskId_;
@@ -100,6 +106,7 @@ private:
     std::string outputPath_;
     std::map<std::string, std::string> header_;
     DownloadConfig config_;
+    mutable std::mutex descriptorMutex_;   // 描述符锁: url_/outputPath_/header_/config_
     std::weak_ptr<DownloadCallback> callback_;
     std::atomic<DownloadState> state_;
     std::mutex progressMutex_;
@@ -112,8 +119,6 @@ private:
     std::mutex queueMutex_;     // 队列锁
     std::mutex taskMutex_;      // task_ 和 pendingTaskToRelease_ 保护锁
     std::queue<QueuedTaskInfo> taskQueue_;  // 任务队列
-    bool urlSet_;
-    bool pathSet_;
     std::shared_ptr<DownloadTask> pendingTaskToRelease_;        // 待释放任务
     std::atomic<int32_t> totalTaskCount_;
     std::atomic<int32_t> completedTaskCount_;

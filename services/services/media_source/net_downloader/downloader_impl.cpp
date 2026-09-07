@@ -107,8 +107,6 @@ DownloaderImpl::DownloaderImpl()
     : downloaderId_(g_downloaderIdCounter.fetch_add(1)),
       taskId_(INVALID_TASK_ID),
       state_(DOWNLOAD_IDLE),
-      urlSet_(false),
-      pathSet_(false),
       totalTaskCount_(0),
       completedTaskCount_(0)
 {
@@ -204,8 +202,10 @@ int32_t DownloaderImpl::SetUrl(const std::string &url)
         return ret;
     }
 
-    url_ = url;
-    urlSet_ = true;
+    {
+        std::lock_guard<std::mutex> lockDesc(descriptorMutex_);
+        url_ = url;
+    }
     MEDIA_LOGI("SetUrl success: %{private}s", url.c_str());
     return DOWNLOAD_RET_OK;
 }
@@ -225,8 +225,10 @@ int32_t DownloaderImpl::SetOutputPath(const std::string &path)
         return ret;
     }
 
-    outputPath_ = path;
-    pathSet_ = true;
+    {
+        std::lock_guard<std::mutex> lockDesc(descriptorMutex_);
+        outputPath_ = path;
+    }
     MEDIA_LOGI("SetOutputPath success: %{public}s", path.c_str());
     return DOWNLOAD_RET_OK;
 }
@@ -241,7 +243,10 @@ int32_t DownloaderImpl::SetHeader(const std::map<std::string, std::string> &head
         return DOWNLOAD_ERROR_INVALID_OPERATION;
     }
 
-    header_ = header;
+    {
+        std::lock_guard<std::mutex> lockDesc(descriptorMutex_);
+        header_ = header;
+    }
     MEDIA_LOGI("SetHeader success, count=%{public}zu", header.size());
     return DOWNLOAD_RET_OK;
 }
@@ -256,7 +261,10 @@ int32_t DownloaderImpl::SetConfig(const DownloadConfig &config)
         return DOWNLOAD_ERROR_INVALID_OPERATION;
     }
 
-    config_ = ClampConfig(config);
+    {
+        std::lock_guard<std::mutex> lockDesc(descriptorMutex_);
+        config_ = ClampConfig(config);
+    }
     MEDIA_LOGI("SetConfig success");
     return DOWNLOAD_RET_OK;
 }
@@ -344,7 +352,7 @@ int32_t DownloaderImpl::Start()
 
     // 获取当前网络类型
     auto networkType = MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
-    if (!IsNetworkAllowDownload(networkType)) {    // 当前网络不允许下载
+    if (!IsNetworkAllowDownload(GetConfig(), networkType)) {    // 当前网络不允许下载
         MEDIA_LOGE("Start failed: network not available");
         return DOWNLOAD_ERROR_NETWORK;
     }
@@ -354,15 +362,16 @@ int32_t DownloaderImpl::Start()
     return ProcessNextTaskInQueue();        // 进行任务调度
 }
 
-int32_t DownloaderImpl::InnerStart()
+int32_t DownloaderImpl::InnerStart(const std::string &url, const std::string &outputPath,
+    const std::map<std::string, std::string> &header, const DownloadConfig &config)
 {
     taskId_.store(g_taskIdCounter.fetch_add(1));
 
-    DownloadTaskInfo info = {taskId_.load(), url_, outputPath_, header_};
+    DownloadTaskInfo info = {taskId_.load(), url, outputPath, header};
     std::shared_ptr<DownloadTask> localTask;
     {
         std::lock_guard<std::mutex> lock(taskMutex_);
-        task_ = std::make_shared<DownloadTask>(info, config_, shared_from_this());
+        task_ = std::make_shared<DownloadTask>(info, config, shared_from_this());
         localTask = task_;
     }
 
@@ -462,9 +471,8 @@ int32_t DownloaderImpl::ProcessNextTaskInQueue()
         return DOWNLOAD_RET_OK;
     }
 
-    // 网络检查在出队和设状态之前 — 失败时任务保留在队列中，状态不变
     auto networkType = MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
-    if (!IsNetworkAllowDownload(networkType)) {    // 当前网络不允许下载
+    if (!IsNetworkAllowDownload(GetConfig(), networkType)) {
         MEDIA_LOGE("ProcessNextTaskInQueue failed: network not available");
         return DOWNLOAD_ERROR_NETWORK;
     }
@@ -472,18 +480,27 @@ int32_t DownloaderImpl::ProcessNextTaskInQueue()
     QueuedTaskInfo taskInfo = taskQueue_.front();
     taskQueue_.pop();
 
-    url_ = taskInfo.url;
-    outputPath_ = taskInfo.outputPath;
-    header_ = taskInfo.header;
-    config_ = taskInfo.config;
-    urlSet_ = true;
-    pathSet_ = true;
+    std::string urlCopy;
+    std::string pathCopy;
+    std::map<std::string, std::string> headerCopy;
+    DownloadConfig configCopy;
+    {
+        std::lock_guard<std::mutex> lockDesc(descriptorMutex_);
+        url_ = taskInfo.url;
+        outputPath_ = taskInfo.outputPath;
+        header_ = taskInfo.header;
+        config_ = taskInfo.config;
+        urlCopy = url_;
+        pathCopy = outputPath_;
+        headerCopy = header_;
+        configCopy = config_;
+    }
 
     MEDIA_LOGI("ProcessNextTaskInQueue: starting task, remaining=%{public}zu", taskQueue_.size());
 
     state_.store(DOWNLOAD_PREPARING);
 
-    return InnerStart();
+    return InnerStart(urlCopy, pathCopy, headerCopy, configCopy);
 }
 
 int32_t DownloaderImpl::Pause()
@@ -528,7 +545,7 @@ int32_t DownloaderImpl::Resume()
     }
 
     auto networkType = MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
-    if (!IsNetworkAllowDownload(networkType)) {
+    if (!IsNetworkAllowDownload(GetConfig(), networkType)) {
         MEDIA_LOGE("Resume failed: network not available, downloaderId=%{public}" PRIu64, downloaderId_);
         return DOWNLOAD_ERROR_NETWORK;
     }
@@ -653,11 +670,12 @@ int32_t DownloaderImpl::Release()
         }
     }
 
-    url_.clear();
-    outputPath_.clear();
-    header_.clear();
-    urlSet_ = false;
-    pathSet_ = false;
+    {
+        std::lock_guard<std::mutex> lockDesc(descriptorMutex_);
+        url_.clear();
+        outputPath_.clear();
+        header_.clear();
+    }
     taskId_.store(INVALID_TASK_ID);
     state_.store(DOWNLOAD_IDLE);
 
@@ -689,10 +707,33 @@ int32_t DownloaderImpl::GetProgress(DownloadProgress &progress)
     return DOWNLOAD_RET_OK;
 }
 
-std::string DownloaderImpl::GetCurrentFilePath() const      // 获取当前下载的fileTask路径
+std::string DownloaderImpl::GetCurrentFilePath() const
 {
-    std::lock_guard<std::mutex> lock(mutex_);
+    return GetOutputPath();
+}
+
+DownloadConfig DownloaderImpl::GetConfig() const
+{
+    std::lock_guard<std::mutex> lock(descriptorMutex_);
+    return config_;
+}
+
+std::string DownloaderImpl::GetUrl() const
+{
+    std::lock_guard<std::mutex> lock(descriptorMutex_);
+    return url_;
+}
+
+std::string DownloaderImpl::GetOutputPath() const
+{
+    std::lock_guard<std::mutex> lock(descriptorMutex_);
     return outputPath_;
+}
+
+std::map<std::string, std::string> DownloaderImpl::GetHeader() const
+{
+    std::lock_guard<std::mutex> lock(descriptorMutex_);
+    return header_;
 }
 
 void DownloaderImpl::NotifyStateChanged(DownloadState state)
@@ -857,7 +898,7 @@ void DownloaderImpl::HandleTaskCompleted()
     if (localPendingTask != nullptr) {
         Message fileMsg;
         fileMsg.type = MSG_FILE_COMPLETED;
-        fileMsg.fileUrl = url_;
+        fileMsg.fileUrl = GetUrl();
         fileMsg.downloadedSize = localPendingTask->GetProgress().downloadedSize;
         if (messageQueue_ != nullptr) {
             messageQueue_->PostMessage(fileMsg);
@@ -928,7 +969,7 @@ void DownloaderImpl::HandleTaskNetChanged() // 网络切换，暂停
     MEDIA_LOGI("HandleTaskNetChanged: enter");
     state_.store(DOWNLOAD_PAUSED);
     auto networkType = MediaSourceUtils::NetworkUtils::GetInstance().GetCurrentNetworkType();
-    if (!IsNetworkAllowDownload(networkType)) { // 当前网络不允许下载
+    if (!IsNetworkAllowDownload(GetConfig(), networkType)) { // 当前网络不允许下载
         MEDIA_LOGE("HandleTaskNetChanged: network not available");
         NotifyStateChanged(DOWNLOAD_PAUSED);
     } else {
@@ -937,26 +978,22 @@ void DownloaderImpl::HandleTaskNetChanged() // 网络切换，暂停
 }
 
 // 检查网络配置是否允许下载
-bool DownloaderImpl::IsNetworkAllowDownload(MediaSourceUtils::NetConnType newType)
+bool DownloaderImpl::IsNetworkAllowDownload(const DownloadConfig &config, MediaSourceUtils::NetConnType newType)
 {
-    MEDIA_LOGI("IsNetworkAllowDownload: network type: %{public}d", newType);
-    if (newType == MediaSourceUtils::NetConnType::NET_CONN_NONE
-        || newType == MediaSourceUtils::NetConnType::NET_CONN_UNKNOWN) {
-        MEDIA_LOGE("no network available");
-        return false;
+    MEDIA_LOGI("is allow download, network type: %{public}d, allow wifi: %{public}d, allow mobile data: %{public}d",
+        newType, static_cast<int32_t>(config.allowWifi), static_cast<int32_t>(config.allowMobileData));
+    switch (newType) {
+        case MediaSourceUtils::NetConnType::NET_CONN_NONE:
+        case MediaSourceUtils::NetConnType::NET_CONN_UNKNOWN:
+            return false;
+        case MediaSourceUtils::NetConnType::NET_CONN_WIFI:
+            return config.allowWifi;
+        case MediaSourceUtils::NetConnType::NET_CONN_CELLULAR:
+            return config.allowMobileData;
+        default:
+            MEDIA_LOGE("is allow download, network type not allowed: %{public}d", newType);
+            return false;
     }
-
-    if (config_.allowWifi && newType == MediaSourceUtils::NetConnType::NET_CONN_WIFI) {
-        MEDIA_LOGI("Start allowed: WiFi network");
-        return true;
-    }
-    if (config_.allowMobileData && newType == MediaSourceUtils::NetConnType::NET_CONN_CELLULAR) {
-        MEDIA_LOGI("Start allowed: Mobile data network");
-        return true;
-    }
-
-    MEDIA_LOGE("IsNetworkAllowDownload: network type %{public}d not allowed", newType);
-    return false;
 }
 
 } // namespace MediaDownload
