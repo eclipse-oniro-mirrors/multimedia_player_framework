@@ -166,6 +166,8 @@ public:
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
         int32_t &watermarkCount);
+    int32_t IsWatermarkSupported(bool &isWatermarkSupported);
+    int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
 
 private:
     int32_t SetAudVidFormat(

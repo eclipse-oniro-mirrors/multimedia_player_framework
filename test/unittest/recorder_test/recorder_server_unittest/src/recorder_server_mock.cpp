@@ -390,13 +390,6 @@ int32_t RecorderServerMock::GetStubFile()
     return MSERR_OK;
 }
 
-int32_t RecorderServerMock::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
-    int32_t &watermarkCount)
-{
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
-    return recorder_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
-}
-
 uint64_t RecorderServerMock::GetPts()
 {
     struct timespec timestamp = {0, 0};
@@ -669,4 +662,23 @@ int32_t RecorderServerMock::SetFormat(const std::string &recorderType, VideoReco
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetRecorderCallback failed ");
     cout << "set format finished" << endl;
     return ret;
+}
+
+int32_t RecorderServerMock::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+    int32_t &watermarkCount)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+}
+
+int32_t RecorderServerMock::IsWatermarkSupported(bool &isWatermarkSupported)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->IsWatermarkSupported(isWatermarkSupported);
+}
+
+int32_t RecorderServerMock::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetWatermark(waterMarkBuffer);
 }

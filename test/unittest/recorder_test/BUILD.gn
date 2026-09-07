@@ -225,7 +225,8 @@ ohos_unittest("recorder_server_unit_test") {
   if (player_framework_support_recorder) {
     sources = [
       "./recorder_server_unittest/src/recorder_server_mock.cpp",
-      "./recorder_server_unittest/src/recorder_server_unit_test.cpp"
+      "./recorder_server_unittest/src/recorder_server_unit_test.cpp",
+      "./recorder_server_unittest/src/hirecorder_watermark_test.cpp",
     ]
     external_deps += [
       "drivers_interface_display:libdisplay_composer_proxy_1.2",
@@ -237,6 +238,7 @@ ohos_unittest("recorder_server_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/histreamer/recorder:media_engine_histreamer_recorder",
   ]
 
   external_deps += [
@@ -263,6 +265,12 @@ ohos_unittest("recorder_server_unit_test") {
     "graphic_surface:sync_fence_static",
     "ability_runtime:app_manager",
     "av_codec:av_codec_client",
+    "audio_framework:audio_suite",
+    "graphic_2d:EGL",
+    "graphic_2d:GLESv3",
+    "graphic_2d:libnative_image",
+    "egl:libEGL",
+    "opengles:libGLES",
   ]
 
   if (defined(global_parts_info) &&

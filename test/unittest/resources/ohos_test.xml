@@ -335,6 +335,7 @@
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_011.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_012.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_013.mp4"/>
+            <option name="shell" value="touch /data/test/media/hirecorder_IsWatermarkSupported_002.mp4"/>
         </preparer>
     </target>
     <target name="screen_capture_native_unit_test">
