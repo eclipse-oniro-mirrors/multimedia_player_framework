@@ -190,6 +190,7 @@ struct ListenerRegisterParams {
     int32_t appPid = -1;
     std::string appBundleName;
     int32_t appIndex = 0;
+    int32_t appUserId = -1;
 };
 
 class ScreenCaptureListenerManager : public std::enable_shared_from_this<ScreenCaptureListenerManager> {
