@@ -85,6 +85,7 @@ public:
     void SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale);
     void SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode);
     void SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame);
+    void SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor);
     void GetMetaSurface(int32_t sourceId);
     void GetMaxAmplitude(int32_t &amplitude);
     void SetMetaConfigs(int32_t sourceId);

@@ -276,6 +276,8 @@ public:
         ohos::multimedia::media::AVRecorderConfig const& config);
     int32_t GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
         ohos::multimedia::media::AVRecorderConfig const& config);
+    void ParseOptionalVideoParams(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+        ohos::multimedia::media::AVRecorderConfig const& config);
     int32_t GetModeAndUrl(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
         ohos::multimedia::media::AVRecorderConfig const& config);
     bool GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
@@ -371,6 +373,7 @@ struct AVRecorderProfile {
     bool isHdr = false;
     bool enableTemporalScale = false;
     bool enableStableQualityMode = false;
+    int32_t sqrFactor = -1;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
 
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;

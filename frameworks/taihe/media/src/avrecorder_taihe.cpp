@@ -366,6 +366,9 @@ RetInfo AVRecorderImpl::SetProfile(std::shared_ptr<AVRecorderConfig> config)
         ret = recorder_->SetVideoEnableStableQualityMode(videoSourceID_, profile.enableStableQualityMode);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableStableQualityMode",
             "enableStableQualityMode"));
+
+        ret = recorder_->SetVideoSqrFactor(videoSourceID_, profile.sqrFactor);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoSqrFactor", "sqrFactor"));
     }
 
     if (config->metaSourceTypeVec.size() != 0 &&
@@ -581,6 +584,14 @@ int32_t AVRecorderImpl::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> 
     } else {
         asyncCtx->config_->profile.isHdr = false;
     }
+    ParseOptionalVideoParams(asyncCtx, config);
+    MediaProfileLog(true, asyncCtx->config_->profile);
+    return ret;
+}
+
+void AVRecorderImpl::ParseOptionalVideoParams(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
+    ohos::multimedia::media::AVRecorderConfig const& config)
+{
     if (config.profile.enableTemporalScale.has_value()) {
         asyncCtx->config_->profile.enableTemporalScale = config.profile.enableTemporalScale.value();
     } else {
@@ -593,8 +604,12 @@ int32_t AVRecorderImpl::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> 
         MEDIA_LOGI("avRecorderProfile enableStableQualityMode is not set.");
         asyncCtx->config_->profile.enableStableQualityMode = false;
     }
-    MediaProfileLog(true, asyncCtx->config_->profile);
-    return ret;
+    if (config.profile.sqrFactor.has_value()) {
+        asyncCtx->config_->profile.sqrFactor = config.profile.sqrFactor.value();
+    } else {
+        MEDIA_LOGI("avRecorderProfile sqrFactor is not set.");
+        asyncCtx->config_->profile.sqrFactor = -1;
+    }
 }
 
 int32_t AVRecorderImpl::GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat)

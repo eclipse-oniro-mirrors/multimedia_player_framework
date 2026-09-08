@@ -2425,5 +2425,114 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetUserMeta_013, TestSize.Level2)
     EXPECT_NE(MSERR_INVALID_OPERATION, recorderServer_->SetUserMeta(userMeta));
     close(g_videoRecorderConfig.outputFd);
 }
+
+/**
+ * @tc.name: recorder_SetVideoSqrFactor_001
+ * @tc.desc: SQR mode with sqrFactor=30, verify full recording flow succeeds
+ *           Covers: branch E (server success), branch F (SQR+sqrFactor>=0),
+ *           branch I (adapter Meta→Format conversion)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetVideoSqrFactor_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.enableStableQualityMode = true;
+    g_videoRecorderConfig.sqrFactor = 30;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+        "recorder_SetVideoSqrFactor_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Start());
+    sleep(RECORDER_TIME / 2);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Pause());
+    sleep(RECORDER_TIME / 2);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Resume());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
+    recorderServer_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetVideoSqrFactor_002
+ * @tc.desc: SQR mode with sqrFactor not set (default -1), verify SQR mode works without factor
+ *           Covers: branch G (SQR+sqrFactor<0, skip Tag set),
+ *           branch J (adapter skips conversion when Tag absent)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetVideoSqrFactor_002, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.enableStableQualityMode = true;
+    g_videoRecorderConfig.sqrFactor = -1;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+        "recorder_SetVideoSqrFactor_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Start());
+    sleep(RECORDER_TIME / 2);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
+    recorderServer_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetVideoSqrFactor_003
+ * @tc.desc: Non-SQR mode (VBR) with sqrFactor=30, verify factor is ignored
+ *           Covers: branch H (enableStableQualityMode=false→VBR, sqrFactor not set on Meta),
+ *           branch J (adapter skips conversion when Tag absent)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetVideoSqrFactor_003, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.enableStableQualityMode = false;
+    g_videoRecorderConfig.sqrFactor = 30;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
+        "recorder_SetVideoSqrFactor_003.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorderServer_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Start());
+    sleep(RECORDER_TIME / 2);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Stop(false));
+    recorderServer_->StopBuffer(PURE_VIDEO);
+    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetVideoSqrFactor_004
+ * @tc.desc: Call SetVideoSqrFactor in wrong state (before SetFormat), verify state check
+ *           Covers: branch A (status_ != REC_CONFIGURED → MSERR_INVALID_OPERATION)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_SetVideoSqrFactor_004, TestSize.Level2)
+{
+    int32_t videoSourceId = 0;
+    EXPECT_EQ(MSERR_OK, recorderServer_->SetVideoSource(VIDEO_SOURCE_SURFACE_YUV, videoSourceId));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorderServer_->SetVideoSqrFactor(videoSourceId, 30));
+    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+}
 } // namespace Media
 } // namespace OHOS

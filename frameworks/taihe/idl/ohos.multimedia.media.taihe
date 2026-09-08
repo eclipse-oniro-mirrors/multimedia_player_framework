@@ -1234,6 +1234,7 @@ struct AVRecorderProfile {
     isHdr: Optional<bool>;
     enableTemporalScale: Optional<bool>;
     enableStableQualityMode: Optional<bool>;
+    sqrFactor: Optional<i32>;
 }
 
 enum ScreenCaptureEvent: i32 {

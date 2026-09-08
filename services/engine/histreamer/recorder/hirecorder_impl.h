@@ -112,6 +112,7 @@ private:
     void ConfigureVideoEnableTemporalScale(const RecorderParam &recParam);
     void ConfigureVidEnableStableQualityMode(const RecorderParam &recParam);
     void ConfigureVidEnableBFrame(const RecorderParam &recParam);
+    void ConfigureVidSqrFactor(const RecorderParam &recParam);
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
     void ConfigureOutFd(const RecorderParam &recParam);
@@ -195,6 +196,7 @@ private:
     bool hasWatermark_ = false;
     bool enableStableQualityMode_ = false;
     bool enableBFrame_ = false;
+    int32_t sqrFactor_ = -1;
     bool enableStabilization_ = true;
 
     std::mutex stateMutex_;

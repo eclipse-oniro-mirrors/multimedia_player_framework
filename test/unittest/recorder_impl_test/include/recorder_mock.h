@@ -103,6 +103,7 @@ namespace RecorderTestParam {
         bool enableTemporalScale = false;
         bool enableStableQualityMode = false;
         bool enableBFrame = false;
+        int32_t sqrFactor = -1;
         float latitude = 30.0;
         float longitude = 60.0;
         std::string genre = "hi";

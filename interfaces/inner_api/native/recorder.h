@@ -580,6 +580,19 @@ public:
     virtual int32_t SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame) = 0;
 
     /**
+     * @brief Sets the video SQR factor for Hisilicon SQR algorithm optimization.
+     *
+     * This function must be called after {@link SetVideoSource} but before {@link Prepare}.
+     *
+     * @param sourceId Indicates the video source ID, which can be obtained from {@link SetVideoSource}.
+     * @param sqrFactor Indicates the SQR factor to set, range [0, 51], -1 means not set.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 1.0
+     * @version 1.0
+     */
+    virtual int32_t SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor) = 0;
+
+    /**
      * @brief Sets the width and height of the video to record.
      *
      * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.

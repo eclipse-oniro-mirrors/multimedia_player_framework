@@ -93,6 +93,7 @@ public:
     virtual int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale) = 0;
     virtual int32_t SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode) = 0;
     virtual int32_t SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame) = 0;
+    virtual int32_t SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor) = 0;
     virtual int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) = 0;
     virtual int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) = 0;
     virtual int32_t GetMaxAmplitude(int32_t &amplitude) = 0;
@@ -146,6 +147,7 @@ public:
         SET_VIDEO_ENABLE_TEMPORAL_SCALE,
         SET_VIDEO_ENABLE_STABLE_QUALITY_MODE,
         SET_VIDEO_ENABLE_B_FRAME,
+        SET_VIDEO_SQR_FACTOR,
 		GET_AUDIO_CAPTURER_CHANGE_INFO,
         GET_AVAILABLE_ENCODER,
         GET_MAX_AMPLITUDE,

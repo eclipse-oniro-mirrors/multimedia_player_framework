@@ -2213,6 +2213,10 @@ int32_t AVRecorderNapi::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> 
         MEDIA_LOGI("avRecorderProfile enableBFrame is not set.");
         profile.enableBFrame = false;
     }
+    if (!CommonNapi::GetPropertyInt32(env, item, "sqrFactor", profile.sqrFactor)) {
+        MEDIA_LOGI("avRecorderProfile sqrFactor is not set.");
+        profile.sqrFactor = -1;
+    }
     MediaProfileLog(true, profile);
     return ret;
 }
@@ -2512,6 +2516,41 @@ bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncC
     return true;
 }
 
+RetInfo AVRecorderNapi::SetVideoProfileConfig(const std::string &operation,
+    const AVRecorderProfile &profile, const std::string &state)
+{
+    int32_t ret = recorder_->SetVideoEncoder(videoSourceID_, profile.videoCodecFormat);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.videoCodec", state));
+
+    ret = recorder_->SetVideoSize(videoSourceID_, profile.videoFrameWidth, profile.videoFrameHeight);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation,
+        "config.profile.videoFrameWidth or config.profile.videoFrameHeight", state));
+
+    ret = recorder_->SetVideoFrameRate(videoSourceID_, profile.videoFrameRate);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.videoFrameRate", state));
+
+    ret = recorder_->SetVideoEncodingBitRate(videoSourceID_, profile.videoBitrate);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.videoBitrate", state));
+
+    ret = recorder_->SetVideoIsHdr(videoSourceID_, profile.isHdr);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.isHdr", state));
+
+    ret = recorder_->SetVideoEnableTemporalScale(videoSourceID_, profile.enableTemporalScale);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.enableTemporalScale", state));
+
+    ret = recorder_->SetVideoEnableStableQualityMode(videoSourceID_, profile.enableStableQualityMode);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        GetRetInfo(ret, operation, "config.profile.enableStableQualityMode", state));
+
+    ret = recorder_->SetVideoEnableBFrame(videoSourceID_, profile.enableBFrame);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.enableBFrame", state));
+
+    ret = recorder_->SetVideoSqrFactor(videoSourceID_, profile.sqrFactor);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.sqrFactor", state));
+
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
 RetInfo AVRecorderNapi::SetProfile(const std::string &operation, std::shared_ptr<AVRecorderConfig> config)
 {
     CHECK_AND_RETURN_RET(recorder_ != nullptr, GetRetInfo(MSERR_INVALID_OPERATION, "SetProfile", ""));
@@ -2543,31 +2582,10 @@ RetInfo AVRecorderNapi::SetProfile(const std::string &operation, std::shared_ptr
     }
 
     if (config->withVideo) {
-        ret = recorder_->SetVideoEncoder(videoSourceID_, profile.videoCodecFormat);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.videoCodec", state));
-
-        ret = recorder_->SetVideoSize(videoSourceID_, profile.videoFrameWidth, profile.videoFrameHeight);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation,
-            "config.profile.videoFrameWidth or config.profile.videoFrameHeight", state));
-
-        ret = recorder_->SetVideoFrameRate(videoSourceID_, profile.videoFrameRate);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.videoFrameRate", state));
-
-        ret = recorder_->SetVideoEncodingBitRate(videoSourceID_, profile.videoBitrate);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.videoBitrate", state));
-
-        ret = recorder_->SetVideoIsHdr(videoSourceID_, profile.isHdr);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.isHdr", state));
-
-        ret = recorder_->SetVideoEnableTemporalScale(videoSourceID_, profile.enableTemporalScale);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.enableTemporalScale", state));
-
-        ret = recorder_->SetVideoEnableStableQualityMode(videoSourceID_, profile.enableStableQualityMode);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK,
-            GetRetInfo(ret, operation, "config.profile.enableStableQualityMode", state));
-        
-        ret = recorder_->SetVideoEnableBFrame(videoSourceID_, profile.enableBFrame);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.enableBFrame", state));
+        RetInfo videoRet = SetVideoProfileConfig(operation, profile, state);
+        if (videoRet.first != MSERR_EXT_API9_OK) {
+            return videoRet;
+        }
     }
 
     if (config->metaSourceTypeVec.size() != 0 &&
@@ -2891,6 +2909,8 @@ napi_status MediaJsAVRecorderProfile::GetJsResult(napi_env env, napi_value &resu
     setRet = CommonNapi::SetPropertyInt32(env, result, "videoFrameHeight", value_->videoFrameHeight);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     setRet = CommonNapi::SetPropertyInt32(env, result, "videoFrameRate", value_->videoFrameRate);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, result, "sqrFactor", value_->sqrFactor);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     return ret;

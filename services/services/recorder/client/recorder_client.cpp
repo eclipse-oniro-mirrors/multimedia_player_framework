@@ -172,6 +172,15 @@ int32_t RecorderClient::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame
     return recorderProxy_->SetVideoEnableBFrame(sourceId, enableBFrame);
 }
 
+int32_t RecorderClient::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetVideoSqrFactor sourceId(%{public}d), sqrFactor(%{public}d)", sourceId, sqrFactor);
+    return recorderProxy_->SetVideoSqrFactor(sourceId, sqrFactor);
+}
+
 int32_t RecorderClient::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
     std::lock_guard<std::mutex> lock(mutex_);

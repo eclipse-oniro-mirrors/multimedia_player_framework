@@ -45,6 +45,7 @@ enum RecorderPublicParamType : uint32_t {
     VID_ENABLE_TEMPORAL_SCALE,
     VID_ENABLE_STABLE_QUALITY_MODE,
     VID_ENABLE_B_FRAME,
+    VID_SQR_FACTOR,
     VID_PUBLIC_PARAM_END,
     VID_ORIENTATION_HINT,
     // audio begin
@@ -141,6 +142,12 @@ struct VidEnableBFrame : public RecorderParam {
     explicit VidEnableBFrame(bool r)
         : RecorderParam(RecorderPublicParamType::VID_ENABLE_B_FRAME), enableBFrame(r) {}
     bool enableBFrame;
+};
+
+struct VidSqrFactor : public RecorderParam {
+    explicit VidSqrFactor(int32_t factor)
+        : RecorderParam(RecorderPublicParamType::VID_SQR_FACTOR), sqrFactor(factor) {}
+    int32_t sqrFactor;
 };
 
 struct CaptureRate : public RecorderParam {

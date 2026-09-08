@@ -334,6 +334,10 @@ void TestRecorder::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
 {
     recorder->SetVideoEnableBFrame(sourceId, enableBFrame);
 }
+void TestRecorder::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
+{
+    recorder->SetVideoSqrFactor(sourceId, sqrFactor);
+}
 void TestRecorder::GetMetaSurface(int32_t sourceId)
 {
     recorder->GetMetaSurface(sourceId);

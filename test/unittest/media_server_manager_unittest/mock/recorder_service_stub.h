@@ -64,6 +64,7 @@ public:
     MOCK_METHOD(int32_t, SetAudioChannels, (int32_t sourceId, int32_t num), (override));
     MOCK_METHOD(int32_t, SetAudioEncodingBitRate, (int32_t sourceId, int32_t bitRate), (override));
     MOCK_METHOD(int32_t, SetVideoEnableBFrame, (int32_t sourceId, bool enableBFrame), (override));
+    MOCK_METHOD(int32_t, SetVideoSqrFactor, (int32_t sourceId, int32_t sqrFactor), (override));
     MOCK_METHOD(int32_t, SetDataSource, (DataSourceType dataType, int32_t &sourceId), (override));
     MOCK_METHOD(int32_t, SetUserCustomInfo, (Meta &userCustomInfo), (override));
     MOCK_METHOD(int32_t, SetGenre, (std::string &genre), (override));

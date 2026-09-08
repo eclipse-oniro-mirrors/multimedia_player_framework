@@ -368,6 +368,26 @@ int32_t RecorderServer::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame
     return TransformEngineStatusCode(result.Value());
 }
 
+int32_t RecorderServer::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
+{
+    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoSqrFactor in, sourceId(%{public}d), "
+        "sqrFactor(%{public}d)", FAKE_POINTER(this), sourceId, sqrFactor);
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
+    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
+    config_.sqrFactor = sqrFactor;
+    VidSqrFactor vidSqrFactor(sqrFactor);
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return recorderEngine_->Configure(sourceId, vidSqrFactor);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
+
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
+    return TransformEngineStatusCode(result.Value());
+}
+
 int32_t RecorderServer::SetMetaSource(MetaSourceType source, int32_t &sourceId)
 {
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetMetaSource in, source(%{public}d), "
@@ -1152,6 +1172,7 @@ int32_t RecorderServer::DumpInfo(int32_t fd)
     dumpString += "RecorderServer enableTemporalScale is: " + std::to_string(config_.enableTemporalScale) + "\n";
     dumpString += "RecorderServer enableStableQualityMode is: " +
         std::to_string(config_.enableStableQualityMode) + "\n";
+    dumpString += "RecorderServer sqrFactor is: " + std::to_string(config_.sqrFactor) + "\n";
     dumpString += "RecorderServer maxDuration is: " + std::to_string(config_.maxDuration) + "\n";
     dumpString += "RecorderServer format is: " + std::to_string(config_.format) + "\n";
     dumpString += "RecorderServer maxFileSize is: " + std::to_string(config_.maxFileSize) + "\n";

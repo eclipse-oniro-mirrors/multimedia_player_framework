@@ -171,6 +171,7 @@ struct AVRecorderProfile {
     bool enableTemporalScale = false;
     bool enableStableQualityMode = false;
     bool enableBFrame = false;
+    int32_t sqrFactor = -1;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
 
     AacProfile aacProfile = AacProfile::AAC_LC;
@@ -436,6 +437,8 @@ private:
     RetInfo ConfigureUrl(const std::string &operation, std::shared_ptr<AVRecorderConfig> config);
     int32_t ConfigAVBufferMeta(std::shared_ptr<PixelMap> &pixelMap, std::shared_ptr<WatermarkConfig> &watermarkConfig,
         std::shared_ptr<Meta> &meta);
+    RetInfo SetVideoProfileConfig(const std::string &operation, const AVRecorderProfile &profile,
+        const std::string &state);
 
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;

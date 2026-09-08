@@ -1131,6 +1131,10 @@ void HiRecorderImpl::ConfigureVideo(const RecorderParam &recParam)
             ConfigureVidEnableBFrame(recParam);
             break;
         }
+        case RecorderPublicParamType::VID_SQR_FACTOR: {
+            ConfigureVidSqrFactor(recParam);
+            break;
+        }
         default:
             break;
     }
@@ -1175,6 +1179,10 @@ void HiRecorderImpl::ConfigureVidEncBitrateMode()
         FALSE_RETURN_MSG(vidBitRate != -1, "Get vidBitRate fail!");
         std::string vidEncParamValue = "video_encode_bitrate_mode=SQR:bitrate=" + std::to_string(vidBitRate);
         userMeta_->SetData("com.openharmony.encParam", vidEncParamValue);
+        if (sqrFactor_ >= 0) {
+            MEDIA_LOG_I("SetVideoSqrFactor: %{public}d", sqrFactor_);
+            videoEncFormat_->Set<Tag::VIDEO_ENCODER_SQR_FACTOR>(static_cast<uint32_t>(sqrFactor_));
+        }
     } else {
         MEDIA_LOG_I("enableStableQualityMode: false, VBR mode in!");
         videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
@@ -1245,6 +1253,12 @@ void HiRecorderImpl::ConfigureVidEnableBFrame(const RecorderParam &recParam)
     VidEnableBFrame vidEnableBFrame =
         static_cast<const VidEnableBFrame&>(recParam);
     enableBFrame_ = vidEnableBFrame.enableBFrame;
+}
+
+void HiRecorderImpl::ConfigureVidSqrFactor(const RecorderParam &recParam)
+{
+    VidSqrFactor vidSqrFactor = static_cast<const VidSqrFactor&>(recParam);
+    sqrFactor_ = vidSqrFactor.sqrFactor;
 }
 
 void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)
