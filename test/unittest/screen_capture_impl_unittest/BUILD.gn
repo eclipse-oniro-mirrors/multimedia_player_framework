@@ -103,7 +103,7 @@ ohos_unittest("screen_capture_impl_unittest") {
   ]
 
   if (player_framework_support_lowpower_av_sink && drivers_interface_lpplayer_flag) {
-    external_deps += [ "drivers_interface_lpplayer:liblow_power_player_stub_1.0" ]
+    external_deps += [ "drivers_interface_lpplayer:liblow_power_player_proxy_1.0" ]
   }
 
   if (player_framework_support_drm) {
