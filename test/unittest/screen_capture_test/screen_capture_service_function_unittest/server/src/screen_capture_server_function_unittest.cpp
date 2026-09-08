@@ -2573,7 +2573,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, BuildPickerParams_008, TestSize.Level2
 #endif
 #endif
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_001, TestSize.Level0)
+HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_001, TestSize.Level2)
 {
     std::vector<uint64_t> displayIds;
     std::vector<Rosen::ScreenId> mirrorIds;
@@ -2581,7 +2581,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_001, TestSize.Level0)
     EXPECT_EQ(ret, Rosen::DMError::DM_ERROR_INVALID_PARAM);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_002, TestSize.Level0)
+HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_002, TestSize.Level2)
 {
     std::vector<uint64_t> displayIds{0, 1};
     std::vector<Rosen::ScreenId> mirrorIds;
@@ -2589,7 +2589,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateMirror_002, TestSize.Level0)
     EXPECT_EQ(ret, Rosen::DMError::DM_ERROR_INVALID_PARAM);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_EmptyDisplayIds_001, TestSize.Level0)
+HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_EmptyDisplayIds_001, TestSize.Level2)
 {
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     screenCaptureServer_->displayIds_ = {99999};
@@ -2602,7 +2602,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_EmptyDisplayI
     EXPECT_NE(ret, MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirror_InvalidScreenId_001, TestSize.Level0)
+HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirror_InvalidScreenId_001, TestSize.Level2)
 {
     screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
     int32_t ret = screenCaptureServer_->MakeVirtualScreenMirror();
