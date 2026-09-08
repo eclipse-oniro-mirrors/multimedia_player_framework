@@ -164,62 +164,20 @@ int32_t HiRecorderImpl::SetVideoSource(VideoSourceType source, int32_t &sourceId
     FALSE_RETURN_V(videoCount_ < static_cast<uint32_t>(VIDEO_SOURCE_MAX_COUNT),
         (int32_t)Status::ERROR_INVALID_OPERATION);
     auto tempSourceId = SourceIdGenerator::GenerateVideoSourceId(videoCount_);
-    Status ret;
-    if (hasWatermark_ && (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV ||
-        source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA)) {
-        ret = SetVideoSourceWithWatermark(source);
-    } else if (!hasWatermark_ && (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV ||
-        source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA)) {
-        ret = SetVideoSourceSurfaceYuvOrRgba(source);
-    } else if (source == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
-        ret = SetVideoSourceSurfaceEs();
-    } else {
-        ret = Status::OK;
-    }
-    FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters videoEncoder to pipeline fail");
+
+    source_ = source;
+    videoSourceSet_ = true;
+    videoSourceIsYuv_ = (source == VideoSourceType::VIDEO_SOURCE_SURFACE_YUV ||
+                         source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA);
+    videoSourceIsRGBA_ = (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA);
+
     MEDIA_LOG_I("SetVideoSource success.");
     videoCount_++;
     videoSourceId_ = tempSourceId;
     sourceId = videoSourceId_;
     OnStateChanged(StateId::RECORDING_SETTING);
 
-    return (int32_t)ret;
-}
-
-Status HiRecorderImpl::SetVideoSourceWithWatermark(VideoSourceType source)
-{
-    MEDIA_LOG_I("SetVideoSource with watermark.");
-    FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, Status::ERROR_NULL_POINTER,
-        "Watermark filter is nullptr");
-    source_ = source;
-    return pipeline_->AddHeadFilters({waterMarkFilter_});
-}
-
-Status HiRecorderImpl::SetVideoSourceSurfaceYuvOrRgba(VideoSourceType source)
-{
-    MEDIA_LOG_I("SetVideoSource with yuv or rgba.");
-    videoSourceIsYuv_ = true;
-    if (!videoEncoderFilter_) {
-        videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
-            ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
-    }
-    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
-        "create videoEncoderFilter failed");
-    videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-    videoSourceIsRGBA_ = (source == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA);
-    return pipeline_->AddHeadFilters({videoEncoderFilter_});
-}
-
-Status HiRecorderImpl::SetVideoSourceSurfaceEs()
-{
-    MEDIA_LOG_I("SetVideoSource with es.");
-    videoSourceIsYuv_ = false;
-    videoSourceIsRGBA_ = false;
-    videoCaptureFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::VideoCaptureFilter>
-        ("videoEncoderFilter", Pipeline::FilterType::VIDEO_CAPTURE);
-    FALSE_RETURN_V_MSG_E(videoCaptureFilter_ != nullptr, Status::ERROR_NULL_POINTER,
-        "create videoCaptureFilter failed");
-    return pipeline_->AddHeadFilters({videoCaptureFilter_});
+    return (int32_t)Status::OK;
 }
 
 int32_t HiRecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
@@ -371,7 +329,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
 sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 {
     MEDIA_LOG_I("HiRecorderImpl GetSurface Enter.");
-    if (waterMarkFilter_) {
+    if (hasWatermark_ && !isHardWatermarkSupported_) {
         return GetSurfaceFromWaterMarkFilter();
     } else if (videoEncoderFilter_) {
         return GetSurfaceFromVideoEncoder();
@@ -385,8 +343,8 @@ sptr<Surface> HiRecorderImpl::GetSurface(int32_t sourceId)
 sptr<Surface> HiRecorderImpl::GetSurfaceFromWaterMarkFilter()
 {
     MEDIA_LOG_I("HiRecorderImpl Get Surface From WaterMarkFilter.");
-    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
-    FALSE_RETURN_V_MSG_E(filter != nullptr, nullptr, "filter is nullptr");
+    auto filter = GetWaterMarkFilter();
+    FALSE_RETURN_V_MSG_E(filter != nullptr, nullptr, "waterMarkFilter_ is null");
     producerSurface_ = filter->GetInputSurface();
     return producerSurface_;
 }
@@ -435,7 +393,8 @@ Status HiRecorderImpl::SetVideoEncoderSurface()
     MEDIA_LOG_I("GetSurface videoWidth:" PUBLIC_LOG_D32 " videoHeight:" PUBLIC_LOG_D32,
         videoWidth, videoHeight);
     Status ret = Status::OK;
-    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    auto filter = GetWaterMarkFilter();
+    FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_UNKNOWN, "waterMarkFilter_ is null");
     ret = filter->SetOutputSurface(encoderSurface, videoWidth, videoHeight, rotation_);
     return ret;
 }
@@ -448,18 +407,14 @@ int32_t HiRecorderImpl::Prepare()
         "The fd is invalid, fd: %{public}d, errno: %{public}d.", fd_, errno);
 
     int32_t result = MSERR_OK;
+    result = BuildPipeline();
+    FALSE_RETURN_V_MSG_E(result == MSERR_OK, result, "BuildPipeline fail");
     result = PrepareAudioCapture();
     FALSE_RETURN_V_MSG_E(result == MSERR_OK, MSERR_AUD_INIT_FAILED, "PrepareAudioCapture fail");
     result = PrepareAudioDataSource();
     FALSE_RETURN_V_MSG_E(result == MSERR_OK, MSERR_FRAMEWORK_ERROR, "PrepareAudioDataSource fail");
-    result = PrepareWatermark();
-    FALSE_RETURN_V_MSG_E(result == MSERR_OK, MSERR_FRAMEWORK_ERROR, "PrepareWatermark fail");
-    result = PrepareVideoEncoder();
-    FALSE_RETURN_V_MSG_E(result == MSERR_OK, result, "PrepareVideoEncoder fail");
     result = PrepareMetaData();
     FALSE_RETURN_V_MSG_E(result == MSERR_OK, result, "PrepareMetaData fail");
-    result = PrepareVideoCapture();
-    FALSE_RETURN_V_MSG_E(result == MSERR_OK, result, "PrepareVideoCapture fail");
     Status ret = pipeline_->Prepare();
     FALSE_RETURN_V_MSG_E(ret == Status::OK, MSERR_FRAMEWORK_ERROR, "Pipeline prepare fail");
     return MSERR_OK;
@@ -478,7 +433,7 @@ int32_t HiRecorderImpl::PrepareAudioCapture()
         audioCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
         capturerInfoChangeCallback_ = std::make_shared<CapturerInfoChangeCallback>(this);
         audioCaptureFilter_->SetAudioCaptureChangeCallback(capturerInfoChangeCallback_);
-        if (videoEncoderFilter_) {
+        if (hasWatermark_ || videoEncoderFilter_) {
             audioCaptureFilter_->SetWithVideo(true);
         } else {
             audioCaptureFilter_->SetWithVideo(false);
@@ -503,37 +458,183 @@ int32_t HiRecorderImpl::PrepareAudioDataSource()
     return MSERR_OK;
 }
 
-int32_t HiRecorderImpl::PrepareWatermark()
+int32_t HiRecorderImpl::BuildPipeline()
 {
-    MEDIA_LOG_I("HiRecorderImpl PrepareWatermark enter.");
-    if (waterMarkFilter_) {
-        auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
-        filter->Init(recorderEventReceiver_, recorderCallback_);
-        filter->SetAVRecorderMode();
+    MEDIA_LOG_I("BuildPipeline enter, hasWatermark_: %{public}d, videoSourceSet_: %{public}d",
+        hasWatermark_, videoSourceSet_);
+
+    if (!videoSourceSet_) {
+        MEDIA_LOG_I("No video source set, skip building video pipeline.");
+        return MSERR_OK;
     }
+
+    if (source_ == VideoSourceType::VIDEO_SOURCE_SURFACE_ES) {
+        return BuildEsPipeline();
+    }
+
+    if (source_ != VideoSourceType::VIDEO_SOURCE_SURFACE_YUV &&
+        source_ != VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA) {
+        return MSERR_OK;
+    }
+
+    if (hasWatermark_) {
+        return BuildWatermarkPipeline();
+    } else {
+        return BuildVideoPipeline();
+    }
+}
+
+int32_t HiRecorderImpl::BuildWatermarkPipeline()
+{
+    MEDIA_LOG_I("BuildWatermarkPipeline enter.");
+
+    bool isHardWatermarkSupported = false;
+    int32_t ret = IsWatermarkSupported(isHardWatermarkSupported);
+    if (ret != (int32_t)Status::OK) {
+        MEDIA_LOG_W("IsWatermarkSupported query failed, fallback to soft path");
+        isHardWatermarkSupported = false;
+    }
+
+    if (isHardWatermarkSupported && CheckHardWatermarkPositionViolation()) {
+        MEDIA_LOG_I("BuildWatermarkPipeline: watermark position violates hardware constraint, "
+            "fallback to soft path");
+        isHardWatermarkSupported = false;
+    }
+
+    isHardWatermarkSupported_ = isHardWatermarkSupported;
+
+    if (isHardWatermarkSupported_) {
+        MEDIA_LOG_I("BuildWatermarkPipeline: hardware watermark path");
+        return BuildHardWatermarkPipeline();
+    } else {
+        MEDIA_LOG_I("BuildWatermarkPipeline: software watermark path");
+        return BuildSoftWatermarkPipeline();
+    }
+}
+
+bool HiRecorderImpl::CheckHardWatermarkPositionViolation()
+{
+    auto filter = GetWaterMarkFilter();
+    if (filter == nullptr) {
+        return false;
+    }
+    int32_t videoWidth = 0;
+    int32_t videoHeight = 0;
+    videoEncFormat_->GetData(Tag::VIDEO_WIDTH, videoWidth);
+    videoEncFormat_->GetData(Tag::VIDEO_HEIGHT, videoHeight);
+    if (videoWidth > 0 && videoHeight > 0) {
+        filter->SetVideoResize(videoWidth, videoHeight);
+    }
+    return filter->HasHardWatermarkPositionViolation();
+}
+
+int32_t HiRecorderImpl::BuildHardWatermarkPipeline()
+{
+    FALSE_RETURN_V_MSG_E(CreateAndConfigureEncoder(true) == MSERR_OK,
+        MSERR_UNKNOWN, "CreateAndConfigureEncoder fail");
+
+    pipeline_->AddHeadFilters({videoEncoderFilter_});
+
+    auto filter = GetWaterMarkFilter();
+    FALSE_RETURN_V_MSG_E(filter != nullptr, MSERR_UNKNOWN, "waterMarkFilter_ is null");
+    filter->SetHardWatermarkMode(true);
+
+    Status pret = filter->PreprocessWatermarks();
+    FALSE_RETURN_V_MSG_E(pret == Status::OK, MSERR_FRAMEWORK_ERROR, "PreprocessWatermarks fail");
+
     return MSERR_OK;
 }
 
-int32_t HiRecorderImpl::PrepareVideoEncoder()
+int32_t HiRecorderImpl::BuildSoftWatermarkPipeline()
 {
-    MEDIA_LOG_I("HiRecorderImpl PrepareVideoEncoder enter.");
-    if (videoEncoderFilter_) {
-        FALSE_RETURN_V_MSG_E(videoEncFormat_ != nullptr, MSERR_UNKNOWN, "videoEncFormat is nullptr");
-        if (videoSourceIsRGBA_) {
-            videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
-        }
-        ConfigureVidEncBitrateMode();
-        videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
-        videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        if (hasWatermark_) {
-            videoEncoderFilter_->SetWatermarkMode();
-        }
-        videoEncoderFilter_->SetStabilizationMode(enableStabilization_);
-        videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
-        FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
-            MSERR_VID_ENC_CONFIG_FAILED, "videoEncoderFilter Configure fail");
-    }
+    auto filter = GetWaterMarkFilter();
+    FALSE_RETURN_V_MSG_E(filter != nullptr, MSERR_UNKNOWN, "waterMarkFilter_ is null");
+    pipeline_->AddHeadFilters({waterMarkFilter_});
+
+    filter->Init(recorderEventReceiver_, recorderCallback_);
+    filter->SetAVRecorderMode();
+    filter->SetHardWatermarkMode(false);
+
     return MSERR_OK;
+}
+
+int32_t HiRecorderImpl::BuildVideoPipeline()
+{
+    MEDIA_LOG_I("BuildVideoPipeline enter.");
+    FALSE_RETURN_V_MSG_E(CreateAndConfigureEncoder(false) == MSERR_OK,
+        MSERR_UNKNOWN, "CreateAndConfigureEncoder fail");
+
+    pipeline_->AddHeadFilters({videoEncoderFilter_});
+    return MSERR_OK;
+}
+
+Pipeline::WaterMarkFilter* HiRecorderImpl::GetWaterMarkFilter()
+{
+    FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, nullptr, "waterMarkFilter_ is null");
+    return static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+}
+
+int32_t HiRecorderImpl::CreateAndConfigureEncoder(bool setWatermarkMode)
+{
+    if (!videoEncoderFilter_) {
+        videoEncoderFilter_ = Pipeline::FilterFactory::Instance()
+            .CreateFilter<Pipeline::SurfaceEncoderFilter>(
+                "videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
+        FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, MSERR_UNKNOWN,
+            "create videoEncoderFilter failed");
+        videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+    }
+    if (videoSourceIsRGBA_) {
+        videoEncFormat_->Set<Tag::VIDEO_PIXEL_FORMAT>(Plugins::VideoPixelFormat::RGBA);
+    }
+    ConfigureVidEncBitrateMode();
+    videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
+    videoEncoderFilter_->Init(recorderEventReceiver_, recorderCallback_);
+    if (setWatermarkMode) {
+        videoEncoderFilter_->SetWatermarkMode();
+    }
+    videoEncoderFilter_->SetStabilizationMode(enableStabilization_);
+    videoEncoderFilter_->SetVideoEnableBFrame(enableBFrame_);
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_->Configure(videoEncFormat_) == Status::OK,
+        MSERR_VID_ENC_CONFIG_FAILED, "videoEncoderFilter Configure fail");
+    return MSERR_OK;
+}
+
+int32_t HiRecorderImpl::BuildEsPipeline()
+{
+    MEDIA_LOG_I("BuildEsPipeline enter.");
+    videoSourceIsYuv_ = false;
+    videoSourceIsRGBA_ = false;
+    videoCaptureFilter_ = Pipeline::FilterFactory::Instance()
+        .CreateFilter<Pipeline::VideoCaptureFilter>(
+            "videoEncoderFilter", Pipeline::FilterType::VIDEO_CAPTURE);
+    FALSE_RETURN_V_MSG_E(videoCaptureFilter_ != nullptr, MSERR_UNKNOWN,
+        "create videoCaptureFilter failed");
+    videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
+    videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
+    FALSE_RETURN_V_MSG_E(videoCaptureFilter_->Configure(videoEncFormat_) == Status::OK,
+        MSERR_VID_CAPTURE_CONFIG_FAILED, "videoCaptureFilter Configure fail");
+    pipeline_->AddHeadFilters({videoCaptureFilter_});
+    return MSERR_OK;
+}
+
+Status HiRecorderImpl::SetHardWatermarkData()
+{
+    MEDIA_LOG_I("SetHardWatermarkData enter, rotation: %{public}d", rotation_);
+
+    auto filter = GetWaterMarkFilter();
+    FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_NULL_POINTER, "waterMarkFilter_ is null");
+    Status ret = filter->ApplyRotation(rotation_);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "ApplyRotation failed");
+
+    auto waterMarkBuffer = filter->GetMergedWatermarkBuffer(rotation_);
+    FALSE_RETURN_V_MSG_E(waterMarkBuffer != nullptr, Status::ERROR_NULL_POINTER,
+        "GetMergedWatermarkBuffer returned null");
+
+    ret = videoEncoderFilter_->SetWatermark(waterMarkBuffer);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "SetWatermark to encoder failed");
+
+    return Status::OK;
 }
 
 int32_t HiRecorderImpl::PrepareMetaData()
@@ -552,31 +653,25 @@ int32_t HiRecorderImpl::PrepareMetaData()
     return MSERR_OK;
 }
 
-int32_t HiRecorderImpl::PrepareVideoCapture()
-{
-    if (videoCaptureFilter_) {
-        videoCaptureFilter_->SetCodecFormat(videoEncFormat_);
-        videoCaptureFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        FALSE_RETURN_V_MSG_E(videoCaptureFilter_->Configure(videoEncFormat_) == Status::OK,
-            MSERR_VID_CAPTURE_CONFIG_FAILED, "videoCaptureFilter Configure fail");
-    }
-    return MSERR_OK;
-}
-
 int32_t HiRecorderImpl::Start()
 {
     MediaTrace trace("HiRecorderImpl::Start");
     MEDIA_LOG_I("Start enter.");
-    int32_t ret = MSERR_OK;
-    if (hasWatermark_) {
-        ret = TransRecorderStatus(SetVideoEncoderSurface());
-        FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "SetVideoEncoderSurface fail");
+    if (hasWatermark_ && !isHardWatermarkSupported_) {
+        Status surfRet = SetVideoEncoderSurface();
+        FALSE_RETURN_V_MSG_E(surfRet == Status::OK, TransRecorderStatus(surfRet),
+            "SetVideoEncoderSurface failed");
     }
-    if (curState_ == StateId::PAUSE) {
-        ret = TransRecorderStatus(pipeline_->Resume());
-    } else {
-        ret = TransRecorderStatus(pipeline_->Start());
+    if (hasWatermark_ && isHardWatermarkSupported_) {
+        Status wmRet = SetHardWatermarkData();
+        if (wmRet != Status::OK) {
+            MEDIA_LOG_W("SetHardWatermarkData failed: %{public}d, recording without watermark",
+                static_cast<int32_t>(wmRet));
+        }
     }
+    int32_t ret = (curState_ == StateId::PAUSE)
+        ? TransRecorderStatus(pipeline_->Resume())
+        : TransRecorderStatus(pipeline_->Start());
     FALSE_RETURN_V_MSG_E(ret == MSERR_OK, ret, "HiRecorderImpl Start fail");
     OnStateChanged(StateId::RECORDING);
     return ret;
@@ -636,10 +731,13 @@ void HiRecorderImpl::ClearAllConfiguration()
     audioSourceId_ = 0;
     videoSourceId_ = 0;
     muxerFilter_ = nullptr;
-    isWatermarkSupported_ = false;
+    isHardWatermarkSupported_ = false;
     hasWatermark_ = false;
+    videoSourceSet_ = false;
+    videoSourceIsYuv_ = false;
+    videoSourceIsRGBA_ = false;
+    source_ = VideoSourceType::VIDEO_SOURCE_SURFACE_ES;
     codecMimeType_ = "";
-    CloseFd();
     if (audioEncFormat_) {
         audioEncFormat_->Clear();
     }
@@ -684,9 +782,13 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
         return static_cast<int32_t>(Status::OK);
     }
     // real stop operations
-    int32_t ret = TransRecorderStatus(HandleStopOperation());
+    int32_t ret = MSERR_OK;
+    ret = TransRecorderStatus(HandleStopOperation());
     // clear all configurations and remove all filters
     ClearAllConfiguration();
+    if (ret == MSERR_OK) {
+        OnStateChanged(StateId::INIT);
+    }
     return ret;
 }
 
@@ -832,9 +934,7 @@ Status HiRecorderImpl::HandleEncodedAudioOrVideoCallback(std::shared_ptr<Pipelin
 
         muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        Status ret = muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
-        FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "SetOutputParameter failed, ret: %{public}d",
-            static_cast<int32_t>(ret));
+        muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
         muxerFilter_->SetParameter(muxerFormat_);
         muxerFilter_->SetUserMeta(userMeta_);
         muxerFilter_->SetMaxDuration(maxDuration_);
@@ -850,15 +950,10 @@ Status HiRecorderImpl::HandleWatermarkCallback(std::shared_ptr<Pipeline::Filter>
     MEDIA_LOG_I("HandleWatermarkCallback enter.");
     videoSourceIsYuv_ = true;
     if (!videoEncoderFilter_) {
-        videoEncoderFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::SurfaceEncoderFilter>
-            ("videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
-        FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr, Status::ERROR_NULL_POINTER,
-            "create videoEncoderFilter failed");
-        videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         videoSourceIsRGBA_ = (source_ == VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA);
-        int32_t result = PrepareVideoEncoder();
-        FALSE_RETURN_V_MSG_E(result == MSERR_OK, static_cast<Status>(result),
-            "HandleWatermarkCallback PrepareVideoEncoder fail");
+        FALSE_RETURN_V_MSG_E(CreateAndConfigureEncoder(true) == MSERR_OK,
+            static_cast<Status>(MSERR_VID_ENC_CONFIG_FAILED),
+            "HandleWatermarkCallback CreateAndConfigureEncoder fail");
     }
 
     pipeline_->LinkFilters(filter, {videoEncoderFilter_}, outType);
@@ -1266,7 +1361,7 @@ void HiRecorderImpl::ConfigureOutFd(const RecorderParam &recParam)
     OutFd outFd = static_cast<const OutFd&>(recParam);
     fd_ = dup(outFd.fd);
     muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
-    MEDIA_LOG_I("ConfigureMuxer enter " PUBLIC_LOG_D32, fd_);
+    MEDIA_LOG_I("ConfigureOutFd enter " PUBLIC_LOG_D32, fd_);
 }
 
 bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)
@@ -1388,11 +1483,11 @@ void HiRecorderImpl::SetCallingInfo(const std::string &bundleName, uint64_t inst
     instanceId_ = instanceId;
 }
 
-int32_t HiRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
+int32_t HiRecorderImpl::IsWatermarkSupported(bool &isHardWatermarkSupported)
 {
     MEDIA_LOG_D("IsWatermarkSupported enter, codecMimeType:" PUBLIC_LOG_S, codecMimeType_.c_str());
-    if (isWatermarkSupported_) {
-        isWatermarkSupported = isWatermarkSupported_;
+    if (isHardWatermarkSupported_) {
+        isHardWatermarkSupported = isHardWatermarkSupported_;
         return (int32_t)Status::OK;
     }
     FALSE_RETURN_V_MSG_E(codecMimeType_ != "", static_cast<int32_t>(Status::ERROR_INVALID_OPERATION),
@@ -1401,7 +1496,7 @@ int32_t HiRecorderImpl::IsWatermarkSupported(bool &isWatermarkSupported)
         codecCapabilityAdapter_ = std::make_shared<Pipeline::CodecCapabilityAdapter>();
     }
     codecCapabilityAdapter_->Init();
-    Status ret = codecCapabilityAdapter_->IsWatermarkSupported(codecMimeType_, isWatermarkSupported);
+    Status ret = codecCapabilityAdapter_->IsWatermarkSupported(codecMimeType_, isHardWatermarkSupported);
     return static_cast<int32_t>(ret);
 }
 
@@ -1443,7 +1538,9 @@ int32_t HiRecorderImpl::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
         FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
             "Watermark filter is nullptr");
     }
-    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+    auto filter = GetWaterMarkFilter();
+    FALSE_RETURN_V_MSG_E(filter != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
+        "waterMarkFilter_ is null");
     Status ret = filter->SetWatermark(watermarkBuffer, width, height);
     if (ret == Status::OK) {
         filter->InitOpenGl();

@@ -37,6 +37,9 @@
 
 namespace OHOS {
 namespace Media {
+namespace Pipeline {
+class WaterMarkFilter;
+}
 
 enum class StateId {
     INIT,
@@ -81,7 +84,7 @@ public:
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo);
     int32_t GetMaxAmplitude(int32_t &amplitude);
     void SetCallingInfo(const std::string &bundleName, uint64_t instanceId);
-    int32_t IsWatermarkSupported(bool &isWatermarkSupported);
+    int32_t IsWatermarkSupported(bool &isHardWatermarkSupported);
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
     Status SetUserMeta(const std::shared_ptr<Meta> &userMeta);
     int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
@@ -116,10 +119,14 @@ private:
     void ClearAllConfiguration();
     int32_t PrepareAudioCapture();
     int32_t PrepareAudioDataSource();
-    int32_t PrepareWatermark();
-    int32_t PrepareVideoEncoder();
     int32_t PrepareMetaData();
-    int32_t PrepareVideoCapture();
+    int32_t BuildPipeline();
+    int32_t BuildWatermarkPipeline();
+    int32_t BuildHardWatermarkPipeline();
+    int32_t BuildSoftWatermarkPipeline();
+    int32_t BuildVideoPipeline();
+    int32_t BuildEsPipeline();
+    Status SetHardWatermarkData();
     EncoderCapabilityData ConvertAudioEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     EncoderCapabilityData ConvertVideoEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     std::vector<EncoderCapabilityData> ConvertEncoderInfo(std::vector<MediaAVCodec::CapabilityData*> &capData);
@@ -127,11 +134,13 @@ private:
     AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
     void CloseFd();
 
-    // Helper methods for SetVideoSource
-    Status SetVideoSourceWithWatermark(VideoSourceType source);
-    Status SetVideoSourceSurfaceYuvOrRgba(VideoSourceType source);
-    Status SetVideoSourceSurfaceEs();
+    // Helper methods for SetVideoEncoderSurface
     Status SetVideoEncoderSurface();
+
+    // Helper methods for watermark fusion
+    Pipeline::WaterMarkFilter* GetWaterMarkFilter();
+    int32_t CreateAndConfigureEncoder(bool setWatermarkMode);
+    bool CheckHardWatermarkPositionViolation();
 
     // Helper methods for GetSurface
     sptr<Surface> GetSurfaceFromWaterMarkFilter();
@@ -182,7 +191,7 @@ private:
 
     bool videoSourceIsYuv_ = false;
     bool videoSourceIsRGBA_ = false;
-    bool isWatermarkSupported_ = false;
+    bool isHardWatermarkSupported_ = false;
     bool hasWatermark_ = false;
     bool enableStableQualityMode_ = false;
     bool enableBFrame_ = false;
@@ -205,6 +214,7 @@ private:
     uint64_t instanceId_ = 0;
     bool muteWhenInterrupted_ = false;
     std::shared_ptr<AVBuffer> buffer_ = nullptr;
+    bool videoSourceSet_ = false;
     VideoSourceType source_ = VideoSourceType::VIDEO_SOURCE_SURFACE_ES;
     int32_t rotation_ = 0;
 };
