@@ -109,6 +109,7 @@ public:
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
     int32_t SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec) override;
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
+    int32_t SetMaxVideoFrameRateInner();
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
@@ -342,6 +343,7 @@ private:
     int32_t capsulePxSize_ = 0;
     int32_t saUid_ = -1;
     int32_t appVersion_ = -1;
+    uint32_t virtualScreenFrameRate_ = 60;
 
     /* used for both CAPTURE STREAM and CAPTURE FILE */
     OHOS::AudioStandard::AppInfo appInfo_;
