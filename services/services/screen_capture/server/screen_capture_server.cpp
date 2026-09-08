@@ -2588,7 +2588,6 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
             "MakeVirtualScreen failed");
         return MSERR_UNKNOWN_MAKE_MIRROR;
     }
-    uint32_t actualRefreshRate = 0;
     SetMaxVideoFrameRateInner();
     return MSERR_OK;
 }
