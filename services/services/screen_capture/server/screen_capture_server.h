@@ -181,9 +181,10 @@ private:
     int32_t OnStartScreenCapture(bool isSkipPrivacyWindow = false);
     bool IsFirstStartPidInstance(int32_t pid);
     bool FirstPidUpdatePrivacyUsingPermissionState(int32_t pid);
-    void PostStartScreenCapture(bool isSuccess);
-    void PostStartScreenCaptureFail();
+    void PostStartScreenCapture(int32_t ret);
+    void PostStartScreenCaptureFail(int32_t ret);
     void PostStartScreenCaptureSuccessAction();
+    AVScreenCaptureErrorCode MSErrorToScreenCaptureError(int32_t ret);
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
     int32_t InitRecorderMix();
     int32_t InitRecorderInner();
