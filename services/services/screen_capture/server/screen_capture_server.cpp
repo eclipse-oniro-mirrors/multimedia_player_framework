@@ -2589,6 +2589,7 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
         return MSERR_UNKNOWN_MAKE_MIRROR;
     }
     SetMaxVideoFrameRateInner();
+    isConsumerStart_ = true;
     return MSERR_OK;
 }
 
