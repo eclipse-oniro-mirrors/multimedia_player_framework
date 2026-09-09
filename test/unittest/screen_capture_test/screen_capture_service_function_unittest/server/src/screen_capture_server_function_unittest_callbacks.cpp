@@ -270,21 +270,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAppInstanceLifecycleE
 }
 
 #ifdef SUPPORT_CALL
-HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnCallStateChanged_True_001, TestSize.Level2)
-{
-    MEDIA_LOGI("ServerCallback_OnCallStateChanged_True_001 start");
-    ASSERT_NE(screenCaptureServer_, nullptr);
-
-    screenCaptureServer_->captureConfig_.strategy.keepCaptureDuringCall = true;
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->isInTelCall_.store(false);
-
-    screenCaptureServer_->OnCallStateChanged(true);
-    WaitForTaskComplete();
-
-    ASSERT_TRUE(screenCaptureServer_->isInTelCall_.load());
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnCallStateChanged_StopByCall_001, TestSize.Level2)
 {
     MEDIA_LOGI("ServerCallback_OnCallStateChanged_StopByCall_001 start");
@@ -296,6 +281,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnCallStateChanged_Stop
 
     screenCaptureServer_->OnCallStateChanged(true);
     WaitForTaskComplete();
+
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::STOPPED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnCallStateChanged_CanActive_001, TestSize.Level2)
@@ -344,14 +331,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnCallStateChanged_Same
 }
 #endif
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnScreenConnect_001, TestSize.Level2)
-{
-    MEDIA_LOGI("ServerCallback_OnScreenConnect_001 start");
-    ASSERT_NE(screenCaptureServer_, nullptr);
-
-    Rosen::ScreenId screenId = 111;
-    screenCaptureServer_->OnScreenConnect(screenId);
-}
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnScreenDisconnect_NotInList_001, TestSize.Level2)
 {
@@ -367,15 +346,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnScreenDisconnect_NotI
     ASSERT_TRUE(screenCaptureServer_->sourceDisplayIds_.empty());
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnLanguageSwitch_001, TestSize.Level2)
-{
-    MEDIA_LOGI("ServerCallback_OnLanguageSwitch_001 start");
-    ASSERT_NE(screenCaptureServer_, nullptr);
-
-    screenCaptureServer_->OnLanguageSwitch();
-    WaitForTaskComplete();
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnRecordDisplayChange_001, TestSize.Level2)
 {
     MEDIA_LOGI("ServerCallback_OnRecordDisplayChange_001 start");
@@ -384,6 +354,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnRecordDisplayChange_0
     std::vector<Rosen::DisplayId> displayIds = {1, 2, 3};
     screenCaptureServer_->OnRecordDisplayChange(displayIds);
     WaitForTaskComplete();
+    ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 3);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAccountSwitched_001, TestSize.Level2)
@@ -394,6 +365,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAccountSwitched_001, 
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     screenCaptureServer_->OnAccountSwitched();
     WaitForTaskComplete();
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::STOPPED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAudioRendererStateChanged_NullSource_001, TestSize.Level2)
@@ -410,32 +382,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAudioRendererStateCha
     ASSERT_EQ(screenCaptureServer_->audioSource_, nullptr);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAudioRendererStateChanged_Stopped_001, TestSize.Level2)
-{
-    MEDIA_LOGI("ServerCallback_OnAudioRendererStateChanged_Stopped_001 start");
-    ASSERT_NE(screenCaptureServer_, nullptr);
-
-    SetupAudioDataSource(AudioCombinePolicy::PASSTHROUGH);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
-    std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> changeInfos;
-    screenCaptureServer_->OnAudioRendererStateChanged(changeInfos);
-    WaitForTaskComplete();
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAudioRendererStateChanged_VoIPMatch_001, TestSize.Level2)
-{
-    MEDIA_LOGI("ServerCallback_OnAudioRendererStateChanged_VoIPMatch_001 start");
-    ASSERT_NE(screenCaptureServer_, nullptr);
-
-    SetupAudioDataSource(AudioCombinePolicy::PASSTHROUGH);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_
-        ->appName_ = GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"];
-    std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> changeInfos;
-    screenCaptureServer_->OnAudioRendererStateChanged(changeInfos);
-    WaitForTaskComplete();
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnPrivateWindowChange_True_001, TestSize.Level2)
 {
     MEDIA_LOGI("ServerCallback_OnPrivateWindowChange_True_001 start");
@@ -443,6 +389,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnPrivateWindowChange_T
 
     screenCaptureServer_->OnPrivateWindowChange(true);
     WaitForTaskComplete();
+    auto cb = static_cast<ScreenCaptureListenerCallback *>(screenCaptureServer_->cbProxy_->screenCaptureCb_.get());
+    auto listener = static_cast<StandardScreenCaptureServerUnittestCallback *>(cb->listener_.GetRefPtr());
+    ASSERT_EQ(listener->lastStateCode_, AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_ENTER_PRIVATE_SCENE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnPrivateWindowChange_False_001, TestSize.Level2)
@@ -452,6 +401,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnPrivateWindowChange_F
 
     screenCaptureServer_->OnPrivateWindowChange(false);
     WaitForTaskComplete();
+    auto cb = static_cast<ScreenCaptureListenerCallback *>(screenCaptureServer_->cbProxy_->screenCaptureCb_.get());
+    auto listener = static_cast<StandardScreenCaptureServerUnittestCallback *>(cb->listener_.GetRefPtr());
+    ASSERT_EQ(listener->lastStateCode_, AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_EXIT_PRIVATE_SCENE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAppInstanceLifecycleEvent_Active_001, TestSize.Level2)

@@ -114,7 +114,7 @@ HWTEST_F(AudioDataSourceGenericTest, PauseThenResume_001, TestSize.Level2)
 {
     auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     src->Pause();
-    EXPECT_NE(src->pauseStartTime_.load(), 0);
+    EXPECT_GT(src->pauseStartTime_.load(), 0);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
     src->Resume();
     EXPECT_GT(src->pauseDuration_.load(), 0);
@@ -205,7 +205,10 @@ HWTEST_F(AudioDataSourceGenericTest, SetCapture_NullCapture_001, TestSize.Level2
     auto wrapper = MakeMockWrapper(AudioCaptureSourceType::ALL_PLAYBACK);
     src->SetCapture(AudioCaptureSourceType::ALL_PLAYBACK, wrapper);
     src->SetCapture(AudioCaptureSourceType::ALL_PLAYBACK, nullptr);
+    EXPECT_EQ(src->captures_.size(), 1u);
     EXPECT_EQ(src->captures_[0].capture, nullptr);
+    src->OnBufferAvailable(AudioCaptureSourceType::ALL_PLAYBACK);
+    EXPECT_EQ(src->captures_[0].state, CaptureSlotState::INACTIVE);
 }
 
 // === Coverage: ReadAudioBuffer avSynced_ with cacheBuffer_ ===
@@ -295,8 +298,12 @@ HWTEST_F(AudioDataSourceGenericTest, MixAudio_Empty_001, TestSize.Level2)
 {
     auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     std::vector<const CacheBuffer *> srcs;
-    int16_t out[4] = {0};
+    int16_t out[4] = {1, 2, 3, 4};
     src->MixAudio(srcs, reinterpret_cast<uint8_t *>(out));
+    EXPECT_EQ(out[0], 1);
+    EXPECT_EQ(out[1], 2);
+    EXPECT_EQ(out[2], 3);
+    EXPECT_EQ(out[3], 4);
 }
 
 // === Coverage: SetMixAudioTypeLog ===
@@ -470,8 +477,7 @@ HWTEST_F(AudioDataSourceGenericTest, MixAudio_ThreeSource_Overflow_001, TestSize
     int16_t out[4] = {0};
     src->MixAudio(srcs, reinterpret_cast<uint8_t *>(out));
     for (int i = 0; i < 4; i++) {
-        EXPECT_GE(out[i], -32768);
-        EXPECT_LE(out[i], 32767);
+        EXPECT_EQ(out[i], 32767);
     }
 }
 
@@ -484,8 +490,7 @@ HWTEST_F(AudioDataSourceGenericTest, MixAudio_NegativeOverflow_001, TestSize.Lev
     int16_t out[4] = {0};
     src->MixAudio(srcs, reinterpret_cast<uint8_t *>(out));
     for (int i = 0; i < 4; i++) {
-        EXPECT_GE(out[i], -32768);
-        EXPECT_LE(out[i], 32767);
+        EXPECT_EQ(out[i], -32768);
     }
 }
 

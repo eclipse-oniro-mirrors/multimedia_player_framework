@@ -266,6 +266,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, TelCallStateUpdated_EnqueueOk_B1, Test
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     EXPECT_EQ(screenCaptureServer_->TelCallStateUpdated(false), MSERR_OK);
     WaitForTaskComplete();
+    ASSERT_FALSE(screenCaptureServer_->isInTelCall_.load());
 }
 #endif
 

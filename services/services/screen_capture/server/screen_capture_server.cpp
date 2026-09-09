@@ -133,7 +133,6 @@ static const uint32_t MAX_LINE_WIDTH = 8;
 static const uint32_t MAX_LINE_COLOR_RGB = 0xffffff;
 static const uint32_t MIN_LINE_COLOR_ARGB = 0xff000000;
 static const size_t MAX_DISPLAY_LEN = 1000;
-static const uint32_t APPMISSIONID_WAIT_TIME = 3;
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
     static const int32_t NOTIFICATION_MAX_TRY_NUM = 3;
 #endif
@@ -371,39 +370,35 @@ void ScreenCaptureServer::PrepareSelectWindow(Json::Value &root)
     if (root.type() != Json::objectValue) {
         return;
     }
-    {
-        std::lock_guard<std::mutex> lock(captureIdsMutex_);
-        missionInfos_.clear();
-    }
     UpdateHighlightOutline(false);
-    ParseDisplayId(root["displayId"]);
-    const Json::Value missionIdJson = root["missionId"];
-    if (!missionIdJson.isNull() && missionIdJson.isInt() && missionIdJson.asInt() >= 0) {
-        int32_t missionId = missionIdJson.asInt();
-        MEDIA_LOGI("Report Select MissionId: %{public}d", missionId);
-        SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionId);
+
+    if (ParseAppMissionIds(root["appInformation"])) {
+        MEDIA_LOGI("Select app, wait for callback");
+        return;
     }
-    if (ParseAppMissionIds(root["appInformation"]) == MSERR_OK) {
-        FinishPrepareSelectWindow();
+    if (ParseMissionId(root["missionId"])) {
+        MEDIA_LOGI("Select window");
+    } else if (ParseDisplayId(root["displayId"])) {
+        MEDIA_LOGI("Select display");
+    } else {
+        MEDIA_LOGI("Fallback config");
     }
+    FinishPrepareSelectWindow();
 }
 
 void ScreenCaptureServer::FinishPrepareSelectWindow()
 {
     UpdateHighlightOutline(true);
     ScreenCaptureUserSelectionInfo selectionInfo;
-    bool isApp;
-    {
-        std::lock_guard<std::mutex> lock(captureIdsMutex_);
-        isApp = !missionInfos_.empty();
-    }
-    if (isApp || captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_WINDOW) {
-        selectionInfo.selectType = isApp ? SELECT_TYPE_APP : SELECT_TYPE_WINDOW;
-        selectionInfo.displayIds = {GetDisplayIdOfWindows()};
-    } else {
+    if (captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_SCREEN) {
         selectionInfo.selectType = SELECT_TYPE_SCREEN;
         std::lock_guard<std::mutex> lock(captureIdsMutex_);
         selectionInfo.displayIds = displayIds_;
+    } else {
+        selectionInfo.selectType = captureConfig_.captureMode == CaptureMode::CAPTURE_SPECIFIED_APP
+            ? SELECT_TYPE_APP
+            : SELECT_TYPE_WINDOW;
+        selectionInfo.displayIds = {GetDisplayIdOfWindows()};
     }
     cbProxy_->OnUserSelected(selectionInfo);
     OnReceiveUserPrivacyAuthority(true);
@@ -533,38 +528,38 @@ int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, co
     return ret;
 }
 
-int32_t ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
+bool ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
 {
     MediaTrace trace("ScreenCaptureServer::ParseAppMissionIds");
-    MEDIA_LOGI("ParseAppMissionIds start.");
-    CHECK_AND_RETURN_RET_LOG(!appInformation.isNull(), MSERR_OK, "appInformation isNull");
+    CHECK_AND_RETURN_RET(!appInformation.isNull(), false);
     const Json::Value bundleNameJson = appInformation["bundleName"];
     const Json::Value appIndexJson = appInformation["appIndex"];
-    CHECK_AND_RETURN_RET_LOG(bundleNameJson.isString() && appIndexJson.isInt(), MSERR_OK,
+    CHECK_AND_RETURN_RET_LOG(bundleNameJson.isString() && appIndexJson.isInt(), false,
         "bundleNameJson or appIndexJson isNull");
 
     int32_t ret = listenerManager_->RegisterListeners(LF_APP_LIFECYCLE,
         {.appBundleName = bundleNameJson.asString(), .appIndex = appIndexJson.asInt(), .appUserId = appUserId_.load()});
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_OK, "RegisterListeners LF_APP_LIFECYCLE failed");
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, false, "RegisterListeners LF_APP_LIFECYCLE failed");
     SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP, -1);
     isGetAppMissionId_ = false;
     auto timeoutTask = std::make_shared<TaskHandler<void>>([this] {
-        if (isGetAppMissionId_) { return; }
+        if (isGetAppMissionId_) {
+            return;
+        }
         MEDIA_LOGE("ParseAppMissionIds timeout");
         PostStartScreenCaptureFail();
     });
-    taskQue_.EnqueueTask(timeoutTask, false, APPMISSIONID_WAIT_TIME * 1000000ULL);
-    return MSERR_INVALID_OPERATION;
+    constexpr uint32_t timeout = 3 * 1000000ULL;
+    taskQue_.EnqueueTask(timeoutTask, false, timeout);
+    return true;
 }
 
-void ScreenCaptureServer::ParseDisplayId(const Json::Value &displayIdJson)
+bool ScreenCaptureServer::ParseDisplayId(const Json::Value &displayIdJson)
 {
     if (displayIdJson.isUInt64()) {
-        auto displayId = static_cast<uint64_t>(displayIdJson.asUInt64());
-        MEDIA_LOGI("Report Select DisplayId: %{public}" PRIu64, displayId);
-        SetDisplayId(displayId);
+        SetDisplayId(static_cast<uint64_t>(displayIdJson.asUInt64()));
         SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
-        return;
+        return true;
     }
     if (displayIdJson.isArray()) {
         std::vector<uint64_t> displayIds;
@@ -576,10 +571,19 @@ void ScreenCaptureServer::ParseDisplayId(const Json::Value &displayIdJson)
         }
         SetDisplayId(std::move(displayIds));
         SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_SCREEN, -1);
-        return;
+        return true;
     }
+    return false;
 }
 
+bool ScreenCaptureServer::ParseMissionId(const Json::Value &missionIdJson)
+{
+    if (missionIdJson.isNull() || !missionIdJson.isInt() || missionIdJson.asInt() < 0) {
+        return false;
+    }
+    SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_WINDOW, missionIdJson.asInt());
+    return true;
+}
 
 int32_t ScreenCaptureServer::PresentPicker()
 {

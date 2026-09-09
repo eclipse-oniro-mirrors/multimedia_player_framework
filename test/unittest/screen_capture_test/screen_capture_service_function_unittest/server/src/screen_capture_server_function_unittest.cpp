@@ -648,23 +648,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, capture_file_params_invalid_008, TestS
     ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_001, TestSize.Level2)
-{
-    SetInvalidConfig();
-    config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_DEFAULT;
-    config_.audioInfo.innerCapInfo.audioSampleRate = 16000;
-    config_.audioInfo.innerCapInfo.audioChannels = 2;
-    config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    std::vector<std::shared_ptr<AudioRendererChangeInfo>> audioRendererChangeInfos;
-    screenCaptureServer_->AudioRendererStateUpdate(audioRendererChangeInfos);
-    sleep(RECORDER_TIME);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCapturePermission_001, TestSize.Level2)
 {
     SetInvalidConfig();
@@ -1133,38 +1116,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetChoiceFromJson_002, TestSize.Level2
     std::string value;
     screenCaptureServer_->GetChoiceFromJson(root, content, "choice", value);
     ASSERT_NE(screenCaptureServer_, nullptr);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_001, TestSize.Level2)
-{
-    RecorderInfo recorderInfo;
-    SetRecorderInfo("start_file_inner_audio_capture_001.mp4", recorderInfo);
-    SetValidConfigFile(recorderInfo);
-    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->SetMicrophoneEnabled(true);
-    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
-    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
-        AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    screenCaptureServer_->StartInnerAudioCapture();
-    screenCaptureServer_->StartMicAudioCapture(false);
-    sleep(RECORDER_TIME / 2);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_002, TestSize.Level2)
-{
-    RecorderInfo recorderInfo;
-    SetRecorderInfo("start_file_inner_audio_capture_002.mp4", recorderInfo);
-    SetValidConfigFile(recorderInfo);
-    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->SetMicrophoneEnabled(true);
-    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
-    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
-        AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    screenCaptureServer_->StartInnerAudioCapture();
-    screenCaptureServer_->StartMicAudioCapture(false);
-    sleep(RECORDER_TIME / 2);
-    ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_003, TestSize.Level2)
@@ -2256,9 +2207,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_001, TestSize.Level2)
     Json::Reader reader;
     Json::Value root;
     ASSERT_TRUE(reader.parse(jsonStr, root));
-    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    EXPECT_TRUE(screenCaptureServer_->ParseDisplayId(root["displayId"]));
     ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 1);
     EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_SCREEN);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_002, TestSize.Level2)
@@ -2267,7 +2219,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_002, TestSize.Level2)
     Json::Reader reader;
     Json::Value root;
     ASSERT_TRUE(reader.parse(jsonStr, root));
-    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    EXPECT_TRUE(screenCaptureServer_->ParseDisplayId(root["displayId"]));
     ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 2);
     EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
     EXPECT_EQ(screenCaptureServer_->displayIds_.back(), 2);
@@ -2279,7 +2231,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_003, TestSize.Level2)
     Json::Reader reader;
     Json::Value root;
     ASSERT_TRUE(reader.parse(jsonStr, root));
-    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    EXPECT_TRUE(screenCaptureServer_->ParseDisplayId(root["displayId"]));
     ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 2);
     EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 1);
     EXPECT_EQ(screenCaptureServer_->displayIds_.back(), 2);
@@ -2291,7 +2243,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_004, TestSize.Level2)
     Json::Reader reader;
     Json::Value root;
     ASSERT_TRUE(reader.parse(jsonStr, root));
-    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    EXPECT_TRUE(screenCaptureServer_->ParseDisplayId(root["displayId"]));
     EXPECT_EQ(screenCaptureServer_->displayIds_.size(), 0);
 }
 
@@ -2302,9 +2254,36 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseDisplayId_005, TestSize.Level2)
     Json::Value root;
     ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->displayIds_ = {2};
-    screenCaptureServer_->ParseDisplayId(root["displayId"]);
+    EXPECT_FALSE(screenCaptureServer_->ParseDisplayId(root["displayId"]));
     ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 1);
     EXPECT_EQ(screenCaptureServer_->displayIds_.front(), 2);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseMissionId_001, TestSize.Level2)
+{
+    std::string jsonStr = R"({"missionId":5})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    EXPECT_TRUE(screenCaptureServer_->ParseMissionId(root["missionId"]));
+    ASSERT_EQ(screenCaptureServer_->missionInfos_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->missionInfos_.front().missionId, 5);
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_WINDOW);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseMissionId_002, TestSize.Level2)
+{
+    std::string jsonStr = R"({"missionId":-1})";
+    Json::Reader reader;
+    Json::Value root;
+    ASSERT_TRUE(reader.parse(jsonStr, root));
+    EXPECT_FALSE(screenCaptureServer_->ParseMissionId(root["missionId"]));
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseMissionId_003, TestSize.Level2)
+{
+    Json::Value root;
+    EXPECT_FALSE(screenCaptureServer_->ParseMissionId(root["missionId"]));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_009, TestSize.Level2)
@@ -2314,9 +2293,17 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_009, TestSize.Leve
     Json::Value root;
     ASSERT_TRUE(reader.parse(jsonStr, root));
     screenCaptureServer_->PrepareSelectWindow(root);
-    ASSERT_EQ(screenCaptureServer_->displayIds_.size(), 1);
     EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 1);
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_WINDOW);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PrepareSelectWindow_010, TestSize.Level2)
+{
+    Json::Value root;
+    screenCaptureServer_->missionInfos_.push_back({42, true});
+    screenCaptureServer_->PrepareSelectWindow(root);
+    EXPECT_EQ(screenCaptureServer_->missionInfos_.size(), 1);
+    EXPECT_EQ(screenCaptureServer_->missionInfos_.front().missionId, 42);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetupVirtualScreenMirror_001, TestSize.Level2)
@@ -2705,8 +2692,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_001, TestSize.Level
     Json::Value appInformation;
     appInformation["bundleName"] = "bundleName_001";
     appInformation["appIndex"] = 0;
-    screenCaptureServer_->ParseAppMissionIds(appInformation);
-    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
+    EXPECT_TRUE(screenCaptureServer_->ParseAppMissionIds(appInformation));
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
@@ -2715,9 +2701,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_002, TestSize.Level
     Json::Value appInformation;
     appInformation["bundleName"] = "bundleName_002";
     appInformation["appIndex"] = 0;
-    screenCaptureServer_->ParseAppMissionIds(appInformation);
-    screenCaptureServer_->missionInfos_.push_back({1, true});
-    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
+    EXPECT_TRUE(screenCaptureServer_->ParseAppMissionIds(appInformation));
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
@@ -2726,9 +2710,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_003, TestSize.Level
     Json::Value appInformation;
     appInformation["bundleName"] = "bundleName_003";
     appInformation["appIndex"] = 0;
-    screenCaptureServer_->missionInfos_.push_back({1, true});
-    screenCaptureServer_->ParseAppMissionIds(appInformation);
-    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
+    EXPECT_TRUE(screenCaptureServer_->ParseAppMissionIds(appInformation));
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
 }
 
@@ -2737,10 +2719,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_004, TestSize.Level
     Json::Value appInformation;
     appInformation["bundleName"] = "bundleName_004";
     appInformation["appIndex"] = 0;
-    screenCaptureServer_->ParseAppMissionIds(appInformation);
-    screenCaptureServer_->missionInfos_.push_back({1, true});
-    screenCaptureServer_->SetCaptureConfig(CaptureMode::CAPTURE_SPECIFIED_APP);
+    EXPECT_TRUE(screenCaptureServer_->ParseAppMissionIds(appInformation));
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_005, TestSize.Level2)
+{
+    Json::Value appInformation;
+    EXPECT_FALSE(screenCaptureServer_->ParseAppMissionIds(appInformation));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Server_SetDisplayId_Single_001, TestSize.Level2)

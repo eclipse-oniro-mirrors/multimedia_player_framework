@@ -177,11 +177,15 @@ public:
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) {};
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {};
     void OnVideoBufferAvailable(bool isReady) {};
-    void OnStateChange(AVScreenCaptureStateCode stateCode) {};
+    void OnStateChange(AVScreenCaptureStateCode stateCode)
+    {
+        lastStateCode_ = stateCode;
+    }
     void OnDisplaySelected(uint64_t displayId) {};
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area) {};
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) {};
     void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) {};
+    AVScreenCaptureStateCode lastStateCode_ = AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID;
 };
 
 class ScreenCaptureServerUnittestCallbackMock : public ScreenCaptureListenerCallback {

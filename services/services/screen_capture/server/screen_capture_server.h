@@ -233,8 +233,9 @@ private:
     int32_t SetVirtualScreenAutoRotation();
     int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();
-    int32_t ParseAppMissionIds(const Json::Value &appInformation);
-    void ParseDisplayId(const Json::Value &displayIdJson);
+    bool ParseAppMissionIds(const Json::Value &appInformation);
+    bool ParseDisplayId(const Json::Value &displayIdJson);
+    bool ParseMissionId(const Json::Value &missionIdJson);
 
     bool CheckScreenCapturePermission();
     bool IsUserPrivacyAuthorityNeeded();

@@ -231,9 +231,6 @@ void ScreenCaptureServer::OnAppInstanceLifecycleEvent(
         if (flags & ADD_WHITE_LIST) {
             AddWhiteListWindows(allIds);
         }
-        if (flags & REMOVE_WHITE_LIST) {
-            RemoveWhiteListWindows({missionId});
-        }
         if (flags & NOTIFY_VISIBLE) {
             NotifyWindowVisible(missionId);
         }
