@@ -752,6 +752,7 @@ void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format 
 
 int32_t PlayerServerMem::GetInformationBeforeMemReset()
 {
+    GetPlayerServerConfig();
     auto ret = PlayerServer::GetCurrentTime(recoverConfig_.currentTime);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to GetCurrentTime");
     ret = PlayerServer::GetVideoTrackInfo(recoverConfig_.videoTrack);
@@ -772,7 +773,6 @@ int32_t PlayerServerMem::GetInformationBeforeMemReset()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "failed to GetDuration");
     recoverConfig_.isPlaying = PlayerServer::IsPlaying();
     recoverConfig_.effectMode = config_.effectMode;
-    GetPlayerServerConfig();
 
     return MSERR_OK;
 }
@@ -968,7 +968,8 @@ void PlayerServerMem::ResetBackGroundForMemManage()
 void PlayerServerMem::ResetMemmgrForMemManage()
 {
     std::unique_lock<std::mutex> lock(mutex_);
-    if (!(isAudioPlayer_ || PlayerServer::IsPlaying())) {
+    if (!(isAudioPlayer_ || PlayerServer::IsPlaying()) &&
+        lastOpStatus_ != PLAYER_STOPPED && lastOpStatus_ != PLAYER_IDLE) {
         ReleaseMemByManage();
     }
 }
