@@ -42,7 +42,7 @@ enum class CaptureSlotState : int32_t {
 };
 
 enum class AudioOutputTag : int32_t {
-    INVALID,
+    INVALID = -1,
     SINGLE,
     MIXED,
     SILENT,
@@ -89,6 +89,7 @@ public:
     void OnBufferAvailable(AudioCaptureSourceType type) override;
 
     void SetCapture(AudioCaptureSourceType type, std::shared_ptr<AudioCapturerWrapper> capture);
+    void SetOutputFormat(int32_t sampleRate, int32_t channels);
     void Pause();
     void Resume();
     void Stop();
@@ -117,6 +118,7 @@ private:
     std::mutex mutex_;
     LastEmit lastEmit_;
     int64_t writedFrameTime_{0};
+    int32_t silentFrameSize_{0};
     std::atomic<int64_t> firstVideoFramePts_{-1};
     bool avSynced_{false};
     std::atomic<int64_t> pauseStartTime_{0};

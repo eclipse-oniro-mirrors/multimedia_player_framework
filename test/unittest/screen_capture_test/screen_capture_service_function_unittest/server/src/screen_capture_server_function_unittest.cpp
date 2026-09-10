@@ -423,6 +423,8 @@ std::shared_ptr<AudioCapturerWrapper> ScreenCaptureServerFunctionTest::CreateTes
 void ScreenCaptureServerFunctionTest::SetupAudioDataSource(AudioCombinePolicy policy)
 {
     screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(policy, false);
+    screenCaptureServer_->audioSource_->SetOutputFormat(ScreenCaptureTestParam::TEST_SAMPLE_RATE,
+        ScreenCaptureTestParam::TEST_CHANNELS);
 }
 
 size_t ScreenCaptureServerFunctionTest::CountForegroundMissions(const std::vector<MissionInfo> &missions)

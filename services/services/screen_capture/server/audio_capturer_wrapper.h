@@ -34,6 +34,7 @@ namespace OHOS {
 namespace Media {
 using namespace AudioStandard;
 
+constexpr int64_t SEC_TO_NS = 1000000000;
 int64_t GetCurrentTimeNs();
 
 class AudioCapturerReadCallbackImpl;

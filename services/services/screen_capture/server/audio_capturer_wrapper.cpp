@@ -28,7 +28,6 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
-constexpr int64_t SEC_TO_NS = 1000000000;
 
 int64_t GetCurrentTimeNs()
 {

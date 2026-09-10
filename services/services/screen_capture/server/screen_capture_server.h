@@ -186,6 +186,7 @@ private:
     void PostStartScreenCaptureSuccessAction();
     AVScreenCaptureErrorCode MSErrorToScreenCaptureError(int32_t ret);
     int32_t InitRecorderInfo(std::shared_ptr<IRecorderService> &recorder, AudioCaptureInfo audioInfo);
+    int32_t SelectAudioSource(AudioCaptureInfo &audioInfo);
     int32_t InitRecorderMix();
     int32_t InitRecorderInner();
     int32_t InitRecorderMic();

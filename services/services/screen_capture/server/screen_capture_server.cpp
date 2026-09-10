@@ -1880,10 +1880,34 @@ int32_t ScreenCaptureServer::InitRecorderMic()
     return ret;
 }
 
+int32_t ScreenCaptureServer::SelectAudioSource(AudioCaptureInfo &audioInfo)
+{
+    auto &inner = captureConfig_.audioInfo.innerCapInfo;
+    auto &mic = captureConfig_.audioInfo.micCapInfo;
+    constexpr auto valid = AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    int32_t ret = MSERR_UNKNOWN;
+    if (inner.state == valid && mic.state == valid) {
+        audioInfo = inner;
+        ret = InitRecorderMix();
+    } else if (inner.state == valid) {
+        audioInfo = inner;
+        ret = InitRecorderInner();
+    } else if (mic.state == valid) {
+        audioInfo = mic;
+        ret = InitRecorderMic();
+    }
+    if (ret == MSERR_OK) {
+        std::lock_guard<std::mutex> lock(audioMutex_);
+        if (audioSource_ && audioInfo.audioSampleRate > 0 && audioInfo.audioChannels > 0) {
+            audioSource_->SetOutputFormat(audioInfo.audioSampleRate, audioInfo.audioChannels);
+        }
+    }
+    return ret;
+}
+
 int32_t ScreenCaptureServer::InitRecorder()
 {
     CHECK_AND_RETURN_RET_LOG(outputFd_ > 0, MSERR_INVALID_FD, "the outputFd is invalid");
-    MEDIA_LOGI("InitRecorder start");
     MediaTrace trace("ScreenCaptureServer::InitRecorder");
     if (!recorder_) {
         recorder_ = providers_->CreateRecorder();
@@ -1893,26 +1917,9 @@ int32_t ScreenCaptureServer::InitRecorder()
         recorder_->Release();
         recorder_ = nullptr;
     };
-    int32_t ret;
     AudioCaptureInfo audioInfo;
-    if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
-        captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
-        audioInfo = captureConfig_.audioInfo.innerCapInfo;
-        ret = InitRecorderMix();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETAUDIO, "SetAudioDataSource failed");
-    } else if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
-        audioInfo = captureConfig_.audioInfo.innerCapInfo;
-        ret = InitRecorderInner();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETAUDIO, "SetAudioDataSource failed");
-    } else if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
-        audioInfo = captureConfig_.audioInfo.micCapInfo;
-        ret = InitRecorderMic();
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETAUDIO, "SetAudioDataSource failed");
-    } else {
-        MEDIA_LOGE("InitRecorder not VALIDATION_VALID");
-        return MSERR_UNKNOWN;
-    }
-    MEDIA_LOGI("InitRecorder recorder SetAudioDataSource ret:%{public}d", ret);
+    int32_t ret = SelectAudioSource(audioInfo);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETAUDIO, "SetAudioDataSource failed");
     ret = InitRecorderInfo(recorder_, audioInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_INIT, "InitRecorderInfo failed");
     ret = recorder_->SetOutputFile(outputFd_);

@@ -72,7 +72,11 @@ namespace OHOS {
 namespace Media {
 namespace ScreenCaptureTestParam {
 constexpr uint32_t RECORDER_TIME = 2;
-}
+constexpr int32_t TEST_SAMPLE_RATE = 48000;
+constexpr int32_t TEST_CHANNELS = 2;
+constexpr int32_t TEST_FRAME_COUNT = 960;
+constexpr int64_t AUDIO_INTERVAL_NS = TEST_FRAME_COUNT * SEC_TO_NS / TEST_SAMPLE_RATE;
+} // namespace ScreenCaptureTestParam
 
 class ScreenCaptureServerFunctionTest : public testing::Test {
 public:
