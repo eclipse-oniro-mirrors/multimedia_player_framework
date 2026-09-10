@@ -19,6 +19,7 @@ group("screen_capture_fuzztest") {
   testonly = true
   deps = [
     "audiodatasource_fuzzer:AudioDataSourceFuzzTest",
+    "audiodatasource_ex_fuzzer:AudioDataSourceExFuzzTest",
     "avscreencaptureservicestub_fuzzer:AvScreenCaptureServiceStubFuzzTest",
     "screencaptureacquireaudiobuffer_fuzzer:ScreenCaptureAcquireAudioBufferFuzzTest",
     "screencaptureacquirevideobuffer_fuzzer:ScreenCaptureAcquireVideoBufferFuzzTest",

@@ -22,9 +22,9 @@
 #include "screen_capture.h"
 #include "screen_capture_server.h"
 #include "string_ex.h"
-#include "test_template.h"
 #include <cmath>
 #include <cstring>
+#include <fuzzer/FuzzedDataProvider.h>
 #include <iostream>
 #include <unistd.h>
 
@@ -36,16 +36,13 @@ namespace OHOS {
 namespace Media {
 
 constexpr int32_t AUDIO_SOURCE_TYPE_COUNT = 4;
-constexpr int32_t SLOT_STATE_COUNT = 3;
 constexpr int32_t COMBINE_POLICY_COUNT = 2;
-constexpr int32_t MAX_SLOTS = 3;
-constexpr int32_t MAX_MIX_SRCS = 4;
 constexpr uint32_t MAX_READ_LENGTH = 1024;
 
-void AudioDataSourceFuzzer::Init()
+void AudioDataSourceFuzzer::Init(FuzzedDataProvider &fdp)
 {
-    auto policy = static_cast<AudioCombinePolicy>(GetData<uint8_t>() % COMBINE_POLICY_COUNT);
-    bool withVideo = static_cast<bool>(GetData<uint8_t>() % COMBINE_POLICY_COUNT);
+    auto policy = static_cast<AudioCombinePolicy>(fdp.ConsumeIntegralInRange<uint8_t>(0, COMBINE_POLICY_COUNT - 1));
+    bool withVideo = fdp.ConsumeBool();
     audioSource_ = std::make_shared<AudioDataSourceGeneric>(policy, withVideo);
 }
 
@@ -68,40 +65,40 @@ std::shared_ptr<AVBuffer> AudioDataSourceFuzzer::CreateAVBuffer()
     return avBuffer;
 }
 
-bool AudioDataSourceFuzzer::FuzzReadAt()
+bool AudioDataSourceFuzzer::FuzzReadAt(FuzzedDataProvider &fdp)
 {
-    Init();
+    Init(fdp);
     auto buffer = CreateAVBuffer();
-    uint32_t length = GetData<uint32_t>() % MAX_READ_LENGTH + 1;
+    uint32_t length = fdp.ConsumeIntegralInRange<uint32_t>(1, MAX_READ_LENGTH);
     audioSource_->ReadAt(buffer, length);
     audioSource_->ReadAt(nullptr, length);
     Release();
     return true;
 }
 
-bool AudioDataSourceFuzzer::FuzzGetSize()
+bool AudioDataSourceFuzzer::FuzzGetSize(FuzzedDataProvider &fdp)
 {
-    Init();
+    Init(fdp);
     int64_t size = 0;
     audioSource_->GetSize(size);
-    audioSource_->cacheBuffer_ = CreateAudioBuffer(GetData<int64_t>());
+    audioSource_->cacheBuffer_ = CreateAudioBuffer(fdp.ConsumeIntegral<int64_t>());
     audioSource_->GetSize(size);
     Release();
     return true;
 }
 
-bool AudioDataSourceFuzzer::FuzzSetVideoFirstFramePts()
+bool AudioDataSourceFuzzer::FuzzSetVideoFirstFramePts(FuzzedDataProvider &fdp)
 {
-    Init();
-    int64_t pts = GetData<int64_t>();
+    Init(fdp);
+    int64_t pts = fdp.ConsumeIntegral<int64_t>();
     audioSource_->SetVideoFirstFramePts(pts);
     Release();
     return true;
 }
 
-bool AudioDataSourceFuzzer::FuzzPauseResume()
+bool AudioDataSourceFuzzer::FuzzPauseResume(FuzzedDataProvider &fdp)
 {
-    Init();
+    Init(fdp);
     audioSource_->Resume();
     audioSource_->Pause();
     audioSource_->Resume();
@@ -110,142 +107,38 @@ bool AudioDataSourceFuzzer::FuzzPauseResume()
     return true;
 }
 
-bool AudioDataSourceFuzzer::FuzzStop()
+bool AudioDataSourceFuzzer::FuzzStop(FuzzedDataProvider &fdp)
 {
-    Init();
+    Init(fdp);
     audioSource_->Stop();
     audioSource_->ReadAudioBuffer();
     Release();
     return true;
 }
 
-bool AudioDataSourceFuzzer::FuzzOnBufferAvailable()
+bool AudioDataSourceFuzzer::FuzzOnBufferAvailable(FuzzedDataProvider &fdp)
 {
-    Init();
-    auto type = static_cast<AudioCaptureSourceType>(GetData<uint8_t>() % AUDIO_SOURCE_TYPE_COUNT);
+    Init(fdp);
+    auto type = static_cast<AudioCaptureSourceType>(
+        fdp.ConsumeIntegralInRange<uint8_t>(0, AUDIO_SOURCE_TYPE_COUNT - 1));
     audioSource_->OnBufferAvailable(type);
-    Release();
-    return true;
-}
-
-bool AudioDataSourceFuzzer::FuzzSetCapture()
-{
-    Init();
-    auto type = static_cast<AudioCaptureSourceType>(GetData<uint8_t>() % AUDIO_SOURCE_TYPE_COUNT);
-    audioSource_->SetCapture(type, nullptr);
-    Release();
-    return true;
-}
-
-bool AudioDataSourceFuzzer::FuzzReadAudioBuffer()
-{
-    Init();
-    audioSource_->firstVideoFramePts_.store(GetData<int64_t>());
-    audioSource_->avSynced_ = static_cast<bool>(GetData<uint8_t>() % COMBINE_POLICY_COUNT);
-    audioSource_->active_.store(static_cast<bool>(GetData<uint8_t>() % COMBINE_POLICY_COUNT));
-
-    int32_t numSlots = GetData<uint8_t>() % MAX_SLOTS;
-    audioSource_->captures_.clear();
-    for (int32_t i = 0; i < numSlots; i++) {
-        auto type = static_cast<AudioCaptureSourceType>(GetData<uint8_t>() % AUDIO_SOURCE_TYPE_COUNT);
-        auto state = static_cast<CaptureSlotState>(GetData<uint8_t>() % SLOT_STATE_COUNT);
-        auto buf = GetData<uint8_t>() % COMBINE_POLICY_COUNT ? CreateAudioBuffer(GetData<int64_t>()) : nullptr;
-        audioSource_->captures_.push_back({type, nullptr, state, buf, GetData<int64_t>()});
-    }
-    audioSource_->ReadAudioBuffer();
-    Release();
-    return true;
-}
-
-bool AudioDataSourceFuzzer::FuzzLostFrameNum()
-{
-    Init();
-    audioSource_->firstVideoFramePts_.store(GetData<int64_t>());
-    audioSource_->writedFrameTime_ = GetData<int64_t>();
-    audioSource_->pauseDuration_.store(GetData<int64_t>());
-    int64_t ts = GetData<int64_t>();
-    audioSource_->LostFrameNum(ts);
-    Release();
-    return true;
-}
-
-bool AudioDataSourceFuzzer::FuzzAlignOrCombine()
-{
-    Init();
-    int32_t numSlots = GetData<uint8_t>() % MAX_SLOTS;
-    audioSource_->captures_.clear();
-    for (int32_t i = 0; i < numSlots; i++) {
-        auto type = static_cast<AudioCaptureSourceType>(GetData<uint8_t>() % AUDIO_SOURCE_TYPE_COUNT);
-        auto state = static_cast<CaptureSlotState>(GetData<uint8_t>() % SLOT_STATE_COUNT);
-        auto buf = GetData<uint8_t>() % COMBINE_POLICY_COUNT ? CreateAudioBuffer(GetData<int64_t>()) : nullptr;
-        audioSource_->captures_.push_back({type, nullptr, state, buf, GetData<int64_t>()});
-    }
-    audioSource_->AlignOrCombine();
-    Release();
-    return true;
-}
-
-bool AudioDataSourceFuzzer::FuzzCombine()
-{
-    Init();
-    int32_t numSlots = GetData<uint8_t>() % MAX_MIX_SRCS;
-    audioSource_->captures_.clear();
-    for (int32_t i = 0; i < numSlots; i++) {
-        auto type = static_cast<AudioCaptureSourceType>(GetData<uint8_t>() % AUDIO_SOURCE_TYPE_COUNT);
-        auto state = static_cast<CaptureSlotState>(GetData<uint8_t>() % SLOT_STATE_COUNT);
-        auto buf = CreateAudioBuffer(GetData<int64_t>());
-        auto lastTs = GetData<int64_t>();
-        audioSource_->captures_.push_back({type, nullptr, state, buf, lastTs});
-    }
-    audioSource_->Combine();
-    Release();
-    return true;
-}
-
-bool AudioDataSourceFuzzer::FuzzMixAudio()
-{
-    Init();
-    int32_t numSrcs = GetData<uint8_t>() % MAX_MIX_SRCS + 1;
-    std::vector<const CacheBuffer *> srcs;
-    std::vector<std::shared_ptr<CacheBuffer>> holders;
-    for (int32_t i = 0; i < numSrcs; i++) {
-        auto buf = CreateAudioBuffer(GetData<int64_t>());
-        holders.push_back(buf);
-        srcs.push_back(buf.get());
-    }
-    auto out = std::make_unique<uint8_t[]>(datasize);
-    audioSource_->MixAudio(srcs, out.get());
-    srcs.clear();
-    for (size_t i = 0; i < holders.size(); i++) {
-        srcs.push_back(i % COMBINE_POLICY_COUNT ? holders[i].get() : nullptr);
-    }
-    audioSource_->MixAudio(srcs, out.get());
     Release();
     return true;
 }
 
 bool FuzzAudioDataSourceCase(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < sizeof(int64_t)) {
+    if (data == nullptr || size == 0) {
         return true;
     }
-    g_baseFuzzData = data;
-    g_baseFuzzSize = size;
-    g_baseFuzzPos = 0;
-
+    FuzzedDataProvider fdp(data, size);
     AudioDataSourceFuzzer fuzzer;
-    fuzzer.FuzzReadAt();
-    fuzzer.FuzzGetSize();
-    fuzzer.FuzzSetVideoFirstFramePts();
-    fuzzer.FuzzPauseResume();
-    fuzzer.FuzzStop();
-    fuzzer.FuzzOnBufferAvailable();
-    fuzzer.FuzzSetCapture();
-    fuzzer.FuzzReadAudioBuffer();
-    fuzzer.FuzzLostFrameNum();
-    fuzzer.FuzzAlignOrCombine();
-    fuzzer.FuzzCombine();
-    fuzzer.FuzzMixAudio();
+    fuzzer.FuzzReadAt(fdp);
+    fuzzer.FuzzGetSize(fdp);
+    fuzzer.FuzzSetVideoFirstFramePts(fdp);
+    fuzzer.FuzzPauseResume(fdp);
+    fuzzer.FuzzStop(fdp);
+    fuzzer.FuzzOnBufferAvailable(fdp);
     return true;
 }
 
