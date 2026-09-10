@@ -29,8 +29,8 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
-constexpr int64_t AUDIO_INTERVAL_IN_NS = 21333334;
-constexpr int64_t FRAME_LOSS_THRESHOLD = 2 * AUDIO_INTERVAL_IN_NS;
+constexpr int64_t AUDIO_INTERVAL_IN_NS = 20000000;
+constexpr int64_t FRAME_LOSS_THRESHOLD = 2;
 
 void AudioBufferLogStats::Log() const
 {
@@ -144,7 +144,7 @@ bool AudioDataSourceGeneric::AcquireReady()
         }
         buf->sourcetype = slot.type;
         if (slot.state == CaptureSlotState::STABLE && slot.lastTs != 0 &&
-            buf->timestamp - slot.lastTs > FRAME_LOSS_THRESHOLD) {
+            buf->timestamp - slot.lastTs > FRAME_LOSS_THRESHOLD * buf->intervalNs) {
             slot.state = CaptureSlotState::UNSTABLE;
             MEDIA_LOGI("AcquireReady frame loss gap:%{public}" PRId64 " lastTs:%{public}" PRId64,
                 buf->timestamp - slot.lastTs, slot.lastTs);
@@ -201,10 +201,12 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::ReadAudioBuffer()
 AudioDataSourceReadAtActionState AudioDataSourceGeneric::VideoAudioSyncIfNeed()
 {
     int64_t audioTime = std::numeric_limits<int64_t>::max();
+    int64_t intervalNs = 0;
     bool found = false;
     for (const auto &slot : captures_) {
         if (slot.currentBuf && slot.currentBuf->timestamp < audioTime) {
             audioTime = slot.currentBuf->timestamp;
+            intervalNs = slot.currentBuf->intervalNs;
             found = true;
         }
     }
@@ -213,7 +215,7 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::VideoAudioSyncIfNeed()
     MEDIA_LOGI("VideoAudioSyncIfNeed timeWindow: %{public}" PRId64 " audioTime: %{public}" PRId64, timeWindow,
         audioTime);
     avSynced_ = true;
-    if (timeWindow >= AUDIO_INTERVAL_IN_NS) {
+    if (timeWindow >= intervalNs) {
         for (auto &slot : captures_) {
             if (slot.currentBuf && slot.capture) {
                 slot.capture->DropBufferUntil(firstVideoFramePts_.load());
@@ -253,7 +255,7 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::AlignOrCombine()
             continue;
         }
         int64_t diff = slot.currentBuf->timestamp - refTs;
-        if (diff >= AUDIO_INTERVAL_IN_NS) {
+        if (diff >= refSlot->currentBuf->intervalNs) {
             slot.currentBuf.reset();
             MEDIA_LOGI("AlignOrCombine hold ahead diff:%{public}" PRId64 " refTs:%{public}" PRId64, diff, refTs);
         }
@@ -286,7 +288,7 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::Combine()
         auto mixData = std::make_unique<uint8_t[]>(srcs.front()->length);
         MixAudio(srcs, mixData.get());
         cacheBuffer_ = std::make_shared<CacheBuffer>(std::move(mixData), srcs.front()->length, ts,
-            srcs.front()->sourcetype);
+            srcs.front()->intervalNs, srcs.front()->sourcetype);
         lastEmit_ = {AudioOutputTag::MIXED, AudioCaptureSourceType::SOURCE_DEFAULT, ts};
     }
     for (auto &slot : captures_) {
@@ -357,6 +359,7 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::ReadAt(std::shared_ptr<
     if (buffer == nullptr || buffer->memory_ == nullptr) {
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
+    int64_t intervalNs = cacheBuffer_->intervalNs;
     auto lostNum = LostFrameNum(cacheBuffer_->timestamp);
     if (lostNum > 0) {
         if (zeroBuffer_.size() < length) {
@@ -372,14 +375,14 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::ReadAt(std::shared_ptr<
             zeroBuffer_.assign(length, 0);
         }
         buffer->memory_->Write(zeroBuffer_.data(), length, 0);
-        writedFrameTime_ += AUDIO_INTERVAL_IN_NS;
+        writedFrameTime_ += intervalNs;
         cacheBuffer_.reset();
         ReadAudioBuffer();
         return AudioDataSourceReadAtActionState::OK;
     }
     cacheBuffer_.reset();
     zeroBuffer_.clear();
-    writedFrameTime_ += AUDIO_INTERVAL_IN_NS;
+    writedFrameTime_ += intervalNs;
     SetMixAudioTypeLog(lastEmit_.type);
     ReadAudioBuffer();
     return AudioDataSourceReadAtActionState::OK;

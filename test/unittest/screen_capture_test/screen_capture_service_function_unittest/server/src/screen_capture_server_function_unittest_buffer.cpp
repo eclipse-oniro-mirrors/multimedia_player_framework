@@ -259,7 +259,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBuffer_MicSuccess_001, Tes
     auto wrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, "MicAd", false);
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     auto buf = std::make_unique<uint8_t[]>(10);
-    wrapper->availBuffers_.push_back(std::make_shared<CacheBuffer>(std::move(buf), 10, 0, AudioCaptureSourceType::MIC));
+    wrapper->availBuffers_.push_back(
+        std::make_shared<CacheBuffer>(std::move(buf), 10, 0, 0, AudioCaptureSourceType::MIC));
     EXPECT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::MIC), MSERR_OK);
     EXPECT_TRUE(wrapper->availBuffers_.empty());
     screenCaptureServer_->micAudioCapture_ = nullptr;
@@ -277,7 +278,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBuffer_SourceDefaultSucces
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     auto buf = std::make_unique<uint8_t[]>(10);
     wrapper->availBuffers_.push_back(
-        std::make_shared<CacheBuffer>(std::move(buf), 10, 0, AudioCaptureSourceType::SOURCE_DEFAULT));
+        std::make_shared<CacheBuffer>(std::move(buf), 10, 0, 0, AudioCaptureSourceType::SOURCE_DEFAULT));
     EXPECT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::SOURCE_DEFAULT), MSERR_OK);
     EXPECT_TRUE(wrapper->availBuffers_.empty());
     screenCaptureServer_->micAudioCapture_ = nullptr;
@@ -295,7 +296,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBuffer_InnerAllPlaybackSuc
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     auto buf = std::make_unique<uint8_t[]>(10);
     wrapper->availBuffers_.push_back(
-        std::make_shared<CacheBuffer>(std::move(buf), 10, 0, AudioCaptureSourceType::ALL_PLAYBACK));
+        std::make_shared<CacheBuffer>(std::move(buf), 10, 0, 0, AudioCaptureSourceType::ALL_PLAYBACK));
     EXPECT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::ALL_PLAYBACK), MSERR_OK);
     EXPECT_TRUE(wrapper->availBuffers_.empty());
     screenCaptureServer_->innerAudioCapture_ = nullptr;
@@ -313,7 +314,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBuffer_InnerAppPlaybackSuc
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     auto buf = std::make_unique<uint8_t[]>(10);
     wrapper->availBuffers_.push_back(
-        std::make_shared<CacheBuffer>(std::move(buf), 10, 0, AudioCaptureSourceType::APP_PLAYBACK));
+        std::make_shared<CacheBuffer>(std::move(buf), 10, 0, 0, AudioCaptureSourceType::APP_PLAYBACK));
     EXPECT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::APP_PLAYBACK), MSERR_OK);
     EXPECT_TRUE(wrapper->availBuffers_.empty());
     screenCaptureServer_->innerAudioCapture_ = nullptr;

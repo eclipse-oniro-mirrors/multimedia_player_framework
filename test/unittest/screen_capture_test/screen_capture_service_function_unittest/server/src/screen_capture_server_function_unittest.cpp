@@ -436,7 +436,7 @@ std::shared_ptr<CacheBuffer> ScreenCaptureServerFunctionTest::MakeTestCacheBuffe
     constexpr int32_t testBufferLen = 10;
     constexpr int64_t testBufferPts = 0;
     auto buf = std::make_unique<uint8_t[]>(testBufferLen);
-    return std::make_shared<CacheBuffer>(std::move(buf), testBufferLen, testBufferPts, type);
+    return std::make_shared<CacheBuffer>(std::move(buf), testBufferLen, testBufferPts, 0, type);
 }
 
 // videoCapInfo and innerCapInfo IGNORE

@@ -60,7 +60,7 @@ std::shared_ptr<CacheBuffer> AudioDataSourceExFuzzer::CreateAudioBuffer(int64_t 
 std::shared_ptr<CacheBuffer> AudioDataSourceExFuzzer::CreateAudioBuffer(int64_t timestamp, int32_t size)
 {
     auto buf = std::make_unique<uint8_t[]>(size);
-    auto cacheBuf = std::make_shared<CacheBuffer>(std::move(buf), size, timestamp);
+    auto cacheBuf = std::make_shared<CacheBuffer>(std::move(buf), size, timestamp, 0);
     return cacheBuf;
 }
 

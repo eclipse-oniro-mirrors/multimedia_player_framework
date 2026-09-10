@@ -268,18 +268,25 @@ std::shared_ptr<CacheBuffer> AudioCapturerWrapper::CreateCacheBuffer(const OHOS:
         return nullptr;
     }
     auto bufferLen = static_cast<int32_t>(bufDesc.bufLength);
+    uint32_t frameCount = 0;
+    capturer->GetFrameCount(frameCount);
+    int64_t intervalNs = 0;
+    if (audioInfo_.audioSampleRate > 0 && frameCount > 0) {
+        intervalNs = static_cast<int64_t>(frameCount) * SEC_TO_NS / audioInfo_.audioSampleRate;
+    }
     ON_SCOPE_EXIT(0)
     {
         capturer->Enqueue(bufDesc);
     };
     if (isMute_.load()) {
-        return std::make_shared<CacheBuffer>(nullptr, bufferLen, audioTimestamp, audioInfo_.audioSource);
+        return std::make_shared<CacheBuffer>(nullptr, bufferLen, audioTimestamp, intervalNs, audioInfo_.audioSource);
     }
     auto ownedBuf = std::make_unique<uint8_t[]>(bufferLen);
     if (memcpy_s(ownedBuf.get(), bufferLen, bufDesc.buffer, bufferLen) != EOK) {
         return nullptr;
     }
-    return std::make_shared<CacheBuffer>(std::move(ownedBuf), bufferLen, audioTimestamp, audioInfo_.audioSource);
+    return std::make_shared<CacheBuffer>(std::move(ownedBuf), bufferLen, audioTimestamp,
+        intervalNs, audioInfo_.audioSource);
 }
 
 void AudioCapturerWrapper::NotifyBufferAvailable(const std::shared_ptr<AudioBufferAvailableCallback> &cb)

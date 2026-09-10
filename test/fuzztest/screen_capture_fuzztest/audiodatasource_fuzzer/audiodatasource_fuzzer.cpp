@@ -54,7 +54,7 @@ void AudioDataSourceFuzzer::Release()
 std::shared_ptr<CacheBuffer> AudioDataSourceFuzzer::CreateAudioBuffer(int64_t timestamp)
 {
     auto buf = std::make_unique<uint8_t[]>(datasize);
-    auto cacheBuf = std::make_shared<CacheBuffer>(std::move(buf), datasize, timestamp);
+    auto cacheBuf = std::make_shared<CacheBuffer>(std::move(buf), datasize, timestamp, 0);
     return cacheBuf;
 }
 
