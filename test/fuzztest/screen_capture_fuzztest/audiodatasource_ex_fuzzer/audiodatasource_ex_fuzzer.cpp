@@ -77,7 +77,7 @@ bool AudioDataSourceExFuzzer::FuzzSetCapture(FuzzedDataProvider &fdp)
 bool AudioDataSourceExFuzzer::FuzzReadAudioBuffer(FuzzedDataProvider &fdp)
 {
     Init(fdp);
-    audioSource_->firstVideoFramePts_.store(fdp.ConsumeIntegral<int64_t>());
+    audioSource_->firstVideoFramePts_ = fdp.ConsumeIntegral<int64_t>();
     audioSource_->avSynced_ = fdp.ConsumeBool();
     audioSource_->active_.store(fdp.ConsumeBool());
 
@@ -98,9 +98,9 @@ bool AudioDataSourceExFuzzer::FuzzReadAudioBuffer(FuzzedDataProvider &fdp)
 bool AudioDataSourceExFuzzer::FuzzLostFrameNum(FuzzedDataProvider &fdp)
 {
     Init(fdp);
-    audioSource_->firstVideoFramePts_.store(fdp.ConsumeIntegral<int64_t>());
+    audioSource_->firstVideoFramePts_ = fdp.ConsumeIntegral<int64_t>();
     audioSource_->writedFrameTime_ = fdp.ConsumeIntegral<int64_t>();
-    audioSource_->pauseDuration_.store(fdp.ConsumeIntegral<int64_t>());
+    audioSource_->pauseDuration_ = fdp.ConsumeIntegral<int64_t>();
     int64_t ts = fdp.ConsumeIntegral<int64_t>();
     audioSource_->LostFrameNum(ts);
     Release();

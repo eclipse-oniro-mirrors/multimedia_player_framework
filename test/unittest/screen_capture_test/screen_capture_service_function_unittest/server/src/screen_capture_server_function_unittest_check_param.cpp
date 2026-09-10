@@ -672,5 +672,52 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetPickerMode_001, TestSize.Level2)
     EXPECT_EQ(screenCaptureServer_->SetPickerMode(static_cast<PickerMode>(-1)), MSERR_INVALID_VAL);
     EXPECT_EQ(screenCaptureServer_->SetPickerMode(static_cast<PickerMode>(7)), MSERR_INVALID_VAL);
 }
+
+// ===================== IsSetHighlightConfig =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSetHighlightConfig_LineThicknessTooSmall_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.highlightConfig.lineThickness = 0;
+    EXPECT_FALSE(screenCaptureServer_->IsSetHighlightConfig());
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSetHighlightConfig_LineThicknessTooLarge_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.highlightConfig.lineThickness = 9;
+    EXPECT_FALSE(screenCaptureServer_->IsSetHighlightConfig());
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSetHighlightConfig_InvalidLineColor_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.highlightConfig.lineThickness = 3;
+    screenCaptureServer_->captureConfig_.highlightConfig.lineColor = 0x1000000;
+    EXPECT_FALSE(screenCaptureServer_->IsSetHighlightConfig());
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSetHighlightConfig_InvalidMode_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.highlightConfig.lineThickness = 3;
+    screenCaptureServer_->captureConfig_.highlightConfig.lineColor = 0xffffff;
+    screenCaptureServer_->captureConfig_.highlightConfig.mode = static_cast<ScreenCaptureHighlightMode>(99);
+    EXPECT_FALSE(screenCaptureServer_->IsSetHighlightConfig());
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSetHighlightConfig_NotSpecifiedWindow_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.highlightConfig.lineThickness = 3;
+    screenCaptureServer_->captureConfig_.highlightConfig.lineColor = 0xffffff;
+    screenCaptureServer_->captureConfig_.highlightConfig.mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CLOSED;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
+    EXPECT_FALSE(screenCaptureServer_->IsSetHighlightConfig());
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, IsSetHighlightConfig_Valid_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.highlightConfig.lineThickness = 3;
+    screenCaptureServer_->captureConfig_.highlightConfig.lineColor = 0xffffff;
+    screenCaptureServer_->captureConfig_.highlightConfig.mode = ScreenCaptureHighlightMode::HIGHLIGHT_MODE_CORNER_WRAP;
+    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    EXPECT_TRUE(screenCaptureServer_->IsSetHighlightConfig());
+}
 } // namespace Media
 } // namespace OHOS

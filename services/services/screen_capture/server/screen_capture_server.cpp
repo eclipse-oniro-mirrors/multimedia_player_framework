@@ -263,7 +263,6 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create(
     int32_t id = mgr.GetNewSessionId();
     CHECK_AND_RETURN_RET_LOG(id != -1, nullptr, "GetNewSessionId failed.");
     auto server = std::make_shared<ScreenCaptureServer>(std::move(providers));
-    CHECK_AND_RETURN_RET_LOG(server != nullptr, nullptr, "Failed to create ScreenCaptureServer.");
     server->sessionId_ = id;
     server->GetAndSetAppVersion();
     server->listenerManager_ = std::make_shared<ScreenCaptureListenerManager>(server, server->providers_.get());
@@ -1379,7 +1378,6 @@ int32_t ScreenCaptureServer::StartInnerAudioCapture()
                 : GenerateThreadNameByPrefix("OS_FInnAd");
             innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
                 captureConfig_.audioInfo.innerCapInfo, cbProxy_, std::move(threadName), contentFilter_);
-            CHECK_AND_RETURN_RET_LOG(innerAudioCapture_ != nullptr, MSERR_UNKNOWN, "CreateInnerAudioCapture failed");
         }
         MediaTrace trace("ScreenCaptureServer::StartInnerAudioCapture");
         int32_t ret = innerAudioCapture_->Start(appInfo_);
@@ -2487,7 +2485,6 @@ int32_t ScreenCaptureServer::StartStreamHomeVideoCapture()
     producerSurface_ = OHOS::Surface::CreateSurfaceAsProducer(producer);
     CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
     surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer_, cbProxy_);
-    CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_UNKNOWN, "MakeSptr surfaceCb_ failed");
     consumer_->RegisterConsumerListener(surfaceCb_);
     MEDIA_LOGD("StartStreamHomeVideoCapture producerSurface_: %{public}" PRIu64, producerSurface_->GetUniqueId());
     int32_t ret = MSERR_OK;
@@ -3566,7 +3563,6 @@ int32_t ScreenCaptureServer::StartMicAudioCapture(bool isVoip)
             ScreenCaptureContentFilter contentFilterMic;
             micAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
                 captureConfig_.audioInfo.micCapInfo, cbProxy_, std::move(threadName), contentFilterMic);
-            CHECK_AND_RETURN_RET_LOG(micAudioCapture_ != nullptr, MSERR_UNKNOWN, "CreateMicAudioCapture failed");
         }
         MediaTrace trace("ScreenCaptureServer::StartMicAudioCapture");
         micAudioCapture_->SetIsInVoIPCall(isVoip);

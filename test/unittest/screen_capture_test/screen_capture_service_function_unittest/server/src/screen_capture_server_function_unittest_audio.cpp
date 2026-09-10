@@ -185,6 +185,56 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_SameState, Te
     EXPECT_EQ(screenCaptureServer_->AudioRendererStateUpdate(changeInfos), MSERR_OK);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_TelCallRunning, TestSize.Level2)
+{
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
+    auto info = std::make_shared<AudioRendererChangeInfo>();
+    info->rendererState = RendererState::RENDERER_RUNNING;
+    info->rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_MODEM_COMMUNICATION;
+    info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_SPEAKER;
+    changeInfos.push_back(info);
+    screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_TEL, AUDIO_STATE_TEL);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_VoipVideo, TestSize.Level2)
+{
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
+    screenCaptureServer_->appName_ = ScreenRecorderBundleName;
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
+    auto info = std::make_shared<AudioRendererChangeInfo>();
+    info->rendererState = RendererState::RENDERER_RUNNING;
+    info->rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION;
+    info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_SPEAKER;
+    changeInfos.push_back(info);
+    screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_VOIP, AUDIO_STATE_VOIP);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_HeadsetAllVariants, TestSize.Level2)
+{
+    SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
+    std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
+    const std::vector<AudioStandard::DeviceType> headsets = {
+        AudioStandard::DEVICE_TYPE_WIRED_HEADPHONES,
+        AudioStandard::DEVICE_TYPE_BLUETOOTH_SCO,
+        AudioStandard::DEVICE_TYPE_BLUETOOTH_A2DP,
+        AudioStandard::DEVICE_TYPE_USB_HEADSET,
+        AudioStandard::DEVICE_TYPE_USB_ARM_HEADSET,
+        AudioStandard::DEVICE_TYPE_NEARLINK,
+    };
+    for (auto dt : headsets) {
+        auto info = std::make_shared<AudioRendererChangeInfo>();
+        info->rendererState = RendererState::RENDERER_RUNNING;
+        info->rendererInfo.streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_MEDIA;
+        info->outputDeviceInfo.deviceType_ = dt;
+        changeInfos.push_back(info);
+    }
+    screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
+}
+
 // ===================== StartInnerAudioCapture =====================
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_CreateFail, TestSize.Level2)

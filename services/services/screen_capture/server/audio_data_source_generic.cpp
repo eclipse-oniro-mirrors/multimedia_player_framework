@@ -31,6 +31,7 @@ namespace OHOS {
 namespace Media {
 constexpr int64_t AUDIO_INTERVAL_IN_NS = 20000000;
 constexpr int64_t FRAME_LOSS_THRESHOLD = 2;
+constexpr int64_t SILENT_FRAME_CHUNK = 5;
 
 void AudioBufferLogStats::Log() const
 {
@@ -38,16 +39,22 @@ void AudioBufferLogStats::Log() const
         static_cast<int32_t>(type), static_cast<int32_t>(source), size);
 }
 
-void AudioBufferLogStats::Update(AudioOutputTag tag, AudioCaptureSourceType src)
+void AudioBufferLogStats::Update(AudioOutputTag tag, AudioCaptureSourceType src, uint64_t count)
 {
     if (tag != type || src != source) {
         Log();
         type = tag;
         source = src;
-        size = 1;
+        size = count;
     } else {
-        size++;
+        size += count;
     }
+}
+
+void AudioBufferLogStats::Emit(AudioOutputTag tag, AudioCaptureSourceType src)
+{
+    emitType = tag;
+    emitSource = src;
 }
 
 AudioDataSourceGeneric::AudioDataSourceGeneric(AudioCombinePolicy policy, bool recorderFileWithVideo)
@@ -68,26 +75,30 @@ void AudioDataSourceGeneric::SetListener(std::shared_ptr<IAudioDataSourceListene
 
 void AudioDataSourceGeneric::SetVideoFirstFramePts(int64_t firstFramePts)
 {
-    firstVideoFramePts_.store(firstFramePts);
-    MEDIA_LOGI("SetVideoFirstFramePts firstVideoFramePts: %{public}" PRId64, firstFramePts);
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (firstVideoFramePts_ < 0) {
+        firstVideoFramePts_ = firstFramePts;
+        MEDIA_LOGI("SetVideoFirstFramePts firstVideoFramePts: %{public}" PRId64, firstFramePts);
+        return;
+    }
+    pauseDuration_ = firstFramePts - firstVideoFramePts_ - writedFrameTime_;
+    remainingSilentFrames_ = 0;
+    pauseDurationPending_ = false;
+    MEDIA_LOGI("SetVideoFirstFramePts update pauseDuration: %{public}" PRId64, pauseDuration_);
 }
 
 void AudioDataSourceGeneric::Pause()
 {
-    pauseStartTime_.store(GetCurrentTimeNs());
-    MEDIA_LOGI("Pause pauseStartTime=%{public}" PRId64, pauseStartTime_.load());
+    std::lock_guard<std::mutex> lock(mutex_);
+    pauseDurationPending_ = true;
+    MEDIA_LOGI("AudioDataSourceGeneric Pause");
 }
 
 void AudioDataSourceGeneric::Resume()
 {
-    int64_t start = pauseStartTime_.exchange(0);
-    if (start == 0) {
-        MEDIA_LOGE("Resume called without prior Pause");
-        return;
-    }
-    int64_t duration = GetCurrentTimeNs() - start;
-    pauseDuration_.fetch_add(duration);
-    MEDIA_LOGI("Resume duration=%{public}" PRId64 " pauseDuration=%{public}" PRId64, duration, pauseDuration_.load());
+    std::lock_guard<std::mutex> lock(mutex_);
+    pauseDurationPending_ = true;
+    MEDIA_LOGI("AudioDataSourceGeneric Resume");
 }
 
 void AudioDataSourceGeneric::Stop()
@@ -101,6 +112,9 @@ void AudioDataSourceGeneric::OnBufferAvailable(AudioCaptureSourceType type)
     std::shared_ptr<IAudioDataSourceListener> listener;
     {
         std::lock_guard<std::mutex> lock(mutex_);
+        if (pauseDurationPending_) {
+            return;
+        }
         if (cacheBuffer_ || ReadAudioBuffer() == AudioDataSourceReadAtActionState::OK) {
             listener = listener_.lock();
         }
@@ -173,7 +187,7 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::ReadAudioBuffer()
     if (!active_.load()) {
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
-    if (recorderFileWithVideo_ && firstVideoFramePts_.load() == -1) {
+    if (recorderFileWithVideo_ && firstVideoFramePts_ == -1) {
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
     if (!AcquireReady()) {
@@ -219,14 +233,14 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::VideoAudioSyncIfNeed()
         }
     }
     CHECK_AND_RETURN_RET_NOLOG(found, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
-    int64_t timeWindow = firstVideoFramePts_.load() - audioTime;
+    int64_t timeWindow = firstVideoFramePts_ - audioTime;
     MEDIA_LOGI("VideoAudioSyncIfNeed timeWindow: %{public}" PRId64 " audioTime: %{public}" PRId64, timeWindow,
         audioTime);
     avSynced_ = true;
     if (timeWindow >= intervalNs) {
         for (auto &slot : captures_) {
             if (slot.currentBuf && slot.capture) {
-                slot.capture->DropBufferUntil(firstVideoFramePts_.load());
+                slot.capture->DropBufferUntil(firstVideoFramePts_);
             }
         }
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
@@ -291,13 +305,13 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::Combine()
     }
     if (srcs.size() == 1) {
         cacheBuffer_ = singleSlot->currentBuf;
-        lastEmit_ = {AudioOutputTag::SINGLE, singleSlot->currentBuf->sourcetype, ts};
+        logStats_.Emit(AudioOutputTag::SINGLE, singleSlot->currentBuf->sourcetype);
     } else {
         auto mixData = std::make_unique<uint8_t[]>(srcs.front()->length);
         MixAudio(srcs, mixData.get());
         cacheBuffer_ = std::make_shared<CacheBuffer>(std::move(mixData), srcs.front()->length, ts,
             srcs.front()->intervalNs, srcs.front()->sourcetype);
-        lastEmit_ = {AudioOutputTag::MIXED, AudioCaptureSourceType::SOURCE_DEFAULT, ts};
+        logStats_.Emit(AudioOutputTag::MIXED, AudioCaptureSourceType::SOURCE_DEFAULT);
     }
     for (auto &slot : captures_) {
         if (slot.currentBuf) {
@@ -343,55 +357,68 @@ void AudioDataSourceGeneric::MixAudio(const std::vector<const CacheBuffer *> &sr
     }
 }
 
-void AudioDataSourceGeneric::SetMixAudioTypeLog(AudioOutputTag bufferType)
-{
-    logStats_.Update(bufferType,
-        (bufferType == AudioOutputTag::SINGLE) ? lastEmit_.source : AudioCaptureSourceType::SOURCE_DEFAULT);
-}
-
 int64_t AudioDataSourceGeneric::LostFrameNum(const int64_t &timestamp)
 {
-    int64_t pauseDuration = pauseDuration_.load();
-    if (firstVideoFramePts_.load() < 0 || timestamp < 0 || pauseDuration < 0 || writedFrameTime_ < 0) {
+    if (remainingSilentFrames_ > 0) {
+        return std::min(remainingSilentFrames_, SILENT_FRAME_CHUNK);
+    }
+    int64_t pauseDuration = pauseDuration_;
+    if (firstVideoFramePts_ < 0 || timestamp < 0 || pauseDuration < 0 || writedFrameTime_ < 0) {
         return 0;
     }
-    return (timestamp - pauseDuration - writedFrameTime_ - firstVideoFramePts_.load()) / AUDIO_INTERVAL_IN_NS;
+    int64_t lostNum = (timestamp - pauseDuration - writedFrameTime_ - firstVideoFramePts_) / AUDIO_INTERVAL_IN_NS;
+    if (lostNum >= FRAME_LOSS_THRESHOLD && silentFrameSize_ > 0) {
+        remainingSilentFrames_ = lostNum;
+        MEDIA_LOGI("LostFrameNum trigger silence fill, lostNum:%{public}" PRId64 " timestamp:%{public}" PRId64
+                   " writedFrameTime_:%{public}" PRId64,
+            lostNum, timestamp, writedFrameTime_);
+        return std::min(lostNum, SILENT_FRAME_CHUNK);
+    }
+    return 0;
+}
+
+bool AudioDataSourceGeneric::FillSilence(const std::shared_ptr<AVBuffer> &buffer, int64_t size)
+{
+    uint8_t *addr = buffer->memory_->GetAddr();
+    if (addr == nullptr || size <= 0) {
+        MEDIA_LOGE("FillSilence invalid, addr:%{public}s size:%{public}" PRId64, addr ? "ok" : "null", size);
+        return false;
+    }
+    if (memset_s(addr, static_cast<size_t>(size), 0, static_cast<size_t>(size)) != EOK) {
+        MEDIA_LOGE("FillSilence memset_s failed, size:%{public}" PRId64, size);
+        return false;
+    }
+    return true;
 }
 
 AudioDataSourceReadAtActionState AudioDataSourceGeneric::ReadAt(std::shared_ptr<AVBuffer> buffer, uint32_t length)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!cacheBuffer_) {
+    if (!cacheBuffer_ || pauseDurationPending_) {
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
     if (buffer == nullptr || buffer->memory_ == nullptr) {
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
-    int64_t intervalNs = cacheBuffer_->intervalNs;
-    auto lostNum = LostFrameNum(cacheBuffer_->timestamp);
+    int64_t lostNum = LostFrameNum(cacheBuffer_->timestamp);
     if (lostNum > 0) {
-        if (zeroBuffer_.size() < length) {
-            zeroBuffer_.assign(length, 0);
-        }
-        buffer->memory_->Write(zeroBuffer_.data(), length, 0);
-        writedFrameTime_ += AUDIO_INTERVAL_IN_NS;
-        SetMixAudioTypeLog(AudioOutputTag::SILENT);
+        FillSilence(buffer, lostNum * silentFrameSize_);
+        writedFrameTime_ += lostNum * AUDIO_INTERVAL_IN_NS;
+        remainingSilentFrames_ -= lostNum;
+        logStats_.Update(AudioOutputTag::SILENT, AudioCaptureSourceType::SOURCE_DEFAULT, lostNum);
         return AudioDataSourceReadAtActionState::OK;
     }
+    int64_t intervalNs = cacheBuffer_->intervalNs;
     if (!cacheBuffer_->WriteTo(buffer->memory_, length)) {
-        if (zeroBuffer_.size() < length) {
-            zeroBuffer_.assign(length, 0);
-        }
-        buffer->memory_->Write(zeroBuffer_.data(), length, 0);
+        FillSilence(buffer, length);
         writedFrameTime_ += intervalNs;
         cacheBuffer_.reset();
         ReadAudioBuffer();
         return AudioDataSourceReadAtActionState::OK;
     }
     cacheBuffer_.reset();
-    zeroBuffer_.clear();
     writedFrameTime_ += intervalNs;
-    SetMixAudioTypeLog(lastEmit_.type);
+    logStats_.Update(logStats_.emitType, logStats_.emitSource);
     ReadAudioBuffer();
     return AudioDataSourceReadAtActionState::OK;
 }
@@ -399,11 +426,12 @@ AudioDataSourceReadAtActionState AudioDataSourceGeneric::ReadAt(std::shared_ptr<
 int32_t AudioDataSourceGeneric::GetSize(int64_t &size)
 {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (!cacheBuffer_ || cacheBuffer_->length <= 0) {
+    if (!cacheBuffer_ || cacheBuffer_->length <= 0 || pauseDurationPending_) {
         return MSERR_UNKNOWN;
     }
-    if (LostFrameNum(cacheBuffer_->timestamp) > 0 && silentFrameSize_ > 0) {
-        size = silentFrameSize_;
+    int64_t lostNum = LostFrameNum(cacheBuffer_->timestamp);
+    if (lostNum > 0) {
+        size = lostNum * silentFrameSize_;
     } else {
         size = cacheBuffer_->length;
     }
