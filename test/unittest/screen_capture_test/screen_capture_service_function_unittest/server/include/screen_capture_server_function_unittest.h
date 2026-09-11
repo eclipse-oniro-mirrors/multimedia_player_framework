@@ -98,7 +98,7 @@ public:
     void SetSCMicAudioCaptureAndPushData(std::shared_ptr<CacheBuffer> micAudioBuffer);
     std::shared_ptr<AudioCapturerWrapper> CreateTestWrapper(AudioCaptureInfo &audioInfo, const std::string &name,
         bool isInner = true);
-    void SetupAudioDataSource(AVScreenCaptureMixMode mode);
+    void SetupAudioDataSource(AudioCombinePolicy policy);
     size_t CountForegroundMissions(const std::vector<MissionInfo> &missions);
 
 protected:
@@ -177,11 +177,15 @@ public:
     void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) {};
     void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) {};
     void OnVideoBufferAvailable(bool isReady) {};
-    void OnStateChange(AVScreenCaptureStateCode stateCode) {};
+    void OnStateChange(AVScreenCaptureStateCode stateCode)
+    {
+        lastStateCode_ = stateCode;
+    }
     void OnDisplaySelected(uint64_t displayId) {};
     void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area) {};
     void OnUserSelected(ScreenCaptureUserSelectionInfo selectionInfo) {};
     void OnPrivacyProtect(AVScreenCapturePrivacyProtect privacyProtect) {};
+    AVScreenCaptureStateCode lastStateCode_ = AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID;
 };
 
 class ScreenCaptureServerUnittestCallbackMock : public ScreenCaptureListenerCallback {

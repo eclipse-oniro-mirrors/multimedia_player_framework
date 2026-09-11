@@ -13,8 +13,8 @@
  * limitations under the License.
  */
 
-#ifndef AUDIODATASOURCE_FUZZER
-#define AUDIODATASOURCE_FUZZER
+#ifndef AUDIODATASOURCE_EX_FUZZER
+#define AUDIODATASOURCE_EX_FUZZER
 
 #include "audio_capturer_wrapper.h"
 #include "audio_data_source_generic.h"
@@ -31,31 +31,30 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#define FUZZ_PROJECT_NAME "audiodatasource_fuzzer"
+#define FUZZ_PROJECT_NAME "audiodatasource_ex_fuzzer"
 
 namespace OHOS {
 namespace Media {
 
-class AudioDataSourceFuzzer {
+class AudioDataSourceExFuzzer {
 public:
-    bool FuzzReadAt(FuzzedDataProvider &fdp);
-    bool FuzzGetSize(FuzzedDataProvider &fdp);
-    bool FuzzSetVideoFirstFramePts(FuzzedDataProvider &fdp);
-    bool FuzzPauseResume(FuzzedDataProvider &fdp);
-    bool FuzzStop(FuzzedDataProvider &fdp);
-    bool FuzzOnBufferAvailable(FuzzedDataProvider &fdp);
+    bool FuzzSetCapture(FuzzedDataProvider &fdp);
+    bool FuzzReadAudioBuffer(FuzzedDataProvider &fdp);
+    bool FuzzLostFrameNum(FuzzedDataProvider &fdp);
+    bool FuzzAlignOrCombine(FuzzedDataProvider &fdp);
+    bool FuzzCombine(FuzzedDataProvider &fdp);
+    bool FuzzMixAudio(FuzzedDataProvider &fdp);
 
 private:
     std::shared_ptr<CacheBuffer> CreateAudioBuffer(int64_t timestamp);
-    std::shared_ptr<AVBuffer> CreateAVBuffer();
+    std::shared_ptr<CacheBuffer> CreateAudioBuffer(int64_t timestamp, int32_t size);
     void Init(FuzzedDataProvider &fdp);
     void Release();
 
     std::shared_ptr<AudioDataSourceGeneric> audioSource_;
     int32_t datasize = 2048;
-    std::vector<uint8_t> AVbuf;
 };
-bool FuzzAudioDataSourceCase(uint8_t *data, size_t size);
+bool FuzzAudioDataSourceExCase(uint8_t *data, size_t size);
 } // namespace Media
 } // namespace OHOS
-#endif // AUDIODATASOURCE_FUZZER
+#endif // AUDIODATASOURCE_EX_FUZZER

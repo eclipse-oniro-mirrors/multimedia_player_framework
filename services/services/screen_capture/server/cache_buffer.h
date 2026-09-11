@@ -30,9 +30,9 @@ class CacheBuffer {
 public:
     CacheBuffer() = delete;
 
-    explicit CacheBuffer(std::unique_ptr<uint8_t[]> buf, int32_t len, int64_t ts,
+    explicit CacheBuffer(std::unique_ptr<uint8_t[]> buf, int32_t len, int64_t ts, int64_t intervalNs,
         AudioCaptureSourceType type = AudioCaptureSourceType::SOURCE_DEFAULT)
-        : length(len), timestamp(ts), sourcetype(type), ownedBuf_(std::move(buf))
+        : length(len), timestamp(ts), intervalNs(intervalNs), sourcetype(type), ownedBuf_(std::move(buf))
     {
     }
 
@@ -63,8 +63,9 @@ public:
         return true;
     }
 
-    int32_t length{0};
-    int64_t timestamp{0};
+    const int32_t length{0};
+    const int64_t timestamp{0};
+    const int64_t intervalNs{0};
     AudioCaptureSourceType sourcetype{AudioCaptureSourceType::SOURCE_DEFAULT};
 
     const uint8_t *Data() const

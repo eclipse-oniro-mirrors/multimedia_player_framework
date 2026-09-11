@@ -17,7 +17,7 @@
 #define SCREEN_CAPTURE_SERVICE_SERVER_H
 
 #include "audio_capturer_wrapper.h"
-#include "audio_data_source.h"
+#include "audio_data_source_generic.h"
 #include "i_screen_capture_service.h"
 #include "screen_capture.h"
 #include "screen_capture_callback_proxy.h"
@@ -71,8 +71,8 @@ struct AudioCaptureSyncFlags {
 };
 
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
-                            public IScreenCaptureService,
                             public IScreenCaptureEventListener,
+                            public IScreenCaptureService,
                             public NoCopyable {
 public:
     static std::shared_ptr<IScreenCaptureService> Create(std::unique_ptr<IScreenCaptureServiceProviders> providers);
@@ -169,14 +169,10 @@ public:
     void NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area);
     void NotifyprivacyProtect();
     bool IsState(uint32_t cap) const;
-    bool IsSCRecorderFileWithVideo();
-    bool IsStopAcquireAudioBufferFlag();
-    bool IsMicrophoneSwitchTurnOn();
     int32_t AudioRendererStateUpdate(
         const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos);
     void OnSceneSessionManagerDied(const wptr<IRemoteObject> &remote);
     bool IsCaptureScreen(uint64_t displayId);
-    void PostSyncAudioCaptures();
 
 private:
     int32_t OnReceiveUserPrivacyAuthority(bool isAllowed);
@@ -237,8 +233,9 @@ private:
     int32_t SetVirtualScreenAutoRotation();
     int32_t PrepareVirtualScreenMirror();
     void DestroyVirtualScreen();
-    int32_t ParseAppMissionIds(const Json::Value &appInformation);
-    void ParseDisplayId(const Json::Value &displayIdJson);
+    bool ParseAppMissionIds(const Json::Value &appInformation);
+    bool ParseDisplayId(const Json::Value &displayIdJson);
+    bool ParseMissionId(const Json::Value &missionIdJson);
 
     bool CheckScreenCapturePermission();
     bool IsUserPrivacyAuthorityNeeded();
@@ -399,7 +396,7 @@ private:
     int32_t outputFd_ = -1;
     int32_t audioSourceId_ = 0;
     int32_t videoSourceId_ = 0;
-    std::shared_ptr<AudioDataSource> audioSource_ = nullptr;
+    std::shared_ptr<AudioDataSourceGeneric> audioSource_ = nullptr;
     /* used for DFX events */
     uint64_t instanceId_ = 0;
     std::vector<uint64_t> skipPrivacyWindowIDsVec_;
@@ -414,6 +411,7 @@ private:
     std::atomic<bool> isInTelCall_ = false;
 #endif
     std::atomic<bool> recorderFileWithVideo_{false};
+    std::atomic<uint32_t> audioRendererState_{0};
 
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);

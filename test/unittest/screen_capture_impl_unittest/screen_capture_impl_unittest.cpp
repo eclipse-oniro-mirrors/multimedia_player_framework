@@ -428,16 +428,16 @@ HWTEST_F(ScreenCaptureImplUnitTest, BoundaryConditions_001, TestSize.Level0)
 {
     ASSERT_NE(screenCaptureImpl_, nullptr);
     screenCaptureImpl_->screenCaptureService_ = nullptr;
-    
+
     std::vector<uint64_t> windowIDsVec = {1, 2};
     EXPECT_NE(screenCaptureImpl_->AddWhiteListWindows(windowIDsVec), MSERR_OK);
     EXPECT_NE(screenCaptureImpl_->RemoveWhiteListWindows(windowIDsVec), MSERR_OK);
-    
+
     ScreenCaptureContentFilter contentFilter;
     EXPECT_NE(screenCaptureImpl_->ExcludeContent(contentFilter), MSERR_OK);
-    
+
     EXPECT_NE(screenCaptureImpl_->ReleaseAudioBuffer(AudioCaptureSourceType::MIC), MSERR_OK);
-    
+
     uint64_t displayId = 1;
     OHOS::Rect area = {0, 0, 1920, 1080};
     EXPECT_NE(screenCaptureImpl_->SetCaptureArea(displayId, area), MSERR_OK);
@@ -453,14 +453,14 @@ HWTEST_F(ScreenCaptureImplUnitTest, BoundaryConditions_002, TestSize.Level0)
     ASSERT_NE(screenCaptureImpl_, nullptr);
     auto mockService = std::make_shared<MockScreenCaptureService>();
     screenCaptureImpl_->screenCaptureService_ = mockService;
-    
+
     std::vector<uint64_t> windowIDsVec = {1, 2};
     EXPECT_CALL(*mockService, AddWhiteListWindows(_)).WillOnce(Return(MSERR_INVALID_VAL));
     EXPECT_NE(screenCaptureImpl_->AddWhiteListWindows(windowIDsVec), MSERR_OK);
-    
+
     EXPECT_CALL(*mockService, RemoveWhiteListWindows(_)).WillOnce(Return(MSERR_INVALID_OPERATION));
     EXPECT_NE(screenCaptureImpl_->RemoveWhiteListWindows(windowIDsVec), MSERR_OK);
-    
+
     ScreenCaptureContentFilter contentFilter;
     EXPECT_CALL(*mockService, ExcludeContent(_)).WillOnce(Return(MSERR_UNKNOWN));
     EXPECT_NE(screenCaptureImpl_->ExcludeContent(contentFilter), MSERR_OK);
@@ -476,14 +476,14 @@ HWTEST_F(ScreenCaptureImplUnitTest, ExceptionScenarios_001, TestSize.Level0)
     ASSERT_NE(screenCaptureImpl_, nullptr);
     auto mockService = std::make_shared<MockScreenCaptureService>();
     screenCaptureImpl_->screenCaptureService_ = mockService;
-    
+
     EXPECT_CALL(*mockService, AcquireAudioBuffer(_, _)).WillOnce(Return(MSERR_NO_MEMORY));
     std::shared_ptr<AudioBuffer> audioBuffer = nullptr;
     EXPECT_NE(screenCaptureImpl_->AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::MIC), MSERR_OK);
-    
+
     EXPECT_CALL(*mockService, ReleaseAudioBuffer(_)).WillOnce(Return(MSERR_INVALID_OPERATION));
     EXPECT_NE(screenCaptureImpl_->ReleaseAudioBuffer(AudioCaptureSourceType::APP_PLAYBACK), MSERR_OK);
-    
+
     EXPECT_CALL(*mockService, ShowCursor(_)).WillOnce(Return(MSERR_UNKNOWN));
     EXPECT_NE(screenCaptureImpl_->ShowCursor(true), MSERR_OK);
 }
@@ -498,11 +498,11 @@ HWTEST_F(ScreenCaptureImplUnitTest, ExceptionScenarios_002, TestSize.Level0)
     ASSERT_NE(screenCaptureImpl_, nullptr);
     auto mockService = std::make_shared<MockScreenCaptureService>();
     screenCaptureImpl_->screenCaptureService_ = mockService;
-    
+
     ScreenCaptureStrategy strategy;
     EXPECT_CALL(*mockService, SetScreenCaptureStrategy(_)).WillOnce(Return(MSERR_NETWORK_TIMEOUT));
     EXPECT_NE(screenCaptureImpl_->SetScreenCaptureStrategy(strategy), MSERR_OK);
-    
+
     uint64_t displayId = 1;
     OHOS::Rect area = {0, 0, 1920, 1080};
     EXPECT_CALL(*mockService, SetCaptureArea(_, _)).WillOnce(Return(MSERR_SERVICE_DIED));
