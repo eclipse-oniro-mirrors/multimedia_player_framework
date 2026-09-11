@@ -23,6 +23,7 @@
 #include "cache_buffer.h"
 #include "media_data_source.h"
 #include "media_errors.h"
+#include "screen_capture_server_function_unittest.h"
 
 using namespace testing::ext;
 using namespace OHOS::Media;

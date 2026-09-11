@@ -1843,13 +1843,17 @@ int32_t ScreenCaptureServer::InitRecorderMix()
 {
     int32_t ret = MSERR_OK;
     MEDIA_LOGI("InitRecorder prepare to SetAudioDataSource");
-    audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL,
-        captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE);
+    {
+        std::lock_guard<std::mutex> lock(audioMutex_);
+        audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL,
+            captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE);
+    }
     ret = listenerManager_->RegisterListeners(LF_AUDIO_RENDERER, {.appPid = appInfo_.appPid});
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "RegisterListeners LF_AUDIO_RENDERER failed");
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> infos;
     AudioStandard::AudioStreamManager::GetInstance()->GetCurrentRendererChangeInfos(infos);
     OnAudioRendererStateChanged(infos);
+    std::lock_guard<std::mutex> lock(audioMutex_);
     ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
     return ret;
 }
@@ -1859,11 +1863,9 @@ int32_t ScreenCaptureServer::InitRecorderInner()
     int32_t ret = MSERR_OK;
     isMicrophoneSwitchTurnOn_ = false;
     MEDIA_LOGI("InitRecorder prepare to SetAudioSource inner");
-    {
-        std::lock_guard<std::mutex> lock(audioMutex_);
-        audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::PASSTHROUGH,
-            captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE);
-    }
+    std::lock_guard<std::mutex> lock(audioMutex_);
+    audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::PASSTHROUGH,
+        captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE);
     ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
     return ret;
 }
@@ -1871,11 +1873,9 @@ int32_t ScreenCaptureServer::InitRecorderInner()
 int32_t ScreenCaptureServer::InitRecorderMic()
 {
     MEDIA_LOGI("InitRecorder prepare to SetAudioSource mic");
-    {
-        std::lock_guard<std::mutex> lock(audioMutex_);
-        audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::PASSTHROUGH,
-            captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE);
-    }
+    std::lock_guard<std::mutex> lock(audioMutex_);
+    audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::PASSTHROUGH,
+        captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE);
     int32_t ret = recorder_->SetAudioDataSource(audioSource_, audioSourceId_);
     return ret;
 }
@@ -3618,8 +3618,11 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureRecorder");
     int32_t ret = MSERR_OK;
     if (recorder_ != nullptr) {
-        if (audioSource_) {
-            audioSource_->Stop();
+        {
+            std::lock_guard<std::mutex> lock(audioMutex_);
+            if (audioSource_) {
+                audioSource_->Stop();
+            }
         }
         ret = recorder_->Stop(false);
         TRUE_LOG(ret != MSERR_OK, MEDIA_LOGE, "StopScreenCaptureRecorder recorder stop failed, ret:%{public}d", ret);
