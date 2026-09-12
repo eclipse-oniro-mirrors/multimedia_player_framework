@@ -23,17 +23,17 @@
 #include "cache_buffer.h"
 #include "media_data_source.h"
 #include "media_errors.h"
+#include "screen_capture_server_function_unittest.h"
 
 using namespace testing::ext;
 using namespace OHOS::Media;
+using ScreenCaptureTestParam::AUDIO_INTERVAL_NS;
+using ScreenCaptureTestParam::TEST_CHANNELS;
+using ScreenCaptureTestParam::TEST_FRAME_COUNT;
+using ScreenCaptureTestParam::TEST_SAMPLE_RATE;
 
 namespace OHOS {
 namespace Media {
-
-constexpr int32_t TEST_SAMPLE_RATE = 48000;
-constexpr int32_t TEST_CHANNELS = 2;
-constexpr int32_t TEST_FRAME_COUNT = 960;
-constexpr int64_t AUDIO_INTERVAL_NS = TEST_FRAME_COUNT * 1000000000LL / TEST_SAMPLE_RATE;
 
 class AudioDataSourceGenericTest : public testing::Test {
 public:

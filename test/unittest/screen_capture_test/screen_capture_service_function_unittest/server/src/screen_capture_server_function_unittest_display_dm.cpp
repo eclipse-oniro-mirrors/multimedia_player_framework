@@ -287,7 +287,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_Success, Te
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_OK);
     ASSERT_FALSE(server_->sourceDisplayIds_.empty());
-    EXPECT_EQ(server_->sourceDisplayIds_.front(), TEST_MAIN_SCREEN_ID);
+    EXPECT_EQ(server_->sourceDisplayIds_.front(), TEST_VIRTUAL_SCREEN_ID);
 }
 
 // ---- PrepareVirtualScreenMirror success (mirror branch): GetScreenById non-null ----
@@ -453,13 +453,25 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_ConvertFail
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);
 }
 
-// MakeVirtualScreenExtended: SetMultiScreenMode fails -> MSERR_UNKNOWN (L2739)
+// MakeVirtualScreenExtended: SetMultiScreenMode fails -> MSERR_UNSUPPORT (L2736)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetMultiScreenModeFail, TestSize.Level2)
 {
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(mainDisplay));
     ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(_, _)).WillByDefault(Return(true));
     ON_CALL(*smFlow_, SetMultiScreenMode(_, _, _)).WillByDefault(Return(DMError::DM_ERROR_INVALID_MODE_ID));
+    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
+    EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNSUPPORT);
+}
+
+// MakeVirtualScreenExtended: SetMultiScreenMode fails with other DM error -> MSERR_UNKNOWN
+HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetMultiScreenModeOtherFail, TestSize.Level2)
+{
+    auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
+    ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(mainDisplay));
+    ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(_, _)).WillByDefault(Return(true));
+    ON_CALL(*smFlow_, SetMultiScreenMode(_, _, _)).WillByDefault(Return(DMError::DM_ERROR_UNKNOWN));
     server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);

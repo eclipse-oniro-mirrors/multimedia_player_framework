@@ -128,6 +128,14 @@ void AudioDataSourceGeneric::SetCapture(AudioCaptureSourceType type, std::shared
     }
 }
 
+void AudioDataSourceGeneric::SetOutputFormat(int32_t sampleRate, int32_t channels)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (sampleRate > 0 && channels > 0) {
+        silentFrameSize_ = sampleRate * channels * sizeof(int16_t) * AUDIO_INTERVAL_IN_NS / SEC_TO_NS;
+    }
+}
+
 bool AudioDataSourceGeneric::AcquireReady()
 {
     bool anyReady = false;
@@ -394,7 +402,11 @@ int32_t AudioDataSourceGeneric::GetSize(int64_t &size)
     if (!cacheBuffer_ || cacheBuffer_->length <= 0) {
         return MSERR_UNKNOWN;
     }
-    size = cacheBuffer_->length;
+    if (LostFrameNum(cacheBuffer_->timestamp) > 0 && silentFrameSize_ > 0) {
+        size = silentFrameSize_;
+    } else {
+        size = cacheBuffer_->length;
+    }
     return MSERR_OK;
 }
 
