@@ -474,6 +474,24 @@ int32_t AudioCapturerWrapper::GetBufferSize(size_t &size)
     return MSERR_OK;
 }
 
+int64_t AudioCapturerWrapper::GetFrameDuration()
+{
+    if (frameDuration_.load() > 0) {
+        return frameDuration_.load();
+    }
+    std::shared_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
+    if (audioCapturer_ != nullptr && audioInfo_.audioSampleRate > 0) {
+        uint64_t frameCount = 0;
+        if (audioCapturer_->GetFrameCount(frameCount) == MSERR_OK && frameCount > 0) {
+            frameDuration_.store(static_cast<int64_t>(frameCount) * AUDIO_NS_PER_SECOND
+                / audioInfo_.audioSampleRate);
+            MEDIA_LOGI("GetFrameDuration: %{public}" PRId64 ", frameCount: %{public}" PRIu64
+                ", sampleRate: %{public}d", frameDuration_.load(), frameCount, audioInfo_.audioSampleRate);
+        }
+    }
+    return frameDuration_.load();
+}
+
 int32_t AudioCapturerWrapper::ReleaseAudioBuffer()
 {
     using namespace std::chrono_literals;

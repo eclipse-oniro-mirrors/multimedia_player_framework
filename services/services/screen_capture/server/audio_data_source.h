@@ -123,6 +123,8 @@ private:
     AudioDataSourceReadAtActionState ReadAudioBuffer(std::shared_ptr<AVBuffer> &buffer, const uint32_t &length);
     int32_t LostFrameNum(const int64_t &timestamp);
     void FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize);
+    double GetFrameDurationRatio();
+    int64_t ScaleDuration(int64_t baseDurationNs);
 
     std::mutex mutexCallBack_;
 
@@ -147,6 +149,7 @@ private:
     std::atomic<int64_t> pauseStartTime_{0};
     std::atomic<int64_t> pauseDuration_{0};
     bool isUnregistered = false;
+    std::atomic<double> frameDurationRatio_{1.0};
 
     static constexpr int32_t INNER_SWITCH_MIC_REQUIRE_COUNT = 10;
     static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
