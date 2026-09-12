@@ -325,7 +325,8 @@ AudioDataSourceReadAtActionState AudioDataSource::InnerMicAudioSync(std::shared_
                    timeWindow, innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load(), count);
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
-    if (timeWindow > ScaleDuration(NEG_AUDIO_INTERVAL_IN_NS) && timeWindow < ScaleDuration(AUDIO_INTERVAL_IN_NS)) { // Write mix
+    if (timeWindow > ScaleDuration(NEG_AUDIO_INTERVAL_IN_NS) &&
+        timeWindow < ScaleDuration(AUDIO_INTERVAL_IN_NS)) { // Write mix
         return WriteMixAudio(buffer, length, innerAudioBuffer, micAudioBuffer);
     } else { // Write Inner data Before mic timeWindow >= AUDIO_INTERVAL_IN_NS
         return WriteInnerAudio(buffer, length, innerAudioBuffer);
@@ -755,9 +756,8 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
 
 int32_t AudioDataSource::LostFrameNum(const int64_t &timestamp)
 {
-    return static_cast<int32_t>(
-        (timestamp - pauseDuration_ - (writedFrameTime_ + firstAudioFramePts_))
-        / ScaleDuration(FILL_AUDIO_FRAME_DURATION_IN_NS));
+    return static_cast<int32_t>((timestamp - pauseDuration_ - (writedFrameTime_ + firstAudioFramePts_)) /
+        ScaleDuration(FILL_AUDIO_FRAME_DURATION_IN_NS));
 }
 
 void AudioDataSource::FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize)
