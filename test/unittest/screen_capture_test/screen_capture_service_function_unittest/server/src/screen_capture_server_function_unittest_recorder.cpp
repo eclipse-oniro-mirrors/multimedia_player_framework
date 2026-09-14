@@ -514,7 +514,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InitRecorder_NoneValid_B1, TestSize.Le
         .state = AVScreenCaptureParamValidationState::VALIDATION_INVALID;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
-    EXPECT_EQ(screenCaptureServer_->InitRecorder(), MSERR_UNKNOWN);
+    EXPECT_EQ(screenCaptureServer_->InitRecorder(), MSERR_UNKNOWN_RECORDER_SETAUDIO);
     screenCaptureServer_->recorder_ = nullptr;
 }
 

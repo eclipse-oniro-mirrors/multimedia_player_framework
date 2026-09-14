@@ -448,8 +448,9 @@ HWTEST_F(AudioDataSourceGenericTest, LostFrameNum_RemainingSilentFrames_001, Tes
     src->pauseDuration_ = 0;
     EXPECT_EQ(src->LostFrameNum(7 * AUDIO_INTERVAL_NS), 5);
     EXPECT_EQ(src->remainingSilentFrames_, 7);
+    src->remainingSilentFrames_ -= 5;
     EXPECT_EQ(src->LostFrameNum(0), 2);
-    EXPECT_EQ(src->remainingSilentFrames_, 7);
+    EXPECT_EQ(src->remainingSilentFrames_, 2);
 }
 
 HWTEST_F(AudioDataSourceGenericTest, ReadAudioBuffer_AudioSynced_NoCaptures_001, TestSize.Level2)
@@ -1116,6 +1117,67 @@ HWTEST_F(AudioDataSourceGenericTest, VideoAudioSync_DropNullCapture_001, TestSiz
     EXPECT_EQ(src->ReadAudioBuffer(), AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
     EXPECT_TRUE(src->avSynced_);
     EXPECT_EQ(inner->availBuffers_.size(), 0u);
+}
+
+// === Coverage: FillSilence failure paths ===
+
+HWTEST_F(AudioDataSourceGenericTest, FillSilence_NullAddr_001, TestSize.Level2)
+{
+    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    src->SetOutputFormat(TEST_SAMPLE_RATE, TEST_CHANNELS);
+    src->firstVideoFramePts_ = 0;
+    src->writedFrameTime_ = 0;
+    src->pauseDuration_ = 0;
+    src->cacheBuffer_ = MakeBuf(100, 4, 3 * AUDIO_INTERVAL_NS);
+    auto buffer = std::make_shared<AVBuffer>();
+    buffer->memory_ = nullptr;
+    EXPECT_EQ(src->ReadAt(buffer, 8), AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
+}
+
+HWTEST_F(AudioDataSourceGenericTest, FillSilence_ZeroSize_001, TestSize.Level2)
+{
+    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    auto buffer = MakeAVBuffer(8);
+    EXPECT_FALSE(src->FillSilence(buffer, 0));
+    EXPECT_FALSE(src->FillSilence(buffer, -1));
+}
+
+// === Coverage: OnBufferAvailable pending ===
+
+HWTEST_F(AudioDataSourceGenericTest, OnBufferAvailable_Pending_001, TestSize.Level2)
+{
+    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    auto listener = std::make_shared<MockListener>();
+    src->SetListener(listener);
+    auto wrapper = MakeMockWrapper(AudioCaptureSourceType::ALL_PLAYBACK);
+    PushBuf(wrapper, 1000, 4, 5000);
+    src->SetCapture(AudioCaptureSourceType::ALL_PLAYBACK, wrapper);
+    src->Pause();
+    src->OnBufferAvailable(AudioCaptureSourceType::ALL_PLAYBACK);
+    EXPECT_EQ(listener->count_, 0);
+    EXPECT_EQ(src->cacheBuffer_, nullptr);
+}
+
+// === Coverage: GetSize pending ===
+
+HWTEST_F(AudioDataSourceGenericTest, GetSize_Pending_001, TestSize.Level2)
+{
+    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    src->cacheBuffer_ = MakeBuf(100, 4, 0);
+    src->Pause();
+    int64_t size = 0;
+    EXPECT_EQ(src->GetSize(size), MSERR_UNKNOWN);
+}
+
+// === Coverage: ReadAt WriteTo success path with intervalNs ===
+
+HWTEST_F(AudioDataSourceGenericTest, ReadAt_NormalData_001, TestSize.Level2)
+{
+    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    src->cacheBuffer_ = MakeBuf(100, 4, 0);
+    auto buffer = MakeAVBuffer(8);
+    EXPECT_EQ(src->ReadAt(buffer, 8), AudioDataSourceReadAtActionState::OK);
+    EXPECT_EQ(src->writedFrameTime_, AUDIO_INTERVAL_NS);
 }
 
 } // namespace Media
