@@ -198,9 +198,11 @@ private:
         uint32_t targetToneTypeBit, SourceType sourceType, int32_t defaultCategory);
     int32_t ClearBitFromToneTypeColumn(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &typeColumnName, const std::string &sourceTypeColumnName, uint32_t targetToneTypeBit);
-    int32_t SetNoRingToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        RingtoneType ringtoneType);
-    int32_t SetNoAlarmToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper);
+    int32_t ClearToneType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const std::string &typeColumnName, const std::string &sourceTypeColumnName,
+        int32_t toneType, int32_t clearedType);
+    int32_t SetNoToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const SetToneUriParams &params);
 
     ToneAttrs QueryNotificationToneAttrs(const DatabaseTool &databaseTool, const std::string &typeColumnName,
         const std::string &typeColumnValue, SourceType sourceType);
@@ -231,9 +233,6 @@ private:
         const int32_t &toneId);
     int32_t UpdateAlarmToneUri(const std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const int32_t ringtoneAssetId);
-    int32_t ClearNotificationToneType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper);
-    int32_t SetNoSystemToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        SystemToneType systemToneType);
 
     bool ConvertToRingtoneType(ToneHapticsType toneHapticsType, RingtoneType &ringtoneType);
     bool ConvertToSystemToneType(ToneHapticsType toneHapticsType, SystemToneType &systemToneType);
