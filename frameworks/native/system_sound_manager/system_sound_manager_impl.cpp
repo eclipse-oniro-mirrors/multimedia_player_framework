@@ -461,19 +461,19 @@ int32_t SystemSoundManagerImpl::UpdateRingtoneUri(std::shared_ptr<DataShare::Dat
 }
 
 bool SystemSoundManagerImpl::IsToneAlreadySet(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
-    const SetToneUriParams &params, uint32_t storedToneType)
+    int32_t toneCategory, int32_t subType, uint32_t storedToneType)
 {
     CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, false, "Invalid ringtone asset.");
-    switch (params.toneCategory) {
+    switch (toneCategory) {
         case TONE_TYPE_RINGTONE:
             return (storedToneType & RingtoneTypeToBitMask(
-                static_cast<RingtoneType>(params.subType))) != 0;
+                static_cast<RingtoneType>(subType))) != 0;
         case TONE_TYPE_NOTIFICATION:
-            if (params.subType == SYSTEM_TONE_TYPE_NOTIFICATION) {
+            if (subType == SYSTEM_TONE_TYPE_NOTIFICATION) {
                 return ringtoneAsset->GetNotificationtoneType() == NOTIFICATION_TONE_TYPE;
             }
             return (storedToneType & SystemToneTypeToBitMask(
-                static_cast<SystemToneType>(params.subType))) != 0;
+                static_cast<SystemToneType>(subType))) != 0;
         case TONE_TYPE_ALARM:
             return ringtoneAsset->GetAlarmtoneType() == ALARM_TONE_TYPE;
         default:
@@ -498,10 +498,9 @@ int32_t SystemSoundManagerImpl::QueryUriForErrorType(
 }
 
 uint32_t SystemSoundManagerImpl::GetStoredToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
-    const SetToneUriParams &params)
+    int32_t toneCategory)
 {
-    switch (params.toneCategory)
-    {
+    switch (toneCategory) {
         case TONE_TYPE_RINGTONE:
             return static_cast<uint32_t>(ringtoneAsset->GetRingtoneType());
         case TONE_TYPE_NOTIFICATION:
@@ -515,16 +514,16 @@ uint32_t SystemSoundManagerImpl::GetStoredToneType(const std::unique_ptr<Rington
 
 int32_t SystemSoundManagerImpl::UpdateToneUriByType(
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-    int32_t toneId, const SetToneUriParams &params, uint32_t storedToneType)
+    int32_t toneId, int32_t toneCategory, int32_t subType, uint32_t storedToneType)
 {
-    switch (params.toneCategory) {
+    switch (toneCategory) {
         case TONE_TYPE_RINGTONE:
             return UpdateRingtoneUri(dataShareHelper, toneId,
-                static_cast<RingtoneType>(params.subType), storedToneType);
+                static_cast<RingtoneType>(subType), storedToneType);
         case TONE_TYPE_NOTIFICATION:
-            return params.subType == SYSTEM_TONE_TYPE_NOTIFICATION ?
+            return subType == SYSTEM_TONE_TYPE_NOTIFICATION ?
                 UpdateNotificationToneUri(dataShareHelper, toneId) : UpdateShotToneUri(dataShareHelper, toneId,
-                static_cast<SystemToneType>(params.subType), storedToneType);
+                static_cast<SystemToneType>(subType), storedToneType);
         case TONE_TYPE_ALARM:
             return UpdateAlarmToneUri(dataShareHelper, toneId);
         default:
@@ -550,15 +549,16 @@ int32_t SystemSoundManagerImpl::SetToneUriInternal(std::shared_ptr<DataShare::Da
         return QueryUriForErrorType(dataShareHelper, uri);
     }
 
-    uint32_t storedToneType = GetStoredToneType(ringtoneAsset, params);
-    if (IsToneAlreadySet(ringtoneAsset, params, storedToneType)) {
+    uint32_t storedToneType = GetStoredToneType(ringtoneAsset, params.toneCategory);
+    if (IsToneAlreadySet(ringtoneAsset, params.toneCategory, params.subType, storedToneType)) {
         MEDIA_LOGI("Tone already set, skip update. toneCategory %{public}d, type %{public}d",
             params.toneCategory, params.subType);
         results->Close();
         return SUCCESS;
     }
 
-    int32_t changedRows = UpdateToneUriByType(dataShareHelper, ringtoneAsset->GetId(), params, storedToneType);
+    int32_t changedRows = UpdateToneUriByType(dataShareHelper, ringtoneAsset->GetId(),
+        params.toneCategory, params.subType, storedToneType);
     results->Close();
     SetExtRingtoneUri(uri, ringtoneAsset->GetTitle(), params.subType,
         params.extToneCategory, changedRows);

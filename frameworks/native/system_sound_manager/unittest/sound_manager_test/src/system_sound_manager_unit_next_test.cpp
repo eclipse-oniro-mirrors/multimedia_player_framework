@@ -2676,7 +2676,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_001, TestSize.Level0)
     ASSERT_NE(impl, nullptr);
     std::unique_ptr<RingtoneAsset> nullAsset = nullptr;
     SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
-    EXPECT_FALSE(impl->IsToneAlreadySet(nullAsset, params, 0));
+    EXPECT_FALSE(impl->IsToneAlreadySet(nullAsset, params.toneCategory, params.subType, 0));
 }
 
 /**
@@ -2692,7 +2692,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_002, TestSize.Level0)
     auto asset = std::make_unique<RingtoneAsset>();
     ASSERT_NE(asset, nullptr);
     SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
-    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params, 1)); // SIM_CARD_0 bit
+    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params.toneCategory, params.subType, 1)); // SIM_CARD_0 bit
 }
 
 /**
@@ -2708,7 +2708,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_003, TestSize.Level0)
     auto asset = std::make_unique<RingtoneAsset>();
     ASSERT_NE(asset, nullptr);
     SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
-    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params, 0));
+    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params.toneCategory, params.subType, 0));
 }
 
 /**
@@ -2725,7 +2725,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_004, TestSize.Level0)
     ASSERT_NE(asset, nullptr);
     asset->SetNotificationtoneType(NOTIFICATION_TONE_TYPE);
     SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_NOTIFICATION, TONE_TYPE_NOTIFICATION };
-    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params, 0));
+    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params.toneCategory, params.subType, 0));
 }
 
 /**
@@ -2742,7 +2742,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_005, TestSize.Level0)
     ASSERT_NE(asset, nullptr);
     asset->SetNotificationtoneType(NOTIFICATION_TONE_TYPE_NOT);
     SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_NOTIFICATION, TONE_TYPE_NOTIFICATION };
-    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params, 0));
+    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params.toneCategory, params.subType, 0));
 }
 
 /**
@@ -2758,7 +2758,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_006, TestSize.Level0)
     auto asset = std::make_unique<RingtoneAsset>();
     ASSERT_NE(asset, nullptr);
     SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION };
-    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params, 1)); // SIM_CARD_0 bit
+    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params.toneCategory, params.subType, 1)); // SIM_CARD_0 bit
 }
 
 /**
@@ -2774,7 +2774,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_007, TestSize.Level0)
     auto asset = std::make_unique<RingtoneAsset>();
     ASSERT_NE(asset, nullptr);
     SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION };
-    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params, 0));
+    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params.toneCategory, params.subType, 0));
 }
 
 /**
@@ -2790,7 +2790,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_008, TestSize.Level0)
     auto asset = std::make_unique<RingtoneAsset>();
     ASSERT_NE(asset, nullptr);
     SetToneUriParams params = { TONE_TYPE_SHOT, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION };
-    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params, 1));
+    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params.toneCategory, params.subType, 1));
 }
 
 /**
@@ -3015,7 +3015,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_009, TestSize.Level0)
     ASSERT_NE(asset, nullptr);
     asset->SetAlarmtoneType(ALARM_TONE_TYPE);
     SetToneUriParams params = { TONE_TYPE_ALARM, 0, TONE_TYPE_ALARM };
-    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params, 0));
+    EXPECT_TRUE(impl->IsToneAlreadySet(asset, params.toneCategory, params.subType, 0));
 }
 
 /**
@@ -3032,7 +3032,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_010, TestSize.Level0)
     ASSERT_NE(asset, nullptr);
     asset->SetAlarmtoneType(ALARM_TONE_TYPE_NOT);
     SetToneUriParams params = { TONE_TYPE_ALARM, 0, TONE_TYPE_ALARM };
-    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params, 0));
+    EXPECT_FALSE(impl->IsToneAlreadySet(asset, params.toneCategory, params.subType, 0));
 }
 
 /**
@@ -3048,7 +3048,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetStoredToneType_001, TestSize.Level0)
     auto asset = std::make_unique<RingtoneAsset>();
     asset->SetRingtoneType(3);
     SetToneUriParams params = { TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE };
-    EXPECT_EQ(impl->GetStoredToneType(asset, params), 3u);
+    EXPECT_EQ(impl->GetStoredToneType(asset, params.toneCategory), 3u);
 }
 
 /**
@@ -3064,7 +3064,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetStoredToneType_002, TestSize.Level0)
     auto asset = std::make_unique<RingtoneAsset>();
     asset->SetShottoneType(2);
     SetToneUriParams params = { TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION };
-    EXPECT_EQ(impl->GetStoredToneType(asset, params), 2u);
+    EXPECT_EQ(impl->GetStoredToneType(asset, params.toneCategory), 2u);
 }
 
 /**
@@ -3079,7 +3079,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetStoredToneType_003, TestSize.Level0)
     ASSERT_NE(impl, nullptr);
     auto asset = std::make_unique<RingtoneAsset>();
     SetToneUriParams params = { TONE_TYPE_ALARM, 0, TONE_TYPE_ALARM };
-    EXPECT_EQ(impl->GetStoredToneType(asset, params), 0u);
+    EXPECT_EQ(impl->GetStoredToneType(asset, params.toneCategory), 0u);
 }
 
 /**

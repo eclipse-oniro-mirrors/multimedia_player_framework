@@ -216,9 +216,9 @@ private:
     int32_t SetToneUriInternal(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &uri, const SetToneUriParams &params);
     int32_t UpdateToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        int32_t toneId, const SetToneUriParams &params, uint32_t storedToneType);
+        int32_t toneId, int32_t toneCategory, int32_t subType, uint32_t storedToneType);
     uint32_t GetStoredToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
-        const SetToneUriParams &params);
+        int32_t toneCategory);
 
     ToneAttrs GetAlarmToneAttrs(const DatabaseTool &databaseTool);
     int32_t UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
@@ -264,7 +264,7 @@ private:
     bool IsSystemToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
         const SystemToneType &systemToneType);
     bool IsToneAlreadySet(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
-        const SetToneUriParams &params, uint32_t storedToneType);
+        int32_t toneCategory, int32_t subType, uint32_t storedToneType);
     int32_t QueryUriForErrorType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &uri);
     static Uri AssembleUri(const std::string &key, std::string tableType = "");
