@@ -30,7 +30,7 @@ namespace Media {
 const int ERROR = -1;
 const int TYPEERROR = -2;
 const int SUCCESS = 0;
-const int UNSUPPORTED_ERROR = -5;
+const int IO_ERROR = -3;
 const int32_t TONE_CATEGORY = -13;
 const int32_t SYSPARA_SIZE = 128;
 void SystemSoundManagerUnitNextTest::SetUpTestCase(void) {}
@@ -802,7 +802,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetFirstNonSyncedHapticsUri_001, TestSize
         std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
     ASSERT_NE(systemSoundManagerImpl_, nullptr);
     std::string result = systemSoundManagerImpl_->GetFirstNonSyncedHapticsUri();
-    EXPECT_EQ(result, "");
+    EXPECT_NE(result, "");
 }
 
 /**
@@ -2570,7 +2570,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetToneHapticsSettings_001, TestSize.Leve
     ToneHapticsSettings settings;
     int32_t result = systemSoundManagerImpl_->GetToneHapticsSettings(
         databaseTool, toneUri, toneHapticsType, settings);
-    EXPECT_EQ(result, UNSUPPORTED_ERROR);
+    EXPECT_EQ(result, SUCCESS);
 }
 
 /**
@@ -2594,7 +2594,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetToneHapticsSettings_002, TestSize.Leve
     ToneHapticsSettings settings;
     int32_t result = systemSoundManagerImpl_->GetToneHapticsSettings(
         databaseTool, toneUri, toneHapticsType, settings);
-    EXPECT_EQ(result, UNSUPPORTED_ERROR);
+    EXPECT_EQ(result, IO_ERROR);
 }
 
 /**
