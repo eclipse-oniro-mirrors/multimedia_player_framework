@@ -464,21 +464,21 @@ bool SystemSoundManagerImpl::IsToneAlreadySet(const std::unique_ptr<RingtoneAsse
     const SetToneUriParams &params, uint32_t storedToneType)
 {
     CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, false, "Invalid ringtone asset.");
-    if (params.toneCategory == TONE_TYPE_RINGTONE) {
-        uint32_t targetBit = RingtoneTypeToBitMask(static_cast<RingtoneType>(params.subType));
-        return (storedToneType & targetBit) != 0;
+    switch (params.toneCategory) {
+        case TONE_TYPE_RINGTONE:
+            return (storedToneType & RingtoneTypeToBitMask(
+                static_cast<RingtoneType>(params.subType))) != 0;
+        case TONE_TYPE_NOTIFICATION:
+            if (params.subType == SYSTEM_TONE_TYPE_NOTIFICATION) {
+                return ringtoneAsset->GetNotificationtoneType() == NOTIFICATION_TONE_TYPE;
+            }
+            return (storedToneType & SystemToneTypeToBitMask(
+                static_cast<SystemToneType>(params.subType))) != 0;
+        case TONE_TYPE_ALARM:
+            return ringtoneAsset->GetAlarmtoneType() == ALARM_TONE_TYPE;
+        default:
+            return false;
     }
-    if (params.toneCategory == TONE_TYPE_NOTIFICATION) {
-        if (params.subType == SYSTEM_TONE_TYPE_NOTIFICATION) {
-            return ringtoneAsset->GetNotificationtoneType() == NOTIFICATION_TONE_TYPE;
-        }
-        uint32_t targetBit = SystemToneTypeToBitMask(static_cast<SystemToneType>(params.subType));
-        return (storedToneType & targetBit) != 0;
-    }
-    if (params.toneCategory == TONE_TYPE_ALARM) {
-        return ringtoneAsset->GetAlarmtoneType() == ALARM_TONE_TYPE;
-    }
-    return false;
 }
 
 int32_t SystemSoundManagerImpl::QueryUriForErrorType(
