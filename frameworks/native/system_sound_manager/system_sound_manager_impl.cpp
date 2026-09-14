@@ -430,34 +430,34 @@ void SystemSoundManagerImpl::InitDefaultToneHapticsMap()
 }
 
 int32_t SystemSoundManagerImpl::UpdateToneTypeUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-    const UpdateToneTypeParams &params)
+    const UpdateToneTypeParams &updateParams)
 {
     // Step 1: Clear targetToneType from all rows
-    ClearBitFromToneTypeColumn(dataShareHelper, params.typeColumnName, params.sourceTypeColumnName,
-        params.targetToneType);
+    ClearBitFromToneTypeColumn(dataShareHelper, updateParams.typeColumnName, updateParams.sourceTypeColumnName,
+        updateParams.targetToneType);
 
     // Step 2: Set new target type on the target tone
-    uint32_t finalType = params.targetToneType | params.storedToneType;
+    uint32_t finalType = updateParams.targetToneType | updateParams.storedToneType;
     DataSharePredicates updatePredicates;
     DataShareValuesBucket updateValuesBucket;
     updatePredicates.SetWhereClause(RINGTONE_COLUMN_TONE_ID + " = ? ");
-    updatePredicates.SetWhereArgs({to_string(params.toneId)});
-    updateValuesBucket.Put(params.typeColumnName, static_cast<int32_t>(finalType));
-    updateValuesBucket.Put(params.sourceTypeColumnName, SOURCE_TYPE_CUSTOMISED);
+    updatePredicates.SetWhereArgs({to_string(updateParams.toneId)});
+    updateValuesBucket.Put(updateParams.typeColumnName, static_cast<int32_t>(finalType));
+    updateValuesBucket.Put(updateParams.sourceTypeColumnName, SOURCE_TYPE_CUSTOMISED);
     return dataShareHelper->Update(RINGTONEURI, updatePredicates, updateValuesBucket);
 }
 
 int32_t SystemSoundManagerImpl::UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     const int32_t &toneId, RingtoneType ringtoneType, const uint32_t &storedToneType)
 {
-    UpdateToneTypeParams params = {
+    UpdateToneTypeParams updateParams = {
         toneId,
         RINGTONE_COLUMN_RING_TONE_TYPE,
         RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
         RingtoneTypeToBitMask(ringtoneType),
         storedToneType
     };
-    return UpdateToneTypeUri(dataShareHelper, params);
+    return UpdateToneTypeUri(dataShareHelper, updateParams);
 }
 
 bool SystemSoundManagerImpl::IsToneAlreadySet(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
@@ -466,14 +466,12 @@ bool SystemSoundManagerImpl::IsToneAlreadySet(const std::unique_ptr<RingtoneAsse
     CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, false, "Invalid ringtone asset.");
     switch (toneCategory) {
         case TONE_TYPE_RINGTONE:
-            return (storedToneType & RingtoneTypeToBitMask(
-                static_cast<RingtoneType>(subType))) != 0;
+            return (storedToneType & RingtoneTypeToBitMask(static_cast<RingtoneType>(subType))) != 0;
         case TONE_TYPE_NOTIFICATION:
             if (subType == SYSTEM_TONE_TYPE_NOTIFICATION) {
                 return ringtoneAsset->GetNotificationtoneType() == NOTIFICATION_TONE_TYPE;
             }
-            return (storedToneType & SystemToneTypeToBitMask(
-                static_cast<SystemToneType>(subType))) != 0;
+            return (storedToneType & SystemToneTypeToBitMask(static_cast<SystemToneType>(subType))) != 0;
         case TONE_TYPE_ALARM:
             return ringtoneAsset->GetAlarmtoneType() == ALARM_TONE_TYPE;
         default:
@@ -512,18 +510,16 @@ uint32_t SystemSoundManagerImpl::GetStoredToneType(const std::unique_ptr<Rington
     }
 }
 
-int32_t SystemSoundManagerImpl::UpdateToneUriByType(
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-    int32_t toneId, int32_t toneCategory, int32_t subType, uint32_t storedToneType)
+int32_t SystemSoundManagerImpl::UpdateToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+    int32_t toneId, const SetToneUriParams &params, uint32_t storedToneType)
 {
-    switch (toneCategory) {
+    switch (params.toneCategory) {
         case TONE_TYPE_RINGTONE:
-            return UpdateRingtoneUri(dataShareHelper, toneId,
-                static_cast<RingtoneType>(subType), storedToneType);
+            return UpdateRingtoneUri(dataShareHelper, toneId, static_cast<RingtoneType>(params.subType), storedToneType);
         case TONE_TYPE_NOTIFICATION:
-            return subType == SYSTEM_TONE_TYPE_NOTIFICATION ?
-                UpdateNotificationToneUri(dataShareHelper, toneId) : UpdateShotToneUri(dataShareHelper, toneId,
-                static_cast<SystemToneType>(subType), storedToneType);
+            return params.subType == SYSTEM_TONE_TYPE_NOTIFICATION ?
+                UpdateNotificationToneUri(dataShareHelper, toneId) :
+                UpdateShotToneUri(dataShareHelper, toneId, static_cast<SystemToneType>(params.subType), storedToneType);
         case TONE_TYPE_ALARM:
             return UpdateAlarmToneUri(dataShareHelper, toneId);
         default:
@@ -558,7 +554,7 @@ int32_t SystemSoundManagerImpl::SetToneUriInternal(std::shared_ptr<DataShare::Da
     }
 
     int32_t changedRows = UpdateToneUriByType(dataShareHelper, ringtoneAsset->GetId(),
-        params.toneCategory, params.subType, storedToneType);
+        params, storedToneType);
     results->Close();
     SetExtRingtoneUri(uri, ringtoneAsset->GetTitle(), params.subType,
         params.extToneCategory, changedRows);
@@ -574,16 +570,15 @@ int32_t SystemSoundManagerImpl::SetNoToneUri(std::shared_ptr<DataShare::DataShar
         case TONE_TYPE_RINGTONE:
             return ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_RING_TONE_TYPE,
                 RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE, RingtoneTypeToBitMask(
-                    static_cast<RingtoneType>(params.subType)));
+                static_cast<RingtoneType>(params.subType)));
         case TONE_TYPE_NOTIFICATION:
             if (params.subType == SYSTEM_TONE_TYPE_NOTIFICATION) {
                 return ClearToneType(dataShareHelper, RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE,
-                    RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE,
-                    NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
+                    RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE, NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
             }
             return ClearBitFromToneTypeColumn(dataShareHelper, RINGTONE_COLUMN_SHOT_TONE_TYPE,
                 RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE, SystemToneTypeToBitMask(
-                    static_cast<SystemToneType>(params.subType)));
+                static_cast<SystemToneType>(params.subType)));
         case TONE_TYPE_ALARM:
             return ClearToneType(dataShareHelper, RINGTONE_COLUMN_ALARM_TONE_TYPE,
                 RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE, ALARM_TONE_TYPE, ALARM_TONE_TYPE_NOT);
@@ -792,14 +787,14 @@ std::shared_ptr<SystemTonePlayer> SystemSoundManagerImpl::GetSystemTonePlayer(
 int32_t SystemSoundManagerImpl::UpdateShotToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
     const int32_t &toneId, SystemToneType systemToneType, const uint32_t &storedToneType)
 {
-    UpdateToneTypeParams params = {
+    UpdateToneTypeParams updateParams = {
         toneId,
         RINGTONE_COLUMN_SHOT_TONE_TYPE,
         RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
         SystemToneTypeToBitMask(systemToneType),
         storedToneType
     };
-    return UpdateToneTypeUri(dataShareHelper, params);
+    return UpdateToneTypeUri(dataShareHelper, updateParams);
 }
 
 int32_t SystemSoundManagerImpl::UpdateNotificationToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,

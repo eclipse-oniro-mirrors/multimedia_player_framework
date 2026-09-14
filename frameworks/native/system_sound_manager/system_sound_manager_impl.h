@@ -208,7 +208,7 @@ private:
         const std::string &typeColumnValue, SourceType sourceType);
 
     int32_t UpdateToneTypeUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const UpdateToneTypeParams &params);
+        const UpdateToneTypeParams &updateParams);
 
     int32_t UpdateRingtoneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper, const int32_t &toneId,
         RingtoneType ringtoneType, const uint32_t &storedToneType);
@@ -216,7 +216,7 @@ private:
     int32_t SetToneUriInternal(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &uri, const SetToneUriParams &params);
     int32_t UpdateToneUriByType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        int32_t toneId, int32_t toneCategory, int32_t subType, uint32_t storedToneType);
+        int32_t toneId, const SetToneUriParams &params, uint32_t storedToneType);
     uint32_t GetStoredToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
         int32_t toneCategory);
 

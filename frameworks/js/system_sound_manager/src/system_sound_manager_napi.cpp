@@ -1789,7 +1789,7 @@ napi_value SystemSoundManagerNapi::GetCustomizedToneAttrList(napi_env env, napi_
             GetToneAttrsListAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
         if (status != napi_ok) {
             napi_value message = nullptr, error = nullptr;
-            napi_create_string_utf8(env, NAPI_ERR_IO_ERROR_INFO, NAPI_AUTO_LENGTH, &message);
+            napi_create_string_utf8(env, NAPI_ERR_IO_ERROR_INFO.c_str(), NAPI_AUTO_LENGTH, &message);
             napi_create_error(env, nullptr, message, &error);
             napi_reject_deferred(env, asyncContext->deferred, error);
             napi_get_undefined(env, &result);
@@ -1799,7 +1799,7 @@ napi_value SystemSoundManagerNapi::GetCustomizedToneAttrList(napi_env env, napi_
                 napi_delete_async_work(env, asyncContext->work);
                 asyncContext->work = nullptr;
                 napi_value message = nullptr, error = nullptr;
-                napi_create_string_utf8(env, NAPI_ERR_IO_ERROR_INFO, NAPI_AUTO_LENGTH, &message);
+                napi_create_string_utf8(env, NAPI_ERR_IO_ERROR_INFO.c_str(), NAPI_AUTO_LENGTH, &message);
                 napi_create_error(env, nullptr, message, &error);
                 napi_reject_deferred(env, asyncContext->deferred, error);
                 napi_get_undefined(env, &result);
