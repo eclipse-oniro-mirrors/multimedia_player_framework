@@ -76,11 +76,11 @@ HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_OpenCustomAudioUri_001
 }
 
 /**
- * @tc.name  : Test SetNoRingToneUri API
- * @tc.number: SystemSoundManagerImpl_SetNoRingToneUri_001
- * @tc.desc  : Test SetNoRingToneUri interface (replaces removed RemoveSourceTypeForRingTone)
+ * @tc.name  : Test SetNoToneUri API for Ringtone
+ * @tc.number: SystemSoundManagerImpl_SetNoToneUri_001
+ * @tc.desc  : Test SetNoToneUri interface for ringtone types
  */
-HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_SetNoRingToneUri_001, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_SetNoToneUri_001, TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -90,11 +90,12 @@ HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_SetNoRingToneUri_001, 
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
 
-    int32_t result =
-        systemSoundManagerImpl_->SetNoRingToneUri(dataShareHelper, RingtoneType::RINGTONE_TYPE_SIM_CARD_0);
+    SetToneUriParams params1 = {TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_0, TONE_TYPE_RINGTONE};
+    int32_t result = systemSoundManagerImpl_->SetNoToneUri(dataShareHelper, params1);
     EXPECT_GE(result, 0);
 
-    result = systemSoundManagerImpl_->SetNoRingToneUri(dataShareHelper, RingtoneType::RINGTONE_TYPE_SIM_CARD_1);
+    SetToneUriParams params2 = {TONE_TYPE_RINGTONE, RINGTONE_TYPE_SIM_CARD_1, TONE_TYPE_RINGTONE};
+    result = systemSoundManagerImpl_->SetNoToneUri(dataShareHelper, params2);
     EXPECT_GE(result, 0);
 }
 
@@ -1846,11 +1847,11 @@ HWTEST(SystemSoundManagerUnitTest, UpdateShotToneUri_003, TestSize.Level0)
 }
 
 /**
- * @tc.name  : SetNoSystemToneUri
- * @tc.number: SystemSoundManagerImpl_SetNoSystemToneUri_001
- * @tc.desc  : Test SetNoSystemToneUri function (replaces removed RemoveSourceTypeForSystemTone)
+ * @tc.name  : SetNoToneUri for SystemTone
+ * @tc.number: SystemSoundManagerImpl_SetNoToneUri_002
+ * @tc.desc  : Test SetNoToneUri function for system tone types
  */
-HWTEST(SystemSoundManagerUnitTest, SetNoSystemToneUri_001, TestSize.Level0)
+HWTEST(SystemSoundManagerUnitTest, SetNoToneUri_002, TestSize.Level0)
 {
     auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
     std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
@@ -1860,14 +1861,14 @@ HWTEST(SystemSoundManagerUnitTest, SetNoSystemToneUri_001, TestSize.Level0)
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
 
-    int32_t result = systemSoundManagerImpl_->SetNoSystemToneUri(
-        dataShareHelper, SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0);
+    SetToneUriParams params1 = {TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION};
+    int32_t result = systemSoundManagerImpl_->SetNoToneUri(dataShareHelper, params1);
     EXPECT_GE(result, 0);
-    result = systemSoundManagerImpl_->SetNoSystemToneUri(
-        dataShareHelper, SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_1);
+    SetToneUriParams params2 = {TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_1, TONE_TYPE_NOTIFICATION};
+    result = systemSoundManagerImpl_->SetNoToneUri(dataShareHelper, params2);
     EXPECT_GE(result, 0);
-    result = systemSoundManagerImpl_->SetNoSystemToneUri(
-        dataShareHelper, SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION);
+    SetToneUriParams params3 = {TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_NOTIFICATION, TONE_TYPE_NOTIFICATION};
+    result = systemSoundManagerImpl_->SetNoToneUri(dataShareHelper, params3);
     EXPECT_GE(result, 0);
 }
 
