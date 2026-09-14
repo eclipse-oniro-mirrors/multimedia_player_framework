@@ -212,6 +212,37 @@ ToneAttrsTaihe SystemSoundManagerImpl::GetDefaultRingtoneAttrs(uintptr_t context
     return GetAlarmToneAttrListSync(context);
 }
 
+::taihe::array<ToneAttrsTaihe> SystemSoundManagerImpl::GetCustomizedToneAttrListSync(uintptr_t context)
+{
+    if (!(CommonTaihe::VerifySelfSystemPermission())) {
+        MEDIA_LOGE("No system permission");
+        CommonTaihe::ThrowError(TAIHE_ERR_PERMISSION_DENIED, TAIHE_ERR_PERMISSION_DENIED_INFO);
+        return ReturnErrToneAttrsTaiheArray();
+    }
+
+    std::shared_ptr<OHOS::AbilityRuntime::Context> abilityContext = GetAbilityContext(get_env(), context);
+    if (abilityContext == nullptr) {
+        MEDIA_LOGE("invalid arguments");
+        CommonTaihe::ThrowError(TAIHE_ERR_INPUT_INVALID, TAIHE_ERR_INPUT_INVALID_INFO);
+        return ReturnErrToneAttrsTaiheArray();
+    }
+    if (sysSoundMgrClient_ == nullptr) {
+        CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
+        return ReturnErrToneAttrsTaiheArray();
+    }
+    auto toneAttrsArray = sysSoundMgrClient_->GetCustomizedToneAttrList(abilityContext);
+    if (toneAttrsArray.empty()) {
+        CommonTaihe::ThrowError(TAIHE_ERR_IO_ERROR, TAIHE_ERR_IO_ERROR_INFO);
+        return ReturnErrToneAttrsTaiheArray();
+    }
+    return ToToneAttrsTaiheArray(toneAttrsArray);
+}
+
+::taihe::array<ToneAttrsTaihe> SystemSoundManagerImpl::GetCustomizedToneAttrList(uintptr_t context)
+{
+    return GetCustomizedToneAttrListSync(context);
+}
+
 void SystemSoundManagerImpl::RemoveCustomizedToneSync(uintptr_t context, ::taihe::string_view uri)
 {
     CHECK_AND_RETURN_RET_LOG(CommonTaihe::VerifyRingtonePermission(),

@@ -2099,7 +2099,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetSystemToneUri_ESIM_NoSy
 /**
  * @tc.name  : Test SetToneUriInternal default branch
  * @tc.number: Media_SoundManager_SetToneUriInternal_Default_001
- * @tc.desc  : Test SetToneUriInternal with invalid toneTypeQuery triggers default branch.
+ * @tc.desc  : Test SetToneUriInternal with invalid toneCategory triggers default branch.
  */
 HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_SetToneUriInternal_Default_001, TestSize.Level2)
 {
@@ -2736,7 +2736,7 @@ HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_007, TestSize.Level0)
 /**
  * @tc.name  : IsToneAlreadySet_UnknownType_ReturnsFalse
  * @tc.number: IsToneAlreadySet_008
- * @tc.desc  : Test IsToneAlreadySet returns false for unknown toneTypeQuery.
+ * @tc.desc  : Test IsToneAlreadySet returns false for unknown toneCategory.
  */
 HWTEST(SystemSoundManagerUnitNextTest, IsToneAlreadySet_008, TestSize.Level0)
 {

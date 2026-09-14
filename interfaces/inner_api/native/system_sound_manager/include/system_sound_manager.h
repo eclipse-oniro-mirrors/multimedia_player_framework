@@ -59,6 +59,7 @@ enum ToneHapticsType {
     TEXT_MESSAGE_ESIM_CARD_0 = 22,
     TEXT_MESSAGE_ESIM_CARD_1 = 23,
     NOTIFICATION = 40,
+    ALARM = 50,
 };
 
 inline bool IsValidRingtoneType(RingtoneType type)
@@ -75,7 +76,8 @@ inline bool IsValidSystemToneType(SystemToneType type)
 inline bool IsValidToneHapticsType(ToneHapticsType type)
 {
     return (type >= CALL_SIM_CARD_0 && type <= CALL_ESIM_CARD_1) ||
-        (type >= TEXT_MESSAGE_SIM_CARD_0 && type <= TEXT_MESSAGE_ESIM_CARD_1) || type == NOTIFICATION;
+        (type >= TEXT_MESSAGE_SIM_CARD_0 && type <= TEXT_MESSAGE_ESIM_CARD_1) ||
+        type == NOTIFICATION || type == ALARM;
 }
 
 enum SystemToneUriType {
@@ -316,6 +318,15 @@ public:
      * @since 12
      */
     virtual int32_t Close(const int32_t &fd) = 0;
+
+    /**
+     * @brief Returns the list of all customized tone attributes.
+     *
+     * @param context Indicates the Context object on OHOS.
+     * @return Returns the list of customized tone attrs.
+     */
+    virtual std::vector<std::shared_ptr<ToneAttrs>> GetCustomizedToneAttrList(
+        const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
 
     /**
      * @brief Add customized tone into ringtone library.
