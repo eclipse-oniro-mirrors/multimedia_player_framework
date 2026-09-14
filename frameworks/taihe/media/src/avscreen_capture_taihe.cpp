@@ -52,11 +52,6 @@ AVScreenCaptureRecorderImpl::AVScreenCaptureRecorderImpl()
     taskQue_ = std::make_unique<TaskQueue>("OS_AVScreenCaptureTaihe");
     (void)taskQue_->Start();
     screenCaptureCb_ = std::make_shared<AVScreenCaptureCallback>();
-    if (screenCaptureCb_ == nullptr) {
-        MEDIA_LOGE("failed to CreateScreenCaptureCb");
-        MediaTaiheUtils::ThrowExceptionError("failed to CreateScreenCaptureCb");
-        return;
-    }
     (void)screenCapture_->SetScreenCaptureCallback(screenCaptureCb_);
 }
 

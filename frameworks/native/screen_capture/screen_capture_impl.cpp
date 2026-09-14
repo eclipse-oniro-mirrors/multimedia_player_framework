@@ -28,7 +28,6 @@ using namespace OHOS::HiviewDFX;
 std::shared_ptr<ScreenCapture> ScreenCaptureFactory::CreateScreenCapture()
 {
     std::shared_ptr<ScreenCaptureImpl> impl = std::make_shared<ScreenCaptureImpl>();
-    CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new ScreenCaptureImpl");
 
     int32_t ret = impl->Init();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init ScreenCaptureImpl");
@@ -52,7 +51,6 @@ int32_t ScreenCaptureImpl::Init()
 std::shared_ptr<ScreenCapture> ScreenCaptureFactory::CreateScreenCapture(OHOS::AudioStandard::AppInfo &appInfo)
 {
     std::shared_ptr<ScreenCaptureImpl> impl = std::make_shared<ScreenCaptureImpl>();
-    CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new ScreenCaptureImpl");
 
     int32_t ret = impl->Init(appInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to init ScreenCaptureImpl");

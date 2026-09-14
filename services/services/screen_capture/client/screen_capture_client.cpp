@@ -28,8 +28,6 @@ std::shared_ptr<ScreenCaptureClient> ScreenCaptureClient::Create(
 {
     std::shared_ptr<ScreenCaptureClient> screenCapture = std::make_shared<ScreenCaptureClient>(ipcProxy);
 
-    CHECK_AND_RETURN_RET_LOG(screenCapture != nullptr, nullptr, "failed to new Screen Capture Client");
-
     int32_t ret = screenCapture->CreateListenerObject();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create listener object");
 

@@ -506,54 +506,47 @@ public:
         return stateChangeCallback_ != nullptr;
     }
 
-    bool SetStateChangeCallback(OH_AVScreenCapture_OnStateChange callback, void *userData)
+    void SetStateChangeCallback(OH_AVScreenCapture_OnStateChange callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         stateChangeCallback_ = std::make_shared<NativeScreenCaptureStateChangeCallback>(callback, userData);
-        return stateChangeCallback_ != nullptr;
     }
 
-    bool SetCaptureContentChangedCallback(OH_AVScreenCapture_OnCaptureContentChanged callback, void *userData)
+    void SetCaptureContentChangedCallback(OH_AVScreenCapture_OnCaptureContentChanged callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         contentChangedCallback_ = std::make_shared<NativeScreenCaptureContentChangedCallback>(callback, userData);
-        return contentChangedCallback_ != nullptr;
     }
 
-    bool SetUserSelectedCallback(OH_AVScreenCapture_OnUserSelected callback, void *userData)
+    void SetUserSelectedCallback(OH_AVScreenCapture_OnUserSelected callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         userSelectedCallback_ = std::make_shared<NativeScreenCaptureUserSelectedCallback>(callback, userData);
-        return userSelectedCallback_ != nullptr;
     }
 
-    bool SetPrivacyProtectCallback(OH_AVScreenCapture_OnPrivacyProtect callback, void *userData)
+    void SetPrivacyProtectCallback(OH_AVScreenCapture_OnPrivacyProtect callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         privacyProtectCallback_ = std::make_shared<NativeScreenCapturePrivacyProtectCallback>(callback, userData);
-        return privacyProtectCallback_ != nullptr;
     }
 
-    bool SetErrorCallback(OH_AVScreenCapture_OnError callback, void *userData)
+    void SetErrorCallback(OH_AVScreenCapture_OnError callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         errorCallback_ = std::make_shared<NativeScreenCaptureErrorCallback>(callback, userData);
-        return errorCallback_ != nullptr;
     }
 
-    bool SetDataCallback(OH_AVScreenCapture_OnBufferAvailable callback, void *userData)
+    void SetDataCallback(OH_AVScreenCapture_OnBufferAvailable callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         dataCallback_ = std::make_shared<NativeScreenCaptureDataCallback>(callback, userData);
         hasDataCallback_.store(true);
-        return dataCallback_ != nullptr;
     }
 
-    bool SetDisplayCallback(OH_AVScreenCapture_OnDisplaySelected callback, void *userData)
+    void SetDisplayCallback(OH_AVScreenCapture_OnDisplaySelected callback, void *userData)
     {
         std::unique_lock<std::shared_mutex> lock(mutex_);
         displaySelectedCallback_ = std::make_shared<NativeScreenCaptureDisplaySelectedCallback>(callback, userData);
-        return displaySelectedCallback_ != nullptr;
     }
 
 private:
@@ -1025,8 +1018,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCallback(struct OH_AVScreenCap
 
     if (screenCaptureObj->callback_ == nullptr) {
         screenCaptureObj->callback_ = std::make_shared<NativeScreenCaptureCallback>(capture, callback);
-        CHECK_AND_RETURN_RET_LOG(screenCaptureObj->callback_ != nullptr,
-            AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "callback_ is nullptr!");
     } else {
         screenCaptureObj->callback_->SetCallback(callback);
     }
@@ -1089,9 +1080,6 @@ static OH_AVSCREEN_CAPTURE_ErrCode AVScreenCaptureSetCallback(struct OH_AVScreen
             .onVideoBufferAvailable = nullptr
         };
         screenCaptureObj->callback_ = std::make_shared<NativeScreenCaptureCallback>(capture, dummyCallback);
-        CHECK_AND_RETURN_RET_LOG(screenCaptureObj->callback_ != nullptr,
-            AV_SCREEN_CAPTURE_ERR_NO_MEMORY, "callback_ is nullptr!");
-
         int32_t ret = screenCaptureObj->screenCapture_->SetScreenCaptureCallback(screenCaptureObj->callback_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
             "SetScreenCaptureCallback failed!");
@@ -1113,11 +1101,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetStateCallback(struct OH_AVScre
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetStateCallback is null");
 
-    if (screenCaptureObj->callback_ == nullptr ||
-        !screenCaptureObj->callback_->SetStateChangeCallback(callback, userData)) {
+    if (screenCaptureObj->callback_ == nullptr) {
         MEDIA_LOGE("OH_AVScreenCapture_SetStateCallback error");
         return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
     }
+    screenCaptureObj->callback_->SetStateChangeCallback(callback, userData);
     MEDIA_LOGD("OH_AVScreenCapture_SetStateCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
@@ -1136,11 +1124,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetCaptureContentChangedCallback is null");
 
-    if (screenCaptureObj->callback_ == nullptr ||
-        !screenCaptureObj->callback_->SetCaptureContentChangedCallback(callback, userData)) {
+    if (screenCaptureObj->callback_ == nullptr) {
         MEDIA_LOGE("OH_AVScreenCapture_SetCaptureContentChangedCallback error");
         return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
     }
+    screenCaptureObj->callback_->SetCaptureContentChangedCallback(callback, userData);
     MEDIA_LOGD("OH_AVScreenCapture_SetCaptureContentChangedCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
@@ -1158,10 +1146,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetErrorCallback(struct OH_AVScre
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetErrorCallback is null");
 
-    if (screenCaptureObj->callback_ == nullptr || !screenCaptureObj->callback_->SetErrorCallback(callback, userData)) {
+    if (screenCaptureObj->callback_ == nullptr) {
         MEDIA_LOGE("OH_AVScreenCapture_SetErrorCallback error");
         return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
     }
+    screenCaptureObj->callback_->SetErrorCallback(callback, userData);
     MEDIA_LOGD("OH_AVScreenCapture_SetErrorCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
@@ -1179,11 +1168,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDataCallback(struct OH_AVScree
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetDataCallback is null");
 
-    if (screenCaptureObj->callback_ == nullptr ||
-        !screenCaptureObj->callback_->SetDataCallback(callback, userData)) {
+    if (screenCaptureObj->callback_ == nullptr) {
         MEDIA_LOGE("OH_AVScreenCapture_SetDataCallback error");
         return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
     }
+    screenCaptureObj->callback_->SetDataCallback(callback, userData);
     MEDIA_LOGD("OH_AVScreenCapture_SetDataCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
@@ -1326,11 +1315,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDisplayCallback(struct OH_AVSc
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, errCode, "SetDisplayCallback is null");
 
-    if (screenCaptureObj->callback_ == nullptr ||
-        !screenCaptureObj->callback_->SetDisplayCallback(callback, userData)) {
+    if (screenCaptureObj->callback_ == nullptr) {
         MEDIA_LOGE("OH_AVScreenCapture_SetDisplayCallback error");
         return AV_SCREEN_CAPTURE_ERR_NO_MEMORY;
     }
+    screenCaptureObj->callback_->SetDisplayCallback(callback, userData);
     MEDIA_LOGD("OH_AVScreenCapture_SetDisplayCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
@@ -1476,11 +1465,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetSelectionCallback(struct OH_AV
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
         "SetSelectionCallback is null");
-    if (screenCaptureObj->callback_ == nullptr ||
-        !screenCaptureObj->callback_->SetUserSelectedCallback(callback, userData)) {
+    if (screenCaptureObj->callback_ == nullptr) {
         MEDIA_LOGE("OH_AVScreenCapture_SetSelectionCallback error");
         return AV_SCREEN_CAPTURE_ERR_INVALID_VAL;
     }
+    screenCaptureObj->callback_->SetUserSelectedCallback(callback, userData);
     MEDIA_LOGD("OH_AVScreenCapture_SetSelectionCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
@@ -1622,11 +1611,11 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPrivacyProtectCallback(struct 
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
         "SetPrivacyProtectCallback is null");
-    if (screenCaptureObj->callback_ == nullptr ||
-        !screenCaptureObj->callback_->SetPrivacyProtectCallback(callback, userData)) {
+    if (screenCaptureObj->callback_ == nullptr) {
         MEDIA_LOGE("OH_AVScreenCapture_SetPrivacyProtectCallback error");
         return AV_SCREEN_CAPTURE_ERR_INVALID_VAL;
     }
+    screenCaptureObj->callback_->SetPrivacyProtectCallback(callback, userData);
     MEDIA_LOGD("OH_AVScreenCapture_SetPrivacyProtectCallback E");
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
