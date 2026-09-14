@@ -14,9 +14,12 @@
  */
 
 #include "screen_cap_buffer_consumer_listener.h"
+#include "surface.h"
 #include "gtest/gtest.h"
 #include <gmock/gmock.h>
+#include <chrono>
 #include <memory>
+#include <thread>
 
 using namespace testing;
 using namespace testing::ext;
@@ -137,13 +140,60 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseBuffer_EmptyQueue_001, Test
     EXPECT_EQ(listener_->ReleaseBuffer(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCapBufferConsumerListenerTest, Destructor_NullThread_001, TestSize.Level1)
+// Push a (null-buffer) entry so we exercise the non-empty control-flow paths
+// without depending on a real producer->consumer buffer flow.
+static void PushNullEntry(ScreenCapBufferConsumerListener &l, int32_t fence = -1)
 {
-    auto localListener = std::make_shared<ScreenCapBufferConsumerListener>(nullptr, nullptr);
-    EXPECT_EQ(localListener->surfaceCbInThread_, nullptr);
-    localListener.reset();
-    SUCCEED();
+    sptr<OHOS::SurfaceBuffer> nullBuf = nullptr;
+    OHOS::Rect damage{0, 0, 0, 0};
+    l.availBuffers_.push(std::make_unique<SurfaceBufferEntry>(nullBuf, fence, 0, damage));
 }
 
+HWTEST_F(ScreenCapBufferConsumerListenerTest, AcquireVideoBuffer_HasEntry_001, TestSize.Level1)
+{
+    PushNullEntry(*listener_);
+    sptr<OHOS::SurfaceBuffer> buffer = nullptr;
+    int32_t fence = -2;
+    int64_t timestamp = -1;
+    OHOS::Rect damage{1, 2, 3, 4};
+    EXPECT_EQ(listener_->AcquireVideoBuffer(buffer, fence, timestamp, damage), MSERR_OK);
+    EXPECT_EQ(buffer, nullptr);
+    EXPECT_EQ(fence, -1);
+    listener_->availBuffers_.pop();
+}
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseVideoBuffer_HasEntry_NullConsumer_001, TestSize.Level1)
+{
+    PushNullEntry(*listener_);
+    EXPECT_EQ(listener_->ReleaseVideoBuffer(), MSERR_OK);
+    EXPECT_TRUE(listener_->availBuffers_.empty());
+}
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, Release_HasEntry_NullConsumer_001, TestSize.Level1)
+{
+    PushNullEntry(*listener_);
+    PushNullEntry(*listener_);
+    EXPECT_EQ(listener_->Release(), MSERR_OK);
+    EXPECT_TRUE(listener_->availBuffers_.empty());
+}
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseBuffer_HasEntry_NullConsumer_001, TestSize.Level1)
+{
+    PushNullEntry(*listener_);
+    EXPECT_EQ(listener_->ReleaseBuffer(), MSERR_OK);
+    EXPECT_TRUE(listener_->availBuffers_.empty());
+}
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, Destructor_RunningThread_001, TestSize.Level1)
+{
+    auto localListener = std::make_shared<ScreenCapBufferConsumerListener>(nullptr, nullptr);
+    ASSERT_EQ(localListener->StartBufferThread(), MSERR_OK);
+    EXPECT_FALSE(localListener->isSurfaceCbInThreadStopped_.load());
+    localListener->StopBufferThread();
+    for (int i = 0; i < 50 && !localListener->isSurfaceCbInThreadStopped_.load(); ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    EXPECT_TRUE(localListener->isSurfaceCbInThreadStopped_.load());
+}
 } // namespace Media
 } // namespace OHOS

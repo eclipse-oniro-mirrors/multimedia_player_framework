@@ -56,17 +56,14 @@ struct CaptureSlot {
     int64_t lastTs{0};
 };
 
-struct LastEmit {
-    AudioOutputTag type{AudioOutputTag::INVALID};
-    AudioCaptureSourceType source{AudioCaptureSourceType::SOURCE_DEFAULT};
-    int64_t pts{0};
-};
-
 struct AudioBufferLogStats {
     AudioOutputTag type{AudioOutputTag::INVALID};
     AudioCaptureSourceType source{AudioCaptureSourceType::SOURCE_DEFAULT};
     uint64_t size{0};
-    void Update(AudioOutputTag tag, AudioCaptureSourceType src);
+    AudioOutputTag emitType{AudioOutputTag::INVALID};
+    AudioCaptureSourceType emitSource{AudioCaptureSourceType::SOURCE_DEFAULT};
+    void Update(AudioOutputTag tag, AudioCaptureSourceType src, uint64_t count = 1);
+    void Emit(AudioOutputTag tag, AudioCaptureSourceType src);
     void Log() const;
 };
 
@@ -106,23 +103,22 @@ private:
     AudioDataSourceReadAtActionState VideoAudioSyncIfNeed();
     void MixAudio(const std::vector<const CacheBuffer *> &srcs, uint8_t *out);
     int64_t LostFrameNum(const int64_t &timestamp);
-    void SetMixAudioTypeLog(AudioOutputTag bufferType);
+    bool FillSilence(const std::shared_ptr<AVBuffer> &buffer, int64_t size);
 
     const AudioCombinePolicy policy_;
     bool recorderFileWithVideo_;
     std::atomic<bool> active_{true};
     std::shared_ptr<CacheBuffer> cacheBuffer_;
     std::vector<CaptureSlot> captures_;
-    std::vector<uint8_t> zeroBuffer_;
     std::weak_ptr<IAudioDataSourceListener> listener_;
     std::mutex mutex_;
-    LastEmit lastEmit_;
-    int64_t writedFrameTime_{0};
     int32_t silentFrameSize_{0};
-    std::atomic<int64_t> firstVideoFramePts_{-1};
+    int64_t remainingSilentFrames_{0};
+    int64_t firstVideoFramePts_{-1};
+    int64_t writedFrameTime_{0};
+    int64_t pauseDuration_{0};
     bool avSynced_{false};
-    std::atomic<int64_t> pauseStartTime_{0};
-    std::atomic<int64_t> pauseDuration_{0};
+    bool pauseDurationPending_{false};
     AudioBufferLogStats logStats_;
 };
 

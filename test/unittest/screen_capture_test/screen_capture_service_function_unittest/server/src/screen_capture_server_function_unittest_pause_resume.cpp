@@ -581,5 +581,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeVideoCapture_ValidScreenId_B2, T
     EXPECT_TRUE(screenCaptureServer_->isConsumerStart_);
 }
 
+HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_NotStarted_001, TestSize.Level2)
+{
+    screenCaptureServer_->virtualScreenId_ = -1;
+    screenCaptureServer_->consumer_ = nullptr;
+    screenCaptureServer_->isSurfaceMode_ = false;
+    EXPECT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCaptureInner_NotRunning_001, TestSize.Level2)
+{
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    EXPECT_EQ(
+        screenCaptureServer_->PauseScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_PAUSED_BY_USER),
+        MSERR_INVALID_OPERATION_STARTED_RESUMED);
+}
+
 } // namespace Media
 } // namespace OHOS
