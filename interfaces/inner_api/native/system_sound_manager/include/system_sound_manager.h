@@ -59,7 +59,7 @@ enum ToneHapticsType {
     TEXT_MESSAGE_ESIM_CARD_0 = 22,
     TEXT_MESSAGE_ESIM_CARD_1 = 23,
     NOTIFICATION = 40,
-    ALARM = 50,
+    ALARM = 41,
 };
 
 inline bool IsValidRingtoneType(RingtoneType type)

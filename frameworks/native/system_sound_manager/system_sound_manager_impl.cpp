@@ -476,7 +476,7 @@ bool SystemSoundManagerImpl::IsToneAlreadySet(const std::unique_ptr<RingtoneAsse
         return (storedToneType & targetBit) != 0;
     }
     if (params.toneCategory == TONE_TYPE_ALARM) {
-        return ringtoneAsset->GetAlarmToneType() == ALARM_TONE_TYPE;
+        return ringtoneAsset->GetAlarmtoneType() == ALARM_TONE_TYPE;
     }
     return false;
 }
@@ -507,7 +507,7 @@ uint32_t SystemSoundManagerImpl::GetStoredToneType(const std::unique_ptr<Rington
         case TONE_TYPE_NOTIFICATION:
             return static_cast<uint32_t>(ringtoneAsset->GetShottoneType());
         case TONE_TYPE_ALARM:
-            return static_cast<uint32_t>(ringtoneAsset->GetAlarmToneType());
+            return static_cast<uint32_t>(ringtoneAsset->GetAlarmtoneType());
         default:
             return 0;
     }
@@ -604,8 +604,8 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed, datashare or library error.");
 
     if (uri == NO_RING_SOUND) {
-        SetToneUriParams noParams = {TONE_TYPE_RINGTONE, static_cast<int32_t>(ringtoneType), TONE_TYPE_RINGTONE};
-        int32_t result = SetNoToneUri(dataShareHelper, noParams);
+        SetToneUriParams noSoundParams = {TONE_TYPE_RINGTONE, static_cast<int32_t>(ringtoneType), TONE_TYPE_RINGTONE};
+        int32_t result = SetNoToneUri(dataShareHelper, noSoundParams);
         dataShareHelper->Release();
         return result >= 0 ? SUCCESS : ERROR;
     }
@@ -828,9 +828,9 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed.");
 
     if (uri == NO_SYSTEM_SOUND) {
-        SetToneUriParams noParams = {TONE_TYPE_NOTIFICATION, static_cast<int32_t>(systemToneType),
+        SetToneUriParams noSoundParams = {TONE_TYPE_NOTIFICATION, static_cast<int32_t>(systemToneType),
             TONE_TYPE_NOTIFICATION};
-        int32_t result = SetNoToneUri(dataShareHelper, noParams);
+        int32_t result = SetNoToneUri(dataShareHelper, noSoundParams);
         dataShareHelper->Release();
         return result >= 0 ? SUCCESS : ERROR;
     }
@@ -1094,8 +1094,8 @@ int32_t SystemSoundManagerImpl::SetAlarmToneUri(const std::shared_ptr<AbilityRun
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed.");
 
     if (uri == NO_RING_SOUND) {
-        SetToneUriParams noParams = {TONE_TYPE_ALARM, 0, TONE_TYPE_ALARM};
-        int32_t result = SetNoToneUri(dataShareHelper, noParams);
+        SetToneUriParams noSoundParams = {TONE_TYPE_ALARM, 0, TONE_TYPE_ALARM};
+        int32_t result = SetNoToneUri(dataShareHelper, noSoundParams);
         dataShareHelper->Release();
         return result >= 0 ? SUCCESS : ERROR;
     }
