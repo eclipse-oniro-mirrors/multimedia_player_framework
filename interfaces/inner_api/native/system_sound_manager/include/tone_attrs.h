@@ -115,9 +115,9 @@ public:
     }
 
 private:
-    std::string title_ = "title_test";
-    std::string fileName_ = "fileName_test";
-    std::string uri_ = "uri_test";
+    std::string title_ = "";
+    std::string fileName_ = "";
+    std::string uri_ = "";
     ToneCustomizedType custType_ = CUSTOMISED;
     int32_t category_ = 0;
     ToneMediaType mediaType_ = ToneMediaType::MEDIA_TYPE_AUD;
