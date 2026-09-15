@@ -14,9 +14,9 @@
  */
 
 #include "screen_capture_impl.h"
-#include "media_log.h"
-#include "media_errors.h"
 #include "i_media_service.h"
+#include "media_errors.h"
+#include "media_log.h"
 #include "string_ex.h"
 
 namespace {
@@ -509,7 +509,7 @@ int32_t ScreenCaptureImpl::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfi
     return screenCaptureService_->SetCaptureAreaHighlight(config);
 }
 
-int32_t ScreenCaptureImpl::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
+int32_t ScreenCaptureImpl::SetScreenCaptureStrategy(const ScreenCaptureStrategy &strategy)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " SetScreenCaptureStrategy in", FAKE_POINTER(this));

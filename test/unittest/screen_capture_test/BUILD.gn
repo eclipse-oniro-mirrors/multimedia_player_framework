@@ -279,10 +279,12 @@ ohos_unittest("screen_capture_ipc_unit_test") {
       "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/client/screen_capture_client.cpp",
       "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_controller_proxy.cpp",
       "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
+      "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_ipc.cpp",
       "screen_capture_ipc_test/screen_capture_controller_proxy_unittest.cpp",
       "screen_capture_ipc_test/screen_capture_listener_callback_unittest.cpp",
       "screen_capture_ipc_test/screen_capture_listener_stub_unittest.cpp",
       "screen_capture_ipc_test/screen_capture_service_stub_unittest.cpp",
+      "screen_capture_ipc_test/screen_capture_strategy_parcel_unittest.cpp",
     ]
   }
 

@@ -376,7 +376,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SyncAudioCaptures_InnerStart, TestSize
     SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->cbProxy_,
-        std::string("InnerSync"), screenCaptureServer_->contentFilter_);
+        screenCaptureServer_->contentFilter_, false);
     screenCaptureServer_->innerAudioCapture_->captureState_ = AudioCapturerWrapperState::CAPTURER_UNKNOWN;
     ASSERT_EQ(screenCaptureServer_->SyncAudioCaptures(), MSERR_OK);
     EXPECT_EQ(screenCaptureServer_->innerAudioCapture_->captureState_, AudioCapturerWrapperState::CAPTURER_RECORDING);

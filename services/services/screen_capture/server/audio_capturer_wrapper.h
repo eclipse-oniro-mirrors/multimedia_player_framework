@@ -63,23 +63,20 @@ enum AudioCapturerWrapperState : int32_t {
 class AudioCapturerWrapper : public std::enable_shared_from_this<AudioCapturerWrapper> {
 public:
     explicit AudioCapturerWrapper(AudioCaptureInfo &audioInfo,
-        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, std::string &&name,
-        const ScreenCaptureContentFilter &filter)
-        : screenCaptureCb_(screenCaptureCb), audioInfo_(audioInfo), threadName_(std::move(name)), contentFilter_(filter)
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb, const ScreenCaptureContentFilter &filter,
+        const bool aecAvailable)
+        : screenCaptureCb_(screenCaptureCb), audioInfo_(audioInfo), contentFilter_(filter), aecAvailable_(aecAvailable)
     {
     }
     virtual ~AudioCapturerWrapper();
-    int32_t Start(const OHOS::AudioStandard::AppInfo &appInfo);
+    int32_t Start(const OHOS::AudioStandard::AppInfo &appInfo, const DataType dataType, const int32_t sessionId);
     int32_t Stop();
     int32_t UpdateAudioCapturerConfig(ScreenCaptureContentFilter &filter);
     void OnReadData(size_t length);
     int32_t AcquireAudioBuffer(std::shared_ptr<CacheBuffer> &cacheBuf);
     int32_t ReleaseAudioBuffer();
     void SetIsInVoIPCall(bool isInVoIPCall);
-    inline bool IsInVoIPCall()
-    {
-        return isInVoIPCall_.load();
-    }
+    bool IsInVoIPCall() const;
     AudioCapturerWrapperState GetAudioCapturerState();
     int32_t UseUpAllLeftBufferUntil(int64_t audioTime);
     int32_t DropBufferUntil(int64_t audioTime);
@@ -102,6 +99,7 @@ private:
 
     void SetInnerStreamUsage(std::vector<OHOS::AudioStandard::StreamUsage> &usages);
     void PartiallyPrintLog(int32_t lineNumber, std::string str);
+    std::string GenerateThreadName(const DataType dataType, const int32_t sessionId) const;
 
 protected:
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_;
@@ -110,7 +108,6 @@ private:
     std::mutex mutex_;
     std::shared_mutex audioCapturerMutex_;
     AudioCaptureInfo audioInfo_;
-    std::string threadName_;
     std::shared_ptr<OHOS::AudioStandard::AudioCapturer> audioCapturer_ = nullptr;
     ScreenCaptureContentFilter contentFilter_;
     OHOS::AudioStandard::AppInfo appInfo_;
@@ -121,6 +118,7 @@ private:
     std::deque<std::shared_ptr<CacheBuffer>> availBuffers_;
     std::string bundleName_;
     std::atomic<bool> isInVoIPCall_ = false;
+    const bool aecAvailable_ = false;
     std::atomic<bool> isMute_ = false;
     std::atomic<AudioCapturerWrapperState> captureState_{CAPTURER_UNKNOWN};
 

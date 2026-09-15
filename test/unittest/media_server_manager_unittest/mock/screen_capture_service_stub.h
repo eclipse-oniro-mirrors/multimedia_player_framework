@@ -70,7 +70,7 @@ public:
     MOCK_METHOD(int32_t, ExcludeContent, (ScreenCaptureContentFilter &contentFilter), (override));
     MOCK_METHOD(int32_t, ExcludePickerWindows, (const std::vector<int32_t> &windowIDsVec), (override));
     MOCK_METHOD(int32_t, SetPickerMode, (PickerMode pickerMode), (override));
-    MOCK_METHOD(int32_t, SetScreenCaptureStrategy, (ScreenCaptureStrategy strategy), (override));
+    MOCK_METHOD(int32_t, SetScreenCaptureStrategy, (const ScreenCaptureStrategy &strategy), (override));
     MOCK_METHOD(int32_t, UpdateSurface, (sptr<Surface> surface), (override));
     MOCK_METHOD(int32_t, SetCaptureArea, (uint64_t displayId, OHOS::Rect area), (override));
     MOCK_METHOD(int32_t, GetMultiDisplayCaptureCapability, (const std::vector<uint64_t> &displayIds,

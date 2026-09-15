@@ -14,6 +14,7 @@
  */
 
 #include "screen_capture_service_proxy.h"
+#include "screen_capture_ipc.h"
 #include "media_log.h"
 #include "media_errors.h"
 #include "avsharedmemory_ipc.h"
@@ -753,7 +754,7 @@ int32_t ScreenCaptureServiceProxy::SetCaptureAreaHighlight(AVScreenCaptureHighli
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
+int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(const ScreenCaptureStrategy &strategy)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -762,10 +763,8 @@ int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(ScreenCaptureStrateg
     bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
 
-    token = data.WriteBool(strategy.enableDeviceLevelCapture) && data.WriteBool(strategy.keepCaptureDuringCall) &&
-            data.WriteInt32(strategy.strategyForPrivacyMaskMode) && data.WriteBool(strategy.canvasFollowRotation) &&
-            data.WriteBool(strategy.enableBFrame) && data.WriteInt32(static_cast<int32_t>(strategy.pickerPopUp)) &&
-            data.WriteInt32(static_cast<int32_t>(strategy.fillMode)) && data.WriteBool(strategy.enablePause);
+    ScreenCaptureStrategyParcel parcel(strategy);
+    token = data.WriteParcelable(&parcel);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write strategy!");
 
     int error = Remote()->SendRequest(SET_STRATEGY, data, reply, option);

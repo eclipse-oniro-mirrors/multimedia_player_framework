@@ -297,7 +297,7 @@ int32_t ScreenCaptureClient::ReleaseVideoBuffer()
     return screenCaptureProxy_->ReleaseVideoBuffer();
 }
 
-int32_t ScreenCaptureClient::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
+int32_t ScreenCaptureClient::SetScreenCaptureStrategy(const ScreenCaptureStrategy &strategy)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");

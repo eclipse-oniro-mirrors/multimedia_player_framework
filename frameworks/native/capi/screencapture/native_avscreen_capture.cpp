@@ -179,7 +179,7 @@ public:
     NativeScreenCapturePrivacyProtectCallback(OH_AVScreenCapture_OnPrivacyProtect callback, void *userData)
         : callback_(callback), userData_(userData) {}
     virtual ~NativeScreenCapturePrivacyProtectCallback() = default;
- 
+
     void OnPrivacyProtect(struct OH_AVScreenCapture *capture, AVScreenCapturePrivacyProtect privacyProtect)
     {
         CHECK_AND_RETURN(capture != nullptr && callback_ != nullptr);
@@ -189,7 +189,7 @@ public:
         };
         callback_(capture, &data, userData_);
     }
- 
+
 private:
     OH_AVScreenCapture_OnPrivacyProtect callback_;
     void *userData_;
@@ -333,7 +333,7 @@ private:
             }
             OH_AVFormat_Destroy(format);
         }
-        
+
         return AV_SCREEN_CAPTURE_ERR_OK;
     }
 
@@ -443,7 +443,7 @@ public:
         MEDIA_LOGI("OnPrivacyProtect() is called");
         std::shared_lock<std::shared_mutex> lock(mutex_);
         CHECK_AND_RETURN(capture_ != nullptr);
- 
+
         if (privacyProtectCallback_ != nullptr) {
             privacyProtectCallback_->OnPrivacyProtect(capture_, privacyProtect);
             return;
@@ -1559,13 +1559,22 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPause(
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForMicAEC(OH_AVScreenCapture_CaptureStrategy *strategy,
+    bool value)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr");
+    auto strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    strategyObj->strategy.enableAEC = value;
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
 void SetMultiDisplayCapability(MultiDisplayCapability displayCapability, OH_MultiDisplayCapability *capability)
 {
     capability->width = displayCapability.width;
     capability->height = displayCapability.height;
     capability->isMultiDisplaySupport = displayCapability.isMultiDisplaySupport;
 }
- 
+
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(struct OH_AVScreenCapture *capture,
     uint64_t *displayIds, size_t count, OH_MultiDisplayCapability *capability)
 {
@@ -1602,7 +1611,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPrivacyProtectCallback(struct 
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
     CHECK_AND_RETURN_RET_LOG(!screenCaptureObj->isStart,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "This interface should be called before Start is called!");
- 
+
     OH_AVSCREEN_CAPTURE_ErrCode errCode = AVScreenCaptureSetCallback(capture, screenCaptureObj);
     CHECK_AND_RETURN_RET_LOG(errCode == AV_SCREEN_CAPTURE_ERR_OK, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
         "SetPrivacyProtectCallback is null");

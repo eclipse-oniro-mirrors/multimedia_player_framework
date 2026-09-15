@@ -602,6 +602,12 @@ int32_t ScreenCaptureCapiMock::StrategyForPause(bool value)
     return OH_AVScreenCapture_StrategyForPause(strategy_, value);
 }
 
+int32_t ScreenCaptureCapiMock::StrategyForMicAEC(bool value)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(strategy_ != nullptr, MSERR_UNKNOWN, "strategy_ == nullptr");
+    return OH_AVScreenCapture_StrategyForMicAEC(strategy_, value);
+}
+
 OH_AVScreenCaptureHighlightConfig ScreenCaptureCapiMock::HighlightConfigConvert(AVScreenCaptureHighlightConfig config)
 {
     OH_AVScreenCaptureHighlightConfig highlightConfig;
