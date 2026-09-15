@@ -79,6 +79,13 @@ struct SetToneUriParams {
     int32_t extToneCategory;
 };
 
+struct ToneTypeConfig {
+    std::string typeColumnName;
+    std::string sourceTypeColumnName;
+    int32_t setToneType;
+    int32_t clearedToneType;
+};
+
 class SystemSoundManagerImpl : public SystemSoundManager {
 public:
     SystemSoundManagerImpl();
@@ -196,9 +203,9 @@ private:
         uint32_t targetToneTypeBit, SourceType sourceType, int32_t defaultCategory);
     int32_t ClearBitFromToneTypeColumn(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const std::string &typeColumnName, const std::string &sourceTypeColumnName, uint32_t targetToneTypeBit);
+    ToneTypeConfig GetToneTypeConfig(int32_t toneCategory);
     int32_t ClearToneType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const std::string &typeColumnName, const std::string &sourceTypeColumnName,
-        int32_t toneType, int32_t clearedType);
+        int32_t toneCategory);
     int32_t SetNoToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
         const SetToneUriParams &params);
 
@@ -227,10 +234,8 @@ private:
     std::string OpenAudioFile(const DatabaseTool &databaseTool, const std::string &uri, int32_t audioId);
     std::string OpenHapticsFile(const DatabaseTool &databaseTool, const std::string &hapticsUri, int32_t hapticsId);
     int32_t OpenCustomToneUri(const std::string &customAudioUri, int32_t toneType);
-    int32_t UpdateNotificationToneUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const int32_t &toneId);
-    int32_t UpdateAlarmToneUri(const std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
-        const int32_t ringtoneAssetId);
+    int32_t UpdateFullToneTypeUri(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
+        const int32_t toneId, int32_t toneCategory);
 
     bool ConvertToRingtoneType(ToneHapticsType toneHapticsType, RingtoneType &ringtoneType);
     bool ConvertToSystemToneType(ToneHapticsType toneHapticsType, SystemToneType &systemToneType);
