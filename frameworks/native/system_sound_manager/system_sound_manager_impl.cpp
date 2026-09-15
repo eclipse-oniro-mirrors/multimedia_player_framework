@@ -1264,45 +1264,6 @@ std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetAlarmToneAttr
     return alarmtoneAttrsArray_;
 }
 
-std::vector<std::shared_ptr<ToneAttrs>> SystemSoundManagerImpl::GetCustomizedToneAttrList(
-    const std::shared_ptr<AbilityRuntime::Context> &context)
-{
-    std::lock_guard<std::mutex> lock(uriMutex_);
-    std::vector<std::shared_ptr<ToneAttrs>> customizedToneAttrsArray;
-    bool isProxy = false;
-    std::shared_ptr<DataShare::DataShareHelper> dataShareHelper;
-    SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
-    CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, customizedToneAttrsArray, "Create dataShare failed.");
-
-    std::string queryUri = BuildRingtoneLibraryUri(isProxy);
-    Uri QUERYURI(queryUri);
-    DataShare::DatashareBusinessError businessError;
-    DataShare::DataSharePredicates queryPredicates;
-    queryPredicates.EqualTo(RINGTONE_COLUMN_SOURCE_TYPE, to_string(SOURCE_TYPE_CUSTOMISED));
-    queryPredicates.GreaterThan(RINGTONE_COLUMN_MEDIA_TYPE, to_string(RINGTONE_MEDIA_TYPE_INVALID));
-    auto resultSet = dataShareHelper->Query(QUERYURI, queryPredicates, COLUMNS, &businessError);
-    CHECK_AND_RETURN_RET_LOG(resultSet != nullptr, customizedToneAttrsArray, "query failed.");
-    auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
-    CHECK_AND_RETURN_RET_LOG(results != nullptr, customizedToneAttrsArray, "query failed, ringtone library error.");
-    unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while (ringtoneAsset != nullptr) {
-        auto toneAttrs = std::make_shared<ToneAttrs>(ringtoneAsset->GetTitle(),
-            ringtoneAsset->GetDisplayName(), ringtoneAsset->GetPath(),
-            sourceTypeMap_[ringtoneAsset->GetSourceType()], 0);
-        SetToneAttrs(toneAttrs, ringtoneAsset);
-        customizedToneAttrsArray.push_back(toneAttrs);
-        ringtoneAsset = results->GetNextObject();
-    }
-    if (customizedToneAttrsArray.empty()) {
-        MEDIA_LOGE("GetCustomizedToneAttrList: no customized tone in the ringtone library!");
-    }
-    if (results != nullptr) {
-        results->Close();
-    }
-    dataShareHelper->Release();
-    return customizedToneAttrsArray;
-}
-
 int32_t SystemSoundManagerImpl::OpenAlarmTone(const std::shared_ptr<AbilityRuntime::Context> &context,
     const std::string &uri)
 {

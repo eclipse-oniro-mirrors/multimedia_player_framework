@@ -320,15 +320,6 @@ public:
     virtual int32_t Close(const int32_t &fd) = 0;
 
     /**
-     * @brief Returns the list of all customized tone attributes.
-     *
-     * @param context Indicates the Context object on OHOS.
-     * @return Returns the list of customized tone attrs.
-     */
-    virtual std::vector<std::shared_ptr<ToneAttrs>> GetCustomizedToneAttrList(
-        const std::shared_ptr<AbilityRuntime::Context> &context) = 0;
-
-    /**
      * @brief Add customized tone into ringtone library.
      *
      * @param context Indicates the Context object on OHOS.

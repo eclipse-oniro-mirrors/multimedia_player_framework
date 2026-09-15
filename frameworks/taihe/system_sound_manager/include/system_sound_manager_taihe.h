@@ -116,8 +116,6 @@ public:
     ::taihe::array<uintptr_t> RemoveCustomizedToneList(::taihe::array_view<::taihe::string> uriList);
     ::taihe::array<uintptr_t> OpenToneListSync(::taihe::array_view<::taihe::string> uriList);
     ::taihe::array<uintptr_t> OpenToneList(::taihe::array_view<::taihe::string> uriList);
-    ::taihe::array<ToneAttrsTaihe> GetCustomizedToneAttrListSync(uintptr_t context);
-    ::taihe::array<ToneAttrsTaihe> GetCustomizedToneAttrList(uintptr_t context);
 
     friend SystemSoundManagerTaihe GetSystemSoundManager();
     friend SystemSoundPlayerTaihe CreateSystemSoundPlayer();

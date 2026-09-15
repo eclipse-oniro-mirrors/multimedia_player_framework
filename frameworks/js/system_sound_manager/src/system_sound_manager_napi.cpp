@@ -422,7 +422,6 @@ napi_status SystemSoundManagerNapi::DefineClassProperties(napi_env env, napi_val
         DECLARE_NAPI_FUNCTION("getCurrentRingtoneAttribute", GetCurrentRingtoneAttribute),
         DECLARE_NAPI_FUNCTION("removeCustomizedToneList", RemoveCustomizedToneList),
         DECLARE_NAPI_FUNCTION("openToneList", OpenToneList),
-        DECLARE_NAPI_FUNCTION("getCustomizedToneAttrList", GetCustomizedToneAttrList),
         DECLARE_NAPI_FUNCTION("getMockHapticRingtonePlayer", GetMockHapticRingtonePlayer),
     };
 
@@ -1758,70 +1757,6 @@ void SystemSoundManagerNapi::AsyncGetAlarmToneAttrList(napi_env env, void *data)
         context->status = ERROR;
         context->errCode = NAPI_ERR_IO_ERROR;
         context->errMessage = "I/O error. Can not get alarm tone.";
-    }
-}
-
-napi_value SystemSoundManagerNapi::GetCustomizedToneAttrList(napi_env env, napi_callback_info info)
-{
-    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
-        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
-        "No system permission");
-    napi_value result = nullptr;
-    napi_value resource = nullptr;
-    napi_value thisVar = nullptr;
-    size_t argc = ARGS_ONE;
-    napi_value argv[ARGS_ONE] = {};
-    napi_status status = napi_get_cb_info(env, info, &argc, argv, &thisVar, nullptr);
-    napi_get_undefined(env, &result);
-    CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result,
-        "GetCustomizedToneAttrList: Failed to retrieve details about the callback");
-    CHECK_AND_RETURN_RET_LOG(argc == ARGS_ONE, ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO,
-        NAPI_ERR_INPUT_INVALID), "invalid arguments");
-    std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext = std::make_unique<SystemSoundManagerAsyncContext>();
-    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
-    if (status == napi_ok && asyncContext->objectInfo != nullptr) {
-        asyncContext->abilityContext_ = GetAbilityContext(env, argv[0]);
-        CHECK_AND_RETURN_RET_LOG(asyncContext->abilityContext_ != nullptr,
-            ThrowErrorAndReturn(env, NAPI_ERR_INPUT_INVALID_INFO, NAPI_ERR_INPUT_INVALID), "invalid arguments");
-        napi_create_promise(env, &asyncContext->deferred, &result);
-        napi_create_string_utf8(env, "GetCustomizedToneAttrList", NAPI_AUTO_LENGTH, &resource);
-        status = napi_create_async_work(env, nullptr, resource, AsyncGetCustomizedToneAttrList,
-            GetToneAttrsListAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
-        if (status != napi_ok) {
-            napi_value message = nullptr, error = nullptr;
-            napi_create_string_utf8(env, NAPI_ERR_IO_ERROR_INFO.c_str(), NAPI_AUTO_LENGTH, &message);
-            napi_create_error(env, nullptr, message, &error);
-            napi_reject_deferred(env, asyncContext->deferred, error);
-            napi_get_undefined(env, &result);
-        } else {
-            status = napi_queue_async_work(env, asyncContext->work);
-            if (status != napi_ok) {
-                napi_delete_async_work(env, asyncContext->work);
-                asyncContext->work = nullptr;
-                napi_value message = nullptr, error = nullptr;
-                napi_create_string_utf8(env, NAPI_ERR_IO_ERROR_INFO.c_str(), NAPI_AUTO_LENGTH, &message);
-                napi_create_error(env, nullptr, message, &error);
-                napi_reject_deferred(env, asyncContext->deferred, error);
-                napi_get_undefined(env, &result);
-            } else {
-                asyncContext.release();
-            }
-        }
-    }
-    return result;
-}
-
-void SystemSoundManagerNapi::AsyncGetCustomizedToneAttrList(napi_env env, void *data)
-{
-    SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
-    if (context->objectInfo->sysSoundMgrClient_ != nullptr) {
-        context->toneAttrsArray = context->objectInfo->sysSoundMgrClient_->GetCustomizedToneAttrList(
-            context->abilityContext_);
-    }
-    if (context->toneAttrsArray.empty()) {
-        context->status = ERROR;
-        context->errCode = NAPI_ERR_IO_ERROR;
-        context->errMessage = "I/O error. Can not get customized tone.";
     }
 }
 

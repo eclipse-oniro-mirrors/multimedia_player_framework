@@ -166,8 +166,6 @@ private:
     static napi_value OpenToneList(napi_env env, napi_callback_info info);
     static void AsyncOpenToneList(napi_env env, void *data);
     static void AsyncOpenToneListAsyncCallbackComp(napi_env env, napi_status status, void *data);
-    static napi_value GetCustomizedToneAttrList(napi_env env, napi_callback_info info);
-    static void AsyncGetCustomizedToneAttrList(napi_env env, void *data);
 
     static napi_value GetMockHapticRingtonePlayer(napi_env env, napi_callback_info info);
     static void AsyncGetMockHapticRingtonePlayer(napi_env env, void *data);

@@ -122,8 +122,6 @@ public:
     int32_t SetAlarmToneUri(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) override;
     int32_t OpenAlarmTone(const std::shared_ptr<AbilityRuntime::Context> &context, const std::string &uri) override;
     int32_t Close(const int32_t &fd) override;
-    std::vector<std::shared_ptr<ToneAttrs>> GetCustomizedToneAttrList(
-        const std::shared_ptr<AbilityRuntime::Context> &context) override;
     std::string AddCustomizedToneByExternalUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::shared_ptr<ToneAttrs> &toneAttrs, const std::string &externalUri) override;
     std::string AddCustomizedToneByFd(const std::shared_ptr<AbilityRuntime::Context> &context,

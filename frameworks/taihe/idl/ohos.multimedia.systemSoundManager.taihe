@@ -247,9 +247,6 @@ interface SystemSoundManager {
   OpenToneListSync(uriList: Array<String>): Array<@sts_type("[string, long, SystemSoundError]") Opaque>;
   @promise OpenToneList(uriList: Array<String>): Array<@sts_type("[string, long, SystemSoundError]") Opaque>;
 
-  GetCustomizedToneAttrListSync(context: @sts_type("BaseContext") Opaque): Array<ToneAttrs>;
-  @promise GetCustomizedToneAttrList(context: @sts_type("BaseContext") Opaque): Array<ToneAttrs>;
-
 }
 
 function CreateCustomizedToneAttrs(): ToneAttrs;
