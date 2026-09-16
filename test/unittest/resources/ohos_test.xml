@@ -531,37 +531,7 @@
     <target name="screen_capture_server_function_unit_test">
         <preparer>
             <option name="shell" value="mkdir /data/test/media"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_voip_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_voip_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_voip_003.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_voip_004.mp4"/>
-            <option name="shell" value="touch /data/test/media/set_microphone_enabled_file_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/set_microphone_enabled_file_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/set_microphone_file_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/set_microphone_file_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/set_microphone_file_003.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_003.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_004.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_005.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_006.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_007.mp4"/>
-            <option name="shell" value="touch /data/test/media/capture_file_params_invalid_008.mp4"/>
-            <option name="shell" value="touch /data/test/media/on_start_screen_capture_unittest_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/start_file_inner_audio_capture_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/start_file_inner_audio_capture_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_recorder_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_recorder_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_recorder_003.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_recorder_004.m4a"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_recorder_005.abcdefg"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_tel_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_tel_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_tel_003.mp4"/>
-            <option name="shell" value="touch /data/test/media/on_tell_call_stop_008.mp4"/>
-            <option name="shell" value="touch /data/test/media/on_tell_call_stop_009.mp4"/>
-            <option name="shell" value="touch /data/test/media/screen_capture_pause.mp4"/>
+            <option name="shell" value="touch /data/test/media/screen_capture_save_file_mix_01.mp4"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>

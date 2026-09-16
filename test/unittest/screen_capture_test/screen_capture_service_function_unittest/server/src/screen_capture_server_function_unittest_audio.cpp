@@ -369,7 +369,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_InnerCaptureUpdateFails
 HWTEST_F(ScreenCaptureServerFunctionTest, SyncAudioCaptures_InnerStart, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("sync_audio_inner.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(false);

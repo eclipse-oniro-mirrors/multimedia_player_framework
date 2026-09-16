@@ -141,7 +141,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioDataSource_012_NullptrInChangeInf
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_005, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("screen_capture_voip_005.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(false);
@@ -159,7 +159,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_005, TestSize
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_007, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("screen_capture_voip_007.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->SetMicrophoneEnabled(false);

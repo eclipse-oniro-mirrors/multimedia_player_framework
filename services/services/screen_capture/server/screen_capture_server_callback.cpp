@@ -212,6 +212,7 @@ void ScreenCaptureServer::OnBatchLifecycleEvent(
                 missionInfos_ = std::move(missionInfos);
                 isGetAppMissionId_ = true;
             }
+            std::lock_guard<std::mutex> lock(mutex_);
             FinishPrepareSelectWindow();
         }
         std::string events = payloadsJson.dump(4);

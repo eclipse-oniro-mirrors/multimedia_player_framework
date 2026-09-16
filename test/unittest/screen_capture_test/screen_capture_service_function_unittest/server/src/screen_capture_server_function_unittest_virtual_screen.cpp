@@ -35,7 +35,7 @@ namespace Media {
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetCanvasRotationInner_InvalidScreenId_B1, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
     EXPECT_EQ(screenCaptureServer_->SetCanvasRotationInner(), MSERR_INVALID_VAL);
 }
 
@@ -43,7 +43,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetCanvasRotationInner_InvalidScreenId
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenScaleMode_InvalidScreen_B1, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
     EXPECT_EQ(screenCaptureServer_->SetScreenScaleMode(), MSERR_INVALID_VAL);
 }
 
@@ -63,23 +63,23 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetScreenScaleMode_ScaleToFill_B1, Tes
 
 HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenExtended_InvalidScreenId_B1, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
     EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenExtended_DisplayEmpty_B1, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = 1;
+    screenCaptureServer_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(1);
     screenCaptureServer_->displayIds_.clear();
     EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenExtended(), MSERR_INVALID_VAL);
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
 }
 
 // ===================== MakeVirtualScreenMirror (L2707-2719) =====================
 
 HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirror_InvalidScreenId_B1, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
     EXPECT_EQ(screenCaptureServer_->MakeVirtualScreenMirror(), MSERR_UNKNOWN);
 }
 
@@ -87,7 +87,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenMirror_InvalidScreenI
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureAreaInner_InvalidScreenId_B2, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
     OHOS::Rect area = {0, 0, 100, 100};
     EXPECT_EQ(screenCaptureServer_->SetCaptureAreaInner(0, area), MSERR_INVALID_VAL);
 }

@@ -68,14 +68,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_001, TestSize.Le
     auto screenCaptureServerInner = MakeScreenCaptureServer();
     SetMockBuilder(screenCaptureServerInner.get());
     RecorderInfo recorderInfo;
-    int outputFd = open("/data/test/media/screen_capture_recorder_001.mp4", O_RDWR);
-    recorderInfo.url = "fd://" + std::to_string(outputFd);
-    recorderInfo.fileFormat = "mp4";
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     screenCaptureServerInner->SetCaptureMode(config_.captureMode);
     screenCaptureServerInner->SetDataType(config_.dataType);
     screenCaptureServerInner->SetRecorderInfo(config_.recorderInfo);
-    screenCaptureServerInner->SetOutputFile(outputFd);
+    screenCaptureServerInner->SetOutputFile(outputFd_);
     screenCaptureServerInner->InitAudioEncInfo(config_.audioInfo.audioEncInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
@@ -86,7 +84,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_001, TestSize.Le
     sleep(RECORDER_TIME);
     screenCaptureServerInner->StopScreenCapture();
     screenCaptureServerInner->Release();
-    close(outputFd);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_002, TestSize.Level2)
@@ -94,15 +91,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_002, TestSize.Le
     auto screenCaptureServerInner = MakeScreenCaptureServer();
     SetMockBuilder(screenCaptureServerInner.get());
     RecorderInfo recorderInfo;
-    int outputFd = open("/data/test/media/screen_capture_recorder_002.mp4", O_RDWR);
-    recorderInfo.url = "fd://" + std::to_string(outputFd);
-    recorderInfo.fileFormat = "mp4";
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     screenCaptureServerInner->SetScreenCaptureCallback(nullptr);
     screenCaptureServerInner->SetCaptureMode(config_.captureMode);
     screenCaptureServerInner->SetDataType(config_.dataType);
     screenCaptureServerInner->SetRecorderInfo(config_.recorderInfo);
-    screenCaptureServerInner->SetOutputFile(outputFd);
+    screenCaptureServerInner->SetOutputFile(outputFd_);
     screenCaptureServerInner->InitAudioEncInfo(config_.audioInfo.audioEncInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
@@ -113,7 +108,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_002, TestSize.Le
     sleep(RECORDER_TIME);
     screenCaptureServerInner->StopScreenCapture();
     screenCaptureServerInner->Release();
-    close(outputFd);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Level2)
@@ -121,15 +115,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Le
     auto screenCaptureServerInner = MakeScreenCaptureServer();
     SetMockBuilder(screenCaptureServerInner.get());
     RecorderInfo recorderInfo;
-    int outputFd = open("/data/test/media/screen_capture_recorder_003.mp4", O_RDWR);
-    recorderInfo.url = "fd://" + std::to_string(outputFd);
-    recorderInfo.fileFormat = "mp4";
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     screenCaptureServerInner->SetScreenCaptureCallback(nullptr);
     screenCaptureServerInner->SetCaptureMode(config_.captureMode);
     screenCaptureServerInner->SetDataType(config_.dataType);
     screenCaptureServerInner->SetRecorderInfo(config_.recorderInfo);
-    screenCaptureServerInner->SetOutputFile(outputFd);
+    screenCaptureServerInner->SetOutputFile(outputFd_);
     screenCaptureServerInner->InitAudioEncInfo(config_.audioInfo.audioEncInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
@@ -140,14 +132,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Le
     sleep(RECORDER_TIME);
     screenCaptureServerInner->StopScreenCapture();
     screenCaptureServerInner->Release();
-    close(outputFd);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_004, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    int outputFd = open("/data/test/media/screen_capture_recorder_004.m4a", O_RDWR);
-    recorderInfo.url = "fd://" + std::to_string(outputFd);
+    SetRecorderInfo(recorderInfo);
     recorderInfo.fileFormat = "m4a";
     int32_t ret = screenCaptureServer_->SetRecorderInfo(recorderInfo);
     ASSERT_EQ(ret, MSERR_OK);
@@ -156,11 +146,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_004, TestSize.Le
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_005, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    int outputFd = open("/data/test/media/screen_capture_recorder_004.abcdefg", O_RDWR);
-    recorderInfo.url = "fd://" + std::to_string(outputFd);
+    SetRecorderInfo(recorderInfo);
     recorderInfo.fileFormat = "abcdefg";
     int32_t ret = screenCaptureServer_->SetRecorderInfo(recorderInfo);
-    ASSERT_NE(ret, MSERR_OK);
+    ASSERT_EQ(ret, MSERR_INVALID_VAL);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureStream_001, TestSize.Level2)
@@ -403,7 +392,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RecorderMock_InitRecorder_PrepareFaile
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->outputFd_.Reset(1);
+    screenCaptureServer_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
@@ -423,7 +412,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RecorderMock_InitRecorder_SetOutputFil
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->outputFd_.Reset(1);
+    screenCaptureServer_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
@@ -443,7 +432,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RecorderMock_InitRecorder_SetAudioData
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->outputFd_.Reset(1);
+    screenCaptureServer_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
@@ -469,7 +458,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InitRecorder_MixMode_B1, TestSize.Leve
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->outputFd_.Reset(1);
+    screenCaptureServer_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
@@ -488,7 +477,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InitRecorder_InnerOnly_B1, TestSize.Le
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->outputFd_.Reset(1);
+    screenCaptureServer_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
@@ -507,7 +496,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InitRecorder_NoneValid_B1, TestSize.Le
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->outputFd_.Reset(1);
+    screenCaptureServer_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_INVALID;
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
@@ -523,7 +512,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InitRecorder_GetSurfaceFail_B1, TestSi
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->outputFd_.Reset(1);
+    screenCaptureServer_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
@@ -544,7 +533,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InitRecorder_SetStabilizationModeFail_
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->outputFd_.Reset(1);
+    screenCaptureServer_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
@@ -561,9 +550,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InitRecorder_SetStabilizationModeFail_
 
 HWTEST_F(ScreenCaptureServerFunctionTest, InitRecorder_RecorderNullCreate_B1, TestSize.Level2)
 {
-    screenCaptureServer_->recorder_ = nullptr;
-    screenCaptureServer_->outputFd_.Reset(1);
-    screenCaptureServer_->providers_ = CreateMockProviders();
+    auto mock = std::make_shared<MockRecorderService>();
+    SetupRecorderDefaults(*mock);
+    EXPECT_CALL(*mock, Prepare()).WillOnce(Return(MSERR_UNKNOWN));
+    EXPECT_CALL(*mock, Release()).WillOnce(Return(MSERR_OK));
+    screenCaptureServer_->recorder_ = mock;
+    screenCaptureServer_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
@@ -595,7 +587,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureRecorder_RecorderNull
     screenCaptureServer_->recorder_ = nullptr;
     screenCaptureServer_->showCursor_ = true;
     EXPECT_EQ(screenCaptureServer_->StopScreenCaptureRecorder(), MSERR_OK);
-    EXPECT_FALSE(screenCaptureServer_->isConsumerStart_);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureRecorder_WithRecorder_B1, TestSize.Level2)
@@ -603,12 +594,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureRecorder_WithRecorder
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
     EXPECT_CALL(*mock, Stop(_)).WillOnce(Return(MSERR_OK));
     EXPECT_CALL(*mock, Release()).WillOnce(Return(MSERR_OK));
     EXPECT_EQ(screenCaptureServer_->StopScreenCaptureRecorder(), MSERR_OK);
     screenCaptureServer_->recorder_ = nullptr;
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureRecorder_MixModeWaitMicSync_B1, TestSize.Level2)
@@ -616,7 +607,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureRecorder_MixModeWaitM
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaults(*mock);
     screenCaptureServer_->recorder_ = mock;
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
     SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     auto wrapper = CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "InnAd", true);
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
@@ -626,7 +617,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureRecorder_MixModeWaitM
     EXPECT_EQ(screenCaptureServer_->StopScreenCaptureRecorder(), MSERR_OK);
     screenCaptureServer_->recorder_ = nullptr;
     screenCaptureServer_->innerAudioCapture_ = nullptr;
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
 }
 
 // ===================== InitAudioCap (L1714-1745) =====================

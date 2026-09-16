@@ -18,9 +18,10 @@
 
 #include "audio_capturer_wrapper.h"
 #include "audio_data_source_generic.h"
-#include "i_screen_capture_service.h"
-#include "screen_capture.h"
 #include "fdsan_fd.h"
+#include "i_screen_capture_service.h"
+#include "screen_cap_buffer_consumer_listener.h"
+#include "screen_capture.h"
 #include "screen_capture_callback_proxy.h"
 #include "screen_capture_listener_manager.h"
 #include "screen_capture_server_base.h"
@@ -69,6 +70,42 @@ struct AudioCaptureSyncFlags {
     bool micStart = false;
     bool innerStart = false;
     bool innerStop = false;
+};
+
+class VirtualScreen {
+public:
+    explicit VirtualScreen(const Rosen::VirtualScreenOption &option)
+    {
+        screenId_ = Rosen::ScreenManager::GetInstance().CreateVirtualScreen(option);
+    }
+    explicit VirtualScreen(Rosen::ScreenId id) : screenId_(id) {}
+
+    ~VirtualScreen()
+    {
+        if (screenId_ != Rosen::SCREEN_ID_INVALID) {
+            std::vector<Rosen::ScreenId> screenIds = {screenId_};
+            Rosen::ScreenManager::GetInstance().StopMirror(screenIds);
+            Rosen::ScreenManager::GetInstance().DestroyVirtualScreen(screenId_);
+        }
+    }
+
+    VirtualScreen(const VirtualScreen &) = delete;
+    VirtualScreen &operator=(const VirtualScreen &) = delete;
+    VirtualScreen(VirtualScreen &&) = delete;
+    VirtualScreen &operator=(VirtualScreen &&) = delete;
+
+    Rosen::ScreenId GetScreenId() const
+    {
+        return screenId_;
+    }
+    bool IsValid() const
+    {
+        return screenId_ != Rosen::SCREEN_ID_INVALID;
+    }
+
+private:
+    VirtualScreen() = default;
+    Rosen::ScreenId screenId_ = Rosen::SCREEN_ID_INVALID;
 };
 
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
@@ -154,8 +191,7 @@ public:
     void HandleNotificationButtonResponse(const std::string &buttonName);
     std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> GetWantAgent(const std::string &callingLabel,
         int32_t sessionId);
-    void PrivacyProtected(Rosen::ScreenId &virtualScreenId, bool systemPrivacyProtectionSwitch,
-        bool appPrivacyProtectionSwitch);
+    void PrivacyProtected(bool systemPrivacyProtectionSwitch, bool appPrivacyProtectionSwitch);
 #ifdef SUPPORT_CALL
     int32_t TelCallStateUpdated(bool isInTelCall);
 #endif
@@ -165,7 +201,7 @@ public:
     void SetDisplayId(std::vector<uint64_t> &&displayIds);
     void ChangeMirrorScreen();
     void NotifyWindowVisible(uint64_t missionId);
-    void FinishPrepareSelectWindow();
+    int32_t FinishPrepareSelectWindow();
     uint8_t UpdateMissionData(uint64_t missionId, Rosen::SessionState state, std::vector<uint64_t> &allIds);
     void NotifyCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area);
     void NotifyprivacyProtect();
@@ -231,10 +267,9 @@ private:
     Rosen::DMError CreateMirror(const std::vector<uint64_t> &displayIds, std::vector<Rosen::ScreenId> &mirrorIds);
     int32_t MakeVirtualScreenMirror();
     int32_t MakeVirtualScreenExtended();
-    int32_t CreateVirtualScreen(sptr<OHOS::Surface> consumer);
+    int32_t CreateVirtualScreen();
     int32_t SetVirtualScreenAutoRotation();
     int32_t PrepareVirtualScreenMirror();
-    void DestroyVirtualScreen();
     bool ParseAppMissionIds(const Json::Value &appInformation);
     bool ParseDisplayId(const Json::Value &displayIdJson);
     bool ParseMissionId(const Json::Value &missionIdJson);
@@ -252,7 +287,7 @@ private:
     int32_t HandlePopupWindowCase(Json::Value &root, const std::string &content);
     int32_t HandleStreamDataCase(Json::Value &root, const std::string &content);
     int32_t HandlePresentPickerWindowCase(Json::Value &root, const std::string &content);
-    void PrepareSelectWindow(Json::Value &root);
+    int32_t PrepareSelectWindow(Json::Value &root);
     bool IsSkipPrivacyWindow();
     void BuildCommonParams(Json::Value &root);
     void InitAppUserId();
@@ -302,8 +337,6 @@ private:
     int32_t HandleOriginalStreamPrivacy();
     void PublishScreenCaptureEvent(const std::string &state);
     void OnCaptureContentChanged(bool isMirrorChanged = false);
-    int32_t PauseVideoCapture();
-    int32_t ResumeVideoCapture();
     int32_t PauseRecorder();
     int32_t ResumeRecorder();
     int32_t PauseScreenCaptureInner(AVScreenCaptureStateCode stateCode);
@@ -327,8 +360,6 @@ private:
     bool isInnerAudioBoxSelected_ = true;
     std::atomic<bool> appPrivacyProtectionSwitch_{true};
     std::atomic<bool> systemPrivacyProtectionSwitch_{true};
-    std::vector<uint64_t> surfaceIdList_ = {};
-    std::vector<uint8_t> surfaceTypeList_ = {};
     std::atomic<bool> stopAcquireAudioBufferFromAudio_ = false;
     std::atomic<int32_t> appUserId_{-1};
 
@@ -356,10 +387,9 @@ private:
     StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     sptr<OHOS::Surface> producerSurface_ = nullptr;
-    bool isConsumerStart_ = false;
     bool isDump_ = false;
     bool isSystemUI2_ = false;
-    Rosen::ScreenId virtualScreenId_ = Rosen::SCREEN_ID_INVALID;
+    std::unique_ptr<VirtualScreen> virtualScreen_;
     Rosen::Rotation targetRotation_ = Rosen::Rotation::ROTATION_0;
     std::vector<Rosen::ScreenId> sourceDisplayIds_;
     std::vector<Rosen::ScreenId> displayIds_;
@@ -385,7 +415,7 @@ private:
     OHOS::Rect regionArea_ = {0, 0, 0, 0};
 
     /* used for CAPTURE STREAM */
-    sptr<IBufferConsumerListener> surfaceCb_ = nullptr;
+    sptr<ScreenCapBufferConsumerListener> surfaceCb_ = nullptr;
     sptr<OHOS::Surface> surface_ = nullptr;
     std::atomic<bool> isSurfaceMode_{false};
     std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;

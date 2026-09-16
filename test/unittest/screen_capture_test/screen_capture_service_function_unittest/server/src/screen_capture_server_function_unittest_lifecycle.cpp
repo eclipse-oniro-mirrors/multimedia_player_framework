@@ -140,11 +140,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_NotAlive_B1, TestSize.L
 HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_ActiveInnerAudioNull_B1, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->virtualScreenId_ = 1;
+    screenCaptureServer_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(1);
     screenCaptureServer_->innerAudioCapture_ = nullptr;
     ScreenCaptureContentFilter filter;
     EXPECT_EQ(screenCaptureServer_->ExcludeContent(filter), MSERR_OK);
-    screenCaptureServer_->virtualScreenId_ = SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
 }
 
 // ===================== StopAndRelease (L3627-3639) =====================
@@ -208,7 +208,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureWithSurface_SurfaceN
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_SurfaceCbNotNull_B2, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = -1;
+    screenCaptureServer_->virtualScreen_.reset();
     screenCaptureServer_->consumer_ = nullptr;
     screenCaptureServer_->isSurfaceMode_ = false;
     screenCaptureServer_->surfaceCb_ = nullptr;

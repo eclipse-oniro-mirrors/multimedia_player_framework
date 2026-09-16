@@ -389,7 +389,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_002, Tes
 HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_003, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("handle_present_picker_window_case_003.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
@@ -424,7 +424,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_004, Tes
 HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_005, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("handle_present_picker_window_case_005.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
@@ -444,7 +444,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_005, Tes
 HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_006, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("handle_present_picker_window_case_006.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
@@ -464,7 +464,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_006, Tes
 HWTEST_F(ScreenCaptureServerFunctionTest, HandlePresentPickerWindowCase_007, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("handle_present_picker_window_case_007.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
