@@ -24,6 +24,7 @@ Multimedia Player Framework 是 OpenHarmony 多媒体子系统组件，提供音
 knowledge/
 ├── AVPlayer/          # 播放器模块（已有）
 ├── AVRecorder/        # 录制模块（已有）
+├── AVScreenCapture/   # 屏幕录制模块（已有）
 ├── AVTranscoder/      # 转码模块（待建设）
 ├── AVMeta/            # 元数据/缩略图模块（已有）
 └── ...                # 其它模块按需扩展
@@ -46,7 +47,7 @@ knowledge/
 
 编辑代码前，必须先声明以下信息：
 
-1. **所属模块**：AVPlayer / AVRecorder / AVTranscoder / AVMetadata / 跨模块
+1. **所属模块**：AVPlayer / AVScreenCapture / AVRecorder / AVTranscoder / AVMetadata / 跨模块
 2. **任务类别**：API 变更 / 引擎开发 / IPC 修改 / Pipeline 调整 / 内存管理 / DFX 增强 / Bug 修复 / 其它
 3. **已读知识文档**：列出已阅读的对应模块 `knowledge/<module>/` 下的相关文档
 4. **发现的约束**：从已读文档中提取适用于本次修改的约束规则（引用项目宪法编号或编码铁律编号）
@@ -109,6 +110,55 @@ knowledge/AVPlayer/
 | 媒体源与协议 | technologies/media-source-and-protocol.md | |
 | 模块演进记录 | technologies/evolution.md | |
 | 关键流程详解 | technologies/flows.md | |
+
+### AVScreenCapture 模块（屏幕录制）
+
+知识目录：`knowledge/AVScreenCapture/`
+
+```
+knowledge/AVScreenCapture/
+├── glossary.md                              # 术语表
+├── business-context.md                      # 业务背景
+├── architecture.md                          # 架构设计及约束
+├── coding-standards.md                      # 编码规范
+├── entities/
+│   ├── api-layer.md                         # API 接入层实体
+│   ├── service-layer.md                     # 服务层实体
+│   ├── ipc-layer-entities.md                # IPC 层实体
+│   ├── capture-implementation.md            # 采集实现实体
+│   └── monitor-and-controller.md            # Monitor 与 Controller 实体
+└── technologies/
+    ├── capture-lifecycle.md                 # 录屏完整生命周期
+    ├── ipc-communication.md                 # IPC 通信与回调机制
+    ├── privacy-and-permission.md            # 隐私保护与权限机制
+    ├── capture-features.md                  # 录制控制特性
+    ├── av-sync-and-buffer.md                # 音视频同步与缓冲区管理
+    ├── error-handling-and-dfx.md            # 错误处理与 DFX 诊断
+    ├── design-patterns.md                   # 设计模式与架构解耦
+    ├── flows.md                             # 关键流程详解
+    └── evolution.md                         # 模块演进记录
+```
+
+| 场景 | 先读 | 加载时机 |
+|------|------|---------|
+| 理解业务术语 | glossary.md | 启动加载 |
+| 理解系统定位与外部依赖 | business-context.md | 启动加载 |
+| 模块设计 / 架构变更 | architecture.md | 按需加载 |
+| 编码前必读 | coding-standards.md | 按需加载 |
+| API 接入层实体与约束 | entities/api-layer.md | 按需加载 |
+| 服务层实体与状态机 | entities/service-layer.md | 按需加载 |
+| IPC 层实体与序列化约束 | entities/ipc-layer-entities.md | 按需加载 |
+| 采集实现实体（虚拟屏幕/音频采集/混音） | entities/capture-implementation.md | 按需加载 |
+| Monitor 与 Controller 实体 | entities/monitor-and-controller.md | 按需加载 |
+| 录屏完整生命周期 | technologies/capture-lifecycle.md | 按需加载 |
+| IPC 通信与回调机制 | technologies/ipc-communication.md | 按需加载 |
+| 隐私保护与权限机制 | technologies/privacy-and-permission.md | 按需加载 |
+| 录制控制特性 | technologies/capture-features.md | 按需加载 |
+| 音视频同步与缓冲区管理 | technologies/av-sync-and-buffer.md | 按需加载 |
+| 错误处理与 DFX 诊断 | technologies/error-handling-and-dfx.md | 按需加载 |
+| 设计模式与架构解耦 | technologies/design-patterns.md | 按需加载 |
+| 关键流程详解 | technologies/flows.md | 按需加载 |
+| 模块演进记录 | technologies/evolution.md | 按需加载 |
 
 ### AVRecorder 模块（录制）
 
@@ -349,6 +399,27 @@ knowledge/AVMeta/
 - 提及 **IPC, Proxy, Stub, RecorderClient, RecorderServer, IStandardRecorderService** → 先读 `knowledge/AVRecorder/technologies/IPCLayer.md`
 - 提及 **AudioCapturer, AudioCaptureFilter, VideoCaptureFilter, Surface, getInputSurface** → 先读 `knowledge/AVRecorder/technologies/AudioVideoCapture.md`
 
+#### AVScreenCapture 相关路径
+
+| 修改路径 | 必读文档 | 原因 |
+|----------|---------|------|
+| frameworks/native/screen_capture/ | knowledge/AVScreenCapture/entities/api-layer.md | Native API 层实体与约束，ScreenCaptureImpl 转发逻辑 |
+| frameworks/native/capi/screencapture/ | knowledge/AVScreenCapture/entities/api-layer.md | C API 封装约束，OH_AVScreenCapture 回调机制，新旧回调适配 |
+| frameworks/js/avscreen_capture/ | knowledge/AVScreenCapture/entities/api-layer.md | NAPI 桥接层调用链，TaskQueue 异步调度 |
+| frameworks/js/screencapturemonitor/ | knowledge/AVScreenCapture/entities/monitor-and-controller.md | Monitor NAPI 桥接，监听器注册 |
+| frameworks/cj/avscreen_capture/ | knowledge/AVScreenCapture/entities/api-layer.md | 仓颉 FFI 桥接层 |
+| services/services/screen_capture/ipc/ | knowledge/AVScreenCapture/technologies/ipc-communication.md + knowledge/AVScreenCapture/entities/ipc-layer-entities.md | IPC 序列化约束、回调不可阻塞、41 个消息码 |
+| services/services/screen_capture/server/ | knowledge/AVScreenCapture/technologies/capture-lifecycle.md + knowledge/AVScreenCapture/entities/service-layer.md | 7 状态能力位图状态机、ScreenCaptureServer 核心逻辑 |
+| services/services/screen_capture/client/ | knowledge/AVScreenCapture/entities/ipc-layer-entities.md | ScreenCaptureClient 客户端代理 |
+| services/services/screen_capture_monitor/ | knowledge/AVScreenCapture/entities/monitor-and-controller.md | Monitor 服务端/客户端，录屏状态追踪 |
+| services/services/screen_capture_monitor/ipc/ | knowledge/AVScreenCapture/entities/monitor-and-controller.md + knowledge/AVScreenCapture/technologies/ipc-communication.md | Monitor IPC 序列化约束、回调不可阻塞 |
+| services/etc/screencapture/ | knowledge/AVScreenCapture/technologies/privacy-and-permission.md | 系统参数配置，弹窗与录屏器包名 |
+| interfaces/inner_api/native/ | knowledge/AVScreenCapture/entities/api-layer.md + knowledge/AVScreenCapture/entities/ipc-layer-entities.md | InnerAPI 契约头文件（screen_capture.h），API 稳定性约束 |
+| interfaces/kits/c/ | knowledge/AVScreenCapture/entities/api-layer.md | 公共 SDK C 头文件（native_avscreen_capture.h），API 兼容性约束 |
+| test/unittest/screen_capture_test/ | — | ScreenCaptureServer 状态机单元测试，验证状态转换合法性 |
+| test/unittest/screen_capture_impl_unittest/ | — | ScreenCaptureImpl 单元测试 |
+| test/fuzztest/screen_capture_fuzztest/ | — | 屏幕录制模糊测试，验证输入参数校验 |
+
 #### 其它模块路径
 
 #### AVMeta 相关路径
@@ -404,6 +475,24 @@ knowledge/AVMeta/
 | MediaLibrary 适配 | `media_library_adapter.cpp` | — |
 | 录制配置/Profile 修改 | `avrecorder_napi.h`（AVRecorderConfig/AVRecorderProfile） | `knowledge/AVRecorder/entities/AVRecorderConfig.md`、`knowledge/AVRecorder/entities/RecorderProfiles.md` |
 | 错误回调修改 | `i_recorder_engine.h`（IRecorderEngineObs） | `knowledge/AVRecorder/entities/RecorderCallback.md` |
+
+#### AVScreenCapture 场景
+
+| 修改场景 | 涉及源码文件 | 必读知识文档 |
+|----------|------------|------------|
+| 状态机/能力位图调整 | `screen_capture_server.cpp`、`screen_capture_server_base.h` | knowledge/AVScreenCapture/technologies/capture-lifecycle.md + knowledge/AVScreenCapture/entities/service-layer.md |
+| 隐私保护/权限校验修改 | `screen_capture_server.cpp`（CheckPrivacyWindowSkipPermission/RequestUserPrivacyAuthority/PrivacyProtected） | knowledge/AVScreenCapture/technologies/privacy-and-permission.md |
+| IPC 接口增删 | `screen_capture_service_stub.cpp`、`screen_capture_service_proxy.cpp`、`screen_capture_client.cpp`、`screen_capture_listener_proxy.cpp` | knowledge/AVScreenCapture/technologies/ipc-communication.md + knowledge/AVScreenCapture/entities/ipc-layer-entities.md |
+| 虚拟屏幕/视频采集修改 | `screen_capture_server.cpp`（MakeVirtualScreenMirror/MakeVirtualScreenExtended）、`screen_cap_buffer_consumer_listener.cpp` | knowledge/AVScreenCapture/entities/capture-implementation.md + knowledge/AVScreenCapture/technologies/capture-features.md |
+| 音频采集/混音逻辑修改 | `audio_capturer_wrapper.cpp`、`audio_data_source.cpp` | knowledge/AVScreenCapture/entities/capture-implementation.md + knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md |
+| Picker/用户选择修改 | `screen_capture_controller_server.cpp`、`ui_extension_ability_connection.cpp` | knowledge/AVScreenCapture/entities/monitor-and-controller.md + knowledge/AVScreenCapture/technologies/privacy-and-permission.md |
+| Monitor 状态追踪修改 | `screen_capture_monitor_server.cpp`、`screen_capture_monitor_client.cpp` | knowledge/AVScreenCapture/entities/monitor-and-controller.md |
+| 系统监听器注册/注销 | `screen_capture_listener_manager.cpp` | knowledge/AVScreenCapture/entities/service-layer.md + knowledge/AVScreenCapture/technologies/capture-lifecycle.md |
+| NAPI/JS API 变更 | `avscreen_capture_napi.cpp`、`screen_capture_impl.cpp` | knowledge/AVScreenCapture/entities/api-layer.md |
+| C API 变更 | `native_avscreen_capture.cpp`、`screen_capture_object.cpp` | knowledge/AVScreenCapture/entities/api-layer.md |
+| 实例数量限制调整 | `screen_capture_server_manager.cpp` | knowledge/AVScreenCapture/entities/service-layer.md |
+| 错误码/DFX 打点 | `screen_capture_server.cpp`、`screen_capture_server_callback.cpp` | knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md |
+| 录屏通知栏修改 | `screen_capture_server.cpp`（NotificationLocalLiveViewContent） | knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md |
 
 #### 其它模块场景
 
@@ -648,3 +737,4 @@ knowledge/AVMeta/
 ### 验证降级
 
 若构建或测试无法运行，报告：(1) 哪些验证步骤无法运行，(2) 原因，(3) 剩余未验证风险，(4) 评审者应执行的手动验证。
+=======
