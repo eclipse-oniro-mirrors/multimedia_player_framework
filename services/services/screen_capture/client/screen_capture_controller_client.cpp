@@ -31,8 +31,6 @@ std::shared_ptr<ScreenCaptureControllerClient> ScreenCaptureControllerClient::Cr
     std::shared_ptr<ScreenCaptureControllerClient> client =
         std::make_shared<ScreenCaptureControllerClient>(ipcProxy);
 
-    CHECK_AND_RETURN_RET_LOG(client != nullptr, nullptr, "failed to new Screen Capture Controller");
-
     return client;
 }
 

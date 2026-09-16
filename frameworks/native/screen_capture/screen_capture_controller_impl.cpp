@@ -26,7 +26,6 @@ namespace Media {
 std::shared_ptr<ScreenCaptureController> ScreenCaptureControllerFactory::CreateScreenCaptureController()
 {
     std::shared_ptr<ScreenCaptureControllerImpl> impl = std::make_shared<ScreenCaptureControllerImpl>();
-    CHECK_AND_RETURN_RET_LOG(impl != nullptr, nullptr, "failed to new ScreenCaptureControllerImpl");
 
     return impl;
 }

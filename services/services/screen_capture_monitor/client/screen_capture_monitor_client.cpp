@@ -28,7 +28,6 @@ std::shared_ptr<ScreenCaptureMonitorClient> ScreenCaptureMonitorClient::Create(
 {
     CHECK_AND_RETURN_RET_LOG(ipcProxy != nullptr, nullptr, "ipcProxy is nullptr..");
     std::shared_ptr<ScreenCaptureMonitorClient> scmClient = std::make_shared<ScreenCaptureMonitorClient>(ipcProxy);
-    CHECK_AND_RETURN_RET_LOG(scmClient != nullptr, nullptr, "failed to new ScreenCaptureMonitorClient..");
     int32_t ret = scmClient->CreateListenerObject();
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create listener object..");
     return scmClient;
