@@ -810,7 +810,6 @@ ScreenCaptureServer::~ScreenCaptureServer()
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " ScreenCaptureServer Instances destroy", FAKE_POINTER(this));
     ReleaseInner();
-    CloseFd();
     taskQue_.Stop();
 }
 
@@ -912,12 +911,9 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
             "File descriptor is not in read-write mode or write-only mode");
         return MSERR_INVALID_WRITE;
     }
-    CloseFd();
-    MEDIA_LOGI("ScreenCaptureServer fd in, fd is %{public}d", outputFd);
-    outputFd_ = dup(outputFd);
-    CHECK_AND_RETURN_RET_LOG(outputFd_ >= 0, MSERR_NO_MEMORY, "dup outputFd failed");
-    MEDIA_LOGI("ScreenCaptureServer fd dup, fd is %{public}d", outputFd_);
-    MEDIA_LOGI("ScreenCaptureServer SetOutputFile End");
+    outputFd_.Reset(dup(outputFd));
+    CHECK_AND_RETURN_RET_LOG(outputFd_.Get() >= 0, MSERR_NO_MEMORY, "dup outputFd failed");
+    MEDIA_LOGI("ScreenCaptureServer SetOutputFile End, fd is %{public}d", outputFd_.Get());
     return MSERR_OK;
 }
 
@@ -1905,7 +1901,7 @@ int32_t ScreenCaptureServer::SelectAudioSource(AudioCaptureInfo &audioInfo)
 
 int32_t ScreenCaptureServer::InitRecorder()
 {
-    CHECK_AND_RETURN_RET_LOG(outputFd_ > 0, MSERR_INVALID_FD, "the outputFd is invalid");
+    CHECK_AND_RETURN_RET_LOG(outputFd_.Get() > 0, MSERR_INVALID_FD, "the outputFd is invalid");
     MediaTrace trace("ScreenCaptureServer::InitRecorder");
     if (!recorder_) {
         recorder_ = providers_->CreateRecorder();
@@ -1920,7 +1916,7 @@ int32_t ScreenCaptureServer::InitRecorder()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETAUDIO, "SetAudioDataSource failed");
     ret = InitRecorderInfo(recorder_, audioInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_INIT, "InitRecorderInfo failed");
-    ret = recorder_->SetOutputFile(outputFd_);
+    ret = recorder_->SetOutputFile(outputFd_.Get());
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN_RECORDER_SETFILE, "SetOutputFile failed");
     ret = recorder_->SetStabilizationMode(false);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetStabilizationMode failed");
@@ -2780,18 +2776,6 @@ void ScreenCaptureServer::DestroyVirtualScreen()
         isConsumerStart_ = false;
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " DestroyVirtualScreen end.", FAKE_POINTER(this));
-}
-
-void ScreenCaptureServer::CloseFd()
-{
-    MediaTrace trace("ScreenCaptureServer::CloseFd");
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this),
-        outputFd_);
-    if (outputFd_ >= 0) {
-        (void)::close(outputFd_);
-        outputFd_ = -1;
-    }
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " CloseFd end.", FAKE_POINTER(this));
 }
 
 std::string ScreenCaptureServer::GetVirtualScreenName() const
@@ -3849,6 +3833,7 @@ void ScreenCaptureServer::ReleaseInner()
         skipPrivacyWindowIDsVec_.clear();
         ScreenCaptureServerManager::GetInstance().RemoveSaAppInfoMap(saUid_);
         sessionId_ = SESSION_ID_INVALID;
+        outputFd_.Reset();
         SetMetaDataReport();
     }
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");

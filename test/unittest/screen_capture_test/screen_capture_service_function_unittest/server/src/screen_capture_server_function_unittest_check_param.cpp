@@ -265,7 +265,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_NotConfigState_001, Test
     ASSERT_GE(fd, 0);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
     EXPECT_EQ(screenCaptureServer_->SetOutputFile(fd), MSERR_INVALID_OPERATION_CREATE);
-    EXPECT_EQ(screenCaptureServer_->outputFd_, -1);
+    EXPECT_EQ(screenCaptureServer_->outputFd_.Get(), -1);
     close(fd);
 }
 

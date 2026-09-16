@@ -506,7 +506,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_Success_I
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaultsDm(*mock);
     server_->recorder_ = mock;
-    server_->outputFd_ = 1;
+    server_->outputFd_.Reset(1);
     server_->fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     server_->isMicrophoneSwitchTurnOn_ = false;
     server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
@@ -532,7 +532,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_InitRecor
     EXPECT_CALL(*mock, GetSurface(_)).WillOnce(Return(nullptr));
     EXPECT_CALL(*mock, Release()).WillOnce(Return(MSERR_OK));
     server_->recorder_ = mock;
-    server_->outputFd_ = 1;
+    server_->outputFd_.Reset(1);
     server_->fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     server_->captureConfig_.audioInfo.innerCapInfo.state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
@@ -550,7 +550,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_RecorderS
     ON_CALL(*mock, Start()).WillByDefault(Return(MSERR_UNKNOWN));
     EXPECT_CALL(*mock, Release()).WillOnce(Return(MSERR_OK));
     server_->recorder_ = mock;
-    server_->outputFd_ = 1;
+    server_->outputFd_.Reset(1);
     server_->fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     server_->isMicrophoneSwitchTurnOn_ = false;
     server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
@@ -568,7 +568,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_CreateVir
     SetupRecorderDefaultsDm(*mock);
     EXPECT_CALL(*mock, Release()).WillOnce(Return(MSERR_OK));
     server_->recorder_ = mock;
-    server_->outputFd_ = 1;
+    server_->outputFd_.Reset(1);
     server_->fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     server_->isMicrophoneSwitchTurnOn_ = false;
     server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
