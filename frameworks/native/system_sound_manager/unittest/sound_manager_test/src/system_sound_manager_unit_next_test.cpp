@@ -2119,8 +2119,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_004, TestSize.
     uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        targetToneType);
+        targetToneType, TONE_TYPE_RINGTONE);
     EXPECT_EQ(result, 0);
 }
 
@@ -2151,8 +2150,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_005, TestSize.
     uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        targetToneType);
+        targetToneType, TONE_TYPE_RINGTONE);
     EXPECT_GT(result, 0);
 }
 
@@ -2183,8 +2181,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_006, TestSize.
     uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        targetToneType);
+        targetToneType, TONE_TYPE_RINGTONE);
     EXPECT_GT(result, 0);
 }
 
@@ -2215,15 +2212,14 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_007, TestSize.
     uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_RING_TONE_TYPE, RINGTONE_COLUMN_RING_TONE_SOURCE_TYPE,
-        targetToneType);
+        targetToneType, TONE_TYPE_RINGTONE);
     EXPECT_GT(result, 0);
 }
 
 /**
  * @tc.name  : ClearBitFromToneTypeColumn_ShotToneColumn
  * @tc.number: ClearBitFromToneTypeColumn_008
- * @tc.desc  : Test ClearBitFromToneTypeColumn with shot tone column name (GetShottoneType branch)
+ * @tc.desc  : Test ClearBitFromToneTypeColumn with shot tone type (GetShottoneType branch)
  */
 HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_008, TestSize.Level0)
 {
@@ -2246,8 +2242,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearBitFromToneTypeColumn_008, TestSize.
     uint32_t targetToneType = 1;
     int32_t result = systemSoundManagerImpl_->ClearBitFromToneTypeColumn(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_SHOT_TONE_TYPE, RINGTONE_COLUMN_SHOT_TONE_SOURCE_TYPE,
-        targetToneType);
+        targetToneType, TONE_TYPE_SHOT);
     EXPECT_GT(result, 0);
 }
 /**

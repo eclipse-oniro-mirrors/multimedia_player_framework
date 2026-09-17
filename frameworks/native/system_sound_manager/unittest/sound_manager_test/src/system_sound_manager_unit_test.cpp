@@ -1247,7 +1247,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_QueryToneAttrsByType_Prese
     DatabaseTool databaseTool = {true, isProxy, nullptr};
     uint32_t targetToneType = 1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
     ToneAttrs toneAttrs_ = systemSoundManager_->QueryToneAttrsByType(databaseTool,
-        RINGTONE_COLUMN_RING_TONE_TYPE, targetToneType, SOURCE_TYPE_PRESET, TONE_CATEGORY_RINGTONE);
+        targetToneType, TONE_TYPE_RINGTONE);
     EXPECT_EQ(toneAttrs_.GetUri().empty(), true);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
