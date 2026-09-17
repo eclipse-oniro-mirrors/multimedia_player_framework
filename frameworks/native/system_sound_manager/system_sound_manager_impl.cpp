@@ -169,7 +169,7 @@ std::vector<std::string> HAPTIC_2_TONE_TABLE_COLUMNS = {{HAPTIC_2_TONE_COLUMN_ID
     {HAPTIC_2_TONE_COLUMN_DATE_MODIFIED}, {HAPTIC_2_TONE_COLUMN_PLAY_MODE}, {HAPTIC_2_TONE_COLUMN_SCANNER_FLAG}};
 
 
-std::string GetToneTypeColumnName(int32_t toneType)
+std::string GetToneTypeColumnName(ToneType toneType)
 {
     switch (toneType) {
         case TONE_TYPE_NOTIFICATION:
@@ -185,7 +185,7 @@ std::string GetToneTypeColumnName(int32_t toneType)
     }
 }
 
-std::string GetToneSourceTypeColumnName(int32_t toneType)
+std::string GetToneSourceTypeColumnName(ToneType toneType)
 {
     switch (toneType) {
         case TONE_TYPE_NOTIFICATION:
@@ -201,7 +201,7 @@ std::string GetToneSourceTypeColumnName(int32_t toneType)
     }
 }
 
-int32_t ConvertToneType2toneType(int32_t toneType)
+int32_t ConvertToneType2ToneCategory(ToneType toneType)
 {
     switch(toneType) {
         case TONE_TYPE_RINGTONE:
@@ -212,6 +212,10 @@ int32_t ConvertToneType2toneType(int32_t toneType)
             return TONE_CATEGORY_NOTIFICATION;
         case TONE_TYPE_ALARM:
             return TONE_CATEGORY_ALARM;
+        case TONE_TYPE_CONTACTS:
+            return TONE_CATEGORY_CONTACTS;
+        case TONE_TYPE_APP_NOTIFICATION:
+            return TONE_CATEGORY_NOTIFICATION_APP;
         default:
             return TONE_CATEGORY_INVALID;
     }
@@ -310,7 +314,7 @@ uint32_t SystemSoundManagerImpl::SystemToneTypeToBitMask(SystemToneType systemTo
 ToneAttrs SystemSoundManagerImpl::QueryToneAttrsByType(const DatabaseTool &databaseTool,
     uint32_t targetToneType, int32_t toneType)
 {
-    int32_t defaultCategory = ConvertToneType2toneType(toneType);
+    int32_t defaultCategory = ConvertToneType2ToneCategory(toneType);
     ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, defaultCategory };
     CHECK_AND_RETURN_RET_LOG(defaultCategory != TONE_CATEGORY_INVALID, toneAttrs, "Invalid tone type.");
     CHECK_AND_RETURN_RET_LOG(databaseTool.isInitialized && databaseTool.dataShareHelper != nullptr, toneAttrs,
@@ -557,11 +561,13 @@ int32_t SystemSoundManagerImpl::UpdateToneUriByType(std::shared_ptr<DataShare::D
 {
     switch (params.toneType) {
         case TONE_TYPE_RINGTONE:
-            return UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_RINGTONE, static_cast<RingtoneType>(params.subType), storedToneType);
+            return UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_RINGTONE,
+                static_cast<RingtoneType>(params.subType), storedToneType);
         case TONE_TYPE_NOTIFICATION:
             return params.subType == SYSTEM_TONE_TYPE_NOTIFICATION ?
                 UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_NOTIFICATION) :
-                UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_SHOT, static_cast<SystemToneType>(params.subType), storedToneType);
+                UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_SHOT,
+                    static_cast<SystemToneType>(params.subType), storedToneType);
         case TONE_TYPE_ALARM:
             return UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_ALARM);
         default:
@@ -830,7 +836,6 @@ ToneAttrs SystemSoundManagerImpl::GetSystemToneAttrs(const DatabaseTool &databas
     if (systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION) {
         toneAttrs = QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_NOTIFICATION);
     } else {
-        uint32_t targetToneType = SystemToneTypeToBitMask(systemToneType);
         toneAttrs = QueryToneAttrsByType(databaseTool, SystemToneTypeToBitMask(systemToneType), TONE_TYPE_SHOT);
     }
     if (toneAttrs.GetUri().empty()) {
