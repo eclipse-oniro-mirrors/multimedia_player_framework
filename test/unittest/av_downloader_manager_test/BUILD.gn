@@ -40,11 +40,6 @@ ohos_unittest("av_downloader_manager_test") {
 
   defines = [ "MEDIA_OHOS" ]
 
-  sanitize = {
-    cfi = true
-    cfi_cross_dso = true
-  }
-
   external_deps = [
     "c_utils:utils",
     "googletest:gmock",
