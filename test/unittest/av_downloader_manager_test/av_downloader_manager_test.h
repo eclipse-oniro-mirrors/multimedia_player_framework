@@ -27,6 +27,7 @@
 #include "av_downloader_manager_impl.h"
 #include "downloader.h"
 #include "network_utils.h"
+#include "path_utils.h"
 
 namespace OHOS {
 namespace Media {
@@ -80,8 +81,15 @@ class AVDownloaderManagerTest : public testing::Test {
 public:
     static void SetUpTestCase(void) {}
     static void TearDownTestCase(void) {}
-    void SetUp(void) {}
-    void TearDown(void) {}
+    void SetUp(void)
+    {
+        MediaSourceUtils::PathUtils::ClearAllowedRootDir();
+        MediaSourceUtils::PathUtils::SetAllowedRootDir("/data/test/");
+    }
+    void TearDown(void)
+    {
+        MediaSourceUtils::PathUtils::ClearAllowedRootDir();
+    }
 
 protected:
     std::shared_ptr<AVDownloaderManagerImpl> managerImpl_;

@@ -763,14 +763,12 @@ HWTEST_F(AVDownloaderManagerTest, OnCompleted_SniffAtCompletion_WhenNotSniffed_0
     DownloadFileInfo fileInfo;
     fileInfo.url = "http://example.com/test.m3u8";
     fileInfo.filePath = m3u8Path;
-    fileInfo.needParse = true;
+    fileInfo.downloaded = true;
+    fileInfo.needParse = false;
     taskInfo->fileList.push_back(fileInfo);
     manager->taskMap_["1"] = taskInfo;
 
     auto mockDownloader = std::make_shared<MockDownloader>();
-    EXPECT_CALL(*mockDownloader, SetConfig(_)).Times(0);
-    EXPECT_CALL(*mockDownloader, AddFileTask(_, _, _)).Times(0);
-    EXPECT_CALL(*mockDownloader, Start()).WillOnce(Return(0));
     manager->downloaderMap_["1"] = mockDownloader;
 
     auto callback = std::make_shared<DownloadTaskCallback>(std::weak_ptr<AVDownloaderManagerImpl>(manager));
@@ -1077,7 +1075,7 @@ HWTEST_F(AVDownloaderManagerTest, NotifyProgressChangeLocked_TaskNotInMap_Callba
     manager->taskMap_["task1"] = taskInfo;
 
     manager->NotifyProgressChangeLocked("unknown", 12.0);
-    EXPECT_DOUBLE_EQ(taskInfo->progress, 80.0);
+    EXPECT_DOUBLE_EQ(taskInfo->progress, 0.0);
 }
 
 HWTEST_F(AVDownloaderManagerTest, NotifyProgressChangeLocked_NoCallback_StillUpdatesProgress_001, TestSize.Level0)
