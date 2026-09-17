@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -74,6 +74,12 @@ enum RecorderPublicParamType : uint32_t {
     PUBLIC_PARAM_TYPE_END,
     AUD_AAC_FMT,
 };
+
+/*
+ * The sqrFactor value range is [0, 51].
+ */
+constexpr int32_t SQR_FACTOR_MIN = 0;
+constexpr int32_t SQR_FACTOR_MAX = 51;
 
 /*
  * Recorder parameter base structure, inherite to it to extend the new parameter.

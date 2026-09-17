@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -2215,7 +2215,11 @@ int32_t AVRecorderNapi::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> 
     }
     if (!CommonNapi::GetPropertyInt32(env, item, "sqrFactor", profile.sqrFactor)) {
         MEDIA_LOGI("avRecorderProfile sqrFactor is not set.");
-        profile.sqrFactor = -1;
+        profile.sqrFactor = SQR_FACTOR_INVALID;
+        profile.sqrFactorSet = false;
+    } else {
+        MEDIA_LOGI("avRecorderProfile sqrFactor is %{public}d", profile.sqrFactor);
+        profile.sqrFactorSet = true;
     }
     MediaProfileLog(true, profile);
     return ret;
@@ -3050,6 +3054,8 @@ napi_status MediaJsAVRecorderConfig::videoToSet(napi_env env, napi_value &profil
     setRet = CommonNapi::SetPropertyInt32(env, profile, "videoFrameHeight", value_->profile.videoFrameHeight);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
     setRet = CommonNapi::SetPropertyInt32(env, profile, "videoFrameRate", value_->profile.videoFrameRate);
+    CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
+    setRet = CommonNapi::SetPropertyInt32(env, profile, "sqrFactor", value_->profile.sqrFactor);
     CHECK_AND_RETURN_RET(setRet == true, napi_generic_failure);
 
     std::string videoCodec;

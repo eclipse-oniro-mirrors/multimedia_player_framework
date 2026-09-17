@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023-2024 Huawei Device Co., Ltd.
+ * Copyright (c) 2023-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy  of the License at
@@ -299,6 +299,7 @@ int32_t HiRecorderImpl::Configure(int32_t sourceId, const RecorderParam &recPara
         case RecorderPublicParamType::VID_ENABLE_TEMPORAL_SCALE:
         case RecorderPublicParamType::VID_ENABLE_STABLE_QUALITY_MODE:
         case RecorderPublicParamType::VID_ENABLE_B_FRAME:
+        case RecorderPublicParamType::VID_SQR_FACTOR:
             ConfigureVideo(recParam);
             break;
         case RecorderPublicParamType::OUT_PATH:
@@ -782,13 +783,9 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
         return static_cast<int32_t>(Status::OK);
     }
     // real stop operations
-    int32_t ret = MSERR_OK;
-    ret = TransRecorderStatus(HandleStopOperation());
+    int32_t ret = TransRecorderStatus(HandleStopOperation());
     // clear all configurations and remove all filters
     ClearAllConfiguration();
-    if (ret == MSERR_OK) {
-        OnStateChanged(StateId::INIT);
-    }
     return ret;
 }
 
@@ -1179,10 +1176,7 @@ void HiRecorderImpl::ConfigureVidEncBitrateMode()
         FALSE_RETURN_MSG(vidBitRate != -1, "Get vidBitRate fail!");
         std::string vidEncParamValue = "video_encode_bitrate_mode=SQR:bitrate=" + std::to_string(vidBitRate);
         userMeta_->SetData("com.openharmony.encParam", vidEncParamValue);
-        if (sqrFactor_ >= 0) {
-            MEDIA_LOG_I("SetVideoSqrFactor: %{public}d", sqrFactor_);
-            videoEncFormat_->Set<Tag::VIDEO_ENCODER_SQR_FACTOR>(static_cast<uint32_t>(sqrFactor_));
-        }
+        ConfigureVidSqrFactorToEncFormat();
     } else {
         MEDIA_LOG_I("enableStableQualityMode: false, VBR mode in!");
         videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
@@ -1259,6 +1253,15 @@ void HiRecorderImpl::ConfigureVidSqrFactor(const RecorderParam &recParam)
 {
     VidSqrFactor vidSqrFactor = static_cast<const VidSqrFactor&>(recParam);
     sqrFactor_ = vidSqrFactor.sqrFactor;
+    MEDIA_LOG_I("ConfigureVidSqrFactor sqrFactor(%{public}d)", sqrFactor_);
+}
+
+void HiRecorderImpl::ConfigureVidSqrFactorToEncFormat()
+{
+    FALSE_RETURN_MSG(sqrFactor_ >= SQR_FACTOR_MIN && sqrFactor_ <= SQR_FACTOR_MAX,
+        "sqrFactor not set or invalid (%{public}d), skip setting", sqrFactor_);
+    MEDIA_LOG_I("SetVideoSqrFactor: %{public}d", sqrFactor_);
+    videoEncFormat_->Set<Tag::VIDEO_ENCODER_SQR_FACTOR>(static_cast<uint32_t>(sqrFactor_));
 }
 
 void HiRecorderImpl::ConfigureVideoEncoderFormat(const RecorderParam &recParam)

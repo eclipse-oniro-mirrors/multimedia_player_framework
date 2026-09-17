@@ -1,5 +1,5 @@
 /*
-* Copyright (C) 2025 Huawei Device Co., Ltd.
+* Copyright (C) 2025-2026 Huawei Device Co., Ltd.
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
 * You may obtain a copy of the License at
@@ -367,8 +367,10 @@ RetInfo AVRecorderImpl::SetProfile(std::shared_ptr<AVRecorderConfig> config)
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableStableQualityMode",
             "enableStableQualityMode"));
 
-        ret = recorder_->SetVideoSqrFactor(videoSourceID_, profile.sqrFactor);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoSqrFactor", "sqrFactor"));
+        if (profile.sqrFactorSet) {
+            ret = recorder_->SetVideoSqrFactor(videoSourceID_, profile.sqrFactor);
+            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoSqrFactor", "sqrFactor"));
+        }
     }
 
     if (config->metaSourceTypeVec.size() != 0 &&
@@ -606,9 +608,11 @@ void AVRecorderImpl::ParseOptionalVideoParams(std::unique_ptr<AVRecorderAsyncCon
     }
     if (config.profile.sqrFactor.has_value()) {
         asyncCtx->config_->profile.sqrFactor = config.profile.sqrFactor.value();
+        asyncCtx->config_->profile.sqrFactorSet = true;
     } else {
         MEDIA_LOGI("avRecorderProfile sqrFactor is not set.");
-        asyncCtx->config_->profile.sqrFactor = -1;
+        asyncCtx->config_->profile.sqrFactor = SQR_FACTOR_INVALID;
+        asyncCtx->config_->profile.sqrFactorSet = false;
     }
 }
 

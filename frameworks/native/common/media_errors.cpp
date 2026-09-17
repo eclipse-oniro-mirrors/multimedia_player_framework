@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021-2025 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -214,6 +214,7 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_AVCODEC_TIMEOUT_NO_VIDEO_FRAME_RECEIVED_5400103,
         "The codec timed out because no video frames were received."},
     {MSERR_CHECK_CAMERA_OUTPUT_STATUS_FAILED_5400102, "Check camera output status failed."},
+    {MSERR_SQR_FACTOR_ERROR_401, "SqrFactor value must be in range [0, 51]."},
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -487,6 +488,7 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_CREATE_MEDIA_FILE_FAILED_5400103,    MSERR_EXT_API9_IO},
     {MSERR_AVCODEC_TIMEOUT_NO_VIDEO_FRAME_RECEIVED_5400103, MSERR_EXT_API9_IO},
     {MSERR_CHECK_CAMERA_OUTPUT_STATUS_FAILED_5400102, MSERR_EXT_API9_OPERATE_NOT_PERMIT},
+    {MSERR_SQR_FACTOR_ERROR_401,                MSERR_EXT_API9_INVALID_PARAMETER},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {

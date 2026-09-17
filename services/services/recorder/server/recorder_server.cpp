@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -373,6 +373,11 @@ int32_t RecorderServer::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
     MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " SetVideoSqrFactor in, sourceId(%{public}d), "
         "sqrFactor(%{public}d)", FAKE_POINTER(this), sourceId, sqrFactor);
     std::lock_guard<std::mutex> lock(mutex_);
+    if (config_.enableStableQualityMode) {
+        CHECK_AND_RETURN_RET_LOG(sqrFactor >= SQR_FACTOR_MIN && sqrFactor <= SQR_FACTOR_MAX, MSERR_SQR_FACTOR_ERROR_401,
+            "SetVideoSqrFactor invalid sqrFactor(%{public}d), should be in range [%{public}d,%{public}d]",
+            sqrFactor, SQR_FACTOR_MIN, SQR_FACTOR_MAX);
+    }
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     config_.sqrFactor = sqrFactor;
