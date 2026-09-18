@@ -306,7 +306,8 @@ HWTEST_F(SoundParserUnitTest, SoundParser_SoundDecoderCallback_001, TestSize.Lev
     std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer;
     bool isRawFile = true;
     int32_t selectedTrackId = 2;
-    SoundDecoderCallback_ = std::make_shared<SoundDecoderCallback>(soundID, audioDec, demuxer, isRawFile, selectedTrackId);
+    SoundDecoderCallback_ = std::make_shared<SoundDecoderCallback>(
+        soundID, audioDec, demuxer, isRawFile, selectedTrackId);
     ASSERT_NE(SoundDecoderCallback_, nullptr);
     EXPECT_EQ(SoundDecoderCallback_->audioTrackIndex_, selectedTrackId);
 }
