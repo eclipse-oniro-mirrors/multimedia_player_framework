@@ -19,6 +19,7 @@
 
 #include "avsharedmemorybase.h"
 #include "isoundpool.h"
+#include "media_demuxer.h"
 #include "sound_parser.h"
 
 namespace {
@@ -110,6 +111,23 @@ int32_t SoundParser::DoParser()
     return MSERR_OK;
 }
 
+int32_t SoundParser::VerifyFileType()
+{
+    CHECK_AND_RETURN_RET_LOG(source_, MSERR_INVALID_VAL, "Invalid source.");
+    const std::shared_ptr<Media::MediaDemuxer> sourceDemuxer = source_->mediaDemuxer;
+    CHECK_AND_RETURN_RET_LOG(sourceDemuxer, MSERR_INVALID_VAL, "Invalid source.");
+    const std::shared_ptr<Meta> globalMeta = sourceDemuxer->GetGlobalMetaInfo();
+    CHECK_AND_RETURN_RET_LOG(globalMeta, MSERR_INVALID_VAL, "Invalid globalMeta.");
+
+    bool hasVideoTrack;
+    Plugins::FileType fileType;
+    globalMeta->GetData(Tag::MEDIA_HAS_VIDEO, hasVideoTrack);
+    globalMeta->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+
+    CHECK_AND_RETURN_RET(!hasVideoTrack || fileType == Plugins::FileType::MP4, MSERR_INVALID_VAL);
+    return MSERR_OK;
+}
+
 int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
 {
     MediaTrace trace("SoundParser::DoDemuxer");
@@ -119,6 +137,7 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     CHECK_AND_RETURN_RET_LOG(source_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain av source");
     CHECK_AND_RETURN_RET_LOG(demuxer_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain demuxer");
     CHECK_AND_RETURN_RET_LOG(trackFormat != nullptr, MSERR_INVALID_VAL, "Invalid trackFormat.");
+    CHECK_AND_RETURN_RET_LOG(VerifyFileType() == MSERR_OK, MSERR_INVALID_VAL, "Unsupported file type.");
     int32_t ret = source_->GetSourceFormat(sourceFormat);
     if (ret != 0) {
         MEDIA_LOGE("GetSourceFormat failed, ret is %{public}d", ret);
@@ -130,9 +149,9 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     sourceDurationInfo_ = duration;
     MEDIA_LOGI("soundID is %{public}d, trackCount is %{public}d", soundID_, trackCount);
 
-    for (int32_t trackIndex = 0; trackIndex < trackCount; trackIndex++) {
+    for (audioTrackIndex_ = 0; audioTrackIndex_ < trackCount; audioTrackIndex_++) {
         int32_t trackType = 0;
-        ret = source_->GetTrackFormat(*trackFormat, trackIndex);
+        ret = source_->GetTrackFormat(*trackFormat, audioTrackIndex_);
         if (ret != 0) {
             MEDIA_LOGE("Get track format failed:%{public}d", ret);
             continue;
@@ -140,7 +159,7 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
         trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_TRACK_TYPE, trackType);
         MEDIA_LOGI("trackType is %{public}d", trackType);
         if (trackType == MEDIA_TYPE_AUD) {
-            demuxer_->SelectTrackByID(trackIndex);
+            demuxer_->SelectTrackByID(audioTrackIndex_);
             std::string trackMimeTypeInfo = "";
             trackFormat->GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
             if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) != 0) {
@@ -172,7 +191,8 @@ int32_t SoundParser::DoDecode(const MediaAVCodec::Format &trackFormat)
         CHECK_AND_RETURN_RET_LOG(audioDec_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain audioDecorder.");
         int32_t ret = audioDec_->Configure(trackFormat);
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to configure audioDecorder.");
-        audioDecCb_ = std::make_shared<SoundDecoderCallback>(soundID_, audioDec_, demuxer_, isRawFile_);
+        audioDecCb_ = std::make_shared<SoundDecoderCallback>(
+            soundID_, audioDec_, demuxer_, isRawFile_, audioTrackIndex_);
         CHECK_AND_RETURN_RET_LOG(audioDecCb_ != nullptr, MSERR_INVALID_VAL, "Failed to obtain decode callback.");
         ret = audioDec_->SetCallback(audioDecCb_);
         CHECK_AND_RETURN_RET_LOG(ret == 0, MSERR_INVALID_VAL, "Failed to setCallback audioDecorder");
@@ -269,9 +289,9 @@ int32_t SoundParser::Release()
 
 SoundDecoderCallback::SoundDecoderCallback(int32_t soundID,
     const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-    const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile) :
+    const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile, int32_t selectedTrackId) :
     soundID_(soundID), audioDec_(audioDec), demuxer_(demuxer), isRawFile_(isRawFile), eosFlag_(false),
-    decodeShouldCompleted_(false), currentSoundBufferSize_(0)
+    decodeShouldCompleted_(false), currentSoundBufferSize_(0), audioTrackIndex_(selectedTrackId)
 {
     MEDIA_LOGI("Construction SoundDecoderCallback");
 }
@@ -306,7 +326,7 @@ void SoundDecoderCallback::OnInputBufferAvailable(uint32_t index, std::shared_pt
     }
 
     if (buffer != nullptr && !eosFlag_ && !decodeShouldCompleted_) {
-        if (demuxer_->ReadSample(0, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
+        if (demuxer_->ReadSample(audioTrackIndex_, buffer, sampleInfo, bufferFlag) != AVCS_ERR_OK) {
             MEDIA_LOGE("ReadSample failed");
             amutex_.unlock();
             return;

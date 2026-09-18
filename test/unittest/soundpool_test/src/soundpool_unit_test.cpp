@@ -2341,5 +2341,57 @@ HWTEST_F(SoundPoolUnitTest, soundpool_function_112, TestSize.Level2)
     cb->ResetHavePlayedSoundNum();
     MEDIA_LOGI("soundpool_unit_test soundpool_function_112 after");
 }
+
+/**
+ * @tc.name: soundpool_function_113
+ * @tc.desc: function test Load and play MP4 file (audio extraction from MP4 container)
+ * @tc.type: FUNC
+ * @tc.require: The MP4 file contains both video and audio tracks, SoundPool should extract and play the audio track
+ */
+HWTEST_F(SoundPoolUnitTest, soundpool_function_113, TestSize.Level2)
+{
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_113 before");
+    int maxStreams = 3;
+    create(maxStreams);
+    std::shared_ptr<SoundPoolCallbackTest> cb = std::make_shared<SoundPoolCallbackTest>(soundPool_);
+    ASSERT_TRUE(cb != nullptr);
+    int32_t ret = soundPool_->SetSoundPoolCallback(cb);
+    ASSERT_TRUE(ret == 0);
+
+    // Load MP4 file which contains video+audio tracks
+    std::string mp4FileName = "/data/test/test_07.mp4";
+    fds_[loadNum_] = open(mp4FileName.c_str(), O_RDONLY);
+    if (fds_[loadNum_] > 0) {
+        size_t filesize = soundPool_->GetFileSize(mp4FileName);
+        EXPECT_NE(filesize, 0);
+        soundIDs_[loadNum_] = soundPool_->Load(fds_[loadNum_], 0, filesize);
+        EXPECT_GT(soundIDs_[loadNum_], 0);
+    } else {
+        cout << "Mp4 file open failed: " << mp4FileName.c_str() << ", fd: " << fds_[loadNum_] << endl;
+        EXPECT_GT(fds_[loadNum_], 0);
+    }
+
+    sleep(waitTime3);
+    ASSERT_TRUE(cb->WaitLoadedSoundNum(1));
+    cb->ResetHaveLoadedSoundNum();
+
+    // Play the audio extracted from MP4
+    struct PlayParams playParameters;
+    playParameters.loop = 0;
+    playParameters.rate = 1;
+    playParameters.leftVolume = 1.0;
+    playParameters.rightVolume = 1.0;
+    playParameters.priority = 0;
+    playParameters.pitch = 1.0;
+    if (soundIDs_[loadNum_] > 0) {
+        streamIDs_[playNum_] = soundPool_->Play(soundIDs_[loadNum_], playParameters);
+        EXPECT_GT(streamIDs_[playNum_], 0);
+        sleep(waitTime3);
+    } else {
+        cout << "Get soundId failed for MP4 file: " << soundIDs_[loadNum_] << endl;
+    }
+    cb->ResetHavePlayedSoundNum();
+    MEDIA_LOGI("soundpool_unit_test soundpool_function_113 after");
+}
 } // namespace Media
 } // namespace OHOS
