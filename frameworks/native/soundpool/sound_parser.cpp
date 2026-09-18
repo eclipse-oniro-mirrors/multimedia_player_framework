@@ -152,9 +152,9 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
     sourceDurationInfo_ = duration;
     MEDIA_LOGI("soundID is %{public}d, trackCount is %{public}d", soundID_, trackCount);
 
-    for (audioTrackIndex_ = 0; audioTrackIndex_ < trackCount; audioTrackIndex_++) {
+    for (int32_t trackIndex = 0; trackIndex < trackCount; trackIndex++) {
         int32_t trackType = 0;
-        ret = source_->GetTrackFormat(*trackFormat, audioTrackIndex_);
+        ret = source_->GetTrackFormat(*trackFormat, trackIndex);
         if (ret != 0) {
             MEDIA_LOGE("Get track format failed:%{public}d", ret);
             continue;
@@ -162,7 +162,8 @@ int32_t SoundParser::DoDemuxer(MediaAVCodec::Format *trackFormat)
         trackFormat->GetIntValue(MediaDescriptionKey::MD_KEY_TRACK_TYPE, trackType);
         MEDIA_LOGI("trackType is %{public}d", trackType);
         if (trackType == MEDIA_TYPE_AUD) {
-            demuxer_->SelectTrackByID(audioTrackIndex_);
+            audioTrackIndex_ = trackIndex;
+            demuxer_->SelectTrackByID(trackIndex);
             std::string trackMimeTypeInfo = "";
             trackFormat->GetStringValue(MediaAVCodec::MediaDescriptionKey::MD_KEY_CODEC_MIME, trackMimeTypeInfo);
             if (AUDIO_RAW_MIMETYPE_INFO.compare(trackMimeTypeInfo) != 0) {
