@@ -2283,7 +2283,14 @@ int32_t PlayerServiceStub::AddAdsMediaSource(MessageParcel &data, MessageParcel 
     if (mimeType == AVMimeType::APPLICATION_M3U8 && fd != -1) {
         (void)::close(fd);
     }
- 
+
+    // Stub-layer URL security check: reject file/fd URLs (aligned with SetMediaSource stub guard)
+    ret = ValidateMediaSourceUrl(mediaSource, mimeType, fd);
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("AddAdsMediaSource rejected: file/fd URL not allowed");
+        return ret;
+    }
+
     std::string outId;
     int32_t result = AddAdsMediaSource(mediaSource, startMs, outId);
     reply.WriteInt32(result);
