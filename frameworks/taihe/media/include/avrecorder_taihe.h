@@ -374,6 +374,7 @@ struct AVRecorderProfile {
     bool enableTemporalScale = false;
     bool enableStableQualityMode = false;
     int32_t sqrFactor = SQR_FACTOR_INVALID;
+    bool sqrFactorSet = false;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;
 
     OutputFormatType fileFormat = OutputFormatType::FORMAT_DEFAULT;
