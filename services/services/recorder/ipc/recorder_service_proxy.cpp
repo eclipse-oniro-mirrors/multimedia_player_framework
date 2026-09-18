@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -237,6 +237,25 @@ int32_t RecorderServiceProxy::SetVideoEnableBFrame(int32_t sourceId, bool enable
     int ret = Remote()->SendRequest(SET_VIDEO_ENABLE_B_FRAME, data, reply, option);
     int32_t error = TransformServiceStubErrCode(ret);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "SetVideoEnableBFrame failed, error: %{public}d", error);
+ 
+    return reply.ReadInt32();
+}
+
+int32_t RecorderServiceProxy::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+ 
+    bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_IPC_ERROR_5400102, "Failed to write descriptor!");
+ 
+    token = data.WriteInt32(sourceId) && data.WriteInt32(sqrFactor);
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_IPC_ERROR_5400102, "write data failed");
+ 
+    int ret = Remote()->SendRequest(SET_VIDEO_SQR_FACTOR, data, reply, option);
+    int32_t error = TransformServiceStubErrCode(ret);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "SetVideoSqrFactor failed, error: %{public}d", error);
  
     return reply.ReadInt32();
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022 Huawei Device Co., Ltd.
+ * Copyright (c) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -85,6 +85,7 @@ public:
     void SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale);
     void SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode);
     void SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame);
+    void SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor);
     void GetMetaSurface(int32_t sourceId);
     void GetMaxAmplitude(int32_t &amplitude);
     void SetMetaConfigs(int32_t sourceId);

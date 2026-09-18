@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -105,6 +105,8 @@ namespace RecorderTestParam {
         bool enableTemporalScale = false;
         bool enableStableQualityMode = false;
         bool enableBFrame = false;
+        int32_t sqrFactor = SQR_FACTOR_INVALID;
+        bool sqrFactorSet = false;
         float latitude = 30.0;
         float longitude = 60.0;
         std::string genre = "hi";
@@ -123,6 +125,7 @@ public:
     int32_t SetVideoSize(int32_t sourceId, int32_t width, int32_t height);
     int32_t SetVideoFrameRate(int32_t sourceId, int32_t frameRate);
     int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate);
+    int32_t SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor);
     int32_t SetCaptureRate(int32_t sourceId, double fps);
     OHOS::sptr<OHOS::Surface> GetSurface(int32_t sourceId);
     OHOS::sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId);

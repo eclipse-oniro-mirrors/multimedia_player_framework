@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -144,6 +144,14 @@ int32_t RecorderImpl::RecorderImpl::SetVideoEnableBFrame(int32_t sourceId, bool 
         "enableBFrame is %{public}d", FAKE_POINTER(this), sourceId, enableBFrame);
     CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
     return recorderService_->SetVideoEnableBFrame(sourceId, enableBFrame);
+}
+
+int32_t RecorderImpl::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
+{
+    MEDIA_LOGI("RecorderImpl:0x%{public}06" PRIXPTR " SetVideoSqrFactor in, sourceId is %{public}d, "
+        "sqrFactor is %{public}d", FAKE_POINTER(this), sourceId, sqrFactor);
+    CHECK_AND_RETURN_RET_LOG(recorderService_ != nullptr, MSERR_NULL_POINTER_5400102, "recorderService_ is nullptr.");
+    return recorderService_->SetVideoSqrFactor(sourceId, sqrFactor);
 }
 
 int32_t RecorderImpl::SetCaptureRate(int32_t sourceId, double fps)

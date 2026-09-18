@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Huawei Device Co., Ltd.
+ * Copyright (C) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -103,6 +103,8 @@ namespace RecorderTestParam {
         bool enableTemporalScale = false;
         bool enableStableQualityMode = false;
         bool enableBFrame = false;
+        int32_t sqrFactor = SQR_FACTOR_INVALID;
+        bool sqrFactorSet = false;
         float latitude = 30.0;
         float longitude = 60.0;
         std::string genre = "hi";

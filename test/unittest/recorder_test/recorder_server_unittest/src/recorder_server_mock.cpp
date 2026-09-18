@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -147,6 +147,12 @@ int32_t RecorderServerMock::SetVideoEncodingBitRate(int32_t sourceId, int32_t ra
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetVideoEncodingBitRate(sourceId, rate);
+}
+
+int32_t RecorderServerMock::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetVideoSqrFactor(sourceId, sqrFactor);
 }
 
 int32_t RecorderServerMock::SetCaptureRate(int32_t sourceId, double fps)
@@ -608,6 +614,10 @@ int32_t RecorderServerMock::SetAudVidFormat(const std::string &recorderType, Vid
         "SetVideoEnableStableQualityMode failed ");
     ret = recorder_->SetVideoEnableBFrame(recorderConfig.videoSourceId, recorderConfig.enableBFrame);
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoEnableBFrame failed ");
+    if (recorderConfig.sqrFactorSet) {
+        ret = recorder_->SetVideoSqrFactor(recorderConfig.videoSourceId, recorderConfig.sqrFactor);
+        UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoSqrFactor failed ");
+    }
     ret = CameraServicesForVideo(recorderConfig);
     UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServicesForVideo failed ");
     ret = CameraServicesForAudio(recorderConfig);
@@ -637,6 +647,10 @@ int32_t RecorderServerMock::SetFormat(const std::string &recorderType, VideoReco
             "SetVideoEnableStableQualityMode failed ");
         ret = recorder_->SetVideoEnableBFrame(recorderConfig.videoSourceId, recorderConfig.enableBFrame);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoEnableBFrame failed ");
+        if (recorderConfig.sqrFactorSet) {
+            ret = recorder_->SetVideoSqrFactor(recorderConfig.videoSourceId, recorderConfig.sqrFactor);
+            UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetVideoSqrFactor failed ");
+        }
         ret = CameraServicesForVideo(recorderConfig);
         UNITTEST_CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "CameraServices failed ");
     } else if (recorderType == PURE_AUDIO) {

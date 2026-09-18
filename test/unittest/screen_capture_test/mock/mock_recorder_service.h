@@ -86,6 +86,10 @@ public:
     {
         return MSERR_OK;
     }
+    int32_t SetVideoSqrFactor(int32_t, int32_t) override
+    {
+        return MSERR_OK;
+    }
     int32_t SetCaptureRate(int32_t, double) override
     {
         return MSERR_OK;

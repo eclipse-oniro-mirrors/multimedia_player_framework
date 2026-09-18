@@ -175,6 +175,7 @@ struct WatermarkConfiguration {
 constexpr int32_t MAX_WATERMARK_SIZE = 4 * 4096 * 4096;
 constexpr int32_t WATERMARK_WIDTH_HEIGHT_MAX = 4096;
 constexpr int32_t WATERMARK_COUNT_MAX = 5;
+constexpr int32_t SQR_FACTOR_INVALID = -1;
 } // namespace Media
 } // namespace OHOS
 #endif // AV_COMMOM_H

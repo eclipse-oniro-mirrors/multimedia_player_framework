@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -170,6 +170,15 @@ int32_t RecorderClient::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame
  
     MEDIA_LOGD("SetVideoEnableBFrame sourceId(%{public}d), enableBFrame(%{public}d)", sourceId, enableBFrame);
     return recorderProxy_->SetVideoEnableBFrame(sourceId, enableBFrame);
+}
+
+int32_t RecorderClient::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(recorderProxy_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder service does not exist.");
+
+    MEDIA_LOGD("SetVideoSqrFactor sourceId(%{public}d), sqrFactor(%{public}d)", sourceId, sqrFactor);
+    return recorderProxy_->SetVideoSqrFactor(sourceId, sqrFactor);
 }
 
 int32_t RecorderClient::SetMetaSource(MetaSourceType source, int32_t &sourceId)

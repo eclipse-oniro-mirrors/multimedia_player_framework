@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Huawei Device Co., Ltd.
+ * Copyright (C) 2021-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -179,6 +179,8 @@ void RecorderServiceStub::FillRecFuncPart3()
         [this](MessageParcel &data, MessageParcel &reply) { return SetWillMuteWhenInterrupted(data, reply); };
     recFuncs_[SET_VIDEO_ENABLE_B_FRAME] =
         [this](MessageParcel &data, MessageParcel &reply) { return SetVideoEnableBFrame(data, reply); };
+    recFuncs_[SET_VIDEO_SQR_FACTOR] =
+        [this](MessageParcel &data, MessageParcel &reply) { return SetVideoSqrFactor(data, reply); };
     recFuncs_[TRANSMIT_QOS] =
         [this](MessageParcel &data, MessageParcel &reply) { return TransmitQos(data, reply); };
 }
@@ -313,6 +315,12 @@ int32_t RecorderServiceStub::SetVideoEnableBFrame(int32_t sourceId, bool enableB
 {
     CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
     return recorderServer_->SetVideoEnableBFrame(sourceId, enableBFrame);
+}
+
+int32_t RecorderServiceStub::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
+{
+    CHECK_AND_RETURN_RET_LOG(recorderServer_ != nullptr, MSERR_NULL_POINTER_5400101, "recorder server is nullptr");
+    return recorderServer_->SetVideoSqrFactor(sourceId, sqrFactor);
 }
 
 int32_t RecorderServiceStub::SetMetaConfigs(int32_t sourceId)
@@ -707,6 +715,19 @@ int32_t RecorderServiceStub::SetVideoEnableBFrame(MessageParcel &data, MessagePa
     }
 
     reply.WriteInt32(SetVideoEnableBFrame(sourceId, enableBFrame));
+    return MSERR_OK;
+}
+
+int32_t RecorderServiceStub::SetVideoSqrFactor(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sourceId = 0;
+    int32_t sqrFactor = -1;
+
+    if (!(data.ReadInt32(sourceId) && data.ReadInt32(sqrFactor))) {
+        return MSERR_INVALID_VAL;
+    }
+
+    reply.WriteInt32(SetVideoSqrFactor(sourceId, sqrFactor));
     return MSERR_OK;
 }
 
