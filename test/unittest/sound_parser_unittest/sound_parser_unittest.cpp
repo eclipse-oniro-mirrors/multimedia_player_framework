@@ -342,7 +342,8 @@ HWTEST_F(SoundParserUnitTest, SoundParser_OnInputBufferAvailable_004, TestSize.L
     ASSERT_NE(demuxer, nullptr);
     bool isRawFile = true;
     int32_t selectedTrackId = 2;
-    SoundDecoderCallback_ = std::make_shared<SoundDecoderCallback>(soundID, audioDec, demuxer, isRawFile, selectedTrackId);
+    SoundDecoderCallback_ = std::make_shared<SoundDecoderCallback>(
+        soundID, audioDec, demuxer, isRawFile, selectedTrackId);
     SoundDecoderCallback_->eosFlag_ = false;
     SoundDecoderCallback_->decodeShouldCompleted_ = false;
     ASSERT_NE(SoundDecoderCallback_, nullptr);

@@ -119,10 +119,13 @@ int32_t SoundParser::VerifyFileType()
     const std::shared_ptr<Meta> globalMeta = sourceDemuxer->GetGlobalMetaInfo();
     CHECK_AND_RETURN_RET_LOG(globalMeta, MSERR_INVALID_VAL, "Invalid globalMeta.");
 
-    bool hasVideoTrack;
-    Plugins::FileType fileType;
-    globalMeta->GetData(Tag::MEDIA_HAS_VIDEO, hasVideoTrack);
-    globalMeta->GetData(Tag::MEDIA_FILE_TYPE, fileType);
+    bool hasVideoTrack = false;
+    Plugins::FileType fileType = Plugins::FileType::UNKNOW;
+
+    CHECK_AND_RETURN_RET_LOG(globalMeta->GetData(Tag::MEDIA_HAS_VIDEO, hasVideoTrack), MSERR_INVALID_VAL,
+        "Failed to get MEDIA_HAS_VIDEO");
+    CHECK_AND_RETURN_RET_LOG(globalMeta->GetData(Tag::MEDIA_FILE_TYPE, fileType), MSERR_INVALID_VAL,
+        "Failed to get MEDIA_FILE_TYPE");
 
     CHECK_AND_RETURN_RET(!hasVideoTrack || fileType == Plugins::FileType::MP4, MSERR_INVALID_VAL);
     return MSERR_OK;
