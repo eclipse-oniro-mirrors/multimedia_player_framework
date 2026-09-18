@@ -14,6 +14,7 @@
  */
 
 #include "screen_capture_service_stub.h"
+#include "fdsan_fd.h"
 #include "screen_capture_service_providers.h"
 #include "screen_capture_listener_callback.h"
 #include "media_server_manager.h"
@@ -568,10 +569,9 @@ int32_t ScreenCaptureServiceStub::SetRecorderInfo(MessageParcel &data, MessagePa
 int32_t ScreenCaptureServiceStub::SetOutputFile(MessageParcel &data, MessageParcel &reply)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
-    int32_t fd = data.ReadFileDescriptor();
-    int32_t ret = SetOutputFile(fd);
+    FdsanFd fd(data.ReadFileDescriptor());
+    int32_t ret = SetOutputFile(fd.Get());
     reply.WriteInt32(ret);
-    CHECK_AND_RETURN_RET_LOG(close(fd) == 0, MSERR_UNKNOWN, "close fd failed, fd is %{public}d", fd);
     return MSERR_OK;
 }
 

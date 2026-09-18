@@ -20,6 +20,7 @@
 #include "audio_data_source_generic.h"
 #include "i_screen_capture_service.h"
 #include "screen_capture.h"
+#include "fdsan_fd.h"
 #include "screen_capture_callback_proxy.h"
 #include "screen_capture_listener_manager.h"
 #include "screen_capture_server_base.h"
@@ -220,7 +221,6 @@ private:
     void InitAppInfo();
     void ConvertTaskIdsToMissionIds();
     void SetupCaptureListeners();
-    void CloseFd();
     bool StopMicAudio();
     void ReleaseInner();
     void GetDumpFlag();
@@ -395,7 +395,7 @@ private:
     /* used for CAPTURE FILE */
     std::shared_ptr<IRecorderService> recorder_ = nullptr;
     OutputFormatType fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
-    int32_t outputFd_ = -1;
+    FdsanFd outputFd_;
     int32_t audioSourceId_ = 0;
     int32_t videoSourceId_ = 0;
     std::shared_ptr<AudioDataSourceGeneric> audioSource_ = nullptr;

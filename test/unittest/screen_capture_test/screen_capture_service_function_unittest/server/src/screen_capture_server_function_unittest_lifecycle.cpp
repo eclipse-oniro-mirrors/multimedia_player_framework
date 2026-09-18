@@ -237,7 +237,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureFile_InvalidFd_B2, T
 {
     SetValidConfig();
     screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
-    screenCaptureServer_->outputFd_ = -1;
+    screenCaptureServer_->outputFd_.Reset();
     EXPECT_EQ(screenCaptureServer_->StartScreenCaptureFile(), MSERR_INVALID_FD);
 }
 
