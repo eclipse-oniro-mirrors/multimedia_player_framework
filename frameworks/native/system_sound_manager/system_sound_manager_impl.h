@@ -235,8 +235,6 @@ private:
     std::unique_ptr<RingtoneAsset> IsPresetRingtone(const DatabaseTool &databaseTool, const std::string &toneUri);
     int GetStandardVibrateType(int toneType);
 
-    bool IsSystemToneType(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
-        const SystemToneType &systemToneType);
     bool IsToneAlreadySet(const std::unique_ptr<RingtoneAsset> &ringtoneAsset,
         int32_t toneType, int32_t subType, uint32_t storedToneType);
     int32_t QueryUriForErrorType(std::shared_ptr<DataShare::DataShareHelper> dataShareHelper,
