@@ -442,15 +442,6 @@ void SystemSoundManagerImpl::InitRingerMode(void)
     audioGroupManager_->SetRingerModeCallback(getpid(), ringerModeCallback_);
 }
 
-bool SystemSoundManagerImpl::IsSystemToneType(const unique_ptr<RingtoneAsset> &ringtoneAsset,
-    const SystemToneType &systemToneType)
-{
-    CHECK_AND_RETURN_RET_LOG(ringtoneAsset != nullptr, false, "Invalid ringtone asset.");
-    return (systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ?
-        TONE_TYPE_NOTIFICATION != ringtoneAsset->GetToneType() :
-        TONE_TYPE_SHOT != ringtoneAsset->GetToneType());
-}
-
 void SystemSoundManagerImpl::ReadDefaultToneHaptics(const char *paramName, ToneHapticsType toneHapticsType)
 {
     char paramValue[SYSPARA_SIZE] = {0};
@@ -975,7 +966,7 @@ std::shared_ptr<ToneAttrs> SystemSoundManagerImpl::GetDefaultSystemToneAttrs(
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
     CHECK_AND_RETURN_RET_LOG(results != nullptr, nullptr, "query single systemtone failed, ringtone library error.");
     unique_ptr<RingtoneAsset> ringtoneAsset = results->GetFirstObject();
-    while ((ringtoneAsset != nullptr) && IsSystemToneType(ringtoneAsset, systemToneType)) {
+    while ((ringtoneAsset != nullptr) && TONE_TYPE_NOTIFICATION != ringtoneAsset->GetToneType()) {
         ringtoneAsset = results->GetNextObject();
     }
     if (ringtoneAsset != nullptr) {
