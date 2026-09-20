@@ -39,6 +39,7 @@ const int SUCCESS = 0;
 const int RESULT_DEFAULT = -13;
 const int RESULT_SUCCESS = -3;
 constexpr int32_t TONE_CATEGORY_DEFAULT = 8;
+const int32_t TONE_SET_FLAG = 1;
 void SystemSoundManagerUnitTest::SetUpTestCase(void) {}
 void SystemSoundManagerUnitTest::TearDownTestCase(void) {}
 void SystemSoundManagerUnitTest::SetUp(void) {}
