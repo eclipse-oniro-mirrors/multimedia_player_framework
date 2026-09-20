@@ -33,6 +33,7 @@ const int SUCCESS = 0;
 const int UNSUPPORTED_ERROR = -5;
 const int32_t TONE_CATEGORY = -13;
 const int32_t SYSPARA_SIZE = 128;
+const int32_t TONE_SET_FLAG = 1;
 void SystemSoundManagerUnitNextTest::SetUpTestCase(void) {}
 void SystemSoundManagerUnitNextTest::TearDownTestCase(void) {}
 void SystemSoundManagerUnitNextTest::SetUp(void) {}
@@ -1959,29 +1960,6 @@ std::shared_ptr<OHOS::Media::MockDataShareHelper> CreateMockHelperWithResultSet(
 }
 
 /**
- * @tc.name  : ClearToneType_NullResults
- * @tc.number: ClearToneType_002
- * @tc.desc  : Test ClearToneType when Query returns null result set (early return branch)
- */
-HWTEST(SystemSoundManagerUnitNextTest, ClearToneType_002, TestSize.Level0)
-{
-    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
-    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
-        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
-    ASSERT_NE(systemSoundManagerImpl_, nullptr);
-
-    auto mockHelper = std::make_shared<OHOS::Media::MockDataShareHelper>();
-    ON_CALL(*mockHelper, Query(_, _, _, _))
-        .WillByDefault(Return(std::shared_ptr<DataShare::DataShareResultSet>(nullptr)));
-
-    int32_t result = systemSoundManagerImpl_->ClearToneType(
-        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE, RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE,
-        NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
-    EXPECT_EQ(result, 0);
-}
-
-/**
  * @tc.name  : ClearToneType_CustomisedNotification
  * @tc.number: ClearToneType_003
  * @tc.desc  : Test ClearToneType with customised notification tone (Update branch, clear mark)
@@ -2007,8 +1985,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearToneType_003, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->ClearToneType(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE, RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE,
-        NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
+        TONE_TYPE_NOTIFICATION);
     EXPECT_GT(result, 0);
 }
 
@@ -2037,8 +2014,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearToneType_004, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->ClearToneType(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_ALARM_TONE_TYPE, RINGTONE_COLUMN_ALARM_TONE_SOURCE_TYPE,
-        ALARM_TONE_TYPE, ALARM_TONE_TYPE_NOT);
+        TONE_TYPE_ALARM);
     EXPECT_GT(result, 0);
 }
 
@@ -2068,8 +2044,7 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearToneType_005, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->ClearToneType(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE, RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE,
-        NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
+        TONE_TYPE_NOTIFICATION);
     EXPECT_GT(result, 0);
 }
 
@@ -2095,8 +2070,29 @@ HWTEST(SystemSoundManagerUnitNextTest, ClearToneType_006, TestSize.Level0)
 
     int32_t result = systemSoundManagerImpl_->ClearToneType(
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
-        RINGTONE_COLUMN_NOTIFICATION_TONE_TYPE, RINGTONE_COLUMN_NOTIFICATION_TONE_SOURCE_TYPE,
-        NOTIFICATION_TONE_TYPE, NOTIFICATION_TONE_TYPE_NOT);
+        TONE_TYPE_NOTIFICATION);
+    EXPECT_EQ(result, 0);
+}
+
+/**
+ * @tc.name  : ClearToneType_NullResults
+ * @tc.number: ClearToneType_007
+ * @tc.desc  : Test ClearToneType when Query returns null result set (early return branch)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, ClearToneType_007, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+
+    auto mockHelper = std::make_shared<OHOS::Media::MockDataShareHelper>();
+    ON_CALL(*mockHelper, Query(_, _, _, _))
+        .WillByDefault(Return(std::shared_ptr<DataShare::DataShareResultSet>(nullptr)));
+
+    int32_t result = systemSoundManagerImpl_->ClearToneType(
+        std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper),
+        TONE_TYPE_NOTIFICATION);
     EXPECT_EQ(result, 0);
 }
 
