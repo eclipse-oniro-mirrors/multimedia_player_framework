@@ -115,7 +115,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckGetScreenCaptureServerById_001, T
     std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
     server->sessionId_ = sessionId;
     ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
-    ASSERT_NE(ScreenCaptureServerManager::GetInstance().GetScreenCaptureServerById(sessionId).lock(), nullptr);
+    auto serverPtr = ScreenCaptureServerManager::GetInstance().GetScreenCaptureServerById(sessionId).lock();
+    ASSERT_NE(serverPtr, nullptr);
+    ASSERT_EQ(serverPtr->sessionId_, sessionId);
     ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(sessionId);
 }
 
@@ -130,6 +132,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckGetScreenCaptureServerById_002, T
     UniqueIDGenerator gIdGenerator(20);
     int32_t sessionId = gIdGenerator.GetNewID();
     ASSERT_EQ(ScreenCaptureServerManager::GetInstance().GetScreenCaptureServerById(sessionId).lock(), nullptr);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.count(sessionId), 0);
     ScreenCaptureServerManager::GetInstance().idGenerator_.ReturnID(sessionId);
 }
 
@@ -299,7 +302,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCanSCInstanceBeCreate_002, TestSi
  */
 HWTEST_F(ScreenCaptureServerFunctionTest, CreateSCNewInstance_001, TestSize.Level2)
 {
-    ASSERT_NE(MakeScreenCaptureServerViaCreate(), nullptr);
+    auto server = MakeScreenCaptureServerViaCreate();
+    ASSERT_NE(server, nullptr);
+    ASSERT_TRUE(server->sessionId_ > 0);
+    ASSERT_EQ(server->captureState_.load(), AVScreenCaptureState::CREATED);
 }
 
 /**
@@ -314,7 +320,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateSCNewInstance_002, TestSize.Leve
         tmpQ.push(ScreenCaptureServerManager::GetInstance().idGenerator_.availableIDs_.front());
         ScreenCaptureServerManager::GetInstance().idGenerator_.availableIDs_.pop();
     }
+    int32_t sizeBefore = ScreenCaptureServerManager::GetInstance().serverMap_.size();
     ASSERT_EQ(ScreenCaptureServer::Create(nullptr), nullptr);
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().serverMap_.size(), sizeBefore);
 
     while (!tmpQ.empty()) {
         ScreenCaptureServerManager::GetInstance().idGenerator_.availableIDs_.push(tmpQ.front());
@@ -330,7 +338,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CreateSCNewInstance_002, TestSize.Leve
 HWTEST_F(ScreenCaptureServerFunctionTest, CreateSCNewInstance_003, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
-    ASSERT_NE(MakeScreenCaptureServerViaCreate(), nullptr);
+    auto server = MakeScreenCaptureServerViaCreate();
+    ASSERT_NE(server, nullptr);
+    ASSERT_TRUE(server->sessionId_ > 0);
+    ASSERT_EQ(server->captureState_.load(), AVScreenCaptureState::CREATED);
 }
 
 /**

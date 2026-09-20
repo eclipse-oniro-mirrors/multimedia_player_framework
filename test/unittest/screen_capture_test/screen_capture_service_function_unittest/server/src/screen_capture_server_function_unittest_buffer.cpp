@@ -77,7 +77,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_002, TestSize.Level
     screenCaptureServer_->ReleaseVideoBuffer();
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, StartBufferThread_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, StartBufferThread_NullParams_001, TestSize.Level2)
 {
     ScreenCapBufferConsumerListener *surfaceCb = new ScreenCapBufferConsumerListener(nullptr, nullptr);
     surfaceCb->isSurfaceCbInThreadStopped_ = false;

@@ -469,6 +469,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_002, TestSi
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_UNSUPPORT_AUD_SAMPLE_RATE);
+    ASSERT_EQ(screenCaptureServer_->CheckAudioCapParam(config_.audioInfo.micCapInfo), MSERR_UNSUPPORT_AUD_SAMPLE_RATE);
 }
 
 // videoCapInfo INVALID
@@ -484,6 +485,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_003, TestSi
     config_.videoInfo.videoCapInfo.videoFrameWidth = -1;
     config_.videoInfo.videoCapInfo.videoFrameHeight = -1;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_INVALID_VID_FRAME_WIDTH);
+    ASSERT_EQ(screenCaptureServer_->CheckVideoCapParam(config_.videoInfo.videoCapInfo), MSERR_INVALID_VID_FRAME_WIDTH);
 }
 
 // dataType INVALID
@@ -546,6 +548,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_001, TestSize
     config_.videoInfo.videoCapInfo.videoFrameWidth = -1;
     config_.videoInfo.videoCapInfo.videoFrameHeight = -1;
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_INVALID_VID_FRAME_WIDTH);
+    ASSERT_EQ(screenCaptureServer_->CheckVideoCapParam(config_.videoInfo.videoCapInfo), MSERR_INVALID_VID_FRAME_WIDTH);
 }
 
 // audioSampleRate INVALID
@@ -561,6 +564,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureFileParamsInvalid_002, TestSize
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_UNSUPPORT_AUD_SAMPLE_RATE);
+    ASSERT_EQ(screenCaptureServer_->CheckAudioCapParam(config_.audioInfo.innerCapInfo), MSERR_UNSUPPORT_AUD_SAMPLE_RATE);
 }
 
 // audioSampleRate and audioSampleRate are not equal
@@ -932,6 +936,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatResumeAudioCapture_001, TestSize
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_,
+                  screenCaptureServer_->captureConfig_.dataType, screenCaptureServer_->sessionId_),
+        MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RepeatPauseAudioCapture_001, TestSize.Level2)
@@ -945,6 +953,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatPauseAudioCapture_001, TestSize.
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdatePrivacyUsingPermissionState_001, TestSize.Level2)
@@ -2123,7 +2133,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCustScrRecPermission_001, TestSiz
     EXPECT_EQ(screenCaptureServer_->CheckCustScrRecPermission(), false);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, SetPickerMode_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, SetPickerMode_PCStandard_001, TestSize.Level2)
 {
     PickerMode pickerMode = PickerMode::SCREEN_ONLY;
     screenCaptureServer_->SetPickerMode(pickerMode);

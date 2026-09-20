@@ -61,8 +61,11 @@ HWTEST_F(ScreenCaptureServiceProvidersTest, CreateDefaultProviders_001, TestSize
  */
 HWTEST_F(ScreenCaptureServiceProvidersTest, GetScreenCaptureMonitor_001, TestSize.Level1)
 {
-    IInnerScreenCaptureMonitorService &monitor = providers_->GetScreenCaptureMonitor();
-    EXPECT_NE(&monitor, nullptr);
+    auto providers = CreateDefaultProviders();
+    ASSERT_NE(providers, nullptr);
+    IInnerScreenCaptureMonitorService &monitor = providers->GetScreenCaptureMonitor();
+    IInnerScreenCaptureMonitorService &monitor2 = providers_->GetScreenCaptureMonitor();
+    ASSERT_EQ(&monitor, &monitor2);
 }
 
 /**
@@ -85,7 +88,8 @@ HWTEST_F(ScreenCaptureServiceProvidersTest, GetScreenCaptureMonitor_002, TestSiz
 HWTEST_F(ScreenCaptureServiceProvidersTest, CreateRecorder_001, TestSize.Level1)
 {
     std::shared_ptr<IRecorderService> recorder = providers_->CreateRecorder();
-    EXPECT_NE(recorder, nullptr);
+    ASSERT_NE(recorder, nullptr);
+    EXPECT_EQ(recorder->Release(), MSERR_OK);
 }
 
 /**
@@ -109,8 +113,11 @@ HWTEST_F(ScreenCaptureServiceProvidersTest, CreateRecorder_002, TestSize.Level1)
  */
 HWTEST_F(ScreenCaptureServiceProvidersTest, GetAccountObserver_001, TestSize.Level1)
 {
-    AccountObserver &observer = providers_->GetAccountObserver();
-    EXPECT_NE(&observer, nullptr);
+    auto providers = CreateDefaultProviders();
+    ASSERT_NE(providers, nullptr);
+    AccountObserver &observer = providers->GetAccountObserver();
+    AccountObserver &observer2 = providers_->GetAccountObserver();
+    ASSERT_EQ(&observer, &observer2);
 }
 
 /**
