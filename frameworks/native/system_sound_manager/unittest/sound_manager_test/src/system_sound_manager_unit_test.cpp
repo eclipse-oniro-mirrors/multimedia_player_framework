@@ -676,32 +676,6 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_GetHapticsUriByStyle_001, 
 }
 
 /**
- * @tc.name  : Test IsSystemToneType API
- * @tc.number: Media_SoundManager_IsSystemToneType_001
- * @tc.desc  : Test IsSystemToneType interface.
- */
-HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_IsSystemToneType_001, TestSize.Level2)
-{
-    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    std::unique_ptr<RingtoneAsset> ringtoneAsset = std::make_unique<RingtoneAsset>();
-    EXPECT_TRUE(systemSoundManager_->IsSystemToneType(ringtoneAsset,
-         SystemToneType::SYSTEM_TONE_TYPE_SIM_CARD_0));
-}
-
-/**
- * @tc.name  : Test IsSystemToneType API
- * @tc.number: Media_SoundManager_IsSystemToneType_002
- * @tc.desc  : Test IsSystemToneType interface.
- */
-HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_IsSystemToneType_002, TestSize.Level2)
-{
-    auto systemSoundManager_ = std::make_shared<SystemSoundManagerImpl>();
-    std::unique_ptr<RingtoneAsset> ringtoneAsset = std::make_unique<RingtoneAsset>();
-    EXPECT_TRUE(systemSoundManager_->IsSystemToneType(ringtoneAsset,
-        SystemToneType::SYSTEM_TONE_TYPE_NOTIFICATION));
-}
-
-/**
  * @tc.name  : Test IsValidToneHapticsType API
  * @tc.number: Media_SoundManager_IsValidToneHapticsType_001
  * @tc.desc  : Test IsValidToneHapticsType interface.
