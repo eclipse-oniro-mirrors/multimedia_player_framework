@@ -169,7 +169,7 @@ std::vector<std::string> HAPTIC_2_TONE_TABLE_COLUMNS = {{HAPTIC_2_TONE_COLUMN_ID
     {HAPTIC_2_TONE_COLUMN_DATE_MODIFIED}, {HAPTIC_2_TONE_COLUMN_PLAY_MODE}, {HAPTIC_2_TONE_COLUMN_SCANNER_FLAG}};
 
 
-std::string GetToneTypeColumnName(ToneType toneType)
+std::string GetToneTypeColumnName(int32_t toneType)
 {
     switch (toneType) {
         case TONE_TYPE_NOTIFICATION:
@@ -185,7 +185,7 @@ std::string GetToneTypeColumnName(ToneType toneType)
     }
 }
 
-std::string GetToneSourceTypeColumnName(ToneType toneType)
+std::string GetToneSourceTypeColumnName(int32_t toneType)
 {
     switch (toneType) {
         case TONE_TYPE_NOTIFICATION:
@@ -201,7 +201,7 @@ std::string GetToneSourceTypeColumnName(ToneType toneType)
     }
 }
 
-int32_t ConvertToneType2ToneCategory(ToneType toneType)
+int32_t ConvertToneType2ToneCategory(int32_t toneType)
 {
     switch(toneType) {
         case TONE_TYPE_RINGTONE:
