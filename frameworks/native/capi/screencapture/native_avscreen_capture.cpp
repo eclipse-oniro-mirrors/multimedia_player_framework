@@ -310,8 +310,6 @@ private:
             screenCapture->AcquireVideoBuffer(fence, timestamp, damage);
         CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed surfaceBuffer no memory!");
-        MEDIA_LOGD("get native surfaceBuffer rsRect: x: %{public}d, y: %{public}d, w: %{public}d, h: %{public}d",
-            rsRect.x, rsRect.y, rsRect.w, rsRect.h);
         std::shared_ptr<AVBuffer> avBuffer = AVBuffer::CreateAVBuffer(surfaceBuffer);
         CHECK_AND_RETURN_RET_LOG(avBuffer != nullptr && avBuffer->memory_ != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed avBuffer no memory!");
