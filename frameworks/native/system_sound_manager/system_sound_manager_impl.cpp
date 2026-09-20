@@ -203,7 +203,7 @@ std::string GetToneSourceTypeColumnName(int32_t toneType)
 
 int32_t ConvertToneType2ToneCategory(int32_t toneType)
 {
-    switch(toneType) {
+    switch (toneType) {
         case TONE_TYPE_RINGTONE:
             return TONE_CATEGORY_RINGTONE;
         case TONE_TYPE_SHOT:
@@ -635,7 +635,6 @@ int32_t SystemSoundManagerImpl::SetRingtoneUri(const shared_ptr<Context> &contex
 
     SetToneUriParams toneParams = {TONE_TYPE_RINGTONE, static_cast<int32_t>(ringtoneType), TONE_TYPE_RINGTONE};
     if (uri == NO_RING_SOUND) {
-        
         int32_t result = SetNoToneUri(dataShareHelper, toneParams);
         dataShareHelper->Release();
         return result >= 0 ? SUCCESS : ERROR;
@@ -685,7 +684,6 @@ ToneAttrs SystemSoundManagerImpl::GetRingtoneAttrs(const DatabaseTool &databaseT
     }
 
     toneAttrs = QueryToneAttrsByType(databaseTool, RingtoneTypeToBitMask(ringtoneType), TONE_TYPE_RINGTONE);
-
     if (toneAttrs.GetUri().empty()) {
         MEDIA_LOGI("GetRingtoneAttrs: No ring tone uri for type %{public}d. Return NO_RING_SOUND", ringtoneType);
         toneAttrs.SetUri(NO_RING_SOUND);
