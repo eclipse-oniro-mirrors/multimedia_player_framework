@@ -2871,7 +2871,7 @@ int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
 }
 
 int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                                                int64_t &timestamp, OHOS::Rect &damage, OHOS::Rect &rsRect)
+                                                int64_t &timestamp, OHOS::Rect &damage)
 {
     MediaTrace trace("ScreenCaptureServer::AcquireVideoBuffer", HITRACE_LEVEL_DEBUG);
     std::unique_lock<std::mutex> lock(mutex_);
@@ -2896,18 +2896,6 @@ int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfa
     }
     if (surfaceBuffer != nullptr) {
         MEDIA_LOGD("getcurrent surfaceBuffer info, size:%{public}u", surfaceBuffer->GetSize());
-        HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion metaRegion;
-        std::vector<uint8_t> data;
-        auto ret = surfaceBuffer->GetMetadata(HDI::Display::Graphic::Common::V1_0::ATTRKEY_CROP_REGION, data);
-        if (ret == GSERROR_OK && memcpy_s(&metaRegion,
-            sizeof(HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion), data.data(), data.size()) == EOK) {
-            rsRect.x = static_cast<int32_t>(metaRegion.left);
-            rsRect.y = static_cast<int32_t>(metaRegion.top);
-            rsRect.w = static_cast<int32_t>(metaRegion.width);
-            rsRect.h = static_cast<int32_t>(metaRegion.height);
-        } else {
-            rsRect = {-1, -1, -1, -1};
-        }
         return MSERR_OK;
     }
     FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,

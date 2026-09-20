@@ -149,12 +149,11 @@ HWTEST_F(ScreenCaptureImplUnitTest, AcquireVideoBuffer_001, TestSize.Level0)
     ASSERT_NE(screenCaptureImpl_, nullptr);
     auto mockService = std::make_shared<MockScreenCaptureService>();
     screenCaptureImpl_->screenCaptureService_ = mockService;
-    EXPECT_CALL(*mockService, AcquireVideoBuffer(_, _, _, _, _)).WillOnce(Return(MSERR_NO_MEMORY));
+    EXPECT_CALL(*mockService, AcquireVideoBuffer(_, _, _, _)).WillOnce(Return(MSERR_NO_MEMORY));
     int32_t fence = NUM_0;
     int64_t timestamp = NUM_0;
     OHOS::Rect damage;
-    OHOS::Rect rsRect;
-    auto ret = screenCaptureImpl_->AcquireVideoBuffer(fence, timestamp, damage, rsRect);
+    auto ret = screenCaptureImpl_->AcquireVideoBuffer(fence, timestamp, damage);
     EXPECT_EQ(ret, nullptr);
 }
 
