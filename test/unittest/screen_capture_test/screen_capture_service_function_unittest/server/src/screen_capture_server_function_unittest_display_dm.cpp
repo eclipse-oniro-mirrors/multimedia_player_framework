@@ -20,6 +20,7 @@
 #include "mock/mock_recorder_service.h"
 #include "mock/mock_screen_capture_service_providers.h"
 #include "mock/mock_screen_display_manager.h"
+#include "mock/mock_session_manager_lite_injector.h"
 #include "screen_capture_server_function_unittest.h"
 #include "screen_capture_server_manager.h"
 #include <gtest/gtest.h>
@@ -166,6 +167,7 @@ void ScreenCaptureServerDisplayDmTest::SetUp()
 
 void ScreenCaptureServerDisplayDmTest::TearDown()
 {
+    ClearMockSceneSessionManagerLite();
     smFlow_.reset();
     dmFlow_.reset();
     if (server_) {
@@ -215,7 +217,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_HomeScreen_S
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_OK));
 
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->captureState_ = AVScreenCaptureState::CREATED;
     std::vector<ScreenId> mirrorIds = {TEST_VIRTUAL_SCREEN_ID};
     EXPECT_EQ(server_->SetupVirtualScreenMirror(mirrorIds), MSERR_OK);
@@ -232,7 +234,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedWin
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_OK));
 
     server_->captureConfig_.captureMode = CAPTURE_SPECIFIED_WINDOW;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_.clear();
     server_->captureState_ = AVScreenCaptureState::CREATED;
     std::vector<ScreenId> mirrorIds = {TEST_VIRTUAL_SCREEN_ID};
@@ -251,7 +253,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScr
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_OK));
 
     server_->captureConfig_.captureMode = CAPTURE_SPECIFIED_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_SCREEN_ID};
     server_->captureState_ = AVScreenCaptureState::CREATED;
     std::vector<ScreenId> mirrorIds = {TEST_VIRTUAL_SCREEN_ID};
@@ -268,7 +270,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenMirror_Success, Test
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_OK));
 
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->isRegionCapture_.store(false);
     server_->captureState_ = AVScreenCaptureState::CREATED;
     EXPECT_EQ(server_->MakeVirtualScreenMirror(), MSERR_OK);
@@ -283,7 +285,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_Success, Te
     ON_CALL(*smFlow_, SetMultiScreenMode(_, _, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetMultiScreenRelativePosition(_, _)).WillByDefault(Return(DMError::DM_OK));
 
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_OK);
     ASSERT_FALSE(server_->sourceDisplayIds_.empty());
@@ -305,7 +307,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, PrepareVirtualScreenMirror_Mirror_Suc
     ON_CALL(*dmFlow_, SetVirtualScreenSecurityExemption(_, _, _)).WillByDefault(Return(DMError::DM_OK));
 
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->canvasRotation_ = false;
     server_->captureState_ = AVScreenCaptureState::CREATED;
     EXPECT_EQ(server_->PrepareVirtualScreenMirror(), MSERR_OK);
@@ -328,7 +330,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, PrepareVirtualScreenMirror_Extended_S
     ON_CALL(*dmFlow_, SetVirtualScreenSecurityExemption(_, _, _)).WillByDefault(Return(DMError::DM_OK));
 
     server_->captureConfig_.captureMode = CAPTURE_VIRTUAL_EXTENDED_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
     server_->canvasRotation_ = false;
     EXPECT_EQ(server_->PrepareVirtualScreenMirror(), MSERR_OK);
@@ -342,7 +344,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, ChangeMirrorScreen_Success, TestSize.
     ON_CALL(*smFlow_, StopMirror(_)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_OK));
 
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_SCREEN_ID};
     server_->sourceDisplayIds_.clear();
     server_->captureState_ = AVScreenCaptureState::CREATED;
@@ -375,22 +377,10 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CreateVirtualScreen_FileHome_Success,
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*dmFlow_, SetVirtualScreenSecurityExemption(_, _, _)).WillByDefault(Return(DMError::DM_OK));
 
-    sptr<OHOS::Surface> consumer = OHOS::Surface::CreateSurfaceAsConsumer();
-    ASSERT_NE(consumer, nullptr);
-    EXPECT_EQ(server_->CreateVirtualScreen(consumer), MSERR_OK);
-    EXPECT_TRUE(server_->isConsumerStart_);
-}
-
-// ---- DestroyVirtualScreen success: isConsumerStart_ true -> StopMirror+Destroy ----
-HWTEST_F(ScreenCaptureServerDisplayDmTest, DestroyVirtualScreen_Success, TestSize.Level2)
-{
-    ON_CALL(*smFlow_, StopMirror(_)).WillByDefault(Return(DMError::DM_OK));
-    ON_CALL(*smFlow_, DestroyVirtualScreen(_, _)).WillByDefault(Return(DMError::DM_OK));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
-    server_->isConsumerStart_ = true;
-    server_->DestroyVirtualScreen();
-    EXPECT_EQ(server_->virtualScreenId_, SCREEN_ID_INVALID);
-    EXPECT_FALSE(server_->isConsumerStart_);
+    server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    server_->consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(server_->consumer_, nullptr);
+    EXPECT_EQ(server_->CreateVirtualScreen(), MSERR_OK);
 }
 
 // ===================== error paths within display functions =====================
@@ -400,7 +390,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_DefaultDispl
 {
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(sptr<Rosen::Display>(nullptr)));
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->captureState_ = AVScreenCaptureState::CREATED;
     std::vector<ScreenId> mirrorIds = {TEST_VIRTUAL_SCREEN_ID};
     EXPECT_EQ(server_->SetupVirtualScreenMirror(mirrorIds), MSERR_UNKNOWN);
@@ -413,7 +403,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_MakeMirrorFa
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_ERROR_INVALID_MODE_ID));
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->captureState_ = AVScreenCaptureState::CREATED;
     std::vector<ScreenId> mirrorIds = {TEST_VIRTUAL_SCREEN_ID};
     EXPECT_EQ(server_->SetupVirtualScreenMirror(mirrorIds), MSERR_UNKNOWN);
@@ -426,7 +416,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScr
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     ON_CALL(*dmFlow_, GetAllDisplayIds(_)).WillByDefault(Return(std::vector<Rosen::DisplayId>{}));
     server_->captureConfig_.captureMode = CAPTURE_SPECIFIED_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_SCREEN_ID};
     server_->captureState_ = AVScreenCaptureState::CREATED;
     std::vector<ScreenId> mirrorIds = {TEST_VIRTUAL_SCREEN_ID};
@@ -437,7 +427,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScr
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_DisplayNull, TestSize.Level2)
 {
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(sptr<Rosen::Display>(nullptr)));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_INVALID_VAL);
 }
@@ -448,36 +438,24 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_ConvertFail
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(mainDisplay));
     ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(_, _)).WillByDefault(Return(false));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);
 }
 
-// MakeVirtualScreenExtended: SetMultiScreenMode fails -> MSERR_UNSUPPORT (L2736)
+// MakeVirtualScreenExtended: SetMultiScreenMode fails -> MSERR_UNSUPPORT
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetMultiScreenModeFail, TestSize.Level2)
 {
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(mainDisplay));
     ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(_, _)).WillByDefault(Return(true));
     ON_CALL(*smFlow_, SetMultiScreenMode(_, _, _)).WillByDefault(Return(DMError::DM_ERROR_INVALID_MODE_ID));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNSUPPORT);
 }
 
-// MakeVirtualScreenExtended: SetMultiScreenMode fails with other DM error -> MSERR_UNKNOWN
-HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetMultiScreenModeOtherFail, TestSize.Level2)
-{
-    auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
-    ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(mainDisplay));
-    ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(_, _)).WillByDefault(Return(true));
-    ON_CALL(*smFlow_, SetMultiScreenMode(_, _, _)).WillByDefault(Return(DMError::DM_ERROR_UNKNOWN));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
-    server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
-    EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);
-}
-
-// MakeVirtualScreenExtended: SetMultiScreenRelativePosition fails -> MSERR_UNKNOWN (L2744)
+// MakeVirtualScreenExtended: SetMultiScreenRelativePosition fails -> MSERR_UNKNOWN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetRelativePositionFail, TestSize.Level2)
 {
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -485,7 +463,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetRelative
     ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(_, _)).WillByDefault(Return(true));
     ON_CALL(*smFlow_, SetMultiScreenMode(_, _, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetMultiScreenRelativePosition(_, _)).WillByDefault(Return(DMError::DM_ERROR_INVALID_MODE_ID));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);
 }
@@ -493,7 +471,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetRelative
 // MakeVirtualScreenExtended: displayIds_ empty -> MSERR_INVALID_VAL (L2727)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_DisplayIdsEmpty, TestSize.Level2)
 {
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_.clear();
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_INVALID_VAL);
 }
@@ -506,7 +484,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_Success_I
     auto mock = std::make_shared<MockRecorderService>();
     SetupRecorderDefaultsDm(*mock);
     server_->recorder_ = mock;
-    server_->outputFd_.Reset(1);
+    server_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     server_->fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     server_->isMicrophoneSwitchTurnOn_ = false;
     server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
@@ -520,7 +498,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_Success_I
     server_->showCursor_ = true;
     SetupCreateVirtualScreenFlow(*smFlow_, *dmFlow_);
     EXPECT_EQ(server_->StartScreenCaptureFile(), MSERR_OK);
-    EXPECT_TRUE(server_->isConsumerStart_);
     server_->recorder_ = nullptr;
 }
 
@@ -532,7 +509,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_InitRecor
     EXPECT_CALL(*mock, GetSurface(_)).WillOnce(Return(nullptr));
     EXPECT_CALL(*mock, Release()).WillOnce(Return(MSERR_OK));
     server_->recorder_ = mock;
-    server_->outputFd_.Reset(1);
+    server_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     server_->fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     server_->captureConfig_.audioInfo.innerCapInfo.state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
@@ -550,7 +527,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_RecorderS
     ON_CALL(*mock, Start()).WillByDefault(Return(MSERR_UNKNOWN));
     EXPECT_CALL(*mock, Release()).WillOnce(Return(MSERR_OK));
     server_->recorder_ = mock;
-    server_->outputFd_.Reset(1);
+    server_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     server_->fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     server_->isMicrophoneSwitchTurnOn_ = false;
     server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
@@ -568,7 +545,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_CreateVir
     SetupRecorderDefaultsDm(*mock);
     EXPECT_CALL(*mock, Release()).WillOnce(Return(MSERR_OK));
     server_->recorder_ = mock;
-    server_->outputFd_.Reset(1);
+    server_->outputFd_.Reset(ScreenCaptureTestParam::MakeTestOutputFd());
     server_->fileFormat_ = OutputFormatType::FORMAT_DEFAULT;
     server_->isMicrophoneSwitchTurnOn_ = false;
     server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
@@ -635,8 +612,8 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CreateVirtualScreen_DisplayNull_
     server_->captureConfig_.videoInfo.videoCapInfo.videoFrameWidth = TEST_DISPLAY_WIDTH;
     server_->captureConfig_.videoInfo.videoCapInfo.videoFrameHeight = TEST_DISPLAY_HEIGHT;
     server_->showCursor_ = true;
-    sptr<OHOS::Surface> consumer = OHOS::Surface::CreateSurfaceAsConsumer();
-    EXPECT_EQ(server_->CreateVirtualScreen(consumer), MSERR_UNKNOWN_MAKE_MIRROR);
+    server_->consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    EXPECT_EQ(server_->CreateVirtualScreen(), MSERR_UNKNOWN_MAKE_MIRROR);
 }
 
 // canvasRotation_ true -> SetCanvasRotationInner invoked inside PrepareVirtualScreenMirror
@@ -651,7 +628,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PrepareVirtualScreenMirror_Canva
     ON_CALL(*smFlow_, SetVirtualMirrorScreenCanvasRotation(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*dmFlow_, SetVirtualScreenSecurityExemption(_, _, _)).WillByDefault(Return(DMError::DM_OK));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->canvasRotation_ = true;
     server_->captureState_ = AVScreenCaptureState::CREATED;
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
@@ -665,7 +642,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PrepareVirtualScreenMirror_GetSc
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     ON_CALL(*smFlow_, GetScreenById(_)).WillByDefault(Return(sptr<Rosen::Screen>(nullptr)));
     ON_CALL(*smFlow_, DestroyVirtualScreen(_, _)).WillByDefault(Return(DMError::DM_OK));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->canvasRotation_ = false;
     EXPECT_EQ(server_->PrepareVirtualScreenMirror(), MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN);
 }
@@ -682,7 +659,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PrepareVirtualScreenMirror_MakeV
     ON_CALL(*smFlow_, DestroyVirtualScreen(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*dmFlow_, SetVirtualScreenSecurityExemption(_, _, _)).WillByDefault(Return(DMError::DM_OK));
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->isRegionCapture_.store(false);
     server_->canvasRotation_ = false;
     EXPECT_EQ(server_->PrepareVirtualScreenMirror(), MSERR_UNKNOWN_MAKE_MIRROR);
@@ -697,7 +674,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetupVirtualScreenMirror_Specifi
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_OK));
     server_->captureConfig_.captureMode = CAPTURE_SPECIFIED_WINDOW;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_SCREEN_ID};
     server_->captureState_ = AVScreenCaptureState::CREATED;
     std::vector<ScreenId> mirrorIds = {TEST_VIRTUAL_SCREEN_ID};
@@ -733,7 +710,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_MakeVirtualScreenMirror_RegionCa
 {
     ON_CALL(*smFlow_, MakeMirrorWithRegion(_, _, _, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*dmFlow_, GetScreenAreaOfDisplayArea(_, _, _, _)).WillByDefault(Return(DMError::DM_OK));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->isRegionCapture_.store(true);
     server_->regionDisplayId_ = TEST_SCREEN_ID;
     server_->regionArea_ = {0, 0, 100, 100};
@@ -746,7 +723,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureAreaInner_Success, Tes
 {
     ON_CALL(*dmFlow_, GetScreenAreaOfDisplayArea(_, _, _, _)).WillByDefault(Return(DMError::DM_OK));
     EXPECT_CALL(*smFlow_, MakeMirrorWithRegion(_, _, _, _)).WillOnce(Return(DMError::DM_OK));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     OHOS::Rect area = {0, 0, 100, 100};
     EXPECT_EQ(server_->SetCaptureAreaInner(TEST_SCREEN_ID, area), MSERR_OK);
     ASSERT_FALSE(server_->sourceDisplayIds_.empty());
@@ -756,7 +733,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureAreaInner_Success, Tes
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureAreaInner_GetScreenAreaFail, TestSize.Level2)
 {
     ON_CALL(*dmFlow_, GetScreenAreaOfDisplayArea(_, _, _, _)).WillByDefault(Return(DMError::DM_ERROR_UNKNOWN));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     OHOS::Rect area = {0, 0, 100, 100};
     EXPECT_EQ(server_->SetCaptureAreaInner(TEST_SCREEN_ID, area), MSERR_INVALID_OPERATION);
 }
@@ -765,7 +742,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureAreaInner_MakeMirrorRe
 {
     ON_CALL(*dmFlow_, GetScreenAreaOfDisplayArea(_, _, _, _)).WillByDefault(Return(DMError::DM_OK));
     EXPECT_CALL(*smFlow_, MakeMirrorWithRegion(_, _, _, _)).WillOnce(Return(DMError::DM_ERROR_INVALID_MODE_ID));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     OHOS::Rect area = {0, 0, 100, 100};
     EXPECT_EQ(server_->SetCaptureAreaInner(TEST_SCREEN_ID, area), MSERR_UNKNOWN);
 }
@@ -791,7 +768,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureArea_Running_Success, 
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(display));
     ON_CALL(*dmFlow_, GetScreenAreaOfDisplayArea(_, _, _, _)).WillByDefault(Return(DMError::DM_OK));
     EXPECT_CALL(*smFlow_, MakeMirrorWithRegion(_, _, _, _)).WillOnce(Return(DMError::DM_OK));
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->captureState_ = AVScreenCaptureState::STARTED;
     OHOS::Rect area = {0, 0, 100, 100};
     EXPECT_EQ(server_->SetCaptureArea(TEST_SCREEN_ID, area), MSERR_OK);
@@ -873,7 +850,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResizeCanvas_Success, TestSize.L
 {
     EXPECT_CALL(*smFlow_, ResizeVirtualScreen(_, _, _, _, _)).WillOnce(Return(DMError::DM_OK));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     EXPECT_EQ(server_->ResizeCanvas(100, 100), MSERR_OK);
 }
@@ -888,7 +865,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResizeCanvas_ResizeFail, TestSiz
 {
     EXPECT_CALL(*smFlow_, ResizeVirtualScreen(_, _, _, _, _)).WillOnce(Return(DMError::DM_ERROR_UNKNOWN));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     EXPECT_EQ(server_->ResizeCanvas(100, 100), MSERR_INVALID_OPERATION);
 }
@@ -900,7 +877,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_UpdateSurface_Success, TestSize.
     EXPECT_CALL(*smFlow_, SetVirtualScreenSurface(_, _)).WillOnce(Return(DMError::DM_OK));
     server_->isSurfaceMode_ = true;
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     sptr<OHOS::Surface> surface = OHOS::Surface::CreateSurfaceAsConsumer();
     EXPECT_EQ(server_->UpdateSurface(surface), MSERR_OK);
     EXPECT_EQ(server_->surface_, surface);
@@ -919,7 +896,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_UpdateSurface_SetSurfaceFail, Te
     EXPECT_CALL(*smFlow_, SetVirtualScreenSurface(_, _)).WillOnce(Return(DMError::DM_ERROR_UNKNOWN));
     server_->isSurfaceMode_ = true;
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     sptr<OHOS::Surface> surface = OHOS::Surface::CreateSurfaceAsConsumer();
     EXPECT_EQ(server_->UpdateSurface(surface), MSERR_UNSUPPORT);
 }
@@ -930,7 +907,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetMaxVideoFrameRate_Success, Te
 {
     EXPECT_CALL(*smFlow_, SetVirtualScreenMaxRefreshRate(_, _, _)).WillOnce(Return(DMError::DM_OK));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     EXPECT_EQ(server_->SetMaxVideoFrameRate(30), MSERR_OK);
 }
 
@@ -944,7 +921,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetMaxVideoFrameRate_SetFail, Te
 {
     EXPECT_CALL(*smFlow_, SetVirtualScreenMaxRefreshRate(_, _, _)).WillOnce(Return(DMError::DM_ERROR_UNKNOWN));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     EXPECT_EQ(server_->SetMaxVideoFrameRate(30), MSERR_INVALID_OPERATION);
 }
 
@@ -962,7 +939,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SkipPrivacyMode_Active_Success, 
 {
     EXPECT_CALL(*dmFlow_, SetVirtualScreenSecurityExemption(_, _, _)).WillOnce(Return(DMError::DM_OK));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     std::vector<uint64_t> windows = {1};
     EXPECT_EQ(server_->SkipPrivacyMode(windows), MSERR_OK);
 }
@@ -971,7 +948,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SkipPrivacyMode_Active_Fail, Tes
 {
     EXPECT_CALL(*dmFlow_, SetVirtualScreenSecurityExemption(_, _, _)).WillOnce(Return(DMError::DM_ERROR_UNKNOWN));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     std::vector<uint64_t> windows = {1};
     EXPECT_EQ(server_->SkipPrivacyMode(windows), MSERR_UNKNOWN);
 }
@@ -989,7 +966,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCanvasRotation_Active_Success
 {
     EXPECT_CALL(*smFlow_, SetVirtualMirrorScreenCanvasRotation(_, _)).WillOnce(Return(DMError::DM_OK));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     EXPECT_EQ(server_->SetCanvasRotation(true), MSERR_OK);
 }
 
@@ -997,7 +974,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCanvasRotation_Active_Fail, T
 {
     EXPECT_CALL(*smFlow_, SetVirtualMirrorScreenCanvasRotation(_, _)).WillOnce(Return(DMError::DM_ERROR_UNKNOWN));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     EXPECT_EQ(server_->SetCanvasRotation(true), MSERR_INVALID_OPERATION);
 }
 
@@ -1006,7 +983,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCanvasRotation_Active_Unsuppo
     EXPECT_CALL(*smFlow_, SetVirtualMirrorScreenCanvasRotation(_, _))
         .WillOnce(Return(DMError::DM_ERROR_DEVICE_NOT_SUPPORT));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->appVersion_ = 25;
     EXPECT_EQ(server_->SetCanvasRotation(true), MSERR_UNSUPPORT);
     server_->appVersion_ = -1;
@@ -1018,7 +995,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_AddWhiteListWindows_Success, Tes
 {
     EXPECT_CALL(*smFlow_, AddVirtualScreenWhiteList(_, _)).WillOnce(Return(DMError::DM_OK));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     std::vector<uint64_t> windows = {1, 2};
     EXPECT_EQ(server_->AddWhiteListWindows(windows), MSERR_OK);
 }
@@ -1027,7 +1004,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_AddWhiteListWindows_Fail, TestSi
 {
     EXPECT_CALL(*smFlow_, AddVirtualScreenWhiteList(_, _)).WillOnce(Return(DMError::DM_ERROR_UNKNOWN));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     std::vector<uint64_t> windows = {1};
     EXPECT_EQ(server_->AddWhiteListWindows(windows), MSERR_UNKNOWN);
 }
@@ -1036,7 +1013,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_RemoveWhiteListWindows_Success, 
 {
     EXPECT_CALL(*smFlow_, RemoveVirtualScreenWhiteList(_, _)).WillOnce(Return(DMError::DM_OK));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     std::vector<uint64_t> windows = {1, 2};
     EXPECT_EQ(server_->RemoveWhiteListWindows(windows), MSERR_OK);
 }
@@ -1045,7 +1022,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_RemoveWhiteListWindows_Fail, Tes
 {
     EXPECT_CALL(*smFlow_, RemoveVirtualScreenWhiteList(_, _)).WillOnce(Return(DMError::DM_ERROR_UNKNOWN));
     server_->captureState_ = AVScreenCaptureState::STARTED;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
+    server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     std::vector<uint64_t> windows = {1};
     EXPECT_EQ(server_->RemoveWhiteListWindows(windows), MSERR_UNKNOWN);
 }
@@ -1075,67 +1052,74 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_ExtendedScree
     ON_CALL(*smFlow_, SetVirtualScreenMaxRefreshRate(_, _, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*dmFlow_, SetVirtualScreenSecurityExemption(_, _, _)).WillByDefault(Return(DMError::DM_OK));
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
-    EXPECT_EQ(server_->ResumeVideoCapture(), MSERR_OK);
+    EXPECT_EQ(server_->CreateVirtualScreen(), MSERR_OK);
     server_->surface_ = nullptr;
 }
 
-// Extended screen + surface null -> MSERR_INVALID_OPERATION
+// surface null -> CreateVirtualScreen returns MSERR_UNKNOWN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_ExtendedScreen_SurfaceNull, TestSize.Level2)
 {
     server_->captureConfig_.captureMode = CAPTURE_VIRTUAL_EXTENDED_SCREEN;
     server_->isSurfaceMode_ = false;
     server_->producerSurface_ = nullptr;
-    EXPECT_EQ(server_->ResumeVideoCapture(), MSERR_INVALID_OPERATION);
+    EXPECT_EQ(server_->CreateVirtualScreen(), MSERR_UNKNOWN);
 }
 
-// Mirror screen + valid virtualScreenId_ + MakeVirtualScreenMirror success
+// Mirror screen + surface set + CreateVirtualScreen success
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_Mirror_Success, TestSize.Level2)
 {
+    server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
+    server_->isSurfaceMode_ = true;
+    server_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
+    ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(mainDisplay));
+    ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(_, _)).WillByDefault(Return(true));
+    ON_CALL(*smFlow_, SetMultiScreenMode(_, _, _)).WillByDefault(Return(DMError::DM_OK));
+    ON_CALL(*smFlow_, SetMultiScreenRelativePosition(_, _)).WillByDefault(Return(DMError::DM_OK));
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
-    ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_OK));
-    server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
-    server_->isRegionCapture_.store(false);
-    EXPECT_EQ(server_->ResumeVideoCapture(), MSERR_OK);
-    EXPECT_TRUE(server_->isConsumerStart_);
+    auto screen = MakeMockScreen(TEST_VIRTUAL_SCREEN_ID);
+    ON_CALL(*smFlow_, CreateVirtualScreen(_)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
+    ON_CALL(*smFlow_, SetVirtualScreenAutoRotation(_, _)).WillByDefault(Return(DMError::DM_OK));
+    ON_CALL(*smFlow_, SetScreenSkipProtectedWindow(_, _)).WillByDefault(Return(DMError::DM_OK));
+    ON_CALL(*smFlow_, SetScreenPrivacyWindowTagSwitch(_, _, _)).WillByDefault(Return(DMError::DM_OK));
+    ON_CALL(*smFlow_, GetScreenById(_)).WillByDefault(Return(screen));
+    ON_CALL(*smFlow_, SetVirtualMirrorScreenScaleMode(_, _)).WillByDefault(Return(DMError::DM_OK));
+    ON_CALL(*smFlow_, SetVirtualScreenMaxRefreshRate(_, _, _)).WillByDefault(Return(DMError::DM_OK));
+    ON_CALL(*dmFlow_, SetVirtualScreenSecurityExemption(_, _, _)).WillByDefault(Return(DMError::DM_OK));
+    server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
+    EXPECT_EQ(server_->CreateVirtualScreen(), MSERR_OK);
+    server_->surface_ = nullptr;
 }
 
-// Mirror screen + valid virtualScreenId_ but GetDefaultDisplaySync null -> MakeVirtualScreenMirror
-// (SetupVirtualScreenMirror) fails -> MSERR_UNKNOWN_MAKE_MIRROR
+// Mirror screen + surface null -> MSERR_INVALID_OPERATION
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_Mirror_Fail, TestSize.Level2)
 {
-    ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(sptr<Rosen::Display>(nullptr)));
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
-    server_->isRegionCapture_.store(false);
-    EXPECT_EQ(server_->ResumeVideoCapture(), MSERR_UNKNOWN_MAKE_MIRROR);
+    server_->isSurfaceMode_ = false;
+    server_->producerSurface_ = nullptr;
+    EXPECT_EQ(server_->CreateVirtualScreen(), MSERR_UNKNOWN);
 }
 
-// ===================== PauseVideoCapture (L4063-4080) =====================
+// ===================== PauseVirtualScreen =====================
 
-// Extended screen -> DestroyVirtualScreen path
-HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PauseVideoCapture_ExtendedScreen, TestSize.Level2)
+// Pause always destroys virtual screen
+#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+// OnReceiveUserPrivacyAuthority CAP_RUNNING allow — CAPTURE_SPECIFIED_WINDOW with missionInfos
+HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunning_SpecifiedWindow, TestSize.Level2)
 {
-    EXPECT_CALL(*smFlow_, DestroyVirtualScreen(_, _)).WillOnce(Return(DMError::DM_OK));
-    server_->captureConfig_.captureMode = CAPTURE_VIRTUAL_EXTENDED_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
-    server_->isConsumerStart_ = true;
-    EXPECT_EQ(server_->PauseVideoCapture(), MSERR_OK);
-    EXPECT_FALSE(server_->isConsumerStart_);
-    EXPECT_EQ(server_->virtualScreenId_, SCREEN_ID_INVALID);
+    SetupCreateVirtualScreenFlow(*smFlow_, *dmFlow_);
+    auto ssmMock = InjectMockSceneSessionManagerLite();
+    server_->isSurfaceMode_ = true;
+    server_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    server_->displayIds_ = {TEST_SCREEN_ID};
+    server_->captureState_ = AVScreenCaptureState::STARTED;
+    server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    server_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
+    server_->missionInfos_ = {{100, true}};
+    ASSERT_EQ(server_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
 }
-
-// Normal + isConsumerStart_ true -> StopMirror
-HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PauseVideoCapture_Normal_ConsumerStart, TestSize.Level2)
-{
-    EXPECT_CALL(*smFlow_, StopMirror(_)).WillOnce(Return(DMError::DM_OK));
-    server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->virtualScreenId_ = TEST_VIRTUAL_SCREEN_ID;
-    server_->isConsumerStart_ = true;
-    EXPECT_EQ(server_->PauseVideoCapture(), MSERR_OK);
-    EXPECT_FALSE(server_->isConsumerStart_);
-}
+#endif
 
 } // namespace Media
 } // namespace OHOS

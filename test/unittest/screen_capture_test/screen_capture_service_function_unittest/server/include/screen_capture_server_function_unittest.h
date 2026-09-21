@@ -76,6 +76,13 @@ constexpr int32_t TEST_SAMPLE_RATE = 48000;
 constexpr int32_t TEST_CHANNELS = 2;
 constexpr int32_t TEST_FRAME_COUNT = 960;
 constexpr int64_t AUDIO_INTERVAL_NS = TEST_FRAME_COUNT * SEC_TO_NS / TEST_SAMPLE_RATE;
+
+inline std::unique_ptr<VirtualScreen> MakeTestVirtualScreen(Rosen::ScreenId screenId)
+{
+    return std::make_unique<VirtualScreen>(screenId);
+}
+
+int MakeTestOutputFd();
 } // namespace ScreenCaptureTestParam
 
 class ScreenCaptureServerFunctionTest : public testing::Test {
@@ -90,8 +97,7 @@ public:
     int32_t SetValidConfig();
     int32_t SetInvalidConfigFile(RecorderInfo &recorderInfo);
     int32_t SetValidConfigFile(RecorderInfo &recorderInfo);
-    int32_t SetRecorderInfo(std::string name, RecorderInfo &recorderInfo);
-    void OpenFileFd(std::string name);
+    int32_t SetRecorderInfo(RecorderInfo &recorderInfo);
     int32_t InitFileScreenCaptureServer();
     int32_t InitStreamScreenCaptureServer();
     void SetHapPermission();

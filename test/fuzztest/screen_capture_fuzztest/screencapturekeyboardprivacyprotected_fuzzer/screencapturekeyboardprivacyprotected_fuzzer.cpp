@@ -83,10 +83,9 @@ bool ScreenCaptureKeyboardPrivacyProtectedFuzzer::ScreenCaptureKeyboardPrivacyPr
     g_baseFuzzData = data;
     g_baseFuzzSize = size;
     g_baseFuzzPos = 0;
-    uint64_t virtualScreenId = fdp.ConsumeIntegral<uint64_t>();
     bool systemPrivacyProtectionSwitch = fdp.ConsumeBool();
     bool appPrivacyProtectionSwitch = fdp.ConsumeBool();
-    screenCaptureServer_->PrivacyProtected(virtualScreenId, systemPrivacyProtectionSwitch,
+    screenCaptureServer_->PrivacyProtected(systemPrivacyProtectionSwitch,
         appPrivacyProtectionSwitch);
 
     bool retFlags = TestScreenCapture::CreateScreenCapture();

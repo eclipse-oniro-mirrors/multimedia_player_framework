@@ -75,7 +75,7 @@ private:
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyMicOn_Success_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("notify_mic_on_001.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     auto recorder = std::make_shared<StateChangeRecorder>();
@@ -90,7 +90,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyMicOn_Success_001, TestSize.Leve
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyMicOff_Success_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("notify_mic_off_001.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     auto recorder = std::make_shared<StateChangeRecorder>();
@@ -106,7 +106,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyMicOff_Success_001, TestSize.Lev
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicRunning_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("notify_tel_start_running_001.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     auto recorder = std::make_shared<StateChangeRecorder>();
@@ -128,7 +128,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicRunning_001, Tes
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicNotRunning_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("notify_tel_start_not_running_001.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     auto recorder = std::make_shared<StateChangeRecorder>();
@@ -150,7 +150,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicNotRunning_001, 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyTelCallStart_MicSwitchOff_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;
-    SetRecorderInfo("notify_tel_start_switch_off_001.mp4", recorderInfo);
+    SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     auto recorder = std::make_shared<StateChangeRecorder>();

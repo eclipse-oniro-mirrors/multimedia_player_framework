@@ -596,7 +596,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureFile_NotCaptureFile_
  */
 HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_InvalidScreenId_001, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = Rosen::SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
     EXPECT_EQ(screenCaptureServer_->ShowCursorInner(), MSERR_INVALID_VAL);
 }
 
@@ -608,7 +608,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursorInner_InvalidScreenId_001, T
 HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_NotOriginalStream_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->virtualScreenId_ = 0;
+    screenCaptureServer_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(0);
     screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     EXPECT_EQ(screenCaptureServer_->ResizeCanvas(580, 1280), MSERR_INVALID_OPERATION);
 }
@@ -620,7 +620,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_NotOriginalStream_001, Te
  */
 HWTEST_F(ScreenCaptureServerFunctionTest, SkipPrivacyModeInner_InvalidScreenId_001, TestSize.Level2)
 {
-    screenCaptureServer_->virtualScreenId_ = Rosen::SCREEN_ID_INVALID;
+    screenCaptureServer_->virtualScreen_.reset();
     EXPECT_EQ(screenCaptureServer_->SkipPrivacyModeInner(), MSERR_INVALID_VAL);
 }
 

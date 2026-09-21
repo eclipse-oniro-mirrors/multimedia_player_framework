@@ -33,6 +33,16 @@ public:
     {
         return 0;
     }
+    bool AddDeathRecipient(const sptr<DeathRecipient> &recipient) override
+    {
+        (void)recipient;
+        return true;
+    }
+    bool RemoveDeathRecipient(const sptr<DeathRecipient> &recipient) override
+    {
+        (void)recipient;
+        return true;
+    }
 };
 
 } // namespace Media
