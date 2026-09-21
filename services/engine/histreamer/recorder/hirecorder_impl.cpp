@@ -879,7 +879,7 @@ void HiRecorderImpl::CloseFd()
     MEDIA_LOG_I("HiRecorderImpl: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this), fd_);
     FALSE_RETURN(fd_ >= 0);
 
-    (void)::close(fd_);
+    close(fd_);
     fd_ = -1;
 }
 
