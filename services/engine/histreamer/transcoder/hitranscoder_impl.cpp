@@ -27,6 +27,8 @@
 #include "osal/task/pipeline_threadpool.h"
 #include "water_mark_filter.h"
 
+#define FDSAN_TAG_A 1
+
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
 constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
@@ -44,6 +46,7 @@ constexpr int32_t DEFAULT_AUDIO_BITRATE = 48000;
 const uint32_t ROTATE_90_VALUE = 90;
 const uint32_t ROTATE_180_VALUE = 180;
 const uint32_t ROTATE_270_VALUE = 270;
+constexpr uint64_t TRANSCODER_FDSAN_TAG = static_cast<uint64_t>(LOG_DOMAIN_SYSTEM_PLAYER) << 32 | FDSAN_TAG_A;
 }
 
 namespace OHOS {
@@ -161,7 +164,7 @@ HiTransCoderImpl::~HiTransCoderImpl()
         transCoderFilterCallback_->NotifyRelease();
     }
     if (fd_ >= 0) {
-        (void)::close(fd_);
+        (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
         fd_ = -1;
     }
     PipeLineThreadPool::GetInstance().DestroyThread(transCoderId_);
@@ -426,11 +429,12 @@ int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
     FALSE_RETURN_V_MSG_E(fd >= 0, MSERR_INVALID_VAL, "Invalid fd: %{public}d", fd);
 
     if (fd_ >= 0) {
-        (void)::close(fd_);
+        (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
         fd_ = -1;
     }
     fd_ = dup(fd);
     FALSE_RETURN_V_MSG_E(fd_ >= 0, MSERR_INVALID_OPERATION, "dup failed, errno: %{public}d", errno);
+    fdsan_exchange_owner_tag(fd, 0, TRANSCODER_FDSAN_TAG);
     MEDIA_LOG_I("HiTransCoder SetOutputFile dup, fd is %{public}d", fd_);
     return MSERR_OK;
 }
@@ -766,7 +770,7 @@ int32_t HiTransCoderImpl::Cancel()
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(ret)});
     }
     if (fd_ >= 0) {
-        (void)::close(fd_);
+        (void)::(void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);;
         fd_ = -1;
     }
     if (ret != MSERR_OK) {
@@ -1136,7 +1140,7 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
             if (ret != Status::OK) {
                 MEDIA_LOG_E("muxerFilter SetOutputParameter fail");
                 if (fd_ >= 0) {
-                    (void)::close(fd_);
+                    (void)::(void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);;
                     fd_ = -1;
                 }
                 return ret;
@@ -1145,7 +1149,7 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
             muxerFilter_->SetTransCoderMode();
             MEDIA_LOG_I("HiTransCoder CloseFd, fd is %{public}d", fd_);
             if (fd_ >= 0) {
-                (void)::close(fd_);
+                (void)::(void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);;
                 fd_ = -1;
             }
         }
