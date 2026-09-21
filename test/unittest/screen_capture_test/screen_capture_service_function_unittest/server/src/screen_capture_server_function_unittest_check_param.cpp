@@ -71,29 +71,33 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_003, TestSize.Level2)
 
 /**
  * @tc.name: CheckAllParams_Extended_001
- * @tc.desc: EXTENDED mode with empty displayIds_ should fail
+ * @tc.desc: EXTENDED mode with empty displayIds_ passes CheckAllParams (displayIds_ validated later in
+ * MakeVirtualScreenExtended)
  * @tc.type: FUNC
  */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_001, TestSize.Level2)
 {
     SetValidConfig();
+    screenCaptureServer_->captureConfig_ = config_;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
     screenCaptureServer_->displayIds_.clear();
-    ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
 /**
  * @tc.name: CheckAllParams_Extended_002
- * @tc.desc: EXTENDED mode with invalid displayId should fail
+ * @tc.desc: EXTENDED mode with invalid displayId passes CheckAllParams (displayId validated later in
+ * MakeVirtualScreenExtended)
  * @tc.type: FUNC
  */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_002, TestSize.Level2)
 {
     SetValidConfig();
+    screenCaptureServer_->captureConfig_ = config_;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
     screenCaptureServer_->displayIds_.clear();
     screenCaptureServer_->displayIds_.push_back(99999);
-    ASSERT_NE(screenCaptureServer_->CheckAllParams(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
 /**
@@ -106,7 +110,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioCapParam_002, TestSize.Level
     AudioCaptureInfo micCapInfo = {.audioSampleRate = 16000,
         .audioChannels = 2,
         .audioSource = static_cast<AudioCaptureSourceType>(AudioCaptureSourceType::APP_PLAYBACK + 1)};
-    ASSERT_NE(screenCaptureServer_->CheckAudioCapParam(micCapInfo), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->CheckAudioCapParam(micCapInfo), MSERR_INVALID_VAL);
 }
 
 /**
@@ -118,7 +122,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoEncParam_006, TestSize.Level
 {
     SetValidConfig();
     config_.videoInfo.videoEncInfo.videoCodec = static_cast<VideoCodecFormat>(VideoCodecFormat::VIDEO_DEFAULT - 1);
-    ASSERT_NE(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->CheckVideoEncParam(config_.videoInfo.videoEncInfo), MSERR_INVALID_VID_CODEC_FORMAT);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioCapInfo_001, TestSize.Level2)
@@ -126,7 +130,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAudioCapInfo_001, TestSize.Level2
     SetValidConfig();
     config_.audioInfo.micCapInfo.audioChannels = 0;
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
-    ASSERT_NE(screenCaptureServer_->CheckAudioCapInfo(config_.audioInfo.micCapInfo), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->CheckAudioCapInfo(config_.audioInfo.micCapInfo), MSERR_UNSUPPORT_AUD_CHANNEL_NUM);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoCapInfo_001, TestSize.Level2)
@@ -134,7 +138,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckVideoCapInfo_001, TestSize.Level2
     SetValidConfig();
     config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1080;
-    ASSERT_NE(screenCaptureServer_->CheckVideoCapInfo(config_.videoInfo.videoCapInfo), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->CheckVideoCapInfo(config_.videoInfo.videoCapInfo), MSERR_INVALID_VID_FRAME_WIDTH);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_001, TestSize.Level2)
@@ -145,7 +149,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_001, TestSize
     config_.audioInfo.innerCapInfo.audioChannels = 0;
     config_.audioInfo.innerCapInfo.audioSampleRate = 0;
     screenCaptureServer_->captureConfig_ = config_;
-    ASSERT_NE(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_INVALID_VAL);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_002, TestSize.Level2)
@@ -153,7 +157,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_002, TestSize
     SetValidConfig();
     config_.videoInfo.videoCapInfo.videoFrameWidth = -1;
     screenCaptureServer_->captureConfig_ = config_;
-    ASSERT_NE(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_INVALID_VAL);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckDisplayArea_001, TestSize.Level2)
@@ -262,7 +266,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetRecorderInfo_NotConfigState_001, Te
 HWTEST_F(ScreenCaptureServerFunctionTest, SetOutputFile_NotConfigState_001, TestSize.Level2)
 {
     int32_t fd = open("/data/test/media/sc_setoutputfile_notconfig.mp4", O_RDWR | O_CREAT, 0777);
-    ASSERT_GE(fd, 0);
+    ASSERT_TRUE(fd >= 0);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STOPPED;
     EXPECT_EQ(screenCaptureServer_->SetOutputFile(fd), MSERR_INVALID_OPERATION_CREATE);
     EXPECT_EQ(screenCaptureServer_->outputFd_.Get(), -1);

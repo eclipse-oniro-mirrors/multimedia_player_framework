@@ -379,7 +379,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnAudioRendererStateCha
     screenCaptureServer_->OnAudioRendererStateChanged(changeInfos);
     WaitForTaskComplete();
 
-    ASSERT_EQ(screenCaptureServer_->audioSource_, nullptr);
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::CREATED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnPrivateWindowChange_True_001, TestSize.Level2)

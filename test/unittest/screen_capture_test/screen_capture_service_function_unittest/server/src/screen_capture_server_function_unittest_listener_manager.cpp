@@ -155,7 +155,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_Create_001, TestSize.L
     auto manager = std::make_shared<ScreenCaptureListenerManager>(listener, mockProviders.get());
     ASSERT_NE(manager, nullptr);
 
-    manager->UnregisterListeners();
+    EXPECT_EQ(manager->UnregisterListeners(), MSERR_OK);
     MEDIA_LOGI("ListenerManager_Create_001 end");
 }
 
@@ -189,7 +189,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_RegisterWindowLifecycl
 
     manager->registerParams_.windowIdList = {1, 2};
     int32_t ret = manager->RegisterWindowLifecycleListener();
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
     manager->UnregisterListeners();
     MEDIA_LOGI("ListenerManager_RegisterWindowLifecycleFailed_001 end");
 }
@@ -231,7 +231,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WindowInfoEmptyWindowI
     manager->registerParams_.windowIdList = {};
     manager->registerParams_.appPid = 100;
     int32_t ret = manager->RegisterWindowInfoChangedListener();
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
 
     manager->UnregisterListeners();
     MEDIA_LOGI("ListenerManager_WindowInfoEmptyWindowIdList_001 end");
@@ -264,7 +264,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_NullEventListener_001,
 
     std::vector<int32_t> windowIdList = {1, 2};
     int32_t appPid = 100;
-    ASSERT_NE(manager->RegisterListeners(LF_WIN_LIFECYCLE, {windowIdList, appPid}), MSERR_OK);
+    ASSERT_EQ(manager->RegisterListeners(LF_WIN_LIFECYCLE, {windowIdList, appPid}), MSERR_INVALID_OPERATION);
 
     manager->UnregisterListeners();
     MEDIA_LOGI("ListenerManager_NullEventListener_001 end");
@@ -285,18 +285,18 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_ServerIntegration_001,
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_MultiCapabilityCheck_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_MultiCapabilityCheck_001 start");
-    uint32_t combined1 = LF_WIN_LIFECYCLE | LF_WIN_INFO;
-    ASSERT_EQ((combined1 & LF_WIN_LIFECYCLE) != 0, true);
-    ASSERT_EQ((combined1 & LF_WIN_INFO) != 0, true);
-    ASSERT_EQ((combined1 & LF_PRIVATE_WIN) != 0, false);
+    auto manager = screenCaptureServer_->listenerManager_;
+    ASSERT_NE(manager, nullptr);
 
-    uint32_t combined2 = LF_PRIVATE_WIN | LF_SCREEN_CONN | LF_LANG_SWITCH;
-    ASSERT_EQ((combined2 & LF_PRIVATE_WIN) != 0, true);
-    ASSERT_EQ((combined2 & LF_SCREEN_CONN) != 0, true);
-    ASSERT_EQ((combined2 & LF_LANG_SWITCH) != 0, true);
-    ASSERT_EQ((combined2 & LF_WIN_LIFECYCLE) != 0, false);
-    MEDIA_LOGI("ListenerManager_MultiCapabilityCheck_001 end");
+    ListenerRegisterParams params;
+    params.windowIdList = {1};
+    params.appPid = 100;
+    uint32_t flags = LF_WIN_LIFECYCLE | LF_PRIVATE_WIN | LF_SCREEN_CONN;
+    ASSERT_EQ(manager->RegisterListeners(flags, params), MSERR_OK);
+    ASSERT_EQ((flags & LF_WIN_LIFECYCLE) != 0, true);
+    ASSERT_EQ((flags & LF_PRIVATE_WIN) != 0, true);
+    ASSERT_EQ((flags & LF_LANG_SWITCH) != 0, false);
+    manager->UnregisterListeners(flags);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperLifecycleEvent_001, TestSize.Level2)
@@ -469,6 +469,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_SetWindowId_001, TestS
 
     int32_t testWindowId = 12345;
     wrapper->SetWindowId(testWindowId);
+    EXPECT_EQ(listener->eventCount_, 0);
 
     delete wrapper;
     MEDIA_LOGI("ListenerManager_SetWindowId_001 end");
@@ -568,7 +569,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_RegisterAudioRendererI
     manager->registerParams_.windowIdList = {};
 
     int32_t ret = manager->RegisterAudioRendererEventListener();
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
     MEDIA_LOGI("ListenerManager_RegisterAudioRendererInvalidPid_001 end");
 }
 
@@ -719,7 +720,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperWindowInfoChang
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperScreenConnectOnChange_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperScreenConnectOnChange_001 start");
     auto listener = std::make_shared<MockScreenCaptureEventListener>();
     ASSERT_NE(listener, nullptr);
 
@@ -728,9 +728,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperScreenConnectOn
 
     Rosen::ScreenId screenId = 999;
     wrapper->OnChange(screenId);
+    ASSERT_EQ(listener->eventCount_, 0);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperScreenConnectOnChange_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_LanguageSwitchOnReceiveEvent_001, TestSize.Level2)
@@ -757,99 +757,111 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_LanguageSwitchOnReceiv
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperNullListener_001 start");
-    std::shared_ptr<IScreenCaptureEventListener> nullListener = nullptr;
+    auto listener = std::make_shared<MockScreenCaptureEventListener>();
+    ASSERT_NE(listener, nullptr);
 
-    auto wrapper = new SessionLifecycleListenerWrapper(nullListener);
+    auto wrapper = new SessionLifecycleListenerWrapper(listener);
     ASSERT_NE(wrapper, nullptr);
 
     Rosen::ISessionLifecycleListener::LifecycleEventPayload payload;
     wrapper->OnLifecycleEvent(Rosen::ISessionLifecycleListener::SessionLifecycleEvent::FOREGROUND, payload);
+    ASSERT_EQ(listener->windowLifecycleEvent_, Rosen::ISessionLifecycleListener::SessionLifecycleEvent::FOREGROUND);
+    ASSERT_EQ(listener->eventCount_, 1);
 
     wrapper->OnBatchLifecycleEvent(std::vector<Rosen::ISessionLifecycleListener::LifecycleEventPayload>());
+    ASSERT_EQ(listener->eventCount_, 2);
     wrapper->OnAppInstanceLifecycleEvent(payload);
+    ASSERT_EQ(listener->eventCount_, 3);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperPrivateWindowNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperPrivateWindowNullListener_001 start");
-    std::shared_ptr<IScreenCaptureEventListener> nullListener = nullptr;
+    auto listener = std::make_shared<MockScreenCaptureEventListener>();
+    ASSERT_NE(listener, nullptr);
 
-    auto wrapper = new PrivateWindowListenerWrapper(nullListener);
+    auto wrapper = new PrivateWindowListenerWrapper(listener);
     ASSERT_NE(wrapper, nullptr);
 
     wrapper->OnPrivateWindow(true);
+    ASSERT_EQ(listener->hasPrivateWindow_, true);
+    ASSERT_EQ(listener->eventCount_, 1);
     wrapper->OnPrivateWindow(false);
+    ASSERT_EQ(listener->hasPrivateWindow_, false);
+    ASSERT_EQ(listener->eventCount_, 2);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperPrivateWindowNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperScreenConnectNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperScreenConnectNullListener_001 start");
-    std::shared_ptr<IScreenCaptureEventListener> nullListener = nullptr;
+    auto listener = std::make_shared<MockScreenCaptureEventListener>();
+    ASSERT_NE(listener, nullptr);
 
-    auto wrapper = new ScreenConnectListenerWrapper(nullListener);
+    auto wrapper = new ScreenConnectListenerWrapper(listener);
     ASSERT_NE(wrapper, nullptr);
 
     Rosen::ScreenId testId = 123;
     wrapper->OnConnect(testId);
+    ASSERT_EQ(listener->screenConnectId_, testId);
+    ASSERT_EQ(listener->eventCount_, 1);
     wrapper->OnDisconnect(testId);
+    ASSERT_EQ(listener->screenDisconnectId_, testId);
+    ASSERT_EQ(listener->eventCount_, 2);
     wrapper->OnChange(testId);
+    ASSERT_EQ(listener->eventCount_, 2);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperScreenConnectNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperRecordDisplayNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperRecordDisplayNullListener_001 start");
-    std::shared_ptr<IScreenCaptureEventListener> nullListener = nullptr;
+    auto listener = std::make_shared<MockScreenCaptureEventListener>();
+    ASSERT_NE(listener, nullptr);
 
-    auto wrapper = new RecordDisplayListenerWrapper(nullListener);
+    auto wrapper = new RecordDisplayListenerWrapper(listener);
     ASSERT_NE(wrapper, nullptr);
 
     std::vector<Rosen::DisplayId> displayIds = {1, 2};
     wrapper->OnChange(displayIds);
+    ASSERT_EQ(listener->recordDisplayIds_, displayIds);
+    ASSERT_EQ(listener->eventCount_, 1);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperRecordDisplayNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperLanguageSwitchNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperLanguageSwitchNullListener_001 start");
-    std::shared_ptr<IScreenCaptureEventListener> nullListener = nullptr;
+    auto listener = std::make_shared<MockScreenCaptureEventListener>();
+    ASSERT_NE(listener, nullptr);
 
     EventFwk::MatchingSkills matchingSkills;
     matchingSkills.AddEvent("usual.event.LOCALE_CHANGED");
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
-    auto wrapper = new LanguageSwitchSubscriberWrapper(subscribeInfo, nullListener);
+    auto wrapper = new LanguageSwitchSubscriberWrapper(subscribeInfo, listener);
     ASSERT_NE(wrapper, nullptr);
 
     EventFwk::CommonEventData data;
     wrapper->OnReceiveEvent(data);
+    ASSERT_EQ(listener->languageSwitched_, true);
+    ASSERT_EQ(listener->eventCount_, 1);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperLanguageSwitchNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperAudioRendererNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperAudioRendererNullListener_001 start");
-    std::shared_ptr<IScreenCaptureEventListener> nullListener = nullptr;
+    auto listener = std::make_shared<MockScreenCaptureEventListener>();
+    ASSERT_NE(listener, nullptr);
 
-    auto wrapper = std::make_shared<AudioRendererCallbackWrapper>(nullListener);
+    auto wrapper = std::make_shared<AudioRendererCallbackWrapper>(listener);
     ASSERT_NE(wrapper, nullptr);
 
     std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> changeInfos;
     wrapper->OnRendererStateChange(changeInfos);
-    MEDIA_LOGI("ListenerManager_WrapperAudioRendererNullListener_001 end");
+    ASSERT_EQ(listener->eventCount_, 1);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_RegisterAppLifecycle_001, TestSize.Level2)
@@ -946,10 +958,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WindowInfoNoDisplayId_
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WindowInfoNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WindowInfoNullListener_001 start");
-    std::shared_ptr<IScreenCaptureEventListener> nullListener = nullptr;
+    auto listener = std::make_shared<MockScreenCaptureEventListener>();
+    ASSERT_NE(listener, nullptr);
 
-    auto wrapper = new WindowInfoListenerWrapper(nullListener);
+    auto wrapper = new WindowInfoListenerWrapper(listener);
     ASSERT_NE(wrapper, nullptr);
 
     std::vector<std::unordered_map<Rosen::WindowInfoKey, Rosen::WindowChangeInfoType>> windowInfoList;
@@ -958,9 +970,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WindowInfoNullListener
     windowInfoList.push_back(windowInfo);
 
     wrapper->OnWindowInfoChanged(windowInfoList);
+    ASSERT_EQ(listener->windowInfoDisplayId_, 12345);
+    ASSERT_EQ(listener->eventCount_, 1);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WindowInfoNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_MultiFlagRegistration_001, TestSize.Level2)
@@ -1123,8 +1136,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_OnSceneSessionManagerD
     auto mock = InjectMockSceneSessionManagerLite();
     manager->OnSceneSessionManagerDied();
     EXPECT_NE(manager->lifecycleListenerDeathRecipient_, nullptr);
+    EXPECT_EQ(manager->windowLifecycleListener_, nullptr);
     ClearMockSceneSessionManagerLite();
-    manager->UnregisterListeners();
+    EXPECT_EQ(manager->UnregisterListeners(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_OnSceneSessionManagerDied_AppLifecycle_001, TestSize.Level2)
@@ -1139,8 +1153,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_OnSceneSessionManagerD
     auto mock = InjectMockSceneSessionManagerLite();
     manager->OnSceneSessionManagerDied();
     EXPECT_NE(manager->lifecycleListenerDeathRecipient_, nullptr);
+    EXPECT_EQ(manager->appLifecycleListener_, nullptr);
     ClearMockSceneSessionManagerLite();
-    manager->UnregisterListeners();
+    EXPECT_EQ(manager->UnregisterListeners(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_OnSceneSessionManagerDied_BothListeners_001, TestSize.Level2)
@@ -1156,8 +1171,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_OnSceneSessionManagerD
     auto mock = InjectMockSceneSessionManagerLite();
     manager->OnSceneSessionManagerDied();
     EXPECT_NE(manager->lifecycleListenerDeathRecipient_, nullptr);
+    EXPECT_EQ(manager->windowLifecycleListener_, nullptr);
+    EXPECT_EQ(manager->appLifecycleListener_, nullptr);
     ClearMockSceneSessionManagerLite();
-    manager->UnregisterListeners();
+    EXPECT_EQ(manager->UnregisterListeners(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_UnregisterWindowLifecycleNotRegistered_001, TestSize.Level2)
@@ -1287,6 +1304,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_SetupDeathRecipientLis
 
     manager->SetupSceneSessionManagerDeathRecipient();
     EXPECT_NE(manager->lifecycleListenerDeathRecipient_, nullptr);
+    auto savedRecipient = manager->lifecycleListenerDeathRecipient_;
+    manager->SetupSceneSessionManagerDeathRecipient();
+    EXPECT_EQ(manager->lifecycleListenerDeathRecipient_, savedRecipient);
 
     ClearMockSceneSessionManagerLite();
     manager->lifecycleListenerDeathRecipient_ = nullptr;
@@ -1546,7 +1566,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_RegisterWindowLifecycl
     auto mock = InjectMockSceneSessionManagerLite();
     EXPECT_CALL(*mock, RegisterSessionLifecycleListenerByIds(_, _)).WillOnce(Return(Rosen::WMError::WM_ERROR_NULLPTR));
 
-    EXPECT_NE(manager->RegisterWindowLifecycleListener(), MSERR_OK);
+    EXPECT_EQ(manager->RegisterWindowLifecycleListener(), MSERR_INVALID_OPERATION);
 
     ClearMockSceneSessionManagerLite();
     manager->windowLifecycleListener_ = nullptr;
@@ -1579,7 +1599,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_UnregisterWindowLifecy
     auto mock = InjectMockSceneSessionManagerLite();
     EXPECT_CALL(*mock, UnregisterSessionLifecycleListener(_)).WillOnce(Return(Rosen::WMError::WM_ERROR_NULLPTR));
 
-    EXPECT_NE(manager->UnregisterWindowLifecycleListener(), MSERR_OK);
+    EXPECT_EQ(manager->UnregisterWindowLifecycleListener(), MSERR_INVALID_OPERATION);
 
     ClearMockSceneSessionManagerLite();
     manager->windowLifecycleListener_ = nullptr;
@@ -1595,6 +1615,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_SetupDeathRecipientSuc
 
     manager->SetupSceneSessionManagerDeathRecipient();
     EXPECT_NE(manager->lifecycleListenerDeathRecipient_, nullptr);
+    auto savedRecipient = manager->lifecycleListenerDeathRecipient_;
+    manager->SetupSceneSessionManagerDeathRecipient();
+    EXPECT_EQ(manager->lifecycleListenerDeathRecipient_, savedRecipient);
 
     ClearMockSceneSessionManagerLite();
     manager->lifecycleListenerDeathRecipient_ = nullptr;
@@ -1634,7 +1657,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_RegisterAppLifecycleFa
     EXPECT_CALL(*mock, RegisterSessionLifecycleListenerByAppInstance(_, _, _, _))
         .WillOnce(Return(Rosen::WMError::WM_ERROR_NULLPTR));
 
-    EXPECT_NE(manager->RegisterAppLifecycleListener(), MSERR_OK);
+    EXPECT_EQ(manager->RegisterAppLifecycleListener(), MSERR_INVALID_OPERATION);
 
     ClearMockSceneSessionManagerLite();
     manager->appLifecycleListener_ = nullptr;
@@ -1667,7 +1690,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_UnregisterAppLifecycle
     auto mock = InjectMockSceneSessionManagerLite();
     EXPECT_CALL(*mock, UnregisterSessionLifecycleListener(_)).WillOnce(Return(Rosen::WMError::WM_ERROR_NULLPTR));
 
-    EXPECT_NE(manager->UnregisterAppLifecycleListener(), MSERR_OK);
+    EXPECT_EQ(manager->UnregisterAppLifecycleListener(), MSERR_INVALID_OPERATION);
 
     ClearMockSceneSessionManagerLite();
     manager->appLifecycleListener_ = nullptr;
@@ -1719,7 +1742,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_RegisterScreenConnectF
 
     MockScreenManagerActions mock;
     EXPECT_CALL(mock, RegisterScreenListener(_)).WillOnce(Return(DMError::DM_ERROR_NULLPTR));
-    EXPECT_NE(manager->RegisterScreenConnectListener(), MSERR_OK);
+    EXPECT_EQ(manager->RegisterScreenConnectListener(), MSERR_INVALID_OPERATION);
     manager->screenConnectListener_ = nullptr;
 }
 
@@ -1743,7 +1766,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_UnregisterScreenConnec
 
     MockScreenManagerActions mock;
     EXPECT_CALL(mock, UnregisterScreenListener(_)).WillOnce(Return(DMError::DM_ERROR_NULLPTR));
-    EXPECT_NE(manager->UnregisterScreenConnectListener(), MSERR_OK);
+    EXPECT_EQ(manager->UnregisterScreenConnectListener(), MSERR_INVALID_OPERATION);
     manager->screenConnectListener_ = nullptr;
 }
 
@@ -1768,7 +1791,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_RegisterPrivateWindowF
 
     MockDisplayManagerActions mock;
     EXPECT_CALL(mock, RegisterPrivateWindowListener(_)).WillOnce(Return(DMError::DM_ERROR_NULLPTR));
-    EXPECT_NE(manager->RegisterPrivateWindowListener(), MSERR_OK);
+    EXPECT_EQ(manager->RegisterPrivateWindowListener(), MSERR_INVALID_OPERATION);
     manager->privateWindowListener_ = nullptr;
 }
 
@@ -1792,7 +1815,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_UnregisterPrivateWindo
 
     MockDisplayManagerActions mock;
     EXPECT_CALL(mock, UnregisterPrivateWindowListener(_)).WillOnce(Return(DMError::DM_ERROR_NULLPTR));
-    EXPECT_NE(manager->UnregisterPrivateWindowListener(), MSERR_OK);
+    EXPECT_EQ(manager->UnregisterPrivateWindowListener(), MSERR_INVALID_OPERATION);
     manager->privateWindowListener_ = nullptr;
 }
 

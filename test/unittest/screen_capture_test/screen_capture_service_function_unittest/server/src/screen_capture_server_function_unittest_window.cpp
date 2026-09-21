@@ -27,7 +27,7 @@ namespace OHOS {
 namespace Media {
 HWTEST_F(ScreenCaptureServerFunctionTest, StartPrivacyWindow_001, TestSize.Level2)
 {
-    ASSERT_NE(screenCaptureServer_->StartPrivacyWindow(""), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartPrivacyWindow(""), MSERR_UNKNOWN);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_001, TestSize.Level2)
@@ -42,7 +42,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_001, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     std::string choice = "{\"choice\": \"false\", \"displayId\": -1, \"missionId\": -1}";
-    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_UNKNOWN);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_002, TestSize.Level2)
@@ -87,7 +87,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_004, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     std::string choice = "{\"choice\": \"12345\", \"displayId\": -1, \"missionId\": -1}";
-    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_UNKNOWN);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_005, TestSize.Level2)
@@ -166,7 +166,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_009, T
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    ASSERT_NE(screenCaptureServer_->ReportAVScreenCaptureUserChoice(""), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(""), MSERR_UNKNOWN);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_010, TestSize.Level2)
@@ -486,7 +486,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_001, TestS
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     bool isSkip = false;
-    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_UNKNOWN);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_002, TestSize.Level2)
@@ -503,7 +503,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_003, TestS
     screenCaptureServer_->appInfo_.appUid = ScreenCaptureServer::ROOT_UID + 1;
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
     bool isSkip = false;
-    ASSERT_NE(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->RequestUserPrivacyAuthority(isSkip), MSERR_UNKNOWN);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestSize.Level2)
