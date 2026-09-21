@@ -71,7 +71,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureMode_003, TestSize.Level2)
 
 /**
  * @tc.name: CheckAllParams_Extended_001
- * @tc.desc: EXTENDED mode with empty displayIds_ passes CheckAllParams (displayIds_ validated later in MakeVirtualScreenExtended)
+ * @tc.desc: EXTENDED mode with empty displayIds_ passes CheckAllParams (displayIds_ validated later in
+ * MakeVirtualScreenExtended)
  * @tc.type: FUNC
  */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_001, TestSize.Level2)
@@ -85,7 +86,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_001, TestSize.
 
 /**
  * @tc.name: CheckAllParams_Extended_002
- * @tc.desc: EXTENDED mode with invalid displayId passes CheckAllParams (displayId validated later in MakeVirtualScreenExtended)
+ * @tc.desc: EXTENDED mode with invalid displayId passes CheckAllParams (displayId validated later in
+ * MakeVirtualScreenExtended)
  * @tc.type: FUNC
  */
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_002, TestSize.Level2)

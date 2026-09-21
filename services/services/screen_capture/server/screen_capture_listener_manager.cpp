@@ -656,17 +656,15 @@ void AudioRendererCallbackWrapper::OnRendererStateChange(
 
 int32_t ScreenCaptureListenerManager::RegisterAppLifecycleListener()
 {
-    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(registerParams_.appUserId)
-        .GetSceneSessionManagerLiteProxy();
-    CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
-        "sceneSessionManager is nullptr, RegisterAppLifecycleListener failed.");
-
-    SetupSceneSessionManagerDeathRecipient();
-
     if (appLifecycleListener_ != nullptr) {
         MEDIA_LOGI("appLifecycleListener already registered");
         return MSERR_OK;
     }
+
+    auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(registerParams_.appUserId)
+        .GetSceneSessionManagerLiteProxy();
+    CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION, "sceneSessionManager is nullptr");
+    SetupSceneSessionManagerDeathRecipient();
 
     appLifecycleListener_ = sptr<SessionLifecycleListenerWrapper>::MakeSptr(eventListener_);
     CHECK_AND_RETURN_RET_LOG(appLifecycleListener_ != nullptr, MSERR_INVALID_OPERATION,

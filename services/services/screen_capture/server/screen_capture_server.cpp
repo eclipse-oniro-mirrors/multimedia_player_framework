@@ -3561,18 +3561,18 @@ int32_t ScreenCaptureServer::StopScreenCaptureRecorder()
     MediaTrace trace("ScreenCaptureServer::StopScreenCaptureRecorder");
     int32_t ret = MSERR_OK;
     if (recorder_ != nullptr) {
+        virtualScreen_.reset();
         {
             std::lock_guard<std::mutex> lock(audioMutex_);
             if (audioSource_) {
                 audioSource_->Stop();
             }
         }
+        StopAudioCapture();
         ret = recorder_->Stop(false);
         TRUE_LOG(ret != MSERR_OK, MEDIA_LOGE, "StopScreenCaptureRecorder recorder stop failed, ret:%{public}d", ret);
-        virtualScreen_.reset();
         recorder_->Release();
         recorder_ = nullptr;
-        StopAudioCapture();
     }
     showCursor_ = true;
     return ret == MSERR_OK ? MSERR_OK : MSERR_UNKNOWN_RECORDER_STOP;

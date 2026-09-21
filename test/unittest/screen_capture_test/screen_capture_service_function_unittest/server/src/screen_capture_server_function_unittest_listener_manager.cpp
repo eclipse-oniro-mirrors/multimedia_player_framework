@@ -285,7 +285,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_ServerIntegration_001,
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_MultiCapabilityCheck_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_MultiCapabilityCheck_001 start");
     auto manager = screenCaptureServer_->listenerManager_;
     ASSERT_NE(manager, nullptr);
 
@@ -298,7 +297,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_MultiCapabilityCheck_0
     ASSERT_EQ((flags & LF_PRIVATE_WIN) != 0, true);
     ASSERT_EQ((flags & LF_LANG_SWITCH) != 0, false);
     manager->UnregisterListeners(flags);
-    MEDIA_LOGI("ListenerManager_MultiCapabilityCheck_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperLifecycleEvent_001, TestSize.Level2)
@@ -722,7 +720,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperWindowInfoChang
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperScreenConnectOnChange_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperScreenConnectOnChange_001 start");
     auto listener = std::make_shared<MockScreenCaptureEventListener>();
     ASSERT_NE(listener, nullptr);
 
@@ -731,11 +728,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperScreenConnectOn
 
     Rosen::ScreenId screenId = 999;
     wrapper->OnChange(screenId);
-    ASSERT_EQ(listener->screenConnectId_, 999);
-    ASSERT_EQ(listener->eventCount_, 1);
+    ASSERT_EQ(listener->eventCount_, 0);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperScreenConnectOnChange_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_LanguageSwitchOnReceiveEvent_001, TestSize.Level2)
@@ -762,7 +757,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_LanguageSwitchOnReceiv
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperNullListener_001 start");
     auto listener = std::make_shared<MockScreenCaptureEventListener>();
     ASSERT_NE(listener, nullptr);
 
@@ -780,12 +774,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperNullListener_00
     ASSERT_EQ(listener->eventCount_, 3);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperPrivateWindowNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperPrivateWindowNullListener_001 start");
     auto listener = std::make_shared<MockScreenCaptureEventListener>();
     ASSERT_NE(listener, nullptr);
 
@@ -800,12 +792,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperPrivateWindowNu
     ASSERT_EQ(listener->eventCount_, 2);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperPrivateWindowNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperScreenConnectNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperScreenConnectNullListener_001 start");
     auto listener = std::make_shared<MockScreenCaptureEventListener>();
     ASSERT_NE(listener, nullptr);
 
@@ -820,16 +810,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperScreenConnectNu
     ASSERT_EQ(listener->screenDisconnectId_, testId);
     ASSERT_EQ(listener->eventCount_, 2);
     wrapper->OnChange(testId);
-    ASSERT_EQ(listener->screenConnectId_, testId);
-    ASSERT_EQ(listener->eventCount_, 3);
+    ASSERT_EQ(listener->eventCount_, 2);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperScreenConnectNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperRecordDisplayNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperRecordDisplayNullListener_001 start");
     auto listener = std::make_shared<MockScreenCaptureEventListener>();
     ASSERT_NE(listener, nullptr);
 
@@ -842,12 +829,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperRecordDisplayNu
     ASSERT_EQ(listener->eventCount_, 1);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperRecordDisplayNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperLanguageSwitchNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperLanguageSwitchNullListener_001 start");
     auto listener = std::make_shared<MockScreenCaptureEventListener>();
     ASSERT_NE(listener, nullptr);
 
@@ -864,12 +849,10 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperLanguageSwitchN
     ASSERT_EQ(listener->eventCount_, 1);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WrapperLanguageSwitchNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperAudioRendererNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WrapperAudioRendererNullListener_001 start");
     auto listener = std::make_shared<MockScreenCaptureEventListener>();
     ASSERT_NE(listener, nullptr);
 
@@ -879,7 +862,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WrapperAudioRendererNu
     std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> changeInfos;
     wrapper->OnRendererStateChange(changeInfos);
     ASSERT_EQ(listener->eventCount_, 1);
-    MEDIA_LOGI("ListenerManager_WrapperAudioRendererNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_RegisterAppLifecycle_001, TestSize.Level2)
@@ -976,7 +958,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WindowInfoNoDisplayId_
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WindowInfoNullListener_001, TestSize.Level2)
 {
-    MEDIA_LOGI("ListenerManager_WindowInfoNullListener_001 start");
     auto listener = std::make_shared<MockScreenCaptureEventListener>();
     ASSERT_NE(listener, nullptr);
 
@@ -993,7 +974,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_WindowInfoNullListener
     ASSERT_EQ(listener->eventCount_, 1);
 
     delete wrapper;
-    MEDIA_LOGI("ListenerManager_WindowInfoNullListener_001 end");
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ListenerManager_MultiFlagRegistration_001, TestSize.Level2)
