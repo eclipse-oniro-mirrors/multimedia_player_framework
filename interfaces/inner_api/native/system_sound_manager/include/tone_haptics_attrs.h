@@ -81,9 +81,9 @@ public:
     }
  
 private:
-    std::string title_ = "title_test";
-    std::string fileName_ = "fileName_test";
-    std::string uri_ = "uri_test";
+    std::string title_ = "";
+    std::string fileName_ = "";
+    std::string uri_ = "";
     std::string gentleTitle_ = "";
     std::string gentleFileName_ = "";
     std::string gentleUri_ = "";

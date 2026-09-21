@@ -80,6 +80,7 @@ const std::map<std::string, ToneHapticsType> toneHapticsTypeMap = {
     {"TEXT_MESSAGE_ESIM_CARD_0", TEXT_MESSAGE_ESIM_CARD_0},
     {"TEXT_MESSAGE_ESIM_CARD_1", TEXT_MESSAGE_ESIM_CARD_1},
     {"NOTIFICATION", NOTIFICATION},
+    {"ALARM", ALARM},
 };
 
 const std::map<std::string, ToneCustomizedType> toneCustomizedTypeMap = {

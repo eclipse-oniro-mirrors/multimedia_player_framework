@@ -59,6 +59,7 @@ enum ToneHapticsType {
     TEXT_MESSAGE_ESIM_CARD_0 = 22,
     TEXT_MESSAGE_ESIM_CARD_1 = 23,
     NOTIFICATION = 40,
+    ALARM = 41,
 };
 
 inline bool IsValidRingtoneType(RingtoneType type)
@@ -75,7 +76,8 @@ inline bool IsValidSystemToneType(SystemToneType type)
 inline bool IsValidToneHapticsType(ToneHapticsType type)
 {
     return (type >= CALL_SIM_CARD_0 && type <= CALL_ESIM_CARD_1) ||
-        (type >= TEXT_MESSAGE_SIM_CARD_0 && type <= TEXT_MESSAGE_ESIM_CARD_1) || type == NOTIFICATION;
+        (type >= TEXT_MESSAGE_SIM_CARD_0 && type <= TEXT_MESSAGE_ESIM_CARD_1) ||
+        type == NOTIFICATION || type == ALARM;
 }
 
 enum SystemToneUriType {

@@ -87,6 +87,7 @@ enum ToneHapticsType: i32  {
   TEXT_MESSAGE_ESIM_CARD_0 = 22,
   TEXT_MESSAGE_ESIM_CARD_1 = 23,
   NOTIFICATION = 40,
+  ALARM = 41,
 }
 
 enum ToneHapticsFeature: i32 {
