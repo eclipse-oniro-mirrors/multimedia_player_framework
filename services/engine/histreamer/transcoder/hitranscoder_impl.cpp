@@ -434,7 +434,7 @@ int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
     }
     fd_ = dup(fd);
     FALSE_RETURN_V_MSG_E(fd_ >= 0, MSERR_INVALID_OPERATION, "dup failed, errno: %{public}d", errno);
-    fdsan_exchange_owner_tag(fd, 0, TRANSCODER_FDSAN_TAG);
+    fdsan_exchange_owner_tag(fd_, 0, TRANSCODER_FDSAN_TAG);
     MEDIA_LOG_I("HiTransCoder SetOutputFile dup, fd is %{public}d", fd_);
     return MSERR_OK;
 }
@@ -770,7 +770,7 @@ int32_t HiTransCoderImpl::Cancel()
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(ret)});
     }
     if (fd_ >= 0) {
-        (void)::(void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);;
+        (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
         fd_ = -1;
     }
     if (ret != MSERR_OK) {
@@ -1140,7 +1140,7 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
             if (ret != Status::OK) {
                 MEDIA_LOG_E("muxerFilter SetOutputParameter fail");
                 if (fd_ >= 0) {
-                    (void)::(void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);;
+                    (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
                     fd_ = -1;
                 }
                 return ret;
@@ -1149,7 +1149,7 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
             muxerFilter_->SetTransCoderMode();
             MEDIA_LOG_I("HiTransCoder CloseFd, fd is %{public}d", fd_);
             if (fd_ >= 0) {
-                (void)::(void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);;
+                (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
                 fd_ = -1;
             }
         }
