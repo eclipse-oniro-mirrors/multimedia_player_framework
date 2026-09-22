@@ -32,6 +32,7 @@
 #include "native_avformat.h"
 #include "native_avcodec_base.h"
 #include "native_avsource.h"
+#include <v1_0/buffer_handle_meta_key_type.h>
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
@@ -44,6 +45,31 @@ constexpr uint32_t MAX_LINE_COLOR_RGB = 0xffffff;
 constexpr uint32_t MIN_LINE_COLOR_ARGB = 0xff000000;
 constexpr uint32_t MAX_LINE_COLOR_ARGB = 0xffffffff;
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "NativeScreenCapture"};
+
+OHOS::Rect GetCropRegionFromMetadata(const OHOS::sptr<OHOS::SurfaceBuffer> &surfaceBuffer)
+{
+    OHOS::Rect rsRect = {-1, -1, -1, -1};
+    if (surfaceBuffer == nullptr) {
+        return rsRect;
+    }
+    OHOS::HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion metaRegion;
+    std::vector<uint8_t> metaData;
+    auto metaRet = surfaceBuffer->GetMetadata(
+        OHOS::HDI::Display::Graphic::Common::V1_0::ATTRKEY_CROP_REGION, metaData);
+    if (metaRet == OHOS::GSERROR_OK && memcpy_s(&metaRegion,
+        sizeof(OHOS::HDI::Display::Graphic::Common::V1_0::BufferHandleMetaRegion),
+        metaData.data(), metaData.size()) == EOK) {
+        rsRect.x = static_cast<int32_t>(metaRegion.left);
+        rsRect.y = static_cast<int32_t>(metaRegion.top);
+        rsRect.w = static_cast<int32_t>(metaRegion.width);
+        rsRect.h = static_cast<int32_t>(metaRegion.height);
+        MEDIA_LOGD("GetCropRegionFromMetadata: x:%{public}d, y:%{public}d, w:%{public}d, h:%{public}d",
+            rsRect.x, rsRect.y, rsRect.w, rsRect.h);
+    } else {
+        MEDIA_LOGD("GetCropRegionFromMetadata get crop region metadata failed, ret:%{public}d", metaRet);
+    }
+    return rsRect;
+}
 }
 const char *OH_SCREEN_CAPTURE_CONTENT_RECT = "screen_capture_content_rect";
 
@@ -280,13 +306,10 @@ private:
     {
         int32_t fence = -1;
         OHOS::Rect damage;
-        OHOS::Rect rsRect;
         OHOS::sptr<OHOS::SurfaceBuffer> surfaceBuffer =
-            screenCapture->AcquireVideoBuffer(fence, timestamp, damage, rsRect);
+            screenCapture->AcquireVideoBuffer(fence, timestamp, damage);
         CHECK_AND_RETURN_RET_LOG(surfaceBuffer != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed surfaceBuffer no memory!");
-        MEDIA_LOGD("get native surfaceBuffer rsRect: x: %{public}d, y: %{public}d, w: %{public}d, h: %{public}d",
-            rsRect.x, rsRect.y, rsRect.w, rsRect.h);
         std::shared_ptr<AVBuffer> avBuffer = AVBuffer::CreateAVBuffer(surfaceBuffer);
         CHECK_AND_RETURN_RET_LOG(avBuffer != nullptr && avBuffer->memory_ != nullptr, AV_SCREEN_CAPTURE_ERR_NO_MEMORY,
             "AcquireVideoBuffer failed avBuffer no memory!");
@@ -298,6 +321,7 @@ private:
 
         OH_AVFormat *format = OH_AVFormat_Create();
         if (format != nullptr) {
+            OHOS::Rect rsRect = GetCropRegionFromMetadata(surfaceBuffer);
             if (rsRect.x >= 0 && rsRect.y >= 0 && rsRect.w >= 0 && rsRect.h >= 0) {
                 int32_t rectData[4] = {rsRect.x, rsRect.y, rsRect.w, rsRect.h};
                 bool formatRes = OH_AVFormat_SetIntBuffer(format, OH_SCREEN_CAPTURE_CONTENT_RECT,
@@ -942,9 +966,8 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
         return nullptr;
     }
     OHOS::Rect damage;
-    OHOS::Rect rsRect;
     OHOS::sptr<OHOS::SurfaceBuffer> sufacebuffer =
-        screenCaptureObj->screenCapture_->AcquireVideoBuffer(*fence, *timestamp, damage, rsRect);
+        screenCaptureObj->screenCapture_->AcquireVideoBuffer(*fence, *timestamp, damage);
     region->x = damage.x;
     region->y = damage.y;
     region->width = damage.w;

@@ -91,13 +91,12 @@ namespace Media {
         int32_t fence = GetData<int32_t>();
         int64_t timestamp = GetData<int64_t>();
         OHOS::Rect damage = GetData<OHOS::Rect>();
-        OHOS::Rect rsRect = GetData<OHOS::Rect>();
 
         TestScreenCapture::SetMicrophoneEnabled(true);
         TestScreenCapture::SetCanvasRotation(true);
         TestScreenCapture::Init(config);
         TestScreenCapture::StartScreenCapture();
-        TestScreenCapture::AcquireVideoBuffer(fence, timestamp, damage, rsRect);
+        TestScreenCapture::AcquireVideoBuffer(fence, timestamp, damage);
         TestScreenCapture::ReleaseVideoBuffer();
         TestScreenCapture::StopScreenCapture();
         TestScreenCapture::Release();
