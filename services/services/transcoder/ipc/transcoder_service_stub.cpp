@@ -25,6 +25,7 @@
 #include "media_dfx.h"
 #include "media_utils.h"
 #include "pixel_map.h"
+#include "fdsan_fd.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "TransCoderServiceStub"};
@@ -333,19 +334,18 @@ int32_t TransCoderServiceStub::SetOutputFormat(MessageParcel &data, MessageParce
 
 int32_t TransCoderServiceStub::SetInputFileFd(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t fd = data.ReadFileDescriptor();
+    FdsanFd fd(data.ReadFileDescriptor());
     int64_t offset = data.ReadInt64();
     int64_t size = data.ReadInt64();
-    reply.WriteInt32(SetInputFile(fd, offset, size));
-    (void)::close(fd);
+    CHECK_AND_RETURN_RET_LOG(fd.Get() > 0 && offset >= 0 && size >= -1, MSERR_INVALID_VAL, "invalid fd source params");
+    reply.WriteInt32(SetInputFile(fd.Get(), offset, size));
     return MSERR_OK;
 }
 
 int32_t TransCoderServiceStub::SetOutputFile(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t fd = data.ReadFileDescriptor();
-    reply.WriteInt32(SetOutputFile(fd));
-    (void)::close(fd);
+    FdsanFd fd(data.ReadFileDescriptor());
+    reply.WriteInt32(SetOutputFile(fd.Get()));
     return MSERR_OK;
 }
 
