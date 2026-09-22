@@ -20,6 +20,7 @@
 #include "recorder_utils.h"
 #include "recorder_param.h"
 #include "common/log.h"
+#include "common/fdsan_fd.h"
 #include "filter/filter_factory.h"
 #include "osal/task/condition_variable.h"
 #include "filter/filter.h"
@@ -34,7 +35,6 @@
 #include "surface_encoder_filter.h"
 #include "video_capture_filter.h"
 #include "codec_capability_adapter.h"
-#include "common/fdsan_fd.h"
 
 namespace OHOS {
 namespace Media {
