@@ -34,6 +34,7 @@
 #include "surface_encoder_filter.h"
 #include "video_capture_filter.h"
 #include "codec_capability_adapter.h"
+#include "common/fdsan_fd.h"
 
 namespace OHOS {
 namespace Media {
