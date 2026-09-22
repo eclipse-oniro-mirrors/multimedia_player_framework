@@ -21,6 +21,7 @@
 #include "file_cache_manager.h"
 #include "cache_mapping_format.h"
 #include "common/log.h"
+#include "fd_san.h"
 #include "media_log.h"
 #include "path_validator.h"
 
@@ -40,7 +41,8 @@ DownloadedFileCacheManager::DownloadedFileCacheManager(const std::string& cacheD
 int32_t DownloadedFileCacheManager::ReadFileData(const std::string& path, void* buffer, int64_t offset,
     int64_t size)
 {
-    int fd = open(path.c_str(), O_RDONLY);
+    int fd = OHOS::Media::MediaSource::FdSanOpen<OHOS::Media::MediaSource::FDSAN_TAG_DOWNLOADED_CACHE>(path.c_str(),
+        O_RDONLY);
     if (fd == -1) {
         MEDIA_LOG_W("ReadCacheData open file error");
         return -1;
@@ -48,7 +50,7 @@ int32_t DownloadedFileCacheManager::ReadFileData(const std::string& path, void* 
 
     struct stat buf;
     if (fstat(fd, &buf) != 0) {
-        close(fd);
+        OHOS::Media::MediaSource::FdSanClose<OHOS::Media::MediaSource::FDSAN_TAG_DOWNLOADED_CACHE>(fd);
         MEDIA_LOG_E("ReadCacheData GetFileSize error");
         return -1;
     }
@@ -56,11 +58,11 @@ int32_t DownloadedFileCacheManager::ReadFileData(const std::string& path, void* 
         MEDIA_LOG_W("Read: offset+size exceeds file size, offset=%{public}" PRId64
             ", size=%{public}" PRId64 ", fileSize=%{public}" PRId64, offset, size,
             static_cast<int64_t>(buf.st_size));
-        close(fd);
+        OHOS::Media::MediaSource::FdSanClose<OHOS::Media::MediaSource::FDSAN_TAG_DOWNLOADED_CACHE>(fd);
         return -1;
     }
     if (lseek(fd, offset, SEEK_SET) == -1) {
-        close(fd);
+        OHOS::Media::MediaSource::FdSanClose<OHOS::Media::MediaSource::FDSAN_TAG_DOWNLOADED_CACHE>(fd);
         MEDIA_LOG_E("ReadCacheData lseek error");
         return -1;
     }
@@ -70,7 +72,7 @@ int32_t DownloadedFileCacheManager::ReadFileData(const std::string& path, void* 
         ssize_t bytesRead = read(fd, static_cast<uint8_t*>(buffer) + totalRead, size - totalRead);
         if (bytesRead < 0) {
             MEDIA_LOG_E("ReadCacheData read error, bytesRead=%{public}" PRId64, static_cast<int64_t>(bytesRead));
-            close(fd);
+            OHOS::Media::MediaSource::FdSanClose<OHOS::Media::MediaSource::FDSAN_TAG_DOWNLOADED_CACHE>(fd);
             return -1;
         }
         if (bytesRead == 0) {
@@ -78,7 +80,7 @@ int32_t DownloadedFileCacheManager::ReadFileData(const std::string& path, void* 
         }
         totalRead += bytesRead;
     }
-    close(fd);
+    OHOS::Media::MediaSource::FdSanClose<OHOS::Media::MediaSource::FDSAN_TAG_DOWNLOADED_CACHE>(fd);
     if (totalRead < size) {
         MEDIA_LOG_W("ReadCacheData partial read: requested=%{public}" PRId64 ", actual=%{public}" PRId64,
             size, totalRead);
@@ -104,7 +106,8 @@ int32_t DownloadedFileCacheManager::Read(const std::string& path, void* buffer, 
 int64_t DownloadedFileCacheManager::GetSize(const std::string& path)
 {
     FALSE_RETURN_V_MSG_E(IsValidPath(path), -1, "invalid path");
-    int fd = open(path.c_str(), O_RDONLY);
+    int fd = OHOS::Media::MediaSource::FdSanOpen<OHOS::Media::MediaSource::FDSAN_TAG_DOWNLOADED_CACHE>(path.c_str(),
+        O_RDONLY);
     if (fd == -1) {
         MEDIA_LOG_E("GetFileSize open file error");
         return -1;
@@ -112,11 +115,11 @@ int64_t DownloadedFileCacheManager::GetSize(const std::string& path)
 
     struct stat buf;
     if (fstat(fd, &buf) != 0) {
-        close(fd);
+        OHOS::Media::MediaSource::FdSanClose<OHOS::Media::MediaSource::FDSAN_TAG_DOWNLOADED_CACHE>(fd);
         MEDIA_LOG_E("GetFileSize fstat error");
         return -1;
     }
-    close(fd);
+    OHOS::Media::MediaSource::FdSanClose<OHOS::Media::MediaSource::FDSAN_TAG_DOWNLOADED_CACHE>(fd);
     return buf.st_size;
 }
 
