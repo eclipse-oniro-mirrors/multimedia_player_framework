@@ -20,10 +20,41 @@
 #include "mock/mock_itranscoder_engine.h"
 #include "mock/mock_hitranscoder_callback_looper.h"
 #include "mock/mock_imediakeysessionServices.h"
+#include "filter/filter.h"
+#include "osal/task/task.h"
 #include "hitranscoder_impl.h"
 
 namespace OHOS {
 namespace Media {
+
+class MockTransCoderEventReceiver : public Pipeline::EventReceiver {
+public:
+    explicit MockTransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl, std::string transcoderId)
+    {
+        hiTransCoderImpl_ = hiTransCoderImpl;
+    }
+    void OnEvent(const Event &event) override {}
+    void NotifyRelease() override {}
+private:
+    HiTransCoderImpl *hiTransCoderImpl_;
+};
+
+class MockTransCoderFilterCallback : public Pipeline::FilterCallback {
+public:
+    explicit MockTransCoderFilterCallback(HiTransCoderImpl *hiTransCoderImpl)
+    {
+        hiTransCoderImpl_ = hiTransCoderImpl;
+    }
+    Status OnCallback(const std::shared_ptr<Pipeline::Filter>& filter, Pipeline::FilterCallBackCommand cmd,
+        Pipeline::StreamType outType) override
+    {
+        return Status::OK;
+    }
+    void NotifyRelease() override {}
+private:
+    HiTransCoderImpl *hiTransCoderImpl_;
+};
+
 class HitranscodeImplUnitTest : public testing::Test {
 public:
     // SetUpTestCase: Called before all test cases
