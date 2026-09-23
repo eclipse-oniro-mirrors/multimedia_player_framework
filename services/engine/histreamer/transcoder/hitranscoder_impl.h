@@ -33,6 +33,7 @@
 #include "muxer_filter.h"
 #include "video_resize_filter.h"
 #include "hitranscoder_callback_looper.h"
+#include "fdsan_fd.h"
 
 namespace OHOS {
 namespace Media {
@@ -165,7 +166,7 @@ private:
     std::weak_ptr<ITransCoderEngineObs> obs_{};
     std::shared_ptr<HiTransCoderCallbackLooper> callbackLooper_;
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
-    int32_t fd_ = -1;
+    FdsanFd fd_;
     std::string inputFile_;
 
     std::string transCoderId_;
