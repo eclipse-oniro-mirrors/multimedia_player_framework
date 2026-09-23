@@ -136,6 +136,7 @@ public:
     std::string GetRingtoneTitle(const std::string &ringtoneUri);
     ToneAttrs GetRingtoneAttrs(const DatabaseTool &databaseTool, RingtoneType ringtoneType);
     ToneAttrs GetSystemToneAttrs(const DatabaseTool &databaseTool, SystemToneType systemToneType);
+    ToneAttrs GetAlarmToneAttrs(const DatabaseTool &databaseTool);
     std::string OpenAudioUri(const DatabaseTool &databaseTool, const std::string &audioUri);
     std::string OpenMockAudioUri(const std::string &uri);
     std::string OpenHapticsUri(const DatabaseTool &databaseTool, const std::string &hapticsUri);
