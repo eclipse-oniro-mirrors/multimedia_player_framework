@@ -27,8 +27,6 @@
 #include "osal/task/pipeline_threadpool.h"
 #include "water_mark_filter.h"
 
-#define FDSAN_TAG_A 1
-
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "HiTransCoder" };
 constexpr int32_t REPORT_PROGRESS_INTERVAL = 100;
@@ -46,7 +44,6 @@ constexpr int32_t DEFAULT_AUDIO_BITRATE = 48000;
 const uint32_t ROTATE_90_VALUE = 90;
 const uint32_t ROTATE_180_VALUE = 180;
 const uint32_t ROTATE_270_VALUE = 270;
-constexpr uint64_t TRANSCODER_FDSAN_TAG = static_cast<uint64_t>(LOG_DOMAIN_SYSTEM_PLAYER) << 32 | FDSAN_TAG_A;
 }
 
 namespace OHOS {
@@ -162,10 +159,6 @@ HiTransCoderImpl::~HiTransCoderImpl()
     }
     if (transCoderFilterCallback_ != nullptr) {
         transCoderFilterCallback_->NotifyRelease();
-    }
-    if (fd_ >= 0) {
-        (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
-        fd_ = -1;
     }
     PipeLineThreadPool::GetInstance().DestroyThread(transCoderId_);
     MEDIA_LOG_I("~HiTransCoderImpl");
@@ -428,14 +421,9 @@ int32_t HiTransCoderImpl::SetOutputFile(const int32_t fd)
     MEDIA_LOG_I("HiTransCoder SetOutputFile in, fd is %{public}d", fd);
     FALSE_RETURN_V_MSG_E(fd >= 0, MSERR_INVALID_VAL, "Invalid fd: %{public}d", fd);
 
-    if (fd_ >= 0) {
-        (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
-        fd_ = -1;
-    }
-    fd_ = dup(fd);
-    FALSE_RETURN_V_MSG_E(fd_ >= 0, MSERR_INVALID_OPERATION, "dup failed, errno: %{public}d", errno);
-    fdsan_exchange_owner_tag(fd_, 0, TRANSCODER_FDSAN_TAG);
-    MEDIA_LOG_I("HiTransCoder SetOutputFile dup, fd is %{public}d", fd_);
+    fd_.Reset(dup(fd));
+    FALSE_RETURN_V_MSG_E(fd_.Get() >= 0, MSERR_INVALID_OPERATION, "dup failed, errno: %{public}d", errno);
+    MEDIA_LOG_I("HiTransCoder SetOutputFile dup, fd is %{public}d", fd_.Get());
     return MSERR_OK;
 }
 
@@ -769,9 +757,8 @@ int32_t HiTransCoderImpl::Cancel()
         CollectionErrorInfo(ret, "Cancel error");
         OnEvent({"TranscoderEngine", EventType::EVENT_ERROR, static_cast<int32_t>(ret)});
     }
-    if (fd_ >= 0) {
-        (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
-        fd_ = -1;
+    if (fd_.Get() >= 0) {
+        fd_.Reset();
     }
     if (ret != MSERR_OK) {
         return ret;
@@ -1136,21 +1123,19 @@ Status HiTransCoderImpl::LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>
             FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr, Status::ERROR_NULL_POINTER,
                 "muxerFilter is nullptr");
             muxerFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
-            ret = muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
+            ret = muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_.Get(), outputFormatType_);
             if (ret != Status::OK) {
                 MEDIA_LOG_E("muxerFilter SetOutputParameter fail");
-                if (fd_ >= 0) {
-                    (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
-                    fd_ = -1;
+                if (fd_.Get() >= 0) {
+                    fd_.Reset();
                 }
                 return ret;
             }
             muxerFilter_->SetParameter(muxerFormat_);
             muxerFilter_->SetTransCoderMode();
-            MEDIA_LOG_I("HiTransCoder CloseFd, fd is %{public}d", fd_);
-            if (fd_ >= 0) {
-                (void)fdsan_close_with_tag(fd_, TRANSCODER_FDSAN_TAG);
-                fd_ = -1;
+            MEDIA_LOG_I("HiTransCoder CloseFd, fd is %{public}d", fd_.Get());
+            if (fd_.Get() >= 0) {
+                fd_.Reset();
             }
         }
     }
