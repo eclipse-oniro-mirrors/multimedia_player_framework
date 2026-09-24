@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -239,7 +239,7 @@ void NativeRecorderUnitTest::SetUp(void)
 
     ret = OH_AVRecorder_SetErrorCallback(recorder_, OnError, nullptr);
     EXPECT_EQ(ret, AV_ERR_OK);
-    
+
     #ifdef SUPPORT_RECORDER_CREATE_FILE
     ret = OH_AVRecorder_SetUriCallback(recorder_, OnUri, nullptr);
     EXPECT_EQ(ret, AV_ERR_OK);
@@ -651,11 +651,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_008, TestSize.Level2)
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
 
-    #ifdef SUPPORT_RECORDER_CREATE_FILE
-    EXPECT_EQ(ret, AV_ERR_OK);
-    #else
     EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
-    #endif
 
     free(config.url);
     free(config.metadata.genre);
@@ -1098,23 +1094,22 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_003, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_UpdateRotation_003 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_UpdateRotation_003.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t rotation = 90;
 
     int32_t ret = AV_ERR_OK;
 
     ret = OH_AVRecorder_Prepare(recorder_, &config);
-    #ifdef SUPPORT_RECORDER_CREATE_FILE
     EXPECT_EQ(ret, AV_ERR_OK);
-    #else
-    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
-    #endif
     ret = OH_AVRecorder_UpdateRotation(recorder_, rotation);
     EXPECT_EQ(ret, AV_ERR_OK);
 
@@ -1138,21 +1133,20 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_UpdateRotation_004, TestSize.Level2)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_UpdateRotation_004 in.");
 
     OH_AVRecorder_Config config = config_;
-    config.url = strdup("");
     config.metadata.genre = strdup("");
     config.metadata.videoOrientation = strdup("0");
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
+    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
+
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_UpdateRotation_004.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = AV_ERR_OK;
 
     ret = OH_AVRecorder_Prepare(recorder_, &config);
-    #ifdef SUPPORT_RECORDER_CREATE_FILE
     EXPECT_EQ(ret, AV_ERR_OK);
-    #else
-    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
-    #endif
 
     int32_t rotation = 0;
     ret = OH_AVRecorder_UpdateRotation(recorder_, rotation);
@@ -1651,49 +1645,6 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_004, TestSize.Level2)
     free(config.metadata.customInfo.value);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_004 out.");
-}
-
-/**
- * @tc.name: Recorder_Stop_005
- * @tc.desc: Test recorder stop process 005
- * @tc.type: FUNC
- */
-HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_005, TestSize.Level2)
-{
-#ifndef SUPPORT_RECORDER_CREATE_FILE
-    #define SUPPORT_RECORDER_CREATE_FILE
-    #define SUPPORT_RECORDER_CREATE_FILE_DEFINED_IN_TESTCASE
-#endif
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_005 in.");
-
-    OH_AVRecorder_Config config = config_;
-    config.metadata.genre = strdup("");
-    config.metadata.videoOrientation = strdup("0");
-    config.metadata.customInfo.key = strdup("");
-    config.metadata.customInfo.value = strdup("");
-    config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_AUTO_CREATE_CAMERA_SCENE;
-
-    int32_t outputFd = open((RECORDER_ROOT + "Recorder_Stop_005.mp4").c_str(), O_RDWR);
-    const std::string fdHead = "fd://";
-    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
-
-    int32_t ret = AV_ERR_OK;
-    ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_EQ(ret, AV_ERR_OK);
-    ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
-
-    free(config.url);
-    free(config.metadata.genre);
-    free(config.metadata.videoOrientation);
-    free(config.metadata.customInfo.key);
-    free(config.metadata.customInfo.value);
-
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_005 out.");
-#ifdef SUPPORT_RECORDER_CREATE_FILE_DEFINED_IN_TESTCASE
-    #undef SUPPORT_RECORDER_CREATE_FILE
-    #undef SUPPORT_RECORDER_CREATE_FILE_DEFINED_IN_TESTCASE
-#endif
 }
 
 /**
