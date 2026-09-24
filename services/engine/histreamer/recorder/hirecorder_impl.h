@@ -20,6 +20,7 @@
 #include "recorder_utils.h"
 #include "recorder_param.h"
 #include "common/log.h"
+#include "common/fdsan_fd.h"
 #include "filter/filter_factory.h"
 #include "osal/task/condition_variable.h"
 #include "filter/filter.h"
@@ -187,7 +188,7 @@ private:
     std::shared_ptr<CapturerInfoChangeCallback> capturerInfoChangeCallback_;
     std::weak_ptr<IRecorderEngineObs> obs_{};
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
-    int32_t fd_ = -1;
+    FdsanFd fd_;
     int32_t maxDuration_ = 0;
     int64_t maxSize_ = 0;
 

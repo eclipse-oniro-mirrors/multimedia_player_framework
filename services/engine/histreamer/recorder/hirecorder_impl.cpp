@@ -404,8 +404,8 @@ int32_t HiRecorderImpl::Prepare()
 {
     MediaTrace trace("HiRecorderImpl::Prepare");
     MEDIA_LOG_I("Prepare enter.");
-    FALSE_RETURN_V_MSG_E(lseek(fd_, 0, SEEK_CUR) != -1, MSERR_OPEN_FILE_FAILED,
-        "The fd is invalid, fd: %{public}d, errno: %{public}d.", fd_, errno);
+    FALSE_RETURN_V_MSG_E(lseek(fd_.Get(), 0, SEEK_CUR) != -1, MSERR_OPEN_FILE_FAILED,
+        "The fd is invalid, fd: %{public}d, errno: %{public}d.", fd_.Get(), errno);
 
     int32_t result = MSERR_OK;
     result = BuildPipeline();
@@ -876,11 +876,8 @@ void HiRecorderImpl::OnEvent(const Event &event)
 
 void HiRecorderImpl::CloseFd()
 {
-    MEDIA_LOG_I("HiRecorderImpl: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this), fd_);
-    FALSE_RETURN(fd_ >= 0);
-
-    (void)::close(fd_);
-    fd_ = -1;
+    MEDIA_LOG_I("HiRecorderImpl: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this), fd_.Get());
+    fd_.Reset();
 }
 
 Status HiRecorderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
@@ -931,7 +928,9 @@ Status HiRecorderImpl::HandleEncodedAudioOrVideoCallback(std::shared_ptr<Pipelin
 
         muxerFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
         muxerFilter_->Init(recorderEventReceiver_, recorderCallback_);
-        muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_, outputFormatType_);
+        Status ret = muxerFilter_->SetOutputParameter(appUid_, appPid_, fd_.Get(), outputFormatType_);
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "SetOutputParameter failed, ret: %{public}d",
+            static_cast<int32_t>(ret));
         muxerFilter_->SetParameter(muxerFormat_);
         muxerFilter_->SetUserMeta(userMeta_);
         muxerFilter_->SetMaxDuration(maxDuration_);
@@ -1376,9 +1375,9 @@ void HiRecorderImpl::ConfigureOutFd(const RecorderParam &recParam)
 {
     CloseFd();
     OutFd outFd = static_cast<const OutFd&>(recParam);
-    fd_ = dup(outFd.fd);
+    fd_.Reset(dup(outFd.fd));
     muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
-    MEDIA_LOG_I("ConfigureOutFd enter " PUBLIC_LOG_D32, fd_);
+    MEDIA_LOG_I("ConfigureOutFd enter " PUBLIC_LOG_D32, fd_.Get());
 }
 
 bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)

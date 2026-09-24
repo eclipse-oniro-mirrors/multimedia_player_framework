@@ -15,6 +15,7 @@
 
 #include "recorder_service_stub.h"
 #include <unistd.h>
+#include "fdsan_fd.h"
 #include "recorder_listener_proxy.h"
 #include "media_server_manager.h"
 #include "media_log.h"
@@ -959,9 +960,8 @@ int32_t RecorderServiceStub::SetOutputFormat(MessageParcel &data, MessageParcel 
 
 int32_t RecorderServiceStub::SetOutputFile(MessageParcel &data, MessageParcel &reply)
 {
-    int32_t fd = data.ReadFileDescriptor();
-    reply.WriteInt32(SetOutputFile(fd));
-    (void)::close(fd);
+    FdsanFd fd(data.ReadFileDescriptor());
+    reply.WriteInt32(SetOutputFile(fd.Get()));
     return MSERR_OK;
 }
 
