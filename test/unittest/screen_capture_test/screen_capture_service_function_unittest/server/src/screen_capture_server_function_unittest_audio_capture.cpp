@@ -277,12 +277,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_ShowShareBox_B1
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
     screenCaptureServer_->innerAudioCapture_ = nullptr;
-    screenCaptureServer_->showShareSystemAudioBox_ = true;
     screenCaptureServer_->isInnerAudioBoxSelected_ = false;
     EXPECT_EQ(screenCaptureServer_->StartInnerAudioCapture(), MSERR_OK);
     EXPECT_NE(screenCaptureServer_->innerAudioCapture_, nullptr);
-    screenCaptureServer_->innerAudioCapture_ = nullptr;
-    screenCaptureServer_->showShareSystemAudioBox_ = false;
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_AlreadyRecording_B1, TestSize.Level2)

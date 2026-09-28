@@ -35,7 +35,6 @@ group("screen_capture_fuzztest") {
     "screencapturecontrollerservicestub_fuzzer:ScreenCaptureControllerServiceStubFuzzTest",
     "screencapturedatatype_fuzzer:ScreenCaptureDataTypeFuzzTest",
     "screencapturefileformatfile_fuzzer:ScreenCaptureFileFormatFileFuzzTest",
-    "screencapturekeyboardprivacyprotected_fuzzer:ScreenCaptureKeyboardPrivacyProtectedFuzzTest",
     "screencapturemonitorservice_fuzzer:ScreenCaptureMonitorServiceFuzzTest",
     "screencapturemonitorservicestub_fuzzer:ScreenCaptureMonitorServiceStubFuzzTest",
     "screencapturemultidisplayid_fuzzer:ScreenCaptureMultiDisplayIdNdkFuzzTest",
