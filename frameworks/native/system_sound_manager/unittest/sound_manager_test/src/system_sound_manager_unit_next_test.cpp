@@ -2904,5 +2904,146 @@ HWTEST(SystemSoundManagerUnitNextTest, SetNoToneUri_005, TestSize.Level0)
         std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper), params);
     EXPECT_LT(result, 0);
 }
+
+/**
+ * @tc.name  : GetAlarmToneAttrs_NotInitialized
+ * @tc.number: GetAlarmToneAttrs_001
+ * @tc.desc  : Test GetAlarmToneAttrs when databaseTool is not initialized (early return)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetAlarmToneAttrs_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = false;
+    databaseTool.dataShareHelper = nullptr;
+    ToneAttrs result = impl->GetAlarmToneAttrs(databaseTool);
+    EXPECT_EQ(result.GetUri(), "");
+    EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_ALARM);
+}
+
+/**
+ * @tc.name  : GetAlarmToneAttrs_NullHelper
+ * @tc.number: GetAlarmToneAttrs_002
+ * @tc.desc  : Test GetAlarmToneAttrs when dataShareHelper is nullptr (early return)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetAlarmToneAttrs_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.dataShareHelper = nullptr;
+    ToneAttrs result = impl->GetAlarmToneAttrs(databaseTool);
+    EXPECT_EQ(result.GetUri(), "");
+    EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_ALARM);
+}
+
+/**
+ * @tc.name  : GetAlarmToneAttrs_EmptyQuery_ReturnsNoRingSound
+ * @tc.number: GetAlarmToneAttrs_003
+ * @tc.desc  : Test GetAlarmToneAttrs when query returns no rows, uri falls back to NO_RING_SOUND
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetAlarmToneAttrs_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = false;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+    ToneAttrs result = impl->GetAlarmToneAttrs(databaseTool);
+    EXPECT_EQ(result.GetUri(), NO_RING_SOUND);
+    EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_ALARM);
+}
+
+/**
+ * @tc.name  : GetAlarmToneAttrs_NonEmptyQuery_ReturnsUri
+ * @tc.number: GetAlarmToneAttrs_004
+ * @tc.desc  : Test GetAlarmToneAttrs when query returns a row, uri is the asset path (not NO_RING_SOUND)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetAlarmToneAttrs_004, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 1;
+    config.toneType = TONE_TYPE_ALARM;
+    config.alarmToneType = ALARM_TONE_TYPE;
+    config.alarmToneSourceType = SOURCE_TYPE_CUSTOMISED;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+    ToneAttrs result = impl->GetAlarmToneAttrs(databaseTool);
+    EXPECT_FALSE(result.GetUri().empty());
+    EXPECT_NE(result.GetUri(), NO_RING_SOUND);
+}
+
+/**
+ * @tc.name  : GetCurrentToneUri_Alarm_EmptyQuery_ReturnsNoRingSound
+ * @tc.number: GetCurrentToneUri_004
+ * @tc.desc  : Test GetCurrentToneUri with ALARM type and empty query returns NO_RING_SOUND
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetCurrentToneUri_004, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = false;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+    std::string result = impl->GetCurrentToneUri(databaseTool, ToneHapticsType::ALARM);
+    EXPECT_EQ(result, NO_RING_SOUND);
+}
+
+/**
+ * @tc.name  : GetCurrentToneUri_Alarm_NonEmptyQuery_ReturnsUri
+ * @tc.number: GetCurrentToneUri_005
+ * @tc.desc  : Test GetCurrentToneUri with ALARM type and non-empty query returns the asset path
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetCurrentToneUri_005, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 1;
+    config.toneType = TONE_TYPE_ALARM;
+    config.alarmToneType = ALARM_TONE_TYPE;
+    config.alarmToneSourceType = SOURCE_TYPE_CUSTOMISED;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+    std::string result = impl->GetCurrentToneUri(databaseTool, ToneHapticsType::ALARM);
+    EXPECT_FALSE(result.empty());
+    EXPECT_NE(result, NO_RING_SOUND);
+}
 } // namespace Media
 } // namespace OHOS

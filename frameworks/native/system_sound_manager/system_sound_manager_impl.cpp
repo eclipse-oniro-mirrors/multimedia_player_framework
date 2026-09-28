@@ -835,6 +835,21 @@ ToneAttrs SystemSoundManagerImpl::GetSystemToneAttrs(const DatabaseTool &databas
     return toneAttrs;
 }
 
+ToneAttrs SystemSoundManagerImpl::GetAlarmToneAttrs(const DatabaseTool &databaseTool)
+{
+    ToneAttrs toneAttrs = { "", "", "", CUSTOMISED, TONE_CATEGORY_ALARM };
+    if (!databaseTool.isInitialized || databaseTool.dataShareHelper == nullptr) {
+        MEDIA_LOGE("GetAlarmToneAttrs: The database tool is not ready!");
+        return toneAttrs;
+    }
+    toneAttrs = QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_ALARM);
+    if (toneAttrs.GetUri().empty()) {
+        MEDIA_LOGI("GetAlarmToneAttrs: No alarm tone uri. Return NO_RING_SOUND");
+        toneAttrs.SetUri(NO_RING_SOUND);
+    }
+    return toneAttrs;
+}
+
 std::string SystemSoundManagerImpl::GetDefaultHapticsUri(const DatabaseTool &databaseTool)
 {
     CHECK_AND_RETURN_RET_LOG(databaseTool.isInitialized && databaseTool.dataShareHelper != nullptr, "",
@@ -1017,7 +1032,7 @@ std::string SystemSoundManagerImpl::GetAlarmToneUri(const std::shared_ptr<Abilit
     SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID, isProxy, dataShareHelper);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, "", "Failed to CreateDataShareHelper!");
     DatabaseTool databaseTool = {true, isProxy, dataShareHelper};
-    ToneAttrs toneAttrs = QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_ALARM);
+    ToneAttrs toneAttrs = GetAlarmToneAttrs(databaseTool);
     dataShareHelper->Release();
     return toneAttrs.GetUri();
 }
@@ -1807,7 +1822,7 @@ std::string SystemSoundManagerImpl::GetCurrentToneUri(const DatabaseTool &databa
     } else if (ConvertToSystemToneType(toneHapticsType, systemToneType)) {
         currentToneUri = GetSystemToneAttrs(databaseTool, systemToneType).GetUri();
     } else if (toneHapticsType == ToneHapticsType::ALARM) {
-        currentToneUri = QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_ALARM).GetUri();
+        currentToneUri = GetAlarmToneAttrs(databaseTool).GetUri();
     } else {
         MEDIA_LOGE("Invalid tone haptics type");
     }
@@ -2806,7 +2821,7 @@ std::vector<ToneInfo> SystemSoundManagerImpl::GetCurrentToneInfos()
     toneAttrs = GetSystemToneAttrs(databaseTool, SYSTEM_TONE_TYPE_NOTIFICATION);
     toneInfos.push_back({EXT_TYPE_NOTIFICATION, toneAttrs.GetUri(), toneAttrs.GetTitle()});
 
-    toneAttrs = QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_ALARM);
+    toneAttrs = GetAlarmToneAttrs(databaseTool);
     toneInfos.push_back({EXT_TYPE_ALARMTONE, toneAttrs.GetUri(), toneAttrs.GetTitle()});
 
     dataShareHelper->Release();
