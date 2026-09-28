@@ -1158,6 +1158,7 @@ int32_t SystemSoundManagerImpl::OpenToneFile(const DatabaseTool &databaseTool,
         MEDIA_LOGE("OpenToneFile: open file failed, ringtone library error.");
         return ERROR;
     }
+    fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_TONE_OPEN_TAG);
     return fd;
 }
 
@@ -1196,6 +1197,7 @@ int32_t SystemSoundManagerImpl::OpenCustomToneUri(const std::string &customAudio
             SendPlaybackFailedEvent(OPEN_FAILED);
             return ERROR;
         }
+        fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_TONE_OPEN_TAG);
         return fd;
     }
     MEDIA_LOGE("Open custom audio uri failed!");
@@ -1258,6 +1260,7 @@ void SystemSoundManagerImpl::OpenOneFile(std::shared_ptr<DataShare::DataShareHel
             results->Close();
         }
         if (fd > 0) {
+            fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_TONE_OPEN_TAG);
             std::get<PARAM1>(resultOfOpen) = fd;
             std::get<PARAM2>(resultOfOpen) = ERROR_OK;
         } else {
@@ -1274,7 +1277,7 @@ void SystemSoundManagerImpl::OpenOneFile(std::shared_ptr<DataShare::DataShareHel
 int32_t SystemSoundManagerImpl::Close(const int32_t &fd)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
-    return close(fd);
+    return fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_TONE_OPEN_TAG);
 }
 
 std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
@@ -1285,11 +1288,13 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     std::string fdHead = "fd://";
     std::string srcPath = externalUri;
     int32_t srcFd = -1;
+    FILE *fp = nullptr;
     bool needToCloseSrcFd = false;
     if (srcPath.find(fdHead) != std::string::npos) {
         StrToInt(srcPath.substr(fdHead.size()), srcFd);
     } else {
-        srcFd = open(srcPath.c_str(), O_RDONLY);
+        fp = fopen(srcPath.c_str(), "r");
+        srcFd = (fp != nullptr) ? fileno(fp) : -1;
         needToCloseSrcFd = (srcFd != -1);
     }
     if (srcFd < 0) {
@@ -1300,7 +1305,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByExternalUri(
     std::string result = AddCustomizedToneByFd(context, toneAttrs, srcFd);
     if (needToCloseSrcFd) {
         MEDIA_LOGI("AddCustomizedToneByFd: close srcFd %{public}d", srcFd);
-        close(srcFd);
+        fclose(fp);
     }
     return result;
 }
@@ -1573,6 +1578,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(
         return "";
     }
     MEDIA_LOGI("CustomizedToneWriteFile: OpenFile success, begin write file.");
+    fdsan_exchange_owner_tag(dstFd, 0, FD_SYSTEM_SOUND_CUSTOMIZED_TONE_WRITE_TAG);
     char buffer[4096];
     int32_t len = paramsForAddCustomizedTone.length;
     memset_s(buffer, sizeof(buffer), 0, sizeof(buffer));
@@ -1586,7 +1592,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(
         len -= bytesWritten;
     }
     MEDIA_LOGI("CustomizedToneWriteFile: Write file end.");
-    close(dstFd);
+    fdsan_close_with_tag(dstFd, FD_SYSTEM_SOUND_CUSTOMIZED_TONE_WRITE_TAG);
     dataShareHelper->Release();
     SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, SUCCESS);
     MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
@@ -1610,7 +1616,7 @@ int32_t SystemSoundManagerImpl::RemoveCustomizedTone(
         MEDIA_LOGE("RemoveCustomizedTone: fd open error is %{public}s", strerror(errno));
     } else {
         fileSize = lseek(srcFd, 0, SEEK_END);
-        close(srcFd);
+        fdsan_close_with_tag(srcFd, FD_SYSTEM_SOUND_TONE_OPEN_TAG);
     }
     return DoRemove(dataShareHelper, uri, fileSize);
 }
@@ -2323,6 +2329,9 @@ int32_t SystemSoundManagerImpl::OpenToneHaptics(const std::shared_ptr<AbilityRun
     Uri ofUri(uriStr);
     int32_t fd = dataShareHelper->OpenFile(ofUri, "r");
     dataShareHelper->Release();
+    if (fd > 0) {
+        fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_TONE_OPEN_TAG);
+    }
     return fd > 0 ? fd : IO_ERROR;
 #endif
     return UNSUPPORTED_ERROR;
@@ -2578,7 +2587,8 @@ std::string SystemSoundManagerImpl::OpenAudioFile(const DatabaseTool &databaseTo
         fd = databaseTool.dataShareHelper->OpenFile(ofUri, "r");
     }
 
-    if (fd > 0) {
+    if (fd >= 0) {
+        fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_AUDIO_URI_TAG);
         newAudioUri = FDHEAD + to_string(fd);
     } else {
         SendPlaybackFailedEvent(OPEN_FAILED);
@@ -2592,7 +2602,8 @@ std::string SystemSoundManagerImpl::OpenMockAudioUri(const std::string &uri)
 {
     std::string newAudioUri = uri;
     int32_t fd = open(uri.c_str(), O_RDONLY);
-    if (fd > 0) {
+    if (fd >= 0) {
+        fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_AUDIO_URI_TAG);
         newAudioUri = FDHEAD + to_string(fd);
     } else {
         SendPlaybackFailedEvent(OPEN_FAILED);
@@ -2638,6 +2649,7 @@ std::string SystemSoundManagerImpl::OpenCustomAudioUri(const std::string &custom
         }
     }
     if (fd > 0) {
+        fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_AUDIO_URI_TAG);
         newAudioUri = FDHEAD + to_string(fd);
     } else {
         SendPlaybackFailedEvent(OPEN_FAILED);
@@ -2703,6 +2715,7 @@ std::string SystemSoundManagerImpl::OpenHapticsFile(
     }
 
     if (fd > 0) {
+        fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
         newHapticsUri = FDHEAD + to_string(fd);
     } else {
         SendPlaybackFailedEvent(OPEN_FAILED);

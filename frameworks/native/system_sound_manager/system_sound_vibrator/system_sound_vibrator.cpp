@@ -98,12 +98,13 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
             MEDIA_LOGE("Failed to open hapticUri!");
             return MSERR_OPEN_FILE_FAILED;
         }
+        fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
     }
 
     struct stat64 statbuf = { 0 };
     if (fstat64(fd, &statbuf) != 0) {
         MEDIA_LOGE("Failed to open fd and get size.");
-        close(fd);
+        fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
         return MSERR_OPEN_FILE_FAILED;
     }
     Sensors::SetUsage(USAGE_NOTIFICATION);
@@ -111,7 +112,7 @@ int32_t SystemSoundVibrator::StartVibratorForSystemTone(const std::string &hapti
     result = Sensors::PlayVibratorCustom(fd, 0, statbuf.st_size);
     MEDIA_LOGI("PlayVibratorCustom result: %{public}d, fd %{public}d, size %{public}lld",
         result, fd, static_cast<long long>(statbuf.st_size));
-    close(fd);
+    fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
 #endif
 
     return result;
@@ -192,15 +193,16 @@ int32_t SystemSoundVibrator::VibrateForRingtone(const std::string hapticUri)
             MEDIA_LOGE("Failed to open hapticUri!");
             return MSERR_OPEN_FILE_FAILED;
         }
+        fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
     }
 
     int32_t result = VibrateLoopFunc(lock, fd);
     if (result != MSERR_OK) {
-        close(fd);
+        fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
         MEDIA_LOGE("Failed to start vibrator!");
         return MSERR_INVALID_OPERATION;
     }
-    close(fd);
+    fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
     return result;
 }
 
@@ -287,6 +289,7 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
             MEDIA_LOGE("Failed to open hapticUri!");
             return ret;
         }
+        fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
     }
 
     VibratorFileDescription vibratorFD{};
@@ -297,14 +300,14 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
         vibratorFD.offset = 0;
         vibratorFD.length = statbuf.st_size;
     } else {
-        close(fd);
+        fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
         MEDIA_LOGE("Failed to get file size!");
         return ret;
     }
 
     int32_t result = Sensors::PreProcess(vibratorFD, vibratorPkg);
     if (result != 0) {
-        close(fd);
+        fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
         MEDIA_LOGE("Failed to pre-process hapticUri!");
         return ret;
     }
@@ -316,7 +319,7 @@ int32_t SystemSoundVibrator::GetVibratorDuration(const std::string &hapticUri)
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].time +
         vibratorPkg.patterns[patternMaxIndex].events[eventMaxIndex].duration;
     Sensors::FreeVibratorPackage(vibratorPkg);
-    close(fd);
+    fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
 #endif
     return ret;
 }

@@ -17,6 +17,7 @@
 #define OHOS_SYSTEM_SOUND_LOG_H
 
 #include "media_log.h"
+#include "audio_fdsan_tag.h"
 
 #undef LOG_DOMAIN
 #define LOG_DOMAIN 0xD002B80

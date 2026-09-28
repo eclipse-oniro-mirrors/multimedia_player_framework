@@ -126,7 +126,7 @@ int32_t SystemSoundPlayerImpl::LoadInternal(SystemSoundType systemSoundType)
     int32_t soundId = soundPool_->Load(FDHEAD + std::to_string(fileFd));
     if (soundId < 0) {
         MEDIA_LOGE("Load: Failed to load soundPool uri.");
-        close(fileFd);
+        fdsan_close_with_tag(fileFd, FD_SYSTEM_SOUND_LOAD_TAG);
         return ERRCODE_IO_ERROR;
     }
     std::unique_lock<std::mutex> loadLock(loadMutex_);
@@ -135,12 +135,12 @@ int32_t SystemSoundPlayerImpl::LoadInternal(SystemSoundType systemSoundType)
         [this]() { return isLoadCompleted_ || isReleased_; });
     if (isReleased_) {
         MEDIA_LOGE("The sound pool is released when it is preparing.");
-        close(fileFd);
+        fdsan_close_with_tag(fileFd, FD_SYSTEM_SOUND_LOAD_TAG);
         return ERRCODE_SYSTEM_ERROR;
     }
     if (!isLoadCompleted_) {
         MEDIA_LOGE("Failed to load audio uri: time out.");
-        close(fileFd);
+        fdsan_close_with_tag(fileFd, FD_SYSTEM_SOUND_LOAD_TAG);
         return ERRCODE_IO_ERROR;
     }
 
@@ -164,6 +164,7 @@ int32_t SystemSoundPlayerImpl::OpenSystemSoundFile(const std::string &filePath)
         MEDIA_LOGE("Failed to OpenSystemSoundFile!");
         return -1;
     }
+    fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_LOAD_TAG);
     return fd;
 }
 
@@ -229,7 +230,7 @@ int32_t SystemSoundPlayerImpl::Unload(SystemSoundType systemSoundType)
     soundIds_.erase(systemSoundType);
     if (soundFds_.count(systemSoundType) != 0) {
         if (soundFds_[systemSoundType] >= 0) {
-            close(soundFds_[systemSoundType]);
+            fdsan_close_with_tag(soundFds_[systemSoundType], FD_SYSTEM_SOUND_LOAD_TAG);
         }
         soundFds_.erase(systemSoundType);
     }
@@ -263,7 +264,7 @@ int32_t SystemSoundPlayerImpl::ReleaseInternal()
     soundIds_.clear();
     for (auto &[systemSoundType, fd] : soundFds_) {
         if (fd >= 0) {
-            close(fd);
+            fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_LOAD_TAG);
         }
     }
     return SSP_SUCCESS;

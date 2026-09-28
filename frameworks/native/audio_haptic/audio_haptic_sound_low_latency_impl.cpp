@@ -76,7 +76,7 @@ int32_t AudioHapticSoundLowLatencyImpl::LoadSoundPoolPlayer()
 int32_t AudioHapticSoundLowLatencyImpl::OpenAudioSource()
 {
     if (fileDes_ != -1) {
-        (void)close(fileDes_);
+        (void)fdsan_close_with_tag(fileDes_, FD_AUDIO_HAPTIC_SOUNDPOOL_AUDIO_TAG);
         fileDes_ = -1;
     }
 
@@ -108,6 +108,7 @@ int32_t AudioHapticSoundLowLatencyImpl::OpenAudioSource()
     MEDIA_LOGI("AudioHapticSoundLowLatencyImpl::OpenAudioSource fileDes_: %{public}d", fileDes_);
     CHECK_AND_RETURN_RET_LOG(fileDes_ > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
         "AudioHapticSoundLowLatencyImpl::OpenAudioSource: Failed to open the audio source for sound pool.");
+    fdsan_exchange_owner_tag(fileDes_, 0, FD_AUDIO_HAPTIC_SOUNDPOOL_AUDIO_TAG);
     // If an audio player is created through a file descriptor (FD)
     // the length information is required, otherwise SoundPool will return a failure
     if (audioUri.empty() && audioSource_.length == 0) {
@@ -235,7 +236,7 @@ void AudioHapticSoundLowLatencyImpl::ReleaseSoundPoolPlayer()
     }
     soundPoolCallback_ = nullptr;
     if (fileDes_ != -1) {
-        (void)close(fileDes_);
+        (void)fdsan_close_with_tag(fileDes_, FD_AUDIO_HAPTIC_SOUNDPOOL_AUDIO_TAG);
         fileDes_ = -1;
     }
 }

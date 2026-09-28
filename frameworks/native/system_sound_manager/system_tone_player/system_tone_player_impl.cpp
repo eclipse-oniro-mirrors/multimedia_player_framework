@@ -745,13 +745,13 @@ int32_t SystemTonePlayerImpl::RegisterSource(const std::string &audioUri, const 
     if (newAudioUri.find(FDHEAD) != std::string::npos) {
         int32_t fd = atoi(newAudioUri.substr(FDHEAD.size()).c_str());
         if (fd > 0) {
-            close(fd);
+            fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_AUDIO_URI_TAG);
         }
     }
     if (newHapticUri.find(FDHEAD) != std::string::npos) {
         int32_t fd = atoi(newHapticUri.substr(FDHEAD.size()).c_str());
         if (fd > 0) {
-            close(fd);
+            fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_HAPTICS_URI_TAG);
         }
     }
 

@@ -1578,7 +1578,7 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_002, TestSize.
         std::string uri = vec[0]->GetUri();
         fd = systemSoundManager_->OpenToneUri(context_, uri, ToneType::TONE_TYPE_ALARM);
     }
-    close(fd);
+    systemSoundManager_->Close(fd);
     EXPECT_NE(systemSoundManager_, nullptr);
 }
 
@@ -1596,13 +1596,13 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_003, TestSize.
     DatabaseTool databaseTool = {true, isProxy, nullptr};
     int fd = systemSoundManager_->OpenToneUri(databaseTool, "test", ToneType::TONE_TYPE_ALARM);
     EXPECT_LT(fd, 0);
-    close(fd);
+    systemSoundManager_->Close(fd);
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     databaseTool = {true, isProxy, dataShareHelper};
     fd = systemSoundManager_->OpenToneUri(databaseTool, "test", ToneType::TONE_TYPE_ALARM);
     EXPECT_LT(fd, 0);
-    close(fd);
+    systemSoundManager_->Close(fd);
     bool isProxy2 = false;
     std::shared_ptr<DataShare::DataShareHelper> helper2 =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
@@ -1612,26 +1612,26 @@ HWTEST(SystemSoundManagerUnitTest, Media_SoundManager_OpenToneUri_003, TestSize.
     std::string uri = toneAttrs_.GetUri();
     fd = systemSoundManager_->OpenToneUri(context_, uri, ToneType::TONE_TYPE_ALARM);
     EXPECT_GE(fd, 0);
-    close(fd);
+    systemSoundManager_->Close(fd);
     isProxy = true;
     dataShareHelper = SystemSoundManagerUtils::CreateDataShareHelperUri(STORAGE_MANAGER_MANAGER_ID);
     databaseTool = {true, isProxy, dataShareHelper};
     fd = systemSoundManager_->OpenToneUri(databaseTool, uri, ToneType::TONE_TYPE_ALARM);
     EXPECT_LT(fd, 0);
-    close(fd);
+    systemSoundManager_->Close(fd);
     fd = systemSoundManager_->OpenCustomToneUri(uri, ToneType::TONE_TYPE_ALARM);
     EXPECT_GE(fd, 0);
-    close(fd);
+    systemSoundManager_->Close(fd);
     uri = "/data/storage/el2/base/files/ringtone.ogg";
     fd = systemSoundManager_->OpenToneUri(databaseTool, uri, ToneType::TONE_TYPE_ALARM);
     EXPECT_LT(fd, 0);
-    close(fd);
+    systemSoundManager_->Close(fd);
     fd = systemSoundManager_->OpenToneUri(databaseTool, uri, ToneType::TONE_TYPE_INVALID);
     EXPECT_LT(fd, 0);
-    close(fd);
+    systemSoundManager_->Close(fd);
     fd = systemSoundManager_->OpenCustomToneUri(uri, ToneType::TONE_TYPE_INVALID);
     EXPECT_LT(fd, 0);
-    close(fd);
+    systemSoundManager_->Close(fd);
 }
 
 

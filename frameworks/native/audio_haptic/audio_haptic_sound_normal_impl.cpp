@@ -78,7 +78,7 @@ int32_t AudioHapticSoundNormalImpl::PrepareSound()
 int32_t AudioHapticSoundNormalImpl::OpenAudioSource()
 {
     if (fileDes_ != -1) {
-        (void)close(fileDes_);
+        (void)fdsan_close_with_tag(fileDes_, FD_AUDIO_HAPTIC_AVPLAYER_AUDIO_TAG);
         fileDes_ = -1;
     }
 
@@ -108,6 +108,7 @@ int32_t AudioHapticSoundNormalImpl::OpenAudioSource()
     MEDIA_LOGI("fileDes_ == %{public}d", fileDes_);
     CHECK_AND_RETURN_RET_LOG(fileDes_ > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
         "Prepare: Invalid fileDes for avplayer.");
+    fdsan_exchange_owner_tag(fileDes_, 0, FD_AUDIO_HAPTIC_AVPLAYER_AUDIO_TAG);
     return MSERR_OK;
 }
 
@@ -236,7 +237,7 @@ void AudioHapticSoundNormalImpl::ReleaseAVPlayer()
     }
     avPlayerCallback_ = nullptr;
     if (fileDes_ != -1) {
-        (void)close(fileDes_);
+        (void)fdsan_close_with_tag(fileDes_, FD_AUDIO_HAPTIC_AVPLAYER_AUDIO_TAG);
         fileDes_ = -1;
     }
 }
