@@ -283,5 +283,98 @@ HWTEST_F(SoundParserUnitTest, SoundParser_OnOutputBufferAvailable_002, TestSize.
         SoundDecoderCallback_->amutex_.unlock();
     }
 }
+
+// @tc.name     Test VerifyFileType API
+// @tc.number   SoundParser_VerifyFileType_001
+// @tc.desc     Test source_ is nullptr, VerifyFileType should return MSERR_INVALID_VAL
+HWTEST_F(SoundParserUnitTest, SoundParser_VerifyFileType_001, TestSize.Level0)
+{
+    ASSERT_NE(soundParser_, nullptr);
+    soundParser_->source_ = nullptr;
+    int32_t ret = soundParser_->VerifyFileType();
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
+
+// @tc.name     Test SoundDecoderCallback with selectedTrackId parameter
+// @tc.number   SoundParser_SoundDecoderCallback_001
+// @tc.desc     Test SoundDecoderCallback constructor with selectedTrackId
+HWTEST_F(SoundParserUnitTest, SoundParser_SoundDecoderCallback_001, TestSize.Level0)
+{
+    ASSERT_NE(soundParser_, nullptr);
+    int32_t soundID = ID_TEST;
+    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec;
+    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer;
+    bool isRawFile = true;
+    int32_t selectedTrackId = 2;
+    SoundDecoderCallback_ = std::make_shared<SoundDecoderCallback>(
+        soundID, audioDec, demuxer, isRawFile, selectedTrackId);
+    ASSERT_NE(SoundDecoderCallback_, nullptr);
+    EXPECT_EQ(SoundDecoderCallback_->audioTrackIndex_, selectedTrackId);
+}
+
+// @tc.name     Test SoundDecoderCallback with default selectedTrackId
+// @tc.number   SoundParser_SoundDecoderCallback_002
+// @tc.desc     Test SoundDecoderCallback constructor with default selectedTrackId = 0
+HWTEST_F(SoundParserUnitTest, SoundParser_SoundDecoderCallback_002, TestSize.Level0)
+{
+    ASSERT_NE(soundParser_, nullptr);
+    int32_t soundID = ID_TEST;
+    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec;
+    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer;
+    bool isRawFile = true;
+    SoundDecoderCallback_ = std::make_shared<SoundDecoderCallback>(soundID, audioDec, demuxer, isRawFile);
+    ASSERT_NE(SoundDecoderCallback_, nullptr);
+    EXPECT_EQ(SoundDecoderCallback_->audioTrackIndex_, 0);
+}
+
+// @tc.name     Test OnInputBufferBufferAvailable with audioTrackIndex
+// @tc.number   SoundParser_OnInputBufferAvailable_004
+// @tc.desc     Test ReadSample is called with correct audioTrackIndex
+HWTEST_F(SoundParserUnitTest, SoundParser_OnInputBufferAvailable_004, TestSize.Level0)
+{
+    ASSERT_NE(soundParser_, nullptr);
+    MediaAVCodec::AVCodecBufferFlag bufferFlag = MediaAVCodec::AVCodecBufferFlag::AVCODEC_BUFFER_FLAG_NONE;
+    int32_t soundID = ID_TEST;
+    std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> audioDec = std::make_shared<MyAVCodecAudioDecoder>();
+    std::shared_ptr<AVDemuxerImpl> demuxer_value = std::make_shared<AVDemuxerImpl>();
+    EXPECT_CALL(*(demuxer_value), ReadSample(2, _, _, bufferFlag)).WillRepeatedly(testing::Return(ERR_OK));
+    soundParser_->source_ = std::make_shared<MediaAVCodec::AVSourceImpl>();
+    std::shared_ptr<MediaAVCodec::AVDemuxer> demuxer = demuxer_value;
+    ASSERT_NE(demuxer, nullptr);
+    bool isRawFile = true;
+    int32_t selectedTrackId = 2;
+    SoundDecoderCallback_ = std::make_shared<SoundDecoderCallback>(
+        soundID, audioDec, demuxer, isRawFile, selectedTrackId);
+    SoundDecoderCallback_->eosFlag_ = false;
+    SoundDecoderCallback_->decodeShouldCompleted_ = false;
+    ASSERT_NE(SoundDecoderCallback_, nullptr);
+    uint32_t index = ID_TEST;
+    std::shared_ptr<AVSharedMemory> buffer = std::make_shared<AVSharedMemoryBase>(1, 1, "test");
+    SoundDecoderCallback_->OnInputBufferAvailable(index, buffer);
+    bool ret = SoundDecoderCallback_->amutex_.try_lock();
+    EXPECT_EQ(ret, true);
+    if (ret == true) {
+        SoundDecoderCallback_->amutex_.unlock();
+    }
+}
+
+// @tc.name     Test DoDemuxer with VerifyFileType check
+// @tc.number   SoundParser_DoDemuxer_002
+// @tc.desc     Test DoDemuxer calls VerifyFileType and returns MSERR_INVALID_VAL when file type is unsupported
+HWTEST_F(SoundParserUnitTest, SoundParser_DoDemuxer_002, TestSize.Level0)
+{
+    ASSERT_NE(soundParser_, nullptr);
+    MediaAVCodec::Format trackFormat;
+    auto source = std::make_shared<MediaAVCodec::AVSourceImpl>();
+    EXPECT_CALL(*(source), GetTrackFormat(_, _)).WillRepeatedly(testing::Return(ID_TEST));
+    EXPECT_CALL(*(source), GetSourceFormat(_)).WillRepeatedly(testing::Return(ERR_OK));
+    soundParser_->source_ = source;
+    std::shared_ptr<AVDemuxerImpl> demuxer = std::make_shared<AVDemuxerImpl>();
+    EXPECT_CALL(*(demuxer), SelectTrackByID(_)).WillRepeatedly(testing::Return(ID_TEST));
+    soundParser_->demuxer_ = demuxer;
+    soundParser_->source_->mediaDemuxer = nullptr;
+    int32_t ret = soundParser_->DoDemuxer(&trackFormat);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
 } // namespace Media
 } // namespace OHOS

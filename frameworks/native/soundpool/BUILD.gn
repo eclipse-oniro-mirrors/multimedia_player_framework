@@ -58,6 +58,7 @@ ohos_shared_library("soundpool_client") {
     "ability_runtime:ability_manager",
     "ability_runtime:abilitykit_native",
     "av_codec:av_codec_client",
+    "av_codec:av_codec_media_engine_modules",
     "audio_framework:audio_client",
     "audio_framework:audio_common",
     "audio_framework:audio_renderer",

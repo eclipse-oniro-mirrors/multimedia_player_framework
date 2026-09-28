@@ -16,6 +16,7 @@
 #define SOUND_PARSER_H
 
 #include <atomic>
+#include <cstdint>
 #include <deque>
 #include <memory>
 #include <mutex>
@@ -35,6 +36,8 @@
 #include "media_dfx.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "media_types.h"
+#include "meta_key.h"
 #include "securec.h"
 
 namespace OHOS {
@@ -61,7 +64,7 @@ public:
     };
 
     SoundDecoderCallback(int32_t soundID, const std::shared_ptr<MediaAVCodec::AVCodecAudioDecoder> &audioDec,
-        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile);
+        const std::shared_ptr<MediaAVCodec::AVDemuxer> &demuxer, bool isRawFile, int32_t selectedTrackId = 0);
     ~SoundDecoderCallback();
     int32_t SetDecodeCallback(const std::shared_ptr<SoundDecodeListener> &listener)
     {
@@ -101,6 +104,7 @@ private:
     std::shared_ptr<AudioStandard::AudioSharedMemory> audioSharedMemory_ = nullptr;
     bool decodeShouldCompleted_ = false;
     int32_t currentSoundBufferSize_ = 0;
+    int32_t audioTrackIndex_ = 0; // first audio track index in file
     std::shared_ptr<ISoundPoolCallback> callback_ = nullptr;
     std::mutex amutex_;
 };
@@ -145,6 +149,7 @@ private:
         std::atomic<bool> isSoundParserCompleted_ = false;
     };
 
+    int32_t VerifyFileType();
     int32_t DoDemuxer(MediaAVCodec::Format *trackFormat);
     int32_t DoDecode(const MediaAVCodec::Format &trackFormat);
     int32_t soundID_ = 0;
@@ -160,6 +165,7 @@ private:
 
     MediaAVCodec::Format trackFormat_;
     int64_t sourceDurationInfo_ = 0;
+    int32_t audioTrackIndex_ = 0; // first audio track index in file
 
     static constexpr int32_t AUDIO_SOURCE_TRACK_COUNT = 1;
     static constexpr int32_t AUDIO_SOURCE_TRACK_INDEX = 0;
