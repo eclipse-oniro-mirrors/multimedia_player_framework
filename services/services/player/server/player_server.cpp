@@ -1789,9 +1789,10 @@ int32_t PlayerServer::SetParameter(const Format &param)
 
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
 
-    if (param.ContainKey(PlayerKeys::STREAM_USAGE)) {
+    Format paramCopy = param;
+    if (paramCopy.ContainKey(PlayerKeys::STREAM_USAGE)) {
         int32_t streamUsage = OHOS::AudioStandard::STREAM_USAGE_UNKNOWN;
-        CHECK_AND_RETURN_RET(param.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage), MSERR_INVALID_VAL);
+        CHECK_AND_RETURN_RET(paramCopy.GetIntValue(PlayerKeys::STREAM_USAGE, streamUsage), MSERR_INVALID_VAL);
         MEDIA_LOGI("streamUsage = %{public}d", streamUsage);
         if (streamUsage != OHOS::AudioStandard::STREAM_USAGE_MUSIC &&
             streamUsage != OHOS::AudioStandard::STREAM_USAGE_MOVIE &&
@@ -1799,18 +1800,24 @@ int32_t PlayerServer::SetParameter(const Format &param)
             isStreamUsagePauseRequired_ = false;
         }
         MEDIA_LOGI("isStreamUsagePauseRequired_ = %{public}d", isStreamUsagePauseRequired_);
+        if ((streamUsage == OHOS::AudioStandard::STREAM_USAGE_VOICE_RINGTONE ||
+            streamUsage == OHOS::AudioStandard::STREAM_USAGE_VOICE_CALL_ASSISTANT) && !isCalledBySystemApp_) {
+            MEDIA_LOGI("Not System App, invalid StreamUsage.");
+            paramCopy.RemoveKey(PlayerKeys::STREAM_USAGE);
+            isStreamUsagePauseRequired_ = true;
+        }
     }
 
-    if (param.ContainKey(PlayerKeys::AUDIO_EFFECT_MODE)) {
+    if (paramCopy.ContainKey(PlayerKeys::AUDIO_EFFECT_MODE)) {
         int32_t effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
-        CHECK_AND_RETURN_RET(param.GetIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode), MSERR_INVALID_VAL);
+        CHECK_AND_RETURN_RET(paramCopy.GetIntValue(PlayerKeys::AUDIO_EFFECT_MODE, effectMode), MSERR_INVALID_VAL);
         return SetAudioEffectMode(effectMode);
     }
 
-    int32_t ret = playerEngine_->SetParameter(param);
+    int32_t ret = playerEngine_->SetParameter(paramCopy);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_INVALID_OPERATION, "SetParameter Failed!");
 
-    if (param.ContainKey(PlayerKeys::CONTENT_TYPE)) {
+    if (paramCopy.ContainKey(PlayerKeys::CONTENT_TYPE)) {
         config_.effectMode = OHOS::AudioStandard::AudioEffectMode::EFFECT_DEFAULT;
     }
 
