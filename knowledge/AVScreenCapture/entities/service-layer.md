@@ -1,68 +1,94 @@
 # 服务层实体
 
-> ScreenCaptureServer、ScreenCaptureServerManager、监听器管理等服务端核心类
+> ScreenCaptureServer、ServerManager、监听器管理等服务端核心类
 
 ## 实体概念
 
-| 实体名称 | 实体定义 | 核心特征 | 类型/分类 |
-|---------|---------|---------|----------|
-| ScreenCaptureServer | 屏幕录制服务端核心类，实现 IScreenCaptureService + IScreenCaptureEventListener | 7 状态能力位图状态机；TaskQueue 异步队列；AVScreenCaptureConfig 统一配置；虚拟屏幕管理（MakeVirtualScreenMirror/MakeVirtualScreenExtended）；音频采集（AudioCapturerWrapper）+ 文件录制（IRecorderService）；隐私授权弹窗；互斥锁保护状态/配置 | 核心服务类 |
-| ScreenCaptureServerManager | 单例管理器，管理屏幕录制实例映射表 | GetNewSessionId 分配会话 ID；CanScreenCaptureInstanceBeCreate 实例数限制；CheckSCServerSpecifiedDataTypeNum 数据类型限制；SA 应用映射管理 | 全局单例 |
-| ScreenCaptureServerBase | 基类，定义状态枚举/能力位图/统计事件信息 | AVScreenCaptureState 7 状态；Capability 能力位图；AVScreenCaptureAvType/AVScreenCaptureDataMode/StopReason 枚举；StatisticalEventInfo DFX 统计 | 基类 |
-| ScreenCaptureCallbackProxy | 服务端回调代理，shared_mutex 保护 | SetCallback 设置回调；SetBufferActive 控制缓冲回调；OnError/OnAudioBufferAvailable/OnVideoBufferAvailable/OnStateChange/OnDisplaySelected/OnCaptureContentChanged/OnUserSelected/OnPrivacyProtect 8 个回调转发 | 回调代理 |
-| ScreenCaptureListenerManager | 监听器统一管理，ListenerFlag 位图控制注册 | RegisterListeners/UnregisterListeners 按位图注册注销；管理 9 类 Wrapper；ExecuteIf 模板按标志执行 | 监听器管理 |
-| IScreenCaptureEventListener | 事件监听纯虚接口，12 个回调 | OnWindowLifecycle/OnWindowInfoChanged/OnPrivateWindowChange/OnScreenConnect/OnScreenDisconnect/OnLanguageSwitch/OnRecordDisplayChange/OnCallStateChanged/OnAccountSwitched/OnAudioRendererStateChanged/OnBatchLifecycleEvent/OnAppInstanceLifecycleEvent | 纯虚接口 |
-| SessionLifecycleListenerWrapper | 窗口生命周期监听 Wrapper | OnLifecycleEvent/OnBatchLifecycleEvent/OnAppInstanceLifecycleEvent 转发 | 监听器 Wrapper |
-| WindowInfoListenerWrapper | 窗口信息变更监听 Wrapper | OnWindowInfoChanged 转发；SetWindowId 设置关注窗口 | 监听器 Wrapper |
-| RecordDisplayListenerWrapper | 录制屏幕变更监听 Wrapper | OnChange(displayIds) 转发 | 监听器 Wrapper |
-| PrivateWindowListenerWrapper | 隐私窗口监听 Wrapper | OnPrivateWindow(hasPrivate) 转发 | 监听器 Wrapper |
-| ScreenConnectListenerWrapper | 屏幕连接监听 Wrapper | OnConnect/OnDisconnect/OnChange 转发 | 监听器 Wrapper |
-| LanguageSwitchSubscriberWrapper | 语言切换监听 Wrapper | OnReceiveEvent 转发 | 监听器 Wrapper |
-| AccountObserverCallbackWrapper | 账号切换监听 Wrapper | OnAccountsSwitch 转发 | 监听器 Wrapper |
-| InCallObserverCallbackWrapper | 通话状态监听 Wrapper | OnTelCallStateUpdated 转发（SUPPORT_CALL） | 监听器 Wrapper |
-| AudioRendererCallbackWrapper | 音频渲染器状态监听 Wrapper | OnRendererStateChange 转发 | 监听器 Wrapper |
-| IScreenCaptureServiceProviders | 依赖注入接口 | GetScreenCaptureMonitor 获取 Monitor；CreateRecorder 创建录制器；GetAccountObserver 获取账号观察者 | 依赖注入接口 |
-| ScreenCaptureControllerServer | 用户选择处理服务端 | ReportAVScreenCaptureUserChoice JSON 解析分发；GetAVScreenCaptureConfigurableParameters 获取配置参数 | 服务端类 |
-| ScreenCaptureMonitorServer | Monitor 单例，IInnerScreenCaptureMonitorService | runningCapturePidCounts_ 运行中 PID 计数；screenCaptureMonitorCbSet_ 监听器集合；CallOnScreenCaptureStarted/Finished 通知 | 全局单例 |
-| UIExtensionAbilityConnection | UI 扩展连接，AbilityConnectionStub | OnAbilityConnectDone/OnAbilityDisconnectDone；ConnectStatus 状态机 UNKNOWN→STARTING→STARTED→CLOSING→CLOSED；CloseDialog 关闭弹窗 | UI 扩展 |
-| ScreenCaptureServiceProviders | 依赖注入实现类 | 实现 IScreenCaptureServiceProviders 接口 | 实现类 |
+| 实体名称 | 实体定义 | 类型/分类 |
+|---------|---------|----------|
+| ScreenCaptureServer | 屏幕录制服务端核心类，实现服务+事件监听接口 | 核心服务类 |
+| ScreenCaptureServerManager | 单例管理器，管理实例映射表与实例数限制 | 全局单例 |
+| ScreenCaptureServerBase | 基类，定义状态枚举/能力位图/统计事件信息 | 基类 |
+| ScreenCaptureCallbackProxy | 服务端回调代理，读写锁保护，转发 8 种回调 | 回调代理 |
+| ScreenCaptureListenerManager | 监听器统一管理，ListenerFlag 位图控制注册注销，管理多类系统监听器 Wrapper | 监听器管理 |
+| IScreenCaptureEventListener | 事件监听纯虚接口，含窗口/隐私/屏幕/语言/账号/通话/音频渲染器等回调 | 纯虚接口 |
+| IScreenCaptureServiceProviders | 依赖注入接口（获取 Monitor/创建 Recorder/获取 AccountObserver） | 依赖注入接口 |
+| ScreenCaptureControllerServer | 用户选择处理服务端，按 sessionId 路由到对应 ScreenCaptureServer（解析在 Server 内） | 服务端类 |
+| ScreenCaptureMonitorServer | Monitor 单例，追踪录屏进程 | 全局单例 |
+| UIExtensionAbilityConnection | UI 扩展连接，管理授权弹窗生命周期 | UI 扩展 |
 
-## 上下文与场景
+> 监听器 Wrapper（窗口生命周期/窗口信息/录制屏幕变更/隐私窗口/屏幕连接/语言切换/账号/通话/音频渲染器）均由 ListenerManager 统一注册，按 ListenerFlag 位图按需启用。
 
-### 交互流程
+## 交互流程
 
-**屏幕录制创建流程**：
+**屏幕录制创建**：应用 → IPC → Stub → ScreenCaptureServer::Create → ServerManager 注册实例 → 返回 Client
 
-```
-应用 → IPC → ScreenCaptureServiceStub::OnRemoteRequest
-  → ScreenCaptureServer::Create(providers)
-  → ScreenCaptureServerManager::RegisterServer(sessionId, server, appUid)
-  → 返回 ScreenCaptureServiceStub (IPC 端)
-```
+**屏幕录制启动**：应用 → IPC → StartScreenCapture → 授权弹窗 → 创建虚拟屏幕 → 启动音频采集 → 启动视频/文件录制 → 后处理
 
-**屏幕录制启动流程**：
+**监听器注册**：SetupCaptureListeners → ListenerManager::RegisterListeners(flags) → 按位图注册各类 Wrapper → Wrapper 回调 → 事件监听接口 → ScreenCaptureServer
 
-```
-应用 → IPC → ScreenCaptureServer::StartScreenCapture
-  → RequestUserPrivacyAuthority 弹窗授权
-  → MakeVirtualScreenMirror/MakeVirtualScreenExtended 创建虚拟屏幕
-  → StartInnerAudioCapture/StartMicAudioCapture 启动音频采集
-  → StartStreamVideoCapture/StartScreenCaptureFile 启动视频/文件录制
-  → PostStartScreenCapture 后处理
-```
+## ReportUserChoice 解析与字段约定
 
-**监听器注册流程**：
+> `ReportAVScreenCaptureUserChoice`（Controller IPC 消息码 0）由 ControllerServer 按 sessionId 路由到对应 ScreenCaptureServer，`content` 为 JSON 字符串，解析在 Server 内完成。字段约定是 wire 兼容契约，修改字段名/取值/类型会 break 应用兼容性。
 
-```
-ScreenCaptureServer::SetupCaptureListeners
-  → ScreenCaptureListenerManager::RegisterListeners(listenerFlags, params)
-  → 按 ListenerFlag 位图分别注册 9 类 Wrapper
-  → Wrapper 回调 → IScreenCaptureEventListener → ScreenCaptureServer
-```
+### choice 字段约定
 
-### 状态流转
+`choice` 为字符串，取值：
 
-**ScreenCaptureServer 7 状态状态机**：
+| 取值 | 语义 |
+|------|------|
+| `"true"` | 允许 |
+| `"false"` | 拒绝 |
+
+### 字段互斥与解析优先级
+
+字段互斥，一次上报只含一组，Server 按以下优先级解析：
+
+| 优先级 | 字段组 | 说明 |
+|------|------|------|
+| 1 | `choice` | 用户授权选择，允许则附录制目标字段 |
+| 2 | `stopRecording` | 停止录屏（STOPPED_BY_USER） |
+| 3 | `appPrivacyProtectionSwitch` + `systemPrivacyProtectionSwitch` | 隐私开关变更 |
+
+### 字段明细
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `choice` | string ("true"/"false") | 用户授权选择，允许则解析录制目标 |
+| `checkBoxSelected` | string ("true"/"false") | 隐私保护复选框，同时设置系统/应用隐私保护开关（choice 组附加） |
+| `isInnerAudioBoxSelected` | string ("true"/"false") | 内录音频复选框（choice 组附加） |
+| `stopRecording` | bool | true 则停止录屏（STOPPED_BY_USER） |
+| `appPrivacyProtectionSwitch` | bool | 应用隐私保护开关 |
+| `systemPrivacyProtectionSwitch` | bool | 系统隐私保护开关 |
+| `appInformation` | object | 录制指定应用，含子字段 `bundleName`:string + `appIndex`:int（choice=true 时附加） |
+| `missionId` | int (≥0) | 录制指定窗口（choice=true 时附加） |
+| `displayId` | uint64 或 array<uint64> | 录制指定屏幕（choice=true 时附加） |
+
+> `choice` / `checkBoxSelected` / `isInnerAudioBoxSelected` 的 bool 值以**字符串** "true"/"false" 传递，非 JSON bool。
+
+### 录制目标字段解析优先级
+
+choice=true 时按优先级解析录制目标字段确定 CaptureMode：
+
+| 优先级 | 字段 | 解析结果 |
+|------|------|---------|
+| 1 | `appInformation` | CAPTURE_SPECIFIED_APP |
+| 2 | `missionId` | CAPTURE_SPECIFIED_WINDOW |
+| 3 | `displayId` | CAPTURE_SPECIFIED_SCREEN |
+| — | 均无 | 回退原配置 |
+
+### GetAVScreenCaptureConfigurableParameters（消息码 1）返回约定
+
+返回 JSON 字符串，字段：
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `appPrivacyProtectionSwitch` | bool | 应用隐私保护开关当前值 |
+| `systemPrivacyProtectionSwitch` | bool | 系统隐私保护开关当前值 |
+
+## 状态流转
+
+**7 状态状态机**：
 
 | 状态 | 说明 | 允许的操作 |
 |------|------|-----------|
@@ -76,81 +102,33 @@ ScreenCaptureServer::SetupCaptureListeners
 
 ### 状态-能力映射
 
-| Capability 位 | 说明 |
-|---------------|------|
-| CAP_NONE | 无能力 |
-| CAP_INIT | 已初始化 |
-| CAP_CONFIG | 已配置 |
-| CAP_ALIVE | 实例存活 |
-| CAP_POPUP | 弹窗中 |
-| CAP_RUNNING | 录制运行中 |
-| CAP_PAUSED | 已暂停 |
-| CAP_ACTIVE | 活跃状态 |
+每个状态对应一组能力位（CAP_INIT/CAP_CONFIG/CAP_ALIVE/CAP_POPUP/CAP_RUNNING/CAP_PAUSED/CAP_ACTIVE），`IsState(cap)` 通过位与判断当前状态是否允许某操作。
 
 ### 异常处理路径
 
 | 异常场景 | 处理方式 |
 |---------|---------|
-| 用户拒绝隐私授权 | StopScreenCaptureByEvent(SCREEN_CAPTURE_STATE_CANCELED)，StopReason=REQUEST_USER_PRIVACY_AUTHORITY_FAILED |
-| 虚拟屏幕创建失败 | PostStartScreenCaptureFail，StopReason=POST_START_SCREENCAPTURE_HANDLE_FAILURE |
-| 通话中断 | OnCallStateChanged → TelCallStateUpdated，可选 keepCaptureDuringCall 策略 |
-| 隐私窗口出现 | OnPrivateWindowChange → 虚拟屏幕黑屏处理 |
-| 账号切换 | OnAccountSwitched → 停止录制并释放资源 |
+| 用户拒绝隐私授权 | 状态回 CREATED，回调 CANCELED |
+| 虚拟屏幕创建失败 | 启动失败处理，上报错误 |
+| 通话中断 | 通话状态回调，可选 keepCaptureDuringCall 策略 |
+| 隐私窗口出现 | 隐私窗口变更 → 虚拟屏幕黑屏处理 |
+| 账号切换 | 账号切换回调 → 停止录制并释放资源 |
 
 ## 规格与约束
 
 | 约束类别 | 约束内容 |
 |---------|---------|
-| 实例限制 | maxAppLimit_=4（全局最多 4 个实例），maxSessionPerUid_=4（每 UID 最多 4 会话），maxSCServerDataTypePerUid_=2（每 UID 最多 2 种数据类型），maxSessionId_=16（会话 ID 上限） |
-| 业务规则 | ScreenCaptureServer 所有操作经过能力位图校验，IsState(cap) 检查当前状态能力 |
-| 性能约束 | 所有录制操作通过 TaskQueue 异步执行，IPC 线程快速返回不阻塞 |
-| 安全与隐私约束 | 屏幕录制需用户隐私授权弹窗（UIExtensionAbilityConnection），授权后方可采集 |
-| 线程安全 | mutex_/captureIdsMutex_/captureConfigMutex_(shared_mutex) 保护状态/配置/ID |
+| 实例限制 | 全局实例数上限、单 UID 会话数上限、单 UID 数据类型数上限、会话 ID 上限 |
+| 业务规则 | 所有操作经过能力位图校验 |
+| 性能约束 | 录制操作通过 TaskQueue 异步执行，IPC 线程快速返回不阻塞 |
+| 安全与隐私 | 屏幕录制需用户隐私授权弹窗，授权后方可采集 |
+| 线程安全 | 互斥锁/读写锁保护状态/配置/ID |
 
 ## 知识关联
 
 | 关联维度 | 关联实体/知识 |
 |---------|------------|
-| 上层依赖 | [[ipc-layer-entities]] — 通过 IPC 存根/代理接收客户端请求 |
-| 下游影响 | [[capture-implementation]] — 虚拟屏幕/音频采集/文件录制 |
-| 平级关联 | ScreenCaptureServer ↔ ScreenCaptureListenerManager — 前者实现事件监听接口，后者管理监听器注册 |
-| 概念对比 | ScreenCaptureServer vs ScreenCaptureMonitorServer — 前者管理单个录制实例，后者全局监控 |
-
-## 数据模型
-
-### StatisticalEventInfo
-
-DFX 统计事件信息结构体：
-
-| 字段 | 说明 |
-|------|------|
-| errCode / errMsg | 错误码与错误信息 |
-| captureDuration | 录制时长 |
-| userAgree | 用户是否同意 |
-| requireMic / enableMic | 需要麦克风/已启用麦克风 |
-| videoResolution | 视频分辨率 |
-| stopReason | 停止原因 |
-| startLatency | 启动延迟 |
-
-### ScreenCaptureServerManager 数据结构
-
-| 数据结构 | 说明 |
-|---------|------|
-| serverMap_ | map\<sessionId, ServerEntry\> — 会话 ID → 服务器实例映射 |
-| ServerEntry | server(weak_ptr) + appUid + dataType |
-| saUidAppUidMap_ | map\<saUid, pair\<appUid, curAppUid\>\> — SA 应用映射 |
-
-## 代码与符号
-
-| 实体 | 代码路径 | 核心符号 |
-|------|---------|---------|
-| ScreenCaptureServer | `services/services/screen_capture/server/screen_capture_server.h/.cpp` | ScreenCaptureServer::StartScreenCapture/StopScreenCapture/PauseScreenCapture |
-| ScreenCaptureServerBase | `services/services/screen_capture/server/screen_capture_server_base.h` | AVScreenCaptureState, Capability, StopReason, StatisticalEventInfo |
-| ScreenCaptureServerManager | `services/services/screen_capture/server/screen_capture_server_manager.h/.cpp` | ScreenCaptureServerManager::GetNewSessionId/CanScreenCaptureInstanceBeCreate |
-| ScreenCaptureCallbackProxy | `services/services/screen_capture/server/screen_capture_callback_proxy.h/.cpp` | ScreenCaptureCallbackProxy::SetCallback/SetBufferActive |
-| ScreenCaptureListenerManager | `services/services/screen_capture/server/screen_capture_listener_manager.h/.cpp` | ScreenCaptureListenerManager::RegisterListeners/UnregisterListeners |
-| IScreenCaptureEventListener | `services/services/screen_capture/server/screen_capture_event_listener.h` | IScreenCaptureEventListener |
-| IScreenCaptureServiceProviders | `services/services/screen_capture/server/screen_capture_service_providers.h/.cpp` | IScreenCaptureServiceProviders, ScreenCaptureServiceProviders |
-| ScreenCaptureControllerServer | `services/services/screen_capture/server/screen_capture_controller_server.h/.cpp` | ScreenCaptureControllerServer::ReportAVScreenCaptureUserChoice |
-| ScreenCaptureMonitorServer | `services/services/screen_capture_monitor/server/screen_capture_monitor_server.h/.cpp` | ScreenCaptureMonitorServer::GetInstance/CallOnScreenCaptureStarted |
-| UIExtensionAbilityConnection | `services/services/screen_capture/server/ui_extension_ability_connection.h/.cpp` | UIExtensionAbilityConnection, ConnectStatus |
+| 上层依赖 | [ipc-layer-entities](ipc-layer-entities.md) — 通过 IPC 存根/代理接收客户端请求 |
+| 下游影响 | [capture-implementation](capture-implementation.md) — 虚拟屏幕/音频采集/文件录制 |
+| 平级关联 | ScreenCaptureServer ↔ ListenerManager — 前者实现事件监听接口，后者管理监听器注册 |
+| 概念对比 | ScreenCaptureServer vs MonitorServer — 前者管理单个录制实例，后者全局监控 |

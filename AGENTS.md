@@ -420,6 +420,20 @@ knowledge/AVMeta/
 | test/unittest/screen_capture_impl_unittest/ | — | ScreenCaptureImpl 单元测试 |
 | test/fuzztest/screen_capture_fuzztest/ | — | 屏幕录制模糊测试，验证输入参数校验 |
 
+**AVScreenCapture 关键词触发规则**：
+
+- 提及 **VirtualScreen, MakeVirtualScreenMirror, MakeVirtualScreenExtended, SurfaceBuffer** → 先读 `knowledge/AVScreenCapture/entities/capture-implementation.md`
+- 提及 **能力位图, Capability bitmask, IsState, STATE_CAPS_, AVScreenCaptureState** → 先读 `knowledge/AVScreenCapture/technologies/capture-lifecycle.md` 和 `knowledge/AVScreenCapture/entities/service-layer.md`
+- 提及 **PrivacyProtected, 隐私窗口, 隐私保护, ENTER_PRIVATE_SCENE** → 先读 `knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
+- 提及 **白名单, 黑名单, AddWhiteListWindows, ExcludeContent, SetVirtualScreenBlackList** → 先读 `knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
+- 提及 **Picker, PresentPicker, PickerMode, UserChoice, Controller** → 先读 `knowledge/AVScreenCapture/entities/monitor-and-controller.md` 和 `knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
+- 提及 **Monitor, IsScreenCaptureWorking, 系统录屏器, ScreenCaptureMonitorServer** → 先读 `knowledge/AVScreenCapture/entities/monitor-and-controller.md`
+- 提及 **IPC, Proxy, Stub, ScreenCaptureClient, ScreenCaptureServiceStub, 41 个消息码** → 先读 `knowledge/AVScreenCapture/technologies/ipc-communication.md` 和 `knowledge/AVScreenCapture/entities/ipc-layer-entities.md`
+- 提及 **AudioCapturerWrapper, AudioDataSource, MixAudio, 混音, 音视频同步** → 先读 `knowledge/AVScreenCapture/entities/capture-implementation.md` 和 `knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md`
+- 提及 **ScreenCapBufferConsumerListener, OnBufferAvailable, SurfaceBuffer** → 先读 `knowledge/AVScreenCapture/entities/capture-implementation.md`
+- 提及 **ScreenCaptureServerManager, maxAppLimit, 实例限制, SA 注册** → 先读 `knowledge/AVScreenCapture/entities/service-layer.md`
+- 提及 **NotificationLocalLiveView, 通知栏, 录屏通知** → 先读 `knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md`
+
 #### 其它模块路径
 
 #### AVMeta 相关路径
@@ -737,4 +751,61 @@ knowledge/AVMeta/
 ### 验证降级
 
 若构建或测试无法运行，报告：(1) 哪些验证步骤无法运行，(2) 原因，(3) 剩余未验证风险，(4) 评审者应执行的手动验证。
-=======
+
+## 屏幕录制模块边界约束（AVScreenCapture）
+
+### 禁止事项
+
+- 禁止跳过状态机校验直接执行采集操作；非法状态必须返回错误码。
+- 禁止绕过实例数量限制直接创建实例。
+- 禁止修改窗口过滤语义（白名单/黑名单的过滤方向）而不验证采集内容正确性。
+- 禁止未经权限审查修改系统参数配置。
+
+### 架构不变量
+
+- **无独立引擎层**：视频采集直接调用系统虚拟屏幕能力，音频采集直接调用系统音频采集能力，文件录制复用录制引擎。
+- **状态机校验必须执行**：能力位图校验必须覆盖所有操作入口。
+- **隐私保护优先**：所有采集操作必须经过权限校验和隐私窗口保护。
+- **三子系统分离**：主录屏、用户选择、状态监控为独立 SA。
+- **依赖方向**：NAPI → Service → 采集实现；不可逆向。
+
+## 屏幕录制模块 DFX 约束
+
+- 录屏统计信息必须在录屏结束或失败时发送 DFX 事件前填充（详见 knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md）。
+- 录屏通知栏的暂停/停止/麦克风按钮响应不可禁用（详见 knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md）。
+
+## 屏幕录制模块常见 Agent 失败模式
+
+- Agent 调用开始采集前未调用初始化 → 返回错误码。调用生命周期方法前必须检查状态（详见 knowledge/AVScreenCapture/technologies/capture-lifecycle.md）。
+- Agent 将白名单理解为"始终可见" → 语义错误。白名单=仅白名单内窗口可见，过滤其余窗口（详见 knowledge/AVScreenCapture/technologies/privacy-and-permission.md）。
+- Agent 绕过实例管理器直接创建实例 → 实例数超限。必须通过实例数校验（详见 knowledge/AVScreenCapture/entities/service-layer.md）。
+- Agent 修改状态机但忘记同步能力位图数组 → 状态校验失效（详见 knowledge/AVScreenCapture/technologies/capture-lifecycle.md）。
+
+## 屏幕录制模块验证
+
+### 任务特定检查
+
+| 变更类型 | 附加检查 |
+|---------|---------|
+| NAPI/JS API 变更 | 验证 NAPI 桥接层与 Native 实现调用链一致；验证异步调度（详见 knowledge/AVScreenCapture/entities/api-layer.md） |
+| C API 变更 | 验证 C API 回调机制；验证新旧回调适配（详见 knowledge/AVScreenCapture/entities/api-layer.md） |
+| IPC parcel 变更 | 验证 Proxy 和 Stub 字段顺序一致；验证消息码不变（详见 knowledge/AVScreenCapture/technologies/ipc-communication.md） |
+| 状态机/能力位图变更 | 验证状态转换覆盖所有操作入口；验证能力位图数组与状态一致（详见 knowledge/AVScreenCapture/technologies/capture-lifecycle.md） |
+| 隐私保护变更 | 验证隐私窗口保护机制；验证权限校验流程；验证白名单/黑名单语义（详见 knowledge/AVScreenCapture/technologies/privacy-and-permission.md） |
+| 虚拟屏幕变更 | 验证虚拟屏幕创建/销毁生命周期；验证 Surface 释放（详见 knowledge/AVScreenCapture/entities/capture-implementation.md） |
+| 音频采集/混音变更 | 验证音频采集生命周期；验证混音同步算法（详见 knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md） |
+| Monitor 变更 | 验证录屏状态追踪；验证监听器注册/注销（详见 knowledge/AVScreenCapture/entities/monitor-and-controller.md） |
+| 实例数量限制变更 | 验证实例数校验逻辑（详见 knowledge/AVScreenCapture/entities/service-layer.md） |
+| DFX 打点变更 | 验证 DFX 事件字段完整；验证通知栏按钮响应未禁用（详见 knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md） |
+
+### 完成定义
+
+完成意味着：(1) 构建成功，(2) 相关单元测试通过，(3) lint 无新增警告，(4) 任务特定兼容性/安全检查通过，(5) 无资源泄漏（虚拟屏幕、Surface、音频采集已释放）。
+
+### 最终响应要求
+
+最终响应必须列出：(1) 变更文件，(2) 运行的检查及结果，(3) 未解决的风险或无法验证的内容。
+
+### 验证降级
+
+若构建或测试无法运行，报告：(1) 哪些验证步骤无法运行，(2) 原因，(3) 剩余未验证风险，(4) 评审者应执行的手动验证。

@@ -28,15 +28,15 @@ HDI 硬件驱动 (显示合成 / 音频采集 / 编解码)
 | 虚拟扩展屏录制 | 录制虚拟扩展显示画面 | AVScreenCapture + CAPTURE_VIRTUAL_EXTENDED_SCREEN |
 | 用户选择录屏 | Picker 弹窗让用户选择录制目标 | AVScreenCaptureController + PresentPicker + UserChoice |
 | 隐私保护录屏 | 跳过隐私窗口、白名单窗口、内容过滤 | PrivacyProtected + SkipPrivacyMode + ExcludeContent |
-| 麦克风+内录混音 | 同时采集麦克风和系统内录音频 | AudioDataSource + MixModeBufferWrite |
+| 麦克风+内录混音 | 同时采集麦克风和系统内录音频 | AudioDataSource + MixAudio |
 | 多显示器录屏 | 镜像指定物理屏幕到虚拟屏幕 | MakeMirror + ChangeMirrorScreen |
 
 ## 进程模型
 
 | 进程 | 包含模块 | 说明 |
 |------|---------|------|
-| 应用进程 | ScreenCaptureImpl / ScreenCaptureMonitorImpl / ScreenCaptureControllerImpl | 客户端代理，持有 IPC Proxy |
-| 媒体服务进程 | ScreenCaptureServer / ScreenCaptureServerManager / ScreenCaptureControllerServer / ScreenCaptureMonitorServer | 服务端核心逻辑，常驻 SA |
+| 应用进程 | 客户端代理（ScreenCapture/Monitor/Controller Impl） | 持有 IPC Proxy，转发调用到服务端 |
+| 媒体服务进程 | 服务端核心（Server/Manager/ControllerServer/MonitorServer） | 常驻 SA，承载录屏核心逻辑 |
 | 编解码服务进程 | codec_server | 文件录制模式下的视频/音频硬编码 |
 
 **关键约束**：录屏客户端与服务端分进程运行，所有操作必须通过 IPC 完成；视频采集通过 Rosen VirtualScreen 跨进程获取 SurfaceBuffer。
@@ -48,9 +48,9 @@ HDI 硬件驱动 (显示合成 / 音频采集 / 编解码)
 | 核心语言 | C++ | 服务端、客户端、采集逻辑 |
 | 客户端API | C (C API) / ArkTS / JS / CangJie | AVScreenCapture 等对外 API |
 | 桥接层 | NAPI / CJ-FFI / ANI | JS/ArkTS 到 C++ 的桥接 |
-| 进程间通信 | OHOS IPC (Binder) | Client-Server 通信，41+3+6 消息码 |
+| 进程间通信 | OHOS IPC (Binder) | Client-Server 通信，4 组 IPC 接口 |
 | 视频采集 | Rosen VirtualScreen + Surface | ScreenManager 创建虚拟屏幕，SurfaceBuffer 逐帧获取 |
-| 音频采集 | AudioStandard::AudioCapturer | AudioCapturerWrapper 封装，支持麦克风/内录/混音 |
+| 音频采集 | AudioStandard::AudioCapturer | 封装为 AudioCapturerWrapper，支持麦克风/内录/混音 |
 | 文件录制 | Recorder 引擎 (IRecorderService) | 复用 player_framework RecorderServer |
 | 隐私保护 | PrivacyKit + WindowManager | 权限申请、隐私窗口检测、跳过保护 |
 | 日志 | HiLog | 分模块标签日志 |
@@ -93,5 +93,5 @@ HDI 硬件驱动 (显示合成 / 音频采集 / 编解码)
 
 ## 知识关联
 
-- [[architecture]] - 架构总览
-- [[glossary]] - 术语速查
+- [architecture](architecture.md) - 架构总览
+- [glossary](glossary.md) - 术语速查
