@@ -818,66 +818,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsPickerPopUp_Extended_003, TestSize.L
 }
 #endif
 
-HWTEST_F(ScreenCaptureServerFunctionTest, InitVideoCap_PickerModePopUp_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
-    VideoCaptureInfo videoInfo;
-    videoInfo.videoFrameWidth = 1920;
-    videoInfo.videoFrameHeight = 1080;
-    videoInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    videoInfo.displayId = 0;
-    ASSERT_EQ(screenCaptureServer_->InitVideoCap(videoInfo), MSERR_OK);
-#ifdef PC_STANDARD
-    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), true);
-#endif
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, InitVideoCap_PickerModePopUp_002, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    VideoCaptureInfo videoInfo;
-    videoInfo.videoFrameWidth = 1920;
-    videoInfo.videoFrameHeight = 1080;
-    videoInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    videoInfo.taskIDs.push_back(1001);
-    ASSERT_EQ(screenCaptureServer_->InitVideoCap(videoInfo), MSERR_OK);
-#ifdef PC_STANDARD
-    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), true);
-#endif
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, InitVideoCap_PickerModePopUp_003, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    VideoCaptureInfo videoInfo;
-    videoInfo.videoFrameWidth = 1920;
-    videoInfo.videoFrameHeight = 1080;
-    videoInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    videoInfo.taskIDs.push_back(1001);
-    videoInfo.taskIDs.push_back(1002);
-    ASSERT_EQ(screenCaptureServer_->InitVideoCap(videoInfo), MSERR_OK);
-#ifdef PC_STANDARD
-    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), false);
-#endif
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, InitVideoCap_PickerModePopUp_004, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_INVAILD;
-    VideoCaptureInfo videoInfo;
-    videoInfo.videoFrameWidth = 1920;
-    videoInfo.videoFrameHeight = 1080;
-    videoInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    ASSERT_EQ(screenCaptureServer_->InitVideoCap(videoInfo), MSERR_OK);
-#ifdef PC_STANDARD
-    ASSERT_EQ(screenCaptureServer_->IsPickerPopUp(), true);
-#endif
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenScaleMode_001, TestSize.Level2)
 {
     ASSERT_EQ(screenCaptureServer_->SetScreenScaleMode(), MSERR_INVALID_VAL);
@@ -1764,46 +1704,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetVirtualScreenAutoRotation_001, Test
     EXPECT_EQ(screenCaptureServer_->SetVirtualScreenAutoRotation(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_001, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = R"({"isEnable": "true"})";
-    std::string key = "isEnable";
-    bool value = false;
-    screenCaptureServer_->GetValueFromJson(root, content, key, value);
-    EXPECT_EQ(value, true);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_002, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = R"({"isEnable": "true"})";
-    std::string key = "Enable";
-    bool value = true;
-    screenCaptureServer_->GetValueFromJson(root, content, key, value);
-    EXPECT_EQ(value, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_003, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = "";
-    std::string key = "Enable";
-    bool value = true;
-    screenCaptureServer_->GetValueFromJson(root, content, key, value);
-    EXPECT_EQ(value, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, GetValueFromJson_004, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = R"({"isEnable": "true"})";
-    std::string key = "isEnable";
-    bool value = false;
-    screenCaptureServer_->GetValueFromJson(root, content, key, value);
-    EXPECT_EQ(value, true);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, InitLiveViewContent_001, TestSize.Level2)
 {
     std::string callingLabel_ = "TestApp";
@@ -1948,76 +1848,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateLiveViewPrivacy_001, TestSize.Le
     EXPECT_EQ(screenCaptureServer_->localLiveViewContent_->GetText(), "隐私保护中，点击查看更多");
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_001, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = R"(
-    {
-        "stopRecording": "true",
-        "appPrivacyProtectionSwitch": "true",
-        "systemPrivacyProtectionSwitch": "true"
-    }
-    )";
-    int32_t result = screenCaptureServer_->HandleStreamDataCase(root, content);
-    EXPECT_EQ(result, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_002, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = R"(
-    {
-        "stopRecording": "false",
-        "appPrivacyProtectionSwitch": "true",
-        "systemPrivacyProtectionSwitch": "true"
-    }
-    )";
-    screenCaptureServer_->HandleStreamDataCase(root, content);
-    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, true);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_003, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = R"(
-    {
-        "stopRecording": "false",
-        "appPrivacyProtectionSwitch": "true",
-        "systemPrivacyProtectionSwitch": "false"
-    }
-    )";
-    screenCaptureServer_->HandleStreamDataCase(root, content);
-    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_004, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = R"(
-    {
-        "stopRecording": "false",
-        "appPrivacyProtectionSwitch": "false",
-        "systemPrivacyProtectionSwitch": "true"
-    }
-    )";
-    screenCaptureServer_->HandleStreamDataCase(root, content);
-    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, true);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleStreamDataCase_005, TestSize.Level2)
-{
-    Json::Value root;
-    std::string content = R"(
-    {
-        "stopRecording": "false",
-        "appPrivacyProtectionSwitch": "false",
-        "systemPrivacyProtectionSwitch": "false"
-    }
-    )";
-    screenCaptureServer_->HandleStreamDataCase(root, content);
-    EXPECT_EQ(screenCaptureServer_->systemPrivacyProtectionSwitch_, false);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_001, TestSize.Level2)
 {
     screenCaptureServer_->SetDataType(DataType::ORIGINAL_STREAM);
@@ -2043,65 +1873,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMicrophoneEnabled_003, TestSize.
     screenCaptureServer_->isSystemUI2_ = false;
     screenCaptureServer_->UpdateMicrophoneEnabled();
     EXPECT_EQ(screenCaptureServer_->isSystemUI2_, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
-    screenCaptureServer_->HandleOriginalStreamPrivacy();
-    EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_002, TestSize.Level2)
-{
-    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
-    screenCaptureServer_->checkBoxSelected_ = true;
-    screenCaptureServer_->HandleOriginalStreamPrivacy();
-    EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, true);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_003, TestSize.Level2)
-{
-    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
-    screenCaptureServer_->checkBoxSelected_ = false;
-    screenCaptureServer_->HandleOriginalStreamPrivacy();
-    EXPECT_EQ(screenCaptureServer_->checkBoxSelected_, false);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_004, TestSize.Level2)
-{
-    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
-    screenCaptureServer_->checkBoxSelected_ = true;
-    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_005, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
-    screenCaptureServer_->checkBoxSelected_ = true;
-    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
-    screenCaptureServer_->StopScreenCapture();
-    screenCaptureServer_->Release();
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_006, TestSize.Level2)
-{
-    screenCaptureServer_->captureConfig_.dataType = DataType::INVAILD;
-    screenCaptureServer_->checkBoxSelected_ = false;
-    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, HandleOriginalStreamPrivacy_007, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
-    screenCaptureServer_->checkBoxSelected_ = false;
-    EXPECT_EQ(screenCaptureServer_->HandleOriginalStreamPrivacy(), MSERR_OK);
-    screenCaptureServer_->StopScreenCapture();
-    screenCaptureServer_->Release();
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, IsSkipPrivacyWindow_001, TestSize.Level2)

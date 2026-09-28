@@ -191,7 +191,7 @@ public:
     void HandleNotificationButtonResponse(const std::string &buttonName);
     std::shared_ptr<OHOS::AbilityRuntime::WantAgent::WantAgent> GetWantAgent(const std::string &callingLabel,
         int32_t sessionId);
-    void PrivacyProtected(bool systemPrivacyProtectionSwitch, bool appPrivacyProtectionSwitch);
+    void PrivacyProtected();
 #ifdef SUPPORT_CALL
     int32_t TelCallStateUpdated(bool isInTelCall);
 #endif
@@ -285,14 +285,17 @@ private:
     Rosen::ScreenScaleMode GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode);
     int32_t ReportAVScreenCaptureUserChoiceImpl(const std::string &content);
     int32_t HandlePopupWindowCase(Json::Value &root, const std::string &content);
-    int32_t HandleStreamDataCase(Json::Value &root, const std::string &content);
-    int32_t HandlePresentPickerWindowCase(Json::Value &root, const std::string &content);
+    int32_t HandleRunningCase(Json::Value &root, const std::string &content);
+    int32_t HandlePickerChoice(Json::Value &root);
     int32_t PrepareSelectWindow(Json::Value &root);
     bool IsSkipPrivacyWindow();
     void BuildCommonParams(Json::Value &root);
     void InitAppUserId();
 
+    bool ShouldShowSensitiveCheckBox() const;
+
 #ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+    bool ShouldShowShareSystemAudioBox() const;
     bool IsPickerPopUp();
     int32_t StartPicker();
 #ifdef PC_STANDARD
@@ -334,7 +337,6 @@ private:
     void StopNotStartedScreenCapture(AVScreenCaptureStateCode stateCode);
     int32_t SetCaptureAreaInner(uint64_t displayId, OHOS::Rect area);
     bool CheckDisplayArea(uint64_t displayId, OHOS::Rect area);
-    int32_t HandleOriginalStreamPrivacy();
     void PublishScreenCaptureEvent(const std::string &state);
     void OnCaptureContentChanged(bool isMirrorChanged = false);
     int32_t PauseRecorder();
@@ -354,9 +356,7 @@ private:
     bool showCursor_ = true;
     std::atomic<bool> isMicrophoneSwitchTurnOn_{true};
     std::atomic<bool> isPrivacyAuthorityEnabled_{false};
-    bool showSensitiveCheckBox_ = false;
     bool checkBoxSelected_ = false;
-    bool showShareSystemAudioBox_ = false;
     bool isInnerAudioBoxSelected_ = true;
     std::atomic<bool> appPrivacyProtectionSwitch_{true};
     std::atomic<bool> systemPrivacyProtectionSwitch_{true};
@@ -456,8 +456,6 @@ private:
     static int32_t CheckVideoEncInfo(VideoEncInfo &videoEncInfo);
     static int32_t CheckCaptureMode(CaptureMode captureMode);
     static int32_t CheckDataType(DataType dataType);
-    static void GetChoiceFromJson(Json::Value &root, const std::string &content, std::string key, std::string &value);
-    static void GetValueFromJson(Json::Value &root, const std::string &content, std::string key, bool &value);
 
 private:
     static constexpr int32_t ROOT_UID = 0;

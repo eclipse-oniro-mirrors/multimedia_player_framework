@@ -103,10 +103,6 @@ namespace Media {
 static const std::string MP4 = "mp4";
 static const std::string M4A = "m4a";
 
-static const std::string USER_CHOICE_ALLOW = "true";
-static const std::string USER_CHOICE_DENY = "false";
-static const std::string CHECK_BOX_SELECTED = "true";
-static const std::string JSON_VALUE_TRUE = "true";
 static const std::string BUTTON_NAME_MIC = "mic";
 static const std::string BUTTON_NAME_STOP = "stop";
 static const std::string BUTTON_NAME_PAUSE = "pause";
@@ -158,6 +154,19 @@ template <typename T> static std::string JoinVector(const std::vector<T> &vec, c
         }
     }
     return oss.str();
+}
+
+static bool GetBool(const Json::Value &v, bool &out)
+{
+    if (v.isBool()) {
+        out = v.asBool();
+        return true;
+    }
+    if (v.isString()) {
+        out = (v.asString() == "true");
+        return true;
+    }
+    return false;
 }
 
 static std::string JsonToString(const Json::Value &root)
@@ -316,43 +325,6 @@ void ScreenCaptureServer::InitAppUserId()
     MEDIA_LOGI("InitAppUserId() appUserId_: %{public}d", appUserId_.load());
 }
 
-void ScreenCaptureServer::GetChoiceFromJson(Json::Value &root,
-    const std::string &content, std::string key, std::string &value)
-{
-    Json::Reader reader;
-    bool parsingSuccessful = reader.parse(content, root);
-    if (!parsingSuccessful || root.type() != Json::objectValue) {
-        MEDIA_LOGE("Error parsing the string");
-        return;
-    }
-    const Json::Value keyJson = root[key];
-    if (!keyJson.isNull() && keyJson.isString()) {
-        value = keyJson.asString();
-    }
-}
-
-void ScreenCaptureServer::GetValueFromJson(Json::Value &root,
-    const std::string &content, const std::string key, bool &value)
-{
-    value = false;
-
-    Json::Reader reader;
-    bool parsingSuccessful = reader.parse(content, root);
-    if (!parsingSuccessful || root.type() != Json::objectValue) {
-        MEDIA_LOGE("Error parsing the string");
-        return;
-    }
-    const Json::Value keyJson = root[key];
-    if (!keyJson.isNull() && keyJson.isString()) {
-        if (JSON_VALUE_TRUE.compare(keyJson.asString()) == 0) {
-            value = true;
-        } else {
-            value = false;
-        }
-    }
-    MEDIA_LOGI("GetValueFromJson key=%{public}s value=%{public}d", key.c_str(), value);
-}
-
 void ScreenCaptureServer::SetCaptureConfig(CaptureMode captureMode, int32_t missionId)
 {
     captureConfig_.captureMode = captureMode;
@@ -411,73 +383,71 @@ int32_t ScreenCaptureServer::ReportAVScreenCaptureUserChoice(const std::string &
     MEDIA_LOGI("ReportAVScreenCaptureUserChoice captureState_ is %{public}d", captureState_.load());
 
     Json::Value root;
-#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
-    if (IsPickerPopUp() && isPresentPickerPopWindow_ && IsState(CAP_RUNNING)) {
-        return HandlePresentPickerWindowCase(root, content);
-    }
-#endif
     if (IsState(CAP_POPUP)) {
         return HandlePopupWindowCase(root, content);
     }
-    CHECK_AND_RETURN_RET(captureConfig_.dataType != DataType::ORIGINAL_STREAM || !IsState(CAP_RUNNING),
-        HandleStreamDataCase(root, content));
-    return MSERR_UNKNOWN;
-}
-
-int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value& root, const std::string &content)
-{
-    MEDIA_LOGI("ReportAVScreenCaptureUserChoice captureState is %{public}d", AVScreenCaptureState::POPUP_WINDOW);
-    std::string choice = "false";
-    GetChoiceFromJson(root, content, std::string("choice"), choice);
-    GetValueFromJson(root, content, std::string("checkBoxSelected"), checkBoxSelected_);
-
-    systemPrivacyProtectionSwitch_ = checkBoxSelected_;
-    appPrivacyProtectionSwitch_ = checkBoxSelected_;
-    NotifyprivacyProtect();
-    MEDIA_LOGI("ReportAVScreenCaptureUserChoice checkBoxSelected: %{public}d", checkBoxSelected_);
-
-    if (showShareSystemAudioBox_) {
-        GetValueFromJson(root, content, std::string("isInnerAudioBoxSelected"), isInnerAudioBoxSelected_);
-    }
-    MEDIA_LOGI("ReportAVScreenCaptureUserChoice showShareSystemAudioBox: %{public}d,"
-        "isInnerAudioBoxSelected: %{public}d", showShareSystemAudioBox_,
-        isInnerAudioBoxSelected_);
-
-    if (USER_CHOICE_ALLOW.compare(choice) == 0) {
-        PrepareSelectWindow(root);
-        return MSERR_OK;
-    } else if (USER_CHOICE_DENY.compare(choice) == 0) {
-        return OnReceiveUserPrivacyAuthority(false);
-    } else {
-        MEDIA_LOGW("ReportAVScreenCaptureUserChoice user choice is not support");
+    if (IsState(CAP_RUNNING)) {
+        return HandleRunningCase(root, content);
     }
     return MSERR_UNKNOWN;
 }
 
-int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::string &content)
+int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value &root, const std::string &content)
 {
-    bool stopRecord = false;
-    bool appPrivacyProtectionSwitch = false;
-    bool systemPrivacyProtectionSwitch = false;
-    GetValueFromJson(root, content, std::string("stopRecording"), stopRecord);
-    if (stopRecord) {
-        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
-        MEDIA_LOGI("ReportAVScreenCaptureUserChoice user stop record");
-        return MSERR_OK;
+    MEDIA_LOGI("HandlePopupWindowCase captureState is %{public}d", AVScreenCaptureState::POPUP_WINDOW);
+    Json::Reader reader;
+    if (!reader.parse(content, root) || root.type() != Json::objectValue) {
+        MEDIA_LOGE("HandlePopupWindowCase parse failed");
+        return MSERR_UNKNOWN;
     }
 
-    GetValueFromJson(root, content, std::string("appPrivacyProtectionSwitch"),
-        appPrivacyProtectionSwitch);
-    GetValueFromJson(root, content, std::string("systemPrivacyProtectionSwitch"),
-        systemPrivacyProtectionSwitch);
-    if (appPrivacyProtectionSwitch != appPrivacyProtectionSwitch_ ||
-        systemPrivacyProtectionSwitch != systemPrivacyProtectionSwitch_) {
-        appPrivacyProtectionSwitch_ = appPrivacyProtectionSwitch;
-        systemPrivacyProtectionSwitch_ = systemPrivacyProtectionSwitch;
+    bool checkVal = false;
+    if (GetBool(root["checkBoxSelected"], checkVal)) {
+        checkBoxSelected_ = checkVal;
+        systemPrivacyProtectionSwitch_.store(checkVal);
+        appPrivacyProtectionSwitch_.store(checkVal);
+        NotifyprivacyProtect();
+        MEDIA_LOGI("checkBoxSelected: %{public}d", checkVal);
+    }
+
+    bool audioVal = false;
+    if (GetBool(root["isInnerAudioBoxSelected"], audioVal)) {
+        isInnerAudioBoxSelected_ = audioVal;
+        MEDIA_LOGI("isInnerAudioBoxSelected: %{public}d", audioVal);
+    }
+
+    return HandlePickerChoice(root);
+}
+
+int32_t ScreenCaptureServer::HandleRunningCase(Json::Value &root, const std::string &content)
+{
+    Json::Reader reader;
+    if (!reader.parse(content, root) || root.type() != Json::objectValue) {
+        MEDIA_LOGE("HandleRunningCase parse failed");
+        return MSERR_UNKNOWN;
+    }
+
+    if (root.isMember("choice")) {
+        isPresentPickerPopWindow_ = false;
+        return HandlePickerChoice(root);
+    }
+
+    bool stopVal = false;
+    if (GetBool(root["stopRecording"], stopVal) && stopVal) {
+        MEDIA_LOGI("HandleRunningCase user stop record");
+        return StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_USER);
+    }
+
+    bool appPrivacy = appPrivacyProtectionSwitch_.load();
+    bool systemPrivacy = systemPrivacyProtectionSwitch_.load();
+    GetBool(root["appPrivacyProtectionSwitch"], appPrivacy);
+    GetBool(root["systemPrivacyProtectionSwitch"], systemPrivacy);
+    if (appPrivacy != appPrivacyProtectionSwitch_.load() || systemPrivacy != systemPrivacyProtectionSwitch_.load()) {
+        appPrivacyProtectionSwitch_.store(appPrivacy);
+        systemPrivacyProtectionSwitch_.store(systemPrivacy);
         NotifyprivacyProtect();
     }
-
-    PrivacyProtected(systemPrivacyProtectionSwitch_, appPrivacyProtectionSwitch_);
+    PrivacyProtected();
 
     NotificationRequest request;
     UpdateLiveViewPrivacy();
@@ -485,17 +455,19 @@ int32_t ScreenCaptureServer::HandleStreamDataCase(Json::Value& root, const std::
     return NotificationHelper::PublishNotification(request);
 }
 
-int32_t ScreenCaptureServer::HandlePresentPickerWindowCase(Json::Value& root, const std::string &content)
+int32_t ScreenCaptureServer::HandlePickerChoice(Json::Value &root)
 {
-    std::string choice = "false";
-    GetChoiceFromJson(root, content, std::string("choice"), choice);
-    MEDIA_LOGI("HandlePresentPickerWindowCase dataType: %{public}d, choice: %{public}s, mode: %{public}d",
-        captureConfig_.dataType, choice.c_str(), captureConfig_.captureMode);
-    isPresentPickerPopWindow_ = false;
-    if (choice != USER_CHOICE_ALLOW) {
+    bool allow = false;
+    if (!GetBool(root["choice"], allow)) {
+        MEDIA_LOGI("HandlePickerChoice: choice not present, skip");
+        return MSERR_UNKNOWN;
+    }
+    MEDIA_LOGI("HandlePickerChoice allow: %{public}d, mode: %{public}d", allow, captureConfig_.captureMode);
+    if (!allow) {
         return OnReceiveUserPrivacyAuthority(false);
     }
-    return PrepareSelectWindow(root);
+    PrepareSelectWindow(root);
+    return MSERR_OK;
 }
 
 bool ScreenCaptureServer::ParseAppMissionIds(const Json::Value &appInformation)
@@ -572,8 +544,6 @@ int32_t ScreenCaptureServer::PresentPicker()
     MediaTrace trace("ScreenCaptureServer::PresentPicker");
     std::lock_guard<std::mutex> lock(mutex_);
     isPresentPickerPopWindow_ = true;
-    showShareSystemAudioBox_ = false;
-    showSensitiveCheckBox_ = false;
     int32_t ret = StartPicker();
     return ret;
 #endif
@@ -1371,7 +1341,7 @@ int32_t ScreenCaptureServer::StartInnerAudioCapture()
         MediaTrace trace("ScreenCaptureServer::StartInnerAudioCapture");
         int32_t ret = innerAudioCapture_->Start(appInfo_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartInnerAudioCapture failed");
-        if (showShareSystemAudioBox_ && !isInnerAudioBoxSelected_) {
+        if (!isInnerAudioBoxSelected_) {
             innerAudioCapture_->SetIsMute(true);
         }
         if (audioSource_) {
@@ -1728,14 +1698,9 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
         captureConfig_.audioInfo.innerCapInfo = audioInfo;
         avType_ = (avType_ == AVScreenCaptureAvType::INVALID_TYPE) ? AVScreenCaptureAvType::AUDIO_TYPE :
             AVScreenCaptureAvType::AV_TYPE;
-#ifdef SUPPORT_SCREEN_CAPTURE_PICKER
-        showShareSystemAudioBox_ = true;
-        MEDIA_LOGI("InitAudioCap set showShareSystemAudioBox true.");
-#endif
     }
-    MEDIA_LOGI("InitAudioCap success sampleRate:%{public}d, channels:%{public}d, source:%{public}d, state:%{public}d,"
-        "showShareSystemAudioBox:%{public}d", audioInfo.audioSampleRate, audioInfo.audioChannels,
-        audioInfo.audioSource, audioInfo.state, showShareSystemAudioBox_);
+    MEDIA_LOGI("InitAudioCap success sampleRate:%{public}d, channels:%{public}d, source:%{public}d, state:%{public}d",
+        audioInfo.audioSampleRate, audioInfo.audioChannels, audioInfo.audioSource, audioInfo.state);
     return MSERR_OK;
 }
 
@@ -1776,9 +1741,9 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
                 infos.front()->windowMetaInfo.pid != appInfo_.appPid);
             MEDIA_LOGI("list window info ret:%{public}d, isPickerModePopUp:%{public}d", wmRet,
                 isPickerModePopUp_.load());
-        } else {
-            isPickerModePopUp_ = true;
         }
+    } else if (captureConfig_.captureMode == CAPTURE_SPECIFIED_SCREEN) {
+        isPickerModePopUp_ = true;
     }
 #endif
 
@@ -1998,10 +1963,9 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     isScreenCaptureAuthority_ = CheckPrivacyWindowSkipPermission();
 
-    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
-        showSensitiveCheckBox_ = true;
-        checkBoxSelected_ = true;
-    }
+    checkBoxSelected_ = captureConfig_.dataType == DataType::ORIGINAL_STREAM;
+    systemPrivacyProtectionSwitch_.store(checkBoxSelected_);
+    appPrivacyProtectionSwitch_.store(checkBoxSelected_);
 
     bool isSkipPrivacyWindow = false;
     if (!isScreenCaptureAuthority_ && IsUserPrivacyAuthorityNeeded()) {
@@ -2055,11 +2019,22 @@ void ScreenCaptureServer::BuildCommonParams(Json::Value &root)
     root["sessionId"] = std::to_string(sessionId_);
     root["callerUid"] = std::to_string(appInfo_.appUid);
     root["appLabel"] = callingLabel_;
-    root["showSensitiveCheckBox"] = std::to_string(static_cast<int>(showSensitiveCheckBox_));
+    root["showSensitiveCheckBox"] = std::to_string(static_cast<int>(ShouldShowSensitiveCheckBox()));
     root["checkBoxSelected"] = std::to_string(static_cast<int>(checkBoxSelected_));
 }
 
+bool ScreenCaptureServer::ShouldShowSensitiveCheckBox() const
+{
+    return !isPresentPickerPopWindow_ && captureConfig_.dataType == DataType::ORIGINAL_STREAM;
+}
+
 #ifdef SUPPORT_SCREEN_CAPTURE_PICKER
+bool ScreenCaptureServer::ShouldShowShareSystemAudioBox() const
+{
+    return !isPresentPickerPopWindow_ &&
+        captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID;
+}
+
 bool ScreenCaptureServer::IsPickerPopUp()
 {
     if (captureConfig_.captureMode == CAPTURE_VIRTUAL_EXTENDED_SCREEN) {
@@ -2088,9 +2063,9 @@ int32_t ScreenCaptureServer::StartPicker()
     want.SetElement(element);
     want.SetParam("appLabel", callingLabel_);
     want.SetParam("sessionId", sessionId_);
-    want.SetParam("showSensitiveCheckBox", showSensitiveCheckBox_);
     want.SetParam("checkBoxSelected", checkBoxSelected_);
-    want.SetParam("showShareSystemAudioBox", showShareSystemAudioBox_);
+    want.SetParam("showSensitiveCheckBox", ShouldShowSensitiveCheckBox());
+    want.SetParam("showShareSystemAudioBox", ShouldShowShareSystemAudioBox());
     want.SetParam("excludedWindowIDs", JoinVector(excludedWindowIDsVec_));
     want.SetParam("pickerMode", static_cast<int>(pickerMode_));
     SendConfigToUIParams(want);
@@ -2140,7 +2115,7 @@ void ScreenCaptureServer::SendConfigToUIParams(AAFwk::Want &want)
 void ScreenCaptureServer::BuildPickerParams(Json::Value &root)
 {
     std::lock_guard<std::mutex> lock(captureIdsMutex_);
-    root["showShareSystemAudioBox"] = showShareSystemAudioBox_;
+    root["showShareSystemAudioBox"] = ShouldShowShareSystemAudioBox();
     if (!excludedWindowIDsVec_.empty()) {
         Json::Value excludedWindowIDs(Json::arrayValue);
         for (const auto &windowId : excludedWindowIDsVec_) {
@@ -2183,7 +2158,6 @@ int32_t ScreenCaptureServer::StartAuthWindow()
     if (IsPickerPopUp()) {
         return StartPicker();
     }
-    showShareSystemAudioBox_ = false;
     Json::Value root;
     BuildCommonParams(root);
     return StartPrivacyWindow(JsonToString(root));
@@ -2508,26 +2482,14 @@ int32_t ScreenCaptureServer::CreateVirtualScreen()
     CHECK_AND_RETURN_RET_LOG(virtualScreen_ && virtualScreen_->IsValid(), MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN,
         "CreateVirtualScreen failed, invalid screenId");
     SetVirtualScreenAutoRotation();
-    CHECK_AND_RETURN_RET_LOG(HandleOriginalStreamPrivacy() == MSERR_OK,
-        MSERR_UNKNOWN, "SetScreenSkipProtectedWindow failed");
+    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
+        PrivacyProtected();
+    }
     if (!showCursor_) {
         ShowCursorInner();
     }
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreen_->GetScreenId());
     return PrepareVirtualScreenMirror();
-}
-
-int32_t ScreenCaptureServer::HandleOriginalStreamPrivacy()
-{
-    if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
-        if (checkBoxSelected_) {
-            MEDIA_LOGI("CreateVirtualScreen checkBoxSelected: %{public}d", checkBoxSelected_);
-            PrivacyProtected(true, true);
-        } else {
-            PrivacyProtected(false, false);
-        }
-    }
-    return MSERR_OK;
 }
 
 int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
@@ -3859,32 +3821,32 @@ void ScreenCaptureServer::SetupPublishRequest(NotificationRequest &request)
     }
 }
 
-void ScreenCaptureServer::PrivacyProtected(bool systemPrivacyProtectionSwitch,
-    bool appPrivacyProtectionSwitch)
+void ScreenCaptureServer::PrivacyProtected()
 {
     CHECK_AND_RETURN(virtualScreen_ != nullptr);
+    bool systemPrivacy = systemPrivacyProtectionSwitch_.load();
+    bool appPrivacy = appPrivacyProtectionSwitch_.load();
     ScreenId virtualScreenId = virtualScreen_->GetScreenId();
     std::vector<ScreenId> screenIds;
     screenIds.push_back(virtualScreenId);
-    auto ret = Rosen::ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds,
-        systemPrivacyProtectionSwitch);
+    auto ret = Rosen::ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, systemPrivacy);
     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
 
     std::vector<std::string> privacyWindowTags;
-    if (systemPrivacyProtectionSwitch == appPrivacyProtectionSwitch) {
+    if (systemPrivacy == appPrivacy) {
         privacyWindowTags.assign({"SCB_KEYBOARD_DEFAULT", "TAG_SCREEN_PROTECTION_SENSITIVE_APP"});
         ret = Rosen::ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
-            std::move(privacyWindowTags), appPrivacyProtectionSwitch);
+            std::move(privacyWindowTags), appPrivacy);
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
     } else {
         privacyWindowTags.assign({"SCB_KEYBOARD_DEFAULT"});
         ret = Rosen::ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
-            std::move(privacyWindowTags), systemPrivacyProtectionSwitch);
+            std::move(privacyWindowTags), systemPrivacy);
         MEDIA_LOGI("KeyboardPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
 
         privacyWindowTags.assign({"TAG_SCREEN_PROTECTION_SENSITIVE_APP"});
         ret = Rosen::ScreenManager::GetInstance().SetScreenPrivacyWindowTagSwitch(virtualScreenId,
-            std::move(privacyWindowTags), appPrivacyProtectionSwitch);
+            std::move(privacyWindowTags), appPrivacy);
         MEDIA_LOGI("AppPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
     }
 }
