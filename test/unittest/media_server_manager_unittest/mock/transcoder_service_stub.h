@@ -46,6 +46,8 @@ public:
     MOCK_METHOD(int32_t, SetVideoEncodingBitRate, (int32_t rate), (override));
     MOCK_METHOD(int32_t, SetColorSpace, (TranscoderColorSpace colorSpaceFormat), (override));
     MOCK_METHOD(int32_t, SetEnableBFrame, (bool enableBFrame), (override));
+    MOCK_METHOD(int32_t, SetVideoBitrateMode, (int32_t bitrateMode), (override));
+    MOCK_METHOD(int32_t, SetVideoSqrFactor, (int32_t sqrFactor), (override));
     MOCK_METHOD(int32_t, SetAudioEncoder, (AudioCodecFormat encoder), (override));
     MOCK_METHOD(int32_t, SetAudioEncodingBitRate, (int32_t bitRate), (override));
     MOCK_METHOD(int32_t, SetOutputFormat, (OutputFormatType format), (override));
