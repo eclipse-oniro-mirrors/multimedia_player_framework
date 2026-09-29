@@ -41,6 +41,8 @@ public:
     int32_t SetVideoEncodingBitRate(int32_t rate) override;
     int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) override;
     int32_t SetEnableBFrame(bool enableBFrame) override;
+    int32_t SetVideoBitrateMode(int32_t bitrateMode) override;
+    int32_t SetVideoSqrFactor(int32_t sqrFactor) override;
     int32_t SetAudioEncoder(AudioCodecFormat encoder) override;
     int32_t SetAudioEncodingBitRate(int32_t bitRate) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
@@ -69,6 +71,8 @@ private:
     int32_t SetVideoEncodingBitRate(MessageParcel &data, MessageParcel &reply);
     int32_t SetColorSpace(MessageParcel &data, MessageParcel &reply);
     int32_t SetEnableBFrame(MessageParcel &data, MessageParcel &reply);
+    int32_t SetVideoBitrateMode(MessageParcel &data, MessageParcel &reply);
+    int32_t SetVideoSqrFactor(MessageParcel &data, MessageParcel &reply);
     int32_t SetAudioEncoder(MessageParcel &data, MessageParcel &reply);
     int32_t SetAudioEncodingBitRate(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputFormat(MessageParcel &data, MessageParcel &reply);
