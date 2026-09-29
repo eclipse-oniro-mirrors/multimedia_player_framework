@@ -944,9 +944,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_002, TestSize.L
         buttonOption->SetButtonName(BUTTON_NAME_STOP);
         notificationSubscriber.OnResponse(notificationId, buttonOption);
     }
-    ASSERT_NE(&notificationSubscriber, nullptr);
-
-    screenCaptureServerInner->Release();
+    ASSERT_EQ(screenCaptureServerInner->captureState_.load(), AVScreenCaptureState::STOPPED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_003, TestSize.Level2)
@@ -979,9 +977,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_003, TestSize.L
     }
 
     sleep(RECORDER_TIME);
-    ASSERT_NE(&notificationSubscriber, nullptr);
-    screenCaptureServerInner->StopScreenCapture();
-    screenCaptureServerInner->Release();
+    ASSERT_EQ(screenCaptureServerInner->captureState_.load(), AVScreenCaptureState::STARTED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_004, TestSize.Level2)
@@ -1011,9 +1007,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_004, TestSize.L
     notificationSubscriber.OnResponse(invalidNotificationId, buttonOption);
 
     sleep(RECORDER_TIME);
-    ASSERT_NE(&notificationSubscriber, nullptr);
-    screenCaptureServerInner->StopScreenCapture();
-    screenCaptureServerInner->Release();
+    ASSERT_EQ(screenCaptureServerInner->captureState_.load(), AVScreenCaptureState::STARTED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetDisplayId_001, TestSize.Level2)
@@ -1038,12 +1032,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GetStringByResourceName_001, TestSize.
     liveViewText += screenCaptureServer_->GetStringByResourceName(
         ScreenCaptureServer::NOTIFICATION_SCREEN_RECORDING_TITLE_ID).c_str();
     MEDIA_LOGI("GetStringByResourceName liveViewText: %{public}s", liveViewText.c_str());
-    ASSERT_EQ(screenCaptureServer_->GetStringByResourceName(
-        ScreenCaptureServer::NOTIFICATION_SCREEN_RECORDING_TITLE_ID).size() > 0, true);
-    ASSERT_EQ(screenCaptureServer_->GetStringByResourceName("NOT_EXITS_ID").size() == 0, true);
+    ASSERT_FALSE(screenCaptureServer_->GetStringByResourceName(
+        ScreenCaptureServer::NOTIFICATION_SCREEN_RECORDING_TITLE_ID).empty());
+    ASSERT_TRUE(screenCaptureServer_->GetStringByResourceName("NOT_EXITS_ID").empty());
     screenCaptureServer_->resourceManager_ = nullptr;
-    ASSERT_EQ(screenCaptureServer_->GetStringByResourceName(
-        ScreenCaptureServer::NOTIFICATION_SCREEN_RECORDING_TITLE_ID).size() > 0, false);
+    ASSERT_TRUE(screenCaptureServer_->GetStringByResourceName(
+        ScreenCaptureServer::NOTIFICATION_SCREEN_RECORDING_TITLE_ID).empty());
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureConfig_001, TestSize.Level2)
@@ -1275,16 +1269,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_00
 {
     screenCaptureServer_->showCursor_ = false;
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
-    ASSERT_EQ(screenCaptureServer_->showCursor_ == false, true);
-    screenCaptureServer_->PostStopScreenCapture(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID);
+    ASSERT_FALSE(screenCaptureServer_->showCursor_);
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::STARTED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCaptureSuccessAction_002, TestSize.Level2)
 {
     screenCaptureServer_->showCursor_ = true;
     screenCaptureServer_->PostStartScreenCaptureSuccessAction();
-    ASSERT_EQ(screenCaptureServer_->showCursor_ == true, true);
-    screenCaptureServer_->PostStopScreenCapture(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID);
+    ASSERT_TRUE(screenCaptureServer_->showCursor_);
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::STARTED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetCanvasRotation_001, TestSize.Level2)
@@ -1473,18 +1467,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_002, TestSize.
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     auto wrapper =
         CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "InnerAudioCapture_002", true);
-    wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
-    screenCaptureServer_->appInfo_.appUid = 100;
-    int ret = screenCaptureServer_->SetMicrophoneEnabled(false);
-    ASSERT_EQ(ret, MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_003, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    auto wrapper =
-        CreateTestWrapper(screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, "InnerAudioCapture_003", true);
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     screenCaptureServer_->appInfo_.appUid = 100;
     int ret = screenCaptureServer_->SetMicrophoneEnabled(false);
@@ -2402,33 +2384,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_001, TestSize.Level
 {
     Json::Value appInformation;
     appInformation["bundleName"] = "bundleName_001";
-    appInformation["appIndex"] = 0;
-    EXPECT_TRUE(screenCaptureServer_->ParseAppMissionIds(appInformation));
-    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_002, TestSize.Level2)
-{
-    Json::Value appInformation;
-    appInformation["bundleName"] = "bundleName_002";
-    appInformation["appIndex"] = 0;
-    EXPECT_TRUE(screenCaptureServer_->ParseAppMissionIds(appInformation));
-    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_003, TestSize.Level2)
-{
-    Json::Value appInformation;
-    appInformation["bundleName"] = "bundleName_003";
-    appInformation["appIndex"] = 0;
-    EXPECT_TRUE(screenCaptureServer_->ParseAppMissionIds(appInformation));
-    EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ParseAppMissionIds_004, TestSize.Level2)
-{
-    Json::Value appInformation;
-    appInformation["bundleName"] = "bundleName_004";
     appInformation["appIndex"] = 0;
     EXPECT_TRUE(screenCaptureServer_->ParseAppMissionIds(appInformation));
     EXPECT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_SPECIFIED_APP);
