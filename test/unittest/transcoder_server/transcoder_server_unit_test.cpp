@@ -20,6 +20,7 @@
 #include "media_errors.h"
 #include "av_common.h"
 #include "meta/video_types.h"
+#include "avcodec_info.h"
 #include "media_errors.h"
 #include "media_log.h"
 #include <thread>
@@ -2059,6 +2060,300 @@ HWTEST_F(TransCoderUnitTest, transcoder_SetEnableBFrame_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
     EXPECT_EQ(MSERR_OK, transcoder_->Start());
     EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+
+ 
+/**
+ * @tc.name: transcoder_SetVideoBitrateMode_001
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with SQR video bitrate mode settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetVideoBitrateMode_001, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    AudioCodecFormat encoderAudio = AAC_LC;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoderAudio));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    int32_t bitrateMode = static_cast<int32_t>(OHOS::MediaAVCodec::VideoEncodeBitrateMode::SQR);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoBitrateMode(bitrateMode));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetVideoSqrFactor_001
+ * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with SQR factor settings
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetVideoSqrFactor_001, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    AudioCodecFormat encoderAudio = AAC_LC;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncoder(encoderAudio));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetAudioEncodingBitRate(TRASCODER_AUDIO_ENCODING_BIT_RATE));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    int32_t bitrateMode = static_cast<int32_t>(OHOS::MediaAVCodec::VideoEncodeBitrateMode::SQR);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoBitrateMode(bitrateMode));
+    int32_t sqrFactor = 30;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSqrFactor(sqrFactor));
+    int32_t videoWidth = -1;
+    int32_t videoHeight = -1;
+    if (access(VPE_LIB_PATH.c_str(), F_OK) == 0) {
+        videoWidth = TRANSCODER_BUFFER_WIDTH;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT;
+    } else {
+        videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+        videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
+    }
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetVideoBitrateMode_002
+ * @tc.desc: test SetVideoBitrateMode with VBR mode
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetVideoBitrateMode_002, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    int32_t bitrateMode = static_cast<int32_t>(OHOS::MediaAVCodec::VideoEncodeBitrateMode::VBR);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoBitrateMode(bitrateMode));
+    int32_t videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+    int32_t videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetVideoSqrFactor_002
+ * @tc.desc: test SetVideoSqrFactor with boundary value 0 and 51
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetVideoSqrFactor_002, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(),
+        O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    int32_t bitrateMode = static_cast<int32_t>(OHOS::MediaAVCodec::VideoEncodeBitrateMode::SQR);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoBitrateMode(bitrateMode));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSqrFactor(0));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSqrFactor(51));
+    int32_t videoWidth = TRANSCODER_BUFFER_WIDTH_480P;
+    int32_t videoHeight = TRANSCODER_BUFFER_HEIGHT_480P;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoSize(videoWidth, videoHeight));
+    EXPECT_EQ(MSERR_OK, transcoder_->Prepare());
+    EXPECT_EQ(MSERR_OK, transcoder_->Start());
+    EXPECT_EQ(MSERR_OK, transcoder_->Cancel());
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetVideoBitrateMode_003
+ * @tc.desc: test SetVideoBitrateMode with CBR mode (not supported by transcoder engine)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetVideoBitrateMode_003, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    int32_t bitrateMode = static_cast<int32_t>(OHOS::MediaAVCodec::VideoEncodeBitrateMode::CBR);
+    EXPECT_NE(MSERR_OK, transcoder_->SetVideoBitrateMode(bitrateMode));
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetVideoBitrateMode_004
+ * @tc.desc: test SetVideoBitrateMode with invalid mode (-1)
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetVideoBitrateMode_004, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    int32_t bitrateMode = -1;
+    EXPECT_NE(MSERR_OK, transcoder_->SetVideoBitrateMode(bitrateMode));
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetVideoSqrFactor_003
+ * @tc.desc: test SetVideoSqrFactor with invalid factor < 0
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetVideoSqrFactor_003, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(),
+        O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    int32_t bitrateMode = static_cast<int32_t>(OHOS::MediaAVCodec::VideoEncodeBitrateMode::SQR);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoBitrateMode(bitrateMode));
+    EXPECT_NE(MSERR_OK, transcoder_->SetVideoSqrFactor(-1));
+    EXPECT_EQ(MSERR_OK, transcoder_->Release());
+    close(dstFd);
+    close(srcFd);
+}
+ 
+/**
+ * @tc.name: transcoder_SetVideoSqrFactor_004
+ * @tc.desc: test SetVideoSqrFactor with invalid factor > 51
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(TransCoderUnitTest, transcoder_SetVideoSqrFactor_004, TestSize.Level2)
+{
+    int32_t srcFd = open((TRANSCODER_ROOT_SRC + "ChineseColor_H264_AAC_480p_15fps.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(srcFd >= 0);
+    int64_t offset = TRANSCODER_FILE_OFFSET;
+    int64_t size = TRANSCODER_FILE_SIZE;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetInputFile(srcFd, offset, size));
+    int32_t dstFd = open((TRANSCODER_ROOT_DST + "ChineseColor_H264_AAC_480p_15fps_dst.mp4").c_str(),
+        O_RDWR);
+    ASSERT_TRUE(dstFd >= 0);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFile(dstFd));
+    std::shared_ptr<TransCoderCallbackTest> cb = std::make_shared<TransCoderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, transcoder_->SetTransCoderCallback(cb));
+    OutputFormatType format = FORMAT_MPEG_4;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetOutputFormat(format));
+    VideoCodecFormat encoder = H264;
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncoder(encoder));
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoEncodingBitRate(TRASCODER_VIDEO_ENCODING_BIT_RATE));
+    int32_t bitrateMode = static_cast<int32_t>(OHOS::MediaAVCodec::VideoEncodeBitrateMode::SQR);
+    EXPECT_EQ(MSERR_OK, transcoder_->SetVideoBitrateMode(bitrateMode));
+    EXPECT_NE(MSERR_OK, transcoder_->SetVideoSqrFactor(52));
     EXPECT_EQ(MSERR_OK, transcoder_->Release());
     close(dstFd);
     close(srcFd);
