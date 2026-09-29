@@ -2065,7 +2065,6 @@ HWTEST_F(TransCoderUnitTest, transcoder_SetEnableBFrame_001, TestSize.Level2)
     close(srcFd);
 }
 
- 
 /**
  * @tc.name: transcoder_SetVideoBitrateMode_001
  * @tc.desc: transcode ChineseColor_H264_AAC_480p_15fps.mp4 with SQR video bitrate mode settings
