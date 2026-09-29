@@ -126,6 +126,24 @@ int32_t TransCoderClient::SetEnableBFrame(bool enableBFrame)
     return transCoderProxy_->SetEnableBFrame(enableBFrame);
 }
 
+int32_t TransCoderClient::SetVideoBitrateMode(int32_t bitrateMode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
+ 
+    MEDIA_LOGD("SetVideoBitrateMode, bitrateMode(%{public}d)", bitrateMode);
+    return transCoderProxy_->SetVideoBitrateMode(bitrateMode);
+}
+
+int32_t TransCoderClient::SetVideoSqrFactor(int32_t sqrFactor)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
+ 
+    MEDIA_LOGD("SetVideoSqrFactor, sqrFactor(%{public}d)", sqrFactor);
+    return transCoderProxy_->SetVideoSqrFactor(sqrFactor);
+}
+
 int32_t TransCoderClient::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);

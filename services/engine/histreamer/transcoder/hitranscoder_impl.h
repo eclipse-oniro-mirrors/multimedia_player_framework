@@ -110,6 +110,8 @@ private:
     void ConfigureDefaultParameter();
     void ConfigureVideoDefaultEncFormat();
     void ConfigureAudioDefaultEncFormat();
+    Status ConfigureVideoBitrateMode(const TransCoderParam &transCoderParam);
+    Status ConfigureSQRFactor(const TransCoderParam &transCoderParam);
     Status ConfigureEnableBFrameEncoding(const TransCoderParam &transCoderParam);
     VideoProcessMode DetermineProcessMode();
     Status BuildPipeline(VideoProcessMode mode, int32_t outputVideoWidth, int32_t outputVideoHeight);
@@ -181,6 +183,9 @@ private:
     bool isExistAudioTrack_ = false;
     bool isConfiguredVideoBitrate_ = false;
     std::atomic<int32_t> durationMs_{-1};
+    int32_t videoBitrateMode_ = -1;
+    int32_t videoSqrFactor_ = -1;
+    Plugins::VideoEncodeBitrateMode bitrateMode = Plugins::VideoEncodeBitrateMode::VBR;
 
     uint64_t instanceId_ = 0;
     std::atomic<int64_t> startTime_{0};

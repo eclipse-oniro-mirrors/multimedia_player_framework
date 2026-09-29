@@ -85,6 +85,8 @@ int32_t TransCoderServiceStub::Init()
     recFuncs_[CANCEL] = &TransCoderServiceStub::Cancel;
     recFuncs_[RELEASE] = &TransCoderServiceStub::Release;
     recFuncs_[ADD_WATERMARK] = &TransCoderServiceStub::AddWatermark;
+    recFuncs_[SET_VIDEO_BITRATE_MODE] = &TransCoderServiceStub::SetVideoBitrateMode;
+    recFuncs_[SET_VIDEO_SQR_FACTOR] = &TransCoderServiceStub::SetVideoSqrFactor;
     recFuncs_[DESTROY] = &TransCoderServiceStub::DestroyStub;
 
     pid_ = IPCSkeleton::GetCallingPid();

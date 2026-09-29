@@ -32,6 +32,8 @@ enum TransCoderPublicParamType : uint32_t {
     COLOR_SPACE_FMT,
     VIDEO_PUBLIC_PARAM_END,
     VIDEO_ENABLE_B_FRAME_ENCODING,
+    VIDEO_BITRATE_MODE,
+    VIDEO_SQR_FACTOR,
     // audio begin
     AUDIO_PUBLIC_PARAM_BEGIN,
     AUDIO_ENC_FMT,
@@ -83,6 +85,18 @@ struct VideoEnableBFrameEncoding : public TransCoderParam {
     explicit VideoEnableBFrameEncoding(bool enableBFrame) : TransCoderParam(
         TransCoderPublicParamType::VIDEO_ENABLE_B_FRAME_ENCODING), enableBFrame(enableBFrame) {}
     bool enableBFrame;
+};
+
+struct VideoBitrateMode : public TransCoderParam {
+    explicit VideoBitrateMode(int32_t mode) : TransCoderParam(TransCoderPublicParamType::VIDEO_BITRATE_MODE),
+        bitrateMode(mode) {}
+    int32_t bitrateMode;
+};
+ 
+struct VideoSqrFactor : public TransCoderParam {
+    explicit VideoSqrFactor(int32_t factor) : TransCoderParam(TransCoderPublicParamType::VIDEO_SQR_FACTOR),
+        sqrFactor(factor) {}
+    int32_t sqrFactor;
 };
 
 struct AudioEnc : public TransCoderParam {

@@ -271,6 +271,114 @@ HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoParam_003, TestSize.Level1)
 }
 
 /**
+ * @tc.name  : Test ConfigureVideoBitrateMode
+ * @tc.number: ConfigureVideoBitrateMode_001
+ * @tc.desc  : Test ConfigureVideoBitrateMode with SQR mode (supported)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoBitrateMode_001, TestSize.Level1)
+{
+    int32_t sqrMode = static_cast<int32_t>(Plugins::VideoEncodeBitrateMode::SQR);
+    VideoBitrateMode bitrateModeParam(sqrMode);
+    Status ret = transcoder_->ConfigureVideoParam(bitrateModeParam);
+    EXPECT_EQ(ret, Status::OK);
+    EXPECT_EQ(transcoder_->videoBitrateMode_, sqrMode);
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoBitrateMode
+ * @tc.number: ConfigureVideoBitrateMode_002
+ * @tc.desc  : Test ConfigureVideoBitrateMode with VBR mode (supported)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoBitrateMode_002, TestSize.Level1)
+{
+    int32_t vbrMode = static_cast<int32_t>(Plugins::VideoEncodeBitrateMode::VBR);
+    VideoBitrateMode bitrateModeParam(vbrMode);
+    Status ret = transcoder_->ConfigureVideoParam(bitrateModeParam);
+    EXPECT_EQ(ret, Status::OK);
+    EXPECT_EQ(transcoder_->videoBitrateMode_, vbrMode);
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoBitrateMode
+ * @tc.number: ConfigureVideoBitrateMode_003
+ * @tc.desc  : Test ConfigureVideoBitrateMode with CBR mode (not supported by transcoder)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoBitrateMode_003, TestSize.Level1)
+{
+    int32_t cbrMode = static_cast<int32_t>(Plugins::VideoEncodeBitrateMode::CBR);
+    VideoBitrateMode bitrateModeParam(cbrMode);
+    Status ret = transcoder_->ConfigureVideoParam(bitrateModeParam);
+    EXPECT_EQ(ret, Status::ERROR_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoBitrateMode
+ * @tc.number: ConfigureVideoBitrateMode_004
+ * @tc.desc  : Test ConfigureVideoBitrateMode with invalid mode (-1)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoBitrateMode_004, TestSize.Level1)
+{
+    VideoBitrateMode bitrateModeParam(-1);
+    Status ret = transcoder_->ConfigureVideoParam(bitrateModeParam);
+    EXPECT_EQ(ret, Status::ERROR_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : Test ConfigureSQRFactor
+ * @tc.number: ConfigureSQRFactor_001
+ * @tc.desc  : Test ConfigureSQRFactor with valid factor 30
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureSQRFactor_001, TestSize.Level1)
+{
+    VideoSqrFactor sqrFactorParam(30);
+    Status ret = transcoder_->ConfigureVideoParam(sqrFactorParam);
+    EXPECT_EQ(ret, Status::OK);
+    EXPECT_EQ(transcoder_->videoSqrFactor_, 30);
+}
+
+/**
+ * @tc.name  : Test ConfigureSQRFactor
+ * @tc.number: ConfigureSQRFactor_002
+ * @tc.desc  : Test ConfigureSQRFactor with boundary values 0 and 51
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureSQRFactor_002, TestSize.Level1)
+{
+    VideoSqrFactor sqrFactorParamMin(0);
+    Status ret = transcoder_->ConfigureVideoParam(sqrFactorParamMin);
+    EXPECT_EQ(ret, Status::OK);
+    EXPECT_EQ(transcoder_->videoSqrFactor_, 0);
+ 
+    VideoSqrFactor sqrFactorParamMax(51);
+    ret = transcoder_->ConfigureVideoParam(sqrFactorParamMax);
+    EXPECT_EQ(ret, Status::OK);
+    EXPECT_EQ(transcoder_->videoSqrFactor_, 51);
+}
+
+/**
+ * @tc.name  : Test ConfigureSQRFactor
+ * @tc.number: ConfigureSQRFactor_003
+ * @tc.desc  : Test ConfigureSQRFactor with invalid factor < 0
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureSQRFactor_003, TestSize.Level1)
+{
+    VideoSqrFactor sqrFactorParam(-1);
+    Status ret = transcoder_->ConfigureVideoParam(sqrFactorParam);
+    EXPECT_EQ(ret, Status::ERROR_INVALID_PARAMETER);
+}
+
+/**
+ * @tc.name  : Test ConfigureSQRFactor
+ * @tc.number: ConfigureSQRFactor_004
+ * @tc.desc  : Test ConfigureSQRFactor with invalid factor > 51
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureSQRFactor_004, TestSize.Level1)
+{
+    VideoSqrFactor sqrFactorParam(52);
+    Status ret = transcoder_->ConfigureVideoParam(sqrFactorParam);
+    EXPECT_EQ(ret, Status::ERROR_INVALID_PARAMETER);
+}
+
+/**
  * @tc.name  : Test LinkAudioDecoderFilter
  * @tc.number: LinkAudioDecoderFilter_001
  * @tc.desc  : Test LinkAudioDecoderFilter with nullptr audioDecoderFilter_

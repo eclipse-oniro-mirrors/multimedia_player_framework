@@ -57,6 +57,16 @@ int32_t MockAVTransCoder::SetEnableBFrame(bool enableBFrame)
     return MSERR_OK;
 }
 
+int32_t MockAVTransCoder::SetVideoBitrateMode(int32_t bitrateMode)
+{
+    return MSERR_OK;
+}
+
+int32_t MockAVTransCoder::SetVideoSqrFactor(int32_t sqrFactor)
+{
+    return MSERR_OK;
+}
+
 int32_t MockAVTransCoder::SetAudioEncoder(AudioCodecFormat encoder)
 {
     return MSERR_OK;

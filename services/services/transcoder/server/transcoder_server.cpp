@@ -216,6 +216,46 @@ int32_t TransCoderServer::SetEnableBFrame(bool enableBFrame)
     return result.Value();
 }
 
+int32_t TransCoderServer::SetVideoBitrateMode(int32_t bitrateMode)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(status_.load() == REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_.load()).c_str());
+    CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.videoBitrateMode = bitrateMode;
+    VideoBitrateMode videoBitrateModeParam(bitrateMode);
+    MEDIA_LOGD("SetVideoBitrateMode: %{public}d", bitrateMode);
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, videoBitrateModeParam]() {
+        return transCoderEngine_->Configure(videoBitrateModeParam);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    lock.unlock();
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task failed");
+    return result.Value();
+}
+
+int32_t TransCoderServer::SetVideoSqrFactor(int32_t sqrFactor)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(status_.load() == REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_.load()).c_str());
+    CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.videoSqrFactor = sqrFactor;
+    VideoSqrFactor videoSqrFactorParam(sqrFactor);
+    MEDIA_LOGD("SetVideoSqrFactor: %{public}d", sqrFactor);
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, videoSqrFactorParam]() {
+        return transCoderEngine_->Configure(videoSqrFactorParam);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    lock.unlock();
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task failed");
+    return result.Value();
+}
+
 int32_t TransCoderServer::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);

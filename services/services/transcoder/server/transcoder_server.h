@@ -52,6 +52,8 @@ public:
     int32_t SetVideoEncodingBitRate(int32_t rate) override;
     int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) override;
     int32_t SetEnableBFrame(bool enableBFrame) override;
+    int32_t SetVideoBitrateMode(int32_t bitrateMode) override;
+    int32_t SetVideoSqrFactor(int32_t sqrFactor) override;
     int32_t SetAudioEncoder(AudioCodecFormat encoder) override;
     int32_t SetAudioEncodingBitRate(int32_t bitRate) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
@@ -98,6 +100,8 @@ private:
         int64_t srcFdSize = -1;
         int32_t dstUrl = -1;
         bool enableBFrame = false;
+        int32_t videoBitrateMode = -1;
+        int32_t videoSqrFactor = -1;
     } config_;
     std::string lastErrMsg_;
 

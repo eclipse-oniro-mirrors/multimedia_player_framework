@@ -139,6 +139,40 @@ int32_t TransCoderServiceProxy::SetEnableBFrame(bool enableBFrame)
     return reply.ReadInt32();
 }
 
+int32_t TransCoderServiceProxy::SetVideoBitrateMode(int32_t bitrateMode)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(TransCoderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(bitrateMode);
+    int error = SendRequest(SET_VIDEO_BITRATE_MODE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoBitrateMode failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t TransCoderServiceProxy::SetVideoSqrFactor(int32_t sqrFactor)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(TransCoderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+ 
+    data.WriteInt32(sqrFactor);
+    int error = SendRequest(SET_VIDEO_SQR_FACTOR, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetVideoSqrFactor failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 int32_t TransCoderServiceProxy::SetAudioEncoder(AudioCodecFormat encoder)
 {
     MessageParcel data;

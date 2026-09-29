@@ -33,6 +33,8 @@ public:
     int32_t SetVideoSize(int32_t videoFrameWidth, int32_t videoFrameHeight) override;
     int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) override;
     int32_t SetEnableBFrame(bool enableBFrame) override;
+    int32_t SetVideoBitrateMode(int32_t bitrateMode) override;
+    int32_t SetVideoSqrFactor(int32_t sqrFactor) override;
     int32_t SetAudioEncoder(AudioCodecFormat encoder) override;
     int32_t SetAudioEncodingBitRate(int32_t bitRate) override;
     int32_t SetInputFile(int32_t fd, int64_t offset, int64_t size) override;
