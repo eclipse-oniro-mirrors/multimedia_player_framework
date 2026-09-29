@@ -94,6 +94,7 @@ const std::set<MediaServiceErrCode> MSERRCODE_AVTRANSCODER_INFOS = {
     MSERR_FRAMEWORK_INTERNAL_ERROR,
     MSERR_VIDEO_RESOLUTION_OUT_OF_RANGE,
     MSERR_TARGET_RESOLUTION_OUT_OF_RANGE,
+    MSERR_SQR_FACTOR_ERROR_401,
 };
 std::map<std::string, AVTransCoderNapi::AvTransCoderTaskqFunc> AVTransCoderNapi::taskQFuncs_ = {
     {AVTransCoderOpt::START, &AVTransCoderNapi::Start},
