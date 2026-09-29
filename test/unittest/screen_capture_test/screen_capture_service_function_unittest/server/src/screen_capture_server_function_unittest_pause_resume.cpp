@@ -283,6 +283,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_Multiple_Cycles_001, TestS
         ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
         ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
     }
+    ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::RESUMED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_State_Verification_001, TestSize.Level2)
@@ -375,8 +376,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_PauseButton_001, TestSize.L
     buttonOption->SetButtonName(BUTTON_NAME_PAUSE);
     notificationSubscriber.OnResponse(notificationId, buttonOption);
     ASSERT_EQ(screenCaptureServerInner->captureState_.load(), AVScreenCaptureState::PAUSED);
-
-    screenCaptureServerInner->Release();
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_ResumeButton_001, TestSize.Level2)
@@ -412,8 +411,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_ResumeButton_001, TestSize.
     resumeOption->SetButtonName(BUTTON_NAME_RESUME);
     notificationSubscriber.OnResponse(notificationId, resumeOption);
     ASSERT_EQ(screenCaptureServerInner->captureState_.load(), AVScreenCaptureState::RESUMED);
-
-    screenCaptureServerInner->Release();
 }
 HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenExtended_InvalidScreenId_001, TestSize.Level2)
 {
@@ -485,7 +482,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCaptureInner_InCallStop_B1
     EXPECT_EQ(
         screenCaptureServer_->ResumeScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_RESUMED_BY_APP),
         MSERR_OK);
-    screenCaptureServer_->isInTelCall_ = false;
 }
 #endif
 

@@ -73,12 +73,14 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, ProcessVideoBufferCallBack_NullCb_
     auto nullListener = std::make_shared<ScreenCapBufferConsumerListener>(nullptr, nullptr);
     EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0);
     nullListener->ProcessVideoBufferCallBack();
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
 }
 
 HWTEST_F(ScreenCapBufferConsumerListenerTest, ProcessVideoBufferCallBack_WithCb_001, TestSize.Level1)
 {
     EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(true)).Times(1);
     listener_->ProcessVideoBufferCallBack();
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
 }
 
 HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseVideoBuffer_EmptyQueue_001, TestSize.Level1)
@@ -112,10 +114,6 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, StartBufferThread_001, TestSize.Le
     EXPECT_TRUE(listener_->isSurfaceCbInThreadStopped_.load());
     EXPECT_EQ(listener_->StartBufferThread(), MSERR_OK);
     EXPECT_FALSE(listener_->isSurfaceCbInThreadStopped_.load());
-    listener_->StopBufferThread();
-    if (listener_->surfaceCbInThread_ && listener_->surfaceCbInThread_->joinable()) {
-        listener_->surfaceCbInThread_->join();
-    }
 }
 
 HWTEST_F(ScreenCapBufferConsumerListenerTest, StartBufferThread_AlreadyRunning_001, TestSize.Level1)
@@ -123,16 +121,13 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, StartBufferThread_AlreadyRunning_0
     EXPECT_EQ(listener_->StartBufferThread(), MSERR_OK);
     EXPECT_FALSE(listener_->isSurfaceCbInThreadStopped_.load());
     EXPECT_EQ(listener_->StartBufferThread(), MSERR_OK);
-    listener_->StopBufferThread();
-    if (listener_->surfaceCbInThread_ && listener_->surfaceCbInThread_->joinable()) {
-        listener_->surfaceCbInThread_->join();
-    }
 }
 
 HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_NullConsumer_001, TestSize.Level1)
 {
     EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0);
     listener_->OnBufferAvailableAction();
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
 }
 
 HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseBuffer_EmptyQueue_001, TestSize.Level1)
@@ -159,7 +154,6 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, AcquireVideoBuffer_HasEntry_001, T
     EXPECT_EQ(listener_->AcquireVideoBuffer(buffer, fence, timestamp, damage), MSERR_OK);
     EXPECT_EQ(buffer, nullptr);
     EXPECT_EQ(fence, -1);
-    listener_->availBuffers_.pop();
 }
 
 HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseVideoBuffer_HasEntry_NullConsumer_001, TestSize.Level1)
