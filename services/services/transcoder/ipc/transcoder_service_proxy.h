@@ -49,6 +49,8 @@ public:
     int32_t DestroyStub() override;
 
 private:
+    int32_t SendRequest(uint32_t code, MessageParcel &data, MessageParcel &reply, MessageOption &option);
+
     static inline BrokerDelegator<TransCoderServiceProxy> delegator_;
 };
 } // namespace Media
