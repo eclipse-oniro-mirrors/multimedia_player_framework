@@ -50,45 +50,36 @@
 
 | 策略 | 说明 |
 |------|------|
-| 统一返回值 | 所有方法返回 `int32_t` 错误码，`MSERR_OK(0)` 为成功 |
-| 状态机能力位图校验 | `IsState(cap)` 通过能力位图检查当前状态是否允许操作 |
-| 参数校验 | `CHECK_AND_RETURN_RET_LOG` 宏统一参数/状态校验 |
-| 错误传播链 | ScreenCaptureServer → ScreenCaptureListenerCallback → IPC → 应用层 |
+| 统一返回值 | 所有方法返回 int32_t 错误码，MSERR_OK(0) 为成功 |
+| 状态机能力位图校验 | IsState(cap) 通过能力位图检查当前状态是否允许操作 |
+| 参数校验 | CHECK_AND_RETURN_RET_LOG 宏统一参数/状态校验 |
+| 错误传播链 | Server → ListenerCallback → IPC → 应用层 |
 | ON_SCOPE_EXIT 守卫 | 关键流程使用作用域守卫确保异常时资源释放 |
-| StopCaptureOnError | 暂停/恢复等操作失败时调用 `StopCaptureOnError` 停止录屏并上报错误 |
+| StopCaptureOnError | 暂停/恢复等操作失败时停止录屏并上报错误 |
 
 ### 错误传播链
 
-```
-ScreenCaptureServer 错误
-  → cbProxy_->OnError(errorType, errorCode)  (ScreenCaptureCallbackProxy)
-  → ScreenCaptureListenerCallback::OnError()
-  → ScreenCaptureListenerProxy::OnError()    (IPC 发送)
-  → ScreenCaptureListenerStub::OnRemoteRequest()
-  → ScreenCaptureCallBack::OnError()         (应用层回调)
-```
+Server 错误 → 回调代理 OnError → 桥接类 → ListenerProxy(IPC 发送) → ListenerStub(IPC 接收) → 应用层 OnError 回调。
 
 ## 三、DFX 诊断
 
 ### 3.1 StatisticalEventInfo 统计打点
 
-```cpp
-struct StatisticalEventInfo {
-    int32_t errCode = 0;
-    std::string errMsg;
-    int32_t captureDuration = -1;   // 录制时长（ms）
-    bool userAgree = false;         // 用户是否同意授权
-    bool requireMic = false;        // 是否需要麦克风
-    bool enableMic = false;         // 麦克风是否开启
-    std::string videoResolution;    // 视频分辨率
-    StopReason stopReason;          // 停止原因
-    int32_t startLatency = -1;      // 启动延迟（ms）
-};
-```
+录屏统计打点信息结构体：
+
+| 字段 | 说明 |
+|------|------|
+| errCode / errMsg | 错误码与错误信息 |
+| captureDuration | 录制时长（ms） |
+| userAgree | 用户是否同意授权 |
+| requireMic / enableMic | 是否需要麦克风 / 麦克风是否开启 |
+| videoResolution | 视频分辨率 |
+| stopReason | 停止原因 |
+| startLatency | 启动延迟（ms） |
 
 ### 3.2 SetMetaDataReport → HiSysEvent 上报
 
-Release 时通过 `SetMetaDataReport()` 将统计信息通过 `Media::Meta` 上报：
+Release 时将统计信息通过 Meta 上报：
 
 | Meta Tag | 字段 |
 |-----------|------|
@@ -106,28 +97,7 @@ Release 时通过 `SetMetaDataReport()` 将统计信息通过 `Media::Meta` 上�
 
 ### 3.3 SetMediaKitReport → MediaKit 上报
 
-录屏开始/失败时调用，上报详细配置信息：
-
-```json
-{
-  "captureMode": 0,
-  "dataType": "0",
-  "videoCapDisplayId": 0,
-  "videoFrameWidth": 1920,
-  "videoFrameHeight": 1080,
-  "videoSourceType": 1,
-  "micAudioSampleRate": 48000,
-  "innerAudioSource": 2,
-  "enableDeviceLevelCapture": false,
-  "keepCaptureDuringCall": false,
-  "pickerPopUp": -1,
-  "fillMode": 0,
-  "enablePause": false
-  ...
-}
-```
-
-通过 `MediaEvent::MediaKitStatistics` 上报。
+录屏开始/失败时调用，上报详细配置信息（captureMode/dataType/视频分辨率/采样率/策略等），通过 MediaEvent::MediaKitStatistics 上报。
 
 ### 3.4 StopReason 枚举
 
@@ -141,95 +111,57 @@ Release 时通过 `SetMetaDataReport()` 将统计信息通过 `Media::Meta` 上�
 
 ### 3.5 FaultEvent 故障上报
 
-```cpp
-FaultScreenCaptureEventWrite(appName, instanceId, avType, dataMode_, errCode, errMsg);
-```
-
-关键故障路径调用，通过 HiSysEvent FAULT 类型上报。
+关键故障路径调用 FaultScreenCaptureEventWrite，通过 HiSysEvent FAULT 类型上报。
 
 ## 四、通知栏实时视图
 
 ### 4.1 NotificationLocalLiveViewContent
 
-录屏期间显示实时通知栏，包含胶囊按钮和计时器。
-
-| 组件 | 说明 |
-|------|------|
-| `localLiveViewContent_` | 通知栏内容对象 |
-| `notificationId_` | = sessionId_，用于通知栏标识 |
-| `SetupPublishRequest` | 配置通知请求（不可移除、实时进行中） |
+录屏期间显示实时通知栏，包含胶囊按钮和计时器。notificationId 与 sessionId 一致，用于通知栏标识。
 
 ### 4.2 胶囊按钮
 
-| 按钮名称 | 动作 | 对应方法 |
-|----------|------|---------|
-| STOP | 停止录屏 | `StopScreenCaptureByEvent(STOPPED_BY_USER)` |
-| PAUSE | 暂停录屏 | `PauseScreenCaptureInner(PAUSED_BY_USER)` |
-| RESUME | 恢复录屏 | `ResumeScreenCaptureInner(RESUMED_BY_USER)` |
-| MIC | 麦克风开关 | `UpdateMicrophoneEnabled()` |
+| 按钮名称 | 动作 |
+|----------|------|
+| STOP | 停止录屏（STOPPED_BY_USER） |
+| PAUSE | 暂停录屏（PAUSED_BY_USER） |
+| RESUME | 恢复录屏（RESUMED_BY_USER） |
+| MIC | 麦克风开关 |
 
 ### 4.3 计时器
 
-通过 `startTime_` 和 `isTimePaused_` 管理计时：
-- 开始：`startTime_ = GetCurrentMillisecond()`
-- 暂停：`isTimePaused_ = true`
-- 恢复：`isTimePaused_ = false`
-- 停止：`captureDuration = endTime - startTime - startLatency`
+通过 startTime 和 isTimePaused 管理：开始记录起始时间；暂停置位；恢复清位；停止计算 captureDuration = endTime - startTime - startLatency。
 
-### 4.4 HandleNotificationButtonResponse
-
-```cpp
-void HandleNotificationButtonResponse(const std::string &buttonName) {
-    if (buttonName == "stop") → StopScreenCaptureByEvent
-    else if (buttonName == "pause") → PauseScreenCaptureInner
-    else if (buttonName == "resume") → ResumeScreenCaptureInner
-    else if (buttonName == "mic") → UpdateMicrophoneEnabled
-}
-```
-
-### 4.5 NotificationSubscriber
-
-```cpp
-class NotificationSubscriber : public NotificationLocalLiveViewSubscriber {
-    void OnConnected() override;
-    void OnDisconnected() override;
-    void OnResponse(notificationId, buttonOption) override;  // 按钮响应
-    void OnDied() override;
-};
-```
-
-通过 `notificationId_` 定位对应的 `ScreenCaptureServer` 实例。
-
-### 4.6 通知栏更新时机
+### 4.4 通知栏更新时机
 
 | 事件 | 更新内容 |
 |------|---------|
 | 暂停 | 按钮从 PAUSE 切换为 RESUME，计时暂停 |
 | 恢复 | 按钮从 RESUME 切换为 PAUSE，计时恢复 |
-| 语言切换 | `UpdateLiveViewContent` 刷新通知文本 |
-| 停止 | `CancelNotification` 移除通知 |
+| 语言切换 | 刷新通知文本 |
+| 停止 | CancelNotification 移除通知 |
 
 ## 五、常见错误场景与处理表
 
 | 场景 | 原因 | 错误码 | 处理方式 |
 |------|------|--------|---------|
-| 非法状态启动 | 非 CREATED/STOPPED | MSERR_INVALID_OPERATION | 校验 `CAP_INIT` |
-| 配置在运行中 | 非 CREATED | MSERR_INVALID_OPERATION_CREATE | 校验 `CAP_CONFIG` |
-| 暂停在非运行态 | 非 STARTED/RESUMED | MSERR_INVALID_OPERATION_STARTED_RESUMED | 校验 `CAP_RUNNING` |
-| 恢复在非暂停态 | 非 PAUSED | MSERR_INVALID_OPERATION_PAUSED | 校验 `CAP_PAUSED` |
+| 非法状态启动 | 非 CREATED/STOPPED | MSERR_INVALID_OPERATION | 校验 INIT |
+| 配置在运行中 | 非 CREATED | MSERR_INVALID_OPERATION_CREATE | 校验 CONFIG |
+| 暂停在非运行态 | 非 STARTED/RESUMED | MSERR_INVALID_OPERATION_STARTED_RESUMED | 校验 RUNNING |
+| 恢复在非暂停态 | 非 PAUSED | MSERR_INVALID_OPERATION_PAUSED | 校验 PAUSED |
 | 未启用 enablePause | strategy.enablePause=false | MSERR_INVALID_OPERATION_ENABLEPAUSE | 前置条件校验 |
 | 虚拟屏幕创建失败 | DisplayManager 返回错误 | MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN | 停止录屏并上报 |
-| 镜像创建失败 | MakeMirror 返回错误 | MSERR_UNKNOWN_MAKE_MIRROR | DestroyVirtualScreen + 上报 |
-| 通话中启动 | InCallObserver 检测通话 | MSERR_UNSUPPORT_INCALL | 发送 STOPPED_BY_CALL 回调 |
+| 镜像创建失败 | MakeMirror 返回错误 | MSERR_UNKNOWN_MAKE_MIRROR | 销毁虚拟屏幕 + 上报 |
+| 通话中启动 | 通话检测 | MSERR_UNSUPPORT_INCALL | 发送 STOPPED_BY_CALL 回调 |
 | 麦克风启动失败 | AudioCapturer 创建失败 | MSERR_UNKNOWN | 发送 MIC_UNAVAILABLE 回调 |
-| 实例数超限 | 超过 maxAppLimit/maxSessionPerUid | MSERR_INVALID_OPERATION | CanScreenCaptureInstanceBeCreate |
-| Recorder 停止失败 | recorder_->Stop 返回错误 | MSERR_UNKNOWN_RECORDER_STOP | 继续清理资源 |
-| 用户拒绝授权 | OnReceiveUserPrivacyAuthority(false) | MSERR_UNKNOWN | 状态回退 CREATED，回调 CANCELED |
+| 实例数超限 | 超全局/单 UID 上限 | MSERR_INVALID_OPERATION | 创建前检查计数 |
+| Recorder 停止失败 | recorder Stop 返回错误 | MSERR_UNKNOWN_RECORDER_STOP | 继续清理资源 |
+| 用户拒绝授权 | 用户 DENY | MSERR_UNKNOWN | 状态回退 CREATED，回调 CANCELED |
 | Picker 不支持 | 编译宏未开启 | MSERR_UNKNOWN_UNSUPPORT | 条件编译返回 |
 
 ## 知识关联
 
-- [[capture-lifecycle]] - 录屏完整生命周期
-- [[ipc-communication]] - IPC 通信与回调机制
-- [[privacy-and-permission]] - 隐私保护与权限机制
-- [[flows]] - 关键流程详解（通知栏控制流程）
+- [capture-lifecycle](capture-lifecycle.md) - 录屏完整生命周期
+- [ipc-communication](ipc-communication.md) - IPC 通信与回调机制
+- [privacy-and-permission](privacy-and-permission.md) - 隐私保护与权限机制
+- [flows](flows.md) - 关键流程详解（通知栏控制流程）
