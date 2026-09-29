@@ -861,5 +861,86 @@ HWTEST_F(AVMetadataUnitTest, FetchFrameYuvsWithTimeout_API_0200, Level2)
     ASSERT_EQ(result, 0);
     close(fdInfo.fd);
 }
+
+/**
+    * @tc.number    : ResolveMetadata_Format_DSF_0100
+    * @tc.name      : DSF format Get MetaData
+    * @tc.desc      : test ResolveMetadata for DSF audio file
+*/
+HWTEST_F(AVMetadataUnitTest, ResolveMetadata_Format_DSF_0100, TestSize.Level0)
+{
+    std::unordered_map<int32_t, std::string> dsfMeta = {
+        {AV_KEY_MIME_TYPE, "audio/dsf"},
+        {AV_KEY_HAS_AUDIO, "yes"},
+        {AV_KEY_SAMPLE_RATE, "352800"},
+        {AV_KEY_DURATION, "3633"},
+        {AV_KEY_NUM_TRACKS, "1"},
+    };
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("DSD128.dsf");
+    CheckMeta(uri, dsfMeta);
+}
+
+/**
+    * @tc.number    : ResolveMetadata_DSF_MimeType_0200
+    * @tc.name      : DSF MIME type verification
+    * @tc.desc      : Verify AV_KEY_MIME_TYPE is audio/dsf for DSF file
+*/
+HWTEST_F(AVMetadataUnitTest, ResolveMetadata_DSF_MimeType_0200, TestSize.Level0)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("DSD128.dsf");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(0, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size, 0));
+    std::string mimeType = helper->ResolveMetadata(AV_KEY_MIME_TYPE);
+    EXPECT_EQ(mimeType, "audio/dsf");
+    helper->Release();
+    close(fdInfo.fd);
+}
+
+/**
+    * @tc.number    : ResolveMetadata_DSF_AudioOnly_0300
+    * @tc.name      : DSF audio only verification
+    * @tc.desc      : Verify DSF file has audio but no video
+*/
+HWTEST_F(AVMetadataUnitTest, ResolveMetadata_DSF_AudioOnly_0300, TestSize.Level0)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("DSD128.dsf");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(0, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size, 0));
+    std::string hasAudio = helper->ResolveMetadata(AV_KEY_HAS_AUDIO);
+    EXPECT_EQ(hasAudio, "yes");
+    std::string hasVideo = helper->ResolveMetadata(AV_KEY_HAS_VIDEO);
+    EXPECT_NE(hasVideo, "yes");
+    helper->Release();
+    close(fdInfo.fd);
+}
+
+/**
+    * @tc.number    : ResolveMetadata_DSF_SampleRate_0400
+    * @tc.name      : DSF sample rate verification
+    * @tc.desc      : Verify DSD128 sample rate is 352800
+*/
+HWTEST_F(AVMetadataUnitTest, ResolveMetadata_DSF_SampleRate_0400, TestSize.Level0)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("DSD128.dsf");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(0, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size, 0));
+    std::string sampleRate = helper->ResolveMetadata(AV_KEY_SAMPLE_RATE);
+    EXPECT_EQ(sampleRate, "352800");
+    helper->Release();
+    close(fdInfo.fd);
+}
 } // namespace Media
 } // namespace OHOS
