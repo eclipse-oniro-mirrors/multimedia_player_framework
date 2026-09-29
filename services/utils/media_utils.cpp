@@ -76,6 +76,7 @@ const std::unordered_map<Status, int32_t> transcoder_statusPair = {
     {Status::ERROR_WATERMARK_NUM_OUT_OF_RANGE, MSERR_WATERMARK_NUM_OUT_OF_RANGE},
     {Status::ERROR_VID_ENC_RESOLUTION_UNSUPPORTED, MSERR_TARGET_RESOLUTION_OUT_OF_RANGE},
     {Status::ERROR_VID_DEC_RESOLUTION_UNSUPPORTED, MSERR_VIDEO_RESOLUTION_OUT_OF_RANGE},
+    {Status::ERROR_SQR_FACTOR_OUT_OF_RANGE, MSERR_SQR_FACTOR_ERROR_401},
 };
 
 const std::unordered_map<Status, int32_t> recorder_statusPair = {
