@@ -1156,6 +1156,8 @@ struct AVTranscoderConfig {
     videoFrameWidth: Optional<i32>;
     videoFrameHeight: Optional<i32>;
     enableBFrame: Optional<bool>;
+    enableStableQualityMode: Optional<bool>;
+    sqrFactor: Optional<i32>;
 }
 
 enum AVScreenCaptureRecordPreset:i32 {
