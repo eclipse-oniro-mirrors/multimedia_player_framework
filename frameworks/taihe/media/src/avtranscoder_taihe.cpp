@@ -662,6 +662,18 @@ RetInfo AVTranscoderImpl::Configure(std::shared_ptr<AVTransCoderConfigInner> con
     ret = transCoder_->SetEnableBFrame(config->enableBFrame);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderEnableBFrame", "enableBFrame"));
 
+    if (config->enableStableQualityMode) {
+        ret = transCoder_->SetVideoBitrateMode(static_cast<int32_t>(VideoEncodeBitrateMode::SQR));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoBitrateMode", "enableStableQualityMode"));
+        if (config->sqrFactorSet) {
+            CHECK_AND_RETURN_RET(config->sqrFactor >= AVTRANSCODER_SQR_FACTOR_MIN &&
+                config->sqrFactor <= AVTRANSCODER_SQR_FACTOR_MAX,
+                GetReturnRet(MSERR_SQR_FACTOR_ERROR_401, "SetVideoSqrFactor", "SQRFactor"));
+            ret = transCoder_->SetVideoSqrFactor(config->sqrFactor);
+            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSqrFactor", "SQRFactor"));
+        }
+    }
+
     hasConfiged_.store(true);
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
@@ -828,6 +840,13 @@ int32_t AVTranscoderImpl::GetVideoConfig(AVTranscoderConfig const& config,
     }
     if (config.enableBFrame.has_value()) {
         configInner->enableBFrame = config.enableBFrame.value();
+    }
+    if (config.enableStableQualityMode.has_value()) {
+        configInner->enableStableQualityMode = config.enableStableQualityMode.value();
+    }
+    if (config.sqrFactor.has_value()) {
+        configInner->sqrFactor = config.sqrFactor.value();
+        configInner->sqrFactorSet = true;
     }
     return MSERR_OK;
 }

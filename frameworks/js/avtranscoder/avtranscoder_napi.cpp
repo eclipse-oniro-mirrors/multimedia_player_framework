@@ -94,6 +94,7 @@ const std::set<MediaServiceErrCode> MSERRCODE_AVTRANSCODER_INFOS = {
     MSERR_FRAMEWORK_INTERNAL_ERROR,
     MSERR_VIDEO_RESOLUTION_OUT_OF_RANGE,
     MSERR_TARGET_RESOLUTION_OUT_OF_RANGE,
+    MSERR_SQR_FACTOR_ERROR_401,
 };
 std::map<std::string, AVTransCoderNapi::AvTransCoderTaskqFunc> AVTransCoderNapi::taskQFuncs_ = {
     {AVTransCoderOpt::START, &AVTransCoderNapi::Start},
@@ -941,6 +942,18 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
     ret = transCoder_->SetVideoEncodingBitRate(config->videoBitrate);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderBitRate", "videoBitrate"));
 
+    if (config->enableStableQualityMode) {
+        ret = transCoder_->SetVideoBitrateMode(static_cast<int32_t>(VideoEncodeBitrateMode::SQR));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoBitrateMode", "enableStableQualityMode"));
+        if (config->sqrFactorSet) {
+            CHECK_AND_RETURN_RET(config->sqrFactor >= AVTRANSCODER_SQR_FACTOR_MIN &&
+                config->sqrFactor <= AVTRANSCODER_SQR_FACTOR_MAX,
+                GetReturnRet(MSERR_SQR_FACTOR_ERROR_401, "SetVideoSqrFactor", "SQRFactor"));
+            ret = transCoder_->SetVideoSqrFactor(config->sqrFactor);
+            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSqrFactor", "SQRFactor"));
+        }
+    }
+
     ret = transCoder_->SetEnableBFrame(config->enableBFrame);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncodingEnableBFrame", "enableBFrame"));
     hasConfiged_.store(true);
@@ -1143,6 +1156,8 @@ int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContex
     (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameWidth", config->videoFrameWidth);
     (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight);
     (void)CommonNapi::GetPropertyBool(env, args, "enableBFrame", config->enableBFrame);
+    (void)CommonNapi::GetPropertyBool(env, args, "enableStableQualityMode", config->enableStableQualityMode);
+    config->sqrFactorSet = CommonNapi::GetPropertyInt32(env, args, "SQRFactor", config->sqrFactor);
     return MSERR_OK;
 }
 

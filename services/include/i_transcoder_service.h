@@ -91,6 +91,8 @@ public:
      * @version 1.0
      */
     virtual int32_t SetEnableBFrame(bool enableBFrame) = 0;
+    virtual int32_t SetVideoBitrateMode(int32_t bitrateMode) = 0;
+    virtual int32_t SetVideoSqrFactor(int32_t sqrFactor) = 0;
 
     /**
      * @brief Sets the encoder of the audio to transcoder.

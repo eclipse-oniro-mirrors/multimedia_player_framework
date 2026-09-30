@@ -234,5 +234,25 @@ int32_t TransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer,
         "transcoder service does not exist.");
     return transCoderService_->AddWatermark(waterMarkBuffer, width, height);
 }
+
+int32_t TransCoderImpl::SetVideoBitrateMode(int32_t bitrateMode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetVideoBitrateMode in, bitrateMode is %{public}d",
+        FAKE_POINTER(this), bitrateMode);
+    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
+        "transcoder service does not exist..");
+    return transCoderService_->SetVideoBitrateMode(bitrateMode);
+}
+ 
+int32_t TransCoderImpl::SetVideoSqrFactor(int32_t sqrFactor)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetVideoSqrFactor in, sqrFactor is %{public}d",
+        FAKE_POINTER(this), sqrFactor);
+    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
+        "transcoder service does not exist..");
+    return transCoderService_->SetVideoSqrFactor(sqrFactor);
+}
 } // namespace Media
 } // namespace OHOS

@@ -85,6 +85,8 @@ int32_t TransCoderServiceStub::Init()
     recFuncs_[CANCEL] = &TransCoderServiceStub::Cancel;
     recFuncs_[RELEASE] = &TransCoderServiceStub::Release;
     recFuncs_[ADD_WATERMARK] = &TransCoderServiceStub::AddWatermark;
+    recFuncs_[SET_VIDEO_BITRATE_MODE] = &TransCoderServiceStub::SetVideoBitrateMode;
+    recFuncs_[SET_VIDEO_SQR_FACTOR] = &TransCoderServiceStub::SetVideoSqrFactor;
     recFuncs_[DESTROY] = &TransCoderServiceStub::DestroyStub;
 
     pid_ = IPCSkeleton::GetCallingPid();
@@ -176,6 +178,18 @@ int32_t TransCoderServiceStub::SetEnableBFrame(bool enableBFrame)
 {
     CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
     return transCoderServer_->SetEnableBFrame(enableBFrame);
+}
+
+int32_t TransCoderServiceStub::SetVideoBitrateMode(int32_t bitrateMode)
+{
+    CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
+    return transCoderServer_->SetVideoBitrateMode(bitrateMode);
+}
+
+int32_t TransCoderServiceStub::SetVideoSqrFactor(int32_t sqrFactor)
+{
+    CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
+    return transCoderServer_->SetVideoSqrFactor(sqrFactor);
 }
 
 int32_t TransCoderServiceStub::SetAudioEncoder(AudioCodecFormat encoder)
@@ -306,6 +320,20 @@ int32_t TransCoderServiceStub::SetEnableBFrame(MessageParcel &data, MessageParce
 {
     bool enableBFrame = data.ReadBool();
     reply.WriteBool(SetEnableBFrame(enableBFrame));
+    return MSERR_OK;
+}
+
+int32_t TransCoderServiceStub::SetVideoBitrateMode(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t bitrateMode = data.ReadInt32();
+    reply.WriteInt32(SetVideoBitrateMode(bitrateMode));
+    return MSERR_OK;
+}
+
+int32_t TransCoderServiceStub::SetVideoSqrFactor(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t sqrFactor = data.ReadInt32();
+    reply.WriteInt32(SetVideoSqrFactor(sqrFactor));
     return MSERR_OK;
 }
 

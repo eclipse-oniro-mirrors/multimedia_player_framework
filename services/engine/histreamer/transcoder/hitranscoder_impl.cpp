@@ -44,6 +44,7 @@ constexpr int32_t DEFAULT_AUDIO_BITRATE = 48000;
 const uint32_t ROTATE_90_VALUE = 90;
 const uint32_t ROTATE_180_VALUE = 180;
 const uint32_t ROTATE_270_VALUE = 270;
+constexpr uint32_t MAX_SQR_FACTOR = 51;
 }
 
 namespace OHOS {
@@ -77,6 +78,10 @@ static const std::unordered_set<std::string> AVMETA_KEY = {
     { "customInfo" },
 };
 
+static const std::unordered_set<Plugins::VideoEncodeBitrateMode> VIDEO_BITRATE_MODES = {
+    Plugins::VideoEncodeBitrateMode::SQR,
+    Plugins::VideoEncodeBitrateMode::VBR
+};
 class TransCoderEventReceiver : public Pipeline::EventReceiver {
 public:
     explicit TransCoderEventReceiver(HiTransCoderImpl *hiTransCoderImpl, std::string transcoderId)
@@ -485,6 +490,32 @@ Status HiTransCoderImpl::ConfigureColorSpace(const TransCoderParam &transCoderPa
     return Status::OK;
 }
 
+Status HiTransCoderImpl::ConfigureVideoBitrateMode(const TransCoderParam &transCoderParam)
+{
+    VideoBitrateMode bitrateModeParam = static_cast<const VideoBitrateMode&>(transCoderParam);
+    videoBitrateMode_ = bitrateModeParam.bitrateMode;
+    MEDIA_LOG_I("HiTransCoderImpl::Configure videoBitrateMode %{public}d", videoBitrateMode_);
+    if (videoBitrateMode_ != -1) {
+        bitrateMode = static_cast<Plugins::VideoEncodeBitrateMode>(videoBitrateMode_);
+        if (VIDEO_BITRATE_MODES.find(bitrateMode) != VIDEO_BITRATE_MODES.end()) {
+            return Status::OK;
+        }
+    }
+    MEDIA_LOG_E("HiTransCoderImpl::Configure videoBitrateMode %{public}d is not support", videoBitrateMode_);
+    return Status::ERROR_INVALID_PARAMETER;
+}
+
+Status HiTransCoderImpl::ConfigureSQRFactor(const TransCoderParam &transCoderParam)
+{
+    VideoSqrFactor sqrFactorParam = static_cast<const VideoSqrFactor&>(transCoderParam);
+    videoSqrFactor_ = sqrFactorParam.sqrFactor;
+    MEDIA_LOG_I("HiTransCoderImpl::Configure videoSqrFactor %{public}d", videoSqrFactor_);
+    FALSE_RETURN_V_MSG(videoSqrFactor_ >= 0 && videoSqrFactor_ <= MAX_SQR_FACTOR, Status::ERROR_SQR_FACTOR_OUT_OF_RANGE,
+        "Invalid video SQR factor");
+    videoEncFormat_->Set<Tag::VIDEO_ENCODER_SQR_FACTOR>(videoSqrFactor_);
+    return Status::OK;
+}
+
 Status HiTransCoderImpl::ConfigureEnableBFrameEncoding(const TransCoderParam &transCoderParam)
 {
     VideoEnableBFrameEncoding enableBFrameEncoding = static_cast<const VideoEnableBFrameEncoding&>(transCoderParam);
@@ -560,6 +591,14 @@ Status HiTransCoderImpl::ConfigureVideoParam(const TransCoderParam &transCoderPa
         }
         case TransCoderPublicParamType::VIDEO_ENABLE_B_FRAME_ENCODING: {
             ret = ConfigureEnableBFrameEncoding(transCoderParam);
+            break;
+        }
+        case TransCoderPublicParamType::VIDEO_BITRATE_MODE: {
+            ret = ConfigureVideoBitrateMode(transCoderParam);
+            break;
+        }
+        case TransCoderPublicParamType::VIDEO_SQR_FACTOR: {
+            ret = ConfigureSQRFactor(transCoderParam);
             break;
         }
         default:
@@ -1073,7 +1112,16 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
         "videoEncFormat is nullptr");
     std::string bundleName_ = GetClientBundleName(appUid_);
     videoEncoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-    videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(Plugins::VideoEncodeBitrateMode::VBR);
+    if (bitrateMode == Plugins::VideoEncodeBitrateMode::SQR) {
+        std::string videoMime;
+        videoEncFormat_->GetData(Tag::MIME_TYPE, videoMime);
+        if (videoMime != Plugins::MimeType::VIDEO_HEVC) {
+            MEDIA_LOG_W("SQR mode is only supported for HEVC output, current mime: %{public}s, fallback to VBR",
+                videoMime.c_str());
+            bitrateMode = Plugins::VideoEncodeBitrateMode::VBR;
+        }
+    }
+    videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(bitrateMode);
     Status ret = videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoEncoderFilter SetCodecFormat fail");
     videoEncoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);

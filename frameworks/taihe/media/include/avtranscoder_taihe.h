@@ -68,6 +68,9 @@ constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = 48000;
 constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
+constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_SQR_FACTOR = -1;
+constexpr int32_t AVTRANSCODER_SQR_FACTOR_MIN = 0;
+constexpr int32_t AVTRANSCODER_SQR_FACTOR_MAX = 51;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_LENGTH = 4096;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_NUM = 5;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_ROWSTRIDE_NUM = 5;
@@ -134,6 +137,9 @@ struct AVTransCoderConfigInner {
     int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
     int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
     bool enableBFrame = false;
+    bool enableStableQualityMode = false;
+    int32_t sqrFactor = AVTRANSCODER_DEFAULT_VIDEO_SQR_FACTOR;
+    bool sqrFactorSet = false;
 };
 
 class AVTranscoderImpl {

@@ -33,6 +33,8 @@ public:
     virtual int32_t SetVideoEncodingBitRate(int32_t rate) = 0;
     virtual int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) = 0;
     virtual int32_t SetEnableBFrame(bool enableBFrame) = 0;
+    virtual int32_t SetVideoBitrateMode(int32_t bitrateMode) = 0;
+    virtual int32_t SetVideoSqrFactor(int32_t sqrFactor) = 0;
     virtual int32_t SetAudioEncoder(AudioCodecFormat encoder) = 0;
     virtual int32_t SetAudioEncodingBitRate(int32_t bitRate) = 0;
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
@@ -70,7 +72,9 @@ public:
         CANCEL,
         RELEASE,
         DESTROY,
-        ADD_WATERMARK
+        ADD_WATERMARK,
+        SET_VIDEO_BITRATE_MODE,
+        SET_VIDEO_SQR_FACTOR
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardTransCoderService");
