@@ -72,6 +72,7 @@ static std::string DupFdFromUri(const std::string &uri)
         MEDIA_LOGE("DupFdFromUri failed. uri: %{public}s", uri.c_str());
         return "";
     }
+    fdsan_exchange_owner_tag(dupFd, 0, FD_AUDIO_HAPTIC_REGISTER_SOURCE_TAG);
     return FDHEAD + std::to_string(dupFd);
 }
 
@@ -169,12 +170,14 @@ int32_t AudioHapticManagerImpl::RegisterSourceFromFd(const AudioHapticFileDescri
         MEDIA_LOGE("RegisterSourceFromFd failed invalid audio fd");
         return INVALID_SOURCE_ID;
     }
+    fdsan_exchange_owner_tag(newAudioFd, 0, FD_AUDIO_HAPTIC_REGISTER_SOURCE_TAG);
     int32_t newHapticFd = dup(hapticFd.fd);
     if (newHapticFd == FILE_DESCRIPTOR_INVALID) {
         MEDIA_LOGE("RegisterSourceFromFd failed invalid haptic fd");
-        close(newAudioFd);
+        fdsan_close_with_tag(newAudioFd, FD_AUDIO_HAPTIC_REGISTER_SOURCE_TAG);
         return INVALID_SOURCE_ID;
     }
+    fdsan_exchange_owner_tag(newHapticFd, 0, FD_AUDIO_HAPTIC_REGISTER_SOURCE_TAG);
 
     curPlayerIndex_ = (curPlayerIndex_ + 1) % MAX_PLAYER_NUM;
     while (audioHapticPlayerMap_[curPlayerIndex_] != nullptr) {
@@ -330,24 +333,24 @@ void AudioHapticManagerImpl::ReleasePlayerInfo(const std::shared_ptr<AudioHaptic
     if (!audioSrc.audioUri.empty()) {
         int32_t fd = ExtractFd(audioSrc.audioUri);
         if (fd > FILE_DESCRIPTOR_INVALID) {
-            close(fd);
+            fdsan_close_with_tag(fd, FD_AUDIO_HAPTIC_REGISTER_SOURCE_TAG);
         }
     }
     int32_t audioFd = audioSrc.fd;
     if (audioFd > FILE_DESCRIPTOR_INVALID) {
-        close(audioFd);
+        fdsan_close_with_tag(audioFd, FD_AUDIO_HAPTIC_REGISTER_SOURCE_TAG);
     }
 
     auto hapticSrc = info->hapticSource_;
     if (!hapticSrc.hapticUri.empty()) {
         int32_t fd = ExtractFd(hapticSrc.hapticUri);
         if (fd > FILE_DESCRIPTOR_INVALID) {
-            close(fd);
+            fdsan_close_with_tag(fd, FD_AUDIO_HAPTIC_REGISTER_SOURCE_TAG);
         }
     }
     int32_t hapticFd = hapticSrc.fd;
     if (hapticFd > FILE_DESCRIPTOR_INVALID) {
-        close(hapticFd);
+        fdsan_close_with_tag(hapticFd, FD_AUDIO_HAPTIC_REGISTER_SOURCE_TAG);
     }
 }
 } // namesapce AudioStandard

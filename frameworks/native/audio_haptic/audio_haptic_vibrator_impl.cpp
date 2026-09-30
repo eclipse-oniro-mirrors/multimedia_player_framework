@@ -241,6 +241,7 @@ int32_t AudioHapticVibratorImpl::OpenHapticSource(const HapticSource& hapticSour
 
     CHECK_AND_RETURN_RET_LOG(fd > FILE_DESCRIPTOR_INVALID, MSERR_OPEN_FILE_FAILED,
         "OpenHapticSource: open source failed, file path: %{public}s, fd: %{public}d", hapticUri.c_str(), hapticFd);
+    fdsan_exchange_owner_tag(fd, 0, FD_AUDIO_HAPTIC_OPEN_HAPTIC_SOURCE_TAG);
 #endif
     return MSERR_OK;
 }
@@ -264,7 +265,7 @@ int32_t AudioHapticVibratorImpl::OpenHapticFile(const HapticSource& hapticSource
         vibratorFD_->length = hapticSource.length > 0 ? hapticSource.length : statbuf.st_size;
         return MSERR_OK;
     } else {
-        close(newFd);
+        fdsan_close_with_tag(newFd, FD_AUDIO_HAPTIC_OPEN_HAPTIC_SOURCE_TAG);
         return MSERR_OPEN_FILE_FAILED;
     }
 #endif
@@ -311,10 +312,10 @@ int32_t AudioHapticVibratorImpl::PreLoad(const HapticSource &hapticSource,
     int32_t fd = vibratorFD_->fd;
     int32_t result = Sensors::PreProcess(*vibratorFD_, *vibratorPkg_);
     if (result != 0) {
-        close(fd);
+        fdsan_close_with_tag(fd, FD_AUDIO_HAPTIC_OPEN_HAPTIC_SOURCE_TAG);
         return MSERR_UNSUPPORT_FILE;
     }
-    close(fd);
+    fdsan_close_with_tag(fd, FD_AUDIO_HAPTIC_OPEN_HAPTIC_SOURCE_TAG);
 #endif
     return MSERR_OK;
 }
