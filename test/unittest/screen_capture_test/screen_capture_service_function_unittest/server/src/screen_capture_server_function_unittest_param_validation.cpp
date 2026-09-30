@@ -419,7 +419,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_MuteWhenShareAu
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
         AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    screenCaptureServer_->showShareSystemAudioBox_ = true;
     screenCaptureServer_->isInnerAudioBoxSelected_ = false;
     AudioCaptureInfo innerInfo = {
         .audioSampleRate = 48000,
