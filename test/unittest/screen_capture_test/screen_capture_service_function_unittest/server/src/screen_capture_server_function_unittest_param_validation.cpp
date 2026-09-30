@@ -302,7 +302,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GenerateThreadNameByPrefix_001, TestSi
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetErrorInfo_001, TestSize.Level2)
 {
-    screenCaptureServer_->SetErrorInfo(MSERR_UNKNOWN, "test error", StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE, true);
+    screenCaptureServer_->SetErrorInfo(MSERR_UNKNOWN, "test error",
+        StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE, true);
     ASSERT_EQ(screenCaptureServer_->statisticalEventInfo_.errCode, MSERR_UNKNOWN);
     ASSERT_EQ(screenCaptureServer_->statisticalEventInfo_.errMsg, "test error");
 }
