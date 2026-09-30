@@ -36,7 +36,6 @@ namespace Media {
 static constexpr int32_t MAX_LINE_COLOR_RGB = 0xFFFFFF;
 static constexpr int32_t MIN_LINE_COLOR_ARGB = 0xFF000000;
 static constexpr int32_t MIN_LINE_WIDTH = 1;
-static constexpr int32_t MAX_LINE_WIDTH = 10;
 static const std::string BUTTON_NAME_MIC = "mic";
 
 HWTEST_F(ScreenCaptureServerFunctionTest, HandleNotificationButton_MicButton_001, TestSize.Level2)
