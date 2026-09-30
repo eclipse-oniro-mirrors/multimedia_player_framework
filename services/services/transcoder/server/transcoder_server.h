@@ -19,6 +19,7 @@
 #include "i_transcoder_service.h"
 #include "i_transcoder_engine.h"
 #include "nocopyable.h"
+#include <atomic>
 #include "task_queue.h"
 #include "watchdog.h"
 #include "uri_helper.h"
@@ -81,7 +82,7 @@ private:
 
     std::unique_ptr<ITransCoderEngine> transCoderEngine_ = nullptr;
     std::shared_ptr<TransCoderCallback> transCoderCb_ = nullptr;
-    RecStatus status_ = REC_INITIALIZED;
+    std::atomic<RecStatus> status_ = REC_INITIALIZED;
     std::mutex mutex_;
     std::mutex cbMutex_;
     TaskQueue taskQue_;
