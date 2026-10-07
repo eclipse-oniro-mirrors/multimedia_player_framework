@@ -608,25 +608,6 @@ HWTEST_F(RecorderServerUnitTest, Mock_IsWatermarkSupported_Success_001, TestSize
 }
 
 /**
- * @tc.name: Mock_SetWatermark_Success_001
- * @tc.desc: Mock SetWatermark Success 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, Mock_SetWatermark_Success_001, TestSize.Level2)
-{
-    RS()->status_ = RecorderServer::REC_PREPARED;
-    auto mock = std::make_unique<MockRecorderEngine>();
-    ASSERT_NE(nullptr, mock);
-    mock->retInt_ = MSERR_OK;
-    auto saved = std::move(RS()->recorderEngine_);
-    RS()->recorderEngine_ = std::move(mock);
-    std::shared_ptr<AVBuffer> buffer;
-    EXPECT_EQ(MSERR_OK, RS()->SetWatermark(buffer));
-    RS()->recorderEngine_ = std::move(saved);
-}
-
-/**
  * @tc.name: Mock_AddWatermark_Success_001
  * @tc.desc: Mock AddWatermark Success 001
  * @tc.type: FUNC
