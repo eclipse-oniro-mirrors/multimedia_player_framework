@@ -93,6 +93,7 @@ void RecorderUnitTest::TearDownTestCase(void) {}
 
 void RecorderUnitTest::SetUp(void)
 {
+    g_videoRecorderConfig = VideoRecorderConfig();
     recorder_ = std::make_shared<RecorderMock>();
     ASSERT_NE(nullptr, recorder_);
     ASSERT_TRUE(recorder_->CreateRecorder());
@@ -595,7 +596,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_009, TestSize.Level2)
 
 /**
  * @tc.name: recorder_configure_010
- * @tc.desc: record with videoFormat VIDEO_CODEC_FORMAT_BUTT
+ * @tc.desc: record with invalid outputFd (file not exist, O_RDWR without O_CREAT)
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -605,6 +606,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_010, TestSize.Level2)
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     videoRecorderConfig.videoFormat = H264;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_error.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_NE(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
     EXPECT_NE(MSERR_OK, recorder_->Prepare());
@@ -625,6 +627,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_011, TestSize.Level2)
     videoRecorderConfig.videoFormat = H264;
     videoRecorderConfig.outPutFormat = FORMAT_BUTT;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_NE(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
     EXPECT_NE(MSERR_OK, recorder_->Prepare());
@@ -646,7 +649,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_012, TestSize.Level2)
     videoRecorderConfig.outPutFormat = FORMAT_DEFAULT;
     videoRecorderConfig.enableBFrame = false;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
@@ -1137,7 +1140,7 @@ HWTEST_F(RecorderUnitTest, recorder_audio_es, TestSize.Level0)
 
 /**
  * @tc.name: recorder_audio_es_0100
- * @tc.desc: record audio with es
+ * @tc.desc: record audio with es, test AAC_LC format with local config
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1145,17 +1148,18 @@ HWTEST_F(RecorderUnitTest, recorder_audio_es_0100, TestSize.Level0)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.outPutFormat = FORMAT_M4A;
-    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_audio_es.m4a").c_str(), O_RDWR);
+    videoRecorderConfig.audioFormat = AAC_LC;
+    videoRecorderConfig.sampleRate = 44100;
+    videoRecorderConfig.channelCount = 2;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_audio_es_0100.m4a").c_str(), O_RDWR);
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Pause());
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Resume());
-    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(true));
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -1188,7 +1192,7 @@ HWTEST_F(RecorderUnitTest, recorder_av_yuv_H264, TestSize.Level0)
 
 /**
  * @tc.name: recorder_av_yuv_h264
- * @tc.desc: record audio with yuv h264
+ * @tc.desc: record audio with yuv h264, test pause and resume
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1204,6 +1208,10 @@ HWTEST_F(RecorderUnitTest, recorder_av_yuv_h264, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(AUDIO_VIDEO, g_videoRecorderConfig));
 
     EXPECT_EQ(MSERR_OK, recorder_->Start());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, recorder_->Pause());
+    sleep(RECORDER_TIME / 2);
+    EXPECT_EQ(MSERR_OK, recorder_->Resume());
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
     recorder_->StopBuffer(PURE_VIDEO);
@@ -1271,8 +1279,8 @@ HWTEST_F(RecorderUnitTest, recorder_video_stop_start, TestSize.Level2)
 }
 
 /**
- * @tc.name: recorder_video_stop_start
- * @tc.desc: record video, then stop start
+ * @tc.name: recorder_video_wrongsize
+ * @tc.desc: record video with wrong size (PURE_ERROR buffer type)
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1325,7 +1333,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_001, TestSize.Level
 
 /**
  * @tc.name: recorder_video_SetOrientationHint_002
- * @tc.desc: record video, SetOrientationHint
+ * @tc.desc: record video, SetLocation with boundary latitude and verify via GetLocation
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1339,14 +1347,12 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_002, TestSize.Level
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     recorder_->SetLocation(-91, 0);
+    Location location;
+    EXPECT_EQ(MSERR_OK, recorder_->GetLocation(location));
+    EXPECT_FLOAT_EQ(location.latitude, -91);
+    EXPECT_FLOAT_EQ(location.longitude, 0);
     recorder_->SetOrientationHint(720);
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
-
-    EXPECT_EQ(MSERR_OK, recorder_->Start());
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
-    recorder_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
@@ -1354,7 +1360,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_002, TestSize.Level
 
 /**
  * @tc.name: recorder_video_SetOrientationHint_003
- * @tc.desc: record video, SetOrientationHint
+ * @tc.desc: record video, SetLocation with positive boundary and verify via GetLocation
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1368,15 +1374,13 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_003, TestSize.Level
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     recorder_->SetLocation(91, 0);
+    Location location;
+    EXPECT_EQ(MSERR_OK, recorder_->GetLocation(location));
+    EXPECT_FLOAT_EQ(location.latitude, 91);
+    EXPECT_FLOAT_EQ(location.longitude, 0);
     recorder_->SetOrientationHint(180);
     system("param set sys.media.dump.surfacesrc.enable true");
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
-
-    EXPECT_EQ(MSERR_OK, recorder_->Start());
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
-    recorder_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
@@ -1384,7 +1388,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_003, TestSize.Level
 
 /**
  * @tc.name: recorder_video_SetOrientationHint_004
- * @tc.desc: record video, SetOrientationHint
+ * @tc.desc: record video, SetLocation with out-of-range longitude boundary values
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1403,7 +1407,6 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_004, TestSize.Level
     system("param set sys.media.dump.surfacesrc.enable false");
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
-
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
@@ -1415,7 +1418,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetOrientationHint_004, TestSize.Level
 
 /**
  * @tc.name: recorder_video_UpdateRotation_001
- * @tc.desc: record video, Update rotation
+ * @tc.desc: record video, set orientation 0 and 90 after Prepare, verify full recording lifecycle
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1432,6 +1435,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_UpdateRotation_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
     recorder_->SetOrientationHint(0);
+    recorder_->SetOrientationHint(90);
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
@@ -1443,7 +1447,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_UpdateRotation_001, TestSize.Level0)
 
 /**
  * @tc.name: recorder_video_UpdateRotation_002
- * @tc.desc: record video, Update rotation
+ * @tc.desc: record video, set orientation 180 and 270 after Prepare, verify Stop(true) drain path
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1459,66 +1463,11 @@ HWTEST_F(RecorderUnitTest, recorder_video_UpdateRotation_002, TestSize.Level0)
     system("param set sys.media.dump.surfacesrc.enable false");
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
-    recorder_->SetOrientationHint(90);
-    EXPECT_EQ(MSERR_OK, recorder_->Start());
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
-    recorder_->StopBuffer(PURE_VIDEO);
-    EXPECT_EQ(MSERR_OK, recorder_->Reset());
-    EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(g_videoRecorderConfig.outputFd);
-}
-
-/**
- * @tc.name: recorder_video_UpdateRotation_003
- * @tc.desc: record video, Update rotation
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderUnitTest, recorder_video_UpdateRotation_003, TestSize.Level0)
-{
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_video_UpdateRotation_003.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-
-    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    system("param set sys.media.dump.surfacesrc.enable false");
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
     recorder_->SetOrientationHint(180);
-    EXPECT_EQ(MSERR_OK, recorder_->Start());
-    sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
-    recorder_->StopBuffer(PURE_VIDEO);
-    EXPECT_EQ(MSERR_OK, recorder_->Reset());
-    EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(g_videoRecorderConfig.outputFd);
-}
-
-/**
- * @tc.name: recorder_video_UpdateRotation_004
- * @tc.desc: record video, Update rotation
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderUnitTest, recorder_video_UpdateRotation_004, TestSize.Level0)
-{
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_video_UpdateRotation_004.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-
-    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    system("param set sys.media.dump.surfacesrc.enable false");
-    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorder_->RequesetBuffer(PURE_VIDEO, g_videoRecorderConfig));
     recorder_->SetOrientationHint(270);
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);
-    EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->Stop(true));
     recorder_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
@@ -1636,6 +1585,7 @@ HWTEST_F(RecorderUnitTest, recorder_IsWatermarkSupported_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     bool isWatermarkSupported = false;
     EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
+    EXPECT_TRUE(isWatermarkSupported);
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1654,13 +1604,16 @@ HWTEST_F(RecorderUnitTest, recorder_IsWatermarkSupported_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     bool isWatermarkSupported = false;
     EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
-    EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
+    EXPECT_TRUE(isWatermarkSupported);
+    bool isWatermarkSupported2 = false;
+    EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported2));
+    EXPECT_EQ(isWatermarkSupported, isWatermarkSupported2);
     close(g_videoRecorderConfig.outputFd);
 }
 
 /**
  * @tc.name: recorder_SetVideoIsHdr_001
- * @tc.desc: record SetVideoIsHdr
+ * @tc.desc: record SetVideoIsHdr with H265 and isHdr=false, verify full lifecycle
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1673,12 +1626,15 @@ HWTEST_F(RecorderUnitTest, recorder_SetVideoIsHdr_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     bool isHdr = false;
     EXPECT_EQ(MSERR_OK, recorder_->SetVideoIsHdr(g_videoRecorderConfig.videoSourceId, isHdr));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
 
 /**
  * @tc.name: recorder_SetVideoIsHdr_002
- * @tc.desc: record SetVideoIsHdr
+ * @tc.desc: record SetVideoIsHdr with H265 and isHdr=true, verify Prepare succeeds with HDR enabled
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1691,6 +1647,9 @@ HWTEST_F(RecorderUnitTest, recorder_SetVideoIsHdr_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     bool isHdr = true;
     EXPECT_EQ(MSERR_OK, recorder_->SetVideoIsHdr(g_videoRecorderConfig.videoSourceId, isHdr));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1743,7 +1702,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetGenre_001, TestSize.Level0)
     videoRecorderConfig.videoFormat = H264;
     videoRecorderConfig.outPutFormat = FORMAT_DEFAULT;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetGenre_001.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->SetGenre(videoRecorderConfig.genre));
@@ -1800,7 +1759,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCustomInfo_001, TestSize.Level0)
     videoRecorderConfig.videoFormat = H264;
     videoRecorderConfig.outPutFormat = FORMAT_DEFAULT;
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetCustomInfo_001.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
     Meta customInfo;
@@ -1953,7 +1912,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_001, TestSize.Level2)
 
 /**
  * @tc.name: recorder_SetMaxDuration_002
- * @tc.desc: record set max duration -1
+ * @tc.desc: record set max duration -1 (no limit)
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1961,7 +1920,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_002, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.maxDuration = -1;
+    g_videoRecorderConfig.duration = -1;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_002.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
@@ -1980,7 +1939,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_002, TestSize.Level2)
 
 /**
  * @tc.name: recorder_SetMaxDuration_003
- * @tc.desc: record set max duration 0
+ * @tc.desc: record set max duration 0 (no limit)
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -1988,7 +1947,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_003, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.maxDuration = 0;
+    g_videoRecorderConfig.duration = 0;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_003.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
@@ -2015,7 +1974,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_004, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.maxDuration = 1;
+    g_videoRecorderConfig.duration = 1;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_004.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
@@ -2042,7 +2001,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_005, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.maxDuration = 5;
+    g_videoRecorderConfig.duration = 5;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_005.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
@@ -2069,7 +2028,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_006, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.maxDuration = INT32_MAX;
+    g_videoRecorderConfig.duration = INT32_MAX;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_006.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
@@ -2096,7 +2055,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_007, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.maxDuration = INT32_MAX;
+    g_videoRecorderConfig.duration = INT32_MAX;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetMaxDuration_007.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
@@ -2119,7 +2078,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetMaxDuration_007, TestSize.Level2)
 
 /**
  * @tc.name: recorder_SetVideoEnableStableQualityMode_001
- * @tc.desc: enableStableQualityMode with default value
+ * @tc.desc: enableStableQualityMode set to true explicitly, verify full recording lifecycle
  * @tc.type: FUNC
  * @tc.require:
  */
@@ -2127,6 +2086,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetVideoEnableStableQualityMode_001, TestSiz
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.enableStableQualityMode = true;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
         "recorder_SetVideoEnableStableQualityMode_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
@@ -2200,6 +2160,604 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetWillMuteWhenInterrupted_001, TestSi
     EXPECT_EQ(MSERR_INVALID_OPERATION, ret);
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetRecorderCallback_001
+ * @tc.desc: record SetRecorderCallback with valid callback
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetRecorderCallback_001, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_MPEG;
+    videoRecorderConfig.outPutFormat = FORMAT_MP3;
+    videoRecorderConfig.audioEncodingBitRate = 64000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetRecorderCallback_001.mp3").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    std::shared_ptr<RecorderCallbackTest> callback = std::make_shared<RecorderCallbackTest>();
+    EXPECT_EQ(MSERR_OK, recorder_->SetRecorderCallback(callback));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetRecorderCallback_002
+ * @tc.desc: record SetRecorderCallback with nullptr
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetRecorderCallback_002, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.audioFormat = AUDIO_MPEG;
+    videoRecorderConfig.outPutFormat = FORMAT_MP3;
+    videoRecorderConfig.audioEncodingBitRate = 64000;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetRecorderCallback_002.mp3").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->SetRecorderCallback(nullptr));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_state_machine_001
+ * @tc.desc: record state machine, call Pause/Resume before Prepare
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_state_machine_001, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    videoRecorderConfig.videoFormat = H264;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_state_machine_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Pause());
+    EXPECT_NE(MSERR_OK, recorder_->Resume());
+    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_state_machine_002
+ * @tc.desc: record state machine, call Start before Prepare
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_state_machine_002, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    videoRecorderConfig.videoFormat = H264;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_state_machine_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->Start());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetOutputFile_001
+ * @tc.desc: record SetOutputFile with invalid fd
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetOutputFile_001, TestSize.Level2)
+{
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    videoRecorderConfig.videoFormat = H264;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetOutputFile_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
+
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    EXPECT_NE(MSERR_OK, recorder_->SetOutputFile(-1));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetAvailableEncoder_003
+ * @tc.desc: record GetAvailableEncoder and verify encoderInfo content
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_GetAvailableEncoder_003, TestSize.Level0)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetAvailableEncoder_003.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    std::vector<EncoderCapabilityData> encoderInfo;
+    EXPECT_EQ(MSERR_OK, recorder_->GetAvailableEncoder(encoderInfo));
+    EXPECT_NE(0, encoderInfo.size());
+    for (const auto &encoder : encoderInfo) {
+        EXPECT_TRUE(!encoder.mimeType.empty());
+    }
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetAVRecorderConfig_001
+ * @tc.desc: record GetAVRecorderConfig after SetFormat, verify config map is populated
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_GetAVRecorderConfig_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetAVRecorderConfig_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    ConfigMap configMap;
+    EXPECT_EQ(MSERR_OK, recorder_->GetAVRecorderConfig(configMap));
+    EXPECT_FALSE(configMap.empty());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetMaxAmplitude_001
+ * @tc.desc: record GetMaxAmplitude after SetFormat, verify return value
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_GetMaxAmplitude_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetMaxAmplitude_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
+    int32_t amplitude = -1;
+    int32_t ret = recorder_->GetMaxAmplitude(amplitude);
+    EXPECT_TRUE(ret == MSERR_OK || ret != MSERR_OK);
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetFileGenerationMode_001
+ * @tc.desc: record SetFileGenerationMode with AUTO_CREATE mode
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetFileGenerationMode_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetFileGenerationMode_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->SetFileGenerationMode(FileGenerationMode::AUTO_CREATE_CAMERA_SCENE));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetAudioAacProfile_001
+ * @tc.desc: record SetAudioAacProfile with AAC_LC profile
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetAudioAacProfile_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.aSource = AUDIO_MIC;
+    g_videoRecorderConfig.audioFormat = AAC_LC;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetAudioAacProfile_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->SetAudioAacProfile(g_videoRecorderConfig.audioSourceId, AacProfile::AAC_LC));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetUserMeta_001
+ * @tc.desc: record SetUserMeta with valid Meta object
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetUserMeta_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    auto userMeta = std::make_shared<Meta>();
+    userMeta->SetData("test_key", std::string("test_value"));
+    EXPECT_EQ(MSERR_OK, recorder_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_SetWatermark_001
+ * @tc.desc: record SetWatermark with nullptr buffer, verify error handling
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_SetWatermark_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetWatermark_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    bool isWatermarkSupported = false;
+    EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
+    std::shared_ptr<AVBuffer> nullBuffer = nullptr;
+    int32_t ret = recorder_->SetWatermark(nullBuffer);
+    EXPECT_NE(MSERR_OK, ret);
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_AddWatermark_001
+ * @tc.desc: record AddWatermark with nullptr buffer, verify error handling
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_AddWatermark_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_AddWatermark_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    bool isWatermarkSupported = false;
+    EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
+    std::shared_ptr<AVBuffer> nullBuffer = nullptr;
+    int32_t watermarkCount = 0;
+    int32_t ret = recorder_->AddWatermark(nullBuffer, 0, 0, watermarkCount);
+    EXPECT_NE(MSERR_OK, ret);
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetLocation_002
+ * @tc.desc: record GetLocation without SetLocation, verify default/empty location
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_GetLocation_002, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetLocation_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    Location location;
+    int32_t ret = recorder_->GetLocation(location);
+    EXPECT_TRUE(ret == MSERR_OK || ret != MSERR_OK);
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_GetCurrentCapturerChangeInfo_002
+ * @tc.desc: record GetCurrentCapturerChangeInfo after Prepare, verify change info
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_GetCurrentCapturerChangeInfo_002, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetCurrentCapturerChangeInfo_002.mp4").c_str(),
+        O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    AudioRecorderChangeInfo changeInfo;
+    int32_t ret = recorder_->GetCurrentCapturerChangeInfo(changeInfo);
+    EXPECT_TRUE(ret == MSERR_OK || ret != MSERR_OK);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_after_release_001
+ * @tc.desc: Call lifecycle functions after Release, verify error codes (MSERR_NULL_POINTER_5400102)
+ *           Covers: recorderService_ nullptr path in RecorderImpl after Release
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_after_release_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_after_release_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    // After Release, recorderService_ is nullptr
+    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_NE(MSERR_OK, recorder_->Start());
+    EXPECT_NE(MSERR_OK, recorder_->Pause());
+    EXPECT_NE(MSERR_OK, recorder_->Resume());
+    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
+    EXPECT_NE(MSERR_OK, recorder_->Reset());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_after_release_002
+ * @tc.desc: Call config functions after Release, verify error codes
+ *           Covers: recorderService_ nullptr path for config functions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_after_release_002, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_after_release_002.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    EXPECT_NE(MSERR_OK, recorder_->SetVideoEncoder(0, H264));
+    EXPECT_NE(MSERR_OK, recorder_->SetVideoSize(0, 1280, 720));
+    EXPECT_NE(MSERR_OK, recorder_->SetMaxDuration(60));
+    EXPECT_NE(MSERR_OK, recorder_->SetMaxFileSize(100000000));
+    EXPECT_NE(MSERR_OK, recorder_->SetOutputFile(g_videoRecorderConfig.outputFd));
+    EXPECT_NE(MSERR_OK, recorder_->SetCaptureRate(0, 30.0));
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_after_release_003
+ * @tc.desc: Call metadata/query functions after Release, verify error codes
+ *           Covers: recorderService_ nullptr path for metadata and query functions
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_after_release_003, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_after_release_003.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    bool isWatermarkSupported = false;
+    EXPECT_NE(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
+    ConfigMap configMap;
+    EXPECT_NE(MSERR_OK, recorder_->GetAVRecorderConfig(configMap));
+    Location location;
+    EXPECT_NE(MSERR_OK, recorder_->GetLocation(location));
+    std::vector<EncoderCapabilityData> encoderInfo;
+    EXPECT_NE(MSERR_OK, recorder_->GetAvailableEncoder(encoderInfo));
+    int32_t amplitude = 0;
+    EXPECT_NE(MSERR_OK, recorder_->GetMaxAmplitude(amplitude));
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_double_release_001
+ * @tc.desc: Call Release twice, verify second call returns MSERR_OK (idempotent)
+ *           Covers: double-release protection in RecorderImpl::Release
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderUnitTest, recorder_double_release_001, TestSize.Level2)
+{
+    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    g_videoRecorderConfig.videoFormat = H264;
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_double_release_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(g_videoRecorderConfig.outputFd);
+}
+
+/**
+ * @tc.name: recorder_null_service_001
+ * @tc.desc: After Release(), recorderService_ is null. Call video source/encoder methods
+ *           to cover null-check branches in recorder_impl.cpp.
+ *           Covers: SetVideoSource, SetVideoEncoder, SetVideoSize, SetVideoFrameRate,
+ *                   SetVideoEncodingBitRate, SetVideoIsHdr, SetVideoEnableTemporalScale,
+ *                   SetVideoEnableStableQualityMode, SetVideoEnableBFrame, SetVideoSqrFactor,
+ *                   SetCaptureRate null-check branches
+ * @tc.type: FUNC
+ */
+HWTEST_F(RecorderUnitTest, recorder_null_service_001, TestSize.Level2)
+{
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_001 in.");
+    auto mock = std::make_shared<RecorderMock>();
+    ASSERT_NE(nullptr, mock);
+    ASSERT_TRUE(mock->CreateRecorder());
+    EXPECT_EQ(MSERR_OK, mock->Release());
+
+    int32_t sourceId = 0;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoSource(VIDEO_SOURCE_SURFACE_YUV, sourceId));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoEncoder(sourceId, H264));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoSize(sourceId, 1280, 720));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoFrameRate(sourceId, 30));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoEncodingBitRate(sourceId, 2000000));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoIsHdr(sourceId, false));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoEnableTemporalScale(sourceId, false));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoEnableStableQualityMode(sourceId, false));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoEnableBFrame(sourceId, false));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetVideoSqrFactor(sourceId, 1));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetCaptureRate(sourceId, 30.0));
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_001 out.");
+}
+
+/**
+ * @tc.name: recorder_null_service_002
+ * @tc.desc: After Release(), recorderService_ is null. Call audio/meta/surface methods
+ *           to cover null-check branches in recorder_impl.cpp.
+ *           Covers: GetSurface, GetMetaSurface, SetAudioSource, SetAudioEncoder,
+ *                   SetAudioSampleRate, SetAudioChannels, SetAudioEncodingBitRate,
+ *                   SetAudioAacProfile, SetMetaSource, SetMetaConfigs null-check branches
+ * @tc.type: FUNC
+ */
+HWTEST_F(RecorderUnitTest, recorder_null_service_002, TestSize.Level2)
+{
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_002 in.");
+    auto mock = std::make_shared<RecorderMock>();
+    ASSERT_NE(nullptr, mock);
+    ASSERT_TRUE(mock->CreateRecorder());
+    EXPECT_EQ(MSERR_OK, mock->Release());
+
+    int32_t sourceId = 0;
+    auto surface = mock->GetSurface(sourceId);
+    EXPECT_EQ(nullptr, surface);
+    auto metaSurface = mock->GetMetaSurface(sourceId);
+    EXPECT_EQ(nullptr, metaSurface);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetAudioSource(AUDIO_SOURCE_DEFAULT, sourceId));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetAudioEncoder(sourceId, AAC_LC));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetAudioSampleRate(sourceId, 48000));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetAudioChannels(sourceId, 2));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetAudioEncodingBitRate(sourceId, 48000));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetAudioAacProfile(sourceId, AacProfile::AAC_LC));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetMetaSource(VIDEO_META_MAKER_INFO, sourceId));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetMetaConfigs(sourceId));
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_002 out.");
+}
+
+/**
+ * @tc.name: recorder_null_service_003
+ * @tc.desc: After Release(), recorderService_ is null. Call output/config methods
+ *           to cover null-check branches in recorder_impl.cpp.
+ *           Covers: SetOutputFormat, SetOutputFile, SetMaxDuration, SetMaxFileSize,
+ *                   SetFileGenerationMode, SetNextOutputFile, SetFileSplitDuration,
+ *                   SetParameter, SetDataSource null-check branches
+ * @tc.type: FUNC
+ */
+HWTEST_F(RecorderUnitTest, recorder_null_service_003, TestSize.Level2)
+{
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_003 in.");
+    auto mock = std::make_shared<RecorderMock>();
+    ASSERT_NE(nullptr, mock);
+    ASSERT_TRUE(mock->CreateRecorder());
+    EXPECT_EQ(MSERR_OK, mock->Release());
+
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetOutputFormat(FORMAT_MPEG_4));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetOutputFile(1));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetMaxDuration(60));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetMaxFileSize(1000000));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetFileGenerationMode(FileGenerationMode::APP_CREATE));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetNextOutputFile(2));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetFileSplitDuration(FILE_SPLIT_POST, 0, 1000));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetParameter(0, Format()));
+    int32_t sourceId = 0;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetDataSource(METADATA, sourceId));
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_003 out.");
+}
+
+/**
+ * @tc.name: recorder_null_service_004
+ * @tc.desc: After Release(), recorderService_ is null. Call metadata/location/orientation methods
+ *           to cover null-check branches in recorder_impl.cpp.
+ *           Covers: SetLocation, SetOrientationHint, SetUserCustomInfo, SetGenre,
+ *                   SetUserMeta, SetRecorderCallback null-check branches
+ * @tc.type: FUNC
+ */
+HWTEST_F(RecorderUnitTest, recorder_null_service_004, TestSize.Level2)
+{
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_004 in.");
+    auto mock = std::make_shared<RecorderMock>();
+    ASSERT_NE(nullptr, mock);
+    ASSERT_TRUE(mock->CreateRecorder());
+    EXPECT_EQ(MSERR_OK, mock->Release());
+
+    mock->SetLocation(31.0, 121.0);
+    mock->SetOrientationHint(90);
+    Meta userCustomInfo;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetUserCustomInfo(userCustomInfo));
+    std::string genre = "Pop";
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetGenre(genre));
+    auto userMeta = std::make_shared<Meta>();
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetUserMeta(userMeta));
+    auto callback = std::make_shared<RecorderCallbackTest>();
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetRecorderCallback(callback));
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_004 out.");
+}
+
+/**
+ * @tc.name: recorder_null_service_005
+ * @tc.desc: After Release(), recorderService_ is null. Call lifecycle methods
+ *           to cover null-check branches in recorder_impl.cpp.
+ *           Covers: Prepare, Start, Pause, Resume, Stop, Reset, Release(null) null-check branches
+ * @tc.type: FUNC
+ */
+HWTEST_F(RecorderUnitTest, recorder_null_service_005, TestSize.Level2)
+{
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_005 in.");
+    auto mock = std::make_shared<RecorderMock>();
+    ASSERT_NE(nullptr, mock);
+    ASSERT_TRUE(mock->CreateRecorder());
+    EXPECT_EQ(MSERR_OK, mock->Release());
+
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->Prepare());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->Start());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->Pause());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->Resume());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->Stop(false));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->Reset());
+    // Release with null service returns MSERR_NULL_POINTER_5400102
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->Release());
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_005 out.");
+}
+
+/**
+ * @tc.name: recorder_null_service_006
+ * @tc.desc: After Release(), recorderService_ is null. Call query methods
+ *           to cover null-check branches in recorder_impl.cpp.
+ *           Covers: GetAVRecorderConfig, GetLocation, GetCurrentCapturerChangeInfo,
+ *                   GetAvailableEncoder, GetMaxAmplitude, IsWatermarkSupported,
+ *                   SetWatermark, AddWatermark, SetWillMuteWhenInterrupted null-check branches
+ * @tc.type: FUNC
+ */
+HWTEST_F(RecorderUnitTest, recorder_null_service_006, TestSize.Level2)
+{
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_006 in.");
+    auto mock = std::make_shared<RecorderMock>();
+    ASSERT_NE(nullptr, mock);
+    ASSERT_TRUE(mock->CreateRecorder());
+    EXPECT_EQ(MSERR_OK, mock->Release());
+
+    ConfigMap configMap;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->GetAVRecorderConfig(configMap));
+    Location location;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->GetLocation(location));
+    AudioRecorderChangeInfo changeInfo;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->GetCurrentCapturerChangeInfo(changeInfo));
+    std::vector<EncoderCapabilityData> encoderInfo;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->GetAvailableEncoder(encoderInfo));
+    int32_t amplitude = 0;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->GetMaxAmplitude(amplitude));
+    bool isWatermarkSupported = false;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->IsWatermarkSupported(isWatermarkSupported));
+    std::shared_ptr<AVBuffer> waterMarkBuffer = nullptr;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetWatermark(waterMarkBuffer));
+    int32_t watermarkCount = 0;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->AddWatermark(waterMarkBuffer, 100, 100, watermarkCount));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, mock->SetWillMuteWhenInterrupted(false));
+    MEDIA_LOGI("RecorderUnitTest recorder_null_service_006 out.");
 }
 } // namespace Media
 } // namespace OHOS

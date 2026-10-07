@@ -227,6 +227,10 @@ ohos_unittest("recorder_server_unit_test") {
       "./recorder_server_unittest/src/recorder_server_mock.cpp",
       "./recorder_server_unittest/src/recorder_server_unit_test.cpp",
       "./recorder_server_unittest/src/hirecorder_watermark_test.cpp",
+      "./recorder_server_unittest/src/recorder_server_status_guard_test.cpp",
+      "./recorder_server_unittest/src/recorder_server_task_queue_test.cpp",
+      "./recorder_server_unittest/src/recorder_server_branch_test.cpp",
+      "./recorder_server_unittest/src/recorder_server_mock_engine_test.cpp",
     ]
     external_deps += [
       "drivers_interface_display:libdisplay_composer_proxy_1.2",

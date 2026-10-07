@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024-2026 Huawei Device Co., Ltd.
+ * Copyright (C) 2024 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -27,6 +27,7 @@
 #include "securec.h"
 #include "nocopyable.h"
 #include "recorder_server.h"
+#include "i_recorder_engine.h"
 
 namespace OHOS {
 namespace Media {
@@ -125,7 +126,6 @@ public:
     int32_t SetVideoSize(int32_t sourceId, int32_t width, int32_t height);
     int32_t SetVideoFrameRate(int32_t sourceId, int32_t frameRate);
     int32_t SetVideoEncodingBitRate(int32_t sourceId, int32_t rate);
-    int32_t SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor);
     int32_t SetCaptureRate(int32_t sourceId, double fps);
     OHOS::sptr<OHOS::Surface> GetSurface(int32_t sourceId);
     OHOS::sptr<OHOS::Surface> GetMetaSurface(int32_t sourceId);
@@ -171,8 +171,23 @@ public:
         int32_t &watermarkCount);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
     int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
+    int32_t GetAVRecorderConfig(ConfigMap &configMap);
+    int32_t GetMaxAmplitude(int32_t &amplitude);
+    int32_t SetFileGenerationMode(FileGenerationMode mode);
+    int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
+    int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr);
+    int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale);
+    int32_t SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode);
+    int32_t SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame);
+    int32_t SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor);
+    int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId);
+    int32_t SetStabilizationMode(bool enableStabilization);
+    int32_t DumpInfo(int32_t fd);
+    int32_t SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource, int32_t& sourceId);
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo);
 
 private:
+    friend class RecorderServerUnitTest;
     int32_t SetAudVidFormat(
         const std::string &recorderType, RecorderTestParam::VideoRecorderConfig &recorderConfig) const;
     std::shared_ptr<RecorderServer> recorder_ = nullptr;
@@ -196,8 +211,62 @@ public:
     void OnInfo(int32_t type, int32_t extra) override;
     void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override;
     int32_t GetErrorCode();
+    int32_t infoExtra_ = 0;
+    bool audioCaptureChangeCalled_ = false;
 private:
     int32_t errorCode_ = 0;
+};
+
+class MockRecorderEngine : public IRecorderEngine {
+public:
+    MockRecorderEngine() = default;
+    ~MockRecorderEngine() override = default;
+
+    int32_t retInt_ = MSERR_OK;
+    Status retStatus_ = Status::OK;
+    sptr<Surface> retSurface_ = nullptr;
+
+    int32_t SetVideoSource(VideoSourceType source, int32_t &sourceId) override {
+        sourceId = 0;
+        return retInt_;
+    }
+    int32_t SetAudioSource(AudioSourceType source, int32_t &sourceId) override {
+        sourceId = 0;
+        return retInt_;
+    }
+    int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId) override {
+        sourceId = 0;
+        return retInt_;
+    }
+    int32_t SetOutputFormat(OutputFormatType format) override { return retInt_; }
+    int32_t SetObs(const std::weak_ptr<IRecorderEngineObs> &obs) override { return retInt_; }
+    int32_t Configure(int32_t sourceId, const RecorderParam &recParam) override { return retInt_; }
+    sptr<Surface> GetSurface(int32_t sourceId) override { return retSurface_; }
+    sptr<Surface> GetMetaSurface(int32_t sourceId) override { return retSurface_; }
+    int32_t Prepare() override { return retInt_; }
+    int32_t Start() override { return retInt_; }
+    int32_t Pause() override { return retInt_; }
+    int32_t Resume() override { return retInt_; }
+    int32_t Stop(bool isDrainAll = false) override { return retInt_; }
+    int32_t Reset() override { return retInt_; }
+    int32_t SetParameter(int32_t sourceId, const RecorderParam &recParam) override { return retInt_; }
+    int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo) override { return retInt_; }
+    int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo) override { return retInt_; }
+    int32_t GetMaxAmplitude(int32_t &amplitude) override {
+        amplitude = 0;
+        return retInt_;
+    }
+    void SetCallingInfo(const std::string &bundleName, uint64_t instanceId) override {}
+    int32_t IsWatermarkSupported(bool &isWatermarkSupported) override {
+        isWatermarkSupported = false;
+        return retInt_;
+    }
+    int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer) override { return retInt_; }
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height) override {
+        return retInt_;
+    }
+    Status SetUserMeta(const std::shared_ptr<Meta> &userMeta) override { return retStatus_; }
+    int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted) override { return retInt_; }
 };
 }
 }

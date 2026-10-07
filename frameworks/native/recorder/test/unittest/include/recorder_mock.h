@@ -163,6 +163,12 @@ public:
     int32_t GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo);
     int32_t IsWatermarkSupported(bool &isWatermarkSupported);
     int32_t SetVideoIsHdr(int32_t sourceId, bool isHdr);
+    int32_t SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale);
+    int32_t SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode);
+    int32_t SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame);
+    int32_t SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor);
+    int32_t SetMetaSource(MetaSourceType source, int32_t &sourceId);
+    int32_t SetMetaConfigs(int32_t sourceId);
     int32_t RequesetBuffer(const std::string &recorderType, RecorderTestParam::VideoRecorderConfig &recorderConfig);
     void StopBuffer(const std::string &recorderType);
     void HDICreateESBuffer();
@@ -176,6 +182,14 @@ public:
     uint64_t GetPts();
     int32_t GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo);
     int32_t SetWillMuteWhenInterrupted(bool enable);
+    int32_t GetAVRecorderConfig(ConfigMap &configMap);
+    int32_t GetMaxAmplitude(int32_t &amplitude);
+    int32_t SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer);
+    int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+        int32_t &watermarkCount);
+    int32_t SetUserMeta(const std::shared_ptr<Meta> &userMeta);
+    int32_t SetFileGenerationMode(FileGenerationMode mode);
+    int32_t SetAudioAacProfile(int32_t sourceId, AacProfile aacProfile);
 
 private:
     int32_t SetAudVidFormat(

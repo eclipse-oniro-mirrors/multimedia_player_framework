@@ -138,7 +138,7 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_IsWatermarkSupported_001, TestSize.
     VideoRecorderConfig config;
     config.vSource = VIDEO_SOURCE_SURFACE_YUV;
     config.videoFormat = H264;
-    config.outputFd = open((RECORDER_ROOT + "hirecorder_IsWatermarkSupported_002.mp4").c_str(), O_RDWR);
+    config.outputFd = open((RECORDER_ROOT + "hirecorder_IsWatermarkSupported_002.mp4").c_str(), O_RDWR | O_CREAT, 0666);
     ASSERT_TRUE(config.outputFd >= 0);
 
     ASSERT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_VIDEO, config));

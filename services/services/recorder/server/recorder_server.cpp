@@ -194,6 +194,7 @@ int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_INITIALIZED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
+    CHECK_AND_RETURN_RET_LOG(userMeta != nullptr, MSERR_NULL_POINTER_5400101, "userMeta is nullptr");
     config_.videoSource = source;
     config_.withVideo = true;
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
