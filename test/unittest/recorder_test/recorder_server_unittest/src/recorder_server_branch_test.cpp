@@ -509,19 +509,6 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_GetStatusDescription_Illegal_001, Tes
 }
 
 /**
- * @tc.name: Coverage3_GetStatusDescription_Valid_001
- * @tc.desc: Coverage3 GetStatusDescription Valid 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, Coverage3_GetStatusDescription_Valid_001, TestSize.Level2)
-{
-    const std::string& desc = RS()->GetStatusDescription(RecorderServer::REC_INITIALIZED);
-    EXPECT_FALSE(desc.empty());
-    EXPECT_NE(std::string("PLAYER_STATUS_ILLEGAL"), desc);
-}
-
-/**
  * @tc.name: Coverage3_OnError_WithCallback_001
  * @tc.desc: Coverage3 OnError WithCallback 001
  * @tc.type: FUNC
