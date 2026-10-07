@@ -200,7 +200,6 @@
             <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableStableQualityMode_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableStableQualityMode_002.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_configure_error.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_GetAvailableEncoder_003.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_state_machine_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_state_machine_002.mp4"/>
@@ -380,7 +379,6 @@
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_012.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_013.mp4"/>
             <option name="shell" value="touch /data/test/media/hirecorder_IsWatermarkSupported_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_configure_error.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_GetAVRecorderConfig_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_GetMaxAmplitude_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetFileGenerationMode_001.mp4"/>

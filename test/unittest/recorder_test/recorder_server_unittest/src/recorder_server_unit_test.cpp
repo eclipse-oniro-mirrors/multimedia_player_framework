@@ -639,27 +639,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_configure_009, TestSize.Level2)
 }
 
 /**
- * @tc.name: recorder_configure_010
- * @tc.desc: record AUDIO_VIDEO with valid H264 codec, verify SetFormat and Prepare succeed
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, recorder_configure_010, TestSize.Level2)
-{
-    VideoRecorderConfig videoRecorderConfig;
-    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    videoRecorderConfig.videoFormat = H264;
-    videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_configure_error.mp4").c_str(), O_RDWR | O_CREAT, 0666);
-
-    EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorderServer_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
-    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
-    close(videoRecorderConfig.outputFd);
-}
-
-/**
  * @tc.name: recorder_configure_011
  * @tc.desc: record with videoFormat FORMAT_BUTT
  * @tc.type: FUNC

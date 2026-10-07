@@ -2377,9 +2377,11 @@ HWTEST_F(RecorderUnitTest, recorder_SetUserMeta_001, TestSize.Level2)
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetUserMeta_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     auto userMeta = std::make_shared<Meta>();
     userMeta->SetData("test_key", std::string("test_value"));
     EXPECT_EQ(MSERR_OK, recorder_->SetUserMeta(userMeta));
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -2564,7 +2566,7 @@ HWTEST_F(RecorderUnitTest, recorder_double_release_001, TestSize.Level2)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
-    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    EXPECT_NE(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
 
