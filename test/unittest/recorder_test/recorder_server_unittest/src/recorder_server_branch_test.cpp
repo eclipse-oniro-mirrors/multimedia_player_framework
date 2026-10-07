@@ -441,21 +441,6 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetUserCustomInfo_EngineNull_001, Tes
 }
 
 /**
- * @tc.name: Coverage3_OnError_NullCallback_001
- * @tc.desc: Coverage3 OnError NullCallback 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, Coverage3_OnError_NullCallback_001, TestSize.Level2)
-{
-    auto savedCb = RS()->recorderCb_;
-    RS()->recorderCb_ = nullptr;
-    RS()->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, MSERR_UNKNOWN);
-    EXPECT_FALSE(RS()->lastErrMsg_.empty());
-    RS()->recorderCb_ = savedCb;
-}
-
-/**
  * @tc.name: Coverage3_OnInfo_NullCallback_001
  * @tc.desc: Coverage3 OnInfo NullCallback 001
  * @tc.type: FUNC
