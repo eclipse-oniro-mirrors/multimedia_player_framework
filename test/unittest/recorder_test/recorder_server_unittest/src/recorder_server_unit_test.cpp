@@ -1703,8 +1703,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_video_GetMetaSurface, TestSize.Level0)
  */
 HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_001, TestSize.Level2)
 {
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_GetMetaSurface_001.mp4").c_str(), O_RDWR | O_CREAT, 0666);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetMetaSurface_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
@@ -1727,8 +1726,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_001, TestSize.Level2)
  */
 HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_002, TestSize.Level2)
 {
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_GetMetaSurface_002.mp4").c_str(), O_RDWR | O_CREAT, 0666);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetMetaSurface_002.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
@@ -1753,8 +1751,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_002, TestSize.Level2)
 HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_003, TestSize.Level2)
 {
     g_videoRecorderConfig.metaSourceType = VIDEO_META_SOURCE_INVALID;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_GetMetaSurface_003.mp4").c_str(), O_RDWR | O_CREAT, 0666);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetMetaSurface_003.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
@@ -1777,8 +1774,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_003, TestSize.Level2)
  */
 HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_004, TestSize.Level2)
 {
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_GetMetaSurface_004.mp4").c_str(), O_RDWR | O_CREAT, 0666);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_GetMetaSurface_004.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
@@ -1803,8 +1799,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_GetMetaSurface_004, TestSize.Level2)
 HWTEST_F(RecorderServerUnitTest, recorder_SetAudioSourceType_001, TestSize.Level2)
 {
     g_videoRecorderConfig.aSource = AUDIO_SOURCE_VOICE_RECOGNITION;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_SetAudioSourceType_001.mp4").c_str(), O_RDWR | O_CREAT, 0666);
+    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_SetAudioSourceType_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorderServer_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
