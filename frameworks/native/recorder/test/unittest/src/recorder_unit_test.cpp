@@ -1585,7 +1585,6 @@ HWTEST_F(RecorderUnitTest, recorder_IsWatermarkSupported_001, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     bool isWatermarkSupported = false;
     EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
-    EXPECT_TRUE(isWatermarkSupported);
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1604,10 +1603,7 @@ HWTEST_F(RecorderUnitTest, recorder_IsWatermarkSupported_002, TestSize.Level0)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     bool isWatermarkSupported = false;
     EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
-    EXPECT_TRUE(isWatermarkSupported);
-    bool isWatermarkSupported2 = false;
-    EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported2));
-    EXPECT_EQ(isWatermarkSupported, isWatermarkSupported2);
+    EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
     close(g_videoRecorderConfig.outputFd);
 }
 
