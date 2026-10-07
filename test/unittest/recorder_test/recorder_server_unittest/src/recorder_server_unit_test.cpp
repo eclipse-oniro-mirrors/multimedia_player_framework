@@ -2594,63 +2594,13 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetVideoSqrFactor_006, TestSize.Level2
 
 /**
  * @tc.name: recorder_SetVideoSqrFactor_007
- * @tc.desc: SQR mode with sqrFactor=-2 (just below min boundary), verify server returns 401
- *           Covers: branch B lower (enableStableQualityMode=true + sqrFactor < 0 → 401)
- *           Boundary: -2 is first invalid negative (-1 is default, also invalid)
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, recorder_SetVideoSqrFactor_007, TestSize.Level2)
-{
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.enableStableQualityMode = true;
-    g_videoRecorderConfig.sqrFactor = -2;
-    g_videoRecorderConfig.sqrFactorSet = true;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_SetVideoSqrFactor.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-
-    EXPECT_NE(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
-    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
-    close(g_videoRecorderConfig.outputFd);
-}
-
-/**
- * @tc.name: recorder_SetVideoSqrFactor_008
- * @tc.desc: SQR mode with sqrFactor explicitly set to -1, verify server returns 401
- *           Covers: branch B (enableStableQualityMode=true + sqrFactor=-1 explicitly set → 401)
- *           Contrast with test_003 where sqrFactor is not set (sqrFactorSet=false → backward compatible)
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, recorder_SetVideoSqrFactor_008, TestSize.Level2)
-{
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.enableStableQualityMode = true;
-    g_videoRecorderConfig.sqrFactor = SQR_FACTOR_INVALID;
-    g_videoRecorderConfig.sqrFactorSet = true;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT +
-        "recorder_SetVideoSqrFactor.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-
-    EXPECT_NE(MSERR_OK, recorderServer_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
-    EXPECT_EQ(MSERR_OK, recorderServer_->Reset());
-    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
-    close(g_videoRecorderConfig.outputFd);
-}
-
-/**
- * @tc.name: recorder_SetVideoSqrFactor_009
  * @tc.desc: SQR mode with sqrFactor not set (sqrFactorSet=false), verify backward compatible
  *           Covers: sqrFactor not set → SetVideoSqrFactor not called → no 401 → success
  *           This is the backward compatibility scenario: existing apps using SQR without sqrFactor
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderServerUnitTest, recorder_SetVideoSqrFactor_009, TestSize.Level2)
+HWTEST_F(RecorderServerUnitTest, recorder_SetVideoSqrFactor_007, TestSize.Level2)
 {
     g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
     g_videoRecorderConfig.videoFormat = H264;

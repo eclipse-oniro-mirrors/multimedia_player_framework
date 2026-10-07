@@ -805,6 +805,31 @@ HWTEST_F(RecorderServerUnitTest, recorder_AddWatermark_OverflowAfterFill_001, Te
               recorderServer_->AddWatermark(buffer, 100, 100, watermarkCount));
 }
 
+/**
+ * @tc.name: recorder_StatusGuard_SetVideoSqrFactor_001
+ * @tc.desc: recorder StatusGuard SetVideoSqrFactor in wrong state
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_StatusGuard_SetVideoSqrFactor_001, TestSize.Level2)
+{
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorderServer_->recorder_->SetVideoSqrFactor(0, 25));
+}
+
+/**
+ * @tc.name: recorder_EngineNull_SetVideoSqrFactor_001
+ * @tc.desc: recorder EngineNull SetVideoSqrFactor with stableQualityMode off
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, recorder_EngineNull_SetVideoSqrFactor_001, TestSize.Level2)
+{
+    EXPECT_EQ(MSERR_OK, recorderServer_->Release());
+    recorderServer_->recorder_->status_ = RecorderServer::REC_CONFIGURED;
+    recorderServer_->recorder_->config_.enableStableQualityMode = false;
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, recorderServer_->recorder_->SetVideoSqrFactor(0, 25));
+}
+
 
 /**
  * @tc.name: recorder_DumpInfo_FdMinusOne_001

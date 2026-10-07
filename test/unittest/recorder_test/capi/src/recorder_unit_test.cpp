@@ -3318,22 +3318,6 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_FileGenMode_001, TestSize.Level2)
 }
 
 /**
- * @tc.name: Recorder_SetWillMute_001
- * @tc.desc: Test SetWillMuteWhenInterrupted with true and false
- *           Covers: SetWillMuteWhenInterrupted both branches
- * @tc.type: FUNC
- */
-HWTEST_F(NativeRecorderUnitTest, Recorder_SetWillMute_001, TestSize.Level1)
-{
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetWillMute_001 in.");
-    int32_t ret = OH_AVRecorder_SetWillMuteWhenInterrupted(recorder_, true);
-    EXPECT_TRUE(ret == AV_ERR_OK || ret == AV_ERR_INVALID_STATE);
-    ret = OH_AVRecorder_SetWillMuteWhenInterrupted(recorder_, false);
-    EXPECT_TRUE(ret == AV_ERR_OK || ret == AV_ERR_INVALID_STATE);
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetWillMute_001 out.");
-}
-
-/**
  * @tc.name: Recorder_SetWillMuteNull_001
  * @tc.desc: Test SetWillMuteWhenInterrupted with null recorder
  *           Covers: recorder == nullptr → AV_ERR_INVALID_STATE

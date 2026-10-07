@@ -172,6 +172,21 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_ValidEngine_VideoMethods_001, TestSiz
 }
 
 /**
+ * @tc.name: Coverage2_EnqueueFail_SetVideoSqrFactor_001
+ * @tc.desc: Coverage2 EnqueueFail SetVideoSqrFactor with stableQualityMode off
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, Coverage2_EnqueueFail_SetVideoSqrFactor_001, TestSize.Level2)
+{
+    RS()->status_ = RecorderServer::REC_CONFIGURED;
+    RS()->config_.enableStableQualityMode = false;
+    RS()->taskQue_.Stop();
+    EXPECT_NE(MSERR_OK, RS()->SetVideoSqrFactor(0, 25));
+    RS()->taskQue_.Start();
+}
+
+/**
  * @tc.name: Coverage2_ValidEngine_AudioMethods_001
  * @tc.desc: Coverage2 ValidEngine AudioMethods 001
  * @tc.type: FUNC
