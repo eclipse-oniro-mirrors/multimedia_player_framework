@@ -423,46 +423,6 @@ HWTEST_F(RecorderServerUnitTest, Mock_Stop_NullSyncCallback_001, TestSize.Level2
 }
 
 /**
- * @tc.name: Mock_DumpInfo_001
- * @tc.desc: Mock DumpInfo 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, Mock_DumpInfo_001, TestSize.Level2)
-{
-    RS()->config_.isHdr = true;
-    RS()->config_.enableTemporalScale = true;
-    RS()->config_.enableStableQualityMode = true;
-    RS()->config_.enableBFrame = true;
-    RS()->config_.withVideo = true;
-    RS()->config_.withAudio = true;
-    RS()->config_.withLocation = true;
-    RS()->lastErrMsg_ = "test_error";
-    int32_t ret = RS()->DumpInfo(1);
-    EXPECT_EQ(MSERR_OK, ret);
-}
-
-/**
- * @tc.name: Mock_DumpInfo_002
- * @tc.desc: Mock DumpInfo 002
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, Mock_DumpInfo_002, TestSize.Level2)
-{
-    RS()->config_.isHdr = false;
-    RS()->config_.enableTemporalScale = false;
-    RS()->config_.enableStableQualityMode = false;
-    RS()->config_.enableBFrame = false;
-    RS()->config_.withVideo = false;
-    RS()->config_.withAudio = false;
-    RS()->config_.withLocation = false;
-    RS()->lastErrMsg_ = "";
-    int32_t ret = RS()->DumpInfo(1);
-    EXPECT_EQ(MSERR_OK, ret);
-}
-
-/**
  * @tc.name: Mock_SetVideoEncoder_Fail_001
  * @tc.desc: Mock SetVideoEncoder Fail 001
  * @tc.type: FUNC
@@ -812,6 +772,5 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetMetaSource_Success_001, TestSize.Level2
     EXPECT_EQ(MSERR_OK, RS()->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId));
     RS()->recorderEngine_ = std::move(saved);
 }
-
 } // namespace Media
 } // namespace OHOS

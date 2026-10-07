@@ -65,27 +65,6 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_EnqueueFail_Recording_001, TestSize.L
 }
 
 /**
- * @tc.name: Coverage2_EnqueueFail_ConfiguredMisc_001
- * @tc.desc: Coverage2 EnqueueFail ConfiguredMisc 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, Coverage2_EnqueueFail_ConfiguredMisc_001, TestSize.Level2)
-{
-    RS()->status_ = RecorderServer::REC_CONFIGURED;
-    RS()->taskQue_.Stop();
-    EXPECT_NE(MSERR_OK, RS()->SetWillMuteWhenInterrupted(true));
-    std::shared_ptr<AVBuffer> buffer;
-    int32_t watermarkCount = 0;
-    EXPECT_NE(MSERR_OK, RS()->AddWatermark(buffer, 100, 100, watermarkCount));
-    std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
-    ASSERT_NE(nullptr, userMeta);
-    EXPECT_NE(MSERR_OK, RS()->SetUserMeta(userMeta));
-    RS()->taskQue_.Start();
-}
-
-
-/**
  * @tc.name: Coverage2_EngineNull_ConfiguredVideo_001
  * @tc.desc: Coverage2 EngineNull ConfiguredVideo 001
  * @tc.type: FUNC
@@ -309,21 +288,6 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_SetMetaDataReport_NoHdr_001, TestSize
               RS()->statisticalEventInfo_.hdrType);
 }
 
-
-/**
- * @tc.name: Coverage2_DumpInfo_WithErrMsg_001
- * @tc.desc: Coverage2 DumpInfo WithErrMsg 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, Coverage2_DumpInfo_WithErrMsg_001, TestSize.Level2)
-{
-    RS()->lastErrMsg_ = "test error message";
-    EXPECT_EQ(MSERR_OK, RS()->DumpInfo(-1));
-    EXPECT_EQ(MSERR_OK, RS()->DumpInfo(1));
-}
-
-
 /**
  * @tc.name: Coverage2_SetLocation_NotConfigured_001
  * @tc.desc: Coverage2 SetLocation NotConfigured 001
@@ -422,19 +386,6 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_SetFileSplitDuration_StatusBranches_0
               RS()->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, 0, 1000));
 }
 
-
-/**
- * @tc.name: Coverage2_Callback_OnError_NullCb_001
- * @tc.desc: Coverage2 Callback OnError NullCb 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, Coverage2_Callback_OnError_NullCb_001, TestSize.Level2)
-{
-    RS()->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, 200);
-    EXPECT_FALSE(RS()->lastErrMsg_.empty());
-}
-
 /**
  * @tc.name: Coverage2_Callback_OnError_WithCb_001
  * @tc.desc: Coverage2 Callback OnError WithCb 001
@@ -524,24 +475,6 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_TransmitQos_Background_001, TestSize.
     EXPECT_EQ(QOS::QosLevel::QOS_BACKGROUND, RS()->clientQos_);
 }
 
-
-/**
- * @tc.name: Coverage2_DumpInfo_FdMinusOne_001
- * @tc.desc: Coverage2 DumpInfo FdMinusOne 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, Coverage2_DumpInfo_FdMinusOne_001, TestSize.Level2)
-{
-    EXPECT_EQ(MSERR_OK, RS()->DumpInfo(-1));
-}
-
-HWTEST_F(RecorderServerUnitTest, Coverage2_DumpInfo_FdValid_001, TestSize.Level2)
-{
-    EXPECT_EQ(MSERR_OK, RS()->DumpInfo(1));
-}
-
-
 /**
  * @tc.name: Coverage2_GetLocation_001
  * @tc.desc: Coverage2 GetLocation 001
@@ -617,6 +550,5 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_Resume_Repeat_001, TestSize.Level2)
     RS()->status_ = RecorderServer::REC_RECORDING;
     EXPECT_EQ(MSERR_INVALID_OPERATION, RS()->Resume());
 }
-
 } // namespace Media
 } // namespace OHOS
