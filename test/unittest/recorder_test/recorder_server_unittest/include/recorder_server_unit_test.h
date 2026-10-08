@@ -28,6 +28,7 @@ public:
     void TearDown(void);
 protected:
     std::shared_ptr<RecorderServerMock> recorderServer_ = nullptr;
+    std::shared_ptr<RecorderServer>& RS() { return recorderServer_->recorder_; }
     static void SetSelfTokenPremission();
 };
 } // namespace Media

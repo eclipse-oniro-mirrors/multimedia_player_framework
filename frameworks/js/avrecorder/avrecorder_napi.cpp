@@ -2173,6 +2173,39 @@ int32_t AVRecorderNapi::GetAudioProfile(std::unique_ptr<AVRecorderAsyncContext> 
     return ret;
 }
 
+void AVRecorderNapi::ParseVideoOptionalBoolFields(napi_env env, napi_value item, AVRecorderProfile &profile)
+{
+    if (!CommonNapi::GetPropertyBool(env, item, "enableTemporalScale", profile.enableTemporalScale)) {
+        MEDIA_LOGI("avRecorderProfile enableTemporalScale is not set.");
+        profile.enableTemporalScale = false;
+    }
+    if (!CommonNapi::GetPropertyBool(env, item, "enableStableQualityMode", profile.enableStableQualityMode)) {
+        MEDIA_LOGI("avRecorderProfile enableStableQualityMode is not set.");
+        profile.enableStableQualityMode = false;
+    }
+    if (!CommonNapi::GetPropertyBool(env, item, "enableBFrame", profile.enableBFrame)) {
+        MEDIA_LOGI("avRecorderProfile enableBFrame is not set.");
+        profile.enableBFrame = false;
+    }
+}
+
+void AVRecorderNapi::ParseVideoSqrFactor(napi_env env, napi_value item, AVRecorderProfile &profile)
+{
+    profile.sqrFactor = SQR_FACTOR_INVALID;
+    profile.sqrFactorSet = false;
+    if (CommonNapi::CheckhasNamedProperty(env, item, "sqrFactor")) {
+        napi_value sqrFactorVal = nullptr;
+        napi_get_named_property(env, item, "sqrFactor", &sqrFactorVal);
+        napi_valuetype valType = napi_undefined;
+        napi_typeof(env, sqrFactorVal, &valType);
+        if (valType == napi_number) {
+            napi_get_value_int32(env, sqrFactorVal, &profile.sqrFactor);
+            MEDIA_LOGI("avRecorderProfile sqrFactor is %{public}d", profile.sqrFactor);
+            profile.sqrFactorSet = true;
+        }
+    }
+}
+
 int32_t AVRecorderNapi::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env,
     napi_value item, AVRecorderProfile &profile)
 {
@@ -2201,26 +2234,8 @@ int32_t AVRecorderNapi::GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> 
     } else {
         profile.isHdr = false;
     }
-    if (!CommonNapi::GetPropertyBool(env, item, "enableTemporalScale", profile.enableTemporalScale)) {
-        MEDIA_LOGI("avRecorderProfile enableTemporalScale is not set.");
-        profile.enableTemporalScale = false;
-    }
-    if (!CommonNapi::GetPropertyBool(env, item, "enableStableQualityMode", profile.enableStableQualityMode)) {
-        MEDIA_LOGI("avRecorderProfile enableStableQualityMode is not set.");
-        profile.enableStableQualityMode = false;
-    }
-    if (!CommonNapi::GetPropertyBool(env, item, "enableBFrame", profile.enableBFrame)) {
-        MEDIA_LOGI("avRecorderProfile enableBFrame is not set.");
-        profile.enableBFrame = false;
-    }
-    if (!CommonNapi::GetPropertyInt32(env, item, "sqrFactor", profile.sqrFactor)) {
-        MEDIA_LOGI("avRecorderProfile sqrFactor is not set.");
-        profile.sqrFactor = SQR_FACTOR_INVALID;
-        profile.sqrFactorSet = false;
-    } else {
-        MEDIA_LOGI("avRecorderProfile sqrFactor is %{public}d", profile.sqrFactor);
-        profile.sqrFactorSet = true;
-    }
+    ParseVideoOptionalBoolFields(env, item, profile);
+    ParseVideoSqrFactor(env, item, profile);
     MediaProfileLog(true, profile);
     return ret;
 }

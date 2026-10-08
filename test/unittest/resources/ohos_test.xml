@@ -199,14 +199,27 @@
             <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_007.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableStableQualityMode_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableStableQualityMode_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_003.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_005.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_006.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_007.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_008.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_009.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetAvailableEncoder_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_state_machine_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_state_machine_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetOutputFile_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetAVRecorderConfig_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetMaxAmplitude_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetFileGenerationMode_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioAacProfile_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetWatermark_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_AddWatermark_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetLocation_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetCurrentCapturerChangeInfo_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_after_release_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_after_release_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_after_release_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_double_release_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_audio_es_0100.m4a"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetRecorderCallback_001.mp3"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetRecorderCallback_002.mp3"/>
         </preparer>
     </target>
     <target name="recorder_native_unit_test">
@@ -244,6 +257,25 @@
             <option name="shell" value="touch /data/test/media/Recorder_SetMaxDuration_007.mp4"/>
             <option name="shell" value="touch /data/test/media/Recorder_AAC_001.aac"/>
             <option name="shell" value="touch /data/test/media/Recorder_AAC_002.aac"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetStateCallback_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_InvalidLocation_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_InvalidLocation_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_InvalidOrientation_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_VideoOnly_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_Hdr_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_TemporalScale_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_Orientation_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_Orientation_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_OrientationNull_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_FileGenMode_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_Prepare_EmptyConfigInvalidLocation_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_Prepare_EmptyConfigInvalidLocation_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_Prepare_EmptyConfigInvalidOrientation_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/Recorder_SetMetadata_002.m4a"/>
+            <option name="shell" value="touch /data/test/media/Recorder_GetConfig_001.m4a"/>
+            <option name="shell" value="touch /data/test/media/Recorder_AudioOnly_001.m4a"/>
+            <option name="shell" value="touch /data/test/media/Recorder_MaxDuration_001.m4a"/>
+            <option name="shell" value="touch /data/test/media/Recorder_Genre_001.m4a"/>
             <option name="shell" value="restorecon /data/test/media"/>
         </preparer>
     </target>
@@ -333,14 +365,7 @@
             <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_007.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableStableQualityMode_001.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableStableQualityMode_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_001.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_002.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_003.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_005.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_006.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_007.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_008.mp4"/>
-            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor_009.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoSqrFactor.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_002.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_003.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_004.mp4"/>
@@ -354,6 +379,69 @@
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_012.mp4"/>
             <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_013.mp4"/>
             <option name="shell" value="touch /data/test/media/hirecorder_IsWatermarkSupported_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetAVRecorderConfig_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetMaxAmplitude_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetFileGenerationMode_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetWillMuteWhenInterrupted_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetWillMuteWhenInterrupted_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetWillMuteWhenInterrupted_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetWatermark_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetWatermark_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_AddWatermark_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_AddWatermark_InvalidSize_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_AddWatermark_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_AfterSetFormat_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_Prepared_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserMeta_Null_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetLocation_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_state_machine_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_state_machine_004.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_engine_null_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_engine_null_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_engine_null_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_double_release_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoIsHdr_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoIsHdr_003.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioAacProfile_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioAacProfile_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioEncoder_Mismatch_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioBitRate_G711MU_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioBitRate_G711MU_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableTemporalScale_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoEnableBFrame_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetUserCustomInfo_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetGenre_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetNextOutputFile_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetNextOutputFile_001_next.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_DumpInfo_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_Prepare_Repeat_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_Start_Repeat_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_Pause_Repeat_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_Resume_Repeat_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_Resume_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_Stop_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetFileSplitDuration_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetRecorderCallback_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetRecorderCallback_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetMaxAmplitude_002.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetMaxAmplitude_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_TransmitQos_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetStabilizationMode_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetParameter_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetAvailableEncoder_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_IsWatermarkSupported_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoSource_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetAudioSource_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetOutputFormat_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetVideoEncoder_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetMaxDuration_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetOutputFile_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_Prepare_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_Start_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_Pause_WrongState_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_SetOrientationHint_001.mp4"/>
+            <option name="shell" value="touch /data/test/media/recorder_GetSurface_WrongState_001.mp4"/>
         </preparer>
     </target>
     <target name="screen_capture_native_unit_test">

@@ -76,16 +76,19 @@ static OHOS::BufferRequestConfig g_yuvRequestConfig = {
 
 void RecorderCallbackTest::OnError(RecorderErrorType errorType, int32_t errorCode)
 {
+    errorCode_ = errorCode;
     cout << "Error received, errorType:" << errorType << " errorCode:" << errorCode << endl;
 }
 
 void RecorderCallbackTest::OnInfo(int32_t type, int32_t extra)
 {
+    infoExtra_ = extra;
     cout << "Info received, Infotype:" << type << " Infocode:" << extra << endl;
 }
 
 void OHOS::Media::RecorderCallbackTest::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
+    audioCaptureChangeCalled_ = true;
     cout<< "AudioCaptureChange" << audioRecorderChangeInfo.capturerState << endl;
 }
 
@@ -147,12 +150,6 @@ int32_t RecorderServerMock::SetVideoEncodingBitRate(int32_t sourceId, int32_t ra
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetVideoEncodingBitRate(sourceId, rate);
-}
-
-int32_t RecorderServerMock::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
-{
-    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
-    return recorder_->SetVideoSqrFactor(sourceId, sqrFactor);
 }
 
 int32_t RecorderServerMock::SetCaptureRate(int32_t sourceId, double fps)
@@ -695,4 +692,89 @@ int32_t RecorderServerMock::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuf
 {
     UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
     return recorder_->SetWatermark(waterMarkBuffer);
+}
+
+int32_t RecorderServerMock::GetAVRecorderConfig(ConfigMap &configMap)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->GetAVRecorderConfig(configMap);
+}
+
+int32_t RecorderServerMock::GetMaxAmplitude(int32_t &amplitude)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->GetMaxAmplitude(amplitude);
+}
+
+int32_t RecorderServerMock::SetFileGenerationMode(FileGenerationMode mode)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetFileGenerationMode(mode);
+}
+
+int32_t RecorderServerMock::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+}
+
+int32_t RecorderServerMock::SetVideoIsHdr(int32_t sourceId, bool isHdr)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetVideoIsHdr(sourceId, isHdr);
+}
+
+int32_t RecorderServerMock::SetVideoEnableTemporalScale(int32_t sourceId, bool enableTemporalScale)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetVideoEnableTemporalScale(sourceId, enableTemporalScale);
+}
+
+int32_t RecorderServerMock::SetVideoEnableStableQualityMode(int32_t sourceId, bool enableStableQualityMode)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetVideoEnableStableQualityMode(sourceId, enableStableQualityMode);
+}
+
+int32_t RecorderServerMock::SetVideoEnableBFrame(int32_t sourceId, bool enableBFrame)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetVideoEnableBFrame(sourceId, enableBFrame);
+}
+
+int32_t RecorderServerMock::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFactor)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetVideoSqrFactor(sourceId, sqrFactor);
+}
+
+int32_t RecorderServerMock::SetMetaSource(MetaSourceType source, int32_t &sourceId)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetMetaSource(source, sourceId);
+}
+
+int32_t RecorderServerMock::SetStabilizationMode(bool enableStabilization)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetStabilizationMode(enableStabilization);
+}
+
+int32_t RecorderServerMock::DumpInfo(int32_t fd)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->DumpInfo(fd);
+}
+
+int32_t RecorderServerMock::SetAudioDataSource(const std::shared_ptr<IAudioDataSource>& audioSource,
+    int32_t& sourceId)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->SetAudioDataSource(audioSource, sourceId);
+}
+
+int32_t RecorderServerMock::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
+{
+    UNITTEST_CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ == nullptr");
+    return recorder_->GetAvailableEncoder(encoderInfo);
 }

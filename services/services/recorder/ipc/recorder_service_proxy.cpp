@@ -246,17 +246,18 @@ int32_t RecorderServiceProxy::SetVideoSqrFactor(int32_t sourceId, int32_t sqrFac
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
- 
+
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_IPC_ERROR_5400102, "Failed to write descriptor!");
- 
+
     token = data.WriteInt32(sourceId) && data.WriteInt32(sqrFactor);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_IPC_ERROR_5400102, "write data failed");
- 
+
+    MEDIA_LOGD("SetVideoSqrFactor proxy send, sourceId(%{public}d), sqrFactor(%{public}d)", sourceId, sqrFactor);
     int ret = Remote()->SendRequest(SET_VIDEO_SQR_FACTOR, data, reply, option);
     int32_t error = TransformServiceStubErrCode(ret);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, error, "SetVideoSqrFactor failed, error: %{public}d", error);
- 
+
     return reply.ReadInt32();
 }
 
@@ -1029,9 +1030,11 @@ int32_t RecorderServiceProxy::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkB
     MessageParcel reply;
     MessageOption option;
 
+    CHECK_AND_RETURN_RET_LOG(waterMarkBuffer != nullptr, MSERR_INVALID_VAL,
+        "SetWatermark failed, waterMarkBuffer is nullptr");
+
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_IPC_ERROR_5400102, "Failed to write descriptor!");
-    
     CHECK_AND_RETURN_RET_LOG(waterMarkBuffer->WriteToMessageParcel(data),
         MSERR_IPC_ERROR_5400102, "Failed to write waterMarkBuffer!");
 
@@ -1048,6 +1051,10 @@ int32_t RecorderServiceProxy::AddWatermark(std::shared_ptr<AVBuffer> &watermarkB
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+
+    CHECK_AND_RETURN_RET_LOG(watermarkBuffer != nullptr, MSERR_INVALID_VAL,
+        "AddWatermark failed, watermarkBuffer is nullptr");
+
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_IPC_ERROR_5400102, "Failed to write descriptor!");
     CHECK_AND_RETURN_RET_LOG(watermarkBuffer->WriteToMessageParcel(data),
@@ -1071,6 +1078,9 @@ int32_t RecorderServiceProxy::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     MessageParcel data;
     MessageParcel reply;
     MessageOption option;
+    
+    CHECK_AND_RETURN_RET_LOG(userMeta != nullptr, MSERR_INVALID_VAL,
+        "SetUserMeta failed, userMeta is nullptr");
 
     bool token = data.WriteInterfaceToken(RecorderServiceProxy::GetDescriptor());
     CHECK_AND_RETURN_RET_LOG(token, MSERR_IPC_ERROR_5400102, "Failed to write descriptor!");
