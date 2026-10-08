@@ -623,7 +623,7 @@ HWTEST_F(RecorderServerUnitTest, Mock_AddWatermark_Success_001, TestSize.Level2)
     RS()->recorderEngine_ = std::move(mock);
     std::shared_ptr<AVBuffer> buffer;
     int32_t watermarkCount = 0;
-    EXPECT_EQ(MSERR_OK, RS()->AddWatermark(buffer, 100, 100, watermarkCount));
+    EXPECT_EQ(MSERR_INVALID_VAL, RS()->AddWatermark(buffer, 100, 100, watermarkCount));
     RS()->recorderEngine_ = std::move(saved);
 }
 

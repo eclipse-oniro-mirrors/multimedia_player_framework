@@ -538,7 +538,7 @@ HWTEST_F(RecorderServerUnitTest, recorder_EngineNull_SetWatermark_001, TestSize.
     EXPECT_EQ(MSERR_OK, recorderServer_->Release());
     recorderServer_->recorder_->status_ = RecorderServer::REC_PREPARED;
     std::shared_ptr<AVBuffer> buffer;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, recorderServer_->SetWatermark(buffer));
+    EXPECT_EQ(MSERR_INVALID_VAL, recorderServer_->SetWatermark(buffer));
 }
 
 /**

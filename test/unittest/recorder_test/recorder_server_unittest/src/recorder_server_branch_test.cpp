@@ -204,7 +204,7 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetWatermark_EngineNull_001, TestSize
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
     std::shared_ptr<AVBuffer> buffer;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetWatermark(buffer));
+    EXPECT_EQ(MSERR_INVALID_VAL, RS()->SetWatermark(buffer));
     RS()->recorderEngine_ = std::move(savedEngine);
 }
 
@@ -221,7 +221,7 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_AddWatermark_EngineNull_001, TestSize
     RS()->recorderEngine_ = nullptr;
     std::shared_ptr<AVBuffer> buffer;
     int32_t watermarkCount = 0;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->AddWatermark(buffer, 100, 100, watermarkCount));
+    EXPECT_EQ(MSERR_INVALID_VAL, RS()->AddWatermark(buffer, 100, 100, watermarkCount));
     RS()->recorderEngine_ = std::move(savedEngine);
 }
 

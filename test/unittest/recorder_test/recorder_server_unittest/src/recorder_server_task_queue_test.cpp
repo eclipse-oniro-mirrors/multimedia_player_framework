@@ -142,13 +142,13 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_EngineNull_MiscMethods_001, TestSize.
     EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->Reset());
     RS()->status_ = RecorderServer::REC_PREPARED;
     std::shared_ptr<AVBuffer> buffer;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetWatermark(buffer));
+    EXPECT_EQ(MSERR_INVALID_VAL, RS()->SetWatermark(buffer));
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     RS()->config_.withVideo = true;
     RS()->SetLocation(30.0, 60.0);
     RS()->SetOrientationHint(90);
     int32_t watermarkCount = 0;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->AddWatermark(buffer, 100, 100, watermarkCount));
+    EXPECT_EQ(MSERR_INVALID_VAL, RS()->AddWatermark(buffer, 100, 100, watermarkCount));
 }
 
 

@@ -1289,7 +1289,7 @@ int32_t RecorderServer::SetWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer)
     std::lock_guard<std::mutex> lock(mutex_);
     MediaTrace trace("RecorderServer::SetWatermark");
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED, MSERR_INVALID_OPERATION);
-     CHECK_AND_RETURN_RET_LOG(waterMarkBuffer != nullptr, MSERR_NULL_POINTER_5400101, "waterMarkBuffer is nullptr");
+    CHECK_AND_RETURN_RET_LOG(waterMarkBuffer != nullptr, MSERR_INVALID_VAL, "waterMarkBuffer is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->SetWatermark(waterMarkBuffer);
@@ -1315,6 +1315,7 @@ int32_t RecorderServer::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
         "Invalid watermark height");
     auto ret = GetWatermarkCount(watermarkCount);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Failed to add watermark, watermarks is over five.");
+    CHECK_AND_RETURN_RET_LOG(watermarkBuffer != nullptr, MSERR_INVALID_VAL, "watermarkBuffer is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return recorderEngine_->AddWatermark(watermarkBuffer, width, height);
@@ -1344,7 +1345,7 @@ int32_t RecorderServer::SetUserMeta(const std::shared_ptr<Meta> &userMeta)
     MediaTrace trace("RecorderServer::SetUserMeta");
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_PREPARED && status_ != REC_RECORDING && status_ != REC_PAUSED,
         MSERR_INVALID_STATE);
-    CHECK_AND_RETURN_RET_LOG(userMeta != nullptr, MSERR_NULL_POINTER_5400101, "userMeta is nullptr");
+    CHECK_AND_RETURN_RET_LOG(userMeta != nullptr, MSERR_INVALID_VAL, "userMeta is nullptr");
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     auto task = std::make_shared<TaskHandler<Status>>([&, this] {
         return recorderEngine_->SetUserMeta(userMeta);

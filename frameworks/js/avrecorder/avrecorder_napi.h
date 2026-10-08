@@ -417,6 +417,8 @@ private:
         AVRecorderProfile &profile);
     int32_t GetVideoProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value item,
         AVRecorderProfile &profile);
+    void ParseVideoOptionalBoolFields(napi_env env, napi_value item, AVRecorderProfile &profile);
+    void ParseVideoSqrFactor(napi_env env, napi_value item, AVRecorderProfile &profile);
     int32_t GetProfile(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetModeAndUrl(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetConfig(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, napi_env env, napi_value args);
