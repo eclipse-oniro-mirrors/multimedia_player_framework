@@ -49,8 +49,7 @@ enum ListenerFlag : uint32_t {
 #endif
     LF_AUDIO_RENDERER = 1 << 8,
     LF_APP_LIFECYCLE = 1 << 9,
-    LF_ALL = LF_WIN_LIFECYCLE | LF_WIN_INFO | LF_RECORD_DISP | LF_PRIVATE_WIN | LF_SCREEN_CONN | LF_LANG_SWITCH |
-        LF_ACCOUNT | LF_AUDIO_RENDERER | LF_APP_LIFECYCLE,
+    LF_ALL = 0xffffffff,
 };
 
 class SessionLifecycleListenerWrapper : public Rosen::SessionLifecycleListenerStub {

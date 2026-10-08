@@ -723,6 +723,7 @@ void ScreenCaptureServer::SetMediaKitReport(const std::string &apiCall)
     metaInfoJson["strategyForPrivacyMaskMode"] =  captureConfig_.strategy.strategyForPrivacyMaskMode;
     metaInfoJson["canvasFollowRotation"] =  captureConfig_.strategy.canvasFollowRotation;
     metaInfoJson["enableBFrame"] =  captureConfig_.strategy.enableBFrame;
+    metaInfoJson["enableAEC"] =  captureConfig_.strategy.enableAEC;
     metaInfoJson["setByUser"] =  captureConfig_.strategy.setByUser;
     metaInfoJson["pickerPopUp"] =  captureConfig_.strategy.pickerPopUp;
     metaInfoJson["fillMode"] =  captureConfig_.strategy.fillMode;
