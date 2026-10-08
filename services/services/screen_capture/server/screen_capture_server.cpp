@@ -407,6 +407,7 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value &root, const std:
         checkBoxSelected_ = checkVal;
         systemPrivacyProtectionSwitch_.store(checkVal);
         appPrivacyProtectionSwitch_.store(checkVal);
+        NotifyprivacyProtect();
         MEDIA_LOGI("checkBoxSelected: %{public}d", checkVal);
     }
 
@@ -445,6 +446,7 @@ int32_t ScreenCaptureServer::HandleRunningCase(Json::Value &root, const std::str
     if (appPrivacy != appPrivacyProtectionSwitch_.load() || systemPrivacy != systemPrivacyProtectionSwitch_.load()) {
         appPrivacyProtectionSwitch_.store(appPrivacy);
         systemPrivacyProtectionSwitch_.store(systemPrivacy);
+        NotifyprivacyProtect();
     }
     PrivacyProtected();
 
@@ -1986,7 +1988,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     isScreenCaptureAuthority_ = CheckPrivacyWindowSkipPermission();
 
     checkBoxSelected_ = captureConfig_.dataType == DataType::ORIGINAL_STREAM &&
-                    !(CheckPrivacyProtectPermission() && !isPrivacyProtect_);
+        !CheckPrivacyProtectPermission();
     systemPrivacyProtectionSwitch_.store(checkBoxSelected_);
     appPrivacyProtectionSwitch_.store(checkBoxSelected_);
 
@@ -2013,6 +2015,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     PostStartScreenCapture(ret);
 
     MEDIA_LOGI("StartScreenCaptureInner E, appUid:%{public}d, appPid:%{public}d", appInfo_.appUid, appInfo_.appPid);
+    CHECK_AND_RETURN_RET_NOLOG(captureConfig_.dataType == DataType::ORIGINAL_STREAM && ret == MSERR_OK, ret);
+    NotifyprivacyProtect();
     return ret;
 }
 
@@ -3838,7 +3842,7 @@ void ScreenCaptureServer::PrivacyProtected()
     screenIds.push_back(virtualScreenId);
     auto ret = Rosen::ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, systemPrivacy);
     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
-    NotifyprivacyProtect();
+
     std::vector<std::string> privacyWindowTags;
     if (systemPrivacy == appPrivacy) {
         privacyWindowTags.assign({"SCB_KEYBOARD_DEFAULT", "TAG_SCREEN_PROTECTION_SENSITIVE_APP"});

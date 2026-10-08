@@ -364,7 +364,6 @@ private:
     std::atomic<bool> isMicrophoneSwitchTurnOn_{true};
     std::atomic<bool> isPrivacyAuthorityEnabled_{false};
     bool checkBoxSelected_ = false;
-    bool isPrivacyProtect_ = false;
     bool isInnerAudioBoxSelected_ = true;
     std::atomic<bool> appPrivacyProtectionSwitch_{true};
     std::atomic<bool> systemPrivacyProtectionSwitch_{true};
