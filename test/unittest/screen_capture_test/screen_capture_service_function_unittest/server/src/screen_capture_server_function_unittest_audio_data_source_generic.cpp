@@ -59,7 +59,7 @@ public:
         info.audioSampleRate = TEST_SAMPLE_RATE;
         info.audioChannels = TEST_CHANNELS;
         ScreenCaptureContentFilter filter{};
-        auto wrapper = std::make_shared<AudioCapturerWrapper>(info, nullptr, "test", filter);
+        auto wrapper = std::make_shared<AudioCapturerWrapper>(info, nullptr, filter, false);
         wrapper->captureState_.store(AudioCapturerWrapperState::CAPTURER_RECORDING);
         return wrapper;
     }

@@ -1324,32 +1324,44 @@ std::string ScreenCaptureServer::GenerateThreadNameByPrefix(std::string threadNa
     return threadName + std::to_string(sessionId_);
 }
 
+int32_t ScreenCaptureServer::StartAudioCapture(
+    std::shared_ptr<AudioCapturerWrapper> &capturer,
+    AudioCaptureInfo &capInfo,
+    const ScreenCaptureContentFilter &filter,
+    AudioCaptureSourceType sourceType,
+    bool isVoip)
+{
+    CHECK_AND_RETURN_RET(!(capturer && capturer->IsRecording()), MSERR_OK);
+    if (capInfo.state != AVScreenCaptureParamValidationState::VALIDATION_VALID) {
+        return MSERR_OK;
+    }
+    bool aecAvailable = captureConfig_.strategy.enableAEC && isAecSupported_;
+    if (capturer == nullptr) {
+        capturer = std::make_shared<AudioCapturerWrapper>(
+            capInfo, cbProxy_, filter, aecAvailable);
+    }
+    capturer->SetIsInVoIPCall(isVoip);
+    MediaTrace trace("ScreenCaptureServer::StartAudioCapture");
+    int32_t ret = capturer->Start(appInfo_, captureConfig_.dataType, sessionId_);
+    if (ret != MSERR_OK) {
+        if (sourceType == AudioCaptureSourceType::MIC) {
+            cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
+        }
+        return ret;
+    }
+    if (sourceType == AudioCaptureSourceType::ALL_PLAYBACK && !isInnerAudioBoxSelected_) {
+        capturer->SetIsMute(true);
+    }
+    if (audioSource_) {
+        audioSource_->SetCapture(sourceType, capturer);
+    }
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureServer::StartInnerAudioCapture()
 {
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartInnerAudioCapture start, dataType:%{public}d, "
-        "innerCapInfo.state:%{public}d.",
-        FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.innerCapInfo.state);
-    CHECK_AND_RETURN_RET(!(innerAudioCapture_ && innerAudioCapture_->IsRecording()), MSERR_OK);
-    if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
-        if (innerAudioCapture_ == nullptr) {
-            std::string threadName = captureConfig_.dataType == DataType::ORIGINAL_STREAM
-                ? GenerateThreadNameByPrefix("OS_SInnAd")
-                : GenerateThreadNameByPrefix("OS_FInnAd");
-            innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
-                captureConfig_.audioInfo.innerCapInfo, cbProxy_, std::move(threadName), contentFilter_);
-        }
-        MediaTrace trace("ScreenCaptureServer::StartInnerAudioCapture");
-        int32_t ret = innerAudioCapture_->Start(appInfo_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "StartInnerAudioCapture failed");
-        if (!isInnerAudioBoxSelected_) {
-            innerAudioCapture_->SetIsMute(true);
-        }
-        if (audioSource_) {
-            audioSource_->SetCapture(AudioCaptureSourceType::ALL_PLAYBACK, innerAudioCapture_);
-        }
-    }
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartInnerAudioCapture OK.", FAKE_POINTER(this));
-    return MSERR_OK;
+    return StartAudioCapture(innerAudioCapture_, captureConfig_.audioInfo.innerCapInfo,
+        contentFilter_, AudioCaptureSourceType::ALL_PLAYBACK, false);
 }
 
 int32_t ScreenCaptureServer::StartScreenCaptureStream()
@@ -3144,17 +3156,20 @@ AudioCaptureSyncFlags ScreenCaptureServer::CalcAudioCaptureSyncFlags(uint32_t st
     flags.micStart = isMicrophoneSwitchTurnOn_ && !(state & AUDIO_STATE_TEL);
     bool isMixMode = audioSource_ && audioSource_->GetPolicy() == AudioCombinePolicy::MIX_ALL;
     bool isOriginalStream = false;
+    bool aecNeedInner = false;
     {
         std::shared_lock<std::shared_mutex> configLock(captureConfigMutex_);
         isOriginalStream = captureConfig_.dataType == DataType::ORIGINAL_STREAM;
+        aecNeedInner = captureConfig_.strategy.enableAEC && isAecSupported_
+            && !(state & AUDIO_STATE_HEADSET);
     }
-    flags.innerStart = isOriginalStream || (isMixMode && (state != 0 || flags.micStop));
-    flags.innerStop = !isOriginalStream && isMixMode && state == 0 && !flags.micStop;
+    flags.innerStart = isOriginalStream || (isMixMode && (state != 0 || flags.micStop || aecNeedInner));
+    flags.innerStop = !isOriginalStream && isMixMode && state == 0 && !flags.micStop && !aecNeedInner;
     MEDIA_LOGI("CalcAudioCaptureSyncFlags: 0x%{public}06" PRIXPTR " state=%{public}u "
                "isMicrophoneSwitchTurnOn=%{public}d micStop=%{public}d micStart=%{public}d "
-               "innerStart=%{public}d innerStop=%{public}d",
+               "innerStart=%{public}d innerStop=%{public}d aecNeedInner=%{public}d",
         FAKE_POINTER(this), state, isMicrophoneSwitchTurnOn_.load(), flags.micStop, flags.micStart, flags.innerStart,
-        flags.innerStop);
+        flags.innerStop, aecNeedInner);
     return flags;
 }
 
@@ -3186,7 +3201,7 @@ int32_t ScreenCaptureServer::SyncAudioCaptures(bool ignoreMicError)
 #endif
     }
     if (flags.micStart) {
-        int32_t micRet = StartMicAudioCapture(state & AUDIO_STATE_VOIP);
+        int32_t micRet = StartMicAudioCapture((state & AUDIO_STATE_VOIP) != 0);
         if (micRet != MSERR_OK && !ignoreMicError) {
             return micRet;
         }
@@ -3462,33 +3477,9 @@ int32_t ScreenCaptureServer::StopAudioCapture()
 
 int32_t ScreenCaptureServer::StartMicAudioCapture(bool isVoip)
 {
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartMicAudioCapture start, dataType:%{public}d, "
-        "micCapInfo.state:%{public}d, isVoip:%{public}d.",
-        FAKE_POINTER(this), captureConfig_.dataType, captureConfig_.audioInfo.micCapInfo.state, isVoip);
-    CHECK_AND_RETURN_RET(!(micAudioCapture_ && micAudioCapture_->IsRecording()), MSERR_OK);
-    if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID) {
-        if (micAudioCapture_ == nullptr) {
-            std::string threadName = captureConfig_.dataType == DataType::ORIGINAL_STREAM
-                ? GenerateThreadNameByPrefix("OS_SMicAd")
-                : GenerateThreadNameByPrefix("OS_FMicAd");
-            ScreenCaptureContentFilter contentFilterMic;
-            micAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
-                captureConfig_.audioInfo.micCapInfo, cbProxy_, std::move(threadName), contentFilterMic);
-        }
-        MediaTrace trace("ScreenCaptureServer::StartMicAudioCapture");
-        micAudioCapture_->SetIsInVoIPCall(isVoip);
-        int32_t ret = micAudioCapture_->Start(appInfo_);
-        if (ret != MSERR_OK) {
-            MEDIA_LOGE("StartMicAudioCapture failed");
-            cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_MIC_UNAVAILABLE);
-            return ret;
-        }
-        if (audioSource_) {
-            audioSource_->SetCapture(AudioCaptureSourceType::MIC, micAudioCapture_);
-        }
-    }
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartMicAudioCapture OK.", FAKE_POINTER(this));
-    return MSERR_OK;
+    ScreenCaptureContentFilter emptyFilter;
+    return StartAudioCapture(micAudioCapture_, captureConfig_.audioInfo.micCapInfo,
+        emptyFilter, AudioCaptureSourceType::MIC, isVoip);
 }
 
 int32_t ScreenCaptureServer::StopVideoCapture()
@@ -3760,18 +3751,23 @@ int32_t ScreenCaptureServer::SetCaptureAreaHighlight(AVScreenCaptureHighlightCon
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
+int32_t ScreenCaptureServer::SetScreenCaptureStrategy(const ScreenCaptureStrategy &strategy)
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(captureState_ < AVScreenCaptureState::POPUP_WINDOW, MSERR_INVALID_OPERATION_CREATE,
         "strategy can not be modified after screen capture started");
     MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,"
                "strategyForPrivacyMaskMode: %{public}d, canvasFollowRotation: %{public}d, enableBFrame: %{public}d,"
-               "pickerPopUp: %{public}d, fillMode: %{public}d, enablePause: %{public}d",
+               "pickerPopUp: %{public}d, fillMode: %{public}d, enablePause: %{public}d, enableAEC: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode,
         strategy.canvasFollowRotation, strategy.enableBFrame, static_cast<int32_t>(strategy.pickerPopUp),
-        static_cast<int32_t>(strategy.fillMode), strategy.enablePause);
+        static_cast<int32_t>(strategy.fillMode), strategy.enablePause, strategy.enableAEC);
     captureConfig_.strategy = strategy;
+    if (strategy.enableAEC) {
+        isAecSupported_ = AudioStandard::AudioStreamManager::GetInstance()
+            ->IsAcousticEchoCancelerSupported(AudioStandard::SourceType::SOURCE_TYPE_LIVE);
+        MEDIA_LOGI("AEC capability queried: %{public}d", isAecSupported_);
+    }
     return MSERR_OK;
 }
 

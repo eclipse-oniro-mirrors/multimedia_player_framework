@@ -80,6 +80,11 @@ HWTEST_F(ScreenCaptureListenerStubTest, CreateReleaseStubObject_001, TestSize.Le
     sptr<ScreenCaptureListenerStub> screenCaptureListenerStub =
         new(std::nothrow) ScreenCaptureListenerStub();
     ASSERT_NE(screenCaptureListenerStub, nullptr);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    int ret = screenCaptureListenerStub->OnRemoteRequest(-1, data, reply, option);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
     screenCaptureListenerStub = nullptr;
 }
 

@@ -47,11 +47,13 @@ void AudioCapturerCallbackImpl::OnStateChange(const CapturerState state)
     MEDIA_LOGI("OnStateChange state:%{public}d", state);
 }
 
-int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
+int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo, const DataType dataType,
+    const int32_t sessionId)
 {
     std::lock_guard<std::mutex> lock(mutex_);
+    std::string threadName = GenerateThreadName(dataType, sessionId);
     if (IsRecording()) {
-        MEDIA_LOGE("Start failed, is running, threadName:%{public}s", threadName_.c_str());
+        MEDIA_LOGE("Start failed, is running, threadName:%{public}s", threadName.c_str());
         return MSERR_UNKNOWN;
     }
     appInfo_ = appInfo;
@@ -61,13 +63,14 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     if (GetScreenCaptureSystemParam()["const.multimedia.screencapture.screenrecorderbundlename"] == bundleName_) {
         std::vector<SourceType> targetSources = {SourceType::SOURCE_TYPE_MIC, SourceType::SOURCE_TYPE_VOICE_CALL,
             SourceType::SOURCE_TYPE_VOICE_MESSAGE, SourceType::SOURCE_TYPE_CAMCORDER};
-        if (isInVoIPCall_.load()) {
+        bool isVoip = isInVoIPCall_.load();
+        if (isVoip) {
             targetSources.push_back(SourceType::SOURCE_TYPE_VOICE_COMMUNICATION);
         }
         int32_t ret = audioCapturer->SetAudioSourceConcurrency(targetSources);
         if (ret != MSERR_OK) {
             MEDIA_LOGE("SetAudioSourceConcurrency failed, ret:%{public}d, threadName:%{public}s", ret,
-                threadName_.c_str());
+                threadName.c_str());
         }
     }
     {
@@ -76,7 +79,7 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
     }
     captureState_.store(CAPTURER_RECORDING);
     if (!audioCapturer->Start()) {
-        MEDIA_LOGE("Start failed, AudioCapturer Start failed, threadName:%{public}s", threadName_.c_str());
+        MEDIA_LOGE("Start failed, AudioCapturer Start failed, threadName:%{public}s", threadName.c_str());
         {
             std::unique_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
             audioCapturer_ = nullptr;
@@ -86,7 +89,7 @@ int32_t AudioCapturerWrapper::Start(const OHOS::AudioStandard::AppInfo &appInfo)
         OnStartFailed(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, SCREEN_CAPTURE_ERR_UNKNOWN);
         return MSERR_UNKNOWN_AUDIO_START;
     }
-    MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR "Start success, threadName:%{public}s", FAKE_POINTER(this), threadName.c_str());
     return MSERR_OK;
 }
 
@@ -97,7 +100,7 @@ int32_t AudioCapturerWrapper::Stop()
         return MSERR_OK;
     }
     captureState_.store(AudioCapturerWrapperState::CAPTURER_STOPPING);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop S, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop S", FAKE_POINTER(this));
     std::shared_ptr<AudioCapturer> capturer;
     {
         std::unique_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
@@ -109,7 +112,7 @@ int32_t AudioCapturerWrapper::Stop()
     }
     {
         std::unique_lock<std::mutex> bufferLock(bufferMutex_);
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " Stop pop, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " Stop pop", FAKE_POINTER(this));
         while (!availBuffers_.empty()) {
             availBuffers_.pop_front();
         }
@@ -118,7 +121,7 @@ int32_t AudioCapturerWrapper::Stop()
     if (capturer != nullptr) {
         capturer->Release();
     }
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop E, threadName:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Stop E", FAKE_POINTER(this));
     captureState_.store(AudioCapturerWrapperState::CAPTURER_STOPED);
     return MSERR_OK;
 }
@@ -175,7 +178,8 @@ void AudioCapturerWrapper::SetInnerStreamUsage(std::vector<OHOS::AudioStandard::
         contentFilter_.filteredAudioContents.end()) {
         usages.push_back(OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
     }
-    if (isInVoIPCall_.load()) {
+    bool isVoip = isInVoIPCall_.load();
+    if (isVoip) {
         usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION);
         usages.push_back(AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION);
     }
@@ -191,13 +195,20 @@ OHOS::AudioStandard::AudioCapturerOptions AudioCapturerWrapper::BuildCapturerOpt
     capturerOptions.streamInfo.format = AudioSampleFormat::SAMPLE_S16LE;
     if (audioInfo_.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
         audioInfo_.audioSource == AudioCaptureSourceType::MIC) {
-        capturerOptions.capturerInfo.sourceType = isInVoIPCall_.load() ? SourceType::SOURCE_TYPE_VOICE_COMMUNICATION
-                                                                       : SourceType::SOURCE_TYPE_MIC;
+        bool isVoip = isInVoIPCall_.load();
+        if (isVoip) {
+            capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_VOICE_COMMUNICATION;
+        } else if (aecAvailable_) {
+            capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_LIVE;
+        } else {
+            capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_MIC;
+        }
     } else if (audioInfo_.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
         audioInfo_.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         capturerOptions.capturerInfo.sourceType = SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE;
         SetInnerStreamUsage(capturerOptions.playbackCaptureConfig.filterOptions.usages);
-        if (isInVoIPCall_.load()) {
+        bool isVoip = isInVoIPCall_.load();
+        if (isVoip) {
             appInfo.appTokenId = IPCSkeleton::GetSelfTokenID();
             appInfo.appFullTokenId = IPCSkeleton::GetSelfTokenID();
         }
@@ -218,16 +229,16 @@ bool AudioCapturerWrapper::SetupCapturerCallbacks(const std::shared_ptr<AudioCap
 {
     auto callback = std::make_shared<AudioCapturerCallbackImpl>();
     if (capturer->SetCapturerCallback(callback) != MSERR_OK) {
-        MEDIA_LOGE("SetCapturerCallback failed, threadName:%{public}s", threadName_.c_str());
+        MEDIA_LOGE("SetCapturerCallback failed");
         return false;
     }
     if (capturer->SetCaptureMode(AudioCaptureMode::CAPTURE_MODE_CALLBACK) != MSERR_OK) {
-        MEDIA_LOGE("SetCaptureMode failed, threadName:%{public}s", threadName_.c_str());
+        MEDIA_LOGE("SetCaptureMode failed");
         return false;
     }
     auto readCallback = std::make_shared<AudioCapturerReadCallbackImpl>(shared_from_this());
     if (capturer->SetCapturerReadCallback(readCallback) != MSERR_OK) {
-        MEDIA_LOGE("SetCapturerReadCallback failed, threadName:%{public}s", threadName_.c_str());
+        MEDIA_LOGE("SetCapturerReadCallback failed");
         return false;
     }
     return true;
@@ -284,8 +295,8 @@ std::shared_ptr<CacheBuffer> AudioCapturerWrapper::CreateCacheBuffer(const OHOS:
     if (memcpy_s(ownedBuf.get(), bufferLen, bufDesc.buffer, bufferLen) != EOK) {
         return nullptr;
     }
-    return std::make_shared<CacheBuffer>(std::move(ownedBuf), bufferLen, audioTimestamp,
-        intervalNs, audioInfo_.audioSource);
+    return std::make_shared<CacheBuffer>(std::move(ownedBuf), bufferLen, audioTimestamp, intervalNs,
+        audioInfo_.audioSource);
 }
 
 void AudioCapturerWrapper::NotifyBufferAvailable(const std::shared_ptr<AudioBufferAvailableCallback> &cb)
@@ -309,12 +320,11 @@ void AudioCapturerWrapper::OnReadData(size_t length)
     std::shared_ptr<AudioCapturer> capturer;
     {
         std::shared_lock<std::shared_mutex> capturerLock(audioCapturerMutex_);
-        CHECK_AND_RETURN_LOG(audioCapturer_ != nullptr, "OnReadData audioCapturer_ is nullptr, name:%{public}s",
-            threadName_.c_str());
+        CHECK_AND_RETURN_LOG(audioCapturer_ != nullptr, "OnReadData audioCapturer_ is nullptr");
         capturer = audioCapturer_;
     }
     if (capturer->GetBufferDesc(bufDesc) != MSERR_OK) {
-        MEDIA_LOGE("OnReadData GetBufferDesc failed, name:%{public}s", threadName_.c_str());
+        MEDIA_LOGE("OnReadData GetBufferDesc failed");
         return;
     }
     bool timeRet = capturer->GetTimeStampInfo(timestamp, OHOS::AudioStandard::Timestamp::Timestampbase::MONOTONIC);
@@ -329,17 +339,16 @@ void AudioCapturerWrapper::OnReadData(size_t length)
         audioTimestamp += INNER_AUDIO_READ_TO_HEAR_TIME;
     }
     auto cacheBuf = CreateCacheBuffer(bufDesc, audioTimestamp, capturer);
-    CHECK_AND_RETURN_LOG(cacheBuf != nullptr, "OnReadData CreateCacheBuffer failed, name:%{public}s",
-        threadName_.c_str());
+    CHECK_AND_RETURN_LOG(cacheBuf != nullptr, "OnReadData CreateCacheBuffer failed");
     std::shared_ptr<AudioBufferAvailableCallback> cb;
     {
         std::unique_lock<std::mutex> lock(bufferMutex_);
         if (!IsRecording()) {
-            MEDIA_LOGD("OnReadData is not running after acquire, drop frame, name:%{public}s", threadName_.c_str());
+            MEDIA_LOGD("OnReadData is not running after acquire, drop frame");
             return;
         }
         if (availBuffers_.size() > MAX_AUDIO_BUFFER_SIZE) {
-            PartiallyPrintLog(__LINE__, "consume slow, drop oldest audio frame" + threadName_);
+            PartiallyPrintLog(__LINE__, "consume slow, drop oldest audio frame");
             availBuffers_.pop_front();
         }
         availBuffers_.push_back(cacheBuf);
@@ -365,8 +374,7 @@ int32_t AudioCapturerWrapper::UseUpAllLeftBufferUntil(int64_t audioTime)
 {
     std::unique_lock<std::mutex> lock(bufferMutex_);
     CHECK_AND_RETURN_RET(IsRecording(), MSERR_OK);
-    MEDIA_LOGI("UseUpAllLeftBufferUntil audioTime: %{public}" PRId64 ", threadName:%{public}s", audioTime,
-        threadName_.c_str());
+    MEDIA_LOGI("UseUpAllLeftBufferUntil audioTime: %{public}" PRId64, audioTime);
     if (bufferCond_.wait_for(lock, std::chrono::milliseconds(STOP_WAIT_TIMEOUT_IN_MS), [this, audioTime]() {
             return availBuffers_.empty() ||
                 (availBuffers_.front() != nullptr && availBuffers_.front()->timestamp >= audioTime);
@@ -381,15 +389,13 @@ int32_t AudioCapturerWrapper::DropBufferUntil(int64_t audioTime)
     {
         std::unique_lock<std::mutex> lock(bufferMutex_);
         CHECK_AND_RETURN_RET(IsRecording(), dropCount);
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " DropBufferUntil S, name:%{public}s", FAKE_POINTER(this),
-            threadName_.c_str());
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " DropBufferUntil S", FAKE_POINTER(this));
         while (!availBuffers_.empty() && availBuffers_.front() != nullptr &&
             availBuffers_.front()->timestamp < audioTime) {
             availBuffers_.pop_front();
             dropCount++;
         }
-        MEDIA_LOGD("0x%{public}06" PRIXPTR " DropBufferUntil E, name:%{public}s", FAKE_POINTER(this),
-            threadName_.c_str());
+        MEDIA_LOGD("0x%{public}06" PRIXPTR " DropBufferUntil E", FAKE_POINTER(this));
     }
     if (dropCount > 0) {
         bufferCond_.notify_all();
@@ -405,29 +411,24 @@ int32_t AudioCapturerWrapper::AcquireAudioBuffer(std::shared_ptr<CacheBuffer> &c
         return MSERR_UNKNOWN;
     }
     CHECK_AND_RETURN_RET_LOG(availBuffers_.front() != nullptr, MSERR_UNKNOWN,
-        "AcquireAudioBuffer availBuffers_.front() is nullptr %{public}s", threadName_.c_str());
+        "AcquireAudioBuffer availBuffers_.front() is nullptr");
     cacheBuf = availBuffers_.front();
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Acquire Buffer E, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Acquire Buffer E", FAKE_POINTER(this));
     return MSERR_OK;
 }
 
 int32_t AudioCapturerWrapper::ReleaseAudioBuffer()
 {
     std::unique_lock<std::mutex> lock(bufferMutex_);
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " Release Buffer S, name:%{public}s", FAKE_POINTER(this), threadName_.c_str());
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Release Buffer S", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(IsRecording(), MSERR_UNKNOWN, "ReleaseAudioBuffer failed, not running");
     CHECK_AND_RETURN_RET_LOG(!availBuffers_.empty() && availBuffers_.front() != nullptr, MSERR_UNKNOWN,
         "ReleaseAudioBuffer failed, no frame to release");
-    MEDIA_LOGD("0x%{public}06" PRIXPTR " ABuffer release name:%{public}s time: %{public}" PRId64, FAKE_POINTER(this),
-        threadName_.c_str(), availBuffers_.front()->timestamp);
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " ABuffer release time: %{public}" PRId64, FAKE_POINTER(this),
+        availBuffers_.front()->timestamp);
     availBuffers_.pop_front();
     bufferCond_.notify_all();
     return MSERR_OK;
-}
-
-void AudioCapturerWrapper::SetIsInVoIPCall(bool isInVoIPCall)
-{
-    isInVoIPCall_.store(isInVoIPCall);
 }
 
 void AudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode)
@@ -435,6 +436,23 @@ void AudioCapturerWrapper::OnStartFailed(ScreenCaptureErrorType errorType, int32
     if (screenCaptureCb_ != nullptr) {
         screenCaptureCb_->OnError(errorType, errorCode);
     }
+}
+
+void AudioCapturerWrapper::SetIsInVoIPCall(bool isInVoIPCall)
+{
+    isInVoIPCall_.store(isInVoIPCall);
+}
+
+bool AudioCapturerWrapper::IsInVoIPCall() const
+{
+    return isInVoIPCall_.load();
+}
+
+std::string AudioCapturerWrapper::GenerateThreadName(const DataType dataType, const int32_t sessionId) const
+{
+    std::string prefix = (dataType == DataType::ORIGINAL_STREAM ? "OS_S" : "OS_F");
+    prefix += (audioInfo_.audioSource == AudioCaptureSourceType::ALL_PLAYBACK) ? "InnAd" : "MicAd";
+    return prefix + std::to_string(sessionId);
 }
 
 AudioCapturerWrapper::~AudioCapturerWrapper()

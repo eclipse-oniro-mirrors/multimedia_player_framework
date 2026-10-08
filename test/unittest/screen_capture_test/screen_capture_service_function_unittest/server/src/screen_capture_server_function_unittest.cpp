@@ -109,6 +109,14 @@ void ScreenCaptureServerFunctionTest::TearDown()
         screenCaptureServer_->Release();
         screenCaptureServer_ = nullptr;
     }
+    auto &mgr = ScreenCaptureServerManager::GetInstance();
+    std::vector<int32_t> sessionIds;
+    for (const auto &entry : mgr.serverMap_) {
+        sessionIds.push_back(entry.first);
+    }
+    for (int32_t id : sessionIds) {
+        mgr.RemoveScreenCaptureServerMap(id);
+    }
 }
 
 void ScreenCaptureServerFunctionTest::WaitForTaskComplete()
@@ -417,8 +425,9 @@ std::shared_ptr<AudioCapturerWrapper> ScreenCaptureServerFunctionTest::CreateTes
     const std::string &name, bool isInner)
 {
     MEDIA_LOGI("CreateTestWrapper S");
+    (void)name;
     auto wrapper = std::make_shared<AudioCapturerWrapper>(
-        audioInfo, screenCaptureServer_->cbProxy_, std::string(name), screenCaptureServer_->contentFilter_);
+        audioInfo, screenCaptureServer_->cbProxy_, screenCaptureServer_->contentFilter_, false);
     if (isInner) {
         screenCaptureServer_->innerAudioCapture_ = wrapper;
     } else {
@@ -863,7 +872,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatStartAudioCapture_001, TestSize.
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_UNKNOWN);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_,
+                  screenCaptureServer_->captureConfig_.dataType, screenCaptureServer_->sessionId_),
+        MSERR_UNKNOWN);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RepeatResumeAudioCapture_001, TestSize.Level2)
@@ -878,7 +889,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RepeatResumeAudioCapture_001, TestSize
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_,
+                  screenCaptureServer_->captureConfig_.dataType, screenCaptureServer_->sessionId_),
+        MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, RepeatPauseAudioCapture_001, TestSize.Level2)
@@ -936,14 +949,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_002, TestSize.L
     sleep(RECORDER_TIME);
 
     auto notificationSubscriber = NotificationSubscriber();
-    if (ScreenCaptureServerManager::GetInstance().serverMap_.begin() !=
-        ScreenCaptureServerManager::GetInstance().serverMap_.end()) {
-        int32_t notificationId = ScreenCaptureServerManager::GetInstance().serverMap_.begin()->first;
-        OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption =
-            new(std::nothrow) OHOS::Notification::NotificationButtonOption();
-        buttonOption->SetButtonName(BUTTON_NAME_STOP);
-        notificationSubscriber.OnResponse(notificationId, buttonOption);
-    }
+    int32_t notificationId = screenCaptureServerInner->sessionId_;
+    OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption =
+        new(std::nothrow) OHOS::Notification::NotificationButtonOption();
+    buttonOption->SetButtonName(BUTTON_NAME_STOP);
+    notificationSubscriber.OnResponse(notificationId, buttonOption);
     ASSERT_EQ(screenCaptureServerInner->captureState_.load(), AVScreenCaptureState::STOPPED);
 }
 
@@ -967,14 +977,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_003, TestSize.L
     sleep(RECORDER_TIME);
 
     auto notificationSubscriber = NotificationSubscriber();
-    if (ScreenCaptureServerManager::GetInstance().serverMap_.begin() !=
-        ScreenCaptureServerManager::GetInstance().serverMap_.end()) {
-        int32_t notificationId = ScreenCaptureServerManager::GetInstance().serverMap_.begin()->first;
-        OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption =
-            new(std::nothrow) OHOS::Notification::NotificationButtonOption();
-        buttonOption->SetButtonName("null");
-        notificationSubscriber.OnResponse(notificationId, buttonOption);
-    }
+    int32_t notificationId = screenCaptureServerInner->sessionId_;
+    OHOS::sptr<OHOS::Notification::NotificationButtonOption> buttonOption =
+        new(std::nothrow) OHOS::Notification::NotificationButtonOption();
+    buttonOption->SetButtonName("null");
+    notificationSubscriber.OnResponse(notificationId, buttonOption);
 
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServerInner->captureState_.load(), AVScreenCaptureState::STARTED);
@@ -1490,7 +1497,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabledOff_005, TestSize.
     SetupAudioDataSource(AudioCombinePolicy::MIX_ALL);
     screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
         screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo, screenCaptureServer_->cbProxy_,
-        std::string("InnerAudioCapture_005"), screenCaptureServer_->contentFilter_);
+        screenCaptureServer_->contentFilter_, false);
     int ret = screenCaptureServer_->SetMicrophoneEnabled(false);
     ASSERT_EQ(ret, MSERR_OK);
 }

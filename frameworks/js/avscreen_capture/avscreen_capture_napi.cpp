@@ -1134,6 +1134,7 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
         strategy.keepCaptureDuringCall, strategy.setByUser);
     GetOptionalBoolProperty(env, strategyVal, "enableBFrame", strategy.enableBFrame, strategy.setByUser);
     GetOptionalBoolProperty(env, strategyVal, "enablePause", strategy.enablePause, strategy.setByUser);
+    GetOptionalBoolProperty(env, strategyVal, "enableAEC", strategy.enableAEC, strategy.setByUser);
 
     status = napi_has_named_property(env, strategyVal, "privacyMaskMode", &exist);
     if (status == napi_ok && exist) {

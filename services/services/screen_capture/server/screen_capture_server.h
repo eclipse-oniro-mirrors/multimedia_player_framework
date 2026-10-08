@@ -154,7 +154,7 @@ public:
     int32_t RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
     int32_t ExcludePickerWindows(const std::vector<int32_t> &windowIDsVec) override;
     int32_t SetPickerMode(PickerMode pickerMode) override;
-    int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
+    int32_t SetScreenCaptureStrategy(const ScreenCaptureStrategy &strategy) override;
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
@@ -236,6 +236,12 @@ private:
     int32_t StartScreenCaptureStream();
     int32_t SyncAudioCaptures(bool ignoreMicError = false);
     std::string GenerateThreadNameByPrefix(std::string threadName);
+    int32_t StartAudioCapture(
+        std::shared_ptr<AudioCapturerWrapper> &capturer,
+        AudioCaptureInfo &capInfo,
+        const ScreenCaptureContentFilter &filter,
+        AudioCaptureSourceType sourceType,
+        bool isVoip);
     int32_t StartInnerAudioCapture();
     int32_t StartMicAudioCapture(bool isVoip);
     int32_t StartStreamVideoCapture();
@@ -444,6 +450,7 @@ private:
 #endif
     std::atomic<bool> recorderFileWithVideo_{false};
     std::atomic<uint32_t> audioRendererState_{0};
+    bool isAecSupported_ = false;
 
 private:
     static int32_t CheckAudioCapParam(const AudioCaptureInfo &audioCapInfo);

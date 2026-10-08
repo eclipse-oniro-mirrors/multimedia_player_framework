@@ -127,8 +127,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AcquireAudioBuffer_MicNullCacheBuf_B1,
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_BluetoothSco_B1, TestSize.Level2)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
     auto info = std::make_shared<AudioRendererChangeInfo>();
     info->rendererState = RendererState::RENDERER_RUNNING;
@@ -136,13 +135,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_BluetoothSco_
     info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_BLUETOOTH_SCO;
     changeInfos.push_back(info);
     screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
-    EXPECT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_BluetoothA2dp_B1, TestSize.Level2)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
     auto info = std::make_shared<AudioRendererChangeInfo>();
     info->rendererState = RendererState::RENDERER_RUNNING;
@@ -150,13 +148,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_BluetoothA2dp
     info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_BLUETOOTH_A2DP;
     changeInfos.push_back(info);
     screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
-    EXPECT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_UsbHeadset_B1, TestSize.Level2)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
     auto info = std::make_shared<AudioRendererChangeInfo>();
     info->rendererState = RendererState::RENDERER_RUNNING;
@@ -164,13 +161,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_UsbHeadset_B1
     info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_USB_HEADSET;
     changeInfos.push_back(info);
     screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
-    EXPECT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_UsbArmHeadset_B1, TestSize.Level2)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
     auto info = std::make_shared<AudioRendererChangeInfo>();
     info->rendererState = RendererState::RENDERER_RUNNING;
@@ -178,13 +174,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_UsbArmHeadset
     info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_USB_ARM_HEADSET;
     changeInfos.push_back(info);
     screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
-    EXPECT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_NearLink_B1, TestSize.Level2)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
     auto info = std::make_shared<AudioRendererChangeInfo>();
     info->rendererState = RendererState::RENDERER_RUNNING;
@@ -192,13 +187,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_NearLink_B1, 
     info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_NEARLINK;
     changeInfos.push_back(info);
     screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
-    EXPECT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_WiredHeadphones_B1, TestSize.Level2)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
     auto info = std::make_shared<AudioRendererChangeInfo>();
     info->rendererState = RendererState::RENDERER_RUNNING;
@@ -206,22 +200,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_WiredHeadphon
     info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_WIRED_HEADPHONES;
     changeInfos.push_back(info);
     screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
-    EXPECT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_HEADSET, AUDIO_STATE_HEADSET);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_SameState_B1, TestSize.Level2)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
-    screenCaptureServer_->audioSource_->SetAudioRendererState(0);
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    screenCaptureServer_->audioRendererState_.store(0);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
     EXPECT_EQ(screenCaptureServer_->AudioRendererStateUpdate(changeInfos), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_PreparedTelState_B1, TestSize.Level2)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
     auto info = std::make_shared<AudioRendererChangeInfo>();
     info->rendererState = RendererState::RENDERER_PREPARED;
@@ -229,13 +221,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_PreparedTelSt
     info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_SPEAKER;
     changeInfos.push_back(info);
     screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
-    EXPECT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_TEL, AUDIO_STATE_TEL);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_TEL, AUDIO_STATE_TEL);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_VoIPMasked_B1, TestSize.Level2)
 {
-    screenCaptureServer_->audioSource_ = std::make_unique<AudioDataSource>(AVScreenCaptureMixMode::MIX_MODE,
-        screenCaptureServer_.get());
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
     screenCaptureServer_->appName_ = "not.the.screen.recorder";
     std::vector<std::shared_ptr<AudioRendererChangeInfo>> changeInfos;
     auto info = std::make_shared<AudioRendererChangeInfo>();
@@ -244,7 +235,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioRendererStateUpdate_VoIPMasked_B1
     info->outputDeviceInfo.deviceType_ = AudioStandard::DEVICE_TYPE_SPEAKER;
     changeInfos.push_back(info);
     screenCaptureServer_->AudioRendererStateUpdate(changeInfos);
-    EXPECT_EQ(screenCaptureServer_->audioSource_->GetAudioRendererState() & AUDIO_STATE_VOIP, 0);
+    EXPECT_EQ(screenCaptureServer_->audioRendererState_.load() & AUDIO_STATE_VOIP, 0);
 }
 
 // ===================== StartInnerAudioCapture (L1369-1395) =====================
@@ -420,6 +411,192 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ExcludeContent_InnerCaptureUpdateFails
     ScreenCaptureContentFilter contentFilter;
     EXPECT_EQ(screenCaptureServer_->ExcludeContent(contentFilter), MSERR_INVALID_VAL);
     screenCaptureServer_->innerAudioCapture_ = nullptr;
+}
+
+// ===================== SetScreenCaptureStrategy AEC (L3859-3877) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenCaptureStrategy_AecEnabled_B1, TestSize.Level2)
+{
+    ScreenCaptureStrategy strategy;
+    strategy.enableAEC = true;
+    screenCaptureServer_->isAecSupported_ = false;
+    EXPECT_EQ(screenCaptureServer_->SetScreenCaptureStrategy(strategy), MSERR_OK);
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.strategy.enableAEC, true);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenCaptureStrategy_AecDisabled_B1, TestSize.Level2)
+{
+    ScreenCaptureStrategy strategy;
+    strategy.enableAEC = false;
+    screenCaptureServer_->isAecSupported_ = false;
+    EXPECT_EQ(screenCaptureServer_->SetScreenCaptureStrategy(strategy), MSERR_OK);
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.strategy.enableAEC, false);
+    EXPECT_EQ(screenCaptureServer_->isAecSupported_, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, SetScreenCaptureStrategy_AecEnabled_IsAecSupportedSet_B1, TestSize.Level2)
+{
+    ScreenCaptureStrategy strategy;
+    strategy.enableAEC = true;
+    screenCaptureServer_->isAecSupported_ = false;
+    EXPECT_EQ(screenCaptureServer_->SetScreenCaptureStrategy(strategy), MSERR_OK);
+    bool queried = screenCaptureServer_->isAecSupported_;
+    EXPECT_EQ(screenCaptureServer_->captureConfig_.strategy.enableAEC, true);
+    bool expectedQueried = AudioStandard::AudioStreamManager::GetInstance()->IsAcousticEchoCancelerSupported(
+        AudioStandard::SourceType::SOURCE_TYPE_LIVE);
+    EXPECT_EQ(queried, expectedQueried);
+}
+
+// ===================== CalcAudioCaptureSyncFlags AEC (L3243-3266) =====================
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CalcAudioCaptureSyncFlags_AecSpeaker_InnerStart_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.strategy.enableAEC = true;
+    screenCaptureServer_->isAecSupported_ = true;
+    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = false;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    uint32_t state = 0;
+    auto flags = screenCaptureServer_->CalcAudioCaptureSyncFlags(state);
+    EXPECT_EQ(flags.innerStart, true);
+    EXPECT_EQ(flags.innerStop, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CalcAudioCaptureSyncFlags_AecHeadset_InnerStop_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.strategy.enableAEC = true;
+    screenCaptureServer_->isAecSupported_ = true;
+    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    uint32_t state = AUDIO_STATE_HEADSET;
+    auto flags = screenCaptureServer_->CalcAudioCaptureSyncFlags(state);
+    EXPECT_EQ(flags.innerStart, true);
+    EXPECT_EQ(flags.innerStop, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CalcAudioCaptureSyncFlags_AecNotSupported_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.strategy.enableAEC = true;
+    screenCaptureServer_->isAecSupported_ = false;
+    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    uint32_t state = 0;
+    auto flags = screenCaptureServer_->CalcAudioCaptureSyncFlags(state);
+    EXPECT_EQ(flags.innerStop, true);
+    EXPECT_EQ(flags.innerStart, false);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, CalcAudioCaptureSyncFlags_AecOriginalStream_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.strategy.enableAEC = true;
+    screenCaptureServer_->isAecSupported_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
+    uint32_t state = AUDIO_STATE_HEADSET;
+    auto flags = screenCaptureServer_->CalcAudioCaptureSyncFlags(state);
+    EXPECT_EQ(flags.innerStart, true);
+    EXPECT_EQ(flags.innerStop, false);
+}
+
+// covers CalcAudioCaptureSyncFlags: enableAEC=false path (L3213 branch 1)
+HWTEST_F(ScreenCaptureServerFunctionTest, CalcAudioCaptureSyncFlags_AecDisabled_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.strategy.enableAEC = false;
+    screenCaptureServer_->isAecSupported_ = false;
+    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    screenCaptureServer_->audioSource_ = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    uint32_t state = 0;
+    auto flags = screenCaptureServer_->CalcAudioCaptureSyncFlags(state);
+    EXPECT_EQ(flags.innerStop, true);
+    EXPECT_EQ(flags.innerStart, false);
+}
+
+// covers CalcAudioCaptureSyncFlags: isMixMode=false (L3216 branch 2, L3217 branch 3)
+HWTEST_F(ScreenCaptureServerFunctionTest, CalcAudioCaptureSyncFlags_NoMixMode_B1, TestSize.Level2)
+{
+    screenCaptureServer_->captureConfig_.strategy.enableAEC = false;
+    screenCaptureServer_->isAecSupported_ = false;
+    screenCaptureServer_->isMicrophoneSwitchTurnOn_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    screenCaptureServer_->audioSource_ = nullptr;
+    uint32_t state = 0;
+    auto flags = screenCaptureServer_->CalcAudioCaptureSyncFlags(state);
+    EXPECT_EQ(flags.innerStart, false);
+    EXPECT_EQ(flags.innerStop, false);
+}
+
+// ===================== StartAudioCapture (L1368-1400) =====================
+
+// covers StartAudioCapture L1368 branch 0: enableAEC=false path
+HWTEST_F(ScreenCaptureServerFunctionTest, StartAudioCapture_AecDefault_B1, TestSize.Level2)
+{
+    AcwFlagGuard guard;
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
+        .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->captureConfig_.strategy.enableAEC = false;
+    screenCaptureServer_->isAecSupported_ = false;
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    ScreenCaptureContentFilter filter;
+    std::shared_ptr<AudioCapturerWrapper> capturer;
+    EXPECT_EQ(screenCaptureServer_->StartAudioCapture(capturer,
+                  screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, filter, AudioCaptureSourceType::MIC,
+                  false),
+        MSERR_OK);
+    EXPECT_NE(capturer, nullptr);
+    EXPECT_EQ(capturer->aecAvailable_, false);
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartAudioCapture_AecAvailable_B1, TestSize.Level2)
+{
+    AcwFlagGuard guard;
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
+        .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->captureConfig_.strategy.enableAEC = true;
+    screenCaptureServer_->isAecSupported_ = true;
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    ScreenCaptureContentFilter filter;
+    std::shared_ptr<AudioCapturerWrapper> capturer;
+    EXPECT_EQ(screenCaptureServer_->StartAudioCapture(capturer,
+                  screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, filter, AudioCaptureSourceType::MIC,
+                  false),
+        MSERR_OK);
+    EXPECT_NE(capturer, nullptr);
+    EXPECT_EQ(capturer->aecAvailable_, true);
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartAudioCapture_AecNotSupported_B1, TestSize.Level2)
+{
+    AcwFlagGuard guard;
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
+        .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->captureConfig_.strategy.enableAEC = true;
+    screenCaptureServer_->isAecSupported_ = false;
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    ScreenCaptureContentFilter filter;
+    std::shared_ptr<AudioCapturerWrapper> capturer;
+    EXPECT_EQ(screenCaptureServer_->StartAudioCapture(capturer,
+                  screenCaptureServer_->captureConfig_.audioInfo.micCapInfo, filter, AudioCaptureSourceType::MIC,
+                  false),
+        MSERR_OK);
+    EXPECT_NE(capturer, nullptr);
+    EXPECT_EQ(capturer->aecAvailable_, false);
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_WithAudioFlags_B1, TestSize.Level2)
+{
+    AcwFlagGuard guard;
+    screenCaptureServer_->captureConfig_.audioInfo.micCapInfo
+        .state = AVScreenCaptureParamValidationState::VALIDATION_VALID;
+    screenCaptureServer_->micAudioCapture_ = nullptr;
+    EXPECT_EQ(screenCaptureServer_->StartMicAudioCapture(true), MSERR_OK);
+    EXPECT_NE(screenCaptureServer_->micAudioCapture_, nullptr);
+    EXPECT_EQ(screenCaptureServer_->micAudioCapture_->IsInVoIPCall(), true);
+    screenCaptureServer_->micAudioCapture_ = nullptr;
 }
 
 } // namespace Media

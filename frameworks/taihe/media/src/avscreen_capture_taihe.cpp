@@ -413,10 +413,16 @@ int32_t AVScreenCaptureRecorderImpl::GetStrategy(std::unique_ptr<AVScreenCapture
         strategy.enablePause = avStrategy.enablePause.value();
         strategy.setByUser = true;
     }
+    // get enableAEC
+    if (avStrategy.enableAEC.has_value()) {
+        strategy.enableAEC = avStrategy.enableAEC.value();
+        strategy.setByUser = true;
+    }
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
-        "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d",
+               "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
+               "enableAEC: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
-        strategy.strategyForPrivacyMaskMode);
+        strategy.strategyForPrivacyMaskMode, strategy.enableAEC);
     return MSERR_OK;
 }
 

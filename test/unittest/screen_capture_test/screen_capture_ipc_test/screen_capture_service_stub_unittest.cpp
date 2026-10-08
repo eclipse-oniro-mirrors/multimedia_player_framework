@@ -74,7 +74,7 @@ HWTEST_F(ScreenCaptureServiceStubTest, DestoyServiceStub_001, TestSize.Level1)
  * @tc.number: errorCode_001
  * @tc.desc  : FUNC
  */
-HWTEST_F(ScreenCaptureServiceStubTest, errorCode_001, TestSize.Level1)
+HWTEST_F(ScreenCaptureServiceStubTest, ServiceStubErrorCode_001, TestSize.Level1)
 {
     sptr<ScreenCaptureServiceStub> screenCaptureServiceStub = ScreenCaptureServiceStub::Create();
     ASSERT_NE(screenCaptureServiceStub, nullptr);
@@ -103,7 +103,7 @@ HWTEST_F(ScreenCaptureServiceStubTest, errorCode_002, TestSize.Level1)
     bool token = data.WriteInterfaceToken(screenCaptureServiceStub->GetDescriptor());
     ASSERT_EQ(token, true);
     int ret = screenCaptureServiceStub->OnRemoteRequest(-1, data, reply, option);
-    EXPECT_NE(ret, MSERR_OK);
+    EXPECT_EQ(ret, IPC_STUB_UNKNOW_TRANS_ERR);
     screenCaptureServiceStub = nullptr;
 }
 

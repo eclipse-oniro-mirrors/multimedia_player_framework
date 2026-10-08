@@ -15,13 +15,13 @@
 #ifndef SCREEN_CAPTURE_IMPL_H
 #define SCREEN_CAPTURE_IMPL_H
 
-#include <mutex>
-#include <media_dfx.h>
-#include "screen_capture.h"
-#include "nocopyable.h"
-#include "i_screen_capture_service.h"
-#include "surface_buffer_impl.h"
 #include "hitrace/tracechain.h"
+#include "i_screen_capture_service.h"
+#include "nocopyable.h"
+#include "screen_capture.h"
+#include "surface_buffer_impl.h"
+#include <media_dfx.h>
+#include <mutex>
 
 namespace OHOS {
 namespace Media {
@@ -60,7 +60,7 @@ public:
     int32_t SetPickerMode(PickerMode pickerMode) override;
     int32_t SetPrivacyAuthorityEnabled() override;
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
-    int32_t SetScreenCaptureStrategy(ScreenCaptureStrategy strategy) override;
+    int32_t SetScreenCaptureStrategy(const ScreenCaptureStrategy &strategy) override;
     int32_t UpdateSurface(sptr<Surface> surface) override;
     int32_t SetCaptureArea(uint64_t displayId, OHOS::Rect area) override;
     int32_t GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,

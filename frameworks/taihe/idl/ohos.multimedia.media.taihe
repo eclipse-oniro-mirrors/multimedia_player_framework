@@ -1186,6 +1186,7 @@ struct AVScreenCaptureStrategy {
     enableBFrame: Optional<bool>;
     privacyMaskMode: Optional<i32>;
     enablePause: Optional<bool>;
+    enableAEC: Optional<bool>;
 }
 
 struct AVScreenCaptureRecordConfig {

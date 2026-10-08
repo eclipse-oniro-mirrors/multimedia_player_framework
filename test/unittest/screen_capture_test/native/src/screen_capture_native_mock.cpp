@@ -393,6 +393,12 @@ int32_t ScreenCaptureNativeMock::StrategyForPause(bool value)
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureNativeMock::StrategyForMicAEC(bool value)
+{
+    strategy_.enableAEC = value;
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureNativeMock::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
 {
     return MSERR_OK;

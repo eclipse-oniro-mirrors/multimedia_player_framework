@@ -14,16 +14,16 @@
  */
 
 #include "screen_capture_service_stub.h"
-#include "fdsan_fd.h"
-#include "screen_capture_service_providers.h"
-#include "screen_capture_listener_callback.h"
-#include "media_server_manager.h"
-#include "media_log.h"
-#include "media_errors.h"
 #include "avsharedmemory_ipc.h"
-#include "screen_capture_listener_callback.h"
-#include "i_standard_screen_capture_listener.h"
 #include "dynamic_module_loader.h"
+#include "fdsan_fd.h"
+#include "i_standard_screen_capture_listener.h"
+#include "media_errors.h"
+#include "media_log.h"
+#include "media_server_manager.h"
+#include "screen_capture_ipc.h"
+#include "screen_capture_listener_callback.h"
+#include "screen_capture_service_providers.h"
 
 namespace {
 constexpr int MAX_WINDOWS_LEN = 1000;
@@ -364,7 +364,7 @@ int32_t ScreenCaptureServiceStub::ReleaseVideoBuffer()
     return screenCaptureServer_->ReleaseVideoBuffer();
 }
 
-int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(ScreenCaptureStrategy strategy)
+int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(const ScreenCaptureStrategy &strategy)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
     return screenCaptureServer_->SetScreenCaptureStrategy(strategy);
@@ -827,22 +827,15 @@ int32_t ScreenCaptureServiceStub::SetCaptureAreaHighlight(MessageParcel &data, M
 int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(MessageParcel &data, MessageParcel &reply)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
-    ScreenCaptureStrategy strategy;
-    strategy.enableDeviceLevelCapture = data.ReadBool();
-    strategy.keepCaptureDuringCall = data.ReadBool();
-    strategy.strategyForPrivacyMaskMode = data.ReadInt32();
-    strategy.canvasFollowRotation = data.ReadBool();
-    strategy.enableBFrame = data.ReadBool();
-    strategy.pickerPopUp = static_cast<AVScreenCapturePickerPopUp>(data.ReadInt32());
-    strategy.fillMode = static_cast<AVScreenCaptureFillMode>(data.ReadInt32());
-    strategy.enablePause = data.ReadBool();
-    CHECK_AND_RETURN_RET_LOG(strategy.pickerPopUp >= AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DEFAULT &&
-            strategy.pickerPopUp <= AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE,
-        MSERR_INVALID_VAL, "invalid picker pop up: %{public}d", static_cast<int32_t>(strategy.pickerPopUp));
-    CHECK_AND_RETURN_RET_LOG(strategy.fillMode >= AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO &&
-            strategy.fillMode <= AVScreenCaptureFillMode::SCALE_TO_FILL,
-        MSERR_INVALID_VAL, "invalid fill mode: %{public}d", static_cast<int32_t>(strategy.fillMode));
-    int32_t ret = SetScreenCaptureStrategy(strategy);
+    auto parcel = data.ReadParcelable<ScreenCaptureStrategyParcel>();
+    CHECK_AND_RETURN_RET_LOG(parcel != nullptr, MSERR_INVALID_VAL, "Failed to read strategy!");
+    CHECK_AND_RETURN_RET_LOG(parcel->pickerPopUp >= AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DEFAULT &&
+            parcel->pickerPopUp <= AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE,
+        MSERR_INVALID_VAL, "invalid picker pop up: %{public}d", static_cast<int32_t>(parcel->pickerPopUp));
+    CHECK_AND_RETURN_RET_LOG(parcel->fillMode >= AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO &&
+            parcel->fillMode <= AVScreenCaptureFillMode::SCALE_TO_FILL,
+        MSERR_INVALID_VAL, "invalid fill mode: %{public}d", static_cast<int32_t>(parcel->fillMode));
+    int32_t ret = SetScreenCaptureStrategy(*parcel);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

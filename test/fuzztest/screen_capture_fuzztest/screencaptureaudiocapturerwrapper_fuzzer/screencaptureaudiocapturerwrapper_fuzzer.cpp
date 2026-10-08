@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2025 Huawei Device Co., Ltd.
+ * Copyright (c) 2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -13,18 +13,18 @@
  * limitations under the License.
  */
 
-#include <cmath>
-#include <iostream>
-#include <fuzzer/FuzzedDataProvider.h>
-#include "aw_common.h"
-#include "string_ex.h"
-#include "media_errors.h"
-#include "directory_ex.h"
-#include "screen_capture.h"
 #include "screencaptureaudiocapturerwrapper_fuzzer.h"
+#include "aw_common.h"
+#include "directory_ex.h"
 #include "i_standard_screen_capture_service.h"
+#include "media_errors.h"
+#include "screen_capture.h"
 #include "screen_capture_server.h"
+#include "string_ex.h"
 #include "test_template.h"
+#include <cmath>
+#include <fuzzer/FuzzedDataProvider.h>
+#include <iostream>
 
 using namespace std;
 using namespace OHOS;
@@ -32,13 +32,9 @@ using namespace Media;
 
 namespace OHOS {
 namespace Media {
-ScreenCaptureAudioCapturerWrapperFuzzer::ScreenCaptureAudioCapturerWrapperFuzzer()
-{
-}
+ScreenCaptureAudioCapturerWrapperFuzzer::ScreenCaptureAudioCapturerWrapperFuzzer() {}
 
-ScreenCaptureAudioCapturerWrapperFuzzer::~ScreenCaptureAudioCapturerWrapperFuzzer()
-{
-}
+ScreenCaptureAudioCapturerWrapperFuzzer::~ScreenCaptureAudioCapturerWrapperFuzzer() {}
 
 AudioCaptureSourceType ScreenCaptureAudioCapturerWrapperFuzzer::PickAudioSource(FuzzedDataProvider &fdp)
 {
@@ -101,7 +97,7 @@ AudioCaptureInfo ScreenCaptureAudioCapturerWrapperFuzzer::CreateAudioCaptureInfo
     return {
         .audioSampleRate = fdp.ConsumeIntegralInRange<int32_t>(8000, 96000),
         .audioChannels = fdp.ConsumeIntegralInRange<int32_t>(1, 8),
-        .audioSource = PickAudioSource(fdp)
+        .audioSource = PickAudioSource(fdp),
     };
 }
 
@@ -110,38 +106,36 @@ AudioInfo ScreenCaptureAudioCapturerWrapperFuzzer::CreateAudioInfo(FuzzedDataPro
     return {
         .micCapInfo = CreateAudioCaptureInfo(fdp),
         .innerCapInfo = CreateAudioCaptureInfo(fdp),
-        .audioEncInfo = {
-            .audioBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 96000),
-            .audioCodecformat = PickAudioCodecFormat(fdp)
-        }
+        .audioEncInfo =
+            {
+                .audioBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 96000),
+                .audioCodecformat = PickAudioCodecFormat(fdp),
+            },
     };
 }
 
 VideoInfo ScreenCaptureAudioCapturerWrapperFuzzer::CreateVideoInfo(FuzzedDataProvider &fdp)
 {
     return {
-        .videoCapInfo = {
-            .videoFrameWidth = fdp.ConsumeIntegralInRange<int32_t>(1, 3840),
+        .videoCapInfo = {.videoFrameWidth = fdp.ConsumeIntegralInRange<int32_t>(1, 3840),
             .videoFrameHeight = fdp.ConsumeIntegralInRange<int32_t>(1, 2160),
-            .videoSource = PickVideoSourceType(fdp)
-        },
-        .videoEncInfo = {
-            .videoCodec = PickVideoCodecFormat(fdp),
-            .videoBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 4000000),
-            .videoFrameRate = fdp.ConsumeIntegralInRange<int32_t>(1, 120)
-        }
+            .videoSource = PickVideoSourceType(fdp)},
+        .videoEncInfo =
+            {
+                .videoCodec = PickVideoCodecFormat(fdp),
+                .videoBitrate = fdp.ConsumeIntegralInRange<int32_t>(1, 4000000),
+                .videoFrameRate = fdp.ConsumeIntegralInRange<int32_t>(1, 120),
+            },
     };
 }
 
 void ScreenCaptureAudioCapturerWrapperFuzzer::SetConfig(RecorderInfo &recorderInfo, FuzzedDataProvider &fdp)
 {
-    config_ = {
-        .captureMode = PickCaptureMode(fdp),
+    config_ = {.captureMode = PickCaptureMode(fdp),
         .dataType = static_cast<DataType>(fdp.ConsumeIntegralInRange<int32_t>(0, 2)),
         .audioInfo = CreateAudioInfo(fdp),
         .videoInfo = CreateVideoInfo(fdp),
-        .recorderInfo = recorderInfo
-    };
+        .recorderInfo = recorderInfo};
 }
 
 void ScreenCaptureAudioCapturerWrapperFuzzer::TestCapturerWrapperOperations(
@@ -152,7 +146,8 @@ void ScreenCaptureAudioCapturerWrapperFuzzer::TestCapturerWrapperOperations(
     appInfo.appFullTokenId = IPCSkeleton::GetCallingFullTokenID();
     appInfo.appUid = IPCSkeleton::GetCallingUid();
     appInfo.appPid = IPCSkeleton::GetCallingPid();
-    audioCapturerWrapper->Start(appInfo);
+    audioCapturerWrapper->Start(appInfo, static_cast<DataType>(fdp.ConsumeIntegral<int32_t>()),
+        fdp.ConsumeIntegral<int32_t>());
 
     ScreenCaptureContentFilter contentFilter;
     if (fdp.ConsumeBool()) {
@@ -178,14 +173,15 @@ void ScreenCaptureAudioCapturerWrapperFuzzer::TestCapturerWrapperOperations(
     audioCapturerWrapper->Stop();
     audioCapturerWrapper->SetIsInVoIPCall(GetData<bool>());
     audioCapturerWrapper->IsInVoIPCall();
-    audioCapturerWrapper->Start(appInfo);
+    audioCapturerWrapper->Start(appInfo, static_cast<DataType>(fdp.ConsumeIntegral<int32_t>()),
+        fdp.ConsumeIntegral<int32_t>());
     audioCapturerWrapper->ReleaseAudioBuffer();
     audioCapturerWrapper->Stop();
 }
 
 bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uint8_t *data, size_t size)
 {
-    if (data == nullptr || size < 2 * sizeof(int32_t)) {  // 2 input params
+    if (data == nullptr || size < 2 * sizeof(int32_t)) { // 2 input params
         return false;
     }
     FuzzedDataProvider fdp(data, size);
@@ -202,10 +198,8 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     SetConfig(recorderInfo, fdp);
     std::shared_ptr<ScreenCaptureCallBack> callbackObj = std::make_shared<TestScreenCaptureCallbackTest>();
     ScreenCaptureContentFilter contentFilter;
-    std::string capturerName = fdp.ConsumeRandomLengthString(64);
-    shared_ptr<AudioCapturerWrapper> audioCapturerWrapper =
-        make_shared<AudioCapturerWrapper>(config_.audioInfo.innerCapInfo, callbackObj, std::move(capturerName),
-            contentFilter);
+    shared_ptr<AudioCapturerWrapper> audioCapturerWrapper = make_shared<AudioCapturerWrapper>(
+        config_.audioInfo.innerCapInfo, callbackObj, contentFilter, false);
     TestCapturerWrapperOperations(audioCapturerWrapper, fdp);
     close(outputFd);
     return true;

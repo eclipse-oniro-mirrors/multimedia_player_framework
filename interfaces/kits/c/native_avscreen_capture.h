@@ -733,6 +733,20 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PauseScreenCapture(struct OH_AVSc
  * @since 26.0.0
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResumeScreenCapture(struct OH_AVScreenCapture *capture);
+
+/**
+ * @brief Specifies whether to enable the echo cancellation function when the microphone is enabled.
+ * @param strategy [in] Pointer to an OH_AVScreenCapture_CaptureStrategy instance
+ * @param enable [in] Enables or disables the AEC capability when the microphone is captured.
+ *     The default value is false, indicating that echo cancellation is disabled.
+ *     If this parameter is set to true, the echo cancellation function of the microphone is enabled.
+ * @return <ul><li>{@link AV_SCREEN_CAPTURE_ERR_OK} : indicates that the operation is successful.</li>
+ *     <li>{@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL} : The input parameter **strategy** is nullptr</li></ul>
+ *     or the value of *enable** is invalid.
+ * @since 26.2.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForMicAEC(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool value);
 #ifdef __cplusplus
 }
 #endif
