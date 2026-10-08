@@ -51,7 +51,9 @@ static const std::unordered_map<Plugins::FileType, std::string> fileTypeMap = {
     { Plugins::FileType::WAV, "wav" },
     { Plugins::FileType::MOV, "mov" },
     { Plugins::FileType::AVI, "avi" },
-    { Plugins::FileType::MPEGPS, "mpg" }
+    { Plugins::FileType::MPEGPS, "mpg" },
+    { Plugins::FileType::DSF, "dsf" },
+    { Plugins::FileType::DFF, "dff" },
 };
 
 static const std::unordered_map<Plugins::VideoOrientationType, int32_t> videoOrientationTypeMap = {

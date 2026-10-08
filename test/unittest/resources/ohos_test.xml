@@ -582,6 +582,7 @@
             <option name="push" value="test_videofile/mbaff.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/h264_4148_1920.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/6M.ts -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/DSD128.dsf -> /data/test" src="res"/>
         </preparer>
     </target>
     <target name="avmetadatahelper_unit_test">
@@ -605,6 +606,7 @@
             <option name="push" value="error.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/HDR.mp4 -> /data/test" src="res"/>
             <option name="push" value="test_videofile/SDR.mp4 -> /data/test" src="res"/>
+            <option name="push" value="test_videofile/DSD128.dsf -> /data/test" src="res"/>
         </preparer>
     </target>
     <target name="vcodec_native_unit_test">
