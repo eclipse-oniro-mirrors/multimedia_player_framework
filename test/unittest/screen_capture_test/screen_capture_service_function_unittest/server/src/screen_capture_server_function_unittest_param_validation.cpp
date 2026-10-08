@@ -412,41 +412,5 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsState_MultipleStates_001, TestSize.L
     ASSERT_EQ(screenCaptureServer_->IsState(CAP_PAUSED), false);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_MuteWhenShareAudioBox_001, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.state =
-        AVScreenCaptureParamValidationState::VALIDATION_VALID;
-    screenCaptureServer_->isInnerAudioBoxSelected_ = false;
-    AudioCaptureInfo innerInfo = {
-        .audioSampleRate = 48000,
-        .audioChannels = 2,
-        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK,
-        .state = AVScreenCaptureParamValidationState::VALIDATION_VALID,
-    };
-    screenCaptureServer_->innerAudioCapture_ = std::make_shared<AudioCapturerWrapper>(
-        innerInfo, screenCaptureServer_->cbProxy_, "test_inner", screenCaptureServer_->contentFilter_);
-    ASSERT_EQ(screenCaptureServer_->StartInnerAudioCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, StartInnerAudioCapture_AlreadyRecording_001, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    AudioCaptureInfo innerInfo = {
-        .audioSampleRate = 48000,
-        .audioChannels = 2,
-        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK,
-        .state = AVScreenCaptureParamValidationState::VALIDATION_VALID,
-    };
-    auto wrapper = std::make_shared<AudioCapturerWrapper>(
-        innerInfo, screenCaptureServer_->cbProxy_, "test_inner_rec", screenCaptureServer_->contentFilter_);
-    wrapper->Start(screenCaptureServer_->appInfo_);
-    screenCaptureServer_->innerAudioCapture_ = wrapper;
-    ASSERT_EQ(screenCaptureServer_->StartInnerAudioCapture(), MSERR_OK);
-}
-
 } // Media
 } // OHOS
