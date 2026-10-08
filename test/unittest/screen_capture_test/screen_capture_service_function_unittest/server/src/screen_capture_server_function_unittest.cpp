@@ -2319,6 +2319,19 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCapture_001, TestSize.Level2
 }
 
 /**
+ * @tc.name: CheckPrivacyProtectPermission_001
+ * @tc.desc: CheckPrivacyProtectPermission_001
+ * @tc.type: FUNC
+ */
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckPrivacyProtectPermission_001, TestSize.Level2)
+{
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    server->appInfo_.appUid = ROOT_UID;
+    server->appInfo_.appPid = 1;
+    ASSERT_EQ(server->CheckPrivacyProtectPermission(), false);
+}
+
+/**
  * @tc.name: CheckPrivacyWindowSkipPermission_001
  * @tc.desc: CheckPrivacyWindowSkipPermission_001
  * @tc.type: FUNC

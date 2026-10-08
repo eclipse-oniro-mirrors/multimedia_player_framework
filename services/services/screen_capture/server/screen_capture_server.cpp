@@ -116,6 +116,7 @@ static const std::string ICON_PATH_RESUME = "/etc/screencapture/play.svg";
 static const std::string BACK_GROUND_COLOR = "#E84026";
 static const std::string SYS_SCR_RECR_KEY = "const.multimedia.screencapture.screenrecorderbundlename";
 static const std::string PERM_CUST_SCR_REC = "ohos.permission.CUSTOM_SCREEN_RECORDING";
+static const std::string PERM_DISABLE_SCREEN_PRIVACY_PROTECTION = "ohos.permission.DISABLE_SCREEN_PRIVACY_PROTECTION";
 static const std::string SHOW_TOUCH_HINT_KEY = "settings.app.show_touch_hint";
 #ifdef PC_STANDARD
 static const std::string SELECT_ABILITY_NAME = "SelectWindowAbility";
@@ -406,7 +407,6 @@ int32_t ScreenCaptureServer::HandlePopupWindowCase(Json::Value &root, const std:
         checkBoxSelected_ = checkVal;
         systemPrivacyProtectionSwitch_.store(checkVal);
         appPrivacyProtectionSwitch_.store(checkVal);
-        NotifyprivacyProtect();
         MEDIA_LOGI("checkBoxSelected: %{public}d", checkVal);
     }
 
@@ -445,7 +445,6 @@ int32_t ScreenCaptureServer::HandleRunningCase(Json::Value &root, const std::str
     if (appPrivacy != appPrivacyProtectionSwitch_.load() || systemPrivacy != systemPrivacyProtectionSwitch_.load()) {
         appPrivacyProtectionSwitch_.store(appPrivacy);
         systemPrivacyProtectionSwitch_.store(systemPrivacy);
-        NotifyprivacyProtect();
     }
     PrivacyProtected();
 
@@ -1255,6 +1254,17 @@ bool ScreenCaptureServer::CheckPrivacyWindowSkipPermission()
     return false;
 }
 
+bool ScreenCaptureServer::CheckPrivacyProtectPermission()
+{
+    MEDIA_LOGI("ScreenCaptureServer::CheckPrivacyProtectPermission() START.");
+    int result = Security::AccessToken::AccessTokenKit::VerifyAccessToken(appInfo_.appTokenId,
+        PERM_DISABLE_SCREEN_PRIVACY_PROTECTION);
+    CHECK_AND_RETURN_RET_LOG(result == Security::AccessToken::PERMISSION_GRANTED, false,
+        "CheckPrivacyProtectPermission: user does not have DISABLE_SCREEN_PRIVACY_PROTECTION permission");
+    MEDIA_LOGI("CheckPrivacyProtectPermission: user has DISABLE_SCREEN_PRIVACY_PROTECTION permission");
+    return true;
+}
+
 int32_t ScreenCaptureServer::RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow)
 {
     MediaTrace trace("ScreenCaptureServer::RequestUserPrivacyAuthority");
@@ -1975,7 +1985,8 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
     captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     isScreenCaptureAuthority_ = CheckPrivacyWindowSkipPermission();
 
-    checkBoxSelected_ = captureConfig_.dataType == DataType::ORIGINAL_STREAM;
+    checkBoxSelected_ = captureConfig_.dataType == DataType::ORIGINAL_STREAM &&
+                    !(CheckPrivacyProtectPermission() && !isPrivacyProtect_);
     systemPrivacyProtectionSwitch_.store(checkBoxSelected_);
     appPrivacyProtectionSwitch_.store(checkBoxSelected_);
 
@@ -3827,7 +3838,7 @@ void ScreenCaptureServer::PrivacyProtected()
     screenIds.push_back(virtualScreenId);
     auto ret = Rosen::ScreenManager::GetInstance().SetScreenSkipProtectedWindow(screenIds, systemPrivacy);
     MEDIA_LOGI("SystemPrivacyProtected SetScreenSkipProtectedWindow done, ret: %{public}d", ret);
-
+    NotifyprivacyProtect();
     std::vector<std::string> privacyWindowTags;
     if (systemPrivacy == appPrivacy) {
         privacyWindowTags.assign({"SCB_KEYBOARD_DEFAULT", "TAG_SCREEN_PROTECTION_SENSITIVE_APP"});

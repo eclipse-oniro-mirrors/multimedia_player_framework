@@ -284,6 +284,7 @@ private:
     bool IsUserPrivacyAuthorityNeeded();
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     bool CheckPrivacyWindowSkipPermission();
+    bool CheckPrivacyProtectPermission();
     int32_t RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow);
     int32_t StartPrivacyWindow(const std::string &cmdStr);
     int32_t StartAuthWindow();
@@ -363,6 +364,7 @@ private:
     std::atomic<bool> isMicrophoneSwitchTurnOn_{true};
     std::atomic<bool> isPrivacyAuthorityEnabled_{false};
     bool checkBoxSelected_ = false;
+    bool isPrivacyProtect_ = false;
     bool isInnerAudioBoxSelected_ = true;
     std::atomic<bool> appPrivacyProtectionSwitch_{true};
     std::atomic<bool> systemPrivacyProtectionSwitch_{true};
