@@ -298,7 +298,6 @@ int32_t SoundParser::Release()
     if (callback_ != nullptr) callback_.reset();
     if (fdSource_ > 0) {
         MEDIA_LOGI("SoundParser::Release() fdSource_:%{public}d", fdSource_);
-        static_cast<void>(close(fdSource_));
         static_cast<void>(fdsan_close_with_tag(fdSource_, GetFdSanTag(soundID_)));
         fdSource_ = -1;
     }
