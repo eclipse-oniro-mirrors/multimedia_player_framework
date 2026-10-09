@@ -21,7 +21,6 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "media_server_manager.h"
-#include "screen_capture_ipc.h"
 #include "screen_capture_listener_callback.h"
 #include "screen_capture_service_providers.h"
 
@@ -827,16 +826,25 @@ int32_t ScreenCaptureServiceStub::SetCaptureAreaHighlight(MessageParcel &data, M
 int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(MessageParcel &data, MessageParcel &reply)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
-    auto parcel = data.ReadParcelable<ScreenCaptureStrategyParcel>();
-    CHECK_AND_RETURN_RET_LOG(parcel != nullptr, MSERR_INVALID_VAL, "Failed to read strategy!");
-    CHECK_AND_RETURN_RET_LOG(parcel->pickerPopUp >= AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DEFAULT &&
-            parcel->pickerPopUp <= AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE,
-        MSERR_INVALID_VAL, "invalid picker pop up: %{public}d", static_cast<int32_t>(parcel->pickerPopUp));
-    CHECK_AND_RETURN_RET_LOG(parcel->fillMode >= AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO &&
-            parcel->fillMode <= AVScreenCaptureFillMode::SCALE_TO_FILL,
-        MSERR_INVALID_VAL, "invalid fill mode: %{public}d", static_cast<int32_t>(parcel->fillMode));
-    int32_t ret = SetScreenCaptureStrategy(*parcel);
-    reply.WriteInt32(ret);
+    ScreenCaptureStrategy strategy;
+    int32_t pickerPopUpVal = 0;
+    int32_t fillModeVal = 0;
+    bool ret = data.ReadBool(strategy.enableDeviceLevelCapture) && data.ReadBool(strategy.keepCaptureDuringCall) &&
+        data.ReadInt32(strategy.strategyForPrivacyMaskMode) && data.ReadBool(strategy.canvasFollowRotation) &&
+        data.ReadBool(strategy.enableBFrame) && data.ReadInt32(pickerPopUpVal) && data.ReadInt32(fillModeVal) &&
+        data.ReadBool(strategy.enablePause) && data.ReadBool(strategy.enableAEC);
+    CHECK_AND_RETURN_RET_LOG(ret, MSERR_INVALID_VAL, "Failed to read strategy!");
+    CHECK_AND_RETURN_RET_LOG(pickerPopUpVal >=
+                static_cast<int32_t>(AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DEFAULT) &&
+            pickerPopUpVal <= static_cast<int32_t>(AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE),
+        MSERR_INVALID_VAL, "invalid picker pop up: %{public}d", pickerPopUpVal);
+    CHECK_AND_RETURN_RET_LOG(fillModeVal >= static_cast<int32_t>(AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO) &&
+            fillModeVal <= static_cast<int32_t>(AVScreenCaptureFillMode::SCALE_TO_FILL),
+        MSERR_INVALID_VAL, "invalid fill mode: %{public}d", fillModeVal);
+    strategy.pickerPopUp = static_cast<AVScreenCapturePickerPopUp>(pickerPopUpVal);
+    strategy.fillMode = static_cast<AVScreenCaptureFillMode>(fillModeVal);
+    int32_t result = SetScreenCaptureStrategy(strategy);
+    reply.WriteInt32(result);
     return MSERR_OK;
 }
 
