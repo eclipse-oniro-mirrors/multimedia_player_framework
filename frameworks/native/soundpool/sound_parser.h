@@ -149,6 +149,7 @@ private:
         std::atomic<bool> isSoundParserCompleted_ = false;
     };
 
+    inline uint64_t GetFdSanTag(int32_t soundId);
     int32_t VerifyFileType();
     int32_t DoDemuxer(MediaAVCodec::Format *trackFormat);
     int32_t DoDecode(const MediaAVCodec::Format &trackFormat);

@@ -21,6 +21,7 @@
 #include "isoundpool.h"
 #include "media_demuxer.h"
 #include "sound_parser.h"
+#include "soundpool_fdsan.h"
 
 namespace {
     constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundParser"};
@@ -47,6 +48,8 @@ SoundParser::SoundParser(int32_t soundID, const std::string &url)
 SoundParser::SoundParser(int32_t soundID, int32_t fd, int64_t offset, int64_t length)
 {
     fdSource_ = fcntl(fd, F_DUPFD_CLOEXEC, MIN_FD);  // dup(fd) + close on exec to prevent leaks.
+    fdsan_exchange_owner_tag(fdSource_, fdsan_get_owner_tag(fdSource_), GetFdSanTag(soundID));
+
     offset = offset >= INT64_MAX ? INT64_MAX : offset;
     length = length >= INT64_MAX ? INT64_MAX : length;
     MEDIA_LOGI("SoundParser::SoundParser fd:%{public}d, fdSource_:%{public}d,", fd, fdSource_);
@@ -65,6 +68,17 @@ SoundParser::~SoundParser()
 {
     MEDIA_LOGI("SoundParser Destruction, soundID is %{public}d", soundID_);
     Release();
+}
+
+inline uint64_t SoundParser::GetFdSanTag(int32_t soundId)
+{
+    const uint64_t fdSanTag
+        /* fdsan type */
+        = (static_cast<uint64_t>(FDSAN_OWNER_TYPE_DEFAULT) << 56)                  // fdsan type: 0 - 7 bits
+        /* fdsan value */
+        | ((static_cast<uint64_t>(LOG_DOMAIN_SOUNDPOOL) << 32) & FDSAN_VALUE_MASK) // module domain: 8 - 31 bits
+        | (static_cast<uint64_t>(soundId) & FDSAN_INSTANCE_MASK);                  // instance: 32 - 63 bits
+    return fdSanTag;
 }
 
 int32_t SoundParser::DoParser()
@@ -284,7 +298,8 @@ int32_t SoundParser::Release()
     if (callback_ != nullptr) callback_.reset();
     if (fdSource_ > 0) {
         MEDIA_LOGI("SoundParser::Release() fdSource_:%{public}d", fdSource_);
-        (void)close(fdSource_);
+        static_cast<void>(close(fdSource_));
+        static_cast<void>(fdsan_close_with_tag(fdSource_, GetFdSanTag(soundID_)));
         fdSource_ = -1;
     }
     MEDIA_LOGI("Release end, soundID is %{public}d", soundID_);
