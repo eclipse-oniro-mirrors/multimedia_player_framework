@@ -2257,7 +2257,7 @@ std::string PlayerServerState::GetStateName() const
 
 int32_t PlayerServerStateMachine::HandleMessage(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+    auto currState = GetCurrState();
     if (currState != nullptr) {
         return currState->OnMessageReceived(type, extra, infoBody);
     }
