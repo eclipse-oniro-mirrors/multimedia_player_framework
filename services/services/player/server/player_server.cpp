@@ -2257,13 +2257,9 @@ std::string PlayerServerState::GetStateName() const
 
 int32_t PlayerServerStateMachine::HandleMessage(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    std::shared_ptr<PlayerServerState> state;
-    {
-        std::unique_lock<std::recursive_mutex> lock(recMutex_);
-        state = currState_;
-    }
-    if (state != nullptr) {
-        return state->OnMessageReceived(type, extra, infoBody);
+    auto currState = std::static_pointer_cast<BaseState>(GetCurrState());
+    if (currState != nullptr) {
+        return currState->OnMessageReceived(type, extra, infoBody);
     }
     return MSERR_OK;
 }
