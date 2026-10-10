@@ -284,6 +284,7 @@ private:
     bool IsUserPrivacyAuthorityNeeded();
     bool UpdatePrivacyUsingPermissionState(VideoPermissionState state);
     bool CheckPrivacyWindowSkipPermission();
+    bool CheckPrivacyProtectPermission();
     int32_t RequestUserPrivacyAuthority(bool &isSkipPrivacyWindow);
     int32_t StartPrivacyWindow(const std::string &cmdStr);
     int32_t StartAuthWindow();
