@@ -75,6 +75,11 @@ bool ScreenCaptureServiceStubFuzzer::FuzzScreenCaptureOnRemoteRequest(uint8_t *d
     MessageParcel reply;
     MessageOption option;
     screencaptureStub->OnRemoteRequest(code, msg, reply, option);
+
+    MessageParcel destroyMsg;
+    destroyMsg.WriteInterfaceToken(screencaptureStub->GetDescriptor());
+    screencaptureStub->OnRemoteRequest(
+        IStandardScreenCaptureService::ScreenCaptureServiceMsg::DESTROY, destroyMsg, reply, option);
     return true;
 }
 }
