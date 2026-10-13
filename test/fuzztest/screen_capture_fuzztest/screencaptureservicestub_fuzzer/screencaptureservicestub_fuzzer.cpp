@@ -21,6 +21,7 @@
 #include "directory_ex.h"
 #include <unistd.h>
 #include "media_server.h"
+#include "media_server_manager.h"
 #include "media_parcel.h"
 #include "i_standard_screen_capture_service.h"
 #include "stub_common.h"
@@ -76,10 +77,8 @@ bool ScreenCaptureServiceStubFuzzer::FuzzScreenCaptureOnRemoteRequest(uint8_t *d
     MessageOption option;
     screencaptureStub->OnRemoteRequest(code, msg, reply, option);
 
-    MessageParcel destroyMsg;
-    destroyMsg.WriteInterfaceToken(screencaptureStub->GetDescriptor());
-    screencaptureStub->OnRemoteRequest(
-        IStandardScreenCaptureService::ScreenCaptureServiceMsg::DESTROY, destroyMsg, reply, option);
+    MediaServerManager::GetInstance().DestroyStubObject(
+        MediaServerManager::StubType::SCREEN_CAPTURE, screencapture);
     return true;
 }
 }
