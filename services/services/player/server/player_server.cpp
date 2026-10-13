@@ -2257,8 +2257,9 @@ std::string PlayerServerState::GetStateName() const
 
 int32_t PlayerServerStateMachine::HandleMessage(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
 {
-    if (currState_ != nullptr) {
-        return currState_->OnMessageReceived(type, extra, infoBody);
+    auto currState = GetCurrState();
+    if (currState != nullptr) {
+        return currState->OnMessageReceived(type, extra, infoBody);
     }
     return MSERR_OK;
 }
