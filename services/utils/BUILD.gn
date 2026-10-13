@@ -18,6 +18,10 @@ config("media_service_utils_public_config") {
   include_dirs = [ "include" ]
 }
 
+config("media_service_utils_compile_config") {
+  cflags = [ "-fvisibility=hidden" ]
+}
+
 ohos_shared_library("media_service_utils") {
   branch_protector_ret = "pac_ret"
   install_enable = true
@@ -71,7 +75,6 @@ ohos_shared_library("media_service_utils") {
     "-FS",
     "-O2",
     "-D_FORTIFY_SOURCE=2",
-    "-fvisibility=hidden",
     "-Wformat=2",
     "-Wfloat-equal",
     "-Wdate-time",
@@ -82,7 +85,10 @@ ohos_shared_library("media_service_utils") {
     "-Wunused-parameter",
   ]
 
-  configs = [ ":media_service_utils_public_config" ]
+  configs = [
+    ":media_service_utils_public_config",
+    ":media_service_utils_compile_config",
+  ]
 
   external_deps = []
   if (!is_arkui_x) {
