@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <fuzzer/FuzzedDataProvider.h>
 #include "media_server.h"
+#include "media_server_manager.h"
 #include "media_parcel.h"
 #include "i_standard_screen_capture_controller.h"
 #include "stub_common.h"
@@ -75,6 +76,9 @@ bool ScreenCaptureControllerServiceStubFuzzer::FuzzScreenCaptureControllerOnRemo
     MessageParcel reply;
     MessageOption option;
     screenCaptureControllerStub->OnRemoteRequest(code, msg, reply, option);
+
+    MediaServerManager::GetInstance().DestroyStubObject(
+        MediaServerManager::StubType::SCREEN_CAPTURE_CONTROLLER, screenCaptureController);
 
     return true;
 }
