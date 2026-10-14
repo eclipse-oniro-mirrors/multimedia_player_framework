@@ -223,6 +223,103 @@ HWTEST_F(InCallObserverInnerUnitTest, OnCallStateUpdated_01, TestSize.Level1)
     InCallObserver::GetInstance().OnCallStateUpdated(false);
     ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(true));
 }
+
+/**
+ * @tc.name: IsInCall_RefreshFalse_001
+ * @tc.desc: IsInCall with refreshState=false covers L58 false branch
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, IsInCall_RefreshFalse_001, TestSize.Level1)
+{
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
+}
+
+/**
+ * @tc.name: OnCallStateUpdated_SameState_001
+ * @tc.desc: OnCallStateUpdated with same state returns true (L104 true branch)
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, OnCallStateUpdated_SameState_001, TestSize.Level1)
+{
+    InCallObserver::GetInstance().OnCallStateUpdated(true);
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(false));
+}
+
+/**
+ * @tc.name: UnregisterCallBack_ExpiredInList_001
+ * @tc.desc: Unregister with expired callback in list covers L89 nullptr path
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, UnregisterCallBack_ExpiredInList_001, TestSize.Level1)
+{
+    std::weak_ptr<InCallObserverCallBack> expiredCb =
+        std::make_shared<InCallObserverTestCallBack>();
+    expiredCb.reset();
+    ASSERT_FALSE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(expiredCb));
+    auto validCb = std::make_shared<InCallObserverTestCallBack>();
+    ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(validCb));
+    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(expiredCb);
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(validCb);
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
+}
+
+/**
+ * @tc.name: UnregisterCallBack_DifferentCallback_001
+ * @tc.desc: Unregister with different callback covers L89 iter++ path
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, UnregisterCallBack_DifferentCallback_001, TestSize.Level1)
+{
+    auto cb1 = std::make_shared<InCallObserverTestCallBack>();
+    auto cb2 = std::make_shared<InCallObserverTestCallBack>();
+    ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(cb1));
+    ASSERT_TRUE(InCallObserver::GetInstance().RegisterInCallObserverCallBack(cb2));
+    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(cb1);
+    ASSERT_TRUE(InCallObserver::GetInstance().OnCallStateUpdated(true));
+    InCallObserver::GetInstance().UnregisterInCallObserverCallBack(cb2);
+    InCallObserver::GetInstance().OnCallStateUpdated(false);
+}
+
+/**
+ * @tc.name: MediaTelephonyListener_AllCallbacks_001
+ * @tc.desc: Call all MediaTelephonyListener callback methods
+ * @tc.type: FUNC
+ */
+HWTEST_F(InCallObserverInnerUnitTest, MediaTelephonyListener_AllCallbacks_001, TestSize.Level1)
+{
+    auto listener = std::make_unique<MediaTelephonyListener>().release();
+    int32_t slotId = -1;
+    std::u16string phoneNumber = u"";
+    listener->OnCallStateUpdated(slotId, 0, phoneNumber);
+    listener->OnCallStateUpdated(slotId, 1, phoneNumber);
+    listener->OnCallStateUpdated(slotId, 2, phoneNumber);
+    listener->OnCallStateUpdated(slotId, 3, phoneNumber);
+    listener->OnCallStateUpdated(slotId, 4, phoneNumber);
+    listener->OnCallStateUpdated(slotId, 5, phoneNumber);
+    listener->OnCallStateUpdated(slotId, 7, phoneNumber);
+    listener->OnCallStateUpdated(slotId, 8, phoneNumber);
+    listener->OnCallStateUpdated(slotId, 9, phoneNumber);
+    const std::vector<sptr<OHOS::Telephony::SignalInformation>> vecSigInfo{};
+    listener->OnSignalInfoUpdated(slotId, vecSigInfo);
+    listener->OnNetworkStateUpdated(slotId, nullptr);
+    const std::vector<sptr<OHOS::Telephony::CellInformation>> vecCellInfo{};
+    listener->OnCellInfoUpdated(slotId, vecCellInfo);
+    listener->OnSimStateUpdated(slotId, OHOS::Telephony::CardType::UNKNOWN_CARD,
+        OHOS::Telephony::SimState::SIM_STATE_UNKNOWN, OHOS::Telephony::LockReason::SIM_NONE);
+    listener->OnCellularDataConnectStateUpdated(slotId, 0, 0);
+    listener->OnCellularDataFlowUpdated(slotId, 0);
+    listener->OnCfuIndicatorUpdated(slotId, true);
+    listener->OnVoiceMailMsgIndicatorUpdated(slotId, true);
+    listener->OnIccAccountUpdated();
+    InCallObserver::GetInstance().OnCallStateUpdated(true);
+    listener->OnCallStateUpdated(slotId, 6, phoneNumber);
+    ASSERT_FALSE(InCallObserver::GetInstance().IsInCall(false));
+}
+
 } // namespace InCallObserverFuncUT
 } // namespace Media
 } // namespace OHOS
