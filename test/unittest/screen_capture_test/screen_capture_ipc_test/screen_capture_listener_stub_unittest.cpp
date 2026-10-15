@@ -614,5 +614,5 @@ HWTEST_F(ScreenCaptureListenerStubTest, OnRemoteRequest_UserSelected_001, TestSi
     stub = nullptr;
 }
 
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

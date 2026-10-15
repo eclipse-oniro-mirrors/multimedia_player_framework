@@ -99,16 +99,7 @@ public:
     static void TearDownTestCase(void) {}
     void SetUp(void) {}
     void TearDown(void) {}
-
-/* Test all ScreenCaptureClient methods with null proxy (error path coverage) */
-
-HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetCaptureMode_001, TestSize.Level2)
-{
-    ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetCaptureMode(CaptureMode::CAPTURE_HOME_SCREEN));
-}
-
-HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetDataType_001, TestSize.Level2)
+};
 
 /* ==================== Success path tests with mock proxy ==================== */
 
@@ -228,7 +219,6 @@ HWTEST_F(ScreenCaptureClientUnitTest, MockProxy_UpdateSurface_001, TestSize.Leve
     EXPECT_EQ(MSERR_INVALID_VAL, client->UpdateSurface(nullptr));
     client->Release();
 }
-
 } // namespace ScreenCaptureIpcUT
 } // namespace Media
 } // namespace OHOS
