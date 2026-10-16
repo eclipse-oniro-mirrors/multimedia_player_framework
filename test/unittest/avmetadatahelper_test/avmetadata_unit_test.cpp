@@ -942,5 +942,82 @@ HWTEST_F(AVMetadataUnitTest, ResolveMetadata_DSF_SampleRate_0400, TestSize.Level
     helper->Release();
     close(fdInfo.fd);
 }
+
+/**
+ * @tc.number    : FetchFrameAtTime_OddHeight_HWDecoder_0100
+ * @tc.name      : Fetch frame from odd-height video, verify HW decoder is used
+ * @tc.desc      : Video height=479 (odd), rounding-up logic should make IsSupportHWDecoder pass
+ */
+HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_OddHeight_HWDecoder_0100, TestSize.Level0)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC_479.mp4");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    OutputConfiguration param = {-1, -1, PixelFormat::RGB_888};
+    int64_t timeUs = 0;
+    int32_t queryOption = AVMetadataQueryOption::AV_META_QUERY_NEXT_SYNC;
+    auto frame = helper->FetchFrameAtTime(timeUs, queryOption, param);
+    EXPECT_NE(nullptr, frame);
+    helper->Release();
+    close(fdInfo.fd);
+}
+
+/**
+ * @tc.number    : FetchFrameAtTime_OddHeight_HWDecoder_0200
+ * @tc.name      : Fetch frame from odd-height video with various query options
+ * @tc.desc      : Verify decoder works for all query options with odd height
+ */
+HWTEST_F(AVMetadataUnitTest, FetchFrameAtTime_OddHeight_HWDecoder_0200, TestSize.Level1)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC_479.mp4");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    OutputConfiguration param = {-1, -1, PixelFormat::RGB_888};
+    int64_t timeUs = 1000000;
+    auto frame = helper->FetchFrameAtTime(timeUs,
+        AVMetadataQueryOption::AV_META_QUERY_PREVIOUS_SYNC, param);
+    EXPECT_NE(nullptr, frame);
+    frame = helper->FetchFrameAtTime(timeUs,
+        AVMetadataQueryOption::AV_META_QUERY_CLOSEST_SYNC, param);
+    EXPECT_NE(nullptr, frame);
+    frame = helper->FetchFrameAtTime(timeUs,
+        AVMetadataQueryOption::AV_META_QUERY_CLOSEST, param);
+    EXPECT_NE(nullptr, frame);
+    helper->Release();
+    close(fdInfo.fd);
+}
+
+/**
+ * @tc.number    : FetchFrameYuv_OddHeight_HWDecoder_0100
+ * @tc.name      : Fetch YUV frame from odd-height video
+ * @tc.desc      : Verify FetchFrameYuv works with odd height after rounding-up
+ */
+HWTEST_F(AVMetadataUnitTest, FetchFrameYuv_OddHeight_HWDecoder_0100, TestSize.Level1)
+{
+    std::string uri = AVMetadataTestBase::GetInstance().GetMountPath() +
+        std::string("H264_AAC_479.mp4");
+    auto helper = AVMetadataHelperServer::Create();
+    ASSERT_NE(nullptr, helper);
+    FileDescriptorInfo fdInfo;
+    OpenFileAsFd(uri, fdInfo);
+    ASSERT_EQ(MSERR_OK, helper->SetSource(fdInfo.fd, fdInfo.offset, fdInfo.size,
+        AVMetadataUsage::AV_META_USAGE_PIXEL_MAP));
+    uint64_t time = 0;
+    OutputConfiguration param;
+    auto pixelMap = helper->FetchFrameYuv(0, time, param);
+    EXPECT_NE(nullptr, pixelMap);
+    helper->Release();
+    close(fdInfo.fd);
+}
 } // namespace Media
 } // namespace OHOS
