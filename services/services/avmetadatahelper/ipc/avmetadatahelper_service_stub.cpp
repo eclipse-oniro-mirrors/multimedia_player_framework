@@ -331,6 +331,11 @@ int32_t AVMetadataHelperServiceStub::SetUriSource(MessageParcel &data, MessagePa
 {
     std::string uri = data.ReadString();
     int32_t usage = data.ReadInt32();
+    if (uri.size() >= strlen("fd://") && uri.compare(0, strlen("fd://"), "fd://") == 0) {
+        MEDIA_LOGE("fd:// scheme is not allowed in SetUriSource, use SetFdSource instead");
+        reply.WriteInt32(MSERR_INVALID_VAL);
+        return MSERR_INVALID_VAL;
+    }
     reply.WriteInt32(SetSource(uri, usage));
     return MSERR_OK;
 }
