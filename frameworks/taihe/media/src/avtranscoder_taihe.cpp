@@ -668,9 +668,9 @@ RetInfo AVTranscoderImpl::Configure(std::shared_ptr<AVTransCoderConfigInner> con
         if (config->sqrFactorSet) {
             CHECK_AND_RETURN_RET(config->sqrFactor >= AVTRANSCODER_SQR_FACTOR_MIN &&
                 config->sqrFactor <= AVTRANSCODER_SQR_FACTOR_MAX,
-                GetReturnRet(MSERR_SQR_FACTOR_ERROR_401, "SetVideoSqrFactor", "SQRFactor"));
+                GetReturnRet(MSERR_SQR_FACTOR_ERROR_401, "SetVideoSqrFactor", "sqrFactor"));
             ret = transCoder_->SetVideoSqrFactor(config->sqrFactor);
-            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSqrFactor", "SQRFactor"));
+            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSqrFactor", "sqrFactor"));
         }
     }
 
