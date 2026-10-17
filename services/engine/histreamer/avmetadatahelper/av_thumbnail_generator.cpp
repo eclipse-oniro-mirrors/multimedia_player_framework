@@ -53,6 +53,7 @@ constexpr int32_t MAX_WAIT_TIME_SECOND = 3;
 constexpr int32_t S_TO_MS = 1000;
 constexpr uint32_t REQUEST_BUFFER_TIMEOUT = 0; // Requesting buffer overtimes 0ms means no retry
 constexpr uint32_t ERROR_AGAIN_SLEEP_TIME_US = 1000;
+constexpr int32_t DIV_BASE_TWO = 2;
 const std::string AV_THUMBNAIL_GENERATOR_INPUT_BUFFER_QUEUE_NAME = "AVThumbnailGeneratorInputBufferQueue";
 
 static const std::unordered_set<std::string> tsCodecTypeSet = {
@@ -228,6 +229,8 @@ bool AVThumbnailGenerator::IsSupportHWDecoder()
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Init decoder trackFormat width:%{public}d, height:%{public}d",
         FAKE_POINTER(this), width, height);
     CHECK_AND_RETURN_RET_LOG(width > 0 && height > 0, false, "width and height must larger than 0");
+    width += (width % DIV_BASE_TWO);
+    height += (height % DIV_BASE_TWO);
     
     OH_AVCapability* capability = OH_AVCodec_GetCapability(trackMime_.c_str(), false);
     if (!capability) {

@@ -144,6 +144,70 @@ HWTEST_F(AVThumbnailGeneratorUnitTest, CopySurfaceBufferInfo, TestSize.Level1)
     avthumbnailGenerator->CopySurfaceBufferInfo(source, dst);
     EXPECT_EQ(avthumbnailGenerator->trackIndex_, 0);
 }
+
+/**
+ * @tc.name: IsSupportHWDecoder_OddHeight_0001
+ * @tc.desc: Odd height (479) should pass HW decoder check after rounding-up to 480
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, IsSupportHWDecoder_OddHeight_0001, TestSize.Level0)
+{
+    avthumbnailGenerator->trackInfo_ = std::make_shared<Meta>();
+    avthumbnailGenerator->trackInfo_->SetData(std::string(MediaDescriptionKey::MD_KEY_WIDTH), 720);
+    avthumbnailGenerator->trackInfo_->SetData(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), 479);
+    avthumbnailGenerator->trackMime_ = "video/avc";
+
+    bool result = avthumbnailGenerator->IsSupportHWDecoder();
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name: IsSupportHWDecoder_EvenHeight_0001
+ * @tc.desc: Even height (480) should pass HW decoder check (no rounding needed)
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, IsSupportHWDecoder_EvenHeight_0001, TestSize.Level0)
+{
+    avthumbnailGenerator->trackInfo_ = std::make_shared<Meta>();
+    avthumbnailGenerator->trackInfo_->SetData(std::string(MediaDescriptionKey::MD_KEY_WIDTH), 720);
+    avthumbnailGenerator->trackInfo_->SetData(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), 480);
+    avthumbnailGenerator->trackMime_ = "video/avc";
+
+    bool result = avthumbnailGenerator->IsSupportHWDecoder();
+    EXPECT_TRUE(result);
+}
+
+/**
+ * @tc.name: IsSupportHWDecoder_InvalidDimension_0001
+ * @tc.desc: Zero width or height should return false
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, IsSupportHWDecoder_InvalidDimension_0001, TestSize.Level1)
+{
+    avthumbnailGenerator->trackInfo_ = std::make_shared<Meta>();
+    avthumbnailGenerator->trackInfo_->SetData(std::string(MediaDescriptionKey::MD_KEY_WIDTH), 0);
+    avthumbnailGenerator->trackInfo_->SetData(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), 480);
+    avthumbnailGenerator->trackMime_ = "video/avc";
+
+    bool result = avthumbnailGenerator->IsSupportHWDecoder();
+    EXPECT_FALSE(result);
+}
+
+/**
+ * @tc.name: IsSupportHWDecoder_OddWidth_0001
+ * @tc.desc: Odd width (853) should also be rounded up and pass HW check
+ * @tc.type: FUNC
+ */
+HWTEST_F(AVThumbnailGeneratorUnitTest, IsSupportHWDecoder_OddWidth_0001, TestSize.Level1)
+{
+    avthumbnailGenerator->trackInfo_ = std::make_shared<Meta>();
+    avthumbnailGenerator->trackInfo_->SetData(std::string(MediaDescriptionKey::MD_KEY_WIDTH), 853);
+    avthumbnailGenerator->trackInfo_->SetData(std::string(MediaDescriptionKey::MD_KEY_HEIGHT), 480);
+    avthumbnailGenerator->trackMime_ = "video/avc";
+
+    bool result = avthumbnailGenerator->IsSupportHWDecoder();
+    EXPECT_TRUE(result);
+}
 }  // namespace Test
 }  // namespace Media
 }  // namespace OHOS
