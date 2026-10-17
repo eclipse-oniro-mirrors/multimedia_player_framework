@@ -322,64 +322,73 @@ RetInfo AVRecorderImpl::ConfigureUrl(std::shared_ptr<AVRecorderConfig> config)
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
-RetInfo AVRecorderImpl::SetProfile(std::shared_ptr<AVRecorderConfig> config)
+RetInfo AVRecorderImpl::SetAudioProfileConfig(std::shared_ptr<AVRecorderConfig> config)
 {
     int32_t ret;
     AVRecorderProfile &profile = config->profile;
+    ret = recorder_->SetAudioEncoder(audioSourceID_, profile.audioCodecFormat);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioEncoder", "audioCodecFormat"));
+    ret = recorder_->SetAudioSampleRate(audioSourceID_, profile.audioSampleRate);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioSampleRate", "audioSampleRate"));
+    ret = recorder_->SetAudioChannels(audioSourceID_, profile.audioChannels);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioChannels", "audioChannels"));
+    ret = recorder_->SetAudioEncodingBitRate(audioSourceID_, profile.audioBitrate);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioEncodingBitRate", "audioBitrate"));
+    if (profile.audioCodecFormat == AudioCodecFormat::AUDIO_DEFAULT ||
+        profile.audioCodecFormat == AudioCodecFormat::AAC_LC) {
+        ret = recorder_->SetAudioAacProfile(audioSourceID_, profile.aacProfile);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioAacProfile", "aacProfile"));
+    }
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
 
-    ret = recorder_->SetOutputFormat(profile.fileFormat);
+RetInfo AVRecorderImpl::SetVideoProfileConfig(std::shared_ptr<AVRecorderConfig> config)
+{
+    int32_t ret;
+    AVRecorderProfile &profile = config->profile;
+    ret = recorder_->SetVideoEncoder(videoSourceID_, profile.videoCodecFormat);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEncoder", "videoCodecFormat"));
+    ret = recorder_->SetVideoSize(videoSourceID_, profile.videoFrameWidth, profile.videoFrameHeight);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoSize", "VideoSize"));
+    ret = recorder_->SetVideoFrameRate(videoSourceID_, profile.videoFrameRate);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoFrameRate", "videoFrameRate"));
+    ret = recorder_->SetVideoEncodingBitRate(videoSourceID_, profile.videoBitrate);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEncodingBitRate", "videoBitrate"));
+    ret = recorder_->SetVideoIsHdr(videoSourceID_, profile.isHdr);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoIsHdr", "isHdr"));
+    ret = recorder_->SetVideoEnableTemporalScale(videoSourceID_, profile.enableTemporalScale);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableTemporalScale", "enableTemporalScale"));
+    ret = recorder_->SetVideoEnableStableQualityMode(videoSourceID_, profile.enableStableQualityMode);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableStableQualityMode",
+        "enableStableQualityMode"));
+    ret = recorder_->SetVideoEnableBFrame(videoSourceID_, profile.enableBFrame);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableBFrame", "enableBFrame"));
+    if (profile.sqrFactorSet) {
+        ret = recorder_->SetVideoSqrFactor(videoSourceID_, profile.sqrFactor);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoSqrFactor", "sqrFactor"));
+    }
+    return RetInfo(MSERR_EXT_API9_OK, "");
+}
+
+RetInfo AVRecorderImpl::SetProfile(std::shared_ptr<AVRecorderConfig> config)
+{
+    AVRecorderProfile &profile = config->profile;
+    int32_t ret = recorder_->SetOutputFormat(profile.fileFormat);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetOutputFormat", "fileFormat"));
-
     if (config->withAudio) {
-        ret = recorder_->SetAudioEncoder(audioSourceID_, profile.audioCodecFormat);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioEncoder", "audioCodecFormat"));
-
-        ret = recorder_->SetAudioSampleRate(audioSourceID_, profile.audioSampleRate);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioSampleRate", "audioSampleRate"));
-
-        ret = recorder_->SetAudioChannels(audioSourceID_, profile.audioChannels);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioChannels", "audioChannels"));
-
-        ret = recorder_->SetAudioEncodingBitRate(audioSourceID_, profile.audioBitrate);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetAudioEncodingBitRate", "audioBitrate"));
+        RetInfo audioRet = SetAudioProfileConfig(config);
+        CHECK_AND_RETURN_RET(audioRet.first == MSERR_OK, audioRet);
     }
-
     if (config->withVideo) {
-        ret = recorder_->SetVideoEncoder(videoSourceID_, profile.videoCodecFormat);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEncoder", "videoCodecFormat"));
-
-        ret = recorder_->SetVideoSize(videoSourceID_, profile.videoFrameWidth, profile.videoFrameHeight);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoSize", "VideoSize"));
-
-        ret = recorder_->SetVideoFrameRate(videoSourceID_, profile.videoFrameRate);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoFrameRate", "videoFrameRate"));
-
-        ret = recorder_->SetVideoEncodingBitRate(videoSourceID_, profile.videoBitrate);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEncodingBitRate", "videoBitrate"));
-
-        ret = recorder_->SetVideoIsHdr(videoSourceID_, profile.isHdr);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoIsHdr", "isHdr"));
-
-        ret = recorder_->SetVideoEnableTemporalScale(videoSourceID_, profile.enableTemporalScale);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableTemporalScale", "enableTemporalScale"));
-
-        ret = recorder_->SetVideoEnableStableQualityMode(videoSourceID_, profile.enableStableQualityMode);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoEnableStableQualityMode",
-            "enableStableQualityMode"));
-
-        if (profile.sqrFactorSet) {
-            ret = recorder_->SetVideoSqrFactor(videoSourceID_, profile.sqrFactor);
-            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetVideoSqrFactor", "sqrFactor"));
-        }
+        RetInfo videoRet = SetVideoProfileConfig(config);
+        CHECK_AND_RETURN_RET(videoRet.first == MSERR_OK, videoRet);
     }
-
     if (config->metaSourceTypeVec.size() != 0 &&
         std::find(config->metaSourceTypeVec.cbegin(), config->metaSourceTypeVec.cend(),
         OHOS::Media::MetaSourceType::VIDEO_META_MAKER_INFO) != config->metaSourceTypeVec.cend()) {
         ret = recorder_->SetMetaConfigs(metaSourceID_);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, "SetMetaConfigs", "metaSourceType"));
     }
-
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
 
@@ -606,6 +615,12 @@ void AVRecorderImpl::ParseOptionalVideoParams(std::unique_ptr<AVRecorderAsyncCon
         MEDIA_LOGI("avRecorderProfile enableStableQualityMode is not set.");
         asyncCtx->config_->profile.enableStableQualityMode = false;
     }
+    if (config.profile.enableBFrame.has_value()) {
+        asyncCtx->config_->profile.enableBFrame = config.profile.enableBFrame.value();
+    } else {
+        MEDIA_LOGI("avRecorderProfile enableBFrame is not set.");
+        asyncCtx->config_->profile.enableBFrame = false;
+    }
     if (config.profile.sqrFactor.has_value()) {
         asyncCtx->config_->profile.sqrFactor = config.profile.sqrFactor.value();
         asyncCtx->config_->profile.sqrFactorSet = true;
@@ -675,6 +690,15 @@ int32_t AVRecorderImpl::GetAudioProfile(std::unique_ptr<AVRecorderAsyncContext> 
     }
     if (config.profile.audioSampleRate.has_value()) {
         asyncCtx->config_->profile.audioSampleRate = config.profile.audioSampleRate.value();
+    }
+    if (config.profile.aacProfile.has_value()) {
+        int32_t aacProfileVal = config.profile.aacProfile.value().get_value();
+        if (aacProfileVal >= static_cast<int32_t>(OHOS::Media::AacProfile::AAC_LC) &&
+            aacProfileVal < static_cast<int32_t>(OHOS::Media::AacProfile::AUDIO_CODEC_FORMAT_BUTT)) {
+            asyncCtx->config_->profile.aacProfile = static_cast<OHOS::Media::AacProfile>(aacProfileVal);
+        } else {
+            asyncCtx->config_->profile.aacProfile = OHOS::Media::AacProfile::AAC_LC;
+        }
     }
     MediaProfileLog(false, asyncCtx->config_->profile);
     return ret;
@@ -973,6 +997,43 @@ void AVRecorderImpl::SetAVRecorderConfig(
     return config;
 }
 
+void AVRecorderImpl::SetAudioProfileFields(::ohos::multimedia::media::AVRecorderProfile &profile,
+    std::shared_ptr<AVRecorderConfig> &config)
+{
+    profile.audioBitrate = optional<int32_t>(std::in_place_t{}, config->profile.audioBitrate);
+    profile.audioChannels = optional<int32_t>(std::in_place_t{}, config->profile.audioChannels);
+    profile.audioSampleRate = optional<int32_t>(std::in_place_t{}, config->profile.audioSampleRate);
+    std::string audioCodec = "";
+    SetAudioCodecFormat(config->profile.audioCodecFormat, audioCodec);
+    taihe::string audioValue = MediaTaiheUtils::ToTaiheString(audioCodec);
+    ohos::multimedia::media::CodecMimeType::key_t codecMimeTypeKey;
+    MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(audioValue, codecMimeTypeKey);
+    profile.audioCodec =
+        optional<::ohos::multimedia::media::CodecMimeType>(std::in_place_t{}, codecMimeTypeKey);
+    profile.aacProfile =
+        optional<::ohos::multimedia::media::AacProfile>(std::in_place_t{},
+            ::ohos::multimedia::media::AacProfile::from_value(
+                static_cast<int32_t>(config->profile.aacProfile)));
+}
+
+void AVRecorderImpl::SetVideoProfileFields(::ohos::multimedia::media::AVRecorderProfile &profile,
+    std::shared_ptr<AVRecorderConfig> &config)
+{
+    profile.videoBitrate = optional<int32_t>(std::in_place_t{}, config->profile.videoBitrate);
+    profile.videoFrameWidth = optional<int32_t>(std::in_place_t{}, config->profile.videoFrameWidth);
+    profile.videoFrameHeight = optional<int32_t>(std::in_place_t{}, config->profile.videoFrameHeight);
+    profile.videoFrameRate = optional<int32_t>(std::in_place_t{}, config->profile.videoFrameRate);
+    std::string videoCodec = "";
+    SetVideoCodecFormat(config->profile.videoCodecFormat, videoCodec);
+    taihe::string videoValue = MediaTaiheUtils::ToTaiheString(videoCodec);
+    ohos::multimedia::media::CodecMimeType::key_t codecMimeTypeKey;
+    MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(videoValue, codecMimeTypeKey);
+    profile.videoCodec =
+        optional<::ohos::multimedia::media::CodecMimeType>(std::in_place_t{}, codecMimeTypeKey);
+    profile.enableBFrame =
+        optional<bool>(std::in_place_t{}, config->profile.enableBFrame);
+}
+
 ::ohos::multimedia::media::AVRecorderProfile AVRecorderImpl::CreateAVRecorderProfile(
     const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx)
 {
@@ -988,6 +1049,7 @@ void AVRecorderImpl::SetAVRecorderConfig(
     ::ohos::multimedia::media::AVRecorderProfile aVRecorderProfile {
         optional<int32_t>(std::nullopt), optional<int32_t>(std::nullopt),
         optional<::ohos::multimedia::media::CodecMimeType>(std::nullopt),
+        optional<::ohos::multimedia::media::AacProfile>(std::nullopt),
         optional<int32_t>(std::nullopt),
         containerFormatTypeKey,
         optional<int32_t>(std::nullopt),
@@ -995,31 +1057,14 @@ void AVRecorderImpl::SetAVRecorderConfig(
         optional<int32_t>(std::nullopt), optional<int32_t>(std::nullopt),
         optional<int32_t>(std::nullopt), optional<bool>(std::nullopt),
         optional<bool>(std::nullopt), optional<bool>(std::nullopt),
+        optional<bool>(std::nullopt),
+        optional<int32_t>(std::nullopt),
     };
     if (config->withAudio) {
-        aVRecorderProfile.audioBitrate = optional<int32_t>(std::in_place_t{}, config->profile.audioBitrate);
-        aVRecorderProfile.audioChannels = optional<int32_t>(std::in_place_t{}, config->profile.audioChannels);
-        aVRecorderProfile.audioSampleRate = optional<int32_t>(std::in_place_t{}, config->profile.audioSampleRate);
-        std::string audioCodec = "";
-        SetAudioCodecFormat(config->profile.audioCodecFormat, audioCodec);
-        taihe::string audioValue = MediaTaiheUtils::ToTaiheString(audioCodec);
-        ohos::multimedia::media::CodecMimeType::key_t codecMimeTypeKey;
-        MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(audioValue, codecMimeTypeKey);
-        aVRecorderProfile.audioCodec =
-            optional<::ohos::multimedia::media::CodecMimeType>(std::in_place_t{}, codecMimeTypeKey);
+        SetAudioProfileFields(aVRecorderProfile, config);
     }
     if (config->withVideo) {
-        aVRecorderProfile.videoBitrate = optional<int32_t>(std::in_place_t{}, config->profile.videoBitrate);
-        aVRecorderProfile.videoFrameWidth = optional<int32_t>(std::in_place_t{}, config->profile.videoFrameWidth);
-        aVRecorderProfile.videoFrameHeight = optional<int32_t>(std::in_place_t{}, config->profile.videoFrameHeight);
-        aVRecorderProfile.videoFrameRate = optional<int32_t>(std::in_place_t{}, config->profile.videoFrameRate);
-        std::string videoCodec = "";
-        SetVideoCodecFormat(config->profile.videoCodecFormat, videoCodec);
-        taihe::string videoValue = MediaTaiheUtils::ToTaiheString(videoCodec);
-        ohos::multimedia::media::CodecMimeType::key_t codecMimeTypeKey;
-        MediaTaiheUtils::GetEnumKeyByStringValue<ohos::multimedia::media::CodecMimeType>(videoValue, codecMimeTypeKey);
-        aVRecorderProfile.videoCodec =
-            optional<::ohos::multimedia::media::CodecMimeType>(std::in_place_t{}, codecMimeTypeKey);
+        SetVideoProfileFields(aVRecorderProfile, config);
     }
     return aVRecorderProfile;
 }
@@ -1037,6 +1082,7 @@ void AVRecorderImpl::SetAVRecorderConfig(
         optional<int32_t>(std::nullopt),
         optional<int32_t>(std::nullopt),
         optional<::ohos::multimedia::media::CodecMimeType>(std::nullopt),
+        optional<::ohos::multimedia::media::AacProfile>(std::nullopt),
         optional<int32_t>(std::nullopt),
         containerFormatTypeKey,
         optional<int32_t>(std::nullopt),
@@ -1047,6 +1093,8 @@ void AVRecorderImpl::SetAVRecorderConfig(
         optional<bool>(std::nullopt),
         optional<bool>(std::nullopt),
         optional<bool>(std::nullopt),
+        optional<bool>(std::nullopt),
+        optional<int32_t>(std::nullopt),
     };
     return aVRecorderProfile;
 }
@@ -1522,6 +1570,59 @@ std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetSetOrientationHintTask(
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
+}
+
+void AVRecorderImpl::SetWillMuteWhenInterruptedSync(bool muteWhenInterrupted)
+{
+    MediaTrace trace("AVRecorder::SetWillMuteWhenInterruptedSync");
+    const std::string &opt = AVRecordergOpt::SET_WILL_MUTE_WHEN_INTERRUPTED;
+    MEDIA_LOGI("Taihe %{public}s Start, muteWhenInterrupted: %{public}d", opt.c_str(), muteWhenInterrupted);
+
+    auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
+    asyncCtx->taihe = this;
+    CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
+
+    if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
+        asyncCtx->task_ = GetSetWillMuteWhenInterruptedTask(asyncCtx, muteWhenInterrupted);
+        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+    } else {
+        SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+    }
+    if (asyncCtx->task_) {
+        auto result = asyncCtx->task_->GetResult();
+        if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
+            set_business_error(result.Value().first, result.Value().second);
+        }
+    }
+    asyncCtx.release();
+
+    MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
+}
+
+std::shared_ptr<TaskHandler<RetInfo>> AVRecorderImpl::GetSetWillMuteWhenInterruptedTask(
+    const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, bool muteWhenInterrupted)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, muteWhenInterrupted]() {
+        const std::string &option = AVRecordergOpt::SET_WILL_MUTE_WHEN_INTERRUPTED;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->recorder_ != nullptr,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        CHECK_AND_RETURN_RET(taihe->CheckStateMachine(option) == MSERR_OK,
+            GetRetInfo(MSERR_INVALID_OPERATION, option, ""));
+
+        int32_t ret = taihe->SetWillMuteWhenInterrupted(muteWhenInterrupted);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, option, ""));
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
+int32_t AVRecorderImpl::SetWillMuteWhenInterrupted(bool muteWhenInterrupted)
+{
+    CHECK_AND_RETURN_RET_LOG(recorder_ != nullptr, MSERR_INVALID_OPERATION, "recorder_ is nullptr!");
+    return recorder_->SetWillMuteWhenInterrupted(muteWhenInterrupted);
 }
 
 int32_t AVRecorderImpl::GetAudioCapturerMaxAmplitudeSync()

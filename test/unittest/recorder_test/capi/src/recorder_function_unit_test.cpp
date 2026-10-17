@@ -326,15 +326,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_001, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_001 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -384,15 +382,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_002, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_002 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -442,15 +438,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_003, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_003 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -500,15 +494,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_004, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_004 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 #ifdef SUPPORT_CODEC_TYPE_HEVC
@@ -560,15 +552,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_005, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_005 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -619,15 +609,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_006, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_006 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -678,15 +666,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_007, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_007 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -737,15 +723,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_008, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_008 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -795,15 +779,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_009, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_NE(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_009 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -853,15 +835,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_010, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_NE(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_010 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 #endif
 
@@ -912,15 +892,13 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_011, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_011 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }
 
 /**
@@ -970,13 +948,11 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_012, TestSize.Level2)
     ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_OK);
 
-    ret = OH_AVRecorder_Reset(recorder_);
-    EXPECT_EQ(ret, AV_ERR_OK);
-
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
 
-    MEDIA_LOGI("RecorderFunctionUnitTest Recorder_Audio_012 out.");
+    ret = OH_AVRecorder_Reset(recorder_);
+    EXPECT_EQ(ret, AV_ERR_OK);
 }

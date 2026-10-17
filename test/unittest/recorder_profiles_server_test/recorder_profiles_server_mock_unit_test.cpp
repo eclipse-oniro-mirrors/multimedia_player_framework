@@ -224,17 +224,17 @@ HWTEST_F(RecorderProfilesServerMockUnitTest, recorder_profile_GetVideoRecorderPr
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
     EXPECT_EQ(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
-    EXPECT_GE(videoRecorderProfile->audioBitrate, 0); // audio bitrate >= 0
-    EXPECT_GE(videoRecorderProfile->audioChannels, 0); // audio channels >= 0
+    EXPECT_EQ(96000, videoRecorderProfile->audioBitrate);
+    EXPECT_EQ(2, videoRecorderProfile->audioChannels);
     EXPECT_EQ(CodecMimeType::AUDIO_AAC, videoRecorderProfile->audioCodec);
-    EXPECT_GE(videoRecorderProfile->audioSampleRate, 0); // audio sampleRate >= 0
-    EXPECT_GE(videoRecorderProfile->durationTime, 0); // duration time >= 0
+    EXPECT_EQ(48000, videoRecorderProfile->audioSampleRate);
+    EXPECT_EQ(30, videoRecorderProfile->durationTime);
     EXPECT_EQ(RECORDER_QUALITY_LOW, videoRecorderProfile->qualityLevel);
-    EXPECT_GE(videoRecorderProfile->videoBitrate, 0); // video bitrate >= 0
+    EXPECT_EQ(192000, videoRecorderProfile->videoBitrate);
     EXPECT_EQ(CodecMimeType::VIDEO_MPEG4, videoRecorderProfile->videoCodec);
-    EXPECT_GE(videoRecorderProfile->videoFrameWidth, 0); // video frame width >= 0
-    EXPECT_GE(videoRecorderProfile->videoFrameHeight, 0); // video frame height >= 0
-    EXPECT_GE(videoRecorderProfile->videoFrameRate, 0); // video frame rate >= 0
+    EXPECT_EQ(176, videoRecorderProfile->videoFrameWidth);
+    EXPECT_EQ(144, videoRecorderProfile->videoFrameHeight);
+    EXPECT_EQ(30, videoRecorderProfile->videoFrameRate);
 }
 
 /**
@@ -269,15 +269,15 @@ HWTEST_F(RecorderProfilesServerMockUnitTest, recorder_profile_GetVideoRecorderPr
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
     EXPECT_EQ(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
-    EXPECT_GE(videoRecorderProfile->audioBitrate, 0); // audio bitrate >= 0
-    EXPECT_GE(videoRecorderProfile->audioChannels, 0); // audio channels >= 0
-    EXPECT_GE(videoRecorderProfile->audioSampleRate, 0); // audio sampleRate >= 0
-    EXPECT_GE(videoRecorderProfile->durationTime, 0); // duration time >= 0
+    EXPECT_EQ(192000, videoRecorderProfile->audioBitrate);
+    EXPECT_EQ(2, videoRecorderProfile->audioChannels);
+    EXPECT_EQ(48000, videoRecorderProfile->audioSampleRate);
+    EXPECT_EQ(30, videoRecorderProfile->durationTime);
     EXPECT_EQ(RECORDER_QUALITY_HIGH, videoRecorderProfile->qualityLevel);
-    EXPECT_GE(videoRecorderProfile->videoBitrate, 0); // video bitrate >= 0
-    EXPECT_GE(videoRecorderProfile->videoFrameWidth, 0); // video frame width >= 0
-    EXPECT_GE(videoRecorderProfile->videoFrameHeight, 0); // video frame height >= 0
-    EXPECT_GE(videoRecorderProfile->videoFrameRate, 0); // video frame rate >= 0
+    EXPECT_EQ(17000000, videoRecorderProfile->videoBitrate);
+    EXPECT_EQ(1920, videoRecorderProfile->videoFrameWidth);
+    EXPECT_EQ(1080, videoRecorderProfile->videoFrameHeight);
+    EXPECT_EQ(30, videoRecorderProfile->videoFrameRate);
 }
 
 /**

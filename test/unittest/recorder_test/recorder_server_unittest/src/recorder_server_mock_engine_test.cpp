@@ -44,8 +44,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetMetaConfigs_VideoMetaMakerInfo_001, Tes
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetMetaConfigs(0));
+    int32_t ret = RS()->SetMetaConfigs(0);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -64,8 +65,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetMetaConfigs_VideoMetaMakerInfo_ConfigFa
     mock->retInt_ = MSERR_INVALID_OPERATION;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_SET_META_CONFIGS_FAILED_5400103, RS()->SetMetaConfigs(0));
+    int32_t ret = RS()->SetMetaConfigs(0);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_SET_META_CONFIGS_FAILED_5400103, ret);
 }
 
 /**
@@ -83,8 +85,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetMetaConfigs_NonVideoMetaMakerInfo_001, 
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetMetaConfigs(0));
+    int32_t ret = RS()->SetMetaConfigs(0);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -103,8 +106,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetUserMeta_WrongState_001, TestSize.Level
     RS()->recorderEngine_ = std::move(mock);
     auto userMeta = std::make_shared<Meta>();
     ASSERT_NE(nullptr, userMeta);
-    EXPECT_EQ(MSERR_INVALID_STATE, RS()->SetUserMeta(userMeta));
+    int32_t ret = RS()->SetUserMeta(userMeta);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_INVALID_STATE, ret);
 }
 
 /**
@@ -123,8 +127,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetUserMeta_InvalidData_001, TestSize.Leve
     RS()->recorderEngine_ = std::move(mock);
     auto userMeta = std::make_shared<Meta>();
     ASSERT_NE(nullptr, userMeta);
-    EXPECT_EQ(MSERR_PARAM_OUT_OF_RANGE, RS()->SetUserMeta(userMeta));
+    int32_t ret = RS()->SetUserMeta(userMeta);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_PARAM_OUT_OF_RANGE, ret);
 }
 
 /**
@@ -143,8 +148,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetUserMeta_NullPointer_001, TestSize.Leve
     RS()->recorderEngine_ = std::move(mock);
     auto userMeta = std::make_shared<Meta>();
     ASSERT_NE(nullptr, userMeta);
-    EXPECT_EQ(MSERR_NO_MEMORY, RS()->SetUserMeta(userMeta));
+    int32_t ret = RS()->SetUserMeta(userMeta);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_NO_MEMORY, ret);
 }
 
 /**
@@ -163,8 +169,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetUserMeta_Success_001, TestSize.Level2)
     RS()->recorderEngine_ = std::move(mock);
     auto userMeta = std::make_shared<Meta>();
     ASSERT_NE(nullptr, userMeta);
-    EXPECT_EQ(MSERR_OK, RS()->SetUserMeta(userMeta));
+    int32_t ret = RS()->SetUserMeta(userMeta);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -183,8 +190,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetUserMeta_UnknownError_001, TestSize.Lev
     RS()->recorderEngine_ = std::move(mock);
     auto userMeta = std::make_shared<Meta>();
     ASSERT_NE(nullptr, userMeta);
-    EXPECT_EQ(MSERR_UNKNOWN, RS()->SetUserMeta(userMeta));
+    int32_t ret = RS()->SetUserMeta(userMeta);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_UNKNOWN, ret);
 }
 
 /**
@@ -202,8 +210,8 @@ HWTEST_F(RecorderServerUnitTest, Mock_Start_Success_001, TestSize.Level2)
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     EXPECT_EQ(MSERR_OK, RS()->Start());
-    EXPECT_EQ(RecorderServer::REC_RECORDING, RS()->status_);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(RecorderServer::REC_RECORDING, RS()->status_);
 }
 
 /**
@@ -221,8 +229,8 @@ HWTEST_F(RecorderServerUnitTest, Mock_Start_Fail_001, TestSize.Level2)
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, RS()->Start());
-    EXPECT_EQ(RecorderServer::REC_ERROR, RS()->status_);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(RecorderServer::REC_ERROR, RS()->status_);
 }
 
 /**
@@ -240,8 +248,8 @@ HWTEST_F(RecorderServerUnitTest, Mock_Stop_Success_001, TestSize.Level2)
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     EXPECT_EQ(MSERR_OK, RS()->Stop(false));
-    EXPECT_EQ(RecorderServer::REC_INITIALIZED, RS()->status_);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(RecorderServer::REC_INITIALIZED, RS()->status_);
 }
 
 /**
@@ -259,8 +267,8 @@ HWTEST_F(RecorderServerUnitTest, Mock_Stop_Fail_001, TestSize.Level2)
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, RS()->Stop(false));
-    EXPECT_EQ(RecorderServer::REC_ERROR, RS()->status_);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(RecorderServer::REC_ERROR, RS()->status_);
 }
 
 /**
@@ -283,11 +291,11 @@ HWTEST_F(RecorderServerUnitTest, Mock_Stop_FileGenerationMode_001, TestSize.Leve
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     EXPECT_EQ(MSERR_OK, RS()->Stop(false));
-    EXPECT_EQ(RecorderServer::REC_INITIALIZED, RS()->status_);
     RS()->recorderEngine_ = std::move(saved);
     RS()->recorderCb_ = nullptr;
     RS()->config_.fileGenerationMode = FileGenerationMode::APP_CREATE;
     RS()->config_.uri = "";
+    EXPECT_EQ(RecorderServer::REC_INITIALIZED, RS()->status_);
 }
 
 /**
@@ -305,8 +313,8 @@ HWTEST_F(RecorderServerUnitTest, Mock_Prepare_Success_001, TestSize.Level2)
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     EXPECT_EQ(MSERR_OK, RS()->Prepare());
-    EXPECT_EQ(RecorderServer::REC_PREPARED, RS()->status_);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(RecorderServer::REC_PREPARED, RS()->status_);
 }
 
 /**
@@ -323,8 +331,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_Prepare_Fail_001, TestSize.Level2)
     mock->retInt_ = MSERR_INVALID_OPERATION;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, RS()->Prepare());
+    int32_t ret = RS()->Prepare();
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, ret);
 }
 
 /**
@@ -341,8 +350,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_Pause_Success_001, TestSize.Level2)
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->Pause());
+    int32_t ret = RS()->Pause();
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -359,8 +369,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_Resume_Success_001, TestSize.Level2)
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->Resume());
+    int32_t ret = RS()->Resume();
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 
@@ -378,8 +389,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetVideoEncoder_Success_001, TestSize.Leve
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetVideoEncoder(0, H264));
+    int32_t ret = RS()->SetVideoEncoder(0, H264);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -397,8 +409,8 @@ HWTEST_F(RecorderServerUnitTest, Mock_Reset_Fail_001, TestSize.Level2)
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, RS()->Reset());
-    EXPECT_EQ(RecorderServer::REC_ERROR, RS()->status_);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(RecorderServer::REC_ERROR, RS()->status_);
 }
 
 /**
@@ -417,9 +429,10 @@ HWTEST_F(RecorderServerUnitTest, Mock_Stop_NullSyncCallback_001, TestSize.Level2
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->Stop(false));
+    int32_t ret = RS()->Stop(false);
     RS()->recorderEngine_ = std::move(saved);
     RS()->syncCallback_ = savedSync;
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -436,8 +449,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetVideoEncoder_Fail_001, TestSize.Level2)
     mock->retInt_ = MSERR_INVALID_OPERATION;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, RS()->SetVideoEncoder(0, H264));
+    int32_t ret = RS()->SetVideoEncoder(0, H264);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, ret);
 }
 
 /**
@@ -456,8 +470,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetAudioEncoder_Success_001, TestSize.Leve
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetAudioEncoder(0, AudioCodecFormat::AAC_LC));
+    int32_t ret = RS()->SetAudioEncoder(0, AudioCodecFormat::AAC_LC);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -474,8 +489,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetMaxDuration_Success_001, TestSize.Level
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetMaxDuration(60));
+    int32_t ret = RS()->SetMaxDuration(60);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -492,8 +508,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetOutputFile_Success_001, TestSize.Level2
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetOutputFile(1));
+    int32_t ret = RS()->SetOutputFile(1);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -510,8 +527,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetNextOutputFile_Success_001, TestSize.Le
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetNextOutputFile(1));
+    int32_t ret = RS()->SetNextOutputFile(1);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -528,8 +546,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetMaxFileSize_Success_001, TestSize.Level
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetMaxFileSize(1048576));
+    int32_t ret = RS()->SetMaxFileSize(1048576);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -547,8 +566,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_GetMaxAmplitude_Success_001, TestSize.Leve
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     int32_t amplitude = 0;
-    EXPECT_EQ(MSERR_OK, RS()->GetMaxAmplitude(amplitude));
+    int32_t ret = RS()->GetMaxAmplitude(amplitude);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -566,8 +586,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_GetCurrentCapturerChangeInfo_Success_001, 
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     AudioRecorderChangeInfo changeInfo;
-    EXPECT_EQ(MSERR_OK, RS()->GetCurrentCapturerChangeInfo(changeInfo));
+    int32_t ret = RS()->GetCurrentCapturerChangeInfo(changeInfo);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -584,8 +605,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_Reset_Success_001, TestSize.Level2)
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->Reset());
+    int32_t ret = RS()->Reset();
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -603,8 +625,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_IsWatermarkSupported_Success_001, TestSize
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     bool supported = false;
-    EXPECT_EQ(MSERR_OK, RS()->IsWatermarkSupported(supported));
+    int32_t ret = RS()->IsWatermarkSupported(supported);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -623,8 +646,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_AddWatermark_Success_001, TestSize.Level2)
     RS()->recorderEngine_ = std::move(mock);
     std::shared_ptr<AVBuffer> buffer;
     int32_t watermarkCount = 0;
-    EXPECT_EQ(MSERR_INVALID_VAL, RS()->AddWatermark(buffer, 100, 100, watermarkCount));
+    int32_t ret = RS()->AddWatermark(buffer, 100, 100, watermarkCount);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_INVALID_VAL, ret);
 }
 
 /**
@@ -640,8 +664,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_TransmitQos_Success_001, TestSize.Level2)
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->TransmitQos(QOS::QosLevel::QOS_USER_INTERACTIVE));
+    int32_t ret = RS()->TransmitQos(QOS::QosLevel::QOS_USER_INTERACTIVE);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -657,8 +682,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetStabilizationMode_Success_001, TestSize
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetStabilizationMode(true));
+    int32_t ret = RS()->SetStabilizationMode(true);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -675,8 +701,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetFileSplitDuration_Success_001, TestSize
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, 0, 1000));
+    int32_t ret = RS()->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, 0, 1000);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -694,8 +721,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetVideoSource_Success_001, TestSize.Level
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     int32_t sourceId = 0;
-    EXPECT_EQ(MSERR_OK, RS()->SetVideoSource(VIDEO_SOURCE_SURFACE_YUV, sourceId));
+    int32_t ret = RS()->SetVideoSource(VIDEO_SOURCE_SURFACE_YUV, sourceId);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -713,8 +741,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetAudioSource_Success_001, TestSize.Level
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     int32_t sourceId = 0;
-    EXPECT_EQ(MSERR_OK, RS()->SetAudioSource(AUDIO_SOURCE_DEFAULT, sourceId));
+    int32_t ret = RS()->SetAudioSource(AUDIO_SOURCE_DEFAULT, sourceId);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -731,8 +760,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetOutputFormat_Success_001, TestSize.Leve
     mock->retInt_ = MSERR_OK;
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
-    EXPECT_EQ(MSERR_OK, RS()->SetOutputFormat(FORMAT_MPEG_4));
+    int32_t ret = RS()->SetOutputFormat(FORMAT_MPEG_4);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 
 /**
@@ -750,8 +780,9 @@ HWTEST_F(RecorderServerUnitTest, Mock_SetMetaSource_Success_001, TestSize.Level2
     auto saved = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = std::move(mock);
     int32_t sourceId = 0;
-    EXPECT_EQ(MSERR_OK, RS()->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId));
+    int32_t ret = RS()->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId);
     RS()->recorderEngine_ = std::move(saved);
+    EXPECT_EQ(MSERR_OK, ret);
 }
 } // namespace Media
 } // namespace OHOS

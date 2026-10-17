@@ -18,6 +18,9 @@
 
 #include "gtest/gtest.h"
 #include "recorder_profiles_xml_parser.h"
+#include "recorder_profiles_ability_singleton.h"
+#include <libxml/parser.h>
+#include <libxml/tree.h>
 
 namespace OHOS {
 namespace Media {

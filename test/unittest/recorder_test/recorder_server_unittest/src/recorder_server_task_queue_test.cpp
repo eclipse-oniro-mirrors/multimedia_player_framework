@@ -38,14 +38,15 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_EnqueueFail_Prepared_001, TestSize.Le
 {
     RS()->status_ = RecorderServer::REC_PREPARED;
     RS()->taskQue_.Stop();
-    EXPECT_NE(MSERR_OK, RS()->Start());
+    ASSERT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, RS()->Start());
     std::shared_ptr<AVBuffer> buffer;
-    EXPECT_NE(MSERR_OK, RS()->SetWatermark(buffer));
+    ASSERT_EQ(MSERR_INVALID_VAL, RS()->SetWatermark(buffer));
     EXPECT_EQ(nullptr, RS()->GetSurface(0));
     EXPECT_EQ(nullptr, RS()->GetMetaSurface(0));
     int32_t amplitude = 0;
-    EXPECT_NE(MSERR_OK, RS()->GetMaxAmplitude(amplitude));
+    int32_t ampRet = RS()->GetMaxAmplitude(amplitude);
     RS()->taskQue_.Start();
+    ASSERT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, ampRet);
 }
 
 /**
@@ -58,10 +59,11 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_EnqueueFail_Recording_001, TestSize.L
 {
     RS()->status_ = RecorderServer::REC_RECORDING;
     RS()->taskQue_.Stop();
-    EXPECT_NE(MSERR_OK, RS()->Pause());
-    EXPECT_NE(MSERR_OK, RS()->Stop(false));
-    EXPECT_EQ(MSERR_OK, RS()->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, 0, 1000));
+    ASSERT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, RS()->Pause());
+    ASSERT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, RS()->Stop(false));
+    int32_t fsdRet = RS()->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, 0, 1000);
     RS()->taskQue_.Start();
+    EXPECT_EQ(MSERR_OK, fsdRet);
 }
 
 /**
@@ -182,8 +184,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage2_EnqueueFail_SetVideoSqrFactor_001, Te
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     RS()->config_.enableStableQualityMode = false;
     RS()->taskQue_.Stop();
-    EXPECT_NE(MSERR_OK, RS()->SetVideoSqrFactor(0, 25));
+    int32_t ret = RS()->SetVideoSqrFactor(0, 25);
     RS()->taskQue_.Start();
+    ASSERT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, ret);
 }
 
 /**
