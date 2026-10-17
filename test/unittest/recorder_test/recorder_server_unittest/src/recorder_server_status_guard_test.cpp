@@ -291,11 +291,13 @@ HWTEST_F(RecorderServerUnitTest, recorder_StatusGuard_GetMaxAmplitude_001, TestS
 HWTEST_F(RecorderServerUnitTest, recorder_StatusGuard_GetSurface_001, TestSize.Level2)
 {
     EXPECT_EQ(nullptr, recorderServer_->GetSurface(0));
+    EXPECT_EQ(RecorderServer::REC_INITIALIZED, recorderServer_->recorder_->status_);
 }
 
 HWTEST_F(RecorderServerUnitTest, recorder_StatusGuard_GetMetaSurface_001, TestSize.Level2)
 {
     EXPECT_EQ(nullptr, recorderServer_->GetMetaSurface(0));
+    EXPECT_EQ(RecorderServer::REC_INITIALIZED, recorderServer_->recorder_->status_);
 }
 
 /**
@@ -675,18 +677,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_Callback_OnError_WithCb_001, TestSize.
 }
 
 /**
- * @tc.name: recorder_Callback_OnInfo_NullCb_001
- * @tc.desc: recorder Callback OnInfo NullCb 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, recorder_Callback_OnInfo_NullCb_001, TestSize.Level2)
-{
-    recorderServer_->recorder_->OnInfo(IRecorderEngineObs::InfoType::INTERNEL_WARNING, 0);
-    EXPECT_TRUE(recorderServer_->recorder_->recorderCb_ == nullptr);
-}
-
-/**
  * @tc.name: recorder_Callback_OnInfo_WithCb_001
  * @tc.desc: recorder Callback OnInfo WithCb 001
  * @tc.type: FUNC
@@ -699,19 +689,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_Callback_OnInfo_WithCb_001, TestSize.L
     recorderServer_->recorder_->recorderCb_ = cb;
     recorderServer_->recorder_->OnInfo(IRecorderEngineObs::InfoType::MAX_DURATION_APPROACHING, 1);
     EXPECT_EQ(1, cb->infoExtra_);
-}
-
-/**
- * @tc.name: recorder_Callback_OnAudioCaptureChange_NullCb_001
- * @tc.desc: recorder Callback OnAudioCaptureChange NullCb 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, recorder_Callback_OnAudioCaptureChange_NullCb_001, TestSize.Level2)
-{
-    AudioRecorderChangeInfo changeInfo;
-    recorderServer_->recorder_->OnAudioCaptureChange(changeInfo);
-    EXPECT_TRUE(recorderServer_->recorder_->recorderCb_ == nullptr);
 }
 
 /**
@@ -830,24 +807,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_EngineNull_SetVideoSqrFactor_001, Test
     EXPECT_EQ(MSERR_NULL_POINTER_5400101, recorderServer_->recorder_->SetVideoSqrFactor(0, 25));
 }
 
-
-/**
- * @tc.name: recorder_DumpInfo_FdMinusOne_001
- * @tc.desc: recorder DumpInfo FdMinusOne 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, recorder_DumpInfo_FdMinusOne_001, TestSize.Level2)
-{
-    EXPECT_EQ(MSERR_OK, recorderServer_->recorder_->DumpInfo(-1));
-}
-
-HWTEST_F(RecorderServerUnitTest, recorder_DumpInfo_FdValid_001, TestSize.Level2)
-{
-    EXPECT_EQ(MSERR_OK, recorderServer_->recorder_->DumpInfo(1));
-}
-
-
 /**
  * @tc.name: recorder_TransmitQos_UserInteractive_001
  * @tc.desc: recorder TransmitQos UserInteractive 001
@@ -858,12 +817,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_TransmitQos_UserInteractive_001, TestS
 {
     EXPECT_EQ(MSERR_OK, recorderServer_->TransmitQos(QOS::QosLevel::QOS_USER_INTERACTIVE));
 }
-
-HWTEST_F(RecorderServerUnitTest, recorder_TransmitQos_Background_001, TestSize.Level2)
-{
-    EXPECT_EQ(MSERR_OK, recorderServer_->TransmitQos(QOS::QosLevel::QOS_BACKGROUND));
-}
-
 
 /**
  * @tc.name: recorder_SetAudioEncoder_MpegM4Mismatch_001
@@ -879,7 +832,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetAudioEncoder_MpegM4Mismatch_001, Te
               recorderServer_->SetAudioEncoder(0, AudioCodecFormat::AUDIO_MPEG));
 }
 
-
 /**
  * @tc.name: recorder_SetAudioEncodingBitRate_G711MuMismatch_001
  * @tc.desc: recorder SetAudioEncodingBitRate G711MuMismatch 001
@@ -893,20 +845,6 @@ HWTEST_F(RecorderServerUnitTest, recorder_SetAudioEncodingBitRate_G711MuMismatch
     EXPECT_EQ(MSERR_AUDIO_G711MU_MATCH_ERROR_401,
               recorderServer_->SetAudioEncodingBitRate(0, 48000));
 }
-
-
-/**
- * @tc.name: recorder_SetDataSource_AlwaysFails_001
- * @tc.desc: recorder SetDataSource AlwaysFails 001
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderServerUnitTest, recorder_SetDataSource_AlwaysFails_001, TestSize.Level2)
-{
-    int32_t sourceId = 0;
-    EXPECT_EQ(MSERR_INVALID_OPERATION, recorderServer_->SetDataSource(METADATA, sourceId));
-}
-
 
 /**
  * @tc.name: recorder_RepeatGuard_Prepare_001

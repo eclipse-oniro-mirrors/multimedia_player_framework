@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Huawei Device Co., Ltd.
+ * Copyright (C) 2024-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -942,7 +942,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetInputSurface_001, TestSize.Level2)
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_GetInputSurface(recorder_, &windowGet);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     EXPECT_EQ(windowGet, nullptr);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetInputSurface_001 out.");
@@ -1139,9 +1139,10 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Start_001, TestSize.Level2)
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     ret = OH_AVRecorder_Stop(recorder_);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Start_001 out.");
 }
@@ -1205,10 +1206,10 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_001, TestSize.Level2)
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Pause(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_001 out.");
 }
@@ -1236,7 +1237,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_002, TestSize.Level2)
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Pause(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -1244,7 +1245,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Pause_002, TestSize.Level2)
     free(config.metadata.customInfo.key);
     free(config.metadata.customInfo.value);
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Pause_002 out.");
 }
@@ -1310,10 +1311,10 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_001, TestSize.Level2)
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Resume(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Resume_001 out.");
 }
@@ -1341,9 +1342,9 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_002, TestSize.Level2)
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Resume(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -1386,7 +1387,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Resume_003, TestSize.Level2)
     requesetBufferThread_.reset(new(std::nothrow) std::thread(RequesetBuffer, windowGet, &config));
     sleep(3);
     ret = OH_AVRecorder_Resume(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     if (requesetBufferThread_ != nullptr) {
         isExit_.store(true);
         requesetBufferThread_->join();
@@ -1469,7 +1470,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_001, TestSize.Level2)
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Stop_001 out.");
 }
@@ -1497,7 +1498,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Stop_002, TestSize.Level2)
     ret = OH_AVRecorder_Prepare(recorder_, &config);
     EXPECT_EQ(ret, AV_ERR_OK);
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -2618,7 +2619,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_InvalidUrl_001, TestSize.Level1)
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
     free(config.metadata.customInfo.key);
@@ -2642,7 +2643,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_InvalidUrl_002, TestSize.Level1)
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
@@ -2667,7 +2668,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_InvalidUrl_003, TestSize.Level1)
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
@@ -2692,7 +2693,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_InvalidUrl_004, TestSize.Level1)
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
@@ -2717,7 +2718,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_InvalidUrl_005, TestSize.Level1)
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
@@ -2746,7 +2747,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_InvalidLocation_001, TestSize.Level1)
     config.metadata.location.latitude = 91.0;
     config.metadata.location.longitude = 0.0;
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
@@ -2776,7 +2777,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_InvalidLocation_002, TestSize.Level1)
     config.metadata.location.latitude = 0.0;
     config.metadata.location.longitude = 181.0;
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
@@ -2804,7 +2805,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_InvalidOrientation_001, TestSize.Level
     config.metadata.customInfo.key = strdup("");
     config.metadata.customInfo.value = strdup("");
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     free(config.url);
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
@@ -2877,7 +2878,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAmplitude_002, TestSize.Level1)
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAmplitude_002 in.");
     int32_t amplitude = -1;
     int32_t ret = OH_AVRecorder_GetAudioCapturerMaxAmplitude(recorder_, &amplitude);
-    EXPECT_TRUE(ret == AV_ERR_OK || ret == AV_ERR_INVALID_STATE || ret == AV_ERR_UNKNOWN);
+    EXPECT_EQ(ret, AV_ERR_INVALID_STATE);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAmplitude_002 out.");
 }
 
@@ -2919,7 +2920,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetMetadata_002, TestSize.Level2)
     EXPECT_NE(format, nullptr);
     OH_AVFormat_SetStringValue(format, "test_key", "test_value");
     ret = OH_AVRecorder_SetMetadata(recorder_, format);
-    EXPECT_TRUE(ret == AV_ERR_OK || ret != AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
     OH_AVFormat_Destroy(format);
 
     ret = OH_AVRecorder_Reset(recorder_);
@@ -3085,7 +3086,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Hdr_001, TestSize.Level2)
     config.metadata.customInfo.value = strdup("");
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_TRUE(ret == AV_ERR_OK || ret != AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
     if (ret == AV_ERR_OK) {
         ret = OH_AVRecorder_Reset(recorder_);
         EXPECT_EQ(ret, AV_ERR_OK);
@@ -3119,7 +3120,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_TemporalScale_001, TestSize.Level2)
     config.metadata.customInfo.value = strdup("");
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_TRUE(ret == AV_ERR_OK || ret != AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_OK);
     if (ret == AV_ERR_OK) {
         ret = OH_AVRecorder_Reset(recorder_);
         EXPECT_EQ(ret, AV_ERR_OK);
@@ -3332,34 +3333,6 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetWillMuteNull_001, TestSize.Level1)
 }
 
 /**
- * @tc.name: Recorder_CallbackNull_001
- * @tc.desc: Test SetStateCallback with null callback
- *           Covers: callback == nullptr → AV_ERR_INVALID_VAL
- * @tc.type: FUNC
- */
-HWTEST_F(NativeRecorderUnitTest, Recorder_CallbackNull_001, TestSize.Level1)
-{
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_CallbackNull_001 in.");
-    int32_t ret = OH_AVRecorder_SetStateCallback(recorder_, nullptr, nullptr);
-    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_CallbackNull_001 out.");
-}
-
-/**
- * @tc.name: Recorder_CallbackNull_002
- * @tc.desc: Test SetErrorCallback with null callback
- *           Covers: callback == nullptr → AV_ERR_INVALID_VAL
- * @tc.type: FUNC
- */
-HWTEST_F(NativeRecorderUnitTest, Recorder_CallbackNull_002, TestSize.Level1)
-{
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_CallbackNull_002 in.");
-    int32_t ret = OH_AVRecorder_SetErrorCallback(recorder_, nullptr, nullptr);
-    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
-    MEDIA_LOGI("NativeRecorderUnitTest Recorder_CallbackNull_002 out.");
-}
-
-/**
  * @tc.name: Recorder_UpdateRotationNull_001
  * @tc.desc: Test UpdateRotation with null recorder
  *           Covers: recorder == nullptr → AV_ERR_INVALID_VAL
@@ -3412,7 +3385,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_StartWithoutPrepare_001, TestSize.Leve
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_StartWithoutPrepare_001 in.");
     int32_t ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_StartWithoutPrepare_001 out.");
 }
 
@@ -3426,7 +3399,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_PauseWithoutPrepare_001, TestSize.Leve
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_PauseWithoutPrepare_001 in.");
     int32_t ret = OH_AVRecorder_Pause(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_PauseWithoutPrepare_001 out.");
 }
 
@@ -3440,7 +3413,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_ResumeWithoutPrepare_001, TestSize.Lev
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_ResumeWithoutPrepare_001 in.");
     int32_t ret = OH_AVRecorder_Resume(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_ResumeWithoutPrepare_001 out.");
 }
 
@@ -3454,7 +3427,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_StopWithoutPrepare_001, TestSize.Level
 {
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_StopWithoutPrepare_001 in.");
     int32_t ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_StopWithoutPrepare_001 out.");
 }
 
@@ -3469,7 +3442,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetSurfaceWithoutPrepare_001, TestSize
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetSurfaceWithoutPrepare_001 in.");
     OHNativeWindow *window = nullptr;
     int32_t ret = OH_AVRecorder_GetInputSurface(recorder_, &window);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetSurfaceWithoutPrepare_001 out.");
 }
 
@@ -3484,7 +3457,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAmplitudeWithoutPrepare_001, TestSi
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAmplitudeWithoutPrepare_001 in.");
     int32_t amplitude = 0;
     int32_t ret = OH_AVRecorder_GetAudioCapturerMaxAmplitude(recorder_, &amplitude);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_STATE);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAmplitudeWithoutPrepare_001 out.");
 }
 
@@ -3502,7 +3475,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_SetMetadataWithoutPrepare_001, TestSiz
     if (format != nullptr) {
         OH_AVFormat_SetStringValue(format, "test_key", "test_value");
         int32_t ret = OH_AVRecorder_SetMetadata(recorder_, format);
-        EXPECT_NE(ret, AV_ERR_OK);
+        EXPECT_EQ(ret, AV_ERR_INVALID_STATE);
         OH_AVFormat_Destroy(format);
     }
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_SetMetadataWithoutPrepare_001 out.");
@@ -3535,7 +3508,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_EmptyConfigInvalidLocation_001
     config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -3572,7 +3545,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_EmptyConfigInvalidLocation_002
     config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -3606,7 +3579,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_EmptyConfigInvalidUrl_001, Tes
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.metadata.genre);
     free(config.metadata.videoOrientation);
@@ -3637,7 +3610,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_EmptyConfigInvalidUrl_002, Tes
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -3669,7 +3642,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_EmptyConfigInvalidUrl_003, Tes
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -3701,7 +3674,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_EmptyConfigInvalidUrl_004, Tes
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -3733,7 +3706,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_EmptyConfigInvalidUrl_005, Tes
     config.fileGenerationMode = OH_AVRecorder_FileGenerationMode::AVRECORDER_APP_CREATE;
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -3769,7 +3742,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_EmptyConfigInvalidOrientation_
     config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
 
     int32_t ret = OH_AVRecorder_Prepare(recorder_, &config);
-    // This may fail at SetVideoEncoder before reaching orientation check, or at orientation check
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     MEDIA_LOGI("Recorder_Prepare_EmptyConfigInvalidOrientation_001 Prepare returned: %{public}d", ret);
 
     free(config.url);

@@ -55,8 +55,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetAudioDataSource_EngineNull_001, Te
     RS()->recorderEngine_ = nullptr;
     std::shared_ptr<IAudioDataSource> audioSource = nullptr;
     int32_t sourceId = 0;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetAudioDataSource(audioSource, sourceId));
+    int32_t result = RS()->SetAudioDataSource(audioSource, sourceId);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -82,8 +83,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetFileGenerationMode_EngineNull_001,
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetFileGenerationMode(FileGenerationMode::APP_CREATE));
+    int32_t result = RS()->SetFileGenerationMode(FileGenerationMode::APP_CREATE);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -97,8 +99,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetFileGenerationMode_NoVideo_001, Te
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     bool savedWithVideo = RS()->config_.withVideo;
     RS()->config_.withVideo = false;
-    EXPECT_EQ(MSERR_INVALID_OPERATION, RS()->SetFileGenerationMode(FileGenerationMode::APP_CREATE));
+    int32_t result = RS()->SetFileGenerationMode(FileGenerationMode::APP_CREATE);
     RS()->config_.withVideo = savedWithVideo;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, result);
 }
 
 
@@ -113,8 +116,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetNextOutputFile_EngineNull_001, Tes
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetNextOutputFile(1));
+    int32_t result = RS()->SetNextOutputFile(1);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -128,8 +132,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetMaxFileSize_EngineNull_001, TestSi
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetMaxFileSize(1048576));
+    int32_t result = RS()->SetMaxFileSize(1048576);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -143,8 +148,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetOutputFile_EngineNull_001, TestSiz
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetOutputFile(1));
+    int32_t result = RS()->SetOutputFile(1);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -158,8 +164,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetMetaMimeType_EngineNull_001, TestS
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetMetaMimeType(0, "test/mime"));
+    int32_t result = RS()->SetMetaMimeType(0, "test/mime");
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -173,8 +180,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetMetaTimedKey_EngineNull_001, TestS
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetMetaTimedKey(0, "test_key"));
+    int32_t result = RS()->SetMetaTimedKey(0, "test_key");
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -188,8 +196,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetMetaSourceTrackMime_EngineNull_001
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetMetaSourceTrackMime(0, "video/avc"));
+    int32_t result = RS()->SetMetaSourceTrackMime(0, "video/avc");
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -204,8 +213,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetWatermark_EngineNull_001, TestSize
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
     std::shared_ptr<AVBuffer> buffer;
-    EXPECT_EQ(MSERR_INVALID_VAL, RS()->SetWatermark(buffer));
+    int32_t result = RS()->SetWatermark(buffer);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -221,8 +231,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_AddWatermark_EngineNull_001, TestSize
     RS()->recorderEngine_ = nullptr;
     std::shared_ptr<AVBuffer> buffer;
     int32_t watermarkCount = 0;
-    EXPECT_EQ(MSERR_INVALID_VAL, RS()->AddWatermark(buffer, 100, 100, watermarkCount));
+    int32_t result = RS()->AddWatermark(buffer, 100, 100, watermarkCount);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -238,8 +249,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetUserMeta_EngineNull_001, TestSize.
     RS()->recorderEngine_ = nullptr;
     std::shared_ptr<Meta> userMeta = std::make_shared<Meta>();
     ASSERT_NE(nullptr, userMeta);
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetUserMeta(userMeta));
+    int32_t result = RS()->SetUserMeta(userMeta);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -253,8 +265,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetMaxDuration_EngineNull_001, TestSi
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetMaxDuration(60));
+    int32_t result = RS()->SetMaxDuration(60);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -268,8 +281,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetCaptureRate_EngineNull_001, TestSi
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetCaptureRate(0, 30.0));
+    int32_t result = RS()->SetCaptureRate(0, 30.0);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -296,8 +310,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetFileSplitDuration_EngineNull_001, 
     RS()->status_ = RecorderServer::REC_RECORDING;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_OK, RS()->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, 0, 1000));
+    int32_t result = RS()->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, 0, 1000);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_OK, result);
 }
 
 /**
@@ -312,8 +327,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_GetMaxAmplitude_EngineNull_001, TestS
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
     int32_t amplitude = 0;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->GetMaxAmplitude(amplitude));
+    int32_t result = RS()->GetMaxAmplitude(amplitude);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -328,8 +344,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_GetCurrentCapturerChangeInfo_EngineNu
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
     AudioRecorderChangeInfo changeInfo;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->GetCurrentCapturerChangeInfo(changeInfo));
+    int32_t result = RS()->GetCurrentCapturerChangeInfo(changeInfo);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -344,8 +361,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_IsWatermarkSupported_EngineNull_001, 
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
     bool supported = false;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->IsWatermarkSupported(supported));
+    int32_t result = RS()->IsWatermarkSupported(supported);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -359,8 +377,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_TransmitQos_EngineNull_001, TestSize.
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_OK, RS()->TransmitQos(QOS::QosLevel::QOS_USER_INTERACTIVE));
+    int32_t result = RS()->TransmitQos(QOS::QosLevel::QOS_USER_INTERACTIVE);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_OK, result);
 }
 
 /**
@@ -374,8 +393,10 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_GetSurface_EngineNull_001, TestSize.L
     RS()->status_ = RecorderServer::REC_PREPARED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(nullptr, RS()->GetSurface(0));
+    auto surface = RS()->GetSurface(0);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(nullptr, surface);
+    EXPECT_EQ(RecorderServer::REC_PREPARED, RS()->status_);
 }
 
 /**
@@ -389,8 +410,10 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_GetMetaSurface_EngineNull_001, TestSi
     RS()->status_ = RecorderServer::REC_PREPARED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(nullptr, RS()->GetMetaSurface(0));
+    auto surface = RS()->GetMetaSurface(0);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(nullptr, surface);
+    EXPECT_EQ(RecorderServer::REC_PREPARED, RS()->status_);
 }
 
 /**
@@ -404,8 +427,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetWillMuteWhenInterrupted_EngineNull
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetWillMuteWhenInterrupted(true));
+    int32_t result = RS()->SetWillMuteWhenInterrupted(true);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -420,8 +444,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetGenre_EngineNull_001, TestSize.Lev
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
     std::string genre = "test";
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetGenre(genre));
+    int32_t result = RS()->SetGenre(genre);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -436,8 +461,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetUserCustomInfo_EngineNull_001, Tes
     auto savedEngine = std::move(RS()->recorderEngine_);
     RS()->recorderEngine_ = nullptr;
     Meta customInfo;
-    EXPECT_EQ(MSERR_NULL_POINTER_5400101, RS()->SetUserCustomInfo(customInfo));
+    int32_t result = RS()->SetUserCustomInfo(customInfo);
     RS()->recorderEngine_ = std::move(savedEngine);
+    EXPECT_EQ(MSERR_NULL_POINTER_5400101, result);
 }
 
 /**
@@ -585,8 +611,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetVideoIsHdr_False_001, TestSize.Lev
 {
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     RS()->taskQue_.Stop();
-    EXPECT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, RS()->SetVideoIsHdr(0, false));
+    int32_t result = RS()->SetVideoIsHdr(0, false);
     RS()->taskQue_.Start();
+    EXPECT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, result);
 }
 
 /**
@@ -599,8 +626,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetVideoEnableTemporalScale_False_001
 {
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     RS()->taskQue_.Stop();
-    EXPECT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, RS()->SetVideoEnableTemporalScale(0, false));
+    int32_t result = RS()->SetVideoEnableTemporalScale(0, false);
     RS()->taskQue_.Start();
+    EXPECT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, result);
 }
 
 /**
@@ -613,8 +641,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetVideoEnableStableQualityMode_False
 {
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     RS()->taskQue_.Stop();
-    EXPECT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, RS()->SetVideoEnableStableQualityMode(0, false));
+    int32_t result = RS()->SetVideoEnableStableQualityMode(0, false);
     RS()->taskQue_.Start();
+    EXPECT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, result);
 }
 
 /**
@@ -627,8 +656,9 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetVideoEnableBFrame_False_001, TestS
 {
     RS()->status_ = RecorderServer::REC_CONFIGURED;
     RS()->taskQue_.Stop();
-    EXPECT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, RS()->SetVideoEnableBFrame(0, false));
+    int32_t result = RS()->SetVideoEnableBFrame(0, false);
     RS()->taskQue_.Start();
+    EXPECT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, result);
 }
 
 } // namespace Media

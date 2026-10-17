@@ -35,12 +35,12 @@ void RecorderProfilesUnitTest::TearDown(void)
 }
 
 /**
- * @tc.name: recorder_profile_IsAudioRecorderConfigSupported_0100
+ * @tc.name: Client_recorder_profile_IsAudioRecorderConfigSupported_0100
  * @tc.desc: recorde profile IsAudioRecorderConfigSupported
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecorderConfigSupported_0100, TestSize.Level0)
+HWTEST_F(RecorderProfilesUnitTest, Client_recorder_profile_IsAudioRecorderConfigSupported_0100, TestSize.Level0)
 {
     std::shared_ptr<AudioRecorderProfile> profile  = std::make_shared<AudioRecorderProfile>();
     profile->containerFormatType = ContainerFormatType::CFT_MPEG_4;
@@ -52,12 +52,12 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecorderConfigSupport
 }
 
 /**
- * @tc.name: recorder_profile_IsAudioRecorderConfigSupported_0200
+ * @tc.name: Client_recorder_profile_IsAudioRecorderConfigSupported_0200
  * @tc.desc: recorde profile IsAudioRecorderConfigSupported when match the wrong audioChannels
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecorderConfigSupported_0200, TestSize.Level0)
+HWTEST_F(RecorderProfilesUnitTest, Client_recorder_profile_IsAudioRecorderConfigSupported_0200, TestSize.Level0)
 {
     std::shared_ptr<AudioRecorderProfile> profile  = std::make_shared<AudioRecorderProfile>();
     profile->containerFormatType = ContainerFormatType::CFT_MPEG_4;
@@ -69,12 +69,12 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_IsAudioRecorderConfigSupport
 }
 
 /**
- * @tc.name: recorder_profile_HasVideoRecorderProfile_0100
+ * @tc.name: Client_recorder_profile_HasVideoRecorderProfile_0100
  * @tc.desc: recorde profile HasVideoRecorderProfile
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderProfilesUnitTest, recorder_profile_HasVideoRecorderProfile_0100, TestSize.Level0)
+HWTEST_F(RecorderProfilesUnitTest, Client_recorder_profile_HasVideoRecorderProfile_0100, TestSize.Level0)
 {
     int32_t sourceId = 0;
     int32_t qualityLevel = RECORDER_QUALITY_LOW;
@@ -82,12 +82,12 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_HasVideoRecorderProfile_0100
 }
 
 /**
- * @tc.name: recorder_profile_HasVideoRecorderProfile_0200
+ * @tc.name: Client_recorder_profile_HasVideoRecorderProfile_0200
  * @tc.desc: recorde profile HasVideoRecorderProfile when match the wrong sourceId and qualityLevel
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderProfilesUnitTest, recorder_profile_HasVideoRecorderProfile_0200, TestSize.Level0)
+HWTEST_F(RecorderProfilesUnitTest, Client_recorder_profile_HasVideoRecorderProfile_0200, TestSize.Level0)
 {
     int32_t sourceId = -1;
     int32_t qualityLevel = RECORDER_QUALITY_HIGH;
@@ -147,12 +147,12 @@ bool RecorderProfilesUnitTest::CheckVideoRecorderCapsArray(
 }
 
 /**
- * @tc.name: recorder_profile_GetAudioRecorderCaps_0100
+ * @tc.name: Client_recorder_profile_GetAudioRecorderCaps_0100
  * @tc.desc: recorde profile GetAudioRecorderCaps
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetAudioRecorderCaps_0100, TestSize.Level0)
+HWTEST_F(RecorderProfilesUnitTest, Client_recorder_profile_GetAudioRecorderCaps_0100, TestSize.Level0)
 {
     std::vector<std::shared_ptr<AudioRecorderCaps>> audioRecorderArray =
         RecorderProfilesFactory::CreateRecorderProfiles().GetAudioRecorderCaps();
@@ -160,26 +160,26 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetAudioRecorderCaps_0100, T
 }
 
 /**
- * @tc.name: recorder_profile_GetVideoRecorderCaps_0100
+ * @tc.name: Client_recorder_profile_GetVideoRecorderCaps_0100
  * @tc.desc: recorde profile GetVideoRecorderCaps
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetVideoRecorderCaps_0100, TestSize.Level0)
+HWTEST_F(RecorderProfilesUnitTest, Client_recorder_profile_GetVideoRecorderCaps_0100, TestSize.Level0)
 {
     std::vector<std::shared_ptr<VideoRecorderCaps>> videoRecorderArray =
         RecorderProfilesFactory::CreateRecorderProfiles().GetVideoRecorderCaps();
     ASSERT_TRUE(videoRecorderArray.size() != 0);
-    CheckVideoRecorderCapsArray(videoRecorderArray);
+    EXPECT_TRUE(CheckVideoRecorderCapsArray(videoRecorderArray));
 }
 
 /**
- * @tc.name: recorder_profile_GetVideoRecorderProfile_0100
+ * @tc.name: Client_recorder_profile_GetVideoRecorderProfile_0100
  * @tc.desc: recorde profile GetVideoRecorderProfile
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetVideoRecorderProfile_0100, TestSize.Level0)
+HWTEST_F(RecorderProfilesUnitTest, Client_recorder_profile_GetVideoRecorderProfile_0100, TestSize.Level0)
 {
     int32_t sourceId = 0;
     int32_t qualityLevel = RECORDER_QUALITY_LOW;
@@ -198,15 +198,16 @@ HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetVideoRecorderProfile_0100
     EXPECT_EQ(176, videoRecorderProfile->videoFrameWidth); // 176 expect width
     EXPECT_EQ(144, videoRecorderProfile->videoFrameHeight); // 144 expect height
     EXPECT_EQ(30, videoRecorderProfile->videoFrameRate); // 30 expect frame rate
+    EXPECT_EQ(RECORDER_QUALITY_LOW, videoRecorderProfile->qualityLevel);
 }
 
 /**
- * @tc.name: recorder_profile_GetVideoRecorderProfile_0200
+ * @tc.name: Client_recorder_profile_GetVideoRecorderProfile_0200
  * @tc.desc: recorde profile GetVideoRecorderProfile when match the wrong sourceId and qualityLevel
  * @tc.type: FUNC
  * @tc.require:
  */
-HWTEST_F(RecorderProfilesUnitTest, recorder_profile_GetVideoRecorderProfile_0200, TestSize.Level0)
+HWTEST_F(RecorderProfilesUnitTest, Client_recorder_profile_GetVideoRecorderProfile_0200, TestSize.Level0)
 {
     int32_t sourceId = -1;
     int32_t qualityLevel = RECORDER_QUALITY_HIGH;
