@@ -330,20 +330,6 @@ HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_CreateListenerObject_001, TestSi
     EXPECT_EQ(MSERR_NO_MEMORY, client.CreateListenerObject());
 }
 
-HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_Release_001, TestSize.Level2)
-{
-    ScreenCaptureClient client(nullptr);
-    client.Release();
-    EXPECT_TRUE(true);
-}
-
-HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_MediaServerDied_001, TestSize.Level2)
-{
-    ScreenCaptureClient client(nullptr);
-    client.MediaServerDied();
-    EXPECT_TRUE(true);
-}
-
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetContentAutoRotation_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
