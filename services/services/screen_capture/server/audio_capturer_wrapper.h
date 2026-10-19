@@ -80,6 +80,7 @@ public:
     void SetIsMute(bool isMute);
     bool IsRecording();
     bool IsStop();
+    int64_t GetFrameDuration();
 
 protected:
     virtual void OnStartFailed(ScreenCaptureErrorType errorType, int32_t errorCode);
@@ -121,6 +122,7 @@ private:
     std::atomic<bool> isInTelCall_ = false;
 #endif
     std::atomic<AudioCapturerWrapperState> captureState_ {CAPTURER_UNKNOWN};
+    std::atomic<int64_t> frameDuration_{0};
 
     /* used for hilog output */
     std::map<int32_t, int32_t> captureAudioLogCountMap_;

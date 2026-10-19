@@ -233,6 +233,35 @@ int64_t AudioDataSource::GetCurrentTimeNs()
     return timestamp.tv_sec * SEC_TO_NS + timestamp.tv_nsec;
 }
 
+double AudioDataSource::GetFrameDurationRatio()
+{
+    CHECK_AND_RETURN_RET_NOLOG(frameDurationRatio_.load() <= 0, frameDurationRatio_.load());
+    CHECK_AND_RETURN_RET(screenCaptureServer_ != nullptr, 1.0);
+    auto innerCapture = screenCaptureServer_->GetInnerAudioCapture();
+    if (innerCapture != nullptr) {
+        int64_t duration = innerCapture->GetFrameDuration();
+        if (duration > 0) {
+            frameDurationRatio_.store(static_cast<double>(duration) / FILL_AUDIO_FRAME_DURATION_IN_NS);
+        }
+    }
+    CHECK_AND_RETURN_RET(frameDurationRatio_.load() <= 0, frameDurationRatio_.load());
+    auto micCapture = screenCaptureServer_->GetMicAudioCapture();
+    if (micCapture != nullptr) {
+        int64_t duration = micCapture->GetFrameDuration();
+        if (duration > 0) {
+            frameDurationRatio_.store(static_cast<double>(duration) / FILL_AUDIO_FRAME_DURATION_IN_NS);
+        }
+    }
+    CHECK_AND_RETURN_RET(frameDurationRatio_.load() > 0, 1.0);
+    MEDIA_LOGI("GetFrameDurationRatio: %{public}f", frameDurationRatio_.load());
+    return frameDurationRatio_.load();
+}
+
+int64_t AudioDataSource::ScaleDuration(int64_t baseDurationNs)
+{
+    return static_cast<int64_t>(baseDurationNs * GetFrameDurationRatio());
+}
+
 void AudioDataSource::Pause()
 {
     pauseStartTime_.store(GetCurrentTimeNs());
@@ -287,7 +316,7 @@ AudioDataSourceReadAtActionState AudioDataSource::InnerMicAudioSync(std::shared_
     uint32_t length, std::shared_ptr<AudioBuffer> &innerAudioBuffer, std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
     int64_t timeWindow = micAudioBuffer->timestamp - innerAudioBuffer->timestamp;
-    if (timeWindow <= NEG_AUDIO_INTERVAL_IN_NS) { // mic before inner
+    if (timeWindow <= ScaleDuration(NEG_AUDIO_INTERVAL_IN_NS)) { // mic before inner
         const auto &capture = screenCaptureServer_->GetMicAudioCapture();
         CHECK_AND_RETURN_RET_NOLOG(capture != nullptr, AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
         auto count = capture->DropBufferUntil(innerAudioBuffer->timestamp);
@@ -296,7 +325,8 @@ AudioDataSourceReadAtActionState AudioDataSource::InnerMicAudioSync(std::shared_
                    timeWindow, innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load(), count);
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
-    if (timeWindow > NEG_AUDIO_INTERVAL_IN_NS && timeWindow < AUDIO_INTERVAL_IN_NS) { // Write mix
+    if (timeWindow > ScaleDuration(NEG_AUDIO_INTERVAL_IN_NS) &&
+        timeWindow < ScaleDuration(AUDIO_INTERVAL_IN_NS)) { // Write mix
         return WriteMixAudio(buffer, length, innerAudioBuffer, micAudioBuffer);
     } else { // Write Inner data Before mic timeWindow >= AUDIO_INTERVAL_IN_NS
         return WriteInnerAudio(buffer, length, innerAudioBuffer);
@@ -307,7 +337,7 @@ AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncMixMode(std::sha
     uint32_t length, int64_t timeWindow, std::shared_ptr<AudioBuffer> &innerAudioBuffer,
     std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
-    if (timeWindow <= NEG_AUDIO_INTERVAL_IN_NS) { // video before audio add 0
+    if (timeWindow <= ScaleDuration(NEG_AUDIO_INTERVAL_IN_NS)) { // video before audio add 0
         if (micAudioBuffer && screenCaptureServer_->GetMicAudioCapture() && mixModeAddAudioMicFrame_) {
             MEDIA_LOGI("mic AddBufferFrom timeWindow: %{public}" PRId64, timeWindow);
             screenCaptureServer_->GetMicAudioCapture()->AddBufferFrom(-1 * timeWindow,
@@ -321,7 +351,7 @@ AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncMixMode(std::sha
         SetAudioFirstFramePts(firstVideoFramePts_.load());
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
-    if (timeWindow >= AUDIO_INTERVAL_IN_NS) { // video after audio drop audio
+    if (timeWindow >= ScaleDuration(AUDIO_INTERVAL_IN_NS)) { // video after audio drop audio
         if (micAudioBuffer && screenCaptureServer_->GetMicAudioCapture()) {
             screenCaptureServer_->GetMicAudioCapture()->DropBufferUntil(firstVideoFramePts_.load());
         }
@@ -460,7 +490,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAtMicMode(std::shared_ptr<
 AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncInnerMode(std::shared_ptr<AVBuffer> &buffer,
     uint32_t length, int64_t timeWindow, std::shared_ptr<AudioBuffer> &innerAudioBuffer)
 {
-    if (timeWindow <= NEG_AUDIO_INTERVAL_IN_NS) { // video before audio add 0
+    if (timeWindow <= ScaleDuration(NEG_AUDIO_INTERVAL_IN_NS)) { // video before audio add 0
         if (innerAudioBuffer && screenCaptureServer_->GetInnerAudioCapture()) {
             screenCaptureServer_->GetInnerAudioCapture()->AddBufferFrom(-1 * timeWindow,
                 length, firstVideoFramePts_.load());
@@ -468,7 +498,7 @@ AudioDataSourceReadAtActionState AudioDataSource::VideoAudioSyncInnerMode(std::s
         SetAudioFirstFramePts(firstVideoFramePts_.load());
         return AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG;
     }
-    if (timeWindow >= AUDIO_INTERVAL_IN_NS) { // video after audio drop audio
+    if (timeWindow >= ScaleDuration(AUDIO_INTERVAL_IN_NS)) { // video after audio drop audio
         if (screenCaptureServer_->GetInnerAudioCapture()) {
             screenCaptureServer_->GetInnerAudioCapture()->DropBufferUntil(firstVideoFramePts_.load());
         }
@@ -549,7 +579,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAudioBuffer(
 void AudioDataSource::HandlePastMicBuffer(std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
     if (micAudioBuffer->timestamp < lastWriteAudioFramePts_.load() &&
-        micAudioBuffer->timestamp < lastMicAudioFramePts_.load() + AUDIO_MIC_TOO_CLOSE_LIMIT_IN_NS &&
+        micAudioBuffer->timestamp < lastMicAudioFramePts_.load() + ScaleDuration(AUDIO_MIC_TOO_CLOSE_LIMIT_IN_NS) &&
         lastWriteType_ == AVScreenCaptureMixBufferType::INNER) { // drop past mic data when switch,keep when mic stable
         screenCaptureServer_->ReleaseMicAudioBuffer();
         MEDIA_LOGD("ABuffer drop mix mic error cur:%{public}" PRId64 " last: %{public}" PRId64,
@@ -726,8 +756,8 @@ void AudioDataSource::MixAudio(std::shared_ptr<AudioBuffer> &innerAudioBuffer,
 
 int32_t AudioDataSource::LostFrameNum(const int64_t &timestamp)
 {
-    return static_cast<int32_t>(
-        (timestamp - pauseDuration_ - (writedFrameTime_ + firstAudioFramePts_)) / FILL_AUDIO_FRAME_DURATION_IN_NS);
+    return static_cast<int32_t>((timestamp - pauseDuration_ - (writedFrameTime_ + firstAudioFramePts_)) /
+        ScaleDuration(FILL_AUDIO_FRAME_DURATION_IN_NS));
 }
 
 void AudioDataSource::FillLostBuffer(const int64_t &lostNum, const int64_t &timestamp, const uint32_t &bufferSize)
@@ -739,7 +769,7 @@ void AudioDataSource::FillLostBuffer(const int64_t &lostNum, const int64_t &time
     auto pts = timestamp;
     for (int64_t i = 0; i < lostNum; i++) {
         auto buffer = std::make_unique<uint8_t[]>(bufferSize);
-        pts -= FILL_AUDIO_FRAME_DURATION_IN_NS;
+        pts -= ScaleDuration(FILL_AUDIO_FRAME_DURATION_IN_NS);
         audioBufferQ_.emplace_front(buffer, pts);
     }
 }
@@ -754,7 +784,7 @@ AudioDataSourceReadAtActionState AudioDataSource::ReadAt(std::shared_ptr<AVBuffe
         }
         audioBufferQ_.front().WriteTo(buffer->memory_, length);
         audioBufferQ_.pop_front();
-        writedFrameTime_ += FILL_AUDIO_FRAME_DURATION_IN_NS;
+        writedFrameTime_ += ScaleDuration(FILL_AUDIO_FRAME_DURATION_IN_NS);
         return AudioDataSourceReadAtActionState::OK;
     }
     const auto &ret = ReadAudioBuffer(buffer, length);
