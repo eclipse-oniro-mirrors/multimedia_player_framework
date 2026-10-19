@@ -797,6 +797,11 @@ int32_t PlayerServiceStub::SetPlayerProducer(MessageParcel &data, MessageParcel 
 int32_t PlayerServiceStub::SetSource(MessageParcel &data, MessageParcel &reply)
 {
     std::string url = data.ReadString();
+    if (url.size() >= strlen("fd://") && url.compare(0, strlen("fd://"), "fd://") == 0) {
+        MEDIA_LOGE("fd:// scheme is not allowed in SetSource(url), use SetFdSource instead");
+        reply.WriteInt32(MSERR_INVALID_VAL);
+        return MSERR_INVALID_VAL;
+    }
     reply.WriteInt32(SetSource(url));
     return MSERR_OK;
 }
