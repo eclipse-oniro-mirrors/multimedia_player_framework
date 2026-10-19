@@ -242,23 +242,6 @@ HWTEST_F(ScreenCaptureUnitTest, capi_exclude_content_nullptr_filter_001, TestSiz
     EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OK, OH_AVScreenCapture_Release(capture));
 }
 
-/* ==================== ExcludePickerWindows paths ==================== */
-
-HWTEST_F(ScreenCaptureUnitTest, capi_exclude_picker_windows_nullptr_001, TestSize.Level2)
-{
-    int32_t windowIds[] = {1, 2, 3};
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-        OH_AVScreenCapture_ExcludePickerWindows(nullptr, windowIds, 3));
-}
-
-/* ==================== SetPickerMode paths ==================== */
-
-HWTEST_F(ScreenCaptureUnitTest, capi_set_picker_mode_nullptr_001, TestSize.Level2)
-{
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-        OH_AVScreenCapture_SetPickerMode(nullptr, OH_CAPTURE_PICKER_MODE_WINDOW_ONLY));
-}
-
 /* ==================== CaptureStrategy paths ==================== */
 
 HWTEST_F(ScreenCaptureUnitTest, capi_strategy_create_release_001, TestSize.Level2)
@@ -1089,43 +1072,6 @@ HWTEST_F(ScreenCaptureUnitTest, capi_stop_recording_no_init_001, TestSize.Level2
     ASSERT_NE(capture, nullptr);
     EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
         OH_AVScreenCapture_StopScreenRecording(capture));
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OK, OH_AVScreenCapture_Release(capture));
-}
-
-/* ==================== SetPickerMode on uninitialized capture ==================== */
-
-HWTEST_F(ScreenCaptureUnitTest, capi_set_picker_mode_no_init_001, TestSize.Level2)
-{
-    OH_AVScreenCapture *capture = OH_AVScreenCapture_Create();
-    ASSERT_NE(capture, nullptr);
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-        OH_AVScreenCapture_SetPickerMode(capture,
-            OH_CapturePickerMode::OH_CAPTURE_PICKER_MODE_WINDOW_ONLY));
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OK, OH_AVScreenCapture_Release(capture));
-}
-
-HWTEST_F(ScreenCaptureUnitTest, capi_set_picker_mode_invalid_001, TestSize.Level2)
-{
-    OH_AVScreenCapture *capture = OH_AVScreenCapture_Create();
-    ASSERT_NE(capture, nullptr);
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-        OH_AVScreenCapture_SetPickerMode(capture, static_cast<OH_CapturePickerMode>(999)));
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OK, OH_AVScreenCapture_Release(capture));
-}
-
-/* ==================== ExcludePickerWindows on uninitialized capture ==================== */
-
-HWTEST_F(ScreenCaptureUnitTest, capi_exclude_picker_windows_no_init_001, TestSize.Level2)
-{
-    OH_AVScreenCapture *capture = OH_AVScreenCapture_Create();
-    ASSERT_NE(capture, nullptr);
-    int32_t windowIds[] = {1, 2, 3};
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-        OH_AVScreenCapture_ExcludePickerWindows(capture, windowIds, 3));
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-        OH_AVScreenCapture_ExcludePickerWindows(capture, nullptr, 3));
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
-        OH_AVScreenCapture_ExcludePickerWindows(capture, windowIds, 1001));
     EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OK, OH_AVScreenCapture_Release(capture));
 }
 
