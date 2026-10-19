@@ -80,7 +80,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_001, TestSize.Level1
 /**
  * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_002
- * @tc.desc  : Test GetNewHapticUriForAudioUri. Returns NewHapticsUri.
+ * @tc.desc  : Test GetHapticUriByAudioPathSubstitution. Returns HapticUri.
  */
 HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_002, TestSize.Level1)
 {
@@ -91,14 +91,14 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_002, TestSize.Level1
     std::string audioUri = "/data/test/ringtone.ogg";
     std::string ringtonePath = "/data/test/";
     std::string hapticsPath = "/data/test/";
-    std::string result = systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, ringtonePath, hapticsPath);
+    std::string result = systemTonePlayerImpl_->GetHapticUriByAudioPathSubstitution(audioUri, ringtonePath, hapticsPath);
     EXPECT_EQ(result, "/data/test/ringtone.json");
 }
 
 /**
  * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_003
- * @tc.desc  : Test GetNewHapticUriForAudioUri. Returns NewHapticsUri.
+ * @tc.desc  : Test GetHapticUriByAudioPathSubstitution. Returns HapticUri.
  */
 HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_003, TestSize.Level1)
 {
@@ -109,14 +109,14 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_003, TestSize.Level1
     std::string audioUri = "/media/audio/test.oggg";
     std::string ringtonePath = "/media/audio/";
     std::string hapticsPath = "/media/haptics/";
-    std::string result = systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, ringtonePath, hapticsPath);
+    std::string result = systemTonePlayerImpl_->GetHapticUriByAudioPathSubstitution(audioUri, ringtonePath, hapticsPath);
     EXPECT_EQ(result, "");
 }
 
 /**
  * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_004
- * @tc.desc  : Test GetNewHapticUriForAudioUri. Returns NewHapticsUri.
+ * @tc.desc  : Test GetHapticUriByAudioPathSubstitution. Returns HapticUri.
  */
 HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_004, TestSize.Level1)
 {
@@ -127,14 +127,14 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_004, TestSize.Level1
     std::string audioUri = ".ogg";
     std::string ringtonePath = ".";
     std::string hapticsPath = ".";
-    std::string result = systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, ringtonePath, hapticsPath);
+    std::string result = systemTonePlayerImpl_->GetHapticUriByAudioPathSubstitution(audioUri, ringtonePath, hapticsPath);
     EXPECT_EQ(result, "");
 }
 
 /**
  * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_005
- * @tc.desc  : Test GetNewHapticUriForAudioUri. Returns NewHapticsUri.
+ * @tc.desc  : Test GetHapticUriByAudioPathSubstitution. Returns HapticUri.
  */
 HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_005, TestSize.Level1)
 {
@@ -145,14 +145,14 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_005, TestSize.Level1
     std::string audioUri = "/";
     std::string ringtonePath = "/";
     std::string hapticsPath = "/";
-    std::string result = systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, ringtonePath, hapticsPath);
+    std::string result = systemTonePlayerImpl_->GetHapticUriByAudioPathSubstitution(audioUri, ringtonePath, hapticsPath);
     EXPECT_EQ(result, "");
 }
 
 /**
  * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_007
- * @tc.desc  : Test GetHapticUriForAudioUri. Returns void
+ * @tc.desc  : Test GetHapticUrisBySameNameLocalFile. Returns void
  */
 HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_007, TestSize.Level1)
 {
@@ -164,19 +164,19 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_007, TestSize.Level1
     std::map<ToneHapticsFeature, std::string> hapticsUriMap;
     hapticsUriMap[ToneHapticsFeature::STANDARD] = "test1";
     hapticsUriMap[ToneHapticsFeature::GENTLE] = "test2";
-    systemTonePlayerImpl_->GetHapticUriForAudioUri(audioUri, hapticsUriMap);
+    systemTonePlayerImpl_->GetHapticUrisBySameNameLocalFile(audioUri, hapticsUriMap);
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::STANDARD], " ");
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
     audioUri = ".ogg";
-    systemTonePlayerImpl_->GetHapticUriForAudioUri(audioUri, hapticsUriMap);
+    systemTonePlayerImpl_->GetHapticUrisBySameNameLocalFile(audioUri, hapticsUriMap);
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::STANDARD], " ");
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
     audioUri = "audio.oggg";
-    systemTonePlayerImpl_->GetHapticUriForAudioUri(audioUri, hapticsUriMap);
+    systemTonePlayerImpl_->GetHapticUrisBySameNameLocalFile(audioUri, hapticsUriMap);
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::STANDARD], " ");
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
     audioUri = "/data/test/ringtone.ogg";
-    systemTonePlayerImpl_->GetHapticUriForAudioUri(audioUri, hapticsUriMap);
+    systemTonePlayerImpl_->GetHapticUrisBySameNameLocalFile(audioUri, hapticsUriMap);
     EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::STANDARD], "/data/test/ringtone.json");
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
 }
@@ -354,7 +354,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_017, TestSize.Level1
 /**
  * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_018
- * @tc.desc  : Test GetNewHapticSettings.
+ * @tc.desc  : Test GetHapticUrisByDbSettings.
  */
 HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_018, TestSize.Level1)
 {
@@ -363,7 +363,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_018, TestSize.Level1
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
     auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
     std::map<ToneHapticsFeature, std::string> hapticsUris;
-    systemTonePlayerImpl_->GetNewHapticSettings("", hapticsUris);
+    systemTonePlayerImpl_->GetHapticUrisByDbSettings("", hapticsUris);
     EXPECT_EQ(hapticsUris.empty(), true);
 }
 
@@ -465,7 +465,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_025, TestSize.Level1
 /**
  * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_026
- * @tc.desc  : Test GetNewHapticUriForAudioUri. Returns void.
+ * @tc.desc  : Test GetHapticUrisByAudioPathSubstitution. Returns void.
  */
 HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_026, TestSize.Level1)
 {
@@ -477,11 +477,11 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_026, TestSize.Level1
     std::map<ToneHapticsFeature, std::string> hapticsUriMap;
     hapticsUriMap[ToneHapticsFeature::STANDARD] = "test1";
     hapticsUriMap[ToneHapticsFeature::GENTLE] = "test2";
-    systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, hapticsUriMap);
+    systemTonePlayerImpl_->GetHapticUrisByAudioPathSubstitution(audioUri, hapticsUriMap);
     EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::STANDARD], "");
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], "");
     audioUri = "/data/test/ringtone.ogg";
-    systemTonePlayerImpl_->GetNewHapticUriForAudioUri(audioUri, hapticsUriMap);
+    systemTonePlayerImpl_->GetHapticUrisByAudioPathSubstitution(audioUri, hapticsUriMap);
     EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::STANDARD], "");
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], "");
 }
@@ -579,7 +579,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_031, TestSize.Level1
 /**
  * @tc.name  : Test MediaTonePlayer
  * @tc.number: Media_TonePlayert_032
- * @tc.desc  : Test GetDefaultNonSyncHapticsPath
+ * @tc.desc  : Test GetNonSyncHapticsUriFromCfg
  */
 HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_032, TestSize.Level1)
 {
@@ -587,7 +587,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_032, TestSize.Level1
     auto systemSoundMgr_ = std::make_shared<SystemSoundManagerImpl>();
     SystemToneType systemToneType = SYSTEM_TONE_TYPE_SIM_CARD_0;
     auto systemTonePlayerImpl_ = std::make_shared<SystemTonePlayerImpl>(context_, *systemSoundMgr_, systemToneType);
-    std::string result = systemTonePlayerImpl_->GetDefaultNonSyncHapticsPath();
+    std::string result = systemSoundMgr_->GetNonSyncHapticsUriFromCfg();
     EXPECT_NE(result, " ");
 }
 

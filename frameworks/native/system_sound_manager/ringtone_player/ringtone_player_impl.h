@@ -63,10 +63,10 @@ private:
         AudioStandard::StreamUsage usage = AudioStandard::StreamUsage::STREAM_USAGE_VOICE_RINGTONE);
     bool NeedToVibrate(const ToneHapticsSettings &settings);
     int32_t StartForNoRing(const HapticStartupMode startupMode = HapticStartupMode::DEFAULT);
-    std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
+    std::string GetHapticUriByAudioPathSubstitution(const std::string &audioUri, const std::string &ringtonePath,
         const std::string& hapticsPath);
-    std::string GetNewHapticUriForAudioUri(const std::string &audioUri);
-    std::string GetHapticUriForAudioUri(const std::string &audioUri);
+    std::string GetHapticUriByAudioPathSubstitution(const std::string &audioUri);
+    std::string GetHapticUriBySameNameLocalFile(const std::string &audioUri);
     bool IsFileExisting(const std::string &fileUri);
     ToneHapticsType ConvertToToneHapticsType(RingtoneType type);
     HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);

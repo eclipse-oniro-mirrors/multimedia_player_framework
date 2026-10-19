@@ -63,6 +63,8 @@ const std::string DEFAULT_SYSTEM_TONE_URI_JSON = "ringtone_sms-notification.json
 const std::string DEFAULT_SYSTEM_TONE_PATH = "notifications/";
 const std::string EXT_SERVICE_AUDIO = "const.mulitimedia.service_audio";
 const std::string DEFAULT_HAPTIC_QUERY_FLAG = "application/json";
+const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-synchronized/";
+const std::string FALLBACK_HAPTICS_FILE = "Tick-tock.json";
 const std::string FIX_MP4 = ".mp4";
 const int STORAGE_MANAGER_MANAGER_ID = 5003;
 const int UNSUPPORTED_ERROR = -5;
@@ -161,8 +163,7 @@ std::vector<std::string> RINGTONETYPE = {{RINGTONE_CONTAINER_TYPE_MP3}, {RINGTON
     {RINGTONE_CONTAINER_TYPE_F4P}, {RINGTONE_CONTAINER_TYPE_M3U}, {RINGTONE_CONTAINER_TYPE_SMF},
     {RINGTONE_CONTAINER_TYPE_MKA}, {RINGTONE_CONTAINER_TYPE_RA}, {RINGTONE_CONTAINER_TYPE_ADTS},
     {RINGTONE_CONTAINER_TYPE_ADT}, {RINGTONE_CONTAINER_TYPE_SND}, {RINGTONE_CONTAINER_TYPE_MP2},
-    {RINGTONE_CONTAINER_TYPE_MP1}, {RINGTONE_CONTAINER_TYPE_MPA}, {RINGTONE_CONTAINER_TYPE_MPA},
-    {RINGTONE_CONTAINER_TYPE_M4R}};
+    {RINGTONE_CONTAINER_TYPE_MP1}, {RINGTONE_CONTAINER_TYPE_MPA}, {RINGTONE_CONTAINER_TYPE_M4R}};
 std::vector<std::string> HAPTIC_2_TONE_TABLE_COLUMNS = {{HAPTIC_2_TONE_COLUMN_ID}, {HAPTIC_2_TONE_COLUMN_DATA},
     {HAPTIC_2_TONE_COLUMN_SIZE}, {HAPTIC_2_TONE_COLUMN_DISPLAY_NAME}, {HAPTIC_2_TONE_COLUMN_TITLE},
     {HAPTIC_2_TONE_COLUMN_HAPTIC_2_TONE_TYPE}, {HAPTIC_2_TONE_COLUMN_SOURCE_TYPE}, {HAPTIC_2_TONE_COLUMN_DATE_ADDED},
@@ -505,12 +506,11 @@ bool SystemSoundManagerImpl::IsToneAlreadySet(const std::unique_ptr<RingtoneAsse
         case TONE_TYPE_RINGTONE:
             return (storedToneType & RingtoneTypeToBitMask(static_cast<RingtoneType>(subType))) != 0;
         case TONE_TYPE_NOTIFICATION:
-            if (subType == SYSTEM_TONE_TYPE_NOTIFICATION) {
-                return ringtoneAsset->GetNotificationtoneType() == NOTIFICATION_TONE_TYPE;
-            }
+            return static_cast<int32_t>(storedToneType) == NOTIFICATION_TONE_TYPE;
+        case TONE_TYPE_SHOT:
             return (storedToneType & SystemToneTypeToBitMask(static_cast<SystemToneType>(subType))) != 0;
         case TONE_TYPE_ALARM:
-            return ringtoneAsset->GetAlarmtoneType() == ALARM_TONE_TYPE;
+            return static_cast<int32_t>(storedToneType) == ALARM_TONE_TYPE;
         default:
             return false;
     }
@@ -539,9 +539,11 @@ uint32_t SystemSoundManagerImpl::GetStoredToneType(const std::unique_ptr<Rington
         case TONE_TYPE_RINGTONE:
             return static_cast<uint32_t>(ringtoneAsset->GetRingtoneType());
         case TONE_TYPE_NOTIFICATION:
-            return static_cast<uint32_t>(ringtoneAsset->GetShottoneType());
+            return static_cast<uint32_t>(ringtoneAsset->GetNotificationtoneType());
         case TONE_TYPE_ALARM:
             return static_cast<uint32_t>(ringtoneAsset->GetAlarmtoneType());
+        case TONE_TYPE_SHOT:
+            return static_cast<uint32_t>(ringtoneAsset->GetShottoneType());
         default:
             return 0;
     }
@@ -552,15 +554,15 @@ int32_t SystemSoundManagerImpl::UpdateToneUriByType(std::shared_ptr<DataShare::D
 {
     switch (params.toneType) {
         case TONE_TYPE_RINGTONE:
-            return UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_RINGTONE,
+            return UpdateToneTypeUri(dataShareHelper, toneId, params.toneType,
                 static_cast<RingtoneType>(params.subType), storedToneType);
         case TONE_TYPE_NOTIFICATION:
-            return params.subType == SYSTEM_TONE_TYPE_NOTIFICATION ?
-                UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_NOTIFICATION) :
-                UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_SHOT,
-                    static_cast<SystemToneType>(params.subType), storedToneType);
+            return UpdateToneTypeUri(dataShareHelper, toneId, params.toneType);
+        case TONE_TYPE_SHOT:
+            return UpdateToneTypeUri(dataShareHelper, toneId, params.toneType,
+                static_cast<SystemToneType>(params.subType), storedToneType);
         case TONE_TYPE_ALARM:
-            return UpdateToneTypeUri(dataShareHelper, toneId, TONE_TYPE_ALARM);
+            return UpdateToneTypeUri(dataShareHelper, toneId, params.toneType);
         default:
             return ERROR;
     }
@@ -572,7 +574,11 @@ int32_t SystemSoundManagerImpl::SetToneUriInternal(std::shared_ptr<DataShare::Da
     DataShare::DatashareBusinessError businessError;
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
-    queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, params.toneType);
+    int32_t queryToneType = params.toneType;
+    if (params.toneType == TONE_TYPE_SHOT) {
+        queryToneType = TONE_TYPE_NOTIFICATION;
+    }
+    queryPredicates.EqualTo(RINGTONE_COLUMN_TONE_TYPE, queryToneType);
 
     auto resultSet = dataShareHelper->Query(RINGTONEURI, queryPredicates, COLUMNS, &businessError);
     auto results = make_unique<RingtoneFetchResult<RingtoneAsset>>(move(resultSet));
@@ -610,9 +616,8 @@ int32_t SystemSoundManagerImpl::SetNoToneUri(std::shared_ptr<DataShare::DataShar
             return ClearBitFromToneTypeColumn(dataShareHelper,
                 RingtoneTypeToBitMask(static_cast<RingtoneType>(params.subType)), TONE_TYPE_RINGTONE);
         case TONE_TYPE_NOTIFICATION:
-            if (params.subType == SYSTEM_TONE_TYPE_NOTIFICATION) {
-                return ClearToneType(dataShareHelper, TONE_TYPE_NOTIFICATION);
-            }
+            return ClearToneType(dataShareHelper, TONE_TYPE_NOTIFICATION);
+        case TONE_TYPE_SHOT:
             return ClearBitFromToneTypeColumn(dataShareHelper, SystemToneTypeToBitMask(
                 static_cast<SystemToneType>(params.subType)), TONE_TYPE_SHOT);
         case TONE_TYPE_ALARM:
@@ -685,7 +690,7 @@ ToneAttrs SystemSoundManagerImpl::GetRingtoneAttrs(const DatabaseTool &databaseT
 
     toneAttrs = QueryToneAttrsByType(databaseTool, RingtoneTypeToBitMask(ringtoneType), TONE_TYPE_RINGTONE);
     if (toneAttrs.GetUri().empty()) {
-        MEDIA_LOGI("GetRingtoneAttrs: No ring tone uri for type %{public}d. Return NO_RING_SOUND", ringtoneType);
+        MEDIA_LOGW("GetRingtoneAttrs: No ring tone uri for type %{public}d. Return NO_RING_SOUND", ringtoneType);
         toneAttrs.SetUri(NO_RING_SOUND);
     }
     return toneAttrs;
@@ -776,9 +781,8 @@ int32_t SystemSoundManagerImpl::SetSystemToneUri(const shared_ptr<Context> &cont
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper =
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     CHECK_AND_RETURN_RET_LOG(dataShareHelper != nullptr, ERROR, "Create dataShare failed.");
-
-    SetToneUriParams toneParams = {TONE_TYPE_NOTIFICATION, static_cast<int32_t>(systemToneType),
-        TONE_TYPE_NOTIFICATION};
+    ToneType toneType = systemToneType == SYSTEM_TONE_TYPE_NOTIFICATION ? TONE_TYPE_NOTIFICATION : TONE_TYPE_SHOT;
+    SetToneUriParams toneParams = {toneType, static_cast<int32_t>(systemToneType), toneType};
     if (uri == NO_SYSTEM_SOUND) {
         int32_t result = SetNoToneUri(dataShareHelper, toneParams);
         dataShareHelper->Release();
@@ -828,7 +832,7 @@ ToneAttrs SystemSoundManagerImpl::GetSystemToneAttrs(const DatabaseTool &databas
         toneAttrs = QueryToneAttrsByType(databaseTool, SystemToneTypeToBitMask(systemToneType), TONE_TYPE_SHOT);
     }
     if (toneAttrs.GetUri().empty()) {
-        MEDIA_LOGI("GetSystemToneAttrs: No system tone uri for type %{public}d. Return NO_SYSTEM_SOUND",
+        MEDIA_LOGW("GetSystemToneAttrs: No system tone uri for type %{public}d. Return NO_SYSTEM_SOUND",
             systemToneType);
         toneAttrs.SetUri(NO_SYSTEM_SOUND);
     }
@@ -1354,6 +1358,13 @@ void SystemSoundManagerImpl::GetCustomizedTone(const std::shared_ptr<ToneAttrs> 
 {
     displayName_ = toneAttrs->GetFileName();
     mimeType_ = "";
+    originalMimeType_ = "";
+    size_t lastDotPos = displayName_.rfind('.');
+    if (lastDotPos != std::string::npos && lastDotPos + 1 < displayName_.length()) {
+        originalMimeType_ = displayName_.substr(lastDotPos + 1);
+        std::transform(originalMimeType_.begin(), originalMimeType_.end(),
+            originalMimeType_.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+    }
     for (const auto& type : RINGTONETYPE) {
         size_t found = displayName_.find("." + type);
         if (found != std::string::npos) {
@@ -1507,7 +1518,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     off_t fileSize = 0;
     std::string checkResult = AddCustomizedToneCheck(toneAttrs, paramsForAddCustomizedTone.length);
     if (!checkResult.empty()) {
-        SendCustomizedToneEvent(true, toneAttrs, fileSize, mimeType_, ERROR);
+        SendCustomizedToneEvent(true, toneAttrs, fileSize, originalMimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return checkResult;
     }
@@ -1516,7 +1527,7 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
     off_t lseekResult = lseek(srcFd, paramsForAddCustomizedTone.offset, SEEK_SET);
     if (srcFd < 0 || lseekResult == -1) {
         MEDIA_LOGE("AddCustomizedToneByFdAndOffset: fd is error");
-        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
+        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, originalMimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return "";
     }
@@ -1524,13 +1535,13 @@ std::string SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset(
         SystemSoundManagerUtils::CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     if (dataShareHelper == nullptr) {
         MEDIA_LOGE("AddCustomizedToneByFdAndOffset: Create dataShare failed, datashare or ringtone library error.");
-        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
+        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, originalMimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return "";
     }
     int32_t sert = AddCustomizedTone(dataShareHelper, toneAttrs, paramsForAddCustomizedTone.length);
     if (sert < 0) {
-        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
+        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, originalMimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         std::string result = DealAddCustomizedToneError(sert, paramsForAddCustomizedTone, toneAttrs, dataShareHelper);
         dataShareHelper->Release();
@@ -1588,7 +1599,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(
         MEDIA_LOGE("CustomizedToneWriteFile: Open error is %{public}s", strerror(errno));
         DeleteCustomizedTone(dataShareHelper, toneAttrs, paramsForAddCustomizedTone.length);
         dataShareHelper->Release();
-        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, ERROR);
+        SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, originalMimeType_, ERROR);
         MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
         return "";
     }
@@ -1609,7 +1620,7 @@ std::string SystemSoundManagerImpl::CustomizedToneWriteFile(
     MEDIA_LOGI("CustomizedToneWriteFile: Write file end.");
     fdsan_close_with_tag(dstFd, FD_SYSTEM_SOUND_CUSTOMIZED_TONE_WRITE_TAG);
     dataShareHelper->Release();
-    SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, mimeType_, SUCCESS);
+    SendCustomizedToneEvent(true, toneAttrs, paramsForAddCustomizedTone.length, originalMimeType_, SUCCESS);
     MediaTrace::TraceEnd("SystemSoundManagerImpl::AddCustomizedToneByFdAndOffset", FAKE_POINTER(this));
     return toneAttrs->GetUri();
 }
@@ -1953,6 +1964,20 @@ std::string SystemSoundManagerImpl::GetDefaultNonSyncedHapticsUri(
     MEDIA_LOGI("GetDefaultNonSyncedHapticsUri: toneHapticsType %{public}d default haptics %{public}s",
         toneHapticsType, hapticsUri.c_str());
     return hapticsUri;
+}
+
+std::string SystemSoundManagerImpl::GetNonSyncHapticsUriFromCfg()
+{
+    char buf[MAX_PATH_LEN];
+    char *path = GetOneCfgFile(NON_SYNC_HAPTICS_PATH.c_str(), buf, MAX_PATH_LEN);
+    if (path == nullptr || *path == '\0') {
+        MEDIA_LOGE("Failed to get fallback non-sync haptics path");
+        return "";
+    }
+    std::string filePath = path;
+    MEDIA_LOGI("Fallback non-sync haptics path [%{public}s]", filePath.c_str());
+    filePath = filePath + FALLBACK_HAPTICS_FILE;
+    return filePath;
 }
 
 std::string SystemSoundManagerImpl::GetFirstNonSyncedHapticsUri()
@@ -2742,7 +2767,6 @@ std::string SystemSoundManagerImpl::OpenHapticsFile(
 void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::shared_ptr<ToneAttrs> &toneAttrs,
     off_t fileSize, std::string mimeType, int result)
 {
-    int32_t realResult = result;
     std::string appName = GetBundleName();
     auto now = std::chrono::system_clock::now();
     time_t rawtime = std::chrono::system_clock::to_time_t(now);
@@ -2765,8 +2789,8 @@ void SystemSoundManagerImpl::SendCustomizedToneEvent(bool flag, const std::share
     bean->Add("MIME_TYPE", mimeType);
     MEDIA_LOGI("SendCustomizedToneEvent: mimeType is %{public}s", mimeType.c_str());
     bean->Add("TIMESTAMP", static_cast<uint64_t>(rawtime));
-    bean->Add("RESULT", static_cast<int32_t>(realResult));
-    MEDIA_LOGI("SendCustomizedToneEvent: result is %{public}d(0 success; -1 error).", realResult);
+    bean->Add("RESULT", static_cast<int32_t>(result));
+    MEDIA_LOGI("SendCustomizedToneEvent: result is %{public}d(0 success; -1 error).", result);
     Media::MediaMonitor::MediaMonitorManager::GetInstance().WriteLogMsg(bean);
 }
 
