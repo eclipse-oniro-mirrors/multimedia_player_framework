@@ -1135,6 +1135,7 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     GetOptionalBoolProperty(env, strategyVal, "enableBFrame", strategy.enableBFrame, strategy.setByUser);
     GetOptionalBoolProperty(env, strategyVal, "enablePause", strategy.enablePause, strategy.setByUser);
     GetOptionalBoolProperty(env, strategyVal, "enableAEC", strategy.enableAEC, strategy.setByUser);
+    GetOptionalBoolProperty(env, strategyVal, "enableHDR", strategy.enableHDRCapture, strategy.setByUser);
 
     status = napi_has_named_property(env, strategyVal, "privacyMaskMode", &exist);
     if (status == napi_ok && exist) {
@@ -1146,9 +1147,10 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
         strategy.setByUser = true;
     }
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
-        "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d",
+        "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
+        "enableHDRCapture: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
-        strategy.strategyForPrivacyMaskMode);
+        strategy.strategyForPrivacyMaskMode, strategy.enableHDRCapture);
     return MSERR_OK;
 }
 

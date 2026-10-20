@@ -725,6 +725,7 @@ void ScreenCaptureServer::SetMediaKitReport(const std::string &apiCall)
     metaInfoJson["canvasFollowRotation"] =  captureConfig_.strategy.canvasFollowRotation;
     metaInfoJson["enableBFrame"] =  captureConfig_.strategy.enableBFrame;
     metaInfoJson["enableAEC"] =  captureConfig_.strategy.enableAEC;
+    metaInfoJson["enableHDRCapture"] =  captureConfig_.strategy.enableHDRCapture;
     metaInfoJson["setByUser"] =  captureConfig_.strategy.setByUser;
     metaInfoJson["pickerPopUp"] =  captureConfig_.strategy.pickerPopUp;
     metaInfoJson["fillMode"] =  captureConfig_.strategy.fillMode;
@@ -1802,6 +1803,8 @@ int32_t ScreenCaptureServer::InitRecorderInfo(std::shared_ptr<IRecorderService> 
     if (captureConfig_.videoInfo.videoCapInfo.state != AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
         ret = recorder->SetVideoEncoder(videoSourceId_, captureConfig_.videoInfo.videoEncInfo.videoCodec);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoEncoder failed");
+        ret = recorder->SetVideoIsHdr(videoSourceId_, captureConfig_.strategy.enableHDRCapture);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "recorder SetVideoIsHdr failed");
         ret = recorder->SetVideoSize(videoSourceId_, captureConfig_.videoInfo.videoCapInfo.videoFrameWidth,
             captureConfig_.videoInfo.videoCapInfo.videoFrameHeight);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, MSERR_UNKNOWN, "SetVideoSize failed");
@@ -2749,6 +2752,7 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(sptr<OHOS::Surf
         .virtualScreenType_ = VirtualScreenType::SCREEN_RECORDING,
         .bundleName_ = appName_,
         .userId_ = appUserId_.load(),
+        .hdrMode_ = captureConfig_.strategy.enableHDRCapture ? HDRMode::HDR_STATIC : HDRMode::NONE;
     };
     auto display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {

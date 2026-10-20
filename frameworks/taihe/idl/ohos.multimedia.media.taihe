@@ -1199,6 +1199,7 @@ struct AVScreenCaptureStrategy {
     privacyMaskMode: Optional<i32>;
     enablePause: Optional<bool>;
     enableAEC: Optional<bool>;
+    enableHDR: Optional<bool>;
 }
 
 struct AVScreenCaptureRecordConfig {

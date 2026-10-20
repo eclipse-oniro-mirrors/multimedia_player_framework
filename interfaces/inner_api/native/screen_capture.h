@@ -230,6 +230,7 @@ struct ScreenCaptureStrategy {
     AVScreenCaptureFillMode fillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
     bool enablePause = false;
     bool enableAEC = false;
+    bool enableHDRCapture = false;
 };
 
 struct AVScreenCaptureHighlightConfig {
