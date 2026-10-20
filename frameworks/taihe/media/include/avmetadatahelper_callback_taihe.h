@@ -50,7 +50,7 @@ private:
     enum FetchResult {
         FETCH_FAILED = 0,
         FETCH_SUCCEEDED = 1,
-        FETCH_CANCELLED = 2,
+        FETCH_CANCELED = 2,
     };
 
     struct FrameInfo {

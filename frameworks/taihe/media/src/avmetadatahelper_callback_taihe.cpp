@@ -124,8 +124,8 @@ void AVMetadataHelperCallback::OnJsPixelCompleteCallback(AVMetadataJsCallback *j
         case FETCH_SUCCEEDED:
             result = ohos::multimedia::media::FetchResult::key_t::FETCH_SUCCEEDED;
             break;
-        case FETCH_CANCELLED:
-            result = ohos::multimedia::media::FetchResult::key_t::FETCH_CANCELLED;
+        case FETCH_CANCELED:
+            result = ohos::multimedia::media::FetchResult::key_t::FETCH_CANCELED;
             break;
     };
 
