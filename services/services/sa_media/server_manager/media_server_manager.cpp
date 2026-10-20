@@ -67,9 +67,24 @@ constexpr uint32_t REPORT_TIME = 100000000; // us
 constexpr uint32_t MAX_TIMES = 15;
 constexpr uint32_t DELAY_TIME = 200;
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
-const std::string MEDIA_SERVICE_LIBNAME = "libmedia_service.z.so"; // madvise library name
+const std::vector<std::string> MEDIA_SERVICE_LIBNAME =  {"libmedia_service.z.so",
+                                                        "libmedia_engine_histreamer.z.so",
+                                                        "libmedia_client.z.so",
+                                                        "libav_codec_media_engine_filters.z.so",
+                                                        "libmedia_plugin_HttpSource.z.so",
+                                                        "libav_codec_media_engine_modules.z.so",
+                                                        "libmedia_plugin_AudioServerSink.z.so",
+                                                        "libmedia_foundation.z.so",
+                                                        "libmedia_plugin_FileFdSource.z.so",
+                                                        "libmedia_service_utils.z.so",
+                                                        "libmedia_plugin_FileSource.z.so",
+                                                        "libmedia_service_dfx.z.so",
+                                                        "libmedia_plugin_FFmpegDemuxer.z.so",
+                                                        "libmedia_plugin_Mpeg4Demuxer.z.so",
+                                                        "libmedia_plugin_FFmpegAudioDecoders.z.so",
+                                                        "libohosffmpeg.z.so"}; // madvise library name
 #ifdef SUPPORT_MEDIA_MADVISE
-constexpr uint32_t MADVISE_INTERVAL_MS = 4 * 60 * 1000; // 4 minutes in ms
+constexpr uint32_t MADVISE_INTERVAL_US =2 * 60 * 1000 * 1000; // 4 minutes in ms
 constexpr int32_t MADVISE_MAX_CALLS = 10; // 10 calls in 40 minutes
 #endif
 }
@@ -923,7 +938,7 @@ void MediaServerManager::HandleMadviseLibraries()
 {
     CHECK_AND_RETURN_NOLOG(GetStubMapCountIsEmpty());
     MEDIA_LOGI("HandleMadviseLibraries start.");
-    MediaMadviseUtils::MediaMadviseSingleLibrary(MEDIA_SERVICE_LIBNAME);
+    MediaMadviseUtils::MediaMadviseMultipleLibraries(MEDIA_SERVICE_LIBNAME);
 }
 
 void MediaServerManager::StartMadviseTask()
@@ -934,10 +949,10 @@ void MediaServerManager::StartMadviseTask()
         madviseTask_->RegisterJob([this]() {
             return this->MadviseTaskCallback();
         });
-        madviseCallCount_ = 0;
     }
     if (madviseTask_ && !madviseTask_->IsTaskRunning()) {
         MEDIA_LOGI("StartMadviseTask: starting madvise task");
+        madviseCallCount_ = 0;
         madviseTask_->Start();
     }
 }
@@ -954,19 +969,21 @@ uint32_t MediaServerManager::MadviseTaskCallback()
 {
     if (!GetStubMapCountIsEmpty()) {
         MEDIA_LOGI("MadviseTaskCallback: stub not empty, stop");
+        madviseTask_->StopAsync();
         return 0;
     }
 
     madviseCallCount_++;
     if (madviseCallCount_ > MADVISE_MAX_CALLS) {
         MEDIA_LOGI("MadviseTaskCallback: reached max calls (%{public}d), stop", MADVISE_MAX_CALLS);
+        madviseTask_->StopAsync();
         return 0;
     }
 
     MEDIA_LOGI("MadviseTaskCallback: call %{public}d/%{public}d", madviseCallCount_.load(), MADVISE_MAX_CALLS);
     HandleMadviseLibraries();
 
-    return MADVISE_INTERVAL_MS;
+    return MADVISE_INTERVAL_US;
 }
 #endif
 
