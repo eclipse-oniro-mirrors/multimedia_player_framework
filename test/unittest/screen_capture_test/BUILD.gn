@@ -194,6 +194,8 @@ ohos_screen_capture_unittest("screen_capture_capi_unit_test") {
   mock_sources = [
     "capi/screen_capture_mock_factory.cpp",
     "capi/src/screen_capture_capi_mock.cpp",
+    "capi/src/screen_capture_capi_param_unittest.cpp",
+    "capi/src/screen_capture_capi_callback_unittest.cpp",
   ]
   deps = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
@@ -285,6 +287,8 @@ ohos_unittest("screen_capture_ipc_unit_test") {
       "screen_capture_ipc_test/screen_capture_listener_stub_unittest.cpp",
       "screen_capture_ipc_test/screen_capture_service_stub_unittest.cpp",
       "screen_capture_ipc_test/screen_capture_strategy_parcel_unittest.cpp",
+      "screen_capture_ipc_test/screen_capture_client_param_unittest.cpp",
+      "screen_capture_ipc_test/screen_capture_client_func_unittest.cpp",
     ]
   }
 

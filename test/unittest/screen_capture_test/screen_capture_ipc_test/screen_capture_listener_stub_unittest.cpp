@@ -434,5 +434,185 @@ HWTEST_F(ScreenCaptureListenerStubTest, OnDisplaySelected_NullCb_001, TestSize.L
     stub = nullptr;
 }
 
-} // Media
-} // OHOS
+/**
+ * @tc.name  : OnError_NullCb_001
+ * @tc.desc  : Test OnError when callback_ is nullptr
+ */
+HWTEST_F(ScreenCaptureListenerStubTest, OnError_NullCb_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
+    ASSERT_NE(stub, nullptr);
+    stub->OnError(SCREEN_CAPTURE_ERROR_INTERNAL, MSERR_UNKNOWN);
+    auto mockCb = std::make_shared<MockListenerStubCallBack>();
+    stub->SetScreenCaptureCallback(mockCb);
+    EXPECT_CALL(*mockCb, OnError(_, _)).Times(1);
+    stub->OnError(SCREEN_CAPTURE_ERROR_INTERNAL, MSERR_UNKNOWN);
+    stub = nullptr;
+}
+
+/**
+ * @tc.name  : OnCaptureContentChanged_NullCb_001
+ * @tc.desc  : Test OnCaptureContentChanged when callback_ is nullptr
+ */
+HWTEST_F(ScreenCaptureListenerStubTest, OnCaptureContentChanged_NullCb_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
+    ASSERT_NE(stub, nullptr);
+    ScreenCaptureRect rect = {0, 0, 100, 100};
+    stub->OnCaptureContentChanged(SCREEN_CAPTURE_CONTENT_VISIBLE, &rect);
+    auto mockCb = std::make_shared<MockListenerStubCallBack>();
+    stub->SetScreenCaptureCallback(mockCb);
+    EXPECT_CALL(*mockCb, OnCaptureContentChanged(_, _)).Times(1);
+    stub->OnCaptureContentChanged(SCREEN_CAPTURE_CONTENT_VISIBLE, &rect);
+    stub = nullptr;
+}
+
+/**
+ * @tc.name  : OnUserSelected_NullCb_001
+ * @tc.desc  : Test OnUserSelected when callback_ is nullptr
+ */
+HWTEST_F(ScreenCaptureListenerStubTest, OnUserSelected_NullCb_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
+    ASSERT_NE(stub, nullptr);
+    ScreenCaptureUserSelectionInfo info;
+    stub->OnUserSelected(info);
+    auto mockCb = std::make_shared<MockListenerStubCallBack>();
+    stub->SetScreenCaptureCallback(mockCb);
+    EXPECT_CALL(*mockCb, OnUserSelected(_)).Times(1);
+    stub->OnUserSelected(info);
+    stub = nullptr;
+}
+
+/**
+ * @tc.name  : OnPrivacyProtect_NullCb_001
+ * @tc.desc  : Test OnPrivacyProtect when callback_ is nullptr
+ */
+HWTEST_F(ScreenCaptureListenerStubTest, OnPrivacyProtect_NullCb_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
+    ASSERT_NE(stub, nullptr);
+    AVScreenCapturePrivacyProtect privacy;
+    stub->OnPrivacyProtect(privacy);
+    auto mockCb = std::make_shared<MockListenerStubCallBack>();
+    stub->SetScreenCaptureCallback(mockCb);
+    EXPECT_CALL(*mockCb, OnPrivacyProtect(_)).Times(1);
+    stub->OnPrivacyProtect(privacy);
+    stub = nullptr;
+}
+
+/**
+ * @tc.name  : OnRemoteRequest_AudioAvailable_001
+ * @tc.desc  : Test OnRemoteRequest with ON_AUDIO_AVAILABLE code
+ */
+HWTEST_F(ScreenCaptureListenerStubTest, OnRemoteRequest_AudioAvailable_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
+    ASSERT_NE(stub, nullptr);
+    auto mockCb = std::make_shared<MockListenerStubCallBack>();
+    stub->SetScreenCaptureCallback(mockCb);
+    EXPECT_CALL(*mockCb, OnAudioBufferAvailable(_, _)).Times(1);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+    data.WriteBool(true);
+    data.WriteInt32(static_cast<int32_t>(AudioCaptureSourceType::MIC));
+    int ret = stub->OnRemoteRequest(static_cast<uint32_t>(
+        IStandardScreenCaptureListener::ScreenCaptureListenerMsg::ON_AUDIO_AVAILABLE), data, reply, option);
+    EXPECT_EQ(MSERR_OK, ret);
+    stub = nullptr;
+}
+
+/**
+ * @tc.name  : OnRemoteRequest_VideoAvailable_001
+ * @tc.desc  : Test OnRemoteRequest with ON_VIDEO_AVAILABLE code
+ */
+HWTEST_F(ScreenCaptureListenerStubTest, OnRemoteRequest_VideoAvailable_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
+    ASSERT_NE(stub, nullptr);
+    auto mockCb = std::make_shared<MockListenerStubCallBack>();
+    stub->SetScreenCaptureCallback(mockCb);
+    EXPECT_CALL(*mockCb, OnVideoBufferAvailable(_)).Times(1);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+    data.WriteBool(true);
+    int ret = stub->OnRemoteRequest(static_cast<uint32_t>(
+        IStandardScreenCaptureListener::ScreenCaptureListenerMsg::ON_VIDEO_AVAILABLE), data, reply, option);
+    EXPECT_EQ(MSERR_OK, ret);
+    stub = nullptr;
+}
+
+/**
+ * @tc.name  : OnRemoteRequest_StageChange_001
+ * @tc.desc  : Test OnRemoteRequest with ON_STAGE_CHANGE code
+ */
+HWTEST_F(ScreenCaptureListenerStubTest, OnRemoteRequest_StageChange_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
+    ASSERT_NE(stub, nullptr);
+    auto mockCb = std::make_shared<MockListenerStubCallBack>();
+    stub->SetScreenCaptureCallback(mockCb);
+    EXPECT_CALL(*mockCb, OnStateChange(_)).Times(1);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+    data.WriteInt32(static_cast<int32_t>(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STARTED));
+    int ret = stub->OnRemoteRequest(static_cast<uint32_t>(
+        IStandardScreenCaptureListener::ScreenCaptureListenerMsg::ON_STAGE_CHANGE), data, reply, option);
+    EXPECT_EQ(MSERR_OK, ret);
+    stub = nullptr;
+}
+
+/**
+ * @tc.name  : OnRemoteRequest_DisplaySelected_001
+ * @tc.desc  : Test OnRemoteRequest with ON_DISPLAY_SELECTED code
+ */
+HWTEST_F(ScreenCaptureListenerStubTest, OnRemoteRequest_DisplaySelected_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
+    ASSERT_NE(stub, nullptr);
+    auto mockCb = std::make_shared<MockListenerStubCallBack>();
+    stub->SetScreenCaptureCallback(mockCb);
+    EXPECT_CALL(*mockCb, OnDisplaySelected(_)).Times(1);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+    data.WriteUint64(static_cast<uint64_t>(1));
+    int ret = stub->OnRemoteRequest(static_cast<uint32_t>(
+        IStandardScreenCaptureListener::ScreenCaptureListenerMsg::ON_DISPLAY_SELECTED), data, reply, option);
+    EXPECT_EQ(MSERR_OK, ret);
+    stub = nullptr;
+}
+
+/**
+ * @tc.name  : OnRemoteRequest_UserSelected_001
+ * @tc.desc  : Test OnRemoteRequest with ON_USER_SELECTED code
+ */
+HWTEST_F(ScreenCaptureListenerStubTest, OnRemoteRequest_UserSelected_001, TestSize.Level1)
+{
+    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
+    ASSERT_NE(stub, nullptr);
+    auto mockCb = std::make_shared<MockListenerStubCallBack>();
+    stub->SetScreenCaptureCallback(mockCb);
+    EXPECT_CALL(*mockCb, OnUserSelected(_)).Times(1);
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(stub->GetDescriptor());
+    data.WriteInt32(0);
+    data.WriteInt32(1);
+    data.WriteUint64(static_cast<uint64_t>(0));
+    int ret = stub->OnRemoteRequest(static_cast<uint32_t>(
+        IStandardScreenCaptureListener::ScreenCaptureListenerMsg::ON_USER_SELECTED), data, reply, option);
+    EXPECT_EQ(MSERR_OK, ret);
+    stub = nullptr;
+}
+
+} // namespace Media
+} // namespace OHOS
