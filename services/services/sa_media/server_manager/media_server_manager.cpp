@@ -67,7 +67,7 @@ constexpr uint32_t REPORT_TIME = 100000000; // us
 constexpr uint32_t MAX_TIMES = 15;
 constexpr uint32_t DELAY_TIME = 200;
 constexpr int32_t RELEASE_THRESHOLD = 3;  // relese task
-const std::vector<std::string> MEDIA_SERVICE_LIBNAME =  {"libmedia_service.z.so",
+const std::vector<std::string> MEDIA_SERVICE_LIBNAME = {"libmedia_service.z.so",
                                                         "libmedia_engine_histreamer.z.so",
                                                         "libmedia_client.z.so",
                                                         "libav_codec_media_engine_filters.z.so",
