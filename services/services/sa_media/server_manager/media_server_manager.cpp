@@ -84,7 +84,7 @@ const std::vector<std::string> MEDIA_SERVICE_LIBNAME = {"libmedia_service.z.so",
                                                         "libmedia_plugin_FFmpegAudioDecoders.z.so",
                                                         "libohosffmpeg.z.so"}; // madvise library name
 #ifdef SUPPORT_MEDIA_MADVISE
-constexpr uint32_t MADVISE_INTERVAL_US =2 * 60 * 1000 * 1000; // 4 minutes in ms
+constexpr uint32_t MADVISE_INTERVAL_US = 2 * 60 * 1000 * 1000; // 4 minutes in ms
 constexpr int32_t MADVISE_MAX_CALLS = 10; // 10 calls in 40 minutes
 #endif
 }
