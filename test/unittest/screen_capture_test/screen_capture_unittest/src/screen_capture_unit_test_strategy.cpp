@@ -601,5 +601,109 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_mic_aec_002, TestSiz
     EXPECT_EQ(MSERR_OK, screenCapture_->Release());
 }
 
+/**
+ * @tc.name: screen_capture_strategy_for_hdr_capture_001
+ * @tc.desc: StrategyForHDRCapture == true, enable HDR vivid output
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_hdr_capture_001, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_hdr_capture_001 before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_strategy_for_hdr_capture_001.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForHDRCapture(true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_hdr_capture_001 after");
+}
+
+/**
+ * @tc.name: screen_capture_strategy_for_hdr_capture_002
+ * @tc.desc: StrategyForHDRCapture == false, keep SDR output
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_hdr_capture_002, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_hdr_capture_002 before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_strategy_for_hdr_capture_002.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo micCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::SOURCE_DEFAULT
+    };
+    config_.audioInfo.micCapInfo = micCapInfo;
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForHDRCapture(false));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_hdr_capture_002 after");
+}
+
+/**
+ * @tc.name: screen_capture_strategy_for_hdr_capture_003
+ * @tc.desc: StrategyForHDRCapture toggling between true and false during recording setup
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_hdr_capture_003, TestSize.Level2)
+{
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_hdr_capture_003 before");
+    RecorderInfo recorderInfo;
+    SetRecorderInfo("screen_capture_strategy_for_hdr_capture_003.mp4", recorderInfo);
+    SetConfigFile(config_, recorderInfo);
+    AudioCaptureInfo innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::APP_PLAYBACK
+    };
+    config_.audioInfo.innerCapInfo = innerCapInfo;
+    EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_OK, screenCapture_->CreateCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForHDRCapture(true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForHDRCapture(false));
+    EXPECT_EQ(MSERR_OK, screenCapture_->StrategyForHDRCapture(true));
+    EXPECT_EQ(MSERR_OK, screenCapture_->SetCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->ReleaseCaptureStrategy());
+    EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenRecording());
+    sleep(RECORDER_TIME);
+    EXPECT_EQ(MSERR_OK, screenCapture_->StopScreenRecording());
+    EXPECT_EQ(MSERR_OK, screenCapture_->Release());
+    MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_strategy_for_hdr_capture_003 after");
+}
+
 } // namespace Media
 } // namespace OHOS

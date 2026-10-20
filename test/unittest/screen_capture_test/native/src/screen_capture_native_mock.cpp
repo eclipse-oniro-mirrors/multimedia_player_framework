@@ -399,6 +399,12 @@ int32_t ScreenCaptureNativeMock::StrategyForMicAEC(bool value)
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureNativeMock::StrategyForHDRCapture(bool value)
+{
+    strategy_.enableHDRCapture = value;
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureNativeMock::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
 {
     return MSERR_OK;
