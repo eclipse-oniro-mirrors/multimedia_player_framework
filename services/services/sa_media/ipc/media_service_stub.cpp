@@ -217,6 +217,8 @@ int32_t MediaServiceStub::GetLppCapacityStub(MessageParcel &data, MessageParcel 
 
 int32_t MediaServiceStub::GetPlayerPidsStub(MessageParcel &data, MessageParcel &reply)
 {
+    int32_t callingUid = IPCSkeleton::GetCallingUid();
+    CHECK_AND_RETURN_RET_LOG(callingUid == RSS_UID, MSERR_INVALID_OPERATION, "No Permission");
     (void)data;
     std::vector<pid_t> res = GetPlayerPids();
     int64_t vectorSize = static_cast<int64_t>(res.size());
