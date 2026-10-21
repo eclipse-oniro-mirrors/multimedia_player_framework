@@ -2979,13 +2979,18 @@ int32_t ScreenCaptureServer::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
 {
     MediaTrace trace("ScreenCaptureServer::SetCaptureArea");
     std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("SetCaptureArea captureState_:%{public}d, IsState(CAP_ALIVE):%{public}d",
+        captureState_.load(), IsState(CAP_ALIVE));
+    CHECK_AND_RETURN_RET_LOG(IsState(CAP_ALIVE), MSERR_INVALID_OPERATION,
+        "SetCaptureArea failed, screen capture already released");
     CHECK_AND_RETURN_RET_LOG(CheckDisplayArea(displayId, area), MSERR_INVALID_VAL,
-        "Check region area failed, invalid input area.");
+        "CheckDisplayArea failed, displayId:%{public}" PRIu64 ", area(x:%{public}d, y:%{public}d, "
+        "w:%{public}d, h:%{public}d) invalid", displayId, area.x, area.y, area.w, area.h);
     isRegionCapture_ = true;
     regionDisplayId_ = displayId;
     regionArea_ = area;
     if (!IsState(CAP_RUNNING)) {
-        MEDIA_LOGI("ScreenCaptureServer::SetCaptureArea, virtual screen not created, return ok");
+        MEDIA_LOGI("ScreenCaptureServer::SetCaptureArea, state not CAP_RUNNING, only cache area, return ok");
         return MSERR_OK;
     }
     return SetCaptureAreaInner(regionDisplayId_, regionArea_);
@@ -2996,7 +3001,7 @@ int32_t ScreenCaptureServer::SetCaptureAreaInner(uint64_t displayId, OHOS::Rect 
     MediaTrace trace("ScreenCaptureServer::SetCaptureAreaInner");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetCaptureAreaInner start, state:%{public}d.",
         FAKE_POINTER(this), captureState_.load());
-    CHECK_AND_RETURN_RET_LOG(virtualScreen_ != nullptr, MSERR_INVALID_VAL,
+    CHECK_AND_RETURN_RET_LOG(virtualScreen_ != nullptr, MSERR_INVALID_OPERATION,
         "SetCaptureAreaInner failed virtual screen not init");
     ScreenId regionScreenId;
     DMRect regionAreaIn;

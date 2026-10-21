@@ -1215,6 +1215,13 @@ struct AVScreenCaptureRecordConfig {
     strategy: Optional<AVScreenCaptureStrategy>;
 }
 
+struct RectangleRegion {
+    left: i32;
+    top: i32;
+    width: i32;
+    height: i32;
+}
+
 enum MetaSourceType: i32 {
     VIDEO_MAKER_INFO = 0,
 }
@@ -1341,6 +1348,9 @@ interface AVScreenCaptureRecorder {
 
     @gen_promise("setContentAutoRotation")
     SetCanvasRotationSync(canvasRotation: bool): void;
+
+    @gen_promise("setCaptureArea")
+    SetCaptureAreaSync(area: RectangleRegion): void;
 
     @gen_promise("release")
     ReleaseSync(): void;

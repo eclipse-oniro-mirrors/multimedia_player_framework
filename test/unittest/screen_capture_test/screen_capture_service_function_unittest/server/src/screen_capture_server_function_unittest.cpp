@@ -1668,7 +1668,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureAreaInner_001, TestSize.Leve
     area.h = 5;
     screenCaptureServer_->virtualScreen_.reset();
     int32_t ret = screenCaptureServer_->SetCaptureAreaInner(0, area);
-    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UserSelected_001, TestSize.Level2)
