@@ -1849,10 +1849,10 @@ HWTEST(SystemSoundManagerUnitTest, SetNoToneUri_002, TestSize.Level0)
     std::shared_ptr<DataShare::DataShareHelper> dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     EXPECT_NE(dataShareHelper, nullptr);
 
-    SetToneUriParams params1 = {TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_NOTIFICATION};
+    SetToneUriParams params1 = {TONE_TYPE_SHOT, SYSTEM_TONE_TYPE_SIM_CARD_0, TONE_TYPE_SHOT};
     int32_t result = systemSoundManagerImpl_->SetNoToneUri(dataShareHelper, params1);
     EXPECT_GE(result, 0);
-    SetToneUriParams params2 = {TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_SIM_CARD_1, TONE_TYPE_NOTIFICATION};
+    SetToneUriParams params2 = {TONE_TYPE_SHOT, SYSTEM_TONE_TYPE_SIM_CARD_1, TONE_TYPE_SHOT};
     result = systemSoundManagerImpl_->SetNoToneUri(dataShareHelper, params2);
     EXPECT_GE(result, 0);
     SetToneUriParams params3 = {TONE_TYPE_NOTIFICATION, SYSTEM_TONE_TYPE_NOTIFICATION, TONE_TYPE_NOTIFICATION};

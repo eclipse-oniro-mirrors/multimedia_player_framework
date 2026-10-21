@@ -131,6 +131,7 @@ public:
     int32_t OpenToneHaptics(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &hapticsUri) override;
     std::string GetDefaultHapticsUri(const DatabaseTool &databaseTool);
+    std::string GetNonSyncHapticsUriFromCfg();
 
     // other public functions
     std::string GetRingtoneTitle(const std::string &ringtoneUri);
@@ -271,6 +272,7 @@ private:
     std::mutex toneHapticsMutex_;
 #endif
     std::string mimeType_ = "";
+    std::string originalMimeType_ = "";
     std::string displayName_ = "";
     std::unordered_map<RingtoneType, std::string> defaultRingtoneUriMap_;
     std::unordered_map<SystemToneType, std::string> defaultSystemToneUriMap_;
