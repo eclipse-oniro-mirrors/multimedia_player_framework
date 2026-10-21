@@ -343,7 +343,7 @@ ToneAttrs SystemSoundManagerImpl::QueryToneAttrsByType(const DatabaseTool &datab
         toneAttrs.SetUri(asset->GetPath());
         toneAttrs.SetTitle(asset->GetTitle());
         toneAttrs.SetFileName(asset->GetDisplayName());
-        toneAttrs.SetCategory(asset->GetToneType());
+        toneAttrs.SetCategory(ConvertToneType2ToneCategory(asset->GetToneType()));
         toneAttrs.SetMediaType(asset->GetMediaType() == RINGTONE_MEDIA_TYPE_VIDEO ?
             ToneMediaType::MEDIA_TYPE_VID : ToneMediaType::MEDIA_TYPE_AUD);
     }
@@ -574,6 +574,7 @@ int32_t SystemSoundManagerImpl::SetToneUriInternal(std::shared_ptr<DataShare::Da
     DataShare::DataSharePredicates queryPredicates;
     queryPredicates.EqualTo(RINGTONE_COLUMN_DATA, uri);
     int32_t queryToneType = params.toneType;
+    // thie field of shot-tone files stored in ringtone library is notification
     if (params.toneType == TONE_TYPE_SHOT) {
         queryToneType = TONE_TYPE_NOTIFICATION;
     }
