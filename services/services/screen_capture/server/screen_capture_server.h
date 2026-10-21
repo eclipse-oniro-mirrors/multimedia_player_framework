@@ -350,6 +350,7 @@ private:
     int32_t ResumeRecorder();
     int32_t PauseScreenCaptureInner(AVScreenCaptureStateCode stateCode);
     int32_t ResumeScreenCaptureInner(AVScreenCaptureStateCode stateCode);
+    int32_t ResumeManualRecovery();
     int32_t GetWatermarkCount(int32_t &watermarkCount);
     void StopCaptureOnError(const std::string &reportMsg);
 
@@ -397,7 +398,6 @@ private:
     bool isDump_ = false;
     bool isSystemUI2_ = false;
     std::unique_ptr<VirtualScreen> virtualScreen_;
-    Rosen::Rotation targetRotation_ = Rosen::Rotation::ROTATION_0;
     std::vector<Rosen::ScreenId> sourceDisplayIds_;
     std::vector<Rosen::ScreenId> displayIds_;
     std::vector<MissionInfo> missionInfos_;

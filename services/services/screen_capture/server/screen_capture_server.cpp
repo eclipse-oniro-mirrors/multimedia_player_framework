@@ -585,15 +585,6 @@ DMError ScreenCaptureServer::CreateMirror(const std::vector<uint64_t> &displayId
     }
 #endif
     CHECK_AND_RETURN_RET(displayIds.size() == 1, DMError::DM_ERROR_INVALID_PARAM);
-    if (!IsState(CAP_ACTIVE)) {
-        sptr<Rosen::Display> display = Rosen::DisplayManager::GetInstance().GetDisplayById(displayIds.front());
-        if (display != nullptr) {
-            targetRotation_ = display->GetRotation();
-        }
-    } else if (IsState(CAP_PAUSED) && !canvasRotation_) {
-        return Rosen::ScreenManager::GetInstance().MakeMirror(displayIds.front(), mirrorIds, mirrorGroup,
-            targetRotation_);
-    }
     return Rosen::ScreenManager::GetInstance().MakeMirror(displayIds.front(), mirrorIds, mirrorGroup);
 }
 
@@ -725,6 +716,8 @@ void ScreenCaptureServer::SetMediaKitReport(const std::string &apiCall)
     metaInfoJson["canvasFollowRotation"] =  captureConfig_.strategy.canvasFollowRotation;
     metaInfoJson["enableBFrame"] =  captureConfig_.strategy.enableBFrame;
     metaInfoJson["enableAEC"] =  captureConfig_.strategy.enableAEC;
+    metaInfoJson["enablePause"] =  captureConfig_.strategy.enablePause;
+    metaInfoJson["contentAutoPauseScenes"] =  captureConfig_.strategy.contentAutoPauseScenes;
     metaInfoJson["setByUser"] =  captureConfig_.strategy.setByUser;
     metaInfoJson["pickerPopUp"] =  captureConfig_.strategy.pickerPopUp;
     metaInfoJson["fillMode"] =  captureConfig_.strategy.fillMode;
@@ -2764,6 +2757,12 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(sptr<OHOS::Surf
             }
         }
     }
+    std::vector<Rosen::RecordPolicy> recordPolicies;
+    if (captureConfig_.strategy.contentAutoPauseScenes &
+        static_cast<uint32_t>(AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE)) {
+        recordPolicies.push_back(Rosen::RecordPolicy::AUTO_PAUSE);
+    }
+    virScrOption.recordPolicies_ = recordPolicies;
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " name:%{public}s end.", FAKE_POINTER(this),
         virScrOption.name_.c_str());
     return virScrOption;
@@ -3774,10 +3773,12 @@ int32_t ScreenCaptureServer::SetScreenCaptureStrategy(const ScreenCaptureStrateg
         "strategy can not be modified after screen capture started");
     MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,"
                "strategyForPrivacyMaskMode: %{public}d, canvasFollowRotation: %{public}d, enableBFrame: %{public}d,"
-               "pickerPopUp: %{public}d, fillMode: %{public}d, enablePause: %{public}d, enableAEC: %{public}d",
+               "pickerPopUp: %{public}d, fillMode: %{public}d, enablePause: %{public}d, enableAEC: %{public}d,"
+               "contentAutoPauseScenes: %{public}u",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode,
         strategy.canvasFollowRotation, strategy.enableBFrame, static_cast<int32_t>(strategy.pickerPopUp),
-        static_cast<int32_t>(strategy.fillMode), strategy.enablePause, strategy.enableAEC);
+        static_cast<int32_t>(strategy.fillMode), strategy.enablePause, strategy.enableAEC,
+        strategy.contentAutoPauseScenes);
     captureConfig_.strategy = strategy;
     if (strategy.enableAEC) {
         isAecSupported_ = AudioStandard::AudioStreamManager::GetInstance()
@@ -3880,12 +3881,13 @@ int32_t ScreenCaptureServer::PauseScreenCaptureInner(AVScreenCaptureStateCode st
         FAKE_POINTER(this), captureState_.load(), static_cast<int32_t>(stateCode));
     CHECK_AND_RETURN_RET_LOG(IsState(CAP_RUNNING), MSERR_INVALID_OPERATION_STARTED_RESUMED,
         "PauseScreenCaptureInner failed, not in STARTED or RESUMED, state:%{public}d", captureState_.load());
-    CHECK_AND_RETURN_RET_LOG(captureConfig_.strategy.enablePause,
-        MSERR_INVALID_OPERATION_ENABLEPAUSE, "PauseScreenCaptureInner failed, enablePause is false");
 
     int32_t ret = MSERR_OK;
 
-    virtualScreen_.reset();
+    if (virtualScreen_ && virtualScreen_->IsValid()) {
+        Rosen::ScreenManager::GetInstance().SetVirtualScreenStatus(virtualScreen_->GetScreenId(),
+            Rosen::VIRTUAL_SCREEN_PAUSE);
+    }
 
     CHECK_AND_RETURN_RET_LOG((ret = StopAudioCapture()) == MSERR_OK,
         (StopCaptureOnError("pauseRecording fail"), ret),
@@ -3926,55 +3928,58 @@ int32_t ScreenCaptureServer::ResumeScreenCapture()
     return ResumeScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_RESUMED_BY_APP);
 }
 
-int32_t ScreenCaptureServer::ResumeScreenCaptureInner(AVScreenCaptureStateCode stateCode)
+int32_t ScreenCaptureServer::ResumeManualRecovery()
 {
-    MediaTrace trace("ScreenCaptureServer::ResumeScreenCaptureInner");
-    std::unique_lock<std::mutex> lock(mutex_);
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ResumeScreenCaptureInner, state:%{public}d, stateCode:%{public}d",
-        FAKE_POINTER(this), captureState_.load(), static_cast<int32_t>(stateCode));
-    CHECK_AND_RETURN_RET_LOG(IsState(CAP_PAUSED), MSERR_INVALID_OPERATION_PAUSED,
-        "ResumeScreenCaptureInner failed, cannot resume in current state, state:%{public}d", captureState_.load());
-    CHECK_AND_RETURN_RET_LOG(captureConfig_.strategy.enablePause,
-        MSERR_INVALID_OPERATION_ENABLEPAUSE, "ResumeScreenCaptureInner failed, enablePause is false");
-
-#ifdef SUPPORT_CALL
-    if (!captureConfig_.strategy.keepCaptureDuringCall && isInTelCall_) {
-        StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
-        lock.unlock();
-        Release();
-        return MSERR_OK;
-    }
-#endif
-
     int32_t ret = MSERR_OK;
-
     if (dataMode_ == AVScreenCaptureDataMode::FILE_MODE) {
         CHECK_AND_RETURN_RET_LOG((ret = ResumeRecorder()) == MSERR_OK,
             (StopCaptureOnError("resumeRecording fail"), ret),
-            "ResumeScreenCaptureInner: ResumeRecorder failed, ret:%{public}d", ret);
+            "ResumeManualRecovery: ResumeRecorder failed, ret:%{public}d", ret);
     }
-
-    CHECK_AND_RETURN_RET_LOG((ret = CreateVirtualScreen()) == MSERR_OK,
-        (StopCaptureOnError("resumeRecording fail"), ret),
-        "ResumeScreenCaptureInner: CreateVirtualScreen failed, ret:%{public}d", ret);
-
     ret = SyncAudioCaptures(true);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, (StopCaptureOnError("resumeRecording fail"), ret),
-        "ResumeScreenCaptureInner: SyncAudioCaptures failed, ret:%{public}d", ret);
-
+        "ResumeManualRecovery: SyncAudioCaptures failed, ret:%{public}d", ret);
     {
         std::lock_guard<std::mutex> audioLock(audioMutex_);
         if (audioSource_) {
             audioSource_->Resume();
         }
     }
-
     isTimePaused_ = false;
     UpdateLiveViewContent();
     NotificationRequest request;
     SetupPublishRequest(request);
     NotificationHelper::PublishNotification(request);
+    return MSERR_OK;
+}
 
+int32_t ScreenCaptureServer::ResumeScreenCaptureInner(AVScreenCaptureStateCode stateCode)
+{
+    MediaTrace trace("ScreenCaptureServer::ResumeScreenCaptureInner");
+    std::unique_lock<std::mutex> lock(mutex_);
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ResumeScreenCaptureInner, state:%{public}d, stateCode:%{public}d",
+        FAKE_POINTER(this), captureState_.load(), static_cast<int32_t>(stateCode));
+    if (!IsState(CAP_ACTIVE)) {
+        MEDIA_LOGE("ResumeScreenCaptureInner failed, cannot resume in current state, state:%{public}d",
+            captureState_.load());
+        return MSERR_INVALID_OPERATION_PAUSED;
+    }
+    if (IsState(CAP_PAUSED)) {
+#ifdef SUPPORT_CALL
+        if (!captureConfig_.strategy.keepCaptureDuringCall && isInTelCall_) {
+            StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
+            lock.unlock();
+            Release();
+            return MSERR_OK;
+        }
+#endif
+        int32_t ret = ResumeManualRecovery();
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "ResumeScreenCaptureInner: manual recovery failed");
+    }
+    if (virtualScreen_ && virtualScreen_->IsValid()) {
+        Rosen::ScreenManager::GetInstance().SetVirtualScreenStatus(virtualScreen_->GetScreenId(),
+            Rosen::VIRTUAL_SCREEN_PLAY);
+    }
     captureState_ = AVScreenCaptureState::RESUMED;
     cbProxy_->OnStateChange(stateCode);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ResumeScreenCaptureInner success", FAKE_POINTER(this));
