@@ -556,11 +556,10 @@ int32_t SystemSoundManagerImpl::UpdateToneUriByType(std::shared_ptr<DataShare::D
         case TONE_TYPE_RINGTONE:
             return UpdateToneTypeUri(dataShareHelper, toneId, params.toneType,
                 static_cast<RingtoneType>(params.subType), storedToneType);
-        case TONE_TYPE_NOTIFICATION:
-            return UpdateToneTypeUri(dataShareHelper, toneId, params.toneType);
         case TONE_TYPE_SHOT:
             return UpdateToneTypeUri(dataShareHelper, toneId, params.toneType,
                 static_cast<SystemToneType>(params.subType), storedToneType);
+        case TONE_TYPE_NOTIFICATION:
         case TONE_TYPE_ALARM:
             return UpdateToneTypeUri(dataShareHelper, toneId, params.toneType);
         default:

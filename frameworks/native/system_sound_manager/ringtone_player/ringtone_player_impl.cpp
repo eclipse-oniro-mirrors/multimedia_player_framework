@@ -143,7 +143,7 @@ bool RingtonePlayerImpl::IsFileExisting(const std::string &fileUri)
     return (stat(fileUri.c_str(), &buffer) == 0);
 }
 
-std::string RingtonePlayerImpl::GetHapticUriByAudioPathSubstitution(const std::string &audioUri,
+std::string RingtonePlayerImpl::GetHapticUriInHapticDir(const std::string &audioUri,
     const std::string &ringtonePath, const std::string& hapticsPath)
 {
     string hapticUri = audioUri;
@@ -162,16 +162,16 @@ std::string RingtonePlayerImpl::GetHapticUriByAudioPathSubstitution(const std::s
     return "";
 }
 
-std::string RingtonePlayerImpl::GetHapticUriByAudioPathSubstitution(const std::string &audioUri)
+std::string RingtonePlayerImpl::GetHapticUriInHapticDir(const std::string &audioUri)
 {
-    std::string hapticUri = GetHapticUriByAudioPathSubstitution(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
+    std::string hapticUri = GetHapticUriInHapticDir(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
     if (hapticUri.empty()) {
         MEDIA_LOGW("Failed to find the vibration json file for audioUri.");
     }
     return hapticUri;
 }
 
-std::string RingtonePlayerImpl::GetHapticUriBySameNameLocalFile(const std::string &audioUri)
+std::string RingtonePlayerImpl::GetHapticUriInAudioDir(const std::string &audioUri)
 {
     std::string hapticUri = "";
     if (audioUri.length() > AUDIO_FORMAT_STR.length() &&
@@ -262,9 +262,9 @@ ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri,
         return settings;
     }
     settings.mode = ToneHapticsMode::SYNC;
-    settings.hapticsUri = GetHapticUriByAudioPathSubstitution(audioUri);
+    settings.hapticsUri = GetHapticUriInHapticDir(audioUri);
     if (settings.hapticsUri.empty()) {
-        settings.hapticsUri = GetHapticUriBySameNameLocalFile(audioUri);
+        settings.hapticsUri = GetHapticUriInAudioDir(audioUri);
         if (settings.hapticsUri.empty()) {
             MEDIA_LOGW("haptic uri is empty. Play ringtone without vibration");
             muteHaptics = true;
