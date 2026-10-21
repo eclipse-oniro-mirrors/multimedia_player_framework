@@ -613,6 +613,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_hdr_capture_001, Tes
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_strategy_for_hdr_capture_001.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
+    config_.videoInfo.videoEncInfo.videoCodec = VideoCodecFormat::H265;
     AudioCaptureInfo micCapInfo = {
         .audioSampleRate = 16000,
         .audioChannels = 2,
@@ -685,6 +686,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_strategy_for_hdr_capture_003, Tes
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_strategy_for_hdr_capture_003.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
+    config_.videoInfo.videoEncInfo.videoCodec = VideoCodecFormat::H265;
     AudioCaptureInfo innerCapInfo = {
         .audioSampleRate = 16000,
         .audioChannels = 2,
