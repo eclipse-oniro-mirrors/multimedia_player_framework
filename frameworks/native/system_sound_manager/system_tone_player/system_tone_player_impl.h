@@ -67,7 +67,8 @@ private:
     void ReleaseHapticsSourceIds();
     ToneHapticsType ConvertToToneHapticsType(SystemToneType type);
     HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
-    void GetHapticUriInRingtoneLibrary(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
+    void GetHapticUriInRingtoneLibrary(const std::string &audioUri, std::map<ToneHapticsFeature,
+        std::string> &hapticsUris);
     void GetCurrentHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticUriMap);
     bool IsSameHapticMaps(const std::map<ToneHapticsFeature, std::string> &hapticUriMap);
     void UpdateStreamId();
