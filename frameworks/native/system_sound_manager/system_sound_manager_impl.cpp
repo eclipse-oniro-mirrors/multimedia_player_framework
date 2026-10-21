@@ -2041,8 +2041,10 @@ int32_t SystemSoundManagerImpl::GetToneHapticsSettings(const DatabaseTool &datab
         ToneHapticsMode mode = IntToToneHapticsMode(simcardSettingAsset->GetRingMode());
         // VibrateFile may be empty due to database exception. Return IO_ERROR to trigger caller fallback
         // when user expects vibration (mode != NONE). mode == NONE means no vibration, empty uri is expected.
-        CHECK_AND_RETURN_RET_LOG(!hapticsUri.empty() || mode == ToneHapticsMode::NONE,
-            IO_ERROR, "GetToneHapticsSettings: vibrateFile is empty but mode is not NONE, data anomaly");
+        if (hapticsUri.empty() && mode != ToneHapticsMode::NONE) {
+            MEDIA_LOGE("GetToneHapticsSettings: vibrateFile is empty but mode is not NONE, data anomaly");
+            return IO_ERROR;
+        }
         settings.hapticsUri = hapticsUri;
         settings.mode = mode;
         return SUCCESS;
