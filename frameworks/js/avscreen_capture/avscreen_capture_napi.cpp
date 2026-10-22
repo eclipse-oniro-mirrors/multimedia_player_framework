@@ -595,8 +595,8 @@ napi_value AVScreenCaptureNapi::JsSetContentAutoRotation(napi_env env, napi_call
 
 napi_status AVScreenCaptureNapi::GetRectangleRegionParam(OHOS::Rect &area, napi_env env, napi_value arg)
 {
-    napi_valuetype vauleType = napi_undefined;
-    if (arg == nullptr || napi_typeof(env, arg, &valueType) != napi_ok || vauleType != napi_object) {
+    napi_valuetype valueType = napi_undefined;
+    if (arg == nullptr || napi_typeof(env, arg, &valueType) != napi_ok || valueType != napi_object) {
         MEDIA_LOGE("GetRectangleRegionParam input is not object");
         return napi_invalid_arg;
     }
@@ -1164,7 +1164,7 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     }
     if (asyncCtx->napi != nullptr) {
-        asyncCtx->napi->displayId_ = videaConfig.displayId;
+        asyncCtx->napi->displayId_ = videoConfig.displayId;
     }
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
     // get video frame info (frameWidth and frameHeight)
