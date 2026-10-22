@@ -18,10 +18,10 @@ Multimedia Player Framework 是 OpenHarmony 多媒体子系统组件，提供音
 
 ## 知识库使用规范
 
-项目知识按模块存放在 `knowledge/` 目录下，每个模块独立子目录：
+项目知识按模块存放在 `docs/knowledge/` 目录下，每个模块独立子目录：
 
 ```
-knowledge/
+docs/knowledge/
 ├── AVPlayer/          # 播放器模块（已有）
 ├── AVRecorder/        # 录制模块（已有）
 ├── AVScreenCapture/   # 屏幕录制模块（已有）
@@ -49,7 +49,7 @@ knowledge/
 
 1. **所属模块**：AVPlayer / AVScreenCapture / AVRecorder / AVTranscoder / AVMetadata / 跨模块
 2. **任务类别**：API 变更 / 引擎开发 / IPC 修改 / Pipeline 调整 / 内存管理 / DFX 增强 / Bug 修复 / 其它
-3. **已读知识文档**：列出已阅读的对应模块 `knowledge/<module>/` 下的相关文档
+3. **已读知识文档**：列出已阅读的对应模块 `docs/knowledge/<module>/` 下的相关文档
 4. **发现的约束**：从已读文档中提取适用于本次修改的约束规则（引用项目宪法编号或编码铁律编号）
 
 未完成声明前，不得开始编辑代码。
@@ -58,10 +58,10 @@ knowledge/
 
 ### AVPlayer 模块（播放器）
 
-知识目录：`knowledge/AVPlayer/`
+知识目录：`docs/knowledge/AVPlayer/`
 
 ```
-knowledge/AVPlayer/
+docs/knowledge/AVPlayer/
 ├── glossary.md                              # 术语表
 ├── business-context.md                      # 业务背景
 ├── architecture.md                          # 架构设计及约束
@@ -113,10 +113,10 @@ knowledge/AVPlayer/
 
 ### AVScreenCapture 模块（屏幕录制）
 
-知识目录：`knowledge/AVScreenCapture/`
+知识目录：`docs/knowledge/AVScreenCapture/`
 
 ```
-knowledge/AVScreenCapture/
+docs/knowledge/AVScreenCapture/
 ├── glossary.md                              # 术语表
 ├── business-context.md                      # 业务背景
 ├── architecture.md                          # 架构设计及约束
@@ -162,10 +162,10 @@ knowledge/AVScreenCapture/
 
 ### AVRecorder 模块（录制）
 
-知识目录：`knowledge/AVRecorder/`
+知识目录：`docs/knowledge/AVRecorder/`
 
 ```
-knowledge/AVRecorder/
+docs/knowledge/AVRecorder/
 ├── glossary.md                              # 术语表
 ├── business-context.md                      # 业务背景
 ├── architecture.md                          # 架构设计及约束
@@ -189,26 +189,26 @@ knowledge/AVRecorder/
 
 | 场景 | 起始路径 | 辅助阅读 |
 |------|---------|---------|
-| JS/ArkTS API 行为或 NAPI 绑定 | `frameworks/js/avrecorder/` | `knowledge/AVRecorder/entities/AVRecorder.md` |
-| 服务层状态机或配置 | `services/services/recorder/server/` | `knowledge/AVRecorder/entities/RecorderServer.md` |
-| IPC 客户端/服务端或回调 | `services/services/recorder/ipc/` | `knowledge/AVRecorder/technologies/IPCLayer.md` |
-| Pipeline 构建或 Filter 接线 | `services/engine/histreamer/recorder/` | `knowledge/AVRecorder/entities/HiRecorder.md`, `knowledge/AVRecorder/technologies/Pipeline.md` |
-| 音频/视频采集 Filter | `av_codec/services/media_engine/filters/audio_capture_filter.*`, `video_capture_filter.*` | `knowledge/AVRecorder/technologies/AudioVideoCapture.md` |
+| JS/ArkTS API 行为或 NAPI 绑定 | `frameworks/js/avrecorder/` | `docs/knowledge/AVRecorder/entities/AVRecorder.md` |
+| 服务层状态机或配置 | `services/services/recorder/server/` | `docs/knowledge/AVRecorder/entities/RecorderServer.md` |
+| IPC 客户端/服务端或回调 | `services/services/recorder/ipc/` | `docs/knowledge/AVRecorder/technologies/IPCLayer.md` |
+| Pipeline 构建或 Filter 接线 | `services/engine/histreamer/recorder/` | `docs/knowledge/AVRecorder/entities/HiRecorder.md`, `docs/knowledge/AVRecorder/technologies/Pipeline.md` |
+| 音频/视频采集 Filter | `av_codec/services/media_engine/filters/audio_capture_filter.*`, `video_capture_filter.*` | `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md` |
 | 音频/视频编码 Filter | `av_codec/services/media_engine/filters/audio_encoder_filter.*`, `surface_encoder_filter.*` | — |
-| 水印叠加 | `av_codec/services/media_engine/filters/water_mark_filter.*` | `knowledge/AVRecorder/entities/WaterMark.md`, `knowledge/AVRecorder/technologies/WatermarkFusion.md` |
-| 封装/容器写入 | `av_codec/services/media_engine/filters/muxer_filter.*` | `knowledge/AVRecorder/technologies/Muxer.md` |
-| Source ID 或 source type 逻辑 | `services/engine/histreamer/recorder/recorder_utils.h` | `knowledge/AVRecorder/entities/SourceId.md` |
-| 录制配置或 Profile | `frameworks/js/avrecorder/avrecorder_napi.h`（AVRecorderConfig/AVRecorderProfile） | `knowledge/AVRecorder/entities/AVRecorderConfig.md`, `knowledge/AVRecorder/entities/RecorderProfiles.md` |
-| 错误回调或信息上报 | `services/services/engine_intf/i_recorder_engine.h`（IRecorderEngineObs） | `knowledge/AVRecorder/entities/RecorderCallback.md` |
+| 水印叠加 | `av_codec/services/media_engine/filters/water_mark_filter.*` | `docs/knowledge/AVRecorder/entities/WaterMark.md`, `docs/knowledge/AVRecorder/technologies/WatermarkFusion.md` |
+| 封装/容器写入 | `av_codec/services/media_engine/filters/muxer_filter.*` | `docs/knowledge/AVRecorder/technologies/Muxer.md` |
+| Source ID 或 source type 逻辑 | `services/engine/histreamer/recorder/recorder_utils.h` | `docs/knowledge/AVRecorder/entities/SourceId.md` |
+| 录制配置或 Profile | `frameworks/js/avrecorder/avrecorder_napi.h`（AVRecorderConfig/AVRecorderProfile） | `docs/knowledge/AVRecorder/entities/AVRecorderConfig.md`, `docs/knowledge/AVRecorder/entities/RecorderProfiles.md` |
+| 错误回调或信息上报 | `services/services/engine_intf/i_recorder_engine.h`（IRecorderEngineObs） | `docs/knowledge/AVRecorder/entities/RecorderCallback.md` |
 | MediaLibrary 适配器（自动创建文件） | `services/services/recorder/server/media_library_adapter.*` | — |
 | 测试 | `test/unittest/` | — |
 
 ### AVTranscoder 模块（转码）
 
-知识目录：`knowledge/AVTranscoder/`
+知识目录：`docs/knowledge/AVTranscoder/`
 
 ```
-knowledge/AVTranscoder/
+docs/knowledge/AVTranscoder/
 ├── glossary.md                              # 术语表
 ├── business-context.md                      # 业务背景
 ├── architecture.md                          # 架构设计及约束
@@ -258,41 +258,41 @@ knowledge/AVTranscoder/
 
 | 修改路径 | 必读文档 | 原因 |
 |----------|---------|------|
-| frameworks/native/transcoder/ | knowledge/AVTranscoder/entities/api-layer.md | API 层实体与约束，TransCoder/TransCoderImpl InnerAPI 实现 |
-| frameworks/native/capi/avtranscoder/ | knowledge/AVTranscoder/entities/api-layer.md | C API 封装约束，OH_AVTranscoder 回调机制、配置结构 |
-| frameworks/js/avtranscoder/ | knowledge/AVTranscoder/entities/api-layer.md | NAPI 桥接层调用链，AVTransCoderNapi/AVTransCoderCallback |
-| frameworks/cj/avtranscoder/ | knowledge/AVTranscoder/entities/api-layer.md | CJ-FFI 桥接层，CJAVTranscoder/CJAVTranscoderCallback |
-| frameworks/taihe/media/ | knowledge/AVTranscoder/entities/api-layer.md | Taihe 桥接层，AVTranscoderImpl async/promise |
-| interfaces/inner_api/native/transcoder.h | knowledge/AVTranscoder/entities/api-layer.md | InnerAPI 契约定义，TransCoder/TransCoderCallback/TransCoderFactory |
-| interfaces/kits/c/avtranscoder.h | knowledge/AVTranscoder/entities/api-layer.md | C API 公共接口定义，OH_AVTranscoder_State 枚举 |
-| services/services/transcoder/server/ | knowledge/AVTranscoder/entities/service-layer.md + knowledge/AVTranscoder/technologies/transcoder-lifecycle.md | 6 状态状态机、TaskQueue 同步队列、ConfigInfo |
-| services/services/transcoder/client/ | knowledge/AVTranscoder/entities/ipc-layer-entities.md | IPC 客户端代理，MonitorClientObject 心跳 |
-| services/services/transcoder/ipc/ | knowledge/AVTranscoder/technologies/transcoder-ipc-communication.md + knowledge/AVTranscoder/entities/ipc-layer-entities.md | IPC 序列化约束、FD 传递、Monitor 心跳、Stub 销毁 |
-| services/engine/histreamer/transcoder/ | knowledge/AVTranscoder/technologies/transcoder-pipeline-architecture.md + knowledge/AVTranscoder/entities/engine-layer-entities.md | Pipeline 动态搭建、VideoProcessMode、Surface 级联、HiTransCoderCallbackLooper |
+| frameworks/native/transcoder/ | docs/knowledge/AVTranscoder/entities/api-layer.md | API 层实体与约束，TransCoder/TransCoderImpl InnerAPI 实现 |
+| frameworks/native/capi/avtranscoder/ | docs/knowledge/AVTranscoder/entities/api-layer.md | C API 封装约束，OH_AVTranscoder 回调机制、配置结构 |
+| frameworks/js/avtranscoder/ | docs/knowledge/AVTranscoder/entities/api-layer.md | NAPI 桥接层调用链，AVTransCoderNapi/AVTransCoderCallback |
+| frameworks/cj/avtranscoder/ | docs/knowledge/AVTranscoder/entities/api-layer.md | CJ-FFI 桥接层，CJAVTranscoder/CJAVTranscoderCallback |
+| frameworks/taihe/media/ | docs/knowledge/AVTranscoder/entities/api-layer.md | Taihe 桥接层，AVTranscoderImpl async/promise |
+| interfaces/inner_api/native/transcoder.h | docs/knowledge/AVTranscoder/entities/api-layer.md | InnerAPI 契约定义，TransCoder/TransCoderCallback/TransCoderFactory |
+| interfaces/kits/c/avtranscoder.h | docs/knowledge/AVTranscoder/entities/api-layer.md | C API 公共接口定义，OH_AVTranscoder_State 枚举 |
+| services/services/transcoder/server/ | docs/knowledge/AVTranscoder/entities/service-layer.md + docs/knowledge/AVTranscoder/technologies/transcoder-lifecycle.md | 6 状态状态机、TaskQueue 同步队列、ConfigInfo |
+| services/services/transcoder/client/ | docs/knowledge/AVTranscoder/entities/ipc-layer-entities.md | IPC 客户端代理，MonitorClientObject 心跳 |
+| services/services/transcoder/ipc/ | docs/knowledge/AVTranscoder/technologies/transcoder-ipc-communication.md + docs/knowledge/AVTranscoder/entities/ipc-layer-entities.md | IPC 序列化约束、FD 传递、Monitor 心跳、Stub 销毁 |
+| services/engine/histreamer/transcoder/ | docs/knowledge/AVTranscoder/technologies/transcoder-pipeline-architecture.md + docs/knowledge/AVTranscoder/entities/engine-layer-entities.md | Pipeline 动态搭建、VideoProcessMode、Surface 级联、HiTransCoderCallbackLooper |
 
 #### AVTranscoder 高频修改场景→源码文件映射
 
 | 修改场景 | 涉及源码文件 | 必读知识文档 |
 |----------|------------|------------|
-| 状态机调整 | `transcoder_server.cpp` | knowledge/AVTranscoder/technologies/transcoder-state-machine.md + knowledge/AVTranscoder/entities/service-layer.md |
-| IPC 接口增删 | `transcoder_service_stub.cpp`、`transcoder_service_proxy.cpp`、`transcoder_listener_proxy.cpp`、`transcoder_listener_stub.cpp` | knowledge/AVTranscoder/technologies/transcoder-ipc-communication.md + knowledge/AVTranscoder/entities/ipc-layer-entities.md |
-| 引擎注册/选择 | `engine_factory_repo.cpp`、`hst_engine_factory.cpp` | knowledge/AVTranscoder/entities/engine-factory-and-selection.md |
-| Pipeline Filter 新增/修改 | 对应 `*_filter.cpp` + `hi_transcoder_pipeline.cpp`（av_codec） | knowledge/AVTranscoder/technologies/transcoder-pipeline-architecture.md + knowledge/AVTranscoder/entities/engine-layer-entities.md |
-| 水印逻辑修改 | `hitranscoder_impl.cpp`、WaterMarkFilter（av_codec） | knowledge/AVTranscoder/technologies/watermark-and-video-processing.md + knowledge/AVTranscoder/entities/engine-layer-entities.md |
-| 音频直通/编码修改 | `hitranscoder_impl.cpp`、AudioEncoderFilter（av_codec） | knowledge/AVTranscoder/entities/engine-layer-entities.md + knowledge/AVTranscoder/technologies/transcoder-pipeline-architecture.md |
-| 回调/进度上报修改 | `hitranscoder_callback_looper.cpp`、`transcoder_server.cpp` | knowledge/AVTranscoder/technologies/transcoder-callback-and-progress.md + knowledge/AVTranscoder/entities/ipc-layer-entities.md |
-| 错误码/DFX 打点 | `transcoder_server.cpp` | knowledge/AVTranscoder/technologies/transcoder-error-handling-and-dfx.md |
-| NAPI/JS API 变更 | `avtranscoder_napi.cpp`、`transcoder_impl.cpp` | knowledge/AVTranscoder/entities/api-layer.md |
-| C API 变更 | `native_avtranscoder.cpp`、`transcoder_impl.cpp` | knowledge/AVTranscoder/entities/api-layer.md |
-| CJ API 变更 | `cj_avtranscoder.cpp`、`transcoder_impl.cpp` | knowledge/AVTranscoder/entities/api-layer.md |
-| 配置/格式支持修改 | `transcoder_impl.cpp`、`hitranscoder_impl.cpp` | knowledge/AVTranscoder/technologies/transcoder-config-and-formats.md + knowledge/AVTranscoder/entities/engine-layer-entities.md |
+| 状态机调整 | `transcoder_server.cpp` | docs/knowledge/AVTranscoder/technologies/transcoder-state-machine.md + docs/knowledge/AVTranscoder/entities/service-layer.md |
+| IPC 接口增删 | `transcoder_service_stub.cpp`、`transcoder_service_proxy.cpp`、`transcoder_listener_proxy.cpp`、`transcoder_listener_stub.cpp` | docs/knowledge/AVTranscoder/technologies/transcoder-ipc-communication.md + docs/knowledge/AVTranscoder/entities/ipc-layer-entities.md |
+| 引擎注册/选择 | `engine_factory_repo.cpp`、`hst_engine_factory.cpp` | docs/knowledge/AVTranscoder/entities/engine-factory-and-selection.md |
+| Pipeline Filter 新增/修改 | 对应 `*_filter.cpp` + `hi_transcoder_pipeline.cpp`（av_codec） | docs/knowledge/AVTranscoder/technologies/transcoder-pipeline-architecture.md + docs/knowledge/AVTranscoder/entities/engine-layer-entities.md |
+| 水印逻辑修改 | `hitranscoder_impl.cpp`、WaterMarkFilter（av_codec） | docs/knowledge/AVTranscoder/technologies/watermark-and-video-processing.md + docs/knowledge/AVTranscoder/entities/engine-layer-entities.md |
+| 音频直通/编码修改 | `hitranscoder_impl.cpp`、AudioEncoderFilter（av_codec） | docs/knowledge/AVTranscoder/entities/engine-layer-entities.md + docs/knowledge/AVTranscoder/technologies/transcoder-pipeline-architecture.md |
+| 回调/进度上报修改 | `hitranscoder_callback_looper.cpp`、`transcoder_server.cpp` | docs/knowledge/AVTranscoder/technologies/transcoder-callback-and-progress.md + docs/knowledge/AVTranscoder/entities/ipc-layer-entities.md |
+| 错误码/DFX 打点 | `transcoder_server.cpp` | docs/knowledge/AVTranscoder/technologies/transcoder-error-handling-and-dfx.md |
+| NAPI/JS API 变更 | `avtranscoder_napi.cpp`、`transcoder_impl.cpp` | docs/knowledge/AVTranscoder/entities/api-layer.md |
+| C API 变更 | `native_avtranscoder.cpp`、`transcoder_impl.cpp` | docs/knowledge/AVTranscoder/entities/api-layer.md |
+| CJ API 变更 | `cj_avtranscoder.cpp`、`transcoder_impl.cpp` | docs/knowledge/AVTranscoder/entities/api-layer.md |
+| 配置/格式支持修改 | `transcoder_impl.cpp`、`hitranscoder_impl.cpp` | docs/knowledge/AVTranscoder/technologies/transcoder-config-and-formats.md + docs/knowledge/AVTranscoder/entities/engine-layer-entities.md |
 
 ### AVMetadata 模块（元数据/缩略图）
 
-知识目录：`knowledge/AVMeta/`
+知识目录：`docs/knowledge/AVMeta/`
 
 ```
-knowledge/AVMeta/
+docs/knowledge/AVMeta/
 ├── glossary.md                              # 术语表
 ├── business-context.md                      # 业务背景
 ├── architecture.md                          # 架构设计及约束
@@ -346,93 +346,93 @@ knowledge/AVMeta/
 
 | 修改路径 | 必读文档 | 原因 |
 |----------|---------|------|
-| frameworks/native/player/ | knowledge/AVPlayer/entities/api-layer.md | API 层实体与约束，状态机调用顺序 |
-| frameworks/native/capi/player/ | knowledge/AVPlayer/entities/api-layer.md | C API 封装约束，OH_AVPlayer 回调机制 |
-| frameworks/js/napi/ | knowledge/AVPlayer/entities/api-layer.md | NAPI 桥接层调用链 |
-| services/services/player/ipc/ | knowledge/AVPlayer/technologies/ipc-communication.md + knowledge/AVPlayer/entities/ipc-layer-entities.md | IPC 序列化约束、回调不可阻塞、Freeze 机制 |
-| services/services/player/ | knowledge/AVPlayer/technologies/player-lifecycle.md + knowledge/AVPlayer/entities/service-layer.md | 8 状态状态机、TaskMgr 异步约束、ConfigInfo 原子性 |
-| services/services/player/player_mem_manage/ | knowledge/AVPlayer/technologies/memory-and-background.md | 内存回收/恢复流程、前台后台策略 |
-| services/engine/histreamer/player/ | knowledge/AVPlayer/technologies/pipeline-architecture.md + knowledge/AVPlayer/entities/engine-layer-entities.md | Pipeline 统一控制约束、Filter 接口契约 |
-| services/engine/histreamer/lpp/ | knowledge/AVPlayer/entities/engine-factory-and-selection.md | LPP 引擎实体、HDI 同步机制 |
-| services/engine/ | knowledge/AVPlayer/entities/engine-factory-and-selection.md | 引擎工厂注册与打分选择，dlopen 约束 |
-| plugins/ | knowledge/AVPlayer/technologies/media-source-and-protocol.md | 插件 Sniff 注册机制、路径安全校验 |
+| frameworks/native/player/ | docs/knowledge/AVPlayer/entities/api-layer.md | API 层实体与约束，状态机调用顺序 |
+| frameworks/native/capi/player/ | docs/knowledge/AVPlayer/entities/api-layer.md | C API 封装约束，OH_AVPlayer 回调机制 |
+| frameworks/js/napi/ | docs/knowledge/AVPlayer/entities/api-layer.md | NAPI 桥接层调用链 |
+| services/services/player/ipc/ | docs/knowledge/AVPlayer/technologies/ipc-communication.md + docs/knowledge/AVPlayer/entities/ipc-layer-entities.md | IPC 序列化约束、回调不可阻塞、Freeze 机制 |
+| services/services/player/ | docs/knowledge/AVPlayer/technologies/player-lifecycle.md + docs/knowledge/AVPlayer/entities/service-layer.md | 8 状态状态机、TaskMgr 异步约束、ConfigInfo 原子性 |
+| services/services/player/player_mem_manage/ | docs/knowledge/AVPlayer/technologies/memory-and-background.md | 内存回收/恢复流程、前台后台策略 |
+| services/engine/histreamer/player/ | docs/knowledge/AVPlayer/technologies/pipeline-architecture.md + docs/knowledge/AVPlayer/entities/engine-layer-entities.md | Pipeline 统一控制约束、Filter 接口契约 |
+| services/engine/histreamer/lpp/ | docs/knowledge/AVPlayer/entities/engine-factory-and-selection.md | LPP 引擎实体、HDI 同步机制 |
+| services/engine/ | docs/knowledge/AVPlayer/entities/engine-factory-and-selection.md | 引擎工厂注册与打分选择，dlopen 约束 |
+| plugins/ | docs/knowledge/AVPlayer/technologies/media-source-and-protocol.md | 插件 Sniff 注册机制、路径安全校验 |
 
 #### AVRecorder 相关路径
 
 | 修改路径 | 必读文档 | 原因 |
 |----------|---------|------|
-| `frameworks/js/avrecorder/` | `knowledge/AVRecorder/entities/AVRecorder.md` | JS API 兼容性、NAPI 绑定约束 |
-| `frameworks/js/avrecorder/avrecorder_napi.h` | `knowledge/AVRecorder/entities/AVRecorderConfig.md` + `knowledge/AVRecorder/entities/RecorderProfiles.md` | AVRecorderConfig/AVRecorderProfile 字段定义、IPC 序列化兼容性 |
-| `services/services/recorder/server/` | `knowledge/AVRecorder/entities/RecorderServer.md` | 录制服务状态机（RecStatus）、ConfigInfo 原子性、WatchDog |
-| `services/services/recorder/ipc/` | `knowledge/AVRecorder/technologies/IPCLayer.md` | IPC parcel 字段顺序、回调路由、Proxy/Stub 一致性 |
-| `services/services/engine_intf/` | `knowledge/AVRecorder/entities/RecorderCallback.md` | IRecorderEngineObs 回调接口、错误/信息上报契约 |
-| `services/engine/histreamer/recorder/` | `knowledge/AVRecorder/entities/HiRecorder.md` | 状态机转换（StateId）、Pipeline 构建（BuildPipeline） |
-| `services/engine/histreamer/recorder/recorder_utils.h` | `knowledge/AVRecorder/entities/SourceId.md` | SourceId 掩码常量（AUDIO_MASK/VIDEO_MASK/META_MASK）、source type 逻辑 |
-| `services/services/recorder/server/media_library_adapter.*` | `knowledge/AVRecorder/entities/RecorderServer.md` | FileGenerationMode、MediaLibrary 文件创建逻辑 |
-| `av_codec/services/media_engine/filters/audio_capture_filter.*` | `knowledge/AVRecorder/technologies/AudioVideoCapture.md` | 音频采集 Filter 生命周期、Surface 契约 |
-| `av_codec/services/media_engine/filters/video_capture_filter.*` | `knowledge/AVRecorder/technologies/AudioVideoCapture.md` | 视频采集 Filter 生命周期、getInputSurface 时序 |
-| `av_codec/services/media_engine/filters/water_mark_filter.*` | `knowledge/AVRecorder/entities/WaterMark.md` + `knowledge/AVRecorder/technologies/WatermarkFusion.md` | 水印渲染、OpenGL shader、硬件/软件水印兼容性 |
-| `av_codec/services/media_engine/filters/muxer_filter.*` | `knowledge/AVRecorder/technologies/Muxer.md` | 封装格式、track 添加逻辑、容器写入、跨版本兼容性 |
+| `frameworks/js/avrecorder/` | `docs/knowledge/AVRecorder/entities/AVRecorder.md` | JS API 兼容性、NAPI 绑定约束 |
+| `frameworks/js/avrecorder/avrecorder_napi.h` | `docs/knowledge/AVRecorder/entities/AVRecorderConfig.md` + `docs/knowledge/AVRecorder/entities/RecorderProfiles.md` | AVRecorderConfig/AVRecorderProfile 字段定义、IPC 序列化兼容性 |
+| `services/services/recorder/server/` | `docs/knowledge/AVRecorder/entities/RecorderServer.md` | 录制服务状态机（RecStatus）、ConfigInfo 原子性、WatchDog |
+| `services/services/recorder/ipc/` | `docs/knowledge/AVRecorder/technologies/IPCLayer.md` | IPC parcel 字段顺序、回调路由、Proxy/Stub 一致性 |
+| `services/services/engine_intf/` | `docs/knowledge/AVRecorder/entities/RecorderCallback.md` | IRecorderEngineObs 回调接口、错误/信息上报契约 |
+| `services/engine/histreamer/recorder/` | `docs/knowledge/AVRecorder/entities/HiRecorder.md` | 状态机转换（StateId）、Pipeline 构建（BuildPipeline） |
+| `services/engine/histreamer/recorder/recorder_utils.h` | `docs/knowledge/AVRecorder/entities/SourceId.md` | SourceId 掩码常量（AUDIO_MASK/VIDEO_MASK/META_MASK）、source type 逻辑 |
+| `services/services/recorder/server/media_library_adapter.*` | `docs/knowledge/AVRecorder/entities/RecorderServer.md` | FileGenerationMode、MediaLibrary 文件创建逻辑 |
+| `av_codec/services/media_engine/filters/audio_capture_filter.*` | `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md` | 音频采集 Filter 生命周期、Surface 契约 |
+| `av_codec/services/media_engine/filters/video_capture_filter.*` | `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md` | 视频采集 Filter 生命周期、getInputSurface 时序 |
+| `av_codec/services/media_engine/filters/water_mark_filter.*` | `docs/knowledge/AVRecorder/entities/WaterMark.md` + `docs/knowledge/AVRecorder/technologies/WatermarkFusion.md` | 水印渲染、OpenGL shader、硬件/软件水印兼容性 |
+| `av_codec/services/media_engine/filters/muxer_filter.*` | `docs/knowledge/AVRecorder/technologies/Muxer.md` | 封装格式、track 添加逻辑、容器写入、跨版本兼容性 |
 | `av_codec/services/media_engine/filters/audio_encoder_filter.*` | — | 音频编码 Filter（无独立知识文档，参考 Pipeline.md） |
 | `av_codec/services/media_engine/filters/surface_encoder_filter.*` | — | 视频编码 Filter（无独立知识文档，参考 Pipeline.md） |
 
 **AVPlayer 关键词触发规则**：
 
-- 提及 **Seek, SeekAgent, DoSeek, OnSeekDone** → 先读 `knowledge/AVPlayer/technologies/seek-architecture.md`
-- 提及 **LPP, LppEngine, LppStreamPlayer, HDI** → 先读 `knowledge/AVPlayer/entities/engine-factory-and-selection.md`
-- 提及 **BufferQueue, AVBufferQueue, BufferManager** → 先读 `knowledge/AVPlayer/technologies/av-sync-and-buffer.md`
-- 提及 **Freeze, Unfreeze, AppBackground, memory reclaim** → 先读 `knowledge/AVPlayer/technologies/memory-and-background.md`
-- 提及 **RecoverConfigInfo, RestoreConfig, PlayerServerMem** → 先读 `knowledge/AVPlayer/technologies/memory-and-background.md`
-- 提及 **Pipeline, Filter, HiPlayerImpl, DemuxerFilter, DecoderFilter** → 先读 `knowledge/AVPlayer/technologies/pipeline-architecture.md` 和 `knowledge/AVPlayer/entities/engine-layer-entities.md`
-- 提及 **状态机, PlayerState, BaseState, stateCtrlList** → 先读 `knowledge/AVPlayer/technologies/player-lifecycle.md`
-- 提及 **IPC, Proxy, Stub, PlayerClient, PlayerServiceStub, PlayerListenerProxy** → 先读 `knowledge/AVPlayer/technologies/ipc-communication.md` 和 `knowledge/AVPlayer/entities/ipc-layer-entities.md`
-- 提及 **EngineFactory, Score, dlopen, HstEngineFactory, LppEngineFactory** → 先读 `knowledge/AVPlayer/entities/engine-factory-and-selection.md`
-- 提及 **Sniff, SourcePlugin, DemuxerPlugin, CodecPlugin** → 先读 `knowledge/AVPlayer/technologies/media-source-and-protocol.md`
+- 提及 **Seek, SeekAgent, DoSeek, OnSeekDone** → 先读 `docs/knowledge/AVPlayer/technologies/seek-architecture.md`
+- 提及 **LPP, LppEngine, LppStreamPlayer, HDI** → 先读 `docs/knowledge/AVPlayer/entities/engine-factory-and-selection.md`
+- 提及 **BufferQueue, AVBufferQueue, BufferManager** → 先读 `docs/knowledge/AVPlayer/technologies/av-sync-and-buffer.md`
+- 提及 **Freeze, Unfreeze, AppBackground, memory reclaim** → 先读 `docs/knowledge/AVPlayer/technologies/memory-and-background.md`
+- 提及 **RecoverConfigInfo, RestoreConfig, PlayerServerMem** → 先读 `docs/knowledge/AVPlayer/technologies/memory-and-background.md`
+- 提及 **Pipeline, Filter, HiPlayerImpl, DemuxerFilter, DecoderFilter** → 先读 `docs/knowledge/AVPlayer/technologies/pipeline-architecture.md` 和 `docs/knowledge/AVPlayer/entities/engine-layer-entities.md`
+- 提及 **状态机, PlayerState, BaseState, stateCtrlList** → 先读 `docs/knowledge/AVPlayer/technologies/player-lifecycle.md`
+- 提及 **IPC, Proxy, Stub, PlayerClient, PlayerServiceStub, PlayerListenerProxy** → 先读 `docs/knowledge/AVPlayer/technologies/ipc-communication.md` 和 `docs/knowledge/AVPlayer/entities/ipc-layer-entities.md`
+- 提及 **EngineFactory, Score, dlopen, HstEngineFactory, LppEngineFactory** → 先读 `docs/knowledge/AVPlayer/entities/engine-factory-and-selection.md`
+- 提及 **Sniff, SourcePlugin, DemuxerPlugin, CodecPlugin** → 先读 `docs/knowledge/AVPlayer/technologies/media-source-and-protocol.md`
 
 **AVRecorder 关键词触发规则**：
 
-- 提及 **AVRecorder, createAVRecorder, AVRecorderConfig, AVRecorderProfile** → 先读 `knowledge/AVRecorder/entities/AVRecorder.md` 和 `knowledge/AVRecorder/entities/AVRecorderConfig.md`
-- 提及 **HiRecorder, HiRecorderImpl, Pipeline, Filter, BuildPipeline** → 先读 `knowledge/AVRecorder/entities/HiRecorder.md` 和 `knowledge/AVRecorder/technologies/Pipeline.md`
-- 提及 **Watermark, WaterMarkFilter, SetWatermark, AddWatermark, OpenGL watermark** → 先读 `knowledge/AVRecorder/entities/WaterMark.md` 和 `knowledge/AVRecorder/technologies/WatermarkFusion.md`
-- 提及 **Muxer, MuxerFilter, MediaMuxer, OutputFormat, container format** → 先读 `knowledge/AVRecorder/technologies/Muxer.md`
-- 提及 **SourceId, AudioSourceType, VideoSourceType, MetaSourceType, DUMMY_SOURCE_ID** → 先读 `knowledge/AVRecorder/entities/SourceId.md`
-- 提及 **IPC, Proxy, Stub, RecorderClient, RecorderServer, IStandardRecorderService** → 先读 `knowledge/AVRecorder/technologies/IPCLayer.md`
-- 提及 **AudioCapturer, AudioCaptureFilter, VideoCaptureFilter, Surface, getInputSurface** → 先读 `knowledge/AVRecorder/technologies/AudioVideoCapture.md`
+- 提及 **AVRecorder, createAVRecorder, AVRecorderConfig, AVRecorderProfile** → 先读 `docs/knowledge/AVRecorder/entities/AVRecorder.md` 和 `docs/knowledge/AVRecorder/entities/AVRecorderConfig.md`
+- 提及 **HiRecorder, HiRecorderImpl, Pipeline, Filter, BuildPipeline** → 先读 `docs/knowledge/AVRecorder/entities/HiRecorder.md` 和 `docs/knowledge/AVRecorder/technologies/Pipeline.md`
+- 提及 **Watermark, WaterMarkFilter, SetWatermark, AddWatermark, OpenGL watermark** → 先读 `docs/knowledge/AVRecorder/entities/WaterMark.md` 和 `docs/knowledge/AVRecorder/technologies/WatermarkFusion.md`
+- 提及 **Muxer, MuxerFilter, MediaMuxer, OutputFormat, container format** → 先读 `docs/knowledge/AVRecorder/technologies/Muxer.md`
+- 提及 **SourceId, AudioSourceType, VideoSourceType, MetaSourceType, DUMMY_SOURCE_ID** → 先读 `docs/knowledge/AVRecorder/entities/SourceId.md`
+- 提及 **IPC, Proxy, Stub, RecorderClient, RecorderServer, IStandardRecorderService** → 先读 `docs/knowledge/AVRecorder/technologies/IPCLayer.md`
+- 提及 **AudioCapturer, AudioCaptureFilter, VideoCaptureFilter, Surface, getInputSurface** → 先读 `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md`
 
 #### AVScreenCapture 相关路径
 
 | 修改路径 | 必读文档 | 原因 |
 |----------|---------|------|
-| frameworks/native/screen_capture/ | knowledge/AVScreenCapture/entities/api-layer.md | Native API 层实体与约束，ScreenCaptureImpl 转发逻辑 |
-| frameworks/native/capi/screencapture/ | knowledge/AVScreenCapture/entities/api-layer.md | C API 封装约束，OH_AVScreenCapture 回调机制，新旧回调适配 |
-| frameworks/js/avscreen_capture/ | knowledge/AVScreenCapture/entities/api-layer.md | NAPI 桥接层调用链，TaskQueue 异步调度 |
-| frameworks/js/screencapturemonitor/ | knowledge/AVScreenCapture/entities/monitor-and-controller.md | Monitor NAPI 桥接，监听器注册 |
-| frameworks/cj/avscreen_capture/ | knowledge/AVScreenCapture/entities/api-layer.md | 仓颉 FFI 桥接层 |
-| services/services/screen_capture/ipc/ | knowledge/AVScreenCapture/technologies/ipc-communication.md + knowledge/AVScreenCapture/entities/ipc-layer-entities.md | IPC 序列化约束、回调不可阻塞、41 个消息码 |
-| services/services/screen_capture/server/ | knowledge/AVScreenCapture/technologies/capture-lifecycle.md + knowledge/AVScreenCapture/entities/service-layer.md | 7 状态能力位图状态机、ScreenCaptureServer 核心逻辑 |
-| services/services/screen_capture/client/ | knowledge/AVScreenCapture/entities/ipc-layer-entities.md | ScreenCaptureClient 客户端代理 |
-| services/services/screen_capture_monitor/ | knowledge/AVScreenCapture/entities/monitor-and-controller.md | Monitor 服务端/客户端，录屏状态追踪 |
-| services/services/screen_capture_monitor/ipc/ | knowledge/AVScreenCapture/entities/monitor-and-controller.md + knowledge/AVScreenCapture/technologies/ipc-communication.md | Monitor IPC 序列化约束、回调不可阻塞 |
-| services/etc/screencapture/ | knowledge/AVScreenCapture/technologies/privacy-and-permission.md | 系统参数配置，弹窗与录屏器包名 |
-| interfaces/inner_api/native/ | knowledge/AVScreenCapture/entities/api-layer.md + knowledge/AVScreenCapture/entities/ipc-layer-entities.md | InnerAPI 契约头文件（screen_capture.h），API 稳定性约束 |
-| interfaces/kits/c/ | knowledge/AVScreenCapture/entities/api-layer.md | 公共 SDK C 头文件（native_avscreen_capture.h），API 兼容性约束 |
+| frameworks/native/screen_capture/ | docs/knowledge/AVScreenCapture/entities/api-layer.md | Native API 层实体与约束，ScreenCaptureImpl 转发逻辑 |
+| frameworks/native/capi/screencapture/ | docs/knowledge/AVScreenCapture/entities/api-layer.md | C API 封装约束，OH_AVScreenCapture 回调机制，新旧回调适配 |
+| frameworks/js/avscreen_capture/ | docs/knowledge/AVScreenCapture/entities/api-layer.md | NAPI 桥接层调用链，TaskQueue 异步调度 |
+| frameworks/js/screencapturemonitor/ | docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md | Monitor NAPI 桥接，监听器注册 |
+| frameworks/cj/avscreen_capture/ | docs/knowledge/AVScreenCapture/entities/api-layer.md | 仓颉 FFI 桥接层 |
+| services/services/screen_capture/ipc/ | docs/knowledge/AVScreenCapture/technologies/ipc-communication.md + docs/knowledge/AVScreenCapture/entities/ipc-layer-entities.md | IPC 序列化约束、回调不可阻塞、41 个消息码 |
+| services/services/screen_capture/server/ | docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md + docs/knowledge/AVScreenCapture/entities/service-layer.md | 7 状态能力位图状态机、ScreenCaptureServer 核心逻辑 |
+| services/services/screen_capture/client/ | docs/knowledge/AVScreenCapture/entities/ipc-layer-entities.md | ScreenCaptureClient 客户端代理 |
+| services/services/screen_capture_monitor/ | docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md | Monitor 服务端/客户端，录屏状态追踪 |
+| services/services/screen_capture_monitor/ipc/ | docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md + docs/knowledge/AVScreenCapture/technologies/ipc-communication.md | Monitor IPC 序列化约束、回调不可阻塞 |
+| services/etc/screencapture/ | docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md | 系统参数配置，弹窗与录屏器包名 |
+| interfaces/inner_api/native/ | docs/knowledge/AVScreenCapture/entities/api-layer.md + docs/knowledge/AVScreenCapture/entities/ipc-layer-entities.md | InnerAPI 契约头文件（screen_capture.h），API 稳定性约束 |
+| interfaces/kits/c/ | docs/knowledge/AVScreenCapture/entities/api-layer.md | 公共 SDK C 头文件（native_avscreen_capture.h），API 兼容性约束 |
 | test/unittest/screen_capture_test/ | — | ScreenCaptureServer 状态机单元测试，验证状态转换合法性 |
 | test/unittest/screen_capture_impl_unittest/ | — | ScreenCaptureImpl 单元测试 |
 | test/fuzztest/screen_capture_fuzztest/ | — | 屏幕录制模糊测试，验证输入参数校验 |
 
 **AVScreenCapture 关键词触发规则**：
 
-- 提及 **VirtualScreen, MakeVirtualScreenMirror, MakeVirtualScreenExtended, SurfaceBuffer** → 先读 `knowledge/AVScreenCapture/entities/capture-implementation.md`
-- 提及 **能力位图, Capability bitmask, IsState, STATE_CAPS_, AVScreenCaptureState** → 先读 `knowledge/AVScreenCapture/technologies/capture-lifecycle.md` 和 `knowledge/AVScreenCapture/entities/service-layer.md`
-- 提及 **PrivacyProtected, 隐私窗口, 隐私保护, ENTER_PRIVATE_SCENE** → 先读 `knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
-- 提及 **白名单, 黑名单, AddWhiteListWindows, ExcludeContent, SetVirtualScreenBlackList** → 先读 `knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
-- 提及 **Picker, PresentPicker, PickerMode, UserChoice, Controller** → 先读 `knowledge/AVScreenCapture/entities/monitor-and-controller.md` 和 `knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
-- 提及 **Monitor, IsScreenCaptureWorking, 系统录屏器, ScreenCaptureMonitorServer** → 先读 `knowledge/AVScreenCapture/entities/monitor-and-controller.md`
-- 提及 **IPC, Proxy, Stub, ScreenCaptureClient, ScreenCaptureServiceStub, 41 个消息码** → 先读 `knowledge/AVScreenCapture/technologies/ipc-communication.md` 和 `knowledge/AVScreenCapture/entities/ipc-layer-entities.md`
-- 提及 **AudioCapturerWrapper, AudioDataSource, MixAudio, 混音, 音视频同步** → 先读 `knowledge/AVScreenCapture/entities/capture-implementation.md` 和 `knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md`
-- 提及 **ScreenCapBufferConsumerListener, OnBufferAvailable, SurfaceBuffer** → 先读 `knowledge/AVScreenCapture/entities/capture-implementation.md`
-- 提及 **ScreenCaptureServerManager, maxAppLimit, 实例限制, SA 注册** → 先读 `knowledge/AVScreenCapture/entities/service-layer.md`
-- 提及 **NotificationLocalLiveView, 通知栏, 录屏通知** → 先读 `knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md`
+- 提及 **VirtualScreen, MakeVirtualScreenMirror, MakeVirtualScreenExtended, SurfaceBuffer** → 先读 `docs/knowledge/AVScreenCapture/entities/capture-implementation.md`
+- 提及 **能力位图, Capability bitmask, IsState, STATE_CAPS_, AVScreenCaptureState** → 先读 `docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md` 和 `docs/knowledge/AVScreenCapture/entities/service-layer.md`
+- 提及 **PrivacyProtected, 隐私窗口, 隐私保护, ENTER_PRIVATE_SCENE** → 先读 `docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
+- 提及 **白名单, 黑名单, AddWhiteListWindows, ExcludeContent, SetVirtualScreenBlackList** → 先读 `docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
+- 提及 **Picker, PresentPicker, PickerMode, UserChoice, Controller** → 先读 `docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md` 和 `docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
+- 提及 **Monitor, IsScreenCaptureWorking, 系统录屏器, ScreenCaptureMonitorServer** → 先读 `docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md`
+- 提及 **IPC, Proxy, Stub, ScreenCaptureClient, ScreenCaptureServiceStub, 41 个消息码** → 先读 `docs/knowledge/AVScreenCapture/technologies/ipc-communication.md` 和 `docs/knowledge/AVScreenCapture/entities/ipc-layer-entities.md`
+- 提及 **AudioCapturerWrapper, AudioDataSource, MixAudio, 混音, 音视频同步** → 先读 `docs/knowledge/AVScreenCapture/entities/capture-implementation.md` 和 `docs/knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md`
+- 提及 **ScreenCapBufferConsumerListener, OnBufferAvailable, SurfaceBuffer** → 先读 `docs/knowledge/AVScreenCapture/entities/capture-implementation.md`
+- 提及 **ScreenCaptureServerManager, maxAppLimit, 实例限制, SA 注册** → 先读 `docs/knowledge/AVScreenCapture/entities/service-layer.md`
+- 提及 **NotificationLocalLiveView, 通知栏, 录屏通知** → 先读 `docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md`
 
 #### 其它模块路径
 
@@ -440,18 +440,18 @@ knowledge/AVMeta/
 
 | 修改路径 | 必读文档 | 原因 |
 |----------|---------|------|
-| frameworks/native/avmetadatahelper/ | knowledge/AVMeta/entities/api-layer.md | API 层实体与约束，三接口合一，PixelMap 转换 |
-| frameworks/native/capi/avmetadatahelper/ | knowledge/AVMeta/entities/api-layer.md | C API 封装约束，OH_AVMetadataExtractor/OH_AVImageGenerator |
-| frameworks/js/metadatahelper/ | knowledge/AVMeta/entities/api-layer.md | NAPI 桥接层调用链，AVMetadataExtractorNapi/AVImageGeneratorNapi |
-| frameworks/cj/metadatahelper/ | knowledge/AVMeta/entities/api-layer.md | CJ-FFI 桥接层 |
-| frameworks/taihe/media/ | knowledge/AVMeta/entities/api-layer.md | Taihe 桥接层 |
-| services/services/avmetadatahelper/ipc/ | knowledge/AVMeta/technologies/ipc-communication.md + knowledge/AVMeta/entities/ipc-layer-entities.md | IPC 序列化约束、回调不可阻塞、参数限制 |
-| services/services/avmetadatahelper/server/ | knowledge/AVMeta/technologies/metadata-lifecycle.md + knowledge/AVMeta/entities/service-layer.md | 4 状态状态机、TaskQueue 串行化、懒初始化 |
-| services/services/avmetadatahelper/client/ | knowledge/AVMeta/entities/ipc-layer-entities.md | IPC 客户端代理，死亡通知 |
-| services/engine/histreamer/avmetadatahelper/ | knowledge/AVMeta/technologies/thumbnail-architecture.md + knowledge/AVMeta/entities/engine-layer-entities.md | 缩略图生成、硬软解切换、懒初始化约束 |
-| services/engine/histreamer/factory/ | knowledge/AVMeta/entities/engine-factory-and-selection.md | 引擎工厂注册与打分选择，SCENE_AVMETADATA |
-| interfaces/inner_api/native/avmetadatahelper.h | knowledge/AVMeta/entities/api-layer.md | InnerAPI 契约定义 |
-| interfaces/kits/c/avmetadata_extractor.h | knowledge/AVMeta/entities/api-layer.md | C API 接口定义 |
+| frameworks/native/avmetadatahelper/ | docs/knowledge/AVMeta/entities/api-layer.md | API 层实体与约束，三接口合一，PixelMap 转换 |
+| frameworks/native/capi/avmetadatahelper/ | docs/knowledge/AVMeta/entities/api-layer.md | C API 封装约束，OH_AVMetadataExtractor/OH_AVImageGenerator |
+| frameworks/js/metadatahelper/ | docs/knowledge/AVMeta/entities/api-layer.md | NAPI 桥接层调用链，AVMetadataExtractorNapi/AVImageGeneratorNapi |
+| frameworks/cj/metadatahelper/ | docs/knowledge/AVMeta/entities/api-layer.md | CJ-FFI 桥接层 |
+| frameworks/taihe/media/ | docs/knowledge/AVMeta/entities/api-layer.md | Taihe 桥接层 |
+| services/services/avmetadatahelper/ipc/ | docs/knowledge/AVMeta/technologies/ipc-communication.md + docs/knowledge/AVMeta/entities/ipc-layer-entities.md | IPC 序列化约束、回调不可阻塞、参数限制 |
+| services/services/avmetadatahelper/server/ | docs/knowledge/AVMeta/technologies/metadata-lifecycle.md + docs/knowledge/AVMeta/entities/service-layer.md | 4 状态状态机、TaskQueue 串行化、懒初始化 |
+| services/services/avmetadatahelper/client/ | docs/knowledge/AVMeta/entities/ipc-layer-entities.md | IPC 客户端代理，死亡通知 |
+| services/engine/histreamer/avmetadatahelper/ | docs/knowledge/AVMeta/technologies/thumbnail-architecture.md + docs/knowledge/AVMeta/entities/engine-layer-entities.md | 缩略图生成、硬软解切换、懒初始化约束 |
+| services/engine/histreamer/factory/ | docs/knowledge/AVMeta/entities/engine-factory-and-selection.md | 引擎工厂注册与打分选择，SCENE_AVMETADATA |
+| interfaces/inner_api/native/avmetadatahelper.h | docs/knowledge/AVMeta/entities/api-layer.md | InnerAPI 契约定义 |
+| interfaces/kits/c/avmetadata_extractor.h | docs/knowledge/AVMeta/entities/api-layer.md | C API 接口定义 |
 
 #### 其它模块路径
 
@@ -461,52 +461,52 @@ knowledge/AVMeta/
 
 | 修改场景 | 涉及源码文件 | 必读知识文档 |
 |----------|------------|------------|
-| Seek 逻辑修改 | `hiplayer_impl.cpp`、`seek_agent.cpp`、`pipeline.cpp`、`demuxer_filter.cpp` | knowledge/AVPlayer/technologies/seek-architecture.md + knowledge/AVPlayer/entities/engine-layer-entities.md |
-| 状态机调整 | `player_server.cpp`（BaseState 子类） | knowledge/AVPlayer/technologies/player-lifecycle.md + knowledge/AVPlayer/technologies/design-patterns.md |
-| IPC 接口增删 | `player_service_stub.cpp`、`player_service_proxy.cpp`、`player_client.cpp`、`player_listener_proxy.cpp` | knowledge/AVPlayer/technologies/ipc-communication.md + knowledge/AVPlayer/entities/ipc-layer-entities.md |
-| 引擎注册/选择 | `engine_factory_repo.cpp`、`hst_engine_factory.cpp`、`lpp_engine_factory.cpp` | knowledge/AVPlayer/entities/engine-factory-and-selection.md |
-| 内存回收策略 | `player_server_mem.cpp`、`player_mem_manage.cpp` | knowledge/AVPlayer/technologies/memory-and-background.md |
-| Pipeline Filter 新增/修改 | 对应 `*_filter.cpp` + `pipeline.cpp` | knowledge/AVPlayer/technologies/pipeline-architecture.md |
-| NAPI/JS API 变更 | `avplayer_napi.cpp`、`player_impl.cpp` | knowledge/AVPlayer/entities/api-layer.md |
-| C API 变更 | `avplayer.cpp`、`player_object.cpp` | knowledge/AVPlayer/entities/api-layer.md |
-| 插件新增（Source/Demuxer/Codec） | 对应 `plugins/*/` 目录 | knowledge/AVPlayer/technologies/media-source-and-protocol.md |
-| 音视频同步调整 | `media_sync_manager.cpp`、`audio_sink_plugin.cpp` | knowledge/AVPlayer/technologies/av-sync-and-buffer.md |
-| 错误码/DFX 打点 | `player_server.cpp`、`dfx_agent.cpp` | knowledge/AVPlayer/technologies/error-handling-and-dfx.md |
+| Seek 逻辑修改 | `hiplayer_impl.cpp`、`seek_agent.cpp`、`pipeline.cpp`、`demuxer_filter.cpp` | docs/knowledge/AVPlayer/technologies/seek-architecture.md + docs/knowledge/AVPlayer/entities/engine-layer-entities.md |
+| 状态机调整 | `player_server.cpp`（BaseState 子类） | docs/knowledge/AVPlayer/technologies/player-lifecycle.md + docs/knowledge/AVPlayer/technologies/design-patterns.md |
+| IPC 接口增删 | `player_service_stub.cpp`、`player_service_proxy.cpp`、`player_client.cpp`、`player_listener_proxy.cpp` | docs/knowledge/AVPlayer/technologies/ipc-communication.md + docs/knowledge/AVPlayer/entities/ipc-layer-entities.md |
+| 引擎注册/选择 | `engine_factory_repo.cpp`、`hst_engine_factory.cpp`、`lpp_engine_factory.cpp` | docs/knowledge/AVPlayer/entities/engine-factory-and-selection.md |
+| 内存回收策略 | `player_server_mem.cpp`、`player_mem_manage.cpp` | docs/knowledge/AVPlayer/technologies/memory-and-background.md |
+| Pipeline Filter 新增/修改 | 对应 `*_filter.cpp` + `pipeline.cpp` | docs/knowledge/AVPlayer/technologies/pipeline-architecture.md |
+| NAPI/JS API 变更 | `avplayer_napi.cpp`、`player_impl.cpp` | docs/knowledge/AVPlayer/entities/api-layer.md |
+| C API 变更 | `avplayer.cpp`、`player_object.cpp` | docs/knowledge/AVPlayer/entities/api-layer.md |
+| 插件新增（Source/Demuxer/Codec） | 对应 `plugins/*/` 目录 | docs/knowledge/AVPlayer/technologies/media-source-and-protocol.md |
+| 音视频同步调整 | `media_sync_manager.cpp`、`audio_sink_plugin.cpp` | docs/knowledge/AVPlayer/technologies/av-sync-and-buffer.md |
+| 错误码/DFX 打点 | `player_server.cpp`、`dfx_agent.cpp` | docs/knowledge/AVPlayer/technologies/error-handling-and-dfx.md |
 
 #### AVRecorder 场景
 
 | 修改场景 | 涉及源码文件 | 必读知识文档 |
 |----------|------------|------------|
-| NAPI/JS API 变更 | `avrecorder_napi.cpp`、`avrecorder_napi.h` | `knowledge/AVRecorder/entities/AVRecorder.md` |
-| 状态机调整 | `recorder_server.cpp`（RecStatus） | `knowledge/AVRecorder/entities/RecorderServer.md` |
-| IPC 接口增删 | `recorder_service_stub.cpp`、`recorder_service_proxy.cpp`、`recorder_client.cpp` | `knowledge/AVRecorder/technologies/IPCLayer.md` |
-| Pipeline 构建/Filter 修改 | `hirecorder_impl.cpp`、对应 `*_filter.cpp` | `knowledge/AVRecorder/entities/HiRecorder.md`、`knowledge/AVRecorder/technologies/Pipeline.md` |
-| 水印功能修改 | `water_mark_filter.cpp` | `knowledge/AVRecorder/entities/WaterMark.md`、`knowledge/AVRecorder/technologies/WatermarkFusion.md` |
-| 封装格式修改 | `muxer_filter.cpp` | `knowledge/AVRecorder/technologies/Muxer.md` |
-| Source ID 逻辑 | `recorder_utils.h` | `knowledge/AVRecorder/entities/SourceId.md` |
-| 音视频采集修改 | `audio_capture_filter.cpp`、`video_capture_filter.cpp` | `knowledge/AVRecorder/technologies/AudioVideoCapture.md` |
+| NAPI/JS API 变更 | `avrecorder_napi.cpp`、`avrecorder_napi.h` | `docs/knowledge/AVRecorder/entities/AVRecorder.md` |
+| 状态机调整 | `recorder_server.cpp`（RecStatus） | `docs/knowledge/AVRecorder/entities/RecorderServer.md` |
+| IPC 接口增删 | `recorder_service_stub.cpp`、`recorder_service_proxy.cpp`、`recorder_client.cpp` | `docs/knowledge/AVRecorder/technologies/IPCLayer.md` |
+| Pipeline 构建/Filter 修改 | `hirecorder_impl.cpp`、对应 `*_filter.cpp` | `docs/knowledge/AVRecorder/entities/HiRecorder.md`、`docs/knowledge/AVRecorder/technologies/Pipeline.md` |
+| 水印功能修改 | `water_mark_filter.cpp` | `docs/knowledge/AVRecorder/entities/WaterMark.md`、`docs/knowledge/AVRecorder/technologies/WatermarkFusion.md` |
+| 封装格式修改 | `muxer_filter.cpp` | `docs/knowledge/AVRecorder/technologies/Muxer.md` |
+| Source ID 逻辑 | `recorder_utils.h` | `docs/knowledge/AVRecorder/entities/SourceId.md` |
+| 音视频采集修改 | `audio_capture_filter.cpp`、`video_capture_filter.cpp` | `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md` |
 | 编码器修改 | `audio_encoder_filter.cpp`、`surface_encoder_filter.cpp` | — |
 | MediaLibrary 适配 | `media_library_adapter.cpp` | — |
-| 录制配置/Profile 修改 | `avrecorder_napi.h`（AVRecorderConfig/AVRecorderProfile） | `knowledge/AVRecorder/entities/AVRecorderConfig.md`、`knowledge/AVRecorder/entities/RecorderProfiles.md` |
-| 错误回调修改 | `i_recorder_engine.h`（IRecorderEngineObs） | `knowledge/AVRecorder/entities/RecorderCallback.md` |
+| 录制配置/Profile 修改 | `avrecorder_napi.h`（AVRecorderConfig/AVRecorderProfile） | `docs/knowledge/AVRecorder/entities/AVRecorderConfig.md`、`docs/knowledge/AVRecorder/entities/RecorderProfiles.md` |
+| 错误回调修改 | `i_recorder_engine.h`（IRecorderEngineObs） | `docs/knowledge/AVRecorder/entities/RecorderCallback.md` |
 
 #### AVScreenCapture 场景
 
 | 修改场景 | 涉及源码文件 | 必读知识文档 |
 |----------|------------|------------|
-| 状态机/能力位图调整 | `screen_capture_server.cpp`、`screen_capture_server_base.h` | knowledge/AVScreenCapture/technologies/capture-lifecycle.md + knowledge/AVScreenCapture/entities/service-layer.md |
-| 隐私保护/权限校验修改 | `screen_capture_server.cpp`（CheckPrivacyWindowSkipPermission/RequestUserPrivacyAuthority/PrivacyProtected） | knowledge/AVScreenCapture/technologies/privacy-and-permission.md |
-| IPC 接口增删 | `screen_capture_service_stub.cpp`、`screen_capture_service_proxy.cpp`、`screen_capture_client.cpp`、`screen_capture_listener_proxy.cpp` | knowledge/AVScreenCapture/technologies/ipc-communication.md + knowledge/AVScreenCapture/entities/ipc-layer-entities.md |
-| 虚拟屏幕/视频采集修改 | `screen_capture_server.cpp`（MakeVirtualScreenMirror/MakeVirtualScreenExtended）、`screen_cap_buffer_consumer_listener.cpp` | knowledge/AVScreenCapture/entities/capture-implementation.md + knowledge/AVScreenCapture/technologies/capture-features.md |
-| 音频采集/混音逻辑修改 | `audio_capturer_wrapper.cpp`、`audio_data_source.cpp` | knowledge/AVScreenCapture/entities/capture-implementation.md + knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md |
-| Picker/用户选择修改 | `screen_capture_controller_server.cpp`、`ui_extension_ability_connection.cpp` | knowledge/AVScreenCapture/entities/monitor-and-controller.md + knowledge/AVScreenCapture/technologies/privacy-and-permission.md |
-| Monitor 状态追踪修改 | `screen_capture_monitor_server.cpp`、`screen_capture_monitor_client.cpp` | knowledge/AVScreenCapture/entities/monitor-and-controller.md |
-| 系统监听器注册/注销 | `screen_capture_listener_manager.cpp` | knowledge/AVScreenCapture/entities/service-layer.md + knowledge/AVScreenCapture/technologies/capture-lifecycle.md |
-| NAPI/JS API 变更 | `avscreen_capture_napi.cpp`、`screen_capture_impl.cpp` | knowledge/AVScreenCapture/entities/api-layer.md |
-| C API 变更 | `native_avscreen_capture.cpp`、`screen_capture_object.cpp` | knowledge/AVScreenCapture/entities/api-layer.md |
-| 实例数量限制调整 | `screen_capture_server_manager.cpp` | knowledge/AVScreenCapture/entities/service-layer.md |
-| 错误码/DFX 打点 | `screen_capture_server.cpp`、`screen_capture_server_callback.cpp` | knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md |
-| 录屏通知栏修改 | `screen_capture_server.cpp`（NotificationLocalLiveViewContent） | knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md |
+| 状态机/能力位图调整 | `screen_capture_server.cpp`、`screen_capture_server_base.h` | docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md + docs/knowledge/AVScreenCapture/entities/service-layer.md |
+| 隐私保护/权限校验修改 | `screen_capture_server.cpp`（CheckPrivacyWindowSkipPermission/RequestUserPrivacyAuthority/PrivacyProtected） | docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md |
+| IPC 接口增删 | `screen_capture_service_stub.cpp`、`screen_capture_service_proxy.cpp`、`screen_capture_client.cpp`、`screen_capture_listener_proxy.cpp` | docs/knowledge/AVScreenCapture/technologies/ipc-communication.md + docs/knowledge/AVScreenCapture/entities/ipc-layer-entities.md |
+| 虚拟屏幕/视频采集修改 | `screen_capture_server.cpp`（MakeVirtualScreenMirror/MakeVirtualScreenExtended）、`screen_cap_buffer_consumer_listener.cpp` | docs/knowledge/AVScreenCapture/entities/capture-implementation.md + docs/knowledge/AVScreenCapture/technologies/capture-features.md |
+| 音频采集/混音逻辑修改 | `audio_capturer_wrapper.cpp`、`audio_data_source.cpp` | docs/knowledge/AVScreenCapture/entities/capture-implementation.md + docs/knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md |
+| Picker/用户选择修改 | `screen_capture_controller_server.cpp`、`ui_extension_ability_connection.cpp` | docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md + docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md |
+| Monitor 状态追踪修改 | `screen_capture_monitor_server.cpp`、`screen_capture_monitor_client.cpp` | docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md |
+| 系统监听器注册/注销 | `screen_capture_listener_manager.cpp` | docs/knowledge/AVScreenCapture/entities/service-layer.md + docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md |
+| NAPI/JS API 变更 | `avscreen_capture_napi.cpp`、`screen_capture_impl.cpp` | docs/knowledge/AVScreenCapture/entities/api-layer.md |
+| C API 变更 | `native_avscreen_capture.cpp`、`screen_capture_object.cpp` | docs/knowledge/AVScreenCapture/entities/api-layer.md |
+| 实例数量限制调整 | `screen_capture_server_manager.cpp` | docs/knowledge/AVScreenCapture/entities/service-layer.md |
+| 错误码/DFX 打点 | `screen_capture_server.cpp`、`screen_capture_server_callback.cpp` | docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md |
+| 录屏通知栏修改 | `screen_capture_server.cpp`（NotificationLocalLiveViewContent） | docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md |
 
 #### 其它模块场景
 
@@ -514,20 +514,20 @@ knowledge/AVMeta/
 
 | 修改场景 | 涉及源码文件 | 必读知识文档 |
 |----------|------------|------------|
-| 缩略图/帧抓取逻辑修改 | `av_thumbnail_generator.cpp`、`avmetadatahelper_impl.cpp`(engine) | knowledge/AVMeta/technologies/thumbnail-architecture.md + knowledge/AVMeta/entities/engine-layer-entities.md |
-| 状态机调整 | `avmetadatahelper_server.cpp`（ChangeState/状态校验） | knowledge/AVMeta/technologies/metadata-lifecycle.md + knowledge/AVMeta/technologies/design-patterns.md |
-| IPC 接口增删 | `avmetadatahelper_service_stub.cpp`、`avmetadatahelper_service_proxy.cpp`、`avmetadatahelper_client.cpp`、`helper_listener_proxy.cpp` | knowledge/AVMeta/technologies/ipc-communication.md + knowledge/AVMeta/entities/ipc-layer-entities.md |
-| 引擎注册/选择 | `engine_factory_repo.cpp`、`hst_engine_factory.cpp` | knowledge/AVMeta/entities/engine-factory-and-selection.md |
-| 元数据提取逻辑 | `avmetadata_collector.cpp` | knowledge/AVMeta/technologies/metadata-features.md + knowledge/AVMeta/entities/engine-layer-entities.md |
-| 硬软解切换 | `av_thumbnail_generator.cpp`（IsSupportHWDecoder/SwitchToSoftWareDecoder） | knowledge/AVMeta/technologies/thumbnail-architecture.md |
-| NAPI/JS API 变更 | `avmetadataextractor_napi.cpp`、`avimagegenerator_napi.cpp`、`avmetadatahelper_impl.cpp`(client) | knowledge/AVMeta/entities/api-layer.md |
-| C API 变更 | `native_avmetadata_extractor.cpp`、`native_avimage_generator.cpp` | knowledge/AVMeta/entities/api-layer.md |
-| 像素图/色彩空间处理 | `avmetadatahelper_impl.cpp`(client)（ProcessPixelMap/CreatePixelMapYuv/ScalePixelMap） | knowledge/AVMeta/technologies/thumbnail-architecture.md + knowledge/AVMeta/entities/api-layer.md |
-| 超时/取消逻辑 | `avmetadatahelper_server.cpp`、`av_thumbnail_generator.cpp`、`avmetadatahelper_impl.cpp`(engine) | knowledge/AVMeta/technologies/thumbnail-architecture.md + knowledge/AVMeta/technologies/metadata-lifecycle.md |
-| 批量帧抓取 | `avmetadatahelper_server.cpp`（FetchFrameYuvs）、`av_thumbnail_generator.cpp` | knowledge/AVMeta/technologies/thumbnail-architecture.md + knowledge/AVMeta/technologies/ipc-communication.md |
-| 帧索引转换 | `avmetadatahelper_impl.cpp`(engine)（TimeAndIndexConversion） | knowledge/AVMeta/technologies/metadata-features.md + knowledge/AVMeta/entities/engine-layer-entities.md |
-| 错误码/DFX 打点 | `avmetadatahelper_server.cpp`、`avmetadata_collector.cpp` | knowledge/AVMeta/technologies/error-handling-and-dfx.md |
-| 媒体源/协议处理 | `avmetadatahelper_impl.cpp`(engine)（SetSource/InitDemuxer） | knowledge/AVMeta/technologies/media-source-and-protocol.md |
+| 缩略图/帧抓取逻辑修改 | `av_thumbnail_generator.cpp`、`avmetadatahelper_impl.cpp`(engine) | docs/knowledge/AVMeta/technologies/thumbnail-architecture.md + docs/knowledge/AVMeta/entities/engine-layer-entities.md |
+| 状态机调整 | `avmetadatahelper_server.cpp`（ChangeState/状态校验） | docs/knowledge/AVMeta/technologies/metadata-lifecycle.md + docs/knowledge/AVMeta/technologies/design-patterns.md |
+| IPC 接口增删 | `avmetadatahelper_service_stub.cpp`、`avmetadatahelper_service_proxy.cpp`、`avmetadatahelper_client.cpp`、`helper_listener_proxy.cpp` | docs/knowledge/AVMeta/technologies/ipc-communication.md + docs/knowledge/AVMeta/entities/ipc-layer-entities.md |
+| 引擎注册/选择 | `engine_factory_repo.cpp`、`hst_engine_factory.cpp` | docs/knowledge/AVMeta/entities/engine-factory-and-selection.md |
+| 元数据提取逻辑 | `avmetadata_collector.cpp` | docs/knowledge/AVMeta/technologies/metadata-features.md + docs/knowledge/AVMeta/entities/engine-layer-entities.md |
+| 硬软解切换 | `av_thumbnail_generator.cpp`（IsSupportHWDecoder/SwitchToSoftWareDecoder） | docs/knowledge/AVMeta/technologies/thumbnail-architecture.md |
+| NAPI/JS API 变更 | `avmetadataextractor_napi.cpp`、`avimagegenerator_napi.cpp`、`avmetadatahelper_impl.cpp`(client) | docs/knowledge/AVMeta/entities/api-layer.md |
+| C API 变更 | `native_avmetadata_extractor.cpp`、`native_avimage_generator.cpp` | docs/knowledge/AVMeta/entities/api-layer.md |
+| 像素图/色彩空间处理 | `avmetadatahelper_impl.cpp`(client)（ProcessPixelMap/CreatePixelMapYuv/ScalePixelMap） | docs/knowledge/AVMeta/technologies/thumbnail-architecture.md + docs/knowledge/AVMeta/entities/api-layer.md |
+| 超时/取消逻辑 | `avmetadatahelper_server.cpp`、`av_thumbnail_generator.cpp`、`avmetadatahelper_impl.cpp`(engine) | docs/knowledge/AVMeta/technologies/thumbnail-architecture.md + docs/knowledge/AVMeta/technologies/metadata-lifecycle.md |
+| 批量帧抓取 | `avmetadatahelper_server.cpp`（FetchFrameYuvs）、`av_thumbnail_generator.cpp` | docs/knowledge/AVMeta/technologies/thumbnail-architecture.md + docs/knowledge/AVMeta/technologies/ipc-communication.md |
+| 帧索引转换 | `avmetadatahelper_impl.cpp`(engine)（TimeAndIndexConversion） | docs/knowledge/AVMeta/technologies/metadata-features.md + docs/knowledge/AVMeta/entities/engine-layer-entities.md |
+| 错误码/DFX 打点 | `avmetadatahelper_server.cpp`、`avmetadata_collector.cpp` | docs/knowledge/AVMeta/technologies/error-handling-and-dfx.md |
+| 媒体源/协议处理 | `avmetadatahelper_impl.cpp`(engine)（SetSource/InitDemuxer） | docs/knowledge/AVMeta/technologies/media-source-and-protocol.md |
 
 #### 其它模块场景
 
@@ -771,15 +771,15 @@ knowledge/AVMeta/
 
 ## 屏幕录制模块 DFX 约束
 
-- 录屏统计信息必须在录屏结束或失败时发送 DFX 事件前填充（详见 knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md）。
-- 录屏通知栏的暂停/停止/麦克风按钮响应不可禁用（详见 knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md）。
+- 录屏统计信息必须在录屏结束或失败时发送 DFX 事件前填充（详见 docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md）。
+- 录屏通知栏的暂停/停止/麦克风按钮响应不可禁用（详见 docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md）。
 
 ## 屏幕录制模块常见 Agent 失败模式
 
-- Agent 调用开始采集前未调用初始化 → 返回错误码。调用生命周期方法前必须检查状态（详见 knowledge/AVScreenCapture/technologies/capture-lifecycle.md）。
-- Agent 将白名单理解为"始终可见" → 语义错误。白名单=仅白名单内窗口可见，过滤其余窗口（详见 knowledge/AVScreenCapture/technologies/privacy-and-permission.md）。
-- Agent 绕过实例管理器直接创建实例 → 实例数超限。必须通过实例数校验（详见 knowledge/AVScreenCapture/entities/service-layer.md）。
-- Agent 修改状态机但忘记同步能力位图数组 → 状态校验失效（详见 knowledge/AVScreenCapture/technologies/capture-lifecycle.md）。
+- Agent 调用开始采集前未调用初始化 → 返回错误码。调用生命周期方法前必须检查状态（详见 docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md）。
+- Agent 将白名单理解为"始终可见" → 语义错误。白名单=仅白名单内窗口可见，过滤其余窗口（详见 docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md）。
+- Agent 绕过实例管理器直接创建实例 → 实例数超限。必须通过实例数校验（详见 docs/knowledge/AVScreenCapture/entities/service-layer.md）。
+- Agent 修改状态机但忘记同步能力位图数组 → 状态校验失效（详见 docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md）。
 
 ## 屏幕录制模块验证
 
@@ -787,16 +787,16 @@ knowledge/AVMeta/
 
 | 变更类型 | 附加检查 |
 |---------|---------|
-| NAPI/JS API 变更 | 验证 NAPI 桥接层与 Native 实现调用链一致；验证异步调度（详见 knowledge/AVScreenCapture/entities/api-layer.md） |
-| C API 变更 | 验证 C API 回调机制；验证新旧回调适配（详见 knowledge/AVScreenCapture/entities/api-layer.md） |
-| IPC parcel 变更 | 验证 Proxy 和 Stub 字段顺序一致；验证消息码不变（详见 knowledge/AVScreenCapture/technologies/ipc-communication.md） |
-| 状态机/能力位图变更 | 验证状态转换覆盖所有操作入口；验证能力位图数组与状态一致（详见 knowledge/AVScreenCapture/technologies/capture-lifecycle.md） |
-| 隐私保护变更 | 验证隐私窗口保护机制；验证权限校验流程；验证白名单/黑名单语义（详见 knowledge/AVScreenCapture/technologies/privacy-and-permission.md） |
-| 虚拟屏幕变更 | 验证虚拟屏幕创建/销毁生命周期；验证 Surface 释放（详见 knowledge/AVScreenCapture/entities/capture-implementation.md） |
-| 音频采集/混音变更 | 验证音频采集生命周期；验证混音同步算法（详见 knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md） |
-| Monitor 变更 | 验证录屏状态追踪；验证监听器注册/注销（详见 knowledge/AVScreenCapture/entities/monitor-and-controller.md） |
-| 实例数量限制变更 | 验证实例数校验逻辑（详见 knowledge/AVScreenCapture/entities/service-layer.md） |
-| DFX 打点变更 | 验证 DFX 事件字段完整；验证通知栏按钮响应未禁用（详见 knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md） |
+| NAPI/JS API 变更 | 验证 NAPI 桥接层与 Native 实现调用链一致；验证异步调度（详见 docs/knowledge/AVScreenCapture/entities/api-layer.md） |
+| C API 变更 | 验证 C API 回调机制；验证新旧回调适配（详见 docs/knowledge/AVScreenCapture/entities/api-layer.md） |
+| IPC parcel 变更 | 验证 Proxy 和 Stub 字段顺序一致；验证消息码不变（详见 docs/knowledge/AVScreenCapture/technologies/ipc-communication.md） |
+| 状态机/能力位图变更 | 验证状态转换覆盖所有操作入口；验证能力位图数组与状态一致（详见 docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md） |
+| 隐私保护变更 | 验证隐私窗口保护机制；验证权限校验流程；验证白名单/黑名单语义（详见 docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md） |
+| 虚拟屏幕变更 | 验证虚拟屏幕创建/销毁生命周期；验证 Surface 释放（详见 docs/knowledge/AVScreenCapture/entities/capture-implementation.md） |
+| 音频采集/混音变更 | 验证音频采集生命周期；验证混音同步算法（详见 docs/knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md） |
+| Monitor 变更 | 验证录屏状态追踪；验证监听器注册/注销（详见 docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md） |
+| 实例数量限制变更 | 验证实例数校验逻辑（详见 docs/knowledge/AVScreenCapture/entities/service-layer.md） |
+| DFX 打点变更 | 验证 DFX 事件字段完整；验证通知栏按钮响应未禁用（详见 docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md） |
 
 ### 完成定义
 
