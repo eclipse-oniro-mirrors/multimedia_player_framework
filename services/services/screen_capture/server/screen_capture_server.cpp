@@ -2999,7 +2999,7 @@ int32_t ScreenCaptureServer::SetCaptureAreaInner(uint64_t displayId, OHOS::Rect 
     MediaTrace trace("ScreenCaptureServer::SetCaptureAreaInner");
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetCaptureAreaInner start, state:%{public}d.",
         FAKE_POINTER(this), captureState_.load());
-    CHECK_AND_RETURN_RET_LOG(virtualScreen_ != nullptr, MSERR_INVALID_OPERATION,
+    CHECK_AND_RETURN_RET_LOG(virtualScreen_ != nullptr, MSERR_INVALID_VAL,
         "SetCaptureAreaInner failed virtual screen not init");
     ScreenId regionScreenId;
     DMRect regionAreaIn;
