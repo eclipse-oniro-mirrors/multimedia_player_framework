@@ -593,7 +593,7 @@ napi_value AVScreenCaptureNapi::JsSetContentAutoRotation(napi_env env, napi_call
     return result;
 }
 
-napi_value AVScreenCaptureNapi::GetRectangleRegionParam(OHOS::Rect &area, napi_env env, napi_value arg)
+napi_status AVScreenCaptureNapi::GetRectangleRegionParam(OHOS::Rect &area, napi_env env, napi_value arg)
 {
     napi_valuetype vauleType = napi_undefined;
     if (arg == nullptr || napi_typeof(env, arg, &valueType) != napi_ok || vauleType != napi_object) {
@@ -609,24 +609,24 @@ napi_value AVScreenCaptureNapi::GetRectangleRegionParam(OHOS::Rect &area, napi_e
     napi_status status;
 
     status = napi_get_named_property(env, arg, "left", &value);
-    CHECK_AND_RETURN_RET_LOG(status = napi_ok, status, "GetRectangleRegionParam missing field 'left'");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam missing field 'left'");
     status = napi_get_value_int32(env, value, &left);
-    CHECK_AND_RETURN_RET_LOG(status = napi_ok, status, "GetRectangleRegionParam field 'left' is not int32");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'left' is not int32");
 
     status = napi_get_named_property(env, arg, "top", &value);
-    CHECK_AND_RETURN_RET_LOG(status = napi_ok, status, "GetRectangleRegionParam missing field 'top'");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam missing field 'top'");
     status = napi_get_value_int32(env, value, &top);
-    CHECK_AND_RETURN_RET_LOG(status = napi_ok, status, "GetRectangleRegionParam field 'top' is not int32");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'top' is not int32");
 
     status = napi_get_named_property(env, arg, "width", &value);
-    CHECK_AND_RETURN_RET_LOG(status = napi_ok, status, "GetRectangleRegionParam missing field 'width'");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam missing field 'width'");
     status = napi_get_value_int32(env, value, &width);
-    CHECK_AND_RETURN_RET_LOG(status = napi_ok, status, "GetRectangleRegionParam field 'width' is not int32");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'width' is not int32");
 
     status = napi_get_named_property(env, arg, "height", &value);
-    CHECK_AND_RETURN_RET_LOG(status = napi_ok, status, "GetRectangleRegionParam missing field 'height'");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam missing field 'height'");
     status = napi_get_value_int32(env, value, &height);
-    CHECK_AND_RETURN_RET_LOG(status = napi_ok, status, "GetRectangleRegionParam field 'height' is not int32");
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'height' is not int32");
 
     if (left < 0 || top < 0 || width < 0 || height < 0) {
         MEDIA_LOGE("GetRectangleRegionParam negative value, left:%{public}d, top:%{public}d, "
