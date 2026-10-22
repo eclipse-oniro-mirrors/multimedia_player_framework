@@ -18,6 +18,7 @@
 #include "media_errors.h"
 #include "common_napi.h"
 #include "media_source_napi.h"
+#include "track_filter_converter.h"
 #include "scope_guard.h"
 #include <cstdint>
 
@@ -32,6 +33,18 @@ constexpr size_t MAX_TASK_ID_LENGTH = 4096;
 std::string GetTaskIdArgument(napi_env env, napi_value value)
 {
     return CommonNapi::GetStringArgument(env, value, MAX_TASK_ID_LENGTH);
+}
+
+void ApplyFilterAndKey(std::shared_ptr<Plugins::MediaSource>& pluginSource,
+    const std::shared_ptr<AVMediaSourceTmp>& srcTmp)
+{
+    if (!srcTmp->retrieveKey.empty()) {
+        pluginSource->SetRetrieveKey(srcTmp->retrieveKey);
+    }
+    if (srcTmp->hasTrackSelectionFilter) {
+        pluginSource->SetTrackSelectFilter(
+            TrackFilterConverter::ToPlugins(srcTmp->trackSelectionFilter));
+    }
 }
 
 std::string StateToString(AVDownloadTaskState state)
@@ -413,6 +426,7 @@ napi_value AVDownloaderManagerNapi::AddAVDownloadTask(napi_env env, napi_callbac
     if (srcTmp) {
         MEDIA_LOGI("AddDownloadTask In");
         auto pluginSource = std::make_shared<Plugins::MediaSource>(srcTmp->url, srcTmp->header);
+        ApplyFilterAndKey(pluginSource, srcTmp);
         taskId = manager->downloaderManager_->AddDownloadTask(pluginSource);
         if (taskId.empty()) {
             ThrowError(env, ERR_OPERATION_NOT_PERMIT, "Operation not allowed: failed to add download task");

@@ -32,14 +32,26 @@ namespace fs = std::filesystem;
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = { LOG_CORE, LOG_DOMAIN_SYSTEM_PLAYER, "DownloadedCacheManager"};
 const std::string CACHE_MAPPING_FILE = "cache_mapping.txt";
+
+bool IsTrackSelectionFilterEmpty(const OHOS::Media::Plugins::TrackSelectionFilter& filter)
+{
+    return (filter.maxVideoBitrate == -1 && filter.minVideoBitrate == -1 &&
+        filter.maxVideoFrameRate == -1 && filter.minVideoFrameRate == -1 &&
+        filter.maxVideoResolution.first == -1 && filter.maxVideoResolution.second == -1 &&
+        filter.minVideoResolution.first == -1 && filter.minVideoResolution.second == -1 &&
+        filter.preferredVideoMimeTypes.empty() && filter.maxAudioBitrate == -1 &&
+        filter.minAudioBitrate == -1 && filter.maxAudioChannels == -1 &&
+        filter.preferredAudioMimeTypes.empty() && filter.preferredAudioLanguages.empty() &&
+        filter.preferredSubtitleLanguages.empty());
+}
 }
 
 namespace OHOS {
 namespace Media {
 namespace DownloadedCache {
 
-DownloadedCacheManager::DownloadedCacheManager(const std::string& cacheDir)
-    : cacheDir_(cacheDir)
+DownloadedCacheManager::DownloadedCacheManager(const std::string& cacheDir, const std::string& retrieveKey)
+    : cacheDir_(cacheDir), retrieveKey_(retrieveKey)
 {
     if (cacheDir_.empty()) {
         MEDIA_LOGE("DownloadedCacheManager: cacheDir is empty");
@@ -96,6 +108,8 @@ void DownloadedCacheManager::LoadCacheMapping()
         MEDIA_LOGW("Failed to deserialize playback param data");
         return;
     }
+    filter_ = filter;
+    hasFilter_ = !IsTrackSelectionFilterEmpty(filter);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " load root url: %{public}s", FAKE_POINTER(this), rootUrl_.c_str());
 
     for (uint32_t i = 0; i < header.entryCount; ++i) {
@@ -118,12 +132,17 @@ void DownloadedCacheManager::LoadCacheMapping()
     }
 }
 
+std::string DownloadedCacheManager::ComputeHashIndex(const std::string& url) const
+{
+    auto hash = SHA256Hasher::GenerateHash(url);
+    return SHA256Hasher::HashToString(hash);
+}
+
 std::string DownloadedCacheManager::GetMediaCache(const std::string& url)
 {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    auto hash = SHA256Hasher::GenerateHash(url);
-    std::string hashIndex = SHA256Hasher::HashToString(hash);
+    std::string hashIndex = ComputeHashIndex(url);
 
     auto it = index_.find(hashIndex);
     CHECK_AND_RETURN_RET_LOG(it != index_.end(), "", "Cache not found for url: %{public}s", url.c_str());
@@ -146,8 +165,7 @@ bool DownloadedCacheManager::GetCacheMetaData(const std::string& url, CacheMetaD
 {
     std::unique_lock<std::mutex> lock(mutex_);
 
-    auto hash = SHA256Hasher::GenerateHash(url);
-    std::string hashIndex = SHA256Hasher::HashToString(hash);
+    std::string hashIndex = ComputeHashIndex(url);
 
     auto it = index_.find(hashIndex);
     CHECK_AND_RETURN_RET_LOG(it != index_.end(), false, "Cache meta not found for url: %{public}s", url.c_str());

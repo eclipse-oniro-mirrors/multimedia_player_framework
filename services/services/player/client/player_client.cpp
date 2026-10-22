@@ -18,14 +18,61 @@
 #include "media_errors.h"
 #include "../media_source/loader/media_loader.h"
 #include "network_utils.h"
-#include "../../media_source/downloaded_cache_loader/downloaded_cache_loader.h"    // 已修改为可用路径
-
-namespace {
-constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerClient"};
-}
+#include "../../media_source/downloaded_cache_loader/downloaded_cache_loader.h"
+#include "track_filter_converter.h"
+#include "../../media_source/downloaded_cache_loader/cache_constants.h"
+#include "../../media_source/downloaded_cache_loader/sha256_hasher.h"
+#include "../../media_source/downloaded_cache_loader/url_key_util.h"
 
 namespace OHOS {
 namespace Media {
+
+namespace {
+constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "PlayerClient"};
+
+int32_t SetupSourceLoader(const std::shared_ptr<AVMediaSource>& mediaSource, bool isCacheAble,
+    sptr<MediaSourceLoaderStub>& sourceLoaderStub,
+    const sptr<IStandardPlayerService>& playerProxy)
+{
+    if (mediaSource->mediaSourceLoaderCb_ != nullptr) {
+        MEDIA_LOGI("PlayerClient mediaSourceLoaderCb_ in");
+        sourceLoaderStub = new(std::nothrow) MediaSourceLoaderStub(mediaSource->mediaSourceLoaderCb_);
+        CHECK_AND_RETURN_RET_LOG(sourceLoaderStub != nullptr, MSERR_NO_MEMORY, "failed to new LoaderStub object");
+        sptr<IRemoteObject> object = sourceLoaderStub->AsObject();
+        CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+        CHECK_AND_RETURN_RET_LOG(playerProxy->SetSourceLoader(object) == MSERR_OK,
+            MSERR_UNKNOWN, "SetSourceLoader error");
+    } else {
+        if (isCacheAble) {
+            std::shared_ptr<LoaderCallback> mediaSourceLoaderCb = std::make_shared<MediaLoader>(mediaSource->url);
+            mediaSource->mediaSourceLoaderCb_ = mediaSourceLoaderCb;
+            MEDIA_LOGI("PlayerClient mediaSourceLoaderCb_ in (cacheable)");
+            sourceLoaderStub = new(std::nothrow) MediaSourceLoaderStub(mediaSource->mediaSourceLoaderCb_);
+            CHECK_AND_RETURN_RET_LOG(sourceLoaderStub != nullptr, MSERR_NO_MEMORY, "failed to new LoaderStub object");
+            sptr<IRemoteObject> object = sourceLoaderStub->AsObject();
+            CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
+            CHECK_AND_RETURN_RET_LOG(playerProxy->SetSourceLoader(object) == MSERR_OK,
+                MSERR_UNKNOWN, "Custom SetSourceLoader error");
+        }
+    }
+    return MSERR_OK;
+}
+
+void ApplyCacheFilter(const std::shared_ptr<DownloadedCache::DownloadedCacheManager>& cacheManager,
+    const sptr<IStandardPlayerService>& playerProxy)
+{
+    if (cacheManager && cacheManager->HasTrackSelectionFilter()) {
+        auto avFilter = TrackFilterConverter::ToAVPlay(cacheManager->GetTrackSelectionFilter());
+        int32_t filterRet = playerProxy->SetTrackSelectionFilter(avFilter);
+        if (filterRet != MSERR_OK) {
+            MEDIA_LOGE("PlayerClient: SetTrackSelectionFilter failed, ret=%{public}d", filterRet);
+        } else {
+            MEDIA_LOGI("PlayerClient: auto-applied track selection filter from cache");
+        }
+    }
+}
+} // anonymous namespace
+
 std::shared_ptr<PlayerClient> PlayerClient::Create(const sptr<IStandardPlayerService> &ipcProxy)
 {
     std::shared_ptr<PlayerClient> player = std::make_shared<PlayerClient>(ipcProxy);
@@ -385,48 +432,27 @@ int32_t PlayerClient::SetMediaSource(const std::shared_ptr<AVMediaSource> &media
         return playerProxy_->SetMediaSource(mediaSource, strategy);
     }
 
-    // 传入的AVMediaSource有缓存路径时，走离线缓存逻辑
-    if (!mediaSource->GetDirectoryPath().empty()) {
+    std::shared_ptr<DownloadedCache::DownloadedCacheManager> cacheManager;
+    std::string cacheDir = mediaSource->GetDirectoryPath();
+    if (!cacheDir.empty()) {
         MEDIA_LOGI("PlayerClient:0x%{public}06" PRIXPTR " directoryPath in", FAKE_POINTER(this));
-        auto cacheManager = std::make_shared<DownloadedCache::DownloadedCacheManager>(mediaSource->GetDirectoryPath());
+        cacheManager = std::make_shared<DownloadedCache::DownloadedCacheManager>(cacheDir);
         auto downloadedCacheLoader = std::make_shared<DownloadedCache::DownloadedCacheLoader>(cacheManager);
         mediaSource->mediaSourceLoaderCb_ = downloadedCacheLoader;
         mediaSource->url = downloadedCacheLoader->GetRootUrl();
         MEDIA_LOGI("PlayerClient: get root url: %{public}s", mediaSource->url.c_str());
     }
 
-    if (mediaSource->mediaSourceLoaderCb_ != nullptr) {
-        MEDIA_LOGI("PlayerClient:0x%{public}06" PRIXPTR " mediaSource->mediaSourceLoaderCb_ in", FAKE_POINTER(this));
-        sourceLoaderStub_ = new(std::nothrow) MediaSourceLoaderStub(mediaSource->mediaSourceLoaderCb_);
-        CHECK_AND_RETURN_RET_LOG(sourceLoaderStub_ != nullptr, MSERR_NO_MEMORY, "failed to new LoaderStub object");
- 
-        sptr<IRemoteObject> object = sourceLoaderStub_->AsObject();
-        CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
- 
-        CHECK_AND_RETURN_RET_LOG(playerProxy_->SetSourceLoader(object) == MSERR_OK,
-            MSERR_UNKNOWN, "SetSourceLoader error");
-    } else {
-        if (isCacheAble) {
-            std::shared_ptr<LoaderCallback> mediaSourceLoaderCb = std::make_shared<MediaLoader>(mediaSource->url);
-            mediaSource->mediaSourceLoaderCb_ = mediaSourceLoaderCb;
+    int32_t loaderRet = SetupSourceLoader(mediaSource, isCacheAble, sourceLoaderStub_, playerProxy_);
+    CHECK_AND_RETURN_RET_LOG(loaderRet == MSERR_OK, loaderRet, "SetupSourceLoader failed");
 
-            MEDIA_LOGI("PlayerClient:0x%{public}06" PRIXPTR
-                " mediaSource->mediaSourceLoaderCb_ in", FAKE_POINTER(this));
-            sourceLoaderStub_ = new(std::nothrow) MediaSourceLoaderStub(mediaSource->mediaSourceLoaderCb_);
-            CHECK_AND_RETURN_RET_LOG(sourceLoaderStub_ != nullptr, MSERR_NO_MEMORY, "failed to new LoaderStub object");
-
-            sptr<IRemoteObject> object = sourceLoaderStub_->AsObject();
-            CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr..");
-
-            CHECK_AND_RETURN_RET_LOG(playerProxy_->SetSourceLoader(object) == MSERR_OK,
-                MSERR_UNKNOWN, "Custom SetSourceLoader error");     // 先调用SetSourceLoader传递loader过来
-        }
-    }
     MEDIA_LOGI("url_=%{private}s playMediaStreamVec_size=%{public}zu mimeType_=%{public}s",
         mediaSource->url.c_str(),
         mediaSource->GetAVPlayMediaStreamList().size(),
         mediaSource->GetMimeType().c_str());
-    return playerProxy_->SetMediaSource(mediaSource, strategy);     // 然后调用SetMediaSource设置数据源
+    int32_t ret = playerProxy_->SetMediaSource(mediaSource, strategy);
+    ApplyCacheFilter(cacheManager, playerProxy_);
+    return ret;
 }
 
 int32_t PlayerClient::GetPlaybackSpeed(PlaybackRateMode &mode)

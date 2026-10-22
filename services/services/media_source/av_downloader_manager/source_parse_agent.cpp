@@ -53,7 +53,7 @@ Plugins::HttpPlugin::StreamProtocolType (*SourceParseAgent::sniffStreamProtocolF
 
 Plugins::HttpPlugin::StreamResourceParser* (*SourceParseAgent::getStreamResourceParserFunc_)(
     const uint8_t* data, size_t size, Plugins::HttpPlugin::StreamProtocolType protocol,
-    const std::string& rootUrl) = nullptr;
+    const std::string& rootUrl, const Plugins::TrackSelectionFilter& filter) = nullptr;
 
 std::mutex SourceParseAgent::loadMutex_;
 
@@ -94,7 +94,7 @@ bool SourceParseAgent::Create()
     // 获取流解析对象
     using StreamParserFuncType = Plugins::HttpPlugin::StreamResourceParser* (*)(
         const uint8_t* data, size_t size, Plugins::HttpPlugin::StreamProtocolType protocol,
-        const std::string& rootUrl);
+        const std::string& rootUrl, const Plugins::TrackSelectionFilter& filter);
 
     StreamParserFuncType getStreamResourceParserFunc =
         (StreamParserFuncType)(::dlsym(handler_, "GetStreamResourceParser"));
@@ -154,7 +154,7 @@ Plugins::HttpPlugin::StreamProtocolType SourceParseAgent::SniffStreamProtocol(co
 
 std::unique_ptr<Plugins::HttpPlugin::StreamResourceParser> SourceParseAgent::GetStreamResourceParser(
     const uint8_t* data, size_t size, Plugins::HttpPlugin::StreamProtocolType protocol,
-    const std::string& rootUrl)
+    const std::string& rootUrl, const Plugins::TrackSelectionFilter& filter)
 {
     std::lock_guard<std::mutex> lock(loadMutex_);
     if (getStreamResourceParserFunc_ == nullptr) {
@@ -167,7 +167,7 @@ std::unique_ptr<Plugins::HttpPlugin::StreamResourceParser> SourceParseAgent::Get
         return nullptr;
     }
 
-    auto *parser = getStreamResourceParserFunc_(data, size, protocol, rootUrl);
+    auto *parser = getStreamResourceParserFunc_(data, size, protocol, rootUrl, filter);
     if (parser == nullptr) {
         MEDIA_LOGE("parser is nullptr");
         return nullptr;

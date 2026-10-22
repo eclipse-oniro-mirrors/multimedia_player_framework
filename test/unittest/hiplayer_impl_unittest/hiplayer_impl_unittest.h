@@ -129,6 +129,10 @@ public:
     MOCK_METHOD(void, SetMimeType, (const std::string& mimeType));
     MOCK_METHOD(void, SetAppUid, (int32_t appUid));
     MOCK_METHOD(void, SetSourceLoader, (std::shared_ptr<IMediaSourceLoader> mediaSourceLoader));
+    MOCK_METHOD(void, SetTrackSelectFilter, (const TrackSelectionFilter& filter));
+    MOCK_CONST_METHOD0(GetTrackSelectFilter, TrackSelectionFilter());
+    MOCK_METHOD(void, SetRetrieveKey, (const std::string& key));
+    MOCK_CONST_METHOD0(GetRetrieveKey, std::string());
 };
 class MockDemuxerFilter : public DemuxerFilter {
 public:

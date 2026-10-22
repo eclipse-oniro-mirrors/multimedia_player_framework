@@ -595,6 +595,41 @@ HWTEST_F(DownloaderDescriptorTest, Resume_NetworkAllowed_NoTask_Completes_001, T
     EXPECT_EQ(downloader->GetState(), DOWNLOAD_COMPLETED);
 }
 
+HWTEST_F(DownloaderDescriptorTest, SetConfig_InPausedState_Succeeds_001, TestSize.Level0)
+{
+    auto downloader = std::make_shared<DownloaderImpl>();
+    DownloadConfig cfg;
+    cfg.allowMobileData = false;
+    (void)downloader->SetConfig(cfg);
+    downloader->state_.store(DOWNLOAD_PAUSED);
+
+    DownloadConfig newCfg;
+    newCfg.allowMobileData = true;
+    int32_t ret = downloader->SetConfig(newCfg);
+    EXPECT_EQ(ret, DOWNLOAD_RET_OK);
+    EXPECT_TRUE(downloader->GetConfig().allowMobileData);
+}
+
+HWTEST_F(DownloaderDescriptorTest, Resume_CellularAllowed_BySetConfigInPaused_001, TestSize.Level0)
+{
+    auto downloader = std::make_shared<DownloaderImpl>();
+    (void)downloader->SetDownloadCallback(std::make_shared<DescTestCallback>());
+    DownloadConfig cfg;
+    cfg.allowMobileData = false;
+    (void)downloader->SetConfig(cfg);
+    downloader->state_.store(DOWNLOAD_PAUSED);
+
+    DownloadConfig newCfg;
+    newCfg.allowMobileData = true;
+    newCfg.allowWifi = true;
+    (void)downloader->SetConfig(newCfg);
+
+    MediaSourceUtils::FakeNetworkTypeGuard guard(MediaSourceUtils::NetConnType::NET_CONN_CELLULAR);
+    int32_t ret = downloader->Resume();
+    EXPECT_EQ(ret, DOWNLOAD_RET_OK);
+    EXPECT_EQ(downloader->GetState(), DOWNLOAD_COMPLETED);
+}
+
 } // namespace MediaDownload
 } // namespace Media
 } // namespace OHOS

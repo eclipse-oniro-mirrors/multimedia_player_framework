@@ -53,6 +53,7 @@ struct DownloadFileInfo {       // 一份源中的所有下载数据结构
 struct AVDownloadTaskInfo {     // 对应DonwloaderImpl
     std::string taskId;     // downloader的id
     std::string url;    // 根url
+    std::string retrieveKey;    // 用于 URL 根路径替换的 key
     std::string cacheDir;   // 根路径
     std::string currentFilePath;   // 当前下载的文件路径
     AVDownloadTaskState state = AVDownloadTaskState::INIT;      // 媒体源的state
@@ -118,7 +119,6 @@ public:
     int32_t SetAllowCellularAccess(bool allow) override;
     int32_t SetRequestTimeout(int32_t timeoutMs) override;
     std::string AddDownloadTask(std::shared_ptr<Plugins::MediaSource> source) override;
-    std::string FindExistingTask(const std::string& url);
     std::tuple<std::string, std::shared_ptr<AVDownloadTaskInfo>, std::shared_ptr<MediaDownload::Downloader>,
         std::string> CreateNewDownloaderAndTask(std::shared_ptr<Plugins::MediaSource> source, const std::string& url);
     int32_t RemoveDownloadTask(const std::string &taskId) override;
@@ -148,7 +148,8 @@ public:
 protected:
     virtual MediaSourceUtils::NetConnType GetNetworkType();
 private:
-    std::string GetDefaultCacheDir(const std::string& url);
+    std::string FindExistingTask(const std::string& url, const std::string& key = "");
+    std::string GetDefaultCacheDir(const std::string& url, const std::string& key = "");
     void HandleMessage(const MediaDownload::Message &msg);
     void HandleTaskAdded(std::string taskId, std::string url);
     void StartNetworkListening();

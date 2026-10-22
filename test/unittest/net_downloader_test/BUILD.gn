@@ -13,6 +13,8 @@
 
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+import(
+    "//foundation/multimedia/player_framework/services/services/media_source/media_source_sources.gni")
 
 module_output_path = "player_framework/player_framework/player"
 
@@ -22,11 +24,11 @@ ohos_unittest("net_downloader_test") {
   include_dirs = [
     "../",
     "common",
-    "$MEDIA_PLAYER_ROOT_DIR/services/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
   ]
 
   cflags = [
@@ -60,21 +62,16 @@ ohos_unittest("net_downloader_test") {
   ]
 
   sources = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/download_network_client.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/download_task.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/downloader_factory.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/downloader_impl.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/message_queue.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/network_client_agent.cpp",
     "common/http_server_demo.cpp",
     "common/net_downloader_test_common.h",
     "common/network_utils_fake.cpp",
     "common/network_utils_fake.h",
-    "downloader_descriptor_tst.cpp",
     "download_task_test.cpp",
+    "downloader_descriptor_tst.cpp",
     "downloader_test.cpp",
     "network_client_ext_test.cpp",
   ]
+  sources += net_downloader_sources
 
   resource_config_file =
       "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"
@@ -86,11 +83,11 @@ ohos_unittest("net_downloader_client_agent_test") {
   include_dirs = [
     "../",
     "common",
-    "$MEDIA_PLAYER_ROOT_DIR/services/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
   ]
 
   cflags = [
@@ -124,16 +121,11 @@ ohos_unittest("net_downloader_client_agent_test") {
   ]
 
   sources = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/download_network_client.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/download_task.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/downloader_factory.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/downloader_impl.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/message_queue.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/network_client_agent.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils/network_utils.cpp",
     "common/net_downloader_test_common.h",
     "network_client_agent_test.cpp",
   ]
+  sources += net_downloader_sources
 
   resource_config_file =
       "$MEDIA_PLAYER_ROOT_DIR/test/unittest/resources/ohos_test.xml"

@@ -1,0 +1,35 @@
+# Copyright (C) 2026 Huawei Device Co., Ltd.
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import("//foundation/multimedia/player_framework/config.gni")
+
+downloaded_cache_loader_sources = [
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/url_key_util.cpp",
+]
+
+net_downloader_sources = [
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/download_network_client.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/download_task.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/downloader_factory.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/downloader_impl.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/message_queue.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/network_client_agent.cpp",
+]

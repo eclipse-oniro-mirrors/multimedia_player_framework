@@ -1379,6 +1379,9 @@ interface MediaSource {
     SetMimeType(mimeType: AVMimeTypes): void;
     SetMediaResourceLoaderDelegate(resourceLoader: MediaSourceLoader): void;
     GetID(): String;
+    SetRetrieveKey(key: String): void;
+    SetTrackSelectionFilter(filter: TrackSelectionFilter): void;
+    GetTrackSelectionFilter(): Optional<TrackSelectionFilter>;
 }
 
 enum AVDownloadTaskState: i32 {

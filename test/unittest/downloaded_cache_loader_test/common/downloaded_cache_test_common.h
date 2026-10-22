@@ -27,6 +27,9 @@
 
 #include "cache_mapping_format.h"
 #include "sha256_hasher.h"
+#include "url_key_util.h"
+#include "play_strategy_serializer.h"
+#include "media_source.h"
 
 namespace fs = std::filesystem;
 
@@ -61,10 +64,10 @@ inline void WriteDefaultPlaybackParamData(std::ofstream& file)
     writeU8(0);
     writeU32(0); writeU32(0);
     writeD64(0.0); writeD64(0.0);
-    writeI32(0); writeI32(0); writeI32(0); writeI32(0);
-    writeI32(0); writeI32(0); writeI32(0); writeI32(0);
+    writeI32(-1); writeI32(-1); writeI32(-1); writeI32(-1);
+    writeI32(-1); writeI32(-1); writeI32(-1); writeI32(-1);
     writeU32(0);
-    writeI32(0); writeI32(0); writeI32(0);
+    writeI32(-1); writeI32(-1); writeI32(-1);
     writeU32(0); writeU32(0); writeU32(0);
 
     uint32_t dataLength = static_cast<uint32_t>(strategyData.size());
@@ -197,6 +200,101 @@ inline void CreateRawMappingFile(const std::string& cacheDir, const std::vector<
         file.write(reinterpret_cast<const char*>(data.data()), data.size());
         file.close();
     }
+}
+
+inline void WritePlaybackParamData(std::ofstream& file,
+    const std::string& rootUrl,
+    const Plugins::PlayStrategy& strategy,
+    const Plugins::TrackSelectionFilter& filter)
+{
+    std::vector<uint8_t> paramData;
+    PlayStrategySerializer::Serialize(rootUrl, strategy, filter, paramData);
+    uint32_t dataLength = static_cast<uint32_t>(paramData.size());
+    file.write(reinterpret_cast<const char*>(&dataLength), sizeof(dataLength));
+    if (dataLength > 0) {
+        file.write(reinterpret_cast<const char*>(paramData.data()), dataLength);
+    }
+}
+
+inline void WriteEntries(std::ofstream& file,
+    const std::vector<std::pair<std::string, std::string>>& entries,
+    uint64_t fileSize)
+{
+    for (const auto& entry : entries) {
+        auto hash = SHA256Hasher::GenerateHash(entry.first);
+        uint32_t pathLength = static_cast<uint32_t>(entry.second.size());
+        uint64_t size = fileSize;
+        uint8_t reserved[8] = {0};
+
+        file.write(reinterpret_cast<const char*>(hash.data()), SHA256_LEN);
+        file.write(reinterpret_cast<const char*>(&pathLength), 4);
+        file.write(reinterpret_cast<const char*>(&size), 8);
+        file.write(reinterpret_cast<const char*>(reserved), 8);
+        file.write(entry.second.c_str(), entry.second.size());
+    }
+}
+
+inline void CreateTestMappingFileWithKey(const std::string& cacheDir,
+    const std::vector<std::pair<std::string, std::string>>& entries,
+    uint64_t fileSize = 1024)
+{
+    std::string mappingPath = cacheDir + "/" + TEST_MAPPING_FILE;
+
+    CacheMappingHeader header;
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
+    header.version = CACHE_MAPPING_VERSION;
+    header.entryCount = static_cast<uint32_t>(entries.size());
+    (void)memset_s(header.reserved, 8, 0, 8);
+    header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
+
+    std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);
+    if (!file.is_open()) {
+        return;
+    }
+
+    file.write(reinterpret_cast<const char*>(header.magic), 4);
+    file.write(reinterpret_cast<const char*>(&header.version), 4);
+    file.write(reinterpret_cast<const char*>(&header.entryCount), 4);
+    file.write(reinterpret_cast<const char*>(header.reserved), 8);
+    file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
+
+    WriteDefaultPlaybackParamData(file);
+    WriteEntries(file, entries, fileSize);
+
+    file.close();
+}
+
+inline void CreateTestMappingFileWithFilter(const std::string& cacheDir,
+    const std::vector<std::pair<std::string, std::string>>& entries,
+    const Plugins::TrackSelectionFilter& filter,
+    const std::string& rootUrl = "http://example.com",
+    uint64_t fileSize = 1024)
+{
+    std::string mappingPath = cacheDir + "/" + TEST_MAPPING_FILE;
+
+    CacheMappingHeader header;
+    (void)memcpy_s(header.magic, sizeof(CACHE_MAPPING_MAGIC), CACHE_MAPPING_MAGIC, sizeof(CACHE_MAPPING_MAGIC));
+    header.version = CACHE_MAPPING_VERSION;
+    header.entryCount = static_cast<uint32_t>(entries.size());
+    (void)memset_s(header.reserved, 8, 0, 8);
+    header.headerChecksum = CacheMappingSerializer::CalculateHeaderChecksum(header);
+
+    std::ofstream file(mappingPath, std::ios::binary | std::ios::trunc);
+    if (!file.is_open()) {
+        return;
+    }
+
+    file.write(reinterpret_cast<const char*>(header.magic), 4);
+    file.write(reinterpret_cast<const char*>(&header.version), 4);
+    file.write(reinterpret_cast<const char*>(&header.entryCount), 4);
+    file.write(reinterpret_cast<const char*>(header.reserved), 8);
+    file.write(reinterpret_cast<const char*>(&header.headerChecksum), 4);
+
+    Plugins::PlayStrategy strategy;
+    WritePlaybackParamData(file, rootUrl, strategy, filter);
+    WriteEntries(file, entries, fileSize);
+
+    file.close();
 }
 
 } // namespace TestCommon

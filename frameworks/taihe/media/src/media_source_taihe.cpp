@@ -287,6 +287,107 @@ std::string MediaSourceImpl::GetID()
     MEDIA_LOGI("TaiheGetID Out, id=%{public}s", id.c_str());
     return id;
 }
+
+void MediaSourceImpl::SetRetrieveKey(string_view key)
+{
+    MEDIA_LOGI("TaiheSetRetrieveKey In");
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(this);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return;
+    }
+    mediaSource->retrieveKey = static_cast<std::string>(key);
+}
+
+void MediaSourceImpl::SetTrackSelectionFilter(TrackSelectionFilter filter)
+{
+    MEDIA_LOGI("TaiheSetTrackSelectionFilter In");
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(this);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return;
+    }
+    AVPlayTrackSelectionFilter avfilter;
+    auto assignIfPresent = [](auto& dest, const auto& src) {
+        if (src.has_value()) dest = src.value();
+    };
+    assignIfPresent(avfilter.maxVideoBitrate, filter.maxVideoBitrate);
+    assignIfPresent(avfilter.minVideoBitrate, filter.minVideoBitrate);
+    assignIfPresent(avfilter.maxVideoFrameRate, filter.maxVideoFrameRate);
+    assignIfPresent(avfilter.minVideoFrameRate, filter.minVideoFrameRate);
+    assignIfPresent(avfilter.maxAudioBitrate, filter.maxAudioBitrate);
+    assignIfPresent(avfilter.minAudioBitrate, filter.minAudioBitrate);
+    assignIfPresent(avfilter.maxAudioChannels, filter.maxAudioChannels);
+    auto assignVec = [](auto& dest, const auto& src) {
+        if (src.has_value() && !src.value().empty()) {
+            dest = std::vector<std::string>(src.value().begin(), src.value().end());
+        }
+    };
+    assignVec(avfilter.preferredVideoMimeTypes, filter.preferredVideoMimeTypes);
+    assignVec(avfilter.preferredAudioMimeTypes, filter.preferredAudioMimeTypes);
+    assignVec(avfilter.preferredAudioLanguages, filter.preferredAudioLanguages);
+    assignVec(avfilter.preferredSubtitleLanguages, filter.preferredSubtitleLanguages);
+    auto assignRes = [](auto& dest, const auto& src) {
+        if (src.has_value()) {
+            dest = std::make_pair(src.value().width.value_or(0), src.value().height.value_or(0));
+        }
+    };
+    assignRes(avfilter.maxVideoResolution, filter.maxVideoResolution);
+    assignRes(avfilter.minVideoResolution, filter.minVideoResolution);
+    mediaSource->trackSelectionFilter = avfilter;
+    mediaSource->hasTrackSelectionFilter = true;
+    MEDIA_LOGI("TaiheSetTrackSelectionFilter Out");
+}
+
+optional<TrackSelectionFilter> MediaSourceImpl::GetTrackSelectionFilter()
+{
+    MEDIA_LOGI("TaiheGetTrackSelectionFilter In");
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(this);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return optional<TrackSelectionFilter>(std::nullopt);
+    }
+    if (!mediaSource->hasTrackSelectionFilter) {
+        MEDIA_LOGE("TrackSelectionFilter not set.");
+        return optional<TrackSelectionFilter>(std::nullopt);
+    }
+    TrackSelectionFilter filter;
+    const auto& avfilter = mediaSource->trackSelectionFilter;
+    auto assignOpt = [](auto& target, const auto& source) {
+        if (source >= 0) {
+            target = optional<std::decay_t<decltype(target.value())>>(std::in_place_t{}, source);
+        }
+    };
+    assignOpt(filter.maxVideoBitrate, avfilter.maxVideoBitrate);
+    assignOpt(filter.minVideoBitrate, avfilter.minVideoBitrate);
+    assignOpt(filter.maxVideoFrameRate, avfilter.maxVideoFrameRate);
+    assignOpt(filter.minVideoFrameRate, avfilter.minVideoFrameRate);
+    assignOpt(filter.maxAudioBitrate, avfilter.maxAudioBitrate);
+    assignOpt(filter.minAudioBitrate, avfilter.minAudioBitrate);
+    assignOpt(filter.maxAudioChannels, avfilter.maxAudioChannels);
+    auto assignRes = [](auto& target, const auto& source) {
+        if (source.first >= 0 && source.second >= 0) {
+            VideoSize vs;
+            vs.width = optional<int32_t>(std::in_place_t{}, source.first);
+            vs.height = optional<int32_t>(std::in_place_t{}, source.second);
+            target = optional<VideoSize>(std::in_place_t{}, vs);
+        }
+    };
+    assignRes(filter.maxVideoResolution, avfilter.maxVideoResolution);
+    assignRes(filter.minVideoResolution, avfilter.minVideoResolution);
+    auto assignArr = [](auto& target, const auto& source) {
+        if (!source.empty()) {
+            target = optional<array<string>>(std::in_place_t{},
+                array<string>(copy_data_t{}, source.data(), source.size()));
+        }
+    };
+    assignArr(filter.preferredVideoMimeTypes, avfilter.preferredVideoMimeTypes);
+    assignArr(filter.preferredAudioMimeTypes, avfilter.preferredAudioMimeTypes);
+    assignArr(filter.preferredAudioLanguages, avfilter.preferredAudioLanguages);
+    assignArr(filter.preferredSubtitleLanguages, avfilter.preferredSubtitleLanguages);
+    MEDIA_LOGI("TaiheGetTrackSelectionFilter Out");
+    return optional<TrackSelectionFilter>(std::in_place_t{}, filter);
+}
 } // namespace ANI::Media
 
 TH_EXPORT_CPP_API_CreateMediaSourceWithUrl(CreateMediaSourceWithUrl);
