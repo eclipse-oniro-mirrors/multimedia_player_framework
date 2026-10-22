@@ -628,8 +628,8 @@ napi_status AVScreenCaptureNapi::GetRectangleRegionParam(OHOS::Rect &area, napi_
     status = napi_get_value_int32(env, value, &height);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'height' is not int32");
 
-    if (left < 0 || top < 0 || width < 0 || height < 0) {
-        MEDIA_LOGE("GetRectangleRegionParam negative value, left:%{public}d, top:%{public}d, "
+    if (left < 0 || top < 0 || width <= 0 || height <= 0) {
+        MEDIA_LOGE("GetRectangleRegionParam invalid value, left:%{public}d, top:%{public}d, "
             "width:%{public}d, height:%{public}d", left, top, width, height);
         return napi_invalid_arg;
     }
@@ -666,8 +666,8 @@ napi_value AVScreenCaptureNapi::JsSetCaptureArea(napi_env env, napi_callback_inf
     napi_status status = GetRectangleRegionParam(area, env, args[0]);
     if (status != napi_ok) {
         asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            "SetCaptureArea parameter out of range: invalid RectangleRegion (left/top/width/height "
-            "must be non-negative int32 and present)");
+            "SetCaptureArea parameter out of range: invalid RectangleRegion (left/top must be non-negative, "
+            "width/height must be positive, and all fields must be present)");
         QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
         return result;
     }
@@ -868,7 +868,9 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetInitTask(
 
         int32_t ret = napi->screenCapture_->Init(config);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, ((void)napi->screenCapture_->Release(), GetReturnInfo(ret, "Init", "")));
-
+        // Set displayId_ only after Init succeeds, so that a failed Init does not change the display used by
+        // a subsequent SetCaptureArea.
+        napi->displayId_ = config.videoInfo.videoCapInfo.displayId;
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -1162,9 +1164,6 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
     videoConfig.displayId = static_cast<uint64_t>(displayId);
     if (videoConfig.displayId > 0) {
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
-    }
-    if (asyncCtx->napi != nullptr) {
-        asyncCtx->napi->displayId_ = videoConfig.displayId;
     }
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
     // get video frame info (frameWidth and frameHeight)

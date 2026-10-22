@@ -303,7 +303,6 @@ int32_t AVScreenCaptureRecorderImpl::GetVideoDisplayInfo(std::unique_ptr<AVScree
     CHECK_AND_RETURN_RET(displayId >= 0,
         (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "getDisplayId", "displayId"), MSERR_INVALID_VAL));
     videoConfig.displayId = static_cast<uint64_t>(displayId);
-    asyncCtx->taihe->displayId_ = videoConfig.displayId;
     if (videoConfig.displayId > 0) {
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     }
@@ -491,7 +490,9 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetInitTask(
 
         int32_t ret = taihe->screenCapture_->Init(config);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, ((void)taihe->screenCapture_->Release(), GetReturnInfo(ret, "Init", "")));
-
+        // Set displayId_ only after Init succeeds, so that a failed Init does not change the display used by
+        // a subsequent SetCaptureArea.
+        taihe->displayId_ = config.videoInfo.videoCapInfo.displayId;
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -874,15 +875,16 @@ void AVScreenCaptureRecorderImpl::SetCaptureAreaSync(::ohos::multimedia::media::
     CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
 
-    if (area.left < 0 || area.top < 0 || area.width < 0 || area.height < 0) {
+    if (area.left < 0 || area.top < 0 || area.width <= 0 || area.height <= 0) {
         std::string invalidFields;
         if (area.left < 0) invalidFields += "left=" + std::to_string(area.left) + " ";
         if (area.top < 0) invalidFields += "top=" + std::to_string(area.top) + " ";
-        if (area.width < 0) invalidFields += "width=" + std::to_string(area.width) + " ";
-        if (area.height < 0) invalidFields += "height=" + std::to_string(area.height) + " ";
-        MEDIA_LOGE("SetCaptureArea negative parameter, %{public}s", invalidFields.c_str());
-        set_business_error(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            option + " negative value: " + invalidFields);
+        if (area.width <= 0) invalidFields += "width=" + std::to_string(area.width) + " ";
+        if (area.height <= 0) invalidFields += "height=" + std::to_string(area.height) + " ";
+        MEDIA_LOGE("SetCaptureArea invalid parameter, %{public}s", invalidFields.c_str());
+        std::string errorMsg = option + " invalid RectangleRegion (left/top must be non-negative, "
+            "width/height must be positive): " + invalidFields;
+        set_business_error(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, errorMsg);
         return;
     }
 
