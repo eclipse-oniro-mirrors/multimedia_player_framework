@@ -212,7 +212,7 @@ namespace {
         std::pair<uint64_t, std::shared_ptr<OHOS::Media::Meta>> metaAppIdPair;
         {
             std::lock_guard<std::mutex> lock(collectMut_);
-            MEDIA_LOG_I("CollectReportMediaInfo in.");
+            MEDIA_LOG_D("CollectReportMediaInfo in.");
             auto idMapIt = idMap_.find(instanceId);
             if (idMapIt == idMap_.end()) {
                 MEDIA_LOG_W("Not found instanceId in idMap");
@@ -433,7 +433,6 @@ void MediaEvent::SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX:
 void MediaEvent::MediaKitStatistics(const std::string& syscap, const std::string& appName,
     const std::string& instanceId, const std::string& APICall, const std::string& events)
 {
-    MEDIA_LOG_I("MediaEvent::MediaKitStatistics start");
     nlohmann::json mediaKitEvent;
     mediaKitEvent["syscap"] = syscap;
     mediaKitEvent["appName"] = appName;
@@ -446,7 +445,7 @@ void MediaEvent::MediaKitStatistics(const std::string& syscap, const std::string
     auto diff = currentTime - currentTimeForMediaKit_;
     auto hour = std::chrono::duration_cast<std::chrono::hours>(diff).count();
     if (hour < HOURS_BETWEEN_REPORTS && mediaKitEvents_.size() < MAX_MAP_SIZE) {
-        MEDIA_LOG_I("MediaEvent::MediaKitStatistics without eventWrite end");
+        MEDIA_LOG_D("MediaEvent::MediaKitStatistics without eventWrite end");
         return;
     }
     HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, "RECORDER_STATISTICS",
