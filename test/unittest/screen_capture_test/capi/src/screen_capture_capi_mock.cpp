@@ -128,6 +128,22 @@ void ScreenCaptureCapiMock::OnPrivacyProtect(OH_AVScreenCapture *screenCapture,
     }
 }
 
+static OH_VideoCodecFormat ConvertToOHVideoCodecFormat(VideoCodecFormat videoCodec)
+{
+    static const std::map<VideoCodecFormat, OH_VideoCodecFormat> codecFormatMap = {
+        {VideoCodecFormat::VIDEO_DEFAULT, OH_VideoCodecFormat::OH_VIDEO_DEFAULT},
+        {VideoCodecFormat::H264, OH_VideoCodecFormat::OH_H264},
+        {VideoCodecFormat::H265, OH_VideoCodecFormat::OH_H265},
+        {VideoCodecFormat::MPEG4, OH_VideoCodecFormat::OH_MPEG4},
+    };
+    auto it = codecFormatMap.find(videoCodec);
+    if (it != codecFormatMap.end()) {
+        return it->second;
+    }
+    MEDIA_LOGE("videoCodec is invalid, value is: %{public}d", static_cast<int32_t>(videoCodec));
+    return OH_VideoCodecFormat::OH_VIDEO_DEFAULT;
+}
+
 OH_AVScreenCaptureConfig ScreenCaptureCapiMock::Convert(AVScreenCaptureConfig config)
 {
     OH_AVScreenCaptureConfig tempConfig;
@@ -162,9 +178,9 @@ OH_AVScreenCaptureConfig ScreenCaptureCapiMock::Convert(AVScreenCaptureConfig co
     tempConfig.videoInfo.videoCapInfo.videoSource =
         static_cast<OH_VideoSourceType>(config.videoInfo.videoCapInfo.videoSource);
     tempConfig.videoInfo.videoEncInfo = {
-        .videoCodec = static_cast<OH_VideoCodecFormat>(config.videoInfo.videoEncInfo.videoCodec),
-        .videoBitrate = static_cast<OH_VideoCodecFormat>(config.videoInfo.videoEncInfo.videoBitrate),
-        .videoFrameRate = static_cast<OH_VideoCodecFormat>(config.videoInfo.videoEncInfo.videoFrameRate)
+        .videoCodec = ConvertToOHVideoCodecFormat(config.videoInfo.videoEncInfo.videoCodec),
+        .videoBitrate = config.videoInfo.videoEncInfo.videoBitrate,
+        .videoFrameRate = config.videoInfo.videoEncInfo.videoFrameRate
     };
     std::string url = config.recorderInfo.url;
     if (!(url.empty())) {
