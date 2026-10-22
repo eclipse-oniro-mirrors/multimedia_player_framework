@@ -2979,13 +2979,16 @@ int32_t ScreenCaptureServer::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
 {
     MediaTrace trace("ScreenCaptureServer::SetCaptureArea");
     std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(IsState(CAP_ALIVE), MSERR_INVALID_OPERATION,
+        "SetCaptureArea failed, screen capture already released");
     CHECK_AND_RETURN_RET_LOG(CheckDisplayArea(displayId, area), MSERR_INVALID_VAL,
         "Check region area failed, invalid input area.");
+    
     isRegionCapture_ = true;
     regionDisplayId_ = displayId;
     regionArea_ = area;
     if (!IsState(CAP_RUNNING)) {
-        MEDIA_LOGI("ScreenCaptureServer::SetCaptureArea, virtual screen not created, return ok");
+        MEDIA_LOGI("ScreenCaptureServer::SetCaptureArea, state not CAP_RUNNING, only cache area, return ok");
         return MSERR_OK;
     }
     return SetCaptureAreaInner(regionDisplayId_, regionArea_);

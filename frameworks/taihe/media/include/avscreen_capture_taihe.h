@@ -44,6 +44,7 @@ namespace AVScreenCapturegOpt {
     const std::string PRESENT_PICKER = "PresentPicker";
     const std::string RELEASE = "Release";
     const std::string ADD_WATERMARK = "AddWatermark";
+    const std::string SET_CAPTURE_AREA = "SetCaptureArea";
 }
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_BIT_RATE = 96000;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_CHANNELS = 2;
@@ -85,6 +86,7 @@ public:
     void SetPickerModeSync(::ohos::multimedia::media::PickerMode pickerMode);
     void SetCanvasRotationSync(bool canvasRotation);
     void ExcludePickerWindowsSync(::taihe::array_view<int32_t> excludedWindows);
+    void SetCaptureAreaSync(::ohos::multimedia::media::RectangleRegion const& area);
     void ReleaseSync();
     int32_t AddWatermarkSync(::ohos::multimedia::image::image::weak::PixelMap watermark,
         ::ohos::multimedia::media::WatermarkConfiguration const& config);
@@ -122,6 +124,12 @@ public:
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     int32_t GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetVideoDisplayInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetVideoEncoderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetVideoFrameInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     int32_t GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     int32_t GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
@@ -146,6 +154,8 @@ public:
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const bool canvasRotation);
     std::shared_ptr<TaskHandler<RetInfo>> GetExcludePickerWindowsTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<int32_t> windowIDsVec);
+    std::shared_ptr<TaskHandler<RetInfo>> GetSetCaptureAreaTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const OHOS::Media::Rect &area);
     void OnStateChange(callback_view<void(ohos::multimedia::media::AVScreenCaptureStateCode)> callback);
     void OffStateChange(optional_view<callback<void(ohos::multimedia::media::AVScreenCaptureStateCode)>> callback);
 
@@ -157,6 +167,7 @@ private:
     std::mutex mutex_;
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    uint64_t displayId_ = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvScreenCaptureTaskqFunc> taskQFuncs_;
