@@ -47,6 +47,7 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_AllFields_001
     src.fillMode = AVScreenCaptureFillMode::SCALE_TO_FILL;
     src.enablePause = true;
     src.enableAEC = true;
+    src.enableHDRCapture = true;
 
     MessageParcel parcel;
     ASSERT_TRUE(src.Marshalling(parcel));
@@ -62,6 +63,7 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_AllFields_001
     ASSERT_EQ(dst->fillMode, AVScreenCaptureFillMode::SCALE_TO_FILL);
     ASSERT_EQ(dst->enablePause, true);
     ASSERT_EQ(dst->enableAEC, true);
+    ASSERT_EQ(dst->enableHDRCapture, true);
 }
 
 HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_DefaultValues_002, TestSize.Level1)
@@ -72,6 +74,7 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_DefaultValues
     src.keepCaptureDuringCall = false;
     src.enableBFrame = false;
     src.enablePause = false;
+    src.enableHDRCapture = false;
 
     MessageParcel parcel;
     ASSERT_TRUE(src.Marshalling(parcel));
@@ -83,6 +86,7 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_DefaultValues
     ASSERT_EQ(dst->keepCaptureDuringCall, false);
     ASSERT_EQ(dst->enableBFrame, false);
     ASSERT_EQ(dst->enablePause, false);
+    ASSERT_EQ(dst->enableHDRCapture, false);
 }
 
 HWTEST_F(ScreenCaptureStrategyParcelTest, Unmarshalling_EmptyParcel_ReturnsNull_001, TestSize.Level1)
@@ -99,20 +103,22 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, Unmarshalling_EmptyParcel_ReturnsNull_
 
     ScreenCaptureStrategyParcel src;
     src.enableAEC = true;
+    src.enableHDRCapture = true;
     MessageParcel validParcel;
     ASSERT_TRUE(src.Marshalling(validParcel));
     auto validResult = ScreenCaptureStrategyParcel::Unmarshalling(validParcel);
     ASSERT_NE(validResult, nullptr);
     ASSERT_EQ(validResult->enableAEC, true);
+    ASSERT_EQ(validResult->enableHDRCapture, true);
 }
 
 // covers Unmarshalling: every Read short-circuit failure branch. Writes exactly N fields
-// (N = 0..8); the (N+1)-th Read then fails and Unmarshalling must return nullptr. This
-// exercises each ReadBool/ReadInt32 false branch, including the enableAEC read (N = 8).
-// N = 9 writes all fields and confirms a successful round-trip of enableAEC.
+// (N = 0..9); the (N+1)-th Read then fails and Unmarshalling must return nullptr. This
+// exercises each ReadBool/ReadInt32 false branch, including the enableHDRCapture read (N = 9).
+// N = 10 writes all fields and confirms a successful round-trip of enableHDRCapture.
 HWTEST_F(ScreenCaptureStrategyParcelTest, Unmarshalling_PartialParcel_EachReadFails_001, TestSize.Level1)
 {
-    for (int32_t n = 0; n <= 9; ++n) {
+    for (int32_t n = 0; n <= 10; ++n) {
         MessageParcel parcel;
         if (n >= 1) { parcel.WriteBool(true); }   // enableDeviceLevelCapture
         if (n >= 2) { parcel.WriteBool(true); }   // keepCaptureDuringCall
@@ -123,12 +129,13 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, Unmarshalling_PartialParcel_EachReadFa
         if (n >= 7) { parcel.WriteInt32(0); }     // fillMode
         if (n >= 8) { parcel.WriteBool(true); }   // enablePause
         if (n >= 9) { parcel.WriteBool(true); }   // enableAEC
+        if (n >= 10) { parcel.WriteBool(true); }  // enableHDRCapture
         auto dst = ScreenCaptureStrategyParcel::Unmarshalling(parcel);
-        if (n < 9) {
+        if (n < 10) {
             ASSERT_EQ(dst, nullptr) << "Unmarshalling should return null when only " << n << " fields are written";
         } else {
             ASSERT_NE(dst, nullptr);
-            ASSERT_EQ(dst->enableAEC, true);
+            ASSERT_EQ(dst->enableHDRCapture, true);
         }
     }
 }
