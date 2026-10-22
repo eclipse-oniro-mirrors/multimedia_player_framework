@@ -235,7 +235,6 @@ int64_t AudioDataSource::GetCurrentTimeNs()
 
 double AudioDataSource::GetFrameDurationRatio()
 {
-    CHECK_AND_RETURN_RET_NOLOG(frameDurationRatio_.load() <= 0, frameDurationRatio_.load());
     CHECK_AND_RETURN_RET(screenCaptureServer_ != nullptr, 1.0);
     auto innerCapture = screenCaptureServer_->GetInnerAudioCapture();
     if (innerCapture != nullptr) {
