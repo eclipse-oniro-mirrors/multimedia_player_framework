@@ -207,7 +207,7 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_GetVideoRecorderCaps_0
         videoRecorderCapsArray.push_back(videoRecorderCaps);
     }
     ASSERT_TRUE(videoRecorderCapsArray.size() != 0);
-    CheckVideoRecorderCapsArray(videoRecorderCapsArray);
+    EXPECT_TRUE(CheckVideoRecorderCapsArray(videoRecorderCapsArray));
 }
 
 /**
@@ -235,7 +235,7 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_GetVideoRecorderProfil
     EXPECT_EQ(CodecMimeType::VIDEO_MPEG4, videoRecorderProfile->videoCodec);
     EXPECT_EQ(176, videoRecorderProfile->videoFrameWidth); // 176 expect width
     EXPECT_EQ(144, videoRecorderProfile->videoFrameHeight); // 144 expect height
-    EXPECT_EQ(30, videoRecorderProfile->videoFrameRate); // 30 expect frame rate
+    EXPECT_EQ(30, videoRecorderProfile->videoFrameRate);
 }
 
 /**

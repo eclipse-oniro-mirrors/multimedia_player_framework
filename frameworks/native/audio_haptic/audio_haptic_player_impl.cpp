@@ -346,6 +346,7 @@ int32_t AudioHapticPlayerImpl::SetVolume(float volume)
         streamUsage_ == AudioStandard::StreamUsage::STREAM_USAGE_VOICE_TRANSFER_RINGTONE) &&
         playerState_ == AudioHapticPlayerState::STATE_RUNNING && !isMockMode_ &&
         std::abs(volume_ - 0.0f) <= std::numeric_limits<float>::epsilon()) {
+        MEDIA_LOGW("SetVolume %{public}f, need to stop vibrate", volume);
         // only for the call manager ringtone
         StopVibrate();
     }

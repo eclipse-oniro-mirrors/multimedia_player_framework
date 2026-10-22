@@ -157,7 +157,7 @@ enum PixelFormat: i32 {
 enum FetchResult: i32 {
     FETCH_FAILED = 0,
     FETCH_SUCCEEDED = 1,
-    FETCH_CANCELLED = 2,
+    FETCH_CANCELED = 2,
 }
 
 struct FrameInfo {
@@ -314,8 +314,8 @@ enum AVMetricsEventType: i32 {
   AV_METRICS_EVENT_LOADING_ERROR = 4,
   AV_METRICS_EVENT_CONTENT_CHANGED = 5,
   AV_METRICS_EVENT_CONTENT_DISCONTINUITY = 6,
-  AV_METRICS_EVENT_CODEC_ABNORMAL = 7,
-  AV_METRICS_EVENT_AUDIO_ABNORMAL = 8,
+  AV_METRICS_EVENT_AUDIO_ABNORMAL = 7,
+  AV_METRICS_EVENT_CODEC_ABNORMAL = 8,
 }
 
 struct AVMetricsEvent {
@@ -557,7 +557,7 @@ interface AVPlayer {
           this.onAudioInterrupt(callback as (interruptEvent: audio.InterruptEvent)=> void);
         } else if (type === "audioOutputDeviceChangeWithInfo"){
           this.onAudioOutputDeviceChangeWithInfo(callback as (audioStreamDeviceChangeInfo: audio.AudioStreamDeviceChangeInfo)=> void);
-        } else if (type === "playbackRateDone"){
+        } else if (type === "playbackRateDone") {
           this.onPlaybackRateDone(callback as (rate: double)=> void);
         } else {
             throw new Error(`Unknown type: ${type}`);
@@ -641,7 +641,7 @@ interface AVPlayer {
           this.offAudioInterrupt(callback as (((interruptEvent: audio.InterruptEvent)=> void) | undefined));
         } else if (type === "audioOutputDeviceChangeWithInfo"){
           this.offAudioOutputDeviceChangeWithInfo(callback as (((audioStreamDeviceChangeInfo: audio.AudioStreamDeviceChangeInfo)=> void) | undefined));
-        } else if (type === "playbackRateDone"){
+        } else if (type === "playbackRateDone") {
           this.offPlaybackRateDone(callback as (((rate: double)=> void) | undefined));
         } else {
           throw new Error(`Unknown type: ${type}`);
@@ -682,6 +682,7 @@ interface AVPlayer {
     SetPlaybackRate(rate: f64): void;
     @gen_promise("getPlaybackRate")
     GetPlaybackRateSync(): f64;
+
     OnMetricsEvent(callback: (data: Array<AVMetricsEvent>)=> void): void;
     OffMetricsEvent(callback: Optional<(data: Array<AVMetricsEvent>)=> void>): void;
     GetCurrentMediaSource(): Optional<MediaSource>;
@@ -745,6 +746,7 @@ enum SeekMode: i32 {
 enum VideoScaleType: i32 {
     VIDEO_SCALE_TYPE_FIT = 0,
     VIDEO_SCALE_TYPE_FIT_CROP = 1,
+    VIDEO_SCALE_TYPE_SCALED_ASPECT = 2,
 }
 
 enum VideoSourceType: i32 {
@@ -871,6 +873,8 @@ enum AVErrorCode: i32 {
     AVERR_SUPER_RESOLUTION_UNSUPPORTED = 5410003,
     AVERR_SUPER_RESOLUTION_NOT_ENABLED = 5410004,
     AVERR_IO_CLEARTEXT_NOT_PERMITTED = 5411012,
+    AVERR_PARAMETER_OUT_OF_RANGE = 5400108,
+    AVERR_SESSION_NOT_EXIST = 5400109,
 }
 
 enum PlaybackInfoKey: String {
@@ -987,6 +991,9 @@ interface AVRecorder {
     @gen_promise("updateRotation")
     UpdateRotationSync(rotation: i32): void;
 
+    @gen_promise("setWillMuteWhenInterrupted")
+    SetWillMuteWhenInterruptedSync(muteWhenInterrupted: bool): void;
+
     @gen_async("getAudioCapturerMaxAmplitude")
     @gen_promise("getAudioCapturerMaxAmplitude")
     GetAudioCapturerMaxAmplitudeSync(): i32;
@@ -1054,9 +1061,14 @@ enum PlaybackSpeed: i32 {
 }
 
 enum MediaType: i32 {
+    MEDIA_TYPE_UNSUPPORTED = -1,
     MEDIA_TYPE_AUD = 0,
     MEDIA_TYPE_VID = 1,
     MEDIA_TYPE_SUBTITLE = 2,
+    MEDIA_TYPE_ATTACHMENT = 3,
+    MEDIA_TYPE_DATA = 4,
+    MEDIA_TYPE_TIMED_METADATA = 5,
+    MEDIA_TYPE_AUXILIARY = 6,
 }
 
 struct Range {
@@ -1212,6 +1224,12 @@ enum FileGenerationMode: i32 {
     AUTO_CREATE_CAMERA_SCENE = 1,
 }
 
+enum AacProfile: i32 {
+    AAC_LC = 0,
+    AAC_HE = 1,
+    AAC_HE_V2 = 2,
+}
+
 struct AVRecorderConfig {
     audioSourceType: Optional<AudioSourceType>;
     videoSourceType: Optional<VideoSourceType>;
@@ -1227,6 +1245,7 @@ struct AVRecorderProfile {
     audioBitrate: Optional<i32>;
     audioChannels: Optional<i32>;
     audioCodec: Optional<CodecMimeType>;
+    aacProfile: Optional<AacProfile>;
     audioSampleRate: Optional<i32>;
     fileFormat: ContainerFormatType;
     videoBitrate: Optional<i32>;
@@ -1236,13 +1255,15 @@ struct AVRecorderProfile {
     videoFrameRate: Optional<i32>;
     isHdr: Optional<bool>;
     enableTemporalScale: Optional<bool>;
+    enableBFrame: Optional<bool>;
     enableStableQualityMode: Optional<bool>;
     sqrFactor: Optional<i32>;
 }
 
 enum ScreenCaptureEvent: i32 {
     SCREENCAPTURE_STARTED = 0,
-    SCREENCAPTURE_STOPPED = 1
+    SCREENCAPTURE_STOPPED = 1,
+    SCREENCAPTURE_DIED = 2
 }
 
 interface ScreenCaptureMonitor {

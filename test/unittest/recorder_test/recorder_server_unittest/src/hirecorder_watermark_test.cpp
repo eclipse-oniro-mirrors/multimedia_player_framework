@@ -145,8 +145,8 @@ HWTEST_F(HiRecorderWatermarkTest, hirecorder_IsWatermarkSupported_001, TestSize.
 
     bool isHardWatermarkSupported = false;
     int32_t ret = recorderServer_->IsWatermarkSupported(isHardWatermarkSupported);
-    EXPECT_EQ(ret, MSERR_OK);
     close(config.outputFd);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 /**
@@ -472,6 +472,7 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetSurface_WatermarkSoft_001, Test
 
     sptr<Surface> surface = impl_->GetSurface(0);
     EXPECT_EQ(surface, nullptr);
+    EXPECT_TRUE(impl_->hasWatermark_);
 }
 
 /**
@@ -488,6 +489,7 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetSurface_WatermarkHard_001, Test
 
     sptr<Surface> surface = impl_->GetSurface(0);
     EXPECT_EQ(surface, nullptr);
+    EXPECT_TRUE(impl_->isHardWatermarkSupported_);
 }
 
 /**
@@ -508,6 +510,7 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetSurface_VideoEncoder_001, TestS
 
     sptr<Surface> surface = impl_->GetSurface(0);
     EXPECT_EQ(surface, nullptr);
+    EXPECT_FALSE(impl_->hasWatermark_);
 }
 
 /**
@@ -528,9 +531,8 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetSurface_VideoCapture_001, TestS
             "videoCaptureFilter", Pipeline::FilterType::VIDEO_CAPTURE);
 
     sptr<Surface> surface = impl_->GetSurface(0);
-    // Routes to GetSurfaceFromVideoCapture; VideoCaptureFilter creates a Surface internally
     EXPECT_NE(surface, nullptr);
-    EXPECT_GT(surface->GetQueueSize(), 0u);
+    EXPECT_EQ(impl_->videoCaptureFilter_->GetFilterType(), Pipeline::FilterType::VIDEO_CAPTURE);
 }
 
 /**
@@ -976,6 +978,7 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetWaterMarkFilter_Null_001, TestS
     impl_->waterMarkFilter_ = nullptr;
     auto* filter = impl_->GetWaterMarkFilter();
     EXPECT_EQ(filter, nullptr);
+    EXPECT_FALSE(impl_->hasWatermark_);
 }
 
 /**

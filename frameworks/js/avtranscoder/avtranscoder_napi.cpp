@@ -948,9 +948,9 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
         if (config->sqrFactorSet) {
             CHECK_AND_RETURN_RET(config->sqrFactor >= AVTRANSCODER_SQR_FACTOR_MIN &&
                 config->sqrFactor <= AVTRANSCODER_SQR_FACTOR_MAX,
-                GetReturnRet(MSERR_SQR_FACTOR_ERROR_401, "SetVideoSqrFactor", "SQRFactor"));
+                GetReturnRet(MSERR_SQR_FACTOR_ERROR_401, "SetVideoSqrFactor", "sqrFactor"));
             ret = transCoder_->SetVideoSqrFactor(config->sqrFactor);
-            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSqrFactor", "SQRFactor"));
+            CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSqrFactor", "sqrFactor"));
         }
     }
 
@@ -1157,7 +1157,7 @@ int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContex
     (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight);
     (void)CommonNapi::GetPropertyBool(env, args, "enableBFrame", config->enableBFrame);
     (void)CommonNapi::GetPropertyBool(env, args, "enableStableQualityMode", config->enableStableQualityMode);
-    config->sqrFactorSet = CommonNapi::GetPropertyInt32(env, args, "SQRFactor", config->sqrFactor);
+    config->sqrFactorSet = CommonNapi::GetPropertyInt32(env, args, "sqrFactor", config->sqrFactor);
     return MSERR_OK;
 }
 

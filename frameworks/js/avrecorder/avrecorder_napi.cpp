@@ -2295,9 +2295,11 @@ void AVRecorderNapi::MediaProfileLog(bool isVideo, AVRecorderProfile &profile)
 {
     if (isVideo) {
         MEDIA_LOGI("videoBitrate %{public}d, videoCodecFormat %{public}d, videoFrameWidth %{public}d,"
-            " videoFrameHeight %{public}d, videoFrameRate %{public}d, isHdr %{public}d, enableTemporalScale %{public}d",
+            " videoFrameHeight %{public}d, videoFrameRate %{public}d, isHdr %{public}d, enableTemporalScale %{public}d,"
+            " enableStableQualityMode %{public}d, enableBFrame %{public}d, sqrFactor %{public}d, sqrSet %{public}d",
             profile.videoBitrate, profile.videoCodecFormat, profile.videoFrameWidth,
-            profile.videoFrameHeight, profile.videoFrameRate, profile.isHdr, profile.enableTemporalScale);
+            profile.videoFrameHeight, profile.videoFrameRate, profile.isHdr, profile.enableTemporalScale,
+            profile.enableStableQualityMode, profile.enableBFrame, profile.sqrFactor, profile.sqrFactorSet);
         return;
     }
     MEDIA_LOGI("audioBitrate %{public}d, audioChannels %{public}d, audioCodecFormat %{public}d,"
@@ -2538,6 +2540,7 @@ bool AVRecorderNapi::GetLocation(std::unique_ptr<AVRecorderAsyncContext> &asyncC
 RetInfo AVRecorderNapi::SetVideoProfileConfig(const std::string &operation,
     const AVRecorderProfile &profile, const std::string &state)
 {
+    MEDIA_LOGI("SetVideoProfileConfig in, operation(%{public}s)", operation.c_str());
     int32_t ret = recorder_->SetVideoEncoder(videoSourceID_, profile.videoCodecFormat);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetRetInfo(ret, operation, "config.profile.videoCodec", state));
 

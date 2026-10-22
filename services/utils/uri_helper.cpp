@@ -252,7 +252,8 @@ bool UriHelper::ParseFdUri(std::string_view uri)
     std::string_view::size_type delim1 = uri.find("?");
     std::string_view::size_type delim2 = uri.find("&");
     if (delim1 == std::string_view::npos && delim2 == std::string_view::npos) {
-        CHECK_AND_RETURN_RET_LOG(StrToInt(uri, fd_), false, "Invalid fd url");
+        MEDIA_LOGE("fd uri without offset/size is not allowed: %{private}s", std::string(uri).c_str());
+        return false;
     } else if (delim1 != std::string_view::npos && delim2 != std::string_view::npos) {
         std::string_view fdstr = uri.substr(0, delim1);
         int32_t fd = -1;

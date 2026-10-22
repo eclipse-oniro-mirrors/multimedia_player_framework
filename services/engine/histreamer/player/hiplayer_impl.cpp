@@ -2585,6 +2585,7 @@ int32_t HiPlayerImpl::GetPlaybackInfo(Format& playbackInfo)
     MEDIA_LOG_D("GetPlaybackInfo in");
 
     PlaybackInfo playbackInfoTmp;
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER), "demuxer_ is null");
     auto ret = demuxer_->GetPlaybackInfo(playbackInfoTmp);
     if (ret == Status::OK) {
         playbackInfo.PutStringValue("server_ip_address", playbackInfoTmp.serverIpAddress);
@@ -2635,6 +2636,7 @@ int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetri
 int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
 {
     MEDIA_LOG_I("GetAudioTrackInfo in");
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER), "demuxer_ is null");
     std::string mime;
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (size_t trackIndex = 0; trackIndex < metaInfo.size(); trackIndex++) {
@@ -2680,6 +2682,7 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
 int32_t HiPlayerImpl::GetSubtitleTrackInfo(std::vector<Format>& subtitleTrack)
 {
     MEDIA_LOG_I("GetSubtitleTrackInfo in");
+    FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER), "demuxer_ is null");
     std::string mime;
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     for (size_t trackIndex = 0; trackIndex < metaInfo.size(); trackIndex++) {
@@ -3822,6 +3825,7 @@ void HiPlayerImpl::NotifySuperResolutionChanged(const Event& event)
 
 void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
 {
+    FALSE_RETURN(demuxer_ != nullptr);
     int32_t innerTrackId = AnyCast<int32_t>(event.param);
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
     std::string mime;
@@ -3855,7 +3859,6 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
         audioSink_->DoFlush();
         audioDecoder_->Start();
         if (IsNeedAudioSinkChangeTrack(metaInfo, index)) {
-            MEDIA_LOG_I("AudioSink changeTrack in");
             FALSE_RETURN_MSG(Status::OK == audioSink_->ChangeTrack(meta),
                 "HandleAudioTrackChangeEvent audioSink change track error");
         }

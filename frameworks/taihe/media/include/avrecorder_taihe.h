@@ -64,6 +64,7 @@ namespace AVRecordergOpt {
     const std::string SET_WATERMARK = "SetWatermark";
     const std::string SET_METADATA = "SetMetadata";
     const std::string ADD_WATERMARK = "AddWatermark";
+    const std::string SET_WILL_MUTE_WHEN_INTERRUPTED = "SetWillMuteWhenInterrupted";
 }
 
 constexpr int32_t AVRECORDER_DEFAULT_AUDIO_BIT_RATE = 48000;
@@ -83,7 +84,8 @@ const std::map<std::string, std::vector<std::string>> stateCtrlList = {
         AVRecordergOpt::GET_AV_RECORDER_PROFILE,
         AVRecordergOpt::SET_AV_RECORDER_CONFIG,
         AVRecordergOpt::GET_ENCODER_INFO,
-        AVRecordergOpt::ADD_WATERMARK
+        AVRecordergOpt::ADD_WATERMARK,
+        AVRecordergOpt::SET_WILL_MUTE_WHEN_INTERRUPTED
     }},
     {AVRecorderState::STATE_PREPARED, {
         AVRecordergOpt::SET_ORIENTATION_HINT,
@@ -184,6 +186,10 @@ public:
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, ::ohos::multimedia::media::AVRecorderConfig &res);
     ::ohos::multimedia::media::AVRecorderProfile CreateAVRecorderProfile(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    void SetAudioProfileFields(::ohos::multimedia::media::AVRecorderProfile &profile,
+        std::shared_ptr<AVRecorderConfig> &config);
+    void SetVideoProfileFields(::ohos::multimedia::media::AVRecorderProfile &profile,
+        std::shared_ptr<AVRecorderConfig> &config);
 
     optional<string> GetInputMetaSurfaceSync(::ohos::multimedia::media::MetaSourceType type);
     int32_t GetMetaType(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx,
@@ -200,6 +206,11 @@ public:
     int32_t GetRotation(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, int32_t rotation);
     std::shared_ptr<TaskHandler<RetInfo>> GetSetOrientationHintTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+
+    void SetWillMuteWhenInterruptedSync(bool muteWhenInterrupted);
+    std::shared_ptr<TaskHandler<RetInfo>> GetSetWillMuteWhenInterruptedTask(
+        const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, bool muteWhenInterrupted);
+    int32_t SetWillMuteWhenInterrupted(bool muteWhenInterrupted);
 
     int32_t GetAudioCapturerMaxAmplitudeSync();
     std::shared_ptr<TaskHandler<RetInfo>> GetMaxAmplitudeTask(
@@ -295,6 +306,8 @@ public:
     RetInfo Configure(std::shared_ptr<AVRecorderConfig> config);
     RetInfo ConfigureUrl(std::shared_ptr<AVRecorderConfig> config);
     RetInfo SetProfile(std::shared_ptr<AVRecorderConfig> config);
+    RetInfo SetAudioProfileConfig(std::shared_ptr<AVRecorderConfig> config);
+    RetInfo SetVideoProfileConfig(std::shared_ptr<AVRecorderConfig> config);
     RetInfo GetInputSurface();
     RetInfo Start();
     RetInfo Pause();
@@ -365,6 +378,7 @@ struct AVRecorderProfile {
     int32_t audioChannels = AVRECORDER_DEFAULT_AUDIO_CHANNELS;
     int32_t audioSampleRate = AVRECORDER_DEFAULT_AUDIO_SAMPLE_RATE;
     AudioCodecFormat audioCodecFormat = AudioCodecFormat::AUDIO_DEFAULT;
+    OHOS::Media::AacProfile aacProfile = OHOS::Media::AacProfile::AAC_LC;
 
     int32_t videoBitrate = AVRECORDER_DEFAULT_VIDEO_BIT_RATE;
     int32_t videoFrameWidth = AVRECORDER_DEFAULT_FRAME_HEIGHT;
@@ -373,6 +387,7 @@ struct AVRecorderProfile {
     bool isHdr = false;
     bool enableTemporalScale = false;
     bool enableStableQualityMode = false;
+    bool enableBFrame = false;
     int32_t sqrFactor = SQR_FACTOR_INVALID;
     bool sqrFactorSet = false;
     VideoCodecFormat videoCodecFormat = VideoCodecFormat::VIDEO_DEFAULT;

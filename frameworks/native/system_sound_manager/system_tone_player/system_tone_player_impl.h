@@ -56,18 +56,19 @@ private:
     int32_t CreatePlayerWithOptions(const AudioHapticPlayerOptions &options);
     void DeletePlayer(const int32_t &streamId);
     void DeleteAllPlayer();
-    std::string GetNewHapticUriForAudioUri(const std::string &audioUri, const std::string &ringtonePath,
+    std::string GetHapticUriInHapticDir(const std::string &audioUri, const std::string &ringtonePath,
         const std::string& hapticsPath);
-    void GetNewHapticUriForAudioUri(const std::string &audioUri,
+    void GetHapticUriInHapticDir(const std::string &audioUri,
         std::map<ToneHapticsFeature, std::string> &hapticsUriMap);
-    void GetHapticUriForAudioUri(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
-    std::string GetDefaultNonSyncHapticsPath();
+    void GetHapticUriInAudioDir(const std::string &audioUri, std::map<ToneHapticsFeature,
+        std::string> &hapticsUris);
     SystemToneOptions GetOptionsFromRingerMode();
     void InitHapticsSourceIds();
     void ReleaseHapticsSourceIds();
     ToneHapticsType ConvertToToneHapticsType(SystemToneType type);
     HapticsMode ConvertToHapticsMode(ToneHapticsMode toneHapticsMode);
-    void GetNewHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticsUris);
+    void GetHapticUriInRingtoneLibrary(const std::string &audioUri, std::map<ToneHapticsFeature,
+        std::string> &hapticsUris);
     void GetCurrentHapticSettings(const std::string &audioUri, std::map<ToneHapticsFeature, std::string> &hapticUriMap);
     bool IsSameHapticMaps(const std::map<ToneHapticsFeature, std::string> &hapticUriMap);
     void UpdateStreamId();
