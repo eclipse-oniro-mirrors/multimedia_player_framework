@@ -964,15 +964,15 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetCaptureAreaTask
         const std::string &option = AVScreenCapturegOpt::SET_CAPTURE_AREA;
         MEDIA_LOGI("%{public}s Start", option.c_str());
 
-        CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr,
-            GetReturnInfo(MSERR_INVALID_OPERATION, option, "", " screenCapture_ is null, recorder released or not init"));
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr, GetReturnInfo(MSERR_INVALID_OPERATION,
+            option, "", " screenCapture_ is null, recorder released or not init"));
 
         int32_t ret = napi->screenCapture_->SetCaptureArea(napi->displayId_, area);
         if (ret == MSERR_INVALID_VAL) {
             MEDIA_LOGE("SetCaptureArea invalid area, left:%{public}d, top:%{public}d, "
-                "width:%{public}d, height:%{public}d, ret = %{public}d", 
+                "width:%{public}d, height:%{public}d, ret = %{public}d",
                 area.x, area.y, area.w, area.h, ret);
-            return RetInfo(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, 
+            return RetInfo(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
                 option + " area out of range: left=" + std::to_string(area.x) +
                 ", top=" + std::to_string(area.y) +
                 ", width=" + std::to_string(area.w) +

@@ -124,6 +124,12 @@ public:
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     int32_t GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetVideoDisplayInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetVideoEncoderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
+    int32_t GetVideoFrameInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+        ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     int32_t GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
         ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config);
     int32_t GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,

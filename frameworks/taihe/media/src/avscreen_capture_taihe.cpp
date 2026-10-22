@@ -283,13 +283,19 @@ int32_t AVScreenCaptureRecorderImpl::GetAudioInfo(std::unique_ptr<AVScreenCaptur
 int32_t AVScreenCaptureRecorderImpl::GetVideoInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
     ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
 {
-    int32_t videoBitrate = AVSCREENCAPTURE_DEFAULT_VIDEO_BIT_RATE;
-    int32_t preset = AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H264_AAC_MP4;
-    int32_t frameWidth = AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH;
-    int32_t frameHeight = AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT;
+    int32_t ret = GetVideoDisplayInfo(asyncCtx, config);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetVideoDisplayInfo");
+    ret = GetVideoEncoderInfo(asyncCtx, config);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetVideoEncoderInfo");
+    ret = GetVideoFrameInfo(asyncCtx, config);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "failed to GetVideoFrameInfo");
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureRecorderImpl::GetVideoDisplayInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
+{
     int32_t displayId = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
-    int32_t fillMode = OHOS::Media::AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
-    VideoEncInfo &encoderConfig = asyncCtx->config_.videoInfo.videoEncInfo;
     VideoCaptureInfo &videoConfig = asyncCtx->config_.videoInfo.videoCapInfo;
     if (config.displayId.has_value()) {
         displayId = config.displayId.value();
@@ -297,11 +303,20 @@ int32_t AVScreenCaptureRecorderImpl::GetVideoInfo(std::unique_ptr<AVScreenCaptur
     CHECK_AND_RETURN_RET(displayId >= 0,
         (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "getDisplayId", "displayId"), MSERR_INVALID_VAL));
     videoConfig.displayId = static_cast<uint64_t>(displayId);
-    asyncCtx->taihe->displayId_ = videaConfig.dispalyId;
+    asyncCtx->taihe->displayId_ = videoConfig.displayId;
     if (videoConfig.displayId > 0) {
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     }
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureRecorderImpl::GetVideoEncoderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
+{
+    int32_t videoBitrate = AVSCREENCAPTURE_DEFAULT_VIDEO_BIT_RATE;
+    int32_t preset = AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H264_AAC_MP4;
+    VideoEncInfo &encoderConfig = asyncCtx->config_.videoInfo.videoEncInfo;
     if (config.videoBitrate.has_value()) {
         videoBitrate = config.videoBitrate.value();
     }
@@ -315,6 +330,16 @@ int32_t AVScreenCaptureRecorderImpl::GetVideoInfo(std::unique_ptr<AVScreenCaptur
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret, "getPreset", "preset"), ret));
     encoderConfig.videoCodec = GetVideoCodecFormat(preset);
     MEDIA_LOGI("input videoCodec %{public}d", encoderConfig.videoCodec);
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureRecorderImpl::GetVideoFrameInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
+    ::ohos::multimedia::media::AVScreenCaptureRecordConfig const& config)
+{
+    int32_t frameWidth = AVSCREENCAPTURE_DEFAULT_FRAME_WIDTH;
+    int32_t frameHeight = AVSCREENCAPTURE_DEFAULT_FRAME_HEIGHT;
+    int32_t fillMode = OHOS::Media::AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
+    VideoCaptureInfo &videoConfig = asyncCtx->config_.videoInfo.videoCapInfo;
     if (config.frameWidth.has_value()) {
         frameWidth = config.frameWidth.value();
     }
@@ -322,9 +347,10 @@ int32_t AVScreenCaptureRecorderImpl::GetVideoInfo(std::unique_ptr<AVScreenCaptur
         frameHeight = config.frameHeight.value();
     }
     MEDIA_LOGI("input frameWidth %{public}d, frameHeight %{public}d", frameWidth, frameHeight);
-    ret = CheckVideoFrameFormat(frameWidth, frameHeight, videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
-    CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVScreenCaptureSignError(ret,
-        "getVideoFrame", "VideoFrame"), ret));
+    int32_t ret = CheckVideoFrameFormat(frameWidth, frameHeight,
+        videoConfig.videoFrameWidth, videoConfig.videoFrameHeight);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK,
+        (asyncCtx->AVScreenCaptureSignError(ret, "getVideoFrame", "VideoFrame"), ret));
     videoConfig.videoSource = OHOS::Media::VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA;
     if (config.fillMode.has_value()) {
         fillMode = config.fillMode.value().get_value();
@@ -815,15 +841,15 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetCapture
         const std::string &option = AVScreenCapturegOpt::SET_CAPTURE_AREA;
         MEDIA_LOGI("%{public}s Start", option.c_str());
 
-        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
-            GetReturnInfo(MSERR_INVALID_OPERATION, option, "", " screenCapture_ is null, recorder released or not init"));
+        CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr, GetReturnInfo(
+            MSERR_INVALID_OPERATION, option, "", " screenCapture_ is null, recorder released or not init"));
 
         int32_t ret = taihe->screenCapture_->SetCaptureArea(taihe->displayId_, area);
         if (ret == MSERR_INVALID_VAL) {
             MEDIA_LOGE("SetCaptureArea invalid area, left:%{public}d, top:%{public}d, "
-                "width:%{public}d, height:%{public}d, ret = %{public}d", 
+                "width:%{public}d, height:%{public}d, ret = %{public}d",
                 area.left, area.top, area.width, area.height, ret);
-            return RetInfo(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, 
+            return RetInfo(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
                 option + " area out of range: left=" + std::to_string(area.left) +
                 ", top=" + std::to_string(area.top) +
                 ", width=" + std::to_string(area.width) +
@@ -855,7 +881,7 @@ void AVScreenCaptureRecorderImpl::SetCaptureAreaSync(::ohos::multimedia::media::
         if (area.width < 0) invalidFields += "width=" + std::to_string(area.width) + " ";
         if (area.height < 0) invalidFields += "height=" + std::to_string(area.height) + " ";
         MEDIA_LOGE("SetCaptureArea negative parameter, %{public}s", invalidFields.c_str());
-        set_business_error(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, 
+        set_business_error(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
             option + " negative value: " + invalidFields);
         return;
     }
