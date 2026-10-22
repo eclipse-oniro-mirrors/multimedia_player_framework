@@ -869,7 +869,7 @@ void AVScreenCaptureRecorderImpl::SetCaptureAreaSync(::ohos::multimedia::media::
     MEDIA_LOGI("Taihe %{public}s Start", option.c_str());
 
     auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>();
-    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContenxt");
+    CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "failed to get AsyncContext");
     asyncCtx->taihe = this;
     CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");

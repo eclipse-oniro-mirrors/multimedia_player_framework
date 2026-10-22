@@ -2986,6 +2986,7 @@ int32_t ScreenCaptureServer::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
     CHECK_AND_RETURN_RET_LOG(CheckDisplayArea(displayId, area), MSERR_INVALID_VAL,
         "CheckDisplayArea failed, displayId:%{public}" PRIu64 ", area(x:%{public}d, y:%{public}d, "
         "w:%{public}d, h:%{public}d) invalid", displayId, area.x, area.y, area.w, area.h);
+    
     isRegionCapture_ = true;
     regionDisplayId_ = displayId;
     regionArea_ = area;
