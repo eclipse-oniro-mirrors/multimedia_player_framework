@@ -13,12 +13,14 @@
 
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+import(
+    "//foundation/multimedia/player_framework/services/services/media_source/media_source_sources.gni")
 
 module_output_path = "player_framework/player_framework/sa_media"
 
 ohos_unittest("sa_media_client_unit_test") {
   module_out_path = module_output_path
-include_dirs = [
+  include_dirs = [
     "./",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/avplayer",
     "$MEDIA_PLAYER_ROOT_DIR/frameworks/js/common",
@@ -29,10 +31,12 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/ipc",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/monitor/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/pcm_output/ipc",
@@ -53,8 +57,6 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/ipc",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils",
   ]
 
   cflags = [
@@ -109,14 +111,6 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/avmetadatahelper/ipc/helper_listener_stub.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/dolby_passthrough/ipc/dolby_passthrough_stub.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/ipc/media_source_loader_stub.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/ipc/media_source_loading_request_proxy.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader/cache_manager.cpp",
@@ -146,6 +140,7 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services/transcoder/ipc/transcoder_listener_stub.cpp",
     "media_client_unit_test.cpp",
   ]
+  sources += downloaded_cache_loader_sources
 
   if (player_framework_support_lowpower_av_sink) {
     include_dirs += [
@@ -168,7 +163,7 @@ include_dirs = [
     "$MEDIA_PLAYER_ROOT_DIR/services/services:media_service",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
-  
+
   if (player_framework_support_lowpower_av_sink &&
       drivers_interface_lpplayer_flag) {
     external_deps +=

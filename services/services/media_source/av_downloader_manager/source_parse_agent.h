@@ -37,7 +37,7 @@ public:
 
     static std::unique_ptr<Plugins::HttpPlugin::StreamResourceParser> GetStreamResourceParser(
         const uint8_t* data, size_t size, Plugins::HttpPlugin::StreamProtocolType protocol,
-        const std::string& rootUrl);
+        const std::string& rootUrl, const Plugins::TrackSelectionFilter& filter = {});
 
 private:
     static void *handler_;      // so句柄
@@ -46,7 +46,7 @@ private:
 
     static Plugins::HttpPlugin::StreamResourceParser* (*getStreamResourceParserFunc_)(
         const uint8_t* data, size_t size, Plugins::HttpPlugin::StreamProtocolType protocol,
-        const std::string& rootUrl);
+        const std::string& rootUrl, const Plugins::TrackSelectionFilter& filter);
 
     static std::mutex loadMutex_;       // so保护的锁
     static void DestroyInner();

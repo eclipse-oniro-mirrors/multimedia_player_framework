@@ -92,5 +92,36 @@ HWTEST_F(MediaSourceNapiTest, MultipleMediaSourceInstances_001, TestSize.Level0)
     EXPECT_NE(source1->url, source2->url);
 }
 
+HWTEST_F(MediaSourceNapiTest, RetrieveKey_SetGet_RoundTrip, TestSize.Level0)
+{
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    EXPECT_EQ(mediaSource_->GetRetrieveKey(), "");
+    mediaSource_->SetRetrieveKey("mykey123");
+    EXPECT_EQ(mediaSource_->GetRetrieveKey(), "mykey123");
+}
+
+HWTEST_F(MediaSourceNapiTest, RetrieveKey_Overwrite, TestSize.Level0)
+{
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    mediaSource_->SetRetrieveKey("keyA");
+    EXPECT_EQ(mediaSource_->GetRetrieveKey(), "keyA");
+    mediaSource_->SetRetrieveKey("keyB");
+    EXPECT_EQ(mediaSource_->GetRetrieveKey(), "keyB");
+}
+
+HWTEST_F(MediaSourceNapiTest, DirectoryPath_SetGet_RoundTrip, TestSize.Level0)
+{
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    EXPECT_EQ(mediaSource_->GetDirectoryPath(), "");
+    mediaSource_->SetDirectoryPath("/data/cache/test");
+    EXPECT_EQ(mediaSource_->GetDirectoryPath(), "/data/cache/test");
+}
+
 } // namespace Media
 } // namespace OHOS

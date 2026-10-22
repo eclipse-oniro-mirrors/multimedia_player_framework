@@ -1014,6 +1014,9 @@ std::shared_ptr<AVMediaSource> AVPlayerImpl::GetAVMediaSource(ohos::multimedia::
     CHECK_AND_RETURN_RET_LOG(mediaSource != nullptr, nullptr, "create mediaSource failed!");
     mediaSource->SetMimeType(srcTmp->GetMimeType());
     mediaSource->SetID(srcTmp->GetID());
+    if (!srcTmp->retrieveKey.empty()) {
+        mediaSource->SetRetrieveKey(srcTmp->retrieveKey);
+    }
     mediaSource->mediaSourceLoaderCb_ = MediaSourceImpl::GetSourceLoader(src);
     if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
         MEDIA_LOGI("mediaSourceLoaderCb_ nullptr");

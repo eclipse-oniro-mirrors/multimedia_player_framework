@@ -13,6 +13,8 @@
 
 import("//build/ohos.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+import(
+    "//foundation/multimedia/player_framework/services/services/media_source/media_source_sources.gni")
 
 MEDIA_ROOT_DIR = "//foundation/multimedia/player_framework"
 
@@ -149,14 +151,6 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/media_data_source/ipc/media_data_source_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/av_downloader_manager/av_downloader_manager.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/av_downloader_manager/source_parse_agent.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/ipc/media_source_loader_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/ipc/media_source_loading_request_proxy.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/loader/cache_manager.cpp",
@@ -165,12 +159,6 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/media_source/loader/http_header_parser.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/loader/media_loader.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/loader/request_handler.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/message_queue.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/downloader_impl.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/download_task.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/download_network_client.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/network_client_agent.cpp",
-      "$MEDIA_ROOT_DIR/services/services/media_source/net_downloader/downloader_factory.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/utils/network_utils.cpp",
       "$MEDIA_ROOT_DIR/services/services/media_source/utils/path_utils.cpp",
       "$MEDIA_ROOT_DIR/services/services/pcm_output/ipc/pcm_output_callback_stub.cpp",
@@ -178,6 +166,8 @@ ohos_shared_library("media_client") {
       "$MEDIA_ROOT_DIR/services/services/player/ipc/player_listener_stub.cpp",
       "$MEDIA_ROOT_DIR/services/services/player/ipc/player_service_proxy.cpp",
     ]
+    sources += downloaded_cache_loader_sources
+    sources += net_downloader_sources
   }
   if (player_framework_support_recorder) {
     sources += [
@@ -248,9 +238,7 @@ ohos_shared_library("media_client") {
   ]
 
   public_configs = [ ":media_public_config" ]
-  deps = [
-    "$MEDIA_ROOT_DIR/services/utils:media_service_utils",
-  ]
+  deps = [ "$MEDIA_ROOT_DIR/services/utils:media_service_utils" ]
 
   external_deps = [
     "access_token:libaccesstoken_sdk",

@@ -24,6 +24,8 @@
 #include "../downloaded_cache_loader/sha256_hasher.h"
 #include "../downloaded_cache_loader/cache_mapping_format.h"
 #include "../downloaded_cache_loader/play_strategy_serializer.h"
+#include "../downloaded_cache_loader/url_key_util.h"
+#include "../downloaded_cache_loader/cache_constants.h"
 #include "path_utils.h"
 #include <cerrno>
 #include <dirent.h>
@@ -35,7 +37,6 @@
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVDownloaderManagerImpl"};
 constexpr int32_t MAX_DOWNLOADER_COUNT = 3;
-constexpr const char *DOWNLOAD_CACHE_BASE_DIR = "/data/storage/el2/base/cache/avplayer_downloaded_cache/";
 constexpr auto PAUSE_RETRY_INTERVAL = std::chrono::milliseconds(10);
 constexpr auto PAUSE_RETRY_TIMEOUT = std::chrono::milliseconds(200);
 constexpr size_t MAX_CACHE_FILENAME_LEN = 100;
@@ -223,12 +224,14 @@ void DownloadTaskCallback::ParseSingleFile(uint64_t downloaderId, DownloadFileIn
         return;
     }
 
+    MEDIA_LOGI("ParseSingleFile: protocol=%{public}d, url=%{private}s",
+        static_cast<int32_t>(taskInfo->detectedProtocol), fileInfo.url.c_str());
     auto parser = SourceParseAgent::GetStreamResourceParser(buffer.data(), buffer.size(),
-        taskInfo->detectedProtocol, fileInfo.url);
+        taskInfo->detectedProtocol, fileInfo.url, taskInfo->filter);
     FALSE_RETURN_MSG(parser != nullptr, "GetStreamResourceParser failed");
 
     auto resources = parser->GetAll();
-    MEDIA_LOGD("TaskId: %{public}" PRIu64 ", parsed %{public}zu sub-resources from %{public}s",
+    MEDIA_LOGI("TaskId: %{public}" PRIu64 ", parsed %{public}zu sub-resources from %{public}s",
         downloaderId, resources.size(), fileInfo.filePath.c_str());
 
     for (const auto& resource : resources) {
@@ -355,13 +358,16 @@ void DownloadTaskCallback::SubmitRemainingTasks(std::shared_ptr<MediaDownload::D
     config.timeoutMs = manager->requestTimeoutMs_.load();
     config.allowMobileData = manager->allowCellularAccess_.load();
     config.allowWifi = true;
+    int32_t submitCount = 0;
     for (const auto& fileInfo : taskInfo->fileList) {
         if (fileInfo.downloaded) {
             continue;
         }
         downloader->SetConfig(config);
         downloader->AddFileTask(fileInfo.url, fileInfo.filePath, config);
+        submitCount++;
     }
+    MEDIA_LOGI("SubmitRemainingTasks: submitted %{public}d files for download", submitCount);
     auto ret = downloader->Start();
     if (ret != MSERR_OK) {
         MEDIA_LOGE("SubmitRemainingTasks: Start failed, ret=%{public}d", ret);
@@ -597,7 +603,7 @@ AVDownloaderManagerImpl::AVDownloaderManagerImpl()
     messageQueue_->Start([this](const MediaDownload::Message &msg) {
         HandleMessage(msg);
     });
-    MediaSourceUtils::PathUtils::SetAllowedRootDir(DOWNLOAD_CACHE_BASE_DIR);
+    MediaSourceUtils::PathUtils::SetAllowedRootDir(DownloadedCache::DOWNLOAD_CACHE_BASE_DIR);
     MEDIA_LOGI("AVDownloaderManagerImpl: messageQueue_ started");
     StartNetworkListening();
 }
@@ -608,10 +614,11 @@ AVDownloaderManagerImpl::~AVDownloaderManagerImpl()
     Release();
 }
 
-std::string AVDownloaderManagerImpl::GetDefaultCacheDir(const std::string& url)
+std::string AVDownloaderManagerImpl::GetDefaultCacheDir(const std::string& url, const std::string& key)
 {
-    std::string baseDir = DOWNLOAD_CACHE_BASE_DIR;
-    auto hash = DownloadedCache::SHA256Hasher::GenerateHash(url);
+    std::string baseDir = DownloadedCache::DOWNLOAD_CACHE_BASE_DIR;
+    std::string hashInput = key.empty() ? url : key;
+    auto hash = DownloadedCache::SHA256Hasher::GenerateHash(hashInput);
     std::string hashStr = DownloadedCache::SHA256Hasher::HashToString(hash);
     baseDir += hashStr;
     if (!CreateDirRecursive(baseDir)) {
@@ -668,6 +675,7 @@ int32_t AVDownloaderManagerImpl::SetRequestTimeout(int32_t timeoutMs)
 std::string AVDownloaderManagerImpl::AddDownloadTask(std::shared_ptr<Plugins::MediaSource> source)
 {
     auto url = source->GetSourceUri();
+    std::string retrieveKey = source->GetRetrieveKey();
     MEDIA_LOGI("AddDownloadTask url: %{private}s", url.c_str());
 
     if (url.empty()) {
@@ -678,7 +686,7 @@ std::string AVDownloaderManagerImpl::AddDownloadTask(std::shared_ptr<Plugins::Me
     std::string existingTaskId;
     {
         std::lock_guard<std::mutex> lock(mapMutex_);
-        existingTaskId = FindExistingTask(url);
+        existingTaskId = FindExistingTask(url, retrieveKey);
         if (!existingTaskId.empty()) {
             auto taskIter = taskMap_.find(existingTaskId);
             if (taskIter != taskMap_.end() && taskIter->second->state == AVDownloadTaskState::PAUSED) {
@@ -707,23 +715,28 @@ std::string AVDownloaderManagerImpl::AddDownloadTask(std::shared_ptr<Plugins::Me
     return existingTaskId;
 }
 
-std::string AVDownloaderManagerImpl::FindExistingTask(const std::string& url)
+std::string AVDownloaderManagerImpl::FindExistingTask(const std::string& url, const std::string& key)
 {
     for (const auto& pair : taskMap_) {
-        if (pair.second->url != url) {
+        bool matched = false;
+        if (!key.empty()) {
+            matched = (key == pair.second->retrieveKey);
+        } else {
+            matched = (url == pair.second->url);
+        }
+        if (!matched) {
             continue;
         }
         MEDIA_LOGI("AddDownloadTask: task with same url already exists, taskId=%{public}s, state=%{public}d",
                 pair.first.c_str(), static_cast<int>(pair.second->state));
         if (pair.second->state == AVDownloadTaskState::RUNNING ||
             pair.second->state == AVDownloadTaskState::QUEUED ||
-            pair.second->state == AVDownloadTaskState::INIT) {
+            pair.second->state == AVDownloadTaskState::INIT ||
+            pair.second->state == AVDownloadTaskState::COMPLETED ||
+            pair.second->state == AVDownloadTaskState::PAUSED) {
             return pair.first;
         }
-        if (pair.second->state != AVDownloadTaskState::PAUSED) {
-            continue;
-        }
-        MEDIA_LOGI("AddDownloadTask: found paused task, taskId=%{public}s", pair.first.c_str());
+        continue;
     }
     return "";
 }
@@ -739,20 +752,29 @@ AVDownloaderManagerImpl::CreateNewDownloaderAndTask(std::shared_ptr<Plugins::Med
     }
 
     std::string taskId = std::to_string(downloader->GetDownloaderId());
-    std::string cacheDir = GetDefaultCacheDir(url);
+    std::string retrieveKey = source->GetRetrieveKey();
+    std::string cacheDir = GetDefaultCacheDir(url, retrieveKey);
     std::string filePath = GetFilePath(cacheDir, url);
 
     auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
     taskInfo->taskId = taskId;
     taskInfo->url = url;
+    taskInfo->retrieveKey = retrieveKey;
     taskInfo->cacheDir = cacheDir;
     taskInfo->currentFilePath = filePath;
     auto strategy = source->GetPlayStrategy();
     if (strategy) {
         taskInfo->strategy = *strategy;
     }
-    taskInfo->filter = Plugins::TrackSelectionFilter{};
+    taskInfo->filter = source->GetTrackSelectFilter();
     MEDIA_LOGI("GetDefaultCacheDir: %{public}s, file path: %{public}s", cacheDir.c_str(), filePath.c_str());
+    MEDIA_LOGI("CreateNewDownloaderAndTask: filter set: maxVideoBitrate=%{public}d, "
+        "maxRes={%{public}d,%{public}d}, preferredAudioLanguages=%{public}zu, "
+        "preferredSubtitleLanguages=%{public}zu, retrieveKey=%{public}s",
+        taskInfo->filter.maxVideoBitrate, taskInfo->filter.maxVideoResolution.first,
+        taskInfo->filter.maxVideoResolution.second, taskInfo->filter.preferredAudioLanguages.size(),
+        taskInfo->filter.preferredSubtitleLanguages.size(),
+        retrieveKey.empty() ? "empty" : "set");
     taskInfo->state = AVDownloadTaskState::INIT;
 
     DownloadFileInfo fileInfo;
@@ -1131,6 +1153,11 @@ void AVDownloaderManagerImpl::ProcessNextPendingTask()
         int32_t ret;
 
         if (state == MediaDownload::DOWNLOAD_PAUSED) {
+            MediaDownload::DownloadConfig config;
+            config.timeoutMs = requestTimeoutMs_.load();
+            config.allowMobileData = allowCellularAccess_.load();
+            config.allowWifi = true;
+            downloader->SetConfig(config);
             ret = downloader->Resume();
         } else if (state == MediaDownload::DOWNLOAD_IDLE) {
             if (taskCallback_ == nullptr) {

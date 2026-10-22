@@ -2597,6 +2597,9 @@ std::shared_ptr<AVMediaSource> AVPlayerNapi::GetAVMediaSource(napi_env env, napi
     mediaSource->SetMimeType(srcTmp->GetMimeType());
     mediaSource->SetID(srcTmp->GetID());
     mediaSource->enableOfflineCache(srcTmp->GetenableOfflineCache());
+    if (!srcTmp->retrieveKey.empty()) {
+        mediaSource->SetRetrieveKey(srcTmp->retrieveKey);
+    }
     mediaSource->mediaSourceLoaderCb_ = MediaSourceNapi::GetSourceLoader(env, value);
     if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
         MEDIA_LOGI("mediaSourceLoaderCb_ nullptr");
