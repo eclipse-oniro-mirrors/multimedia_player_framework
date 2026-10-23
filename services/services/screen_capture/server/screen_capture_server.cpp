@@ -2752,7 +2752,7 @@ VirtualScreenOption ScreenCaptureServer::InitVirtualScreenOption(sptr<OHOS::Surf
         .virtualScreenType_ = VirtualScreenType::SCREEN_RECORDING,
         .bundleName_ = appName_,
         .userId_ = appUserId_.load(),
-        .hdrMode_ = captureConfig_.strategy.enableHDRCapture ? HDRMode::HDR_STATIC : HDRMode::NONE;
+        .hdrMode_ = captureConfig_.strategy.enableHDRCapture ? HDRMode::HDR_STATIC : HDRMode::NONE,
     };
     auto display = Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
     if (display != nullptr) {
