@@ -1587,6 +1587,7 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForHDRCapture(OH_AVScreen
     strategyObj->strategy.enableHDRCapture = enable;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
+
 void SetMultiDisplayCapability(MultiDisplayCapability displayCapability, OH_MultiDisplayCapability *capability)
 {
     capability->width = displayCapability.width;

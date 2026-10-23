@@ -3780,8 +3780,8 @@ int32_t ScreenCaptureServer::SetScreenCaptureStrategy(const ScreenCaptureStrateg
         "strategy can not be modified after screen capture started");
     MEDIA_LOGI("SetScreenCaptureStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d,"
                "strategyForPrivacyMaskMode: %{public}d, canvasFollowRotation: %{public}d, enableBFrame: %{public}d,"
-               "pickerPopUp: %{public}d, fillMode: %{public}d, enablePause: %{public}d, enableAEC: %{public}d,"
-               "contentAutoPauseScenes: %{public}u",
+               "pickerPopUp: %{public}d, fillMode: %{public}d, enablePause: %{public}d, enableAEC: %{public}d, "
+               "contentAutoPauseScenes: %{public}u, enableHDRCapture: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.strategyForPrivacyMaskMode,
         strategy.canvasFollowRotation, strategy.enableBFrame, static_cast<int32_t>(strategy.pickerPopUp),
         static_cast<int32_t>(strategy.fillMode), strategy.enablePause, strategy.enableAEC,

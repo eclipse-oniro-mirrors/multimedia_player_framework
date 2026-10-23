@@ -25,7 +25,7 @@ bool ScreenCaptureStrategyParcel::Marshalling(Parcel &parcel) const
         parcel.WriteBool(strategy.enableBFrame) && parcel.WriteInt32(static_cast<int32_t>(strategy.pickerPopUp)) &&
         parcel.WriteInt32(static_cast<int32_t>(strategy.fillMode)) && parcel.WriteBool(strategy.enablePause) &&
         parcel.WriteBool(strategy.enableAEC) && parcel.WriteUint32(strategy.contentAutoPauseScenes) &&
-        parcel.WriteBool(strategy.enableHDRCapture);;
+        parcel.WriteBool(strategy.enableHDRCapture);
 }
 
 ScreenCaptureStrategyParcel *ScreenCaptureStrategyParcel::Unmarshalling(Parcel &parcel)
