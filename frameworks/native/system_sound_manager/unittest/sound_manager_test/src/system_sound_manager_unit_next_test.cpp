@@ -613,6 +613,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetCustomizedTone_001, TestSize.Level0)
     systemSoundManagerImpl_->GetCustomizedTone(toneAttrs);
     EXPECT_EQ(systemSoundManagerImpl_->mimeType_, "mp3");
     EXPECT_EQ(systemSoundManagerImpl_->displayName_, "test_file.mp3");
+    EXPECT_EQ(systemSoundManagerImpl_->originalMimeType_, "mp3");
 }
 
 /**
@@ -633,8 +634,57 @@ HWTEST(SystemSoundManagerUnitNextTest, GetCustomizedTone_002, TestSize.Level0)
     systemSoundManagerImpl_->displayName_ = "";
     systemSoundManagerImpl_->originalMimeType_ = "";
     systemSoundManagerImpl_->GetCustomizedTone(toneAttrs);
+    systemSoundManagerImpl_->originalMimeType_ = "";
     EXPECT_EQ(systemSoundManagerImpl_->mimeType_, "ogg");
     EXPECT_EQ(systemSoundManagerImpl_->displayName_, "test_file.ogg");
+    EXPECT_EQ(systemSoundManagerImpl_->originalMimeType_, "");
+}
+
+/**
+ * @tc.name  : GetCustomizedTone_UpperCaseExtension
+ * @tc.number: GetCustomizedTone_003
+ * @tc.desc  : Test GetCustomizedTone extracts originalMimeType_ as lowercase from uppercase extension.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetCustomizedTone_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+ 
+    std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
+        "test_tone", "test_file.MP3", "test_uri", ToneCustomizedType::CUSTOMISED, 0);
+ 
+    systemSoundManagerImpl_->displayName_ = "";
+    systemSoundManagerImpl_->mimeType_ = "";
+    systemSoundManagerImpl_->originalMimeType_ = "";
+    systemSoundManagerImpl_->GetCustomizedTone(toneAttrs);
+    EXPECT_EQ(systemSoundManagerImpl_->originalMimeType_, "mp3");
+    EXPECT_EQ(systemSoundManagerImpl_->mimeType_, RINGTONE_CONTAINER_TYPE_OGG);
+}
+ 
+/**
+ * @tc.name  : GetCustomizedTone_NoExtension
+ * @tc.number: GetCustomizedTone_004
+ * @tc.desc  : Test GetCustomizedTone leaves originalMimeType_ empty when file name has no extension.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, GetCustomizedTone_004, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<SystemSoundManagerImpl> systemSoundManagerImpl_ =
+        std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(systemSoundManagerImpl_, nullptr);
+ 
+    std::shared_ptr<ToneAttrs> toneAttrs = std::make_shared<ToneAttrs>(
+        "test_tone", "test_file", "test_uri", ToneCustomizedType::CUSTOMISED, 0);
+ 
+    systemSoundManagerImpl_->displayName_ = "";
+    systemSoundManagerImpl_->mimeType_ = "";
+    systemSoundManagerImpl_->originalMimeType_ = "stale_value";
+    systemSoundManagerImpl_->GetCustomizedTone(toneAttrs);
+    EXPECT_EQ(systemSoundManagerImpl_->mimeType_, "ogg");
+    EXPECT_EQ(systemSoundManagerImpl_->displayName_, "test_file.ogg");
+    EXPECT_EQ(systemSoundManagerImpl_->originalMimeType_, "");
 }
 
 /**
