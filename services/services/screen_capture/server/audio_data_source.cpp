@@ -244,7 +244,7 @@ double AudioDataSource::GetFrameDurationRatio()
         }
     }
     CHECK_AND_RETURN_RET_LOG(frameDurationRatio_.load() <= 0 || innerCapture == nullptr ||
-        innerCapture.IsStop(), frameDurationRatio_.load(),
+        innerCapture->IsStop(), frameDurationRatio_.load(),
         "inner GetFrameDurationRatio: %{public}f", frameDurationRatio_.load());
     auto micCapture = screenCaptureServer_->GetMicAudioCapture();
     if (micCapture != nullptr) {
