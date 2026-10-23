@@ -668,7 +668,7 @@ napi_value AVScreenCaptureNapi::JsSetCaptureArea(napi_env env, napi_callback_inf
         displayIdType != napi_number || napi_get_value_int32(env, args[0], &displayId) != napi_ok ||
         displayId < 0) {
         asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            "SetCaptureArea parameter out of range: displayId must be non-negative");
+            "SetCaptureArea parameter out of range: display must be non-negative");
         QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
         return result;
     }
@@ -979,11 +979,11 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetCaptureAreaTask
 
         int32_t ret = napi->screenCapture_->SetCaptureArea(static_cast<uint64_t>(displayId), area);
         if (ret == MSERR_INVALID_VAL) {
-            MEDIA_LOGE("SetCaptureArea invalid parameter, displayId:%{public}d, left:%{public}d, top:%{public}d, "
+            MEDIA_LOGE("SetCaptureArea invalid parameter, display:%{public}d, left:%{public}d, top:%{public}d, "
                 "width:%{public}d, height:%{public}d, ret = %{public}d",
                 displayId, area.x, area.y, area.w, area.h, ret);
             return RetInfo(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-                option + " out of range: displayId=" + std::to_string(displayId) +
+                option + " out of range: display=" + std::to_string(displayId) +
                 ", left=" + std::to_string(area.x) +
                 ", top=" + std::to_string(area.y) +
                 ", width=" + std::to_string(area.w) +

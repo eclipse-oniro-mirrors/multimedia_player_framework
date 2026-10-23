@@ -845,11 +845,11 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetCapture
 
         int32_t ret = taihe->screenCapture_->SetCaptureArea(static_cast<uint64_t>(displayId), area);
         if (ret == MSERR_INVALID_VAL) {
-            MEDIA_LOGE("SetCaptureArea invalid parameter, displayId:%{public}d, left:%{public}d, top:%{public}d, "
+            MEDIA_LOGE("SetCaptureArea invalid parameter, display:%{public}d, left:%{public}d, top:%{public}d, "
                 "width:%{public}d, height:%{public}d, ret = %{public}d",
                 displayId, area.left, area.top, area.width, area.height, ret);
             return RetInfo(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-                option + " out of range: displayId=" + std::to_string(displayId) +
+                option + " out of range: display=" + std::to_string(displayId) +
                 ", left=" + std::to_string(area.left) +
                 ", top=" + std::to_string(area.top) +
                 ", width=" + std::to_string(area.width) +
@@ -878,7 +878,7 @@ void AVScreenCaptureRecorderImpl::SetCaptureAreaSync(int32_t displayId,
     if (displayId < 0) {
         MEDIA_LOGE("SetCaptureArea invalid displayId: %{public}d", displayId);
         set_business_error(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            option + " invalid displayId (must be non-negative): " + std::to_string(displayId));
+            option + " invalid display (must be non-negative): " + std::to_string(displayId));
         return;
     }
 
