@@ -755,9 +755,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForMicAEC(
  *     The default value is false, indicating that only images in SRD format are output.
  *     If this parameter is set to true, the output image is in the HDR VIVID format.
  * @return <ul><li>{@link AV_SCREEN_CAPTURE_ERR_OK} : indicates that the operation is successful.</li>
- *     <li>{@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL}: The input parameter **strategy** is nullptr</li></ul>
- *     or the value of *enable** is invalid.
- * @since 26.2.0
+ *     <li>{@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL}: The input parameter **strategy** is nullptr
+ *      or the value of **enable** is invalid.</li></ul>
+ * @since 26.1.0
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForHDRCapture(
     OH_AVScreenCapture_CaptureStrategy *strategy, bool enable);
