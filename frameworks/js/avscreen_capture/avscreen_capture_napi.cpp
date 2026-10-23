@@ -668,7 +668,7 @@ napi_value AVScreenCaptureNapi::JsSetCaptureArea(napi_env env, napi_callback_inf
         displayIdType != napi_number || napi_get_value_int32(env, args[0], &displayId) != napi_ok ||
         displayId < 0) {
         asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            "SetCaptureArea parameter out of range: displayId must be a non-negative int32");
+            "SetCaptureArea parameter out of range: displayId must be non-negative");
         QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
         return result;
     }
