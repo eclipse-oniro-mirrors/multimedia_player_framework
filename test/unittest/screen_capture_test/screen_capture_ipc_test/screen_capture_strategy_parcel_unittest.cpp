@@ -52,8 +52,6 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_AllFields_001
         AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE);
     src.strategy.enableHDRCapture = true;
 
-
-
     MessageParcel parcel;
     ASSERT_TRUE(src.Marshalling(parcel));
 
