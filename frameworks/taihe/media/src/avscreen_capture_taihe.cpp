@@ -456,7 +456,8 @@ int32_t AVScreenCaptureRecorderImpl::GetStrategy(std::unique_ptr<AVScreenCapture
                "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
                "enableAEC: %{public}d, contentAutoPauseScenes: %{public}u, enableHDRCapture: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
-        strategy.strategyForPrivacyMaskMode, strategy.enableAEC, strategy.contentAutoPauseScenes, strategy.enableHDRCapture);
+        strategy.strategyForPrivacyMaskMode, strategy.enableAEC, strategy.contentAutoPauseScenes,
+        strategy.enableHDRCapture);
     return MSERR_OK;
 }
 
