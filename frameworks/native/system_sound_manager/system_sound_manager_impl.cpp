@@ -1279,6 +1279,7 @@ void SystemSoundManagerImpl::OpenOneFile(std::shared_ptr<DataShare::DataShareHel
         }
         if (fd > 0) {
             fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_TONE_OPEN_TAG);
+            MEDIA_LOGI("OpenOneFile: open success, fd %{public}d, uri %{public}s", fd, uri.c_str());
             std::get<PARAM1>(resultOfOpen) = fd;
             std::get<PARAM2>(resultOfOpen) = ERROR_OK;
         } else {
@@ -1295,6 +1296,7 @@ void SystemSoundManagerImpl::OpenOneFile(std::shared_ptr<DataShare::DataShareHel
 int32_t SystemSoundManagerImpl::Close(const int32_t &fd)
 {
     std::lock_guard<std::mutex> lock(uriMutex_);
+    MEDIA_LOGI("Close: fd %{public}d", fd);
     return fdsan_close_with_tag(fd, FD_SYSTEM_SOUND_TONE_OPEN_TAG);
 }
 
@@ -2370,6 +2372,8 @@ int32_t SystemSoundManagerImpl::OpenToneHaptics(const std::shared_ptr<AbilityRun
     dataShareHelper->Release();
     if (fd > 0) {
         fdsan_exchange_owner_tag(fd, 0, FD_SYSTEM_SOUND_TONE_OPEN_TAG);
+        MEDIA_LOGI("OpenToneHaptics: open success, fd %{public}d, hapticsUri %{public}s",
+            fd, hapticsUri.c_str());
     }
     return fd > 0 ? fd : IO_ERROR;
 #endif
