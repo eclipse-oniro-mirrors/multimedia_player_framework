@@ -1182,6 +1182,11 @@ enum AVScreenCaptureFillMode:i32 {
     SCALE_TO_FILL = 1,
 }
 
+enum AVScreenCaptureAutoPauseScene:i32 {
+    SCENE_NONE = 0,
+    SCENE_SCREEN_FOLD_STATE_CHANGE = 1,
+}
+
 enum PickerMode: i32 {
     WINDOW_ONLY = 0,
     SCREEN_ONLY = 1,
@@ -1199,6 +1204,7 @@ struct AVScreenCaptureStrategy {
     privacyMaskMode: Optional<i32>;
     enablePause: Optional<bool>;
     enableAEC: Optional<bool>;
+    contentAutoPauseScenes: Optional<Array<AVScreenCaptureAutoPauseScene>>;
     enableHDR: Optional<bool>;
 }
 
@@ -1214,6 +1220,13 @@ struct AVScreenCaptureRecordConfig {
     displayId: Optional<i32>;
     fillMode: Optional<AVScreenCaptureFillMode>;
     strategy: Optional<AVScreenCaptureStrategy>;
+}
+
+struct RectangleRegion {
+    left: i32;
+    top: i32;
+    width: i32;
+    height: i32;
 }
 
 enum MetaSourceType: i32 {
@@ -1343,6 +1356,9 @@ interface AVScreenCaptureRecorder {
     @gen_promise("setContentAutoRotation")
     SetCanvasRotationSync(canvasRotation: bool): void;
 
+    @gen_promise("setCaptureArea")
+    SetCaptureAreaSync(area: RectangleRegion): void;
+
     @gen_promise("release")
     ReleaseSync(): void;
 
@@ -1409,6 +1425,9 @@ interface MediaSource {
     SetMimeType(mimeType: AVMimeTypes): void;
     SetMediaResourceLoaderDelegate(resourceLoader: MediaSourceLoader): void;
     GetID(): String;
+    SetRetrieveKey(key: String): void;
+    SetTrackSelectionFilter(filter: TrackSelectionFilter): void;
+    GetTrackSelectionFilter(): Optional<TrackSelectionFilter>;
 }
 
 enum AVDownloadTaskState: i32 {

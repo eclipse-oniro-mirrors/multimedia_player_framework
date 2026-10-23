@@ -486,6 +486,9 @@ public:
     AVFileDescriptor fd {};
     AVDataSrcDescriptor dataSrc {};
     std::string directoryPath {};
+    std::string retrieveKey {};
+    AVPlayTrackSelectionFilter trackSelectionFilter {};
+    bool hasTrackSelectionFilter {false};
 private:
     std::vector<AVPlayMediaStreamTmp> mediaStreamVec_;
 };

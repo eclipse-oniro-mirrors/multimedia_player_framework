@@ -22,6 +22,7 @@
 #include "ohos.multimedia.media.impl.hpp"
 #include "taihe/runtime.hpp"
 #include "meta/format.h"
+#include "player.h"
 
 namespace ANI {
 namespace Media {
@@ -99,6 +100,9 @@ public:
     ::ohos::multimedia::media::AVFileDescriptor fd {};
     DataSrcDescriptor dataSrc {};
     std::string directoryPath {};
+    std::string retrieveKey {};
+    OHOS::Media::AVPlayTrackSelectionFilter trackSelectionFilter {};
+    bool hasTrackSelectionFilter {false};
 private:
     std::vector<AVPlayMediaStreamTmp> mediaStreamVec_;
 };

@@ -18,6 +18,7 @@
 #include "media_errors.h"
 #include "media_taihe_utils.h"
 #include "media_source.h"
+#include "track_filter_converter.h"
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "AVDownloaderTaihe"};
@@ -103,6 +104,13 @@ string AVDownloaderManagerImpl::AddAVDownloadTask(ohos::multimedia::media::weak:
     }
 
     auto pluginSource = std::make_shared<OHOS::Media::Plugins::MediaSource>(srcTmp->url, srcTmp->header);
+    if (!srcTmp->retrieveKey.empty()) {
+        pluginSource->SetRetrieveKey(srcTmp->retrieveKey);
+    }
+    if (srcTmp->hasTrackSelectionFilter) {
+        pluginSource->SetTrackSelectFilter(
+            TrackFilterConverter::ToPlugins(srcTmp->trackSelectionFilter));
+    }
     std::string taskId = manager->AddDownloadTask(pluginSource);
     if (taskId.empty()) {
         set_business_error(ERR_OPERATION_NOT_PERMIT, "Operation not allowed: failed to add download task");

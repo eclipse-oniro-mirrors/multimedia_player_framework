@@ -14,6 +14,8 @@
 import("//build/config/features.gni")
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+import(
+    "//foundation/multimedia/player_framework/services/services/media_source/media_source_sources.gni")
 
 module_output_path = "player_framework/avtranscoder_and_avmetadata/avmetadata"
 
@@ -22,12 +24,16 @@ ohos_unittest("avmetadata_unittest") {
   include_dirs = [
     "./include",
     "./mock",
+    "//foundation/multimedia/player_framework/frameworks/native/avmetadatahelper",
+    "//foundation/multimedia/player_framework/frameworks/native/media_source_loading_request",
+    "//foundation/multimedia/player_framework/frameworks/native/player",
     "//foundation/multimedia/player_framework/interfaces/inner_api/native",
     "//foundation/multimedia/player_framework/services/include",
     "//foundation/multimedia/player_framework/services/services/avmetadatahelper/client",
     "//foundation/multimedia/player_framework/services/services/avmetadatahelper/ipc",
-    "//foundation/multimedia/player_framework/services/services/media_data_source/ipc",
     "//foundation/multimedia/player_framework/services/services/dolby_passthrough/ipc",
+    "//foundation/multimedia/player_framework/services/services/engine_intf",
+    "//foundation/multimedia/player_framework/services/services/media_data_source/ipc",
     "//foundation/multimedia/player_framework/services/services/media_source/ipc",
     "//foundation/multimedia/player_framework/services/services/media_source/loader",
     "//foundation/multimedia/player_framework/services/services/media_source/utils",
@@ -50,11 +56,7 @@ ohos_unittest("avmetadata_unittest") {
     "//foundation/multimedia/player_framework/services/services/screen_capture_monitor/server",
     "//foundation/multimedia/player_framework/services/services/transcoder/client",
     "//foundation/multimedia/player_framework/services/services/transcoder/ipc",
-    "//foundation/multimedia/player_framework/services/services/engine_intf",
     "//foundation/multimedia/player_framework/services/utils/include",
-    "//foundation/multimedia/player_framework/frameworks/native/avmetadatahelper",
-    "//foundation/multimedia/player_framework/frameworks/native/media_source_loading_request",
-    "//foundation/multimedia/player_framework/frameworks/native/player",
     "//foundation/multimedia/player_framework/test/unittest/common/include",
   ]
 
@@ -72,15 +74,6 @@ ohos_unittest("avmetadata_unittest") {
     "../../../services/services/avmetadatahelper/ipc/helper_listener_stub.cpp",
     "../../../services/services/dolby_passthrough/ipc/dolby_passthrough_stub.cpp",
     "../../../services/services/media_data_source/ipc/media_data_source_stub.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/path_validator.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
-    "../../../services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
-    "../../../services/services/media_source/utils/path_utils.cpp",
     "../../../services/services/media_source/ipc/media_source_loader_stub.cpp",
     "../../../services/services/media_source/ipc/media_source_loading_request_proxy.cpp",
     "../../../services/services/media_source/loader/cache_manager.cpp",
@@ -90,6 +83,7 @@ ohos_unittest("avmetadata_unittest") {
     "../../../services/services/media_source/loader/media_loader.cpp",
     "../../../services/services/media_source/loader/network_client_agent.cpp",
     "../../../services/services/media_source/loader/request_handler.cpp",
+    "../../../services/services/media_source/utils/path_utils.cpp",
     "../../../services/services/monitor/client/monitor_client.cpp",
     "../../../services/services/monitor/client/monitor_client_object.cpp",
     "../../../services/services/pcm_output/ipc/pcm_output_callback_stub.cpp",
@@ -110,6 +104,7 @@ ohos_unittest("avmetadata_unittest") {
     "mock/avsharedmemory_ipc.cpp",
     "src/avmetadata_unittest.cpp",
   ]
+  sources += downloaded_cache_loader_sources
 
   external_deps = [
     "ability_runtime:ability_connect_callback_stub",
@@ -137,8 +132,8 @@ ohos_unittest("avmetadata_unittest") {
     "hitrace:libhitracechain",
     "i18n:intl_util",
     "image_framework:image_native",
-    "image_framework:pixelmap",
     "image_framework:image_utils",
+    "image_framework:pixelmap",
     "init:libbegetutil",
     "ipc:ipc_single",
     "libxml2:libxml2",

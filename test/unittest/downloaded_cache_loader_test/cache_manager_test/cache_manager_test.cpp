@@ -24,6 +24,10 @@
 #include "cache_manager.h"
 #include "cache_mapping_format.h"
 #include "sha256_hasher.h"
+#include "url_key_util.h"
+#include "play_strategy_serializer.h"
+#include "media_source.h"
+#include "track_filter_converter.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -352,6 +356,86 @@ HWTEST_F(CacheManagerTest, GetCacheMetaData_ValidPath_001, TestSize.Level0)
     EXPECT_TRUE(result);
     EXPECT_EQ(metadata.url, testUrl);
     EXPECT_EQ(metadata.entry, testPath);
+}
+
+HWTEST_F(CacheManagerTest, GetMediaCache_WithKey_CrossCdnMatch, TestSize.Level0)
+{
+    std::string downloadUrl = "https://cdn1.example.com/path/video.m3u8";
+    std::string testPath = "videos/test.m3u8";
+    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
+    TestCommon::CreateTestMappingFileWithKey(testCacheDir_, {{downloadUrl, testPath}});
+
+    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
+    std::string result = manager->GetMediaCache(downloadUrl);
+    EXPECT_FALSE(result.empty());
+}
+
+HWTEST_F(CacheManagerTest, GetMediaCache_Mismatch_DiffUrl_NoMatch, TestSize.Level0)
+{
+    std::string downloadUrl = "https://cdn1.example.com/path/video.m3u8";
+    std::string otherUrl = "https://cdn2.example.com/path/video.m3u8";
+    std::string testPath = "videos/test.m3u8";
+    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
+    TestCommon::CreateTestMappingFileWithKey(testCacheDir_, {{downloadUrl, testPath}});
+
+    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
+    std::string result = manager->GetMediaCache(otherUrl);
+    EXPECT_EQ(result, "");
+}
+
+HWTEST_F(CacheManagerTest, LoadCacheMapping_WithFilter_HasTrackSelectionFilter, TestSize.Level0)
+{
+    std::string testUrl = "http://example.com/test.mp4";
+    std::string testPath = "videos/test.mp4";
+    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
+
+    Plugins::TrackSelectionFilter filter;
+    filter.maxVideoBitrate = 5000000;
+    filter.minVideoBitrate = 100000;
+    filter.preferredAudioLanguages = {"eng", "chi"};
+    TestCommon::CreateTestMappingFileWithFilter(testCacheDir_, {{testUrl, testPath}}, filter);
+
+    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
+    EXPECT_TRUE(manager->HasTrackSelectionFilter());
+    auto loaded = manager->GetTrackSelectionFilter();
+    EXPECT_EQ(loaded.maxVideoBitrate, 5000000);
+    EXPECT_EQ(loaded.minVideoBitrate, 100000);
+    EXPECT_EQ(loaded.preferredAudioLanguages.size(), 2);
+    EXPECT_EQ(loaded.preferredAudioLanguages[0], "eng");
+    EXPECT_EQ(loaded.preferredAudioLanguages[1], "chi");
+}
+
+HWTEST_F(CacheManagerTest, LoadCacheMapping_NoFilter_NotHasTrackSelectionFilter, TestSize.Level0)
+{
+    std::string testUrl = "http://example.com/test.mp4";
+    std::string testPath = "videos/test.mp4";
+    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
+    TestCommon::CreateTestMappingFile(testCacheDir_, {{testUrl, testPath}});
+
+    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
+    EXPECT_FALSE(manager->HasTrackSelectionFilter());
+}
+
+HWTEST_F(CacheManagerTest, LoadCacheMapping_KeyAndFilter_BothAvailable, TestSize.Level1)
+{
+    std::string downloadUrl = "https://cdn1.example.com/path/video.m3u8";
+    std::string testPath = "videos/test.m3u8";
+    TestCommon::CreateTestCacheFile(testCacheDir_, testPath, std::vector<uint8_t>(1024, 'A'));
+
+    Plugins::TrackSelectionFilter filter;
+    filter.maxVideoBitrate = 8000000;
+    filter.preferredVideoMimeTypes = {"video/avc"};
+    TestCommon::CreateTestMappingFileWithFilter(testCacheDir_, {{downloadUrl, testPath}},
+        filter, downloadUrl);
+
+    auto manager = std::make_shared<DownloadedCacheManager>(testCacheDir_);
+    EXPECT_TRUE(manager->HasTrackSelectionFilter());
+    auto loaded = manager->GetTrackSelectionFilter();
+    EXPECT_EQ(loaded.maxVideoBitrate, 8000000);
+    EXPECT_EQ(loaded.preferredVideoMimeTypes.size(), 1);
+    EXPECT_EQ(loaded.preferredVideoMimeTypes[0], "video/avc");
+    std::string result = manager->GetMediaCache(downloadUrl);
+    EXPECT_FALSE(result.empty());
 }
 
 } // namespace DownloadedCache

@@ -169,6 +169,11 @@ enum AVScreenCaptureFillMode : int32_t {
     SCALE_TO_FILL = 1,
 };
 
+enum class AVScreenCaptureAutoPauseScene : uint32_t {
+    NONE = 0,
+    SCREEN_FOLD_STATE_CHANGE = 1 << 0,
+};
+
 enum class AVScreenCapturePickerPopUp : int32_t {
     SCREEN_CAPTURE_PICKER_POPUP_DEFAULT = -1,
     SCREEN_CAPTURE_PICKER_POPUP_DISABLE = 0,
@@ -230,6 +235,7 @@ struct ScreenCaptureStrategy {
     AVScreenCaptureFillMode fillMode = AVScreenCaptureFillMode::PRESERVE_ASPECT_RATIO;
     bool enablePause = false;
     bool enableAEC = false;
+    uint32_t contentAutoPauseScenes = 0;
     bool enableHDRCapture = false;
 };
 

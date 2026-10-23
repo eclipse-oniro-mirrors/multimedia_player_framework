@@ -114,6 +114,9 @@ private:
 #endif
 #ifdef SUPPORT_MEDIA_MADVISE
     void HandleMadviseLibraries();
+    void StartMadviseTask();
+    void StopMadviseTask();
+    uint32_t MadviseTaskCallback();
 #endif
     sptr<IRemoteObject> GetMonitorStubObject();
     sptr<IRemoteObject> CreateStubObjectByType(StubType type);
@@ -176,6 +179,10 @@ private:
     std::future<void> future_;
 #ifdef SUPPORT_START_STOP_ON_DEMAND
     int64_t allInstancesReleasedTime_ {0};
+#endif
+#ifdef SUPPORT_MEDIA_MADVISE
+    std::unique_ptr<Task> madviseTask_{nullptr};
+    std::atomic<int32_t> madviseCallCount_{0};
 #endif
 };
 } // namespace Media

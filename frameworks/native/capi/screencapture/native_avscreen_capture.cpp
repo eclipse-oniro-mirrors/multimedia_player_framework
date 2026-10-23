@@ -1568,6 +1568,16 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForMicAEC(OH_AVScreenCapt
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
 
+
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForContentAutoPauseScenes(
+    OH_AVScreenCapture_CaptureStrategy *strategy, OH_AVScreenCapture_AutoPauseSceneSet scenes)
+{
+    CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr");
+    auto contentStrategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
+    contentStrategyObj->strategy.contentAutoPauseScenes = scenes;
+    return AV_SCREEN_CAPTURE_ERR_OK;
+}
+
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForHDRCapture(OH_AVScreenCapture_CaptureStrategy *strategy,
     bool enable)
 {
@@ -1577,7 +1587,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForHDRCapture(OH_AVScreen
     strategyObj->strategy.enableHDRCapture = enable;
     return AV_SCREEN_CAPTURE_ERR_OK;
 }
-
 void SetMultiDisplayCapability(MultiDisplayCapability displayCapability, OH_MultiDisplayCapability *capability)
 {
     capability->width = displayCapability.width;

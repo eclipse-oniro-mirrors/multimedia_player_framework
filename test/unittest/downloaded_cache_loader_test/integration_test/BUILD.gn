@@ -13,6 +13,8 @@
 
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+import(
+    "//foundation/multimedia/player_framework/services/services/media_source/media_source_sources.gni")
 
 module_output_path = "player_framework/player_framework/player"
 
@@ -22,17 +24,17 @@ ohos_unittest("downloaded_integration_test") {
   include_dirs = [
     "../",
     "../common",
-    "$MEDIA_PLAYER_ROOT_DIR/services/include",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/factory",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
-    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
-    "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
     "$MEDIA_PLAYER_ROOT_DIR/services/dfx",
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles",
+    "$MEDIA_PLAYER_ROOT_DIR/services/include",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/common",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/engine_intf",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/factory",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/loader",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils",
+    "$MEDIA_PLAYER_ROOT_DIR/services/utils/include",
   ]
 
   cflags = [
@@ -66,15 +68,8 @@ ohos_unittest("downloaded_integration_test") {
   ]
 
   sources = [
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_manager_new.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_mapping_serializer.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/cache_reader.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/downloaded_cache_loader.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/file_cache_manager.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/path_validator.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/play_strategy_serializer.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/downloaded_cache_loader/sha256_hasher.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/utils/path_utils.cpp",
     "integration_test.cpp",
   ]
+  sources += downloaded_cache_loader_sources
 }

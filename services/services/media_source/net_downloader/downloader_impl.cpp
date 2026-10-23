@@ -256,8 +256,8 @@ int32_t DownloaderImpl::SetConfig(const DownloadConfig &config)
     std::lock_guard<std::mutex> lock(mutex_);
 
     DownloadState currentState = state_.load();
-    if (currentState != DOWNLOAD_IDLE) {
-        MEDIA_LOGE("SetConfig failed: state=%{public}d, expected IDLE", currentState);
+    if (currentState != DOWNLOAD_IDLE && currentState != DOWNLOAD_PAUSED) {
+        MEDIA_LOGE("SetConfig failed: state=%{public}d, expected IDLE or PAUSED", currentState);
         return DOWNLOAD_ERROR_INVALID_OPERATION;
     }
 

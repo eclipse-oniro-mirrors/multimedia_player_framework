@@ -42,7 +42,6 @@ const std::string AUDIO_FORMAT_STR = ".ogg";
 const std::string HAPTIC_FORMAT_STR = ".json";
 const std::string RINGTONE_PATH = "/media/audio/";
 const std::string STANDARD_HAPTICS_PATH = "/media/haptics/standard/synchronized/";
-const std::string NON_SYNC_HAPTICS_PATH = "resource/media/haptics/standard/non-synchronized/";
 const std::string FDHEAD = "fd://";
 
 RingtonePlayerImpl::RingtonePlayerImpl(const shared_ptr<Context> &context,
@@ -144,7 +143,7 @@ bool RingtonePlayerImpl::IsFileExisting(const std::string &fileUri)
     return (stat(fileUri.c_str(), &buffer) == 0);
 }
 
-std::string RingtonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUri,
+std::string RingtonePlayerImpl::GetHapticUriInHapticDir(const std::string &audioUri,
     const std::string &ringtonePath, const std::string& hapticsPath)
 {
     string hapticUri = audioUri;
@@ -163,16 +162,16 @@ std::string RingtonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &au
     return "";
 }
 
-std::string RingtonePlayerImpl::GetNewHapticUriForAudioUri(const std::string &audioUri)
+std::string RingtonePlayerImpl::GetHapticUriInHapticDir(const std::string &audioUri)
 {
-    std::string hapticUri = GetNewHapticUriForAudioUri(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
+    std::string hapticUri = GetHapticUriInHapticDir(audioUri, RINGTONE_PATH, STANDARD_HAPTICS_PATH);
     if (hapticUri.empty()) {
         MEDIA_LOGW("Failed to find the vibration json file for audioUri.");
     }
     return hapticUri;
 }
 
-std::string RingtonePlayerImpl::GetHapticUriForAudioUri(const std::string &audioUri)
+std::string RingtonePlayerImpl::GetHapticUriInAudioDir(const std::string &audioUri)
 {
     std::string hapticUri = "";
     if (audioUri.length() > AUDIO_FORMAT_STR.length() &&
@@ -263,9 +262,9 @@ ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri,
         return settings;
     }
     settings.mode = ToneHapticsMode::SYNC;
-    settings.hapticsUri = GetNewHapticUriForAudioUri(audioUri);
+    settings.hapticsUri = GetHapticUriInHapticDir(audioUri);
     if (settings.hapticsUri.empty()) {
-        settings.hapticsUri = GetHapticUriForAudioUri(audioUri);
+        settings.hapticsUri = GetHapticUriInAudioDir(audioUri);
         if (settings.hapticsUri.empty()) {
             MEDIA_LOGW("haptic uri is empty. Play ringtone without vibration");
             muteHaptics = true;
@@ -290,7 +289,7 @@ int32_t RingtonePlayerImpl::RegisterSource(const std::string &audioUri, const st
     string newHapticUri = systemSoundMgr_.OpenHapticsUri(databaseTool_, hapticUri);
 
     if (newAudioUri.find(FDHEAD) == std::string::npos && newAudioUri != NO_RING_SOUND) {
-        MEDIA_LOGI("Failed to open ringtone file, select to open default ringtone and play.");
+        MEDIA_LOGW("Failed to open ringtone file, select to open default ringtone and play.");
         std::string uri = "";
         std::shared_ptr<ToneAttrs> ringtoneAttrs = systemSoundMgr_.GetDefaultRingtoneAttrs(context_, type_);
         if (ringtoneAttrs != nullptr) {
@@ -351,7 +350,7 @@ void RingtonePlayerImpl::InitPlayer(std::string &audioUri, ToneHapticsSettings &
     player_->SetHapticsMode(ConvertToHapticsMode(settings.mode));
     int32_t result = player_->Prepare();
     if (audioUri == NO_RING_SOUND) {
-        MEDIA_LOGI("The incoming audioUri is no_ring_sound.");
+        MEDIA_LOGW("The incoming audioUri is no_ring_sound.");
         configuredUri_ = NO_RING_SOUND;
         ringtoneState_ = RingtoneState::STATE_NEW;
         result = MSERR_OK;
@@ -381,7 +380,7 @@ int32_t RingtonePlayerImpl::Configure(const float &volume, const bool &loop)
 
     if (configuredUri_ == NO_RING_SOUND && ringtoneState_ == STATE_RUNNING &&
         std::abs(volume - 0.0f) <= std::numeric_limits<float>::epsilon()) {
-        MEDIA_LOGI("Set volume to 0.0 for NO_RING_SOUND. Stop vibrator!");
+        MEDIA_LOGW("Set volume to 0.0 for NO_RING_SOUND. Stop vibrator!");
         SystemSoundVibrator::StopVibrator();
         return MSERR_OK;
     }
@@ -422,13 +421,13 @@ int32_t RingtonePlayerImpl::Start(const HapticStartupMode startupMode)
         ringtoneUri = systemSoundMgr_.GetRingtoneAttrs(databaseTool_, type_).GetUri();
         MEDIA_LOGI("RingtonePlayerImpl::ringtoneUri: %{public}s", ringtoneUri.c_str());
     } else if (specifyRingtoneUri_ == "-1") {
-        ringtoneUri = NO_RING_SOUND;
-        MEDIA_LOGI("RingtonePlayerImpl::ringtoneUri: %{public}s", ringtoneUri.c_str());
+        MEDIA_LOGW("The specifyRingtoneUri is no_ring_sound.");
+        return StartForNoRing(startupMode);
     } else {
         ringtoneUri = specifyRingtoneUri_;
     }
     if (ringtoneUri == NO_RING_SOUND) {
-        MEDIA_LOGI("The ringtoneUri is no_ring_sound.");
+        MEDIA_LOGW("The ringtoneUri is no_ring_sound.");
         return StartForNoRing(startupMode);
     }
     AudioHapticPlayerOptions options = {false, false};

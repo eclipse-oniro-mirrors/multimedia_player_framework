@@ -45,6 +45,7 @@ const std::string SET_PICKER_MODE = "SetPickerMode";
 const std::string SET_CONTENT_AUTO_ROTATION = "SetContentAutoRotation";
 const std::string PRESENT_PICKER = "PresentPicker";
 const std::string ADD_WATERMARK = "AddWatermark";
+const std::string SET_CAPTURE_AREA = "SetCaptureArea";
 }
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_BIT_RATE = 96000;
 constexpr int32_t AVSCREENCAPTURE_DEFAULT_AUDIO_CHANNELS = 2;
@@ -139,6 +140,10 @@ private:
      */
     static napi_value JsSetContentAutoRotation(napi_env env, napi_callback_info info);
     /**
+     * setCaptureArea(area: RectangleRegion): Promise<void>
+     */
+    static napi_value JsSetCaptureArea(napi_env env, napi_callback_info info);
+    /**
      * release(): Promise<void>
      */
     static napi_value JsRelease(napi_env env, napi_callback_info info);
@@ -169,6 +174,8 @@ private:
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const std::vector<int32_t> windowIDsVec);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSetPickerModeTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const PickerMode pickerMode);
+    static std::shared_ptr<TaskHandler<RetInfo>> GetSetCaptureAreaTask(
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const OHOS::Rect &area);
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static int32_t CheckVideoCodecFormat(const int32_t &preset);
     static int32_t CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
@@ -188,6 +195,7 @@ private:
     static int32_t CheckAudioChannelCount(const int32_t &audioChannelCount);
     static napi_status GetWindowIDsVectorParams(std::vector<uint64_t> &windowIDsVec, napi_env env, napi_value* args);
     static napi_status GetInt32VectorParams(std::vector<int32_t> &vec, napi_env env, napi_value arg);
+    static napi_status GetRectangleRegionParam(OHOS::Rect &area, napi_env env, napi_value arg);
     static int32_t SetScreenCaptureFillMode(ScreenCaptureStrategy &strategy, const int32_t &fillMode);
     static napi_value ThrowCustomError(napi_env env, int32_t errorCode, const char* errorMessage);
     static int32_t GetWatermarkParam(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx,
@@ -219,6 +227,7 @@ private:
     int32_t GetConfig(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetContentAutoPauseScenes(napi_env env, napi_value strategyVal, ScreenCaptureStrategy &strategy);
     void GetOptionalBoolProperty(napi_env env, napi_value obj, const std::string &propertyName, bool &target,
         bool &setByUser);
 
@@ -226,6 +235,7 @@ private:
     napi_env env_ = nullptr;
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
+    uint64_t displayId_ = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvScreenCaptureTaskqFunc> taskQFuncs_;

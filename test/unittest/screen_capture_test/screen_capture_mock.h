@@ -140,6 +140,7 @@ public:
     virtual int32_t StrategyForPause(bool value);
     virtual int32_t StrategyForMicAEC(bool value);
     virtual int32_t StrategyForHDRCapture(bool value);
+    virtual int32_t StrategyForContentAutoPauseScenes(uint32_t scenes);
     virtual int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config);
     virtual int32_t GetMultiDisplayCaptureCapability(uint64_t *displayIds, size_t count,
         MultiDisplayCapability *multiDisplayCapability) = 0;

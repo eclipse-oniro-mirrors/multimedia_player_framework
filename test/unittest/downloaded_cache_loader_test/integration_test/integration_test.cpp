@@ -185,6 +185,149 @@ HWTEST_F(IntegrationTest, CacheReader_CloseBeforeRead_001, TestSize.Level0)
     EXPECT_FALSE(request->IsRespondDataCalled());
 }
 
+HWTEST_F(IntegrationTest, E2E_FilterRoundTrip, TestSize.Level0)
+{
+    std::string cacheDir = TestCommon::GetTestCacheDir("e2e_filter");
+    TestCommon::SetupTestDirectory(cacheDir);
+
+    std::string url = "http://example.com/test.mp4";
+    std::string path = "videos/test.mp4";
+    TestCommon::CreateTestCacheFile(cacheDir, path, std::vector<uint8_t>(1024, 'A'));
+
+    Plugins::TrackSelectionFilter filter;
+    filter.maxVideoBitrate = 5000000;
+    filter.minVideoBitrate = 100000;
+    filter.maxVideoFrameRate = 60;
+    filter.minVideoFrameRate = 24;
+    filter.maxVideoResolution = {1920, 1080};
+    filter.minVideoResolution = {640, 480};
+    filter.preferredVideoMimeTypes = {"video/avc", "video/hevc"};
+    filter.maxAudioBitrate = 320000;
+    filter.minAudioBitrate = 48000;
+    filter.maxAudioChannels = 2;
+    filter.preferredAudioMimeTypes = {"audio/mp4a-latm"};
+    filter.preferredAudioLanguages = {"eng", "chi"};
+    filter.preferredSubtitleLanguages = {"chi"};
+    TestCommon::CreateTestMappingFileWithFilter(cacheDir, {{url, path}}, filter);
+
+    auto manager = std::make_shared<DownloadedCacheManager>(cacheDir);
+    EXPECT_TRUE(manager->HasTrackSelectionFilter());
+    auto loaded = manager->GetTrackSelectionFilter();
+    EXPECT_EQ(loaded.maxVideoBitrate, 5000000);
+    EXPECT_EQ(loaded.minVideoBitrate, 100000);
+    EXPECT_EQ(loaded.maxVideoFrameRate, 60);
+    EXPECT_EQ(loaded.minVideoFrameRate, 24);
+    EXPECT_EQ(loaded.maxVideoResolution.first, 1920);
+    EXPECT_EQ(loaded.maxVideoResolution.second, 1080);
+    EXPECT_EQ(loaded.minVideoResolution.first, 640);
+    EXPECT_EQ(loaded.minVideoResolution.second, 480);
+    EXPECT_EQ(loaded.preferredVideoMimeTypes.size(), 2);
+    EXPECT_EQ(loaded.preferredVideoMimeTypes[0], "video/avc");
+    EXPECT_EQ(loaded.preferredAudioLanguages.size(), 2);
+    EXPECT_EQ(loaded.preferredAudioLanguages[0], "eng");
+    EXPECT_EQ(loaded.preferredSubtitleLanguages.size(), 1);
+    std::string mediaCache = manager->GetMediaCache(url);
+    EXPECT_FALSE(mediaCache.empty());
+
+    TestCommon::CleanupTestDirectory(cacheDir);
+}
+
+HWTEST_F(IntegrationTest, E2E_KeyCrossCdnMatch, TestSize.Level0)
+{
+    std::string cacheDir = TestCommon::GetTestCacheDir("e2e_key");
+    TestCommon::SetupTestDirectory(cacheDir);
+
+    std::string downloadUrl = "https://cdn1.example.com/path/video.m3u8";
+    std::string path = "videos/video.m3u8";
+    TestCommon::CreateTestCacheFile(cacheDir, path, std::vector<uint8_t>(1024, 'A'));
+    TestCommon::CreateTestMappingFileWithKey(cacheDir, {{downloadUrl, path}});
+
+    auto manager = std::make_shared<DownloadedCacheManager>(cacheDir);
+    auto loader = std::make_shared<DownloadedCacheLoader>(manager);
+
+    std::string mediaCache = manager->GetMediaCache(downloadUrl);
+    EXPECT_FALSE(mediaCache.empty());
+
+    auto request = std::make_shared<MockLoadingRequest>(downloadUrl);
+    std::shared_ptr<LoadingRequest> requestPtr = request;
+    int64_t uuid = loader->Open(requestPtr);
+    EXPECT_GE(uuid, 0);
+
+    TestCommon::CleanupTestDirectory(cacheDir);
+}
+
+HWTEST_F(IntegrationTest, E2E_NoKeyFallback, TestSize.Level0)
+{
+    std::string cacheDir = TestCommon::GetTestCacheDir("e2e_nokey");
+    TestCommon::SetupTestDirectory(cacheDir);
+
+    std::string url = "http://example.com/test.mp4";
+    std::string path = "videos/test.mp4";
+    TestCommon::CreateTestCacheFile(cacheDir, path, std::vector<uint8_t>(1024, 'A'));
+    TestCommon::CreateTestMappingFile(cacheDir, {{url, path}});
+
+    auto manager = std::make_shared<DownloadedCacheManager>(cacheDir, "");
+    EXPECT_FALSE(manager->HasTrackSelectionFilter());
+
+    std::string mediaCache = manager->GetMediaCache(url);
+    EXPECT_FALSE(mediaCache.empty());
+
+    TestCommon::CleanupTestDirectory(cacheDir);
+}
+
+HWTEST_F(IntegrationTest, E2E_FilterAndKeyCombined, TestSize.Level1)
+{
+    std::string cacheDir = TestCommon::GetTestCacheDir("e2e_combo");
+    TestCommon::SetupTestDirectory(cacheDir);
+
+    std::string downloadUrl = "https://cdn1.example.com/path/video.m3u8";
+    std::string path = "videos/video.m3u8";
+    TestCommon::CreateTestCacheFile(cacheDir, path, std::vector<uint8_t>(1024, 'A'));
+
+    Plugins::TrackSelectionFilter filter;
+    filter.maxVideoBitrate = 8000000;
+    filter.preferredVideoMimeTypes = {"video/avc"};
+    filter.preferredAudioLanguages = {"eng"};
+    TestCommon::CreateTestMappingFileWithFilter(cacheDir, {{downloadUrl, path}},
+        filter, downloadUrl);
+
+    auto manager = std::make_shared<DownloadedCacheManager>(cacheDir);
+    EXPECT_TRUE(manager->HasTrackSelectionFilter());
+    auto loaded = manager->GetTrackSelectionFilter();
+    EXPECT_EQ(loaded.maxVideoBitrate, 8000000);
+    EXPECT_EQ(loaded.preferredVideoMimeTypes.size(), 1);
+    EXPECT_EQ(loaded.preferredAudioLanguages.size(), 1);
+
+    std::string mediaCache = manager->GetMediaCache(downloadUrl);
+    EXPECT_FALSE(mediaCache.empty());
+
+    TestCommon::CleanupTestDirectory(cacheDir);
+}
+
+HWTEST_F(IntegrationTest, E2E_OldCacheCompatibility, TestSize.Level0)
+{
+    std::string cacheDir = TestCommon::GetTestCacheDir("e2e_old");
+    TestCommon::SetupTestDirectory(cacheDir);
+
+    std::string url = "http://example.com/test.mp4";
+    std::string path = "videos/test.mp4";
+    TestCommon::CreateTestCacheFile(cacheDir, path, std::vector<uint8_t>(1024, 'A'));
+    TestCommon::CreateTestMappingFile(cacheDir, {{url, path}});
+
+    auto manager = std::make_shared<DownloadedCacheManager>(cacheDir, "");
+    EXPECT_FALSE(manager->HasTrackSelectionFilter());
+
+    CacheMetaData metadata;
+    bool result = manager->GetCacheMetaData(url, metadata);
+    EXPECT_TRUE(result);
+    EXPECT_EQ(metadata.entry, path);
+
+    std::string mediaCache = manager->GetMediaCache(url);
+    EXPECT_FALSE(mediaCache.empty());
+
+    TestCommon::CleanupTestDirectory(cacheDir);
+}
+
 } // namespace DownloadedCache
 } // namespace Media
 } // namespace OHOS

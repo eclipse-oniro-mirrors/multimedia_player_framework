@@ -405,6 +405,12 @@ int32_t ScreenCaptureNativeMock::StrategyForHDRCapture(bool value)
     return MSERR_OK;
 }
 
+int32_t ScreenCaptureNativeMock::StrategyForContentAutoPauseScenes(uint32_t scenes)
+{
+    strategy_.contentAutoPauseScenes = scenes;
+    return MSERR_OK;
+}
+
 int32_t ScreenCaptureNativeMock::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
 {
     return MSERR_OK;

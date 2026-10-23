@@ -44,6 +44,9 @@ public:
     void SetMimeType(::ohos::multimedia::media::AVMimeTypes mimeType);
     void SetMediaResourceLoaderDelegate(::ohos::multimedia::media::MediaSourceLoader const& resourceLoader);
     std::string GetID();
+    void SetRetrieveKey(::taihe::string_view key);
+    void SetTrackSelectionFilter(::ohos::multimedia::media::TrackSelectionFilter filter);
+    optional<::ohos::multimedia::media::TrackSelectionFilter> GetTrackSelectionFilter();
 private:
     static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithUrl(string_view url,
         optional_view<map<string, string>> headers);

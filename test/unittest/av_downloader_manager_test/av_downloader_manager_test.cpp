@@ -387,7 +387,7 @@ HWTEST_F(AVDownloaderManagerTest, FindExistingTask_FindInitTask_001, TestSize.Le
     manager->taskMap_.erase("task_init");
 }
 
-HWTEST_F(AVDownloaderManagerTest, FindExistingTask_PausedTask_DownloaderNotFound_001, TestSize.Level0)
+HWTEST_F(AVDownloaderManagerTest, FindExistingTask_PausedTask_ReturnsTaskId_001, TestSize.Level0)
 {
     auto manager = std::make_shared<TestableAVDownloaderManager>();
     ASSERT_NE(manager, nullptr);
@@ -400,7 +400,7 @@ HWTEST_F(AVDownloaderManagerTest, FindExistingTask_PausedTask_DownloaderNotFound
     manager->taskMap_["task_paused_no_downloader"] = taskInfo;
     
     std::string result = manager->FindExistingTask("http://example.com/test.mp4");
-    EXPECT_EQ(result, "");
+    EXPECT_EQ(result, "task_paused_no_downloader");
     
     manager->taskMap_.erase("task_paused_no_downloader");
 }
@@ -417,7 +417,7 @@ HWTEST_F(AVDownloaderManagerTest, FindExistingTask_CompletedTask_001, TestSize.L
     manager->taskMap_["task_completed"] = taskInfo;
     
     std::string result = manager->FindExistingTask("http://example.com/test.mp4");
-    EXPECT_EQ(result, "");
+    EXPECT_EQ(result, "task_completed");
     
     manager->taskMap_.erase("task_completed");
 }
@@ -1089,6 +1089,168 @@ HWTEST_F(AVDownloaderManagerTest, NotifyProgressChangeLocked_NoCallback_StillUpd
 
     manager->NotifyProgressChangeLocked("task1", 33.0);
     EXPECT_DOUBLE_EQ(taskInfo->progress, 33.0);
+}
+
+HWTEST_F(AVDownloaderManagerTest, FindExistingTask_NewNoKey_ExistingHasKey_SameUrl_Match, TestSize.Level0)
+{
+    auto manager = std::make_shared<TestableAVDownloaderManager>();
+    ASSERT_NE(manager, nullptr);
+
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task_with_key";
+    taskInfo->url = "https://cdn1.example.com/path/video.m3u8";
+    taskInfo->retrieveKey = "mykey";
+    taskInfo->state = AVDownloadTaskState::RUNNING;
+    manager->taskMap_["task_with_key"] = taskInfo;
+
+    std::string result = manager->FindExistingTask("https://cdn1.example.com/path/video.m3u8", "");
+    EXPECT_EQ(result, "task_with_key");
+
+    manager->taskMap_.erase("task_with_key");
+}
+
+HWTEST_F(AVDownloaderManagerTest, FindExistingTask_SameKeySameUrl_Match, TestSize.Level0)
+{
+    auto manager = std::make_shared<TestableAVDownloaderManager>();
+    ASSERT_NE(manager, nullptr);
+
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task_same_key";
+    taskInfo->url = "https://cdn1.example.com/path/video.m3u8";
+    taskInfo->retrieveKey = "mykey";
+    taskInfo->state = AVDownloadTaskState::RUNNING;
+    manager->taskMap_["task_same_key"] = taskInfo;
+
+    std::string result = manager->FindExistingTask("https://cdn1.example.com/path/video.m3u8", "mykey");
+    EXPECT_EQ(result, "task_same_key");
+
+    manager->taskMap_.erase("task_same_key");
+}
+
+HWTEST_F(AVDownloaderManagerTest, FindExistingTask_BothHaveKey_DiffKey_SameUrl_NoMatch, TestSize.Level0)
+{
+    auto manager = std::make_shared<TestableAVDownloaderManager>();
+    ASSERT_NE(manager, nullptr);
+
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task_key_a";
+    taskInfo->url = "https://cdn1.example.com/path/video.m3u8";
+    taskInfo->retrieveKey = "keyA";
+    taskInfo->state = AVDownloadTaskState::RUNNING;
+    manager->taskMap_["task_key_a"] = taskInfo;
+
+    std::string result = manager->FindExistingTask("https://cdn1.example.com/path/video.m3u8", "keyB");
+    EXPECT_EQ(result, "");
+
+    manager->taskMap_.erase("task_key_a");
+}
+
+HWTEST_F(AVDownloaderManagerTest, FindExistingTask_BothHaveKey_SameKey_DiffUrl_Match, TestSize.Level0)
+{
+    auto manager = std::make_shared<TestableAVDownloaderManager>();
+    ASSERT_NE(manager, nullptr);
+
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task_cdn1";
+    taskInfo->url = "https://cdn1.example.com/path/video.m3u8";
+    taskInfo->retrieveKey = "mykey";
+    taskInfo->state = AVDownloadTaskState::RUNNING;
+    manager->taskMap_["task_cdn1"] = taskInfo;
+
+    std::string result = manager->FindExistingTask("https://cdn2.example.com/path/video.m3u8", "mykey");
+    EXPECT_EQ(result, "task_cdn1");
+
+    manager->taskMap_.erase("task_cdn1");
+}
+
+HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_FilterPopulatedFromSource, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+
+    auto source = std::make_shared<Plugins::MediaSource>("http://example.com/test.m3u8");
+    Plugins::TrackSelectionFilter filter;
+    filter.maxVideoBitrate = 2000000;
+    filter.maxVideoResolution = {1920, 1080};
+    filter.preferredAudioLanguages = {"chi"};
+    source->SetTrackSelectFilter(filter);
+
+    auto [taskId, taskInfo, downloader, filePath] =
+        manager->CreateNewDownloaderAndTask(source, "http://example.com/test.m3u8");
+
+    EXPECT_NE(taskInfo, nullptr);
+    EXPECT_EQ(taskInfo->filter.maxVideoBitrate, 2000000);
+    EXPECT_EQ(taskInfo->filter.maxVideoResolution.first, 1920);
+    EXPECT_EQ(taskInfo->filter.maxVideoResolution.second, 1080);
+    EXPECT_EQ(taskInfo->filter.preferredAudioLanguages.size(), 1);
+    EXPECT_EQ(taskInfo->filter.preferredAudioLanguages[0], "chi");
+}
+
+HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_NoFilter_DefaultValues, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+
+    auto source = std::make_shared<Plugins::MediaSource>("http://example.com/test.m3u8");
+
+    auto [taskId, taskInfo, downloader, filePath] =
+        manager->CreateNewDownloaderAndTask(source, "http://example.com/test.m3u8");
+
+    EXPECT_NE(taskInfo, nullptr);
+    EXPECT_EQ(taskInfo->filter.maxVideoBitrate, -1);
+    EXPECT_EQ(taskInfo->filter.minVideoBitrate, -1);
+    EXPECT_TRUE(taskInfo->filter.preferredAudioLanguages.empty());
+    EXPECT_TRUE(taskInfo->filter.preferredVideoMimeTypes.empty());
+}
+
+HWTEST_F(AVDownloaderManagerTest, CreateNewDownloaderAndTask_RetrieveKeyPopulatedFromSource, TestSize.Level0)
+{
+    auto manager = std::make_shared<AVDownloaderManagerImpl>();
+    ASSERT_NE(manager, nullptr);
+
+    auto source = std::make_shared<Plugins::MediaSource>("http://example.com/test.m3u8");
+    source->SetRetrieveKey("testkey123");
+
+    auto [taskId, taskInfo, downloader, filePath] =
+        manager->CreateNewDownloaderAndTask(source, "http://example.com/test.m3u8");
+
+    EXPECT_NE(taskInfo, nullptr);
+    EXPECT_EQ(taskInfo->retrieveKey, "testkey123");
+}
+
+HWTEST_F(AVDownloaderManagerTest, FindExistingTask_PausedTask_ReturnsTaskId, TestSize.Level0)
+{
+    auto manager = std::make_shared<TestableAVDownloaderManager>();
+    ASSERT_NE(manager, nullptr);
+
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task_paused";
+    taskInfo->url = "http://example.com/test.mp4";
+    taskInfo->state = AVDownloadTaskState::PAUSED;
+    manager->taskMap_["task_paused"] = taskInfo;
+
+    std::string result = manager->FindExistingTask("http://example.com/test.mp4", "");
+    EXPECT_EQ(result, "task_paused");
+
+    manager->taskMap_.erase("task_paused");
+}
+
+HWTEST_F(AVDownloaderManagerTest, FindExistingTask_PausedTask_WithKey_ReturnsTaskId, TestSize.Level0)
+{
+    auto manager = std::make_shared<TestableAVDownloaderManager>();
+    ASSERT_NE(manager, nullptr);
+
+    auto taskInfo = std::make_shared<AVDownloadTaskInfo>();
+    taskInfo->taskId = "task_paused_key";
+    taskInfo->url = "https://cdn1.example.com/path/video.m3u8";
+    taskInfo->retrieveKey = "mykey";
+    taskInfo->state = AVDownloadTaskState::PAUSED;
+    manager->taskMap_["task_paused_key"] = taskInfo;
+
+    std::string result = manager->FindExistingTask("https://cdn2.example.com/path/video.m3u8", "mykey");
+    EXPECT_EQ(result, "task_paused_key");
+
+    manager->taskMap_.erase("task_paused_key");
 }
 
 } // namespace Media

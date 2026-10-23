@@ -71,6 +71,9 @@ napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setMediaResourceLoaderDelegate", JsSetMediaResourceLoaderDelegate),
         DECLARE_NAPI_FUNCTION("enableOfflineCache", JsEnableOfflineCache),
         DECLARE_NAPI_FUNCTION("getID", JsGetID),
+        DECLARE_NAPI_FUNCTION("setRetrieveKey", JsSetRetrieveKey),
+        DECLARE_NAPI_FUNCTION("setTrackSelectionFilter", JsSetTrackSelectionFilter),
+        DECLARE_NAPI_FUNCTION("getTrackSelectionFilter", JsGetTrackSelectionFilter),
     };
 
     napi_value constructor = nullptr;
@@ -536,6 +539,95 @@ napi_value MediaSourceNapi::JsGetID(napi_env env, napi_callback_info info)
     }
     
     MEDIA_LOGI("JsGetID Out, id=%{public}s", id.c_str());
+    return result;
+}
+
+napi_value MediaSourceNapi::JsSetRetrieveKey(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsSetRetrieveKey In");
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    size_t argCount = 1;
+    napi_value args[1] = {nullptr};
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "failed to napi_get_cb_info");
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_string) {
+        return undefinedResult;
+    }
+
+    std::string retrieveKey = CommonNapi::GetStringArgument(env, args[0]);
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsThis);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return undefinedResult;
+    }
+
+    mediaSource->retrieveKey = retrieveKey;
+    return undefinedResult;
+}
+
+napi_value MediaSourceNapi::JsSetTrackSelectionFilter(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsSetTrackSelectionFilter In");
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    size_t argCount = 1;
+    napi_value args[1] = {nullptr};
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "failed to napi_get_cb_info");
+
+    napi_valuetype valueType = napi_undefined;
+    if (argCount < 1 || napi_typeof(env, args[0], &valueType) != napi_ok || valueType != napi_object) {
+        return undefinedResult;
+    }
+
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsThis);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return undefinedResult;
+    }
+
+    AVPlayTrackSelectionFilter filter;
+    if (!CommonNapi::GetTrackSelectionFilter(env, args[0], filter)) {
+        MEDIA_LOGE("Failed to parse trackSelectionFilter");
+        return undefinedResult;
+    }
+
+    mediaSource->trackSelectionFilter = filter;
+    mediaSource->hasTrackSelectionFilter = true;
+    return undefinedResult;
+}
+
+napi_value MediaSourceNapi::JsGetTrackSelectionFilter(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("JsGetTrackSelectionFilter In");
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    napi_value jsThis = nullptr;
+    size_t argCount = 0;
+    napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "failed to napi_get_cb_info");
+
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsThis);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return undefinedResult;
+    }
+    if (!mediaSource->hasTrackSelectionFilter) {
+        MEDIA_LOGE("TrackSelectionFilter not set.");
+        return undefinedResult;
+    }
+
+    napi_value result = nullptr;
+    MediaJsResultTrackFilter jsResult(mediaSource->trackSelectionFilter);
+    if (jsResult.GetJsResult(env, result) != napi_ok) {
+        MEDIA_LOGE("Failed to create JS result for trackSelectionFilter");
+        return undefinedResult;
+    }
     return result;
 }
 } // Media

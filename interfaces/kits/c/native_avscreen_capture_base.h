@@ -698,6 +698,32 @@ typedef void (*OH_AVScreenCapture_OnDisplaySelected)(OH_AVScreenCapture *capture
 typedef struct OH_AVScreenCapture_CaptureStrategy OH_AVScreenCapture_CaptureStrategy;
 
 /**
+ * @brief Scene Enumeration for Auto Pause Screen Capture.
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @since 26.2.0
+ */
+typedef enum OH_AVScreenCapture_AutoPauseCaptureSceneEnum {
+    /**
+     * @brief Default value, indicating that auto-pause is not performed in any scenario.
+     * @since 26.2.0
+     */
+    OH_CAPTURE_AUTO_PAUSE_SCENE_NONE = 0,
+
+    /**
+     * @brief Scene where the screen fold state changes.
+     * @since 26.2.0
+     */
+    OH_CAPTURE_AUTO_PAUSE_SCENE_SCREEN_FOLD_STATE_CHANGE = 1 << 0,
+} OH_AVScreenCapture_AutoPauseCaptureSceneEnum;
+
+/**
+ * @brief Bitmask set of auto-pause scenes for screen capture.
+ * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
+ * @since 26.2.0
+ */
+typedef uint32_t OH_AVScreenCapture_AutoPauseSceneSet;
+
+/**
  * @brief When Capture Content info changes, the function will be called to notify user
  * @syscap SystemCapability.Multimedia.Media.AVScreenCapture
  * @param {OH_AVScreenCapture*} capture Pointer to an OH_AVScreenCapture instance

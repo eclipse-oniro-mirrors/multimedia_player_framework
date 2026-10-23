@@ -246,6 +246,16 @@ public:
     {
         return directoryPath_;
     }
+
+    void SetRetrieveKey(const std::string& key)
+    {
+        retrieveKey_ = key;
+    }
+
+    std::string GetRetrieveKey() const
+    {
+        return retrieveKey_;
+    }
     std::string url {};
     std::string mimeType_ {};
     bool enable_ {false};
@@ -254,6 +264,7 @@ public:
     std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};
     std::string id_ {};
     std::string directoryPath_ {}; // 离线缓存路径
+    std::string retrieveKey_ {}; // 用于 URL 根路径替换的 key
 private:
     std::vector<AVPlayMediaStream> mediaStreamVec_;
     FileDescriptor fileDescriptor_ {};

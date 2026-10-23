@@ -25,6 +25,7 @@
 #include "cache_mapping_format.h"
 #include "media_source.h"
 #include "play_strategy_serializer.h"
+#include "url_key_util.h"
 
 namespace OHOS {
 namespace Media {
@@ -40,11 +41,13 @@ struct CacheMetaData {
 
 class DownloadedCacheManager {
 public:
-    explicit DownloadedCacheManager(const std::string& cacheDir);
+    explicit DownloadedCacheManager(const std::string& cacheDir, const std::string& retrieveKey = "");
     ~DownloadedCacheManager();
 
     std::string GetCacheDir() const { return cacheDir_; }
     std::string GetRootUrl() const { return rootUrl_; }
+    Plugins::TrackSelectionFilter GetTrackSelectionFilter() const { return filter_; }
+    bool HasTrackSelectionFilter() const { return hasFilter_; }
     std::string GetMediaCache(const std::string& url);
     bool GetCacheMetaData(const std::string& url, CacheMetaData& metadata);
     std::map<std::string, std::string> BuildHttpHeaders(const std::string& url, int64_t fileSize);
@@ -52,9 +55,13 @@ public:
 private:
     void LoadCacheMapping();
     bool CreateDirectories(const std::string& path);
+    std::string ComputeHashIndex(const std::string& url) const;
 
     std::string cacheDir_;
     std::string rootUrl_;
+    std::string retrieveKey_;
+    Plugins::TrackSelectionFilter filter_;
+    bool hasFilter_ = false;
     std::unordered_map<std::string, CacheMappingEntry> index_;
     std::mutex mutex_;
 };

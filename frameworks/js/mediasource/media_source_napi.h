@@ -75,6 +75,21 @@ private:
      */
     static napi_value JsGetID(napi_env env, napi_callback_info info);
 
+    /**
+     * function setRetrieveKey(key: string): void
+     */
+    static napi_value JsSetRetrieveKey(napi_env env, napi_callback_info info);
+
+    /**
+     * function setTrackSelectionFilter(filter: TrackSelectionFilter): void
+     */
+    static napi_value JsSetTrackSelectionFilter(napi_env env, napi_callback_info info);
+
+    /**
+     * function getTrackSelectionFilter(): TrackSelectionFilter
+     */
+    static napi_value JsGetTrackSelectionFilter(napi_env env, napi_callback_info info);
+
     MediaSourceNapi() = default;
     virtual ~MediaSourceNapi() = default;
 

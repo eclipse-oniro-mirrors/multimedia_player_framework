@@ -76,6 +76,7 @@ napi_value AVScreenCaptureNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("excludePickerWindows", JsExcludePickerWindows),
         DECLARE_NAPI_FUNCTION("setPickerMode", JsSetPickerMode),
         DECLARE_NAPI_FUNCTION("setContentAutoRotation", JsSetContentAutoRotation),
+        DECLARE_NAPI_FUNCTION("setCaptureArea", JsSetCaptureArea),
         DECLARE_NAPI_FUNCTION("presentPicker", JsPresentPicker),
     };
 
@@ -592,6 +593,92 @@ napi_value AVScreenCaptureNapi::JsSetContentAutoRotation(napi_env env, napi_call
     return result;
 }
 
+napi_status AVScreenCaptureNapi::GetRectangleRegionParam(OHOS::Rect &area, napi_env env, napi_value arg)
+{
+    napi_valuetype valueType = napi_undefined;
+    if (arg == nullptr || napi_typeof(env, arg, &valueType) != napi_ok || valueType != napi_object) {
+        MEDIA_LOGE("GetRectangleRegionParam input is not object");
+        return napi_invalid_arg;
+    }
+
+    int32_t left = -1;
+    int32_t top = -1;
+    int32_t width = -1;
+    int32_t height = -1;
+    napi_value value = nullptr;
+    napi_status status;
+
+    status = napi_get_named_property(env, arg, "left", &value);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam missing field 'left'");
+    status = napi_get_value_int32(env, value, &left);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'left' is not int32");
+
+    status = napi_get_named_property(env, arg, "top", &value);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam missing field 'top'");
+    status = napi_get_value_int32(env, value, &top);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'top' is not int32");
+
+    status = napi_get_named_property(env, arg, "width", &value);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam missing field 'width'");
+    status = napi_get_value_int32(env, value, &width);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'width' is not int32");
+
+    status = napi_get_named_property(env, arg, "height", &value);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam missing field 'height'");
+    status = napi_get_value_int32(env, value, &height);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'height' is not int32");
+
+    if (left < 0 || top < 0 || width < 0 || height < 0) {
+        MEDIA_LOGE("GetRectangleRegionParam negative value, left:%{public}d, top:%{public}d, "
+            "width:%{public}d, height:%{public}d", left, top, width, height);
+        return napi_invalid_arg;
+    }
+
+    area.x = left;
+    area.y = top;
+    area.w = width;
+    area.h = height;
+    return napi_ok;
+}
+
+napi_value AVScreenCaptureNapi::JsSetCaptureArea(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVScreenCapture::JsSetCaptureArea");
+    const std::string &opt = AVScreenCapturegOpt::SET_CAPTURE_AREA;
+    MEDIA_LOGI("Js %{public}s Start", opt.c_str());
+
+    const int32_t maxParam = 1;
+    size_t argCount = maxParam;
+    napi_value args[maxParam] = { nullptr };
+
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+
+    auto asyncCtx = std::make_unique<AVScreenCaptureAsyncContext>(env);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx != nullptr, result, "failed to get AsyncContext");
+    asyncCtx->napi = AVScreenCaptureNapi::GetJsInstanceAndArgs(env, info, argCount, args);
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi != nullptr, result, "failed to GetJsInstanceAndArgs");
+    CHECK_AND_RETURN_RET_LOG(asyncCtx->napi->taskQue_ != nullptr, result, "taskQue is nullptr!");
+
+    asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
+
+    OHOS::Rect area;
+    napi_status status = GetRectangleRegionParam(area, env, args[0]);
+    if (status != napi_ok) {
+        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "SetCaptureArea parameter out of range: invalid RectangleRegion (left/top/width/height "
+            "must be non-negative int32 and present)");
+        QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
+        return result;
+    }
+    
+    asyncCtx->task_ = AVScreenCaptureNapi::GetSetCaptureAreaTask(asyncCtx, area);
+    (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
+    
+    QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
+    return result;
+}
+
 napi_value AVScreenCaptureNapi::JsExcludePickerWindows(napi_env env, napi_callback_info info)
 {
     MediaTrace trace("AVScreenCapture::JsExcludePickerWindows");
@@ -870,6 +957,34 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetContentAutoRota
     });
 }
 
+std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetCaptureAreaTask(
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const OHOS::Rect &area)
+{
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, area]() {
+        const std::string &option = AVScreenCapturegOpt::SET_CAPTURE_AREA;
+        MEDIA_LOGI("%{public}s Start", option.c_str());
+
+        CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr, GetReturnInfo(MSERR_INVALID_OPERATION,
+            option, "", " screenCapture_ is null, recorder released or not init"));
+
+        int32_t ret = napi->screenCapture_->SetCaptureArea(napi->displayId_, area);
+        if (ret == MSERR_INVALID_VAL) {
+            MEDIA_LOGE("SetCaptureArea invalid area, left:%{public}d, top:%{public}d, "
+                "width:%{public}d, height:%{public}d, ret = %{public}d",
+                area.x, area.y, area.w, area.h, ret);
+            return RetInfo(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+                option + " area out of range: left=" + std::to_string(area.x) +
+                ", top=" + std::to_string(area.y) +
+                ", width=" + std::to_string(area.w) +
+                ", height=" + std::to_string(area.h));
+        }
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
+
+        MEDIA_LOGI("%{public}s End", option.c_str());
+        return RetInfo(MSERR_EXT_API9_OK, "");
+    });
+}
+
 AVScreenCaptureNapi *AVScreenCaptureNapi::GetJsInstanceAndArgs(
     napi_env env, napi_callback_info info, size_t &argCount, napi_value *args)
 {
@@ -1048,6 +1163,9 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
     if (videoConfig.displayId > 0) {
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     }
+    if (asyncCtx->napi != nullptr) {
+        asyncCtx->napi->displayId_ = videoConfig.displayId;
+    }
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
     // get video frame info (frameWidth and frameHeight)
     ret = AVScreenCaptureNapi::GetPropertyInt32(env, args, "frameWidth", frameWidth);
@@ -1137,6 +1255,9 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     GetOptionalBoolProperty(env, strategyVal, "enableAEC", strategy.enableAEC, strategy.setByUser);
     GetOptionalBoolProperty(env, strategyVal, "enableHDR", strategy.enableHDRCapture, strategy.setByUser);
 
+    CHECK_AND_RETURN_RET_LOG(GetContentAutoPauseScenes(env, strategyVal, strategy) == MSERR_OK, MSERR_INVALID_VAL,
+        "GetContentAutoPauseScenes failed");
+
     status = napi_has_named_property(env, strategyVal, "privacyMaskMode", &exist);
     if (status == napi_ok && exist) {
         int32_t value = 0;
@@ -1147,10 +1268,43 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
         strategy.setByUser = true;
     }
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
-        "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
-        "enableHDRCapture: %{public}d",
+               "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
+               "contentAutoPauseScenes: %{public}, uenableHDRCapture: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
-        strategy.strategyForPrivacyMaskMode, strategy.enableHDRCapture);
+        strategy.strategyForPrivacyMaskMode, strategy.contentAutoPauseScenes, strategy.enableHDRCapture);
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureNapi::GetContentAutoPauseScenes(napi_env env, napi_value strategyVal,
+    ScreenCaptureStrategy &strategy)
+{
+    napi_value scenesVal = nullptr;
+    bool scenesExist = false;
+    napi_status status = napi_has_named_property(env, strategyVal, "contentAutoPauseScenes", &scenesExist);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && scenesExist, MSERR_OK, "without contentAutoPauseScenes");
+    napi_get_named_property(env, strategyVal, "contentAutoPauseScenes", &scenesVal);
+    napi_valuetype scenesType = napi_undefined;
+    status = napi_typeof(env, scenesVal, &scenesType);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_INVALID_VAL, "get scenes valueType failed");
+    CHECK_AND_RETURN_RET_LOG(scenesType != napi_undefined, MSERR_OK, "contentAutoPauseScenes undefined");
+    bool isArray = false;
+    napi_is_array(env, scenesVal, &isArray);
+    CHECK_AND_RETURN_RET_LOG(isArray, MSERR_INVALID_VAL, "contentAutoPauseScenes must be array");
+    uint32_t len = 0;
+    napi_get_array_length(env, scenesVal, &len);
+    uint32_t mask = 0;
+    for (uint32_t i = 0; i < len; i++) {
+        napi_value item = nullptr;
+        napi_get_element(env, scenesVal, i, &item);
+        int32_t v = 0;
+        CHECK_AND_RETURN_RET_LOG(napi_get_value_int32(env, item, &v) == napi_ok, MSERR_INVALID_VAL, "scene invalid");
+        CHECK_AND_RETURN_RET_LOG(v == static_cast<int32_t>(AVScreenCaptureAutoPauseScene::NONE) ||
+                v == static_cast<int32_t>(AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE),
+            MSERR_INVALID_VAL, "scene out of range");
+        mask |= static_cast<uint32_t>(v);
+    }
+    strategy.contentAutoPauseScenes = mask;
+    strategy.setByUser = true;
     return MSERR_OK;
 }
 

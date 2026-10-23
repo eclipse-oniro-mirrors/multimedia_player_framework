@@ -749,6 +749,22 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForMicAEC(
     OH_AVScreenCapture_CaptureStrategy *strategy, bool value);
 
 /**
+ * @brief Sets the set of scenarios in which the screen content capture is automatically paused.
+ * If the specified scenario is met, the system automatically pauses the screen content capture.
+ * You can call the OH_AVScreenCapture_ResumeScreenCapture() function to resume the screen content capture.
+ *
+ * @param strategy [in] Pointer to an OH_AVScreenCapture_CaptureStrategy instance
+ * @param scenes [in] Set of scenes, which are bitwise or combined using OH_CaptureAutoPauseScene.
+ *     If OH_CAPTURE_AUTO_PAUSE_SCENE_NONE is input, the system does not pause automatically.
+ * @return <ul><li>{@link AV_SCREEN_CAPTURE_ERR_OK} : indicates that the operation is successful.</li>
+ *     <li>{@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL}: The input parameter **strategy** is nullptr
+ *     or the value of **scenes** is invalid.</li></ul>
+ * @since 26.2.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForContentAutoPauseScenes(
+    OH_AVScreenCapture_CaptureStrategy *strategy, OH_AVScreenCapture_AutoPauseSceneSet scenes);
+
+/**
  * @brief Specifies whether to output images in HDR vivid format.
  * @param strategy [in] Pointer to an OH_AVScreenCapture_CaptureStrategy instance
  * @param enable [in] Indicates whether to output HDR VIVID images.
