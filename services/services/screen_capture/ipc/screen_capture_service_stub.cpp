@@ -832,7 +832,8 @@ int32_t ScreenCaptureServiceStub::SetScreenCaptureStrategy(MessageParcel &data, 
     bool ret = data.ReadBool(strategy.enableDeviceLevelCapture) && data.ReadBool(strategy.keepCaptureDuringCall) &&
         data.ReadInt32(strategy.strategyForPrivacyMaskMode) && data.ReadBool(strategy.canvasFollowRotation) &&
         data.ReadBool(strategy.enableBFrame) && data.ReadInt32(pickerPopUpVal) && data.ReadInt32(fillModeVal) &&
-        data.ReadBool(strategy.enablePause) && data.ReadBool(strategy.enableAEC);
+        data.ReadBool(strategy.enablePause) && data.ReadBool(strategy.enableAEC) &&
+        data.ReadBool(strategy.enableHDRCapture);
     CHECK_AND_RETURN_RET_LOG(ret, MSERR_INVALID_VAL, "Failed to read strategy!");
     CHECK_AND_RETURN_RET_LOG(pickerPopUpVal >=
                 static_cast<int32_t>(AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DEFAULT) &&

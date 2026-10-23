@@ -766,7 +766,7 @@ int32_t ScreenCaptureServiceProxy::SetScreenCaptureStrategy(const ScreenCaptureS
         data.WriteInt32(strategy.strategyForPrivacyMaskMode) && data.WriteBool(strategy.canvasFollowRotation) &&
         data.WriteBool(strategy.enableBFrame) && data.WriteInt32(static_cast<int32_t>(strategy.pickerPopUp)) &&
         data.WriteInt32(static_cast<int32_t>(strategy.fillMode)) && data.WriteBool(strategy.enablePause) &&
-        data.WriteBool(strategy.enableAEC);
+        data.WriteBool(strategy.enableAEC) && data.WriteBool(strategy.enableHDRCapture);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write strategy!");
 
     int error = Remote()->SendRequest(SET_STRATEGY, data, reply, option);
