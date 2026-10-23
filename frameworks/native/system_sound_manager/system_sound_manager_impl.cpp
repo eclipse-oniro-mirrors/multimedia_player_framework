@@ -330,6 +330,10 @@ ToneAttrs SystemSoundManagerImpl::QueryToneAttrsByType(const DatabaseTool &datab
         queryPredicates.SetWhereClause(typeColumnName + " = ? ");
     }
     queryPredicates.SetWhereArgs({to_string(targetToneType)});
+    std::string sourceTypeColumnName = GetToneSourceTypeColumnName(toneType);
+    if (!sourceTypeColumnName.empty()) {
+        queryPredicates.SetOrder(sourceTypeColumnName + " DESC");
+    }
 
     std::string ringtoneLibraryUri = BuildRingtoneLibraryUri(databaseTool.isProxy);
     Uri queryUri(ringtoneLibraryUri);

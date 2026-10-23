@@ -3045,5 +3045,201 @@ HWTEST(SystemSoundManagerUnitNextTest, GetCurrentToneUri_005, TestSize.Level0)
     EXPECT_FALSE(result.empty());
     EXPECT_NE(result, NO_RING_SOUND);
 }
+
+/**
+ * @tc.name  : QueryToneAttrsByType_Mock_Ringtone_PresetSourceType
+ * @tc.number: QueryToneAttrsByType_Mock_001
+ * @tc.desc  : Test QueryToneAttrsByType with RINGTONE type and PRESET sourceType (max=2),
+ *             verify OrderBy code path does not crash and data is correctly returned.
+ *             Note: mock DataShareHelper does not process predicates OrderBy;
+ *             actual sort behaviour requires device-side verification.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 1;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.ringtoneType = 1;
+    config.ringtoneSourceType = SOURCE_TYPE_PRESET;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.isProxy = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+
+    uint32_t targetToneType = 1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, targetToneType, TONE_TYPE_RINGTONE);
+    EXPECT_FALSE(result.GetUri().empty());
+    EXPECT_EQ(result.GetCategory(), TONE_TYPE_RINGTONE);
+}
+
+/**
+ * @tc.name  : QueryToneAttrsByType_Mock_Notification_PresetSourceType
+ * @tc.number: QueryToneAttrsByType_Mock_002
+ * @tc.desc  : Test QueryToneAttrsByType with NOTIFICATION type and PRESET sourceType (max=2),
+ *             verify OrderBy code path does not crash and data is correctly returned.
+ *             Note: mock DataShareHelper does not process predicates OrderBy;
+ *             actual sort behaviour requires device-side verification.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 2;
+    config.toneType = TONE_TYPE_NOTIFICATION;
+    config.notificationToneType = NOTIFICATION_TONE_TYPE;
+    config.notificationToneSourceType = SOURCE_TYPE_PRESET;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.isProxy = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+
+    ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_NOTIFICATION);
+    EXPECT_FALSE(result.GetUri().empty());
+    EXPECT_EQ(result.GetCategory(), TONE_TYPE_NOTIFICATION);
+}
+
+/**
+ * @tc.name  : QueryToneAttrsByType_Mock_Alarm_PresetSourceType
+ * @tc.number: QueryToneAttrsByType_Mock_003
+ * @tc.desc  : Test QueryToneAttrsByType with ALARM type and PRESET sourceType (max=2),
+ *             verify OrderBy code path does not crash and data is correctly returned.
+ *             Note: mock DataShareHelper does not process predicates OrderBy;
+ *             actual sort behaviour requires device-side verification.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 3;
+    config.toneType = TONE_TYPE_ALARM;
+    config.alarmToneType = ALARM_TONE_TYPE;
+    config.alarmToneSourceType = SOURCE_TYPE_PRESET;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.isProxy = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+
+    ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_ALARM);
+    EXPECT_FALSE(result.GetUri().empty());
+    EXPECT_EQ(result.GetCategory(), TONE_TYPE_ALARM);
+}
+
+/**
+ * @tc.name  : QueryToneAttrsByType_Mock_Shot_PresetSourceType
+ * @tc.number: QueryToneAttrsByType_Mock_004
+ * @tc.desc  : Test QueryToneAttrsByType with SHOT type and PRESET sourceType (max=2),
+ *             verify OrderBy code path does not crash and data is correctly returned.
+ *             Note: mock DataShareHelper does not process predicates OrderBy;
+ *             actual sort behaviour requires device-side verification.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_004, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 4;
+    config.toneType = TONE_TYPE_SHOT;
+    config.shottoneType = 1;
+    config.shotToneSourceType = SOURCE_TYPE_PRESET;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.isProxy = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+
+    uint32_t targetToneType = 1u << (SYSTEM_TONE_TYPE_SIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0);
+    ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, targetToneType, TONE_TYPE_SHOT);
+    EXPECT_FALSE(result.GetUri().empty());
+    EXPECT_EQ(result.GetCategory(), TONE_TYPE_SHOT);
+}
+
+/**
+ * @tc.name  : QueryToneAttrsByType_Mock_Ringtone_CustomisedSourceType
+ * @tc.number: QueryToneAttrsByType_Mock_005
+ * @tc.desc  : Test QueryToneAttrsByType with RINGTONE type and CUSTOMISED sourceType (=1),
+ *             verify OrderBy code path works with lower sourceType value as well.
+ *             Note: mock DataShareHelper does not process predicates OrderBy;
+ *             actual sort behaviour requires device-side verification.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_005, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = true;
+    config.toneId = 5;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.ringtoneType = 1;
+    config.ringtoneSourceType = SOURCE_TYPE_CUSTOMISED;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.isProxy = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+
+    uint32_t targetToneType = 1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, targetToneType, TONE_TYPE_RINGTONE);
+    EXPECT_FALSE(result.GetUri().empty());
+    EXPECT_EQ(result.GetCategory(), TONE_TYPE_RINGTONE);
+}
+
+/**
+ * @tc.name  : QueryToneAttrsByType_Mock_EmptyResultSet_ReturnsDefault
+ * @tc.number: QueryToneAttrsByType_Mock_006
+ * @tc.desc  : Test QueryToneAttrsByType with empty result set, verify default ToneAttrs is returned
+ *             and OrderBy code path does not crash when no data is available.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_006, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = false;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    DatabaseTool databaseTool;
+    databaseTool.isInitialized = true;
+    databaseTool.isProxy = true;
+    databaseTool.dataShareHelper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+
+    uint32_t targetToneType = 1u << (RINGTONE_TYPE_SIM_CARD_0 - RINGTONE_TYPE_SIM_CARD_0);
+    ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, targetToneType, TONE_TYPE_RINGTONE);
+    EXPECT_TRUE(result.GetUri().empty());
+    EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_RINGTONE);
+}
 } // namespace Media
 } // namespace OHOS
