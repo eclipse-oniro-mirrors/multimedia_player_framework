@@ -1254,6 +1254,9 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     GetOptionalBoolProperty(env, strategyVal, "enablePause", strategy.enablePause, strategy.setByUser);
     GetOptionalBoolProperty(env, strategyVal, "enableAEC", strategy.enableAEC, strategy.setByUser);
 
+    CHECK_AND_RETURN_RET_LOG(GetContentAutoPauseScenes(env, strategyVal, strategy) == MSERR_OK, MSERR_INVALID_VAL,
+        "GetContentAutoPauseScenes failed");
+
     status = napi_has_named_property(env, strategyVal, "privacyMaskMode", &exist);
     if (status == napi_ok && exist) {
         int32_t value = 0;
@@ -1264,9 +1267,43 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
         strategy.setByUser = true;
     }
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
-        "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d",
+               "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
+               "contentAutoPauseScenes: %{public}u",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
-        strategy.strategyForPrivacyMaskMode);
+        strategy.strategyForPrivacyMaskMode, strategy.contentAutoPauseScenes);
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureNapi::GetContentAutoPauseScenes(napi_env env, napi_value strategyVal,
+    ScreenCaptureStrategy &strategy)
+{
+    napi_value scenesVal = nullptr;
+    bool scenesExist = false;
+    napi_status status = napi_has_named_property(env, strategyVal, "contentAutoPauseScenes", &scenesExist);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && scenesExist, MSERR_OK, "without contentAutoPauseScenes");
+    napi_get_named_property(env, strategyVal, "contentAutoPauseScenes", &scenesVal);
+    napi_valuetype scenesType = napi_undefined;
+    status = napi_typeof(env, scenesVal, &scenesType);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, MSERR_INVALID_VAL, "get scenes valueType failed");
+    CHECK_AND_RETURN_RET_LOG(scenesType != napi_undefined, MSERR_OK, "contentAutoPauseScenes undefined");
+    bool isArray = false;
+    napi_is_array(env, scenesVal, &isArray);
+    CHECK_AND_RETURN_RET_LOG(isArray, MSERR_INVALID_VAL, "contentAutoPauseScenes must be array");
+    uint32_t len = 0;
+    napi_get_array_length(env, scenesVal, &len);
+    uint32_t mask = 0;
+    for (uint32_t i = 0; i < len; i++) {
+        napi_value item = nullptr;
+        napi_get_element(env, scenesVal, i, &item);
+        int32_t v = 0;
+        CHECK_AND_RETURN_RET_LOG(napi_get_value_int32(env, item, &v) == napi_ok, MSERR_INVALID_VAL, "scene invalid");
+        CHECK_AND_RETURN_RET_LOG(v == static_cast<int32_t>(AVScreenCaptureAutoPauseScene::NONE) ||
+                v == static_cast<int32_t>(AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE),
+            MSERR_INVALID_VAL, "scene out of range");
+        mask |= static_cast<uint32_t>(v);
+    }
+    strategy.contentAutoPauseScenes = mask;
+    strategy.setByUser = true;
     return MSERR_OK;
 }
 

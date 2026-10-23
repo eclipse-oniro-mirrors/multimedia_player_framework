@@ -16,19 +16,20 @@
 #ifndef SCREEN_CAPTURE_IPC_H
 #define SCREEN_CAPTURE_IPC_H
 
-#include <parcel.h>
 #include "screen_capture.h"
+#include <parcel.h>
 
 namespace OHOS {
 namespace Media {
 
-struct ScreenCaptureStrategyParcel : public ScreenCaptureStrategy, public Parcelable {
+struct ScreenCaptureStrategyParcel : public Parcelable {
+    ScreenCaptureStrategy strategy;
+
     ScreenCaptureStrategyParcel() = default;
-    explicit ScreenCaptureStrategyParcel(const ScreenCaptureStrategy &base)
-        : ScreenCaptureStrategy(base) {}
+    explicit ScreenCaptureStrategyParcel(const ScreenCaptureStrategy &other) : strategy(other) {}
 
     bool Marshalling(Parcel &parcel) const override;
-    static sptr<ScreenCaptureStrategyParcel> Unmarshalling(Parcel &parcel);
+    static ScreenCaptureStrategyParcel *Unmarshalling(Parcel &parcel);
 };
 
 } // namespace Media

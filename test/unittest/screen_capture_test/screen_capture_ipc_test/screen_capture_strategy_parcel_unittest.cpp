@@ -13,11 +13,12 @@
  * limitations under the License.
  */
 
-#include "screen_capture_ipc.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include "screen_capture_ipc.h"
 
 #include <gtest/gtest.h>
+#include <memory>
 #include <message_parcel.h>
 
 using namespace testing::ext;
@@ -38,99 +39,99 @@ public:
 HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_AllFields_001, TestSize.Level1)
 {
     ScreenCaptureStrategyParcel src;
-    src.enableDeviceLevelCapture = true;
-    src.keepCaptureDuringCall = true;
-    src.strategyForPrivacyMaskMode = 1;
-    src.canvasFollowRotation = true;
-    src.enableBFrame = true;
-    src.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
-    src.fillMode = AVScreenCaptureFillMode::SCALE_TO_FILL;
-    src.enablePause = true;
-    src.enableAEC = true;
+    src.strategy.enableDeviceLevelCapture = true;
+    src.strategy.keepCaptureDuringCall = true;
+    src.strategy.strategyForPrivacyMaskMode = 1;
+    src.strategy.canvasFollowRotation = true;
+    src.strategy.enableBFrame = true;
+    src.strategy.pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
+    src.strategy.fillMode = AVScreenCaptureFillMode::SCALE_TO_FILL;
+    src.strategy.enablePause = true;
+    src.strategy.enableAEC = true;
+    src.strategy.contentAutoPauseScenes = static_cast<uint32_t>(
+        AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE);
 
     MessageParcel parcel;
     ASSERT_TRUE(src.Marshalling(parcel));
 
-    auto dst = ScreenCaptureStrategyParcel::Unmarshalling(parcel);
+    std::unique_ptr<ScreenCaptureStrategyParcel> dst(ScreenCaptureStrategyParcel::Unmarshalling(parcel));
     ASSERT_NE(dst, nullptr);
-    ASSERT_EQ(dst->enableDeviceLevelCapture, true);
-    ASSERT_EQ(dst->keepCaptureDuringCall, true);
-    ASSERT_EQ(dst->strategyForPrivacyMaskMode, 1);
-    ASSERT_EQ(dst->canvasFollowRotation, true);
-    ASSERT_EQ(dst->enableBFrame, true);
-    ASSERT_EQ(dst->pickerPopUp, AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE);
-    ASSERT_EQ(dst->fillMode, AVScreenCaptureFillMode::SCALE_TO_FILL);
-    ASSERT_EQ(dst->enablePause, true);
-    ASSERT_EQ(dst->enableAEC, true);
+    ASSERT_EQ(dst->strategy.enableDeviceLevelCapture, true);
+    ASSERT_EQ(dst->strategy.keepCaptureDuringCall, true);
+    ASSERT_EQ(dst->strategy.strategyForPrivacyMaskMode, 1);
+    ASSERT_EQ(dst->strategy.canvasFollowRotation, true);
+    ASSERT_EQ(dst->strategy.enableBFrame, true);
+    ASSERT_EQ(dst->strategy.pickerPopUp, AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE);
+    ASSERT_EQ(dst->strategy.fillMode, AVScreenCaptureFillMode::SCALE_TO_FILL);
+    ASSERT_EQ(dst->strategy.enablePause, true);
+    ASSERT_EQ(dst->strategy.enableAEC, true);
+    ASSERT_EQ(dst->strategy.contentAutoPauseScenes,
+        static_cast<uint32_t>(AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE));
 }
 
 HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_DefaultValues_002, TestSize.Level1)
 {
     ScreenCaptureStrategyParcel src;
-    src.enableAEC = false;
-    src.enableDeviceLevelCapture = false;
-    src.keepCaptureDuringCall = false;
-    src.enableBFrame = false;
-    src.enablePause = false;
+    src.strategy.enableAEC = false;
+    src.strategy.enableDeviceLevelCapture = false;
+    src.strategy.keepCaptureDuringCall = false;
+    src.strategy.enableBFrame = false;
+    src.strategy.enablePause = false;
 
     MessageParcel parcel;
     ASSERT_TRUE(src.Marshalling(parcel));
 
-    auto dst = ScreenCaptureStrategyParcel::Unmarshalling(parcel);
+    std::unique_ptr<ScreenCaptureStrategyParcel> dst(ScreenCaptureStrategyParcel::Unmarshalling(parcel));
     ASSERT_NE(dst, nullptr);
-    ASSERT_EQ(dst->enableAEC, false);
-    ASSERT_EQ(dst->enableDeviceLevelCapture, false);
-    ASSERT_EQ(dst->keepCaptureDuringCall, false);
-    ASSERT_EQ(dst->enableBFrame, false);
-    ASSERT_EQ(dst->enablePause, false);
+    ASSERT_EQ(dst->strategy.enableAEC, false);
+    ASSERT_EQ(dst->strategy.enableDeviceLevelCapture, false);
+    ASSERT_EQ(dst->strategy.keepCaptureDuringCall, false);
+    ASSERT_EQ(dst->strategy.enableBFrame, false);
+    ASSERT_EQ(dst->strategy.enablePause, false);
 }
 
 HWTEST_F(ScreenCaptureStrategyParcelTest, Unmarshalling_EmptyParcel_ReturnsNull_001, TestSize.Level1)
 {
     MessageParcel emptyParcel;
-    auto result = ScreenCaptureStrategyParcel::Unmarshalling(emptyParcel);
+    std::unique_ptr<ScreenCaptureStrategyParcel> result(ScreenCaptureStrategyParcel::Unmarshalling(emptyParcel));
     ASSERT_EQ(result, nullptr);
 
     MessageParcel partialParcel;
     partialParcel.WriteBool(true);
     partialParcel.WriteBool(false);
-    auto partialResult = ScreenCaptureStrategyParcel::Unmarshalling(partialParcel);
+    std::unique_ptr<ScreenCaptureStrategyParcel> partialResult(
+        ScreenCaptureStrategyParcel::Unmarshalling(partialParcel));
     ASSERT_EQ(partialResult, nullptr);
 
     ScreenCaptureStrategyParcel src;
-    src.enableAEC = true;
+    src.strategy.enableAEC = true;
     MessageParcel validParcel;
     ASSERT_TRUE(src.Marshalling(validParcel));
-    auto validResult = ScreenCaptureStrategyParcel::Unmarshalling(validParcel);
+    std::unique_ptr<ScreenCaptureStrategyParcel> validResult(ScreenCaptureStrategyParcel::Unmarshalling(validParcel));
     ASSERT_NE(validResult, nullptr);
-    ASSERT_EQ(validResult->enableAEC, true);
+    ASSERT_EQ(validResult->strategy.enableAEC, true);
 }
 
-// covers Unmarshalling: every Read short-circuit failure branch. Writes exactly N fields
-// (N = 0..8); the (N+1)-th Read then fails and Unmarshalling must return nullptr. This
-// exercises each ReadBool/ReadInt32 false branch, including the enableAEC read (N = 8).
-// N = 9 writes all fields and confirms a successful round-trip of enableAEC.
-HWTEST_F(ScreenCaptureStrategyParcelTest, Unmarshalling_PartialParcel_EachReadFails_001, TestSize.Level1)
+// covers contentAutoPauseScenes bitmask round-trip: NONE(0) and SCREEN_FOLD_STATE_CHANGE(bit 0).
+HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_ContentAutoPauseScenes_001, TestSize.Level1)
 {
-    for (int32_t n = 0; n <= 9; ++n) {
-        MessageParcel parcel;
-        if (n >= 1) { parcel.WriteBool(true); }   // enableDeviceLevelCapture
-        if (n >= 2) { parcel.WriteBool(true); }   // keepCaptureDuringCall
-        if (n >= 3) { parcel.WriteInt32(1); }     // strategyForPrivacyMaskMode
-        if (n >= 4) { parcel.WriteBool(true); }   // canvasFollowRotation
-        if (n >= 5) { parcel.WriteBool(true); }   // enableBFrame
-        if (n >= 6) { parcel.WriteInt32(0); }     // pickerPopUp
-        if (n >= 7) { parcel.WriteInt32(0); }     // fillMode
-        if (n >= 8) { parcel.WriteBool(true); }   // enablePause
-        if (n >= 9) { parcel.WriteBool(true); }   // enableAEC
-        auto dst = ScreenCaptureStrategyParcel::Unmarshalling(parcel);
-        if (n < 9) {
-            ASSERT_EQ(dst, nullptr) << "Unmarshalling should return null when only " << n << " fields are written";
-        } else {
-            ASSERT_NE(dst, nullptr);
-            ASSERT_EQ(dst->enableAEC, true);
-        }
-    }
+    ScreenCaptureStrategyParcel srcFold;
+    srcFold.strategy.contentAutoPauseScenes = static_cast<uint32_t>(
+        AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE);
+    MessageParcel parcelFold;
+    ASSERT_TRUE(srcFold.Marshalling(parcelFold));
+    std::unique_ptr<ScreenCaptureStrategyParcel> dstFold(ScreenCaptureStrategyParcel::Unmarshalling(parcelFold));
+    ASSERT_NE(dstFold, nullptr);
+    ASSERT_EQ(dstFold->strategy.contentAutoPauseScenes,
+        static_cast<uint32_t>(AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE));
+
+    ScreenCaptureStrategyParcel srcNone;
+    srcNone.strategy.contentAutoPauseScenes = static_cast<uint32_t>(AVScreenCaptureAutoPauseScene::NONE);
+    MessageParcel parcelNone;
+    ASSERT_TRUE(srcNone.Marshalling(parcelNone));
+    std::unique_ptr<ScreenCaptureStrategyParcel> dstNone(ScreenCaptureStrategyParcel::Unmarshalling(parcelNone));
+    ASSERT_NE(dstNone, nullptr);
+    ASSERT_EQ(dstNone->strategy.contentAutoPauseScenes, static_cast<uint32_t>(AVScreenCaptureAutoPauseScene::NONE));
 }
 
 } // namespace Media

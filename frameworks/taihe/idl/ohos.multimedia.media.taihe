@@ -1182,6 +1182,11 @@ enum AVScreenCaptureFillMode:i32 {
     SCALE_TO_FILL = 1,
 }
 
+enum AVScreenCaptureAutoPauseScene:i32 {
+    SCENE_NONE = 0,
+    SCENE_SCREEN_FOLD_STATE_CHANGE = 1,
+}
+
 enum PickerMode: i32 {
     WINDOW_ONLY = 0,
     SCREEN_ONLY = 1,
@@ -1199,6 +1204,7 @@ struct AVScreenCaptureStrategy {
     privacyMaskMode: Optional<i32>;
     enablePause: Optional<bool>;
     enableAEC: Optional<bool>;
+    contentAutoPauseScenes: Optional<Array<AVScreenCaptureAutoPauseScene>>;
 }
 
 struct AVScreenCaptureRecordConfig {

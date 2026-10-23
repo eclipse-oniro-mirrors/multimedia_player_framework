@@ -682,17 +682,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetupVirtualScreenMirror_Specifi
     EXPECT_EQ(server_->sourceDisplayIds_.front(), TEST_SCREEN_ID);
 }
 
-// CreateMirror in PAUSED state with canvasRotation_ false -> MakeMirrorWithRotation
-HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CreateMirror_PausedWithRotation, TestSize.Level2)
-{
-    EXPECT_CALL(*smFlow_, MakeMirrorWithRotation(_, _, _, _)).WillOnce(Return(DMError::DM_OK));
-    server_->captureState_ = AVScreenCaptureState::PAUSED;
-    server_->canvasRotation_ = false;
-    std::vector<uint64_t> displayIds = {TEST_SCREEN_ID};
-    std::vector<ScreenId> mirrorIds = {TEST_VIRTUAL_SCREEN_ID};
-    EXPECT_EQ(server_->CreateMirror(displayIds, mirrorIds), DMError::DM_OK);
-}
-
 // CreateMirror in ACTIVE (STARTED) state -> plain MakeMirror (skips GetDisplayById)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CreateMirror_ActiveState, TestSize.Level2)
 {

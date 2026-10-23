@@ -445,11 +445,32 @@ int32_t AVScreenCaptureRecorderImpl::GetStrategy(std::unique_ptr<AVScreenCapture
         strategy.enableAEC = avStrategy.enableAEC.value();
         strategy.setByUser = true;
     }
+    CHECK_AND_RETURN_RET_LOG(GetContentAutoPauseScenes(strategy, avStrategy) == MSERR_OK, MSERR_INVALID_VAL,
+        "GetContentAutoPauseScenes failed");
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
                "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
-               "enableAEC: %{public}d",
+               "enableAEC: %{public}d, contentAutoPauseScenes: %{public}u",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
-        strategy.strategyForPrivacyMaskMode, strategy.enableAEC);
+        strategy.strategyForPrivacyMaskMode, strategy.enableAEC, strategy.contentAutoPauseScenes);
+    return MSERR_OK;
+}
+
+int32_t AVScreenCaptureRecorderImpl::GetContentAutoPauseScenes(ScreenCaptureStrategy &strategy,
+    const ::ohos::multimedia::media::AVScreenCaptureStrategy &avStrategy)
+{
+    if (!avStrategy.contentAutoPauseScenes.has_value()) {
+        return MSERR_OK;
+    }
+    const auto &scenes = avStrategy.contentAutoPauseScenes.value();
+    uint32_t mask = 0;
+    for (const auto &scene : scenes) {
+        CHECK_AND_RETURN_RET_LOG(scene == ohos::multimedia::media::AVScreenCaptureAutoPauseScene::key_t::SCENE_NONE ||
+                scene == ohos::multimedia::media::AVScreenCaptureAutoPauseScene::key_t::SCENE_SCREEN_FOLD_STATE_CHANGE,
+            MSERR_INVALID_VAL, "scene out of range");
+        mask |= static_cast<uint32_t>(static_cast<int32_t>(scene));
+    }
+    strategy.contentAutoPauseScenes = mask;
+    strategy.setByUser = true;
     return MSERR_OK;
 }
 

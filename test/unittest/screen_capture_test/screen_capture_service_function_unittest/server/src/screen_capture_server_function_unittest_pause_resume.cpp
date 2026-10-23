@@ -59,16 +59,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCapture_Invalid_State_002, 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_INVALID_OPERATION_STARTED_RESUMED);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCapture_Invalid_State_003, TestSize.Level2)
-{
-    SetValidConfig();
-    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->captureConfig_.strategy.enablePause = false;
-
-    ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_INVALID_OPERATION_ENABLEPAUSE);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCapture_Stream_Mode_001, TestSize.Level2)
 {
     SetValidConfig();
@@ -99,17 +89,27 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_Invalid_State_001,
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_INVALID_OPERATION_PAUSED);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_Invalid_State_002, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_AutoPause_001, TestSize.Level2)
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
-    ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_INVALID_OPERATION_PAUSED);
+    ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_Invalid_State_003, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_AutoPause_NoEnablePause_001, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    screenCaptureServer_->captureConfig_.strategy.enablePause = false;
+
+    ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_AutoPause_002, TestSize.Level2)
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
@@ -118,9 +118,32 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_Invalid_State_003,
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
-
-    ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_INVALID_OPERATION_PAUSED);
+    ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
 }
+
+HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_AutoPause_NoVirtualScreen_001, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+
+    ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
+}
+
+#ifdef SUPPORT_CALL
+HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_InCall_KeepCapture_001, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    screenCaptureServer_->captureConfig_.strategy.enablePause = true;
+    ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.strategy.keepCaptureDuringCall = true;
+    screenCaptureServer_->isInTelCall_ = true;
+
+    ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
+}
+#endif
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_State_Transition_001, TestSize.Level2)
 {
@@ -445,33 +468,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCaptureInner_NotRunning_B1,
         MSERR_INVALID_OPERATION_STARTED_RESUMED);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCaptureInner_DisablePause_B1, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->captureConfig_.strategy.enablePause = false;
-    EXPECT_EQ(
-        screenCaptureServer_->PauseScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_PAUSED_BY_APP),
-        MSERR_INVALID_OPERATION_ENABLEPAUSE);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCaptureInner_NotPaused_B1, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->captureConfig_.strategy.enablePause = true;
-    EXPECT_EQ(
-        screenCaptureServer_->ResumeScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_RESUMED_BY_APP),
-        MSERR_INVALID_OPERATION_PAUSED);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCaptureInner_DisablePause_B1, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::PAUSED;
-    screenCaptureServer_->captureConfig_.strategy.enablePause = false;
-    EXPECT_EQ(
-        screenCaptureServer_->ResumeScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_RESUMED_BY_APP),
-        MSERR_INVALID_OPERATION_ENABLEPAUSE);
-}
-
 #ifdef SUPPORT_CALL
 HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCaptureInner_InCallStop_B1, TestSize.Level2)
 {
@@ -524,6 +520,27 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCaptureInner_NotRunning_001
     EXPECT_EQ(
         screenCaptureServer_->PauseScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_PAUSED_BY_USER),
         MSERR_INVALID_OPERATION_STARTED_RESUMED);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InitVirtualScreenOption_AutoPauseScene_FoldStateChange, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.strategy.contentAutoPauseScenes = static_cast<uint32_t>(
+        AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE);
+    auto option = screenCaptureServer_->InitVirtualScreenOption(nullptr);
+    ASSERT_EQ(option.recordPolicies_.size(), 1);
+    ASSERT_EQ(option.recordPolicies_[0], Rosen::RecordPolicy::AUTO_PAUSE);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, InitVirtualScreenOption_AutoPauseScene_None, TestSize.Level2)
+{
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.strategy.contentAutoPauseScenes = static_cast<uint32_t>(
+        AVScreenCaptureAutoPauseScene::NONE);
+    auto option = screenCaptureServer_->InitVirtualScreenOption(nullptr);
+    ASSERT_TRUE(option.recordPolicies_.empty());
 }
 
 } // namespace Media

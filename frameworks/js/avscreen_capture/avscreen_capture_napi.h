@@ -227,6 +227,7 @@ private:
     int32_t GetConfig(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetRecorderInfo(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
     int32_t GetStrategy(std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, napi_env env, napi_value args);
+    int32_t GetContentAutoPauseScenes(napi_env env, napi_value strategyVal, ScreenCaptureStrategy &strategy);
     void GetOptionalBoolProperty(napi_env env, napi_value obj, const std::string &propertyName, bool &target,
         bool &setByUser);
 

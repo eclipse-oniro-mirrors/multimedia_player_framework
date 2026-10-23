@@ -189,6 +189,12 @@ static const std::vector<struct JsEnumInt> g_screenCaptureFillMode = {
     { "SCALE_TO_FILL", AVScreenCaptureFillMode::SCALE_TO_FILL },
 };
 
+static const std::vector<struct JsEnumInt> g_screenCaptureAutoPauseScene = {
+    { "SCENE_NONE", static_cast<int32_t>(AVScreenCaptureAutoPauseScene::NONE) },
+    { "SCENE_SCREEN_FOLD_STATE_CHANGE",
+        static_cast<int32_t>(AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE) },
+};
+
 static const std::vector<struct JsEnumInt> g_fileGenerationMode = {
     { "APP_CREATE", FileGenerationMode::APP_CREATE },
     { "AUTO_CREATE_CAMERA_SCENE", FileGenerationMode::AUTO_CREATE_CAMERA_SCENE },
@@ -541,6 +547,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "MetaSourceType", g_metaSourceType},
     { "ScreenCaptureEvent", g_screenCaptureMonitorEvent },
     { "AVScreenCaptureFillMode", g_screenCaptureFillMode},
+    { "AVScreenCaptureAutoPauseCaptureScene", g_screenCaptureAutoPauseScene},
     { "ErrorType", g_soundpoolErrorType },
     { "AacProfile", g_aacProfile },
     { "SoundInterruptMode", g_soundpoolInterruptMode },
