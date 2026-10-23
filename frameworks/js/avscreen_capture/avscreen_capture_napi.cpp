@@ -1269,7 +1269,7 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     }
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
                "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
-               "contentAutoPauseScenes: %{public}, uenableHDRCapture: %{public}d",
+               "contentAutoPauseScenes: %{public}u, enableHDRCapture: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
         strategy.strategyForPrivacyMaskMode, strategy.contentAutoPauseScenes, strategy.enableHDRCapture);
     return MSERR_OK;
