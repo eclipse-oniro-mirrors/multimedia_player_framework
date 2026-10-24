@@ -89,6 +89,7 @@ public:
     int32_t StrategyForFillMode(AVScreenCaptureFillMode value) override;
     int32_t StrategyForPause(bool value) override;
     int32_t StrategyForMicAEC(bool value) override;
+    int32_t StrategyForHDRCapture(bool value) override;
     int32_t StrategyForContentAutoPauseScenes(uint32_t scenes) override;
     int32_t SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config) override;
     int32_t GetMultiDisplayCaptureCapability(uint64_t *displayIds, size_t count,

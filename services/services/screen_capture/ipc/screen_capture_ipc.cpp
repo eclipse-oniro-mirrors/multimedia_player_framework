@@ -24,7 +24,8 @@ bool ScreenCaptureStrategyParcel::Marshalling(Parcel &parcel) const
         parcel.WriteInt32(strategy.strategyForPrivacyMaskMode) && parcel.WriteBool(strategy.canvasFollowRotation) &&
         parcel.WriteBool(strategy.enableBFrame) && parcel.WriteInt32(static_cast<int32_t>(strategy.pickerPopUp)) &&
         parcel.WriteInt32(static_cast<int32_t>(strategy.fillMode)) && parcel.WriteBool(strategy.enablePause) &&
-        parcel.WriteBool(strategy.enableAEC) && parcel.WriteUint32(strategy.contentAutoPauseScenes);
+        parcel.WriteBool(strategy.enableAEC) && parcel.WriteUint32(strategy.contentAutoPauseScenes) &&
+        parcel.WriteBool(strategy.enableHDRCapture);
 }
 
 ScreenCaptureStrategyParcel *ScreenCaptureStrategyParcel::Unmarshalling(Parcel &parcel)
@@ -38,7 +39,8 @@ ScreenCaptureStrategyParcel *ScreenCaptureStrategyParcel::Unmarshalling(Parcel &
         parcel.ReadBool(obj->strategy.canvasFollowRotation) && parcel.ReadBool(obj->strategy.enableBFrame) &&
         parcel.ReadInt32(pickerPopUpVal) && parcel.ReadInt32(fillModeVal) &&
         parcel.ReadBool(obj->strategy.enablePause) && parcel.ReadBool(obj->strategy.enableAEC) &&
-        parcel.ReadUint32(obj->strategy.contentAutoPauseScenes)) {
+        parcel.ReadUint32(obj->strategy.contentAutoPauseScenes) &&
+        parcel.ReadBool(obj->strategy.enableHDRCapture)) {
         obj->strategy.pickerPopUp = static_cast<AVScreenCapturePickerPopUp>(pickerPopUpVal);
         obj->strategy.fillMode = static_cast<AVScreenCaptureFillMode>(fillModeVal);
         return obj;

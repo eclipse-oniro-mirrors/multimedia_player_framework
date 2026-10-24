@@ -1253,6 +1253,7 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     GetOptionalBoolProperty(env, strategyVal, "enableBFrame", strategy.enableBFrame, strategy.setByUser);
     GetOptionalBoolProperty(env, strategyVal, "enablePause", strategy.enablePause, strategy.setByUser);
     GetOptionalBoolProperty(env, strategyVal, "enableAEC", strategy.enableAEC, strategy.setByUser);
+    GetOptionalBoolProperty(env, strategyVal, "enableHDR", strategy.enableHDRCapture, strategy.setByUser);
 
     CHECK_AND_RETURN_RET_LOG(GetContentAutoPauseScenes(env, strategyVal, strategy) == MSERR_OK, MSERR_INVALID_VAL,
         "GetContentAutoPauseScenes failed");
@@ -1268,9 +1269,9 @@ int32_t AVScreenCaptureNapi::GetStrategy(std::unique_ptr<AVScreenCaptureAsyncCon
     }
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
                "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
-               "contentAutoPauseScenes: %{public}u",
+               "contentAutoPauseScenes: %{public}u, enableHDRCapture: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
-        strategy.strategyForPrivacyMaskMode, strategy.contentAutoPauseScenes);
+        strategy.strategyForPrivacyMaskMode, strategy.contentAutoPauseScenes, strategy.enableHDRCapture);
     return MSERR_OK;
 }
 

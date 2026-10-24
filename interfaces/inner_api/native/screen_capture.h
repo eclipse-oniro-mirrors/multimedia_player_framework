@@ -236,6 +236,7 @@ struct ScreenCaptureStrategy {
     bool enablePause = false;
     bool enableAEC = false;
     uint32_t contentAutoPauseScenes = 0;
+    bool enableHDRCapture = false;
 };
 
 struct AVScreenCaptureHighlightConfig {

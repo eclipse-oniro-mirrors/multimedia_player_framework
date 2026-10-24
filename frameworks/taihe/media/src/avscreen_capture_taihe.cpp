@@ -445,13 +445,19 @@ int32_t AVScreenCaptureRecorderImpl::GetStrategy(std::unique_ptr<AVScreenCapture
         strategy.enableAEC = avStrategy.enableAEC.value();
         strategy.setByUser = true;
     }
+    // get enableHDR
+    if (avStrategy.enableHDR.has_value()) {
+        strategy.enableHDRCapture = avStrategy.enableHDR.value();
+        strategy.setByUser = true;
+    }
     CHECK_AND_RETURN_RET_LOG(GetContentAutoPauseScenes(strategy, avStrategy) == MSERR_OK, MSERR_INVALID_VAL,
         "GetContentAutoPauseScenes failed");
     MEDIA_LOGI("GetStrategy enableDeviceLevelCapture: %{public}d, keepCaptureDuringCall: %{public}d, "
                "enableBFrame: %{public}d, enablePause: %{public}d, strategyForPrivacyMaskMode: %{public}d, "
-               "enableAEC: %{public}d, contentAutoPauseScenes: %{public}u",
+               "enableAEC: %{public}d, contentAutoPauseScenes: %{public}u, enableHDRCapture: %{public}d",
         strategy.enableDeviceLevelCapture, strategy.keepCaptureDuringCall, strategy.enableBFrame, strategy.enablePause,
-        strategy.strategyForPrivacyMaskMode, strategy.enableAEC, strategy.contentAutoPauseScenes);
+        strategy.strategyForPrivacyMaskMode, strategy.enableAEC, strategy.contentAutoPauseScenes,
+        strategy.enableHDRCapture);
     return MSERR_OK;
 }
 

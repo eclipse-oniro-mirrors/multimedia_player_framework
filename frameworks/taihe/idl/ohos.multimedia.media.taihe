@@ -1205,6 +1205,7 @@ struct AVScreenCaptureStrategy {
     enablePause: Optional<bool>;
     enableAEC: Optional<bool>;
     contentAutoPauseScenes: Optional<Array<AVScreenCaptureAutoPauseScene>>;
+    enableHDR: Optional<bool>;
 }
 
 struct AVScreenCaptureRecordConfig {

@@ -50,6 +50,7 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_AllFields_001
     src.strategy.enableAEC = true;
     src.strategy.contentAutoPauseScenes = static_cast<uint32_t>(
         AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE);
+    src.strategy.enableHDRCapture = true;
 
     MessageParcel parcel;
     ASSERT_TRUE(src.Marshalling(parcel));
@@ -67,6 +68,7 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_AllFields_001
     ASSERT_EQ(dst->strategy.enableAEC, true);
     ASSERT_EQ(dst->strategy.contentAutoPauseScenes,
         static_cast<uint32_t>(AVScreenCaptureAutoPauseScene::SCREEN_FOLD_STATE_CHANGE));
+    ASSERT_EQ(dst->strategy.enableHDRCapture, true);
 }
 
 HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_DefaultValues_002, TestSize.Level1)
@@ -77,6 +79,7 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_DefaultValues
     src.strategy.keepCaptureDuringCall = false;
     src.strategy.enableBFrame = false;
     src.strategy.enablePause = false;
+    src.strategy.enableHDRCapture = false;
 
     MessageParcel parcel;
     ASSERT_TRUE(src.Marshalling(parcel));
@@ -88,6 +91,7 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, MarshallingUnmarshalling_DefaultValues
     ASSERT_EQ(dst->strategy.keepCaptureDuringCall, false);
     ASSERT_EQ(dst->strategy.enableBFrame, false);
     ASSERT_EQ(dst->strategy.enablePause, false);
+    ASSERT_EQ(dst->strategy.enableHDRCapture, false);
 }
 
 HWTEST_F(ScreenCaptureStrategyParcelTest, Unmarshalling_EmptyParcel_ReturnsNull_001, TestSize.Level1)
@@ -105,11 +109,13 @@ HWTEST_F(ScreenCaptureStrategyParcelTest, Unmarshalling_EmptyParcel_ReturnsNull_
 
     ScreenCaptureStrategyParcel src;
     src.strategy.enableAEC = true;
+    src.strategy.enableHDRCapture = true;
     MessageParcel validParcel;
     ASSERT_TRUE(src.Marshalling(validParcel));
     std::unique_ptr<ScreenCaptureStrategyParcel> validResult(ScreenCaptureStrategyParcel::Unmarshalling(validParcel));
     ASSERT_NE(validResult, nullptr);
     ASSERT_EQ(validResult->strategy.enableAEC, true);
+    ASSERT_EQ(validResult->strategy.enableHDRCapture, true);
 }
 
 // covers contentAutoPauseScenes bitmask round-trip: NONE(0) and SCREEN_FOLD_STATE_CHANGE(bit 0).

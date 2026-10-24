@@ -763,6 +763,20 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForMicAEC(
  */
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForContentAutoPauseScenes(
     OH_AVScreenCapture_CaptureStrategy *strategy, OH_AVScreenCapture_AutoPauseSceneSet scenes);
+
+/**
+ * @brief Specifies whether to output images in HDR vivid format.
+ * @param strategy [in] Pointer to an OH_AVScreenCapture_CaptureStrategy instance
+ * @param enable [in] Indicates whether to output HDR VIVID images.
+ *     The default value is false, indicating that only images in SRD format are output.
+ *     If this parameter is set to true, the output image is in the HDR VIVID format.
+ * @return <ul><li>{@link AV_SCREEN_CAPTURE_ERR_OK} : indicates that the operation is successful.</li>
+ *     <li>{@link AV_SCREEN_CAPTURE_ERR_INVALID_VAL}: The input parameter **strategy** is nullptr
+ *      or the value of **enable** is invalid.</li></ul>
+ * @since 26.1.0
+ */
+OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForHDRCapture(
+    OH_AVScreenCapture_CaptureStrategy *strategy, bool enable);
 #ifdef __cplusplus
 }
 #endif
