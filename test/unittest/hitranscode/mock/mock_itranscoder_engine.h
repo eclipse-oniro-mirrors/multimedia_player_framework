@@ -69,6 +69,8 @@ public:
     MOCK_METHOD(int32_t, GetDuration, (int32_t &duration), ());
 
     MOCK_METHOD(int32_t, AddWatermark, (std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height), ());
+
+    MOCK_METHOD(int32_t, SetTimeRange, (int64_t startTime, int64_t endTime), ());
 };
 } // namespace Media
 } // namespace OHOS

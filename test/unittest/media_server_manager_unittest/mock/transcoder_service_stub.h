@@ -48,6 +48,7 @@ public:
     MOCK_METHOD(int32_t, SetEnableBFrame, (bool enableBFrame), (override));
     MOCK_METHOD(int32_t, SetVideoBitrateMode, (int32_t bitrateMode), (override));
     MOCK_METHOD(int32_t, SetVideoSqrFactor, (int32_t sqrFactor), (override));
+    MOCK_METHOD(int32_t, SetDestHDRMode, (DestHDRMode mode), (override));
     MOCK_METHOD(int32_t, SetAudioEncoder, (AudioCodecFormat encoder), (override));
     MOCK_METHOD(int32_t, SetAudioEncodingBitRate, (int32_t bitRate), (override));
     MOCK_METHOD(int32_t, SetOutputFormat, (OutputFormatType format), (override));
@@ -82,6 +83,7 @@ public:
     MOCK_METHOD(int32_t, ReleaseInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, DestroyStubInner, (MessageParcel &data, MessageParcel &reply));
     MOCK_METHOD(int32_t, AddWatermark, (std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height), ());
+    MOCK_METHOD(int32_t, SetTimeRange, (int64_t startTime, int64_t endTime), ());
 };
 } // namespace Media
 } // namespace OHOS

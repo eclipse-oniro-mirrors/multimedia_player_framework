@@ -95,6 +95,11 @@ const std::set<MediaServiceErrCode> MSERRCODE_AVTRANSCODER_INFOS = {
     MSERR_VIDEO_RESOLUTION_OUT_OF_RANGE,
     MSERR_TARGET_RESOLUTION_OUT_OF_RANGE,
     MSERR_SQR_FACTOR_ERROR_401,
+    MSERR_TIME_RANGE_START_ERROR_401,
+    MSERR_TIME_RANGE_END_ERROR_401,
+    MSERR_TIME_RANGE_INVALID_ERROR_401,
+    MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401,
+    MSERR_HDR_VIVID_WATERMARK_ERROR_5400106,
 };
 std::map<std::string, AVTransCoderNapi::AvTransCoderTaskqFunc> AVTransCoderNapi::taskQFuncs_ = {
     {AVTransCoderOpt::START, &AVTransCoderNapi::Start},
@@ -956,6 +961,14 @@ RetInfo AVTransCoderNapi::Configure(std::shared_ptr<AVTransCoderConfig> config)
 
     ret = transCoder_->SetEnableBFrame(config->enableBFrame);
     CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncodingEnableBFrame", "enableBFrame"));
+
+    if (config->startTime >= 0 || config->endTime >= 0) {
+        ret = transCoder_->SetTimeRange(config->startTime, config->endTime);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetTimeRange", "timeRange"));
+    }
+
+    ret = transCoder_->SetDestHDRMode(config->destHdrMode);
+    CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetDestHDRMode", "destHDRMode"));
     hasConfiged_.store(true);
     return RetInfo(MSERR_EXT_API9_OK, "");
 }
@@ -1156,8 +1169,25 @@ int32_t AVTransCoderNapi::GetVideoConfig(std::unique_ptr<AVTransCoderAsyncContex
     (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameWidth", config->videoFrameWidth);
     (void)CommonNapi::GetPropertyInt32(env, args, "videoFrameHeight", config->videoFrameHeight);
     (void)CommonNapi::GetPropertyBool(env, args, "enableBFrame", config->enableBFrame);
+    bool isStartSet = false;
+    isStartSet = CommonNapi::GetPropertyInt64(env, args, "startTime", config->startTime);
+    if (isStartSet && config->startTime < 0) {
+        MEDIA_LOGE("invalid start time range, startTime: %{public}" PRId64, config->startTime);
+        asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetVideoConfig", "startTime");
+        return MSERR_INVALID_VAL;
+    }
+    bool isEndSet = false;
+    isEndSet = CommonNapi::GetPropertyInt64(env, args, "endTime", config->endTime);
+    if (isEndSet && config->endTime < 0) {
+        MEDIA_LOGE("invalid end time range, endTime: %{public}" PRId64, config->endTime);
+        asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetVideoConfig", "endTime");
+        return MSERR_INVALID_VAL;
+    }
     (void)CommonNapi::GetPropertyBool(env, args, "enableStableQualityMode", config->enableStableQualityMode);
     config->sqrFactorSet = CommonNapi::GetPropertyInt32(env, args, "sqrFactor", config->sqrFactor);
+    int32_t destHdrMode = 0;
+    (void)CommonNapi::GetPropertyInt32(env, args, "destHDRMode", destHdrMode);
+    config->destHdrMode = static_cast<DestHDRMode>(destHdrMode);
     return MSERR_OK;
 }
 

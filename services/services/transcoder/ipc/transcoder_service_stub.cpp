@@ -75,6 +75,7 @@ int32_t TransCoderServiceStub::Init()
     recFuncs_[SET_AUDIO_ENCODING_BIT_RATE] = &TransCoderServiceStub::SetAudioEncodingBitRate;
     recFuncs_[SET_COLOR_SPACE] = &TransCoderServiceStub::SetColorSpace;
     recFuncs_[SET_ENABLE_B_FRAME] = &TransCoderServiceStub::SetEnableBFrame;
+    recFuncs_[SET_DEST_HDR_MODE] = &TransCoderServiceStub::SetDestHDRMode;
     recFuncs_[SET_OUTPUT_FORMAT] = &TransCoderServiceStub::SetOutputFormat;
     recFuncs_[SET_INPUT_FILE_FD] = &TransCoderServiceStub::SetInputFileFd;
     recFuncs_[SET_OUTPUT_FILE] = &TransCoderServiceStub::SetOutputFile;
@@ -85,6 +86,7 @@ int32_t TransCoderServiceStub::Init()
     recFuncs_[CANCEL] = &TransCoderServiceStub::Cancel;
     recFuncs_[RELEASE] = &TransCoderServiceStub::Release;
     recFuncs_[ADD_WATERMARK] = &TransCoderServiceStub::AddWatermark;
+    recFuncs_[SET_TIME_RANGE] = &TransCoderServiceStub::SetTimeRange;
     recFuncs_[SET_VIDEO_BITRATE_MODE] = &TransCoderServiceStub::SetVideoBitrateMode;
     recFuncs_[SET_VIDEO_SQR_FACTOR] = &TransCoderServiceStub::SetVideoSqrFactor;
     recFuncs_[DESTROY] = &TransCoderServiceStub::DestroyStub;
@@ -192,6 +194,12 @@ int32_t TransCoderServiceStub::SetVideoSqrFactor(int32_t sqrFactor)
     return transCoderServer_->SetVideoSqrFactor(sqrFactor);
 }
 
+int32_t TransCoderServiceStub::SetDestHDRMode(DestHDRMode mode)
+{
+    CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
+    return transCoderServer_->SetDestHDRMode(mode);
+}
+
 int32_t TransCoderServiceStub::SetAudioEncoder(AudioCodecFormat encoder)
 {
     CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
@@ -264,6 +272,12 @@ int32_t TransCoderServiceStub::AddWatermark(std::shared_ptr<AVBuffer> &waterMark
     return transCoderServer_->AddWatermark(waterMarkBuffer, width, height);
 }
 
+int32_t TransCoderServiceStub::SetTimeRange(int64_t startTime, int64_t endTime)
+{
+    CHECK_AND_RETURN_RET_LOG(transCoderServer_ != nullptr, MSERR_NO_MEMORY, "transcoder server is nullptr");
+    return transCoderServer_->SetTimeRange(startTime, endTime);
+}
+
 int32_t TransCoderServiceStub::DoIpcAbnormality()
 {
     MEDIA_LOGI("Enter DoIpcAbnormality.");
@@ -334,6 +348,14 @@ int32_t TransCoderServiceStub::SetVideoSqrFactor(MessageParcel &data, MessagePar
 {
     int32_t sqrFactor = data.ReadInt32();
     reply.WriteInt32(SetVideoSqrFactor(sqrFactor));
+    return MSERR_OK;
+}
+
+int32_t TransCoderServiceStub::SetDestHDRMode(MessageParcel &data, MessageParcel &reply)
+{
+    int32_t mode = data.ReadInt32();
+    DestHDRMode destHdrMode = static_cast<DestHDRMode>(mode);
+    reply.WriteInt32(SetDestHDRMode(destHdrMode));
     return MSERR_OK;
 }
 
@@ -429,6 +451,14 @@ int32_t TransCoderServiceStub::AddWatermark(MessageParcel &data, MessageParcel &
     int32_t height = data.ReadInt32();
     CHECK_AND_RETURN_RET_LOG(reply.WriteInt32(AddWatermark(buffer, width, height)),
         MSERR_INVALID_OPERATION, "reply write failed");
+    return MSERR_OK;
+}
+
+int32_t TransCoderServiceStub::SetTimeRange(MessageParcel &data, MessageParcel &reply)
+{
+    int64_t startTime = data.ReadInt64();
+    int64_t endTime = data.ReadInt64();
+    reply.WriteInt32(SetTimeRange(startTime, endTime));
     return MSERR_OK;
 }
 

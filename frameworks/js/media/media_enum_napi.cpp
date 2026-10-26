@@ -27,6 +27,7 @@
 #include "recorder_profiles.h"
 #include "av_common.h"
 #include "mime_type.h"
+#include "transcoder.h"
 #include "screen_capture.h"
 #include "avscreen_capture_napi.h"
 #include "screen_capture_monitor.h"
@@ -210,6 +211,11 @@ static const std::vector<struct JsEnumInt> g_frameFlags = {
 static const std::vector<struct JsEnumInt> g_hdrType = {
     { "AV_HDR_TYPE_NONE", HdrType::AV_HDR_TYPE_NONE },
     { "AV_HDR_TYPE_VIVID", HdrType::AV_HDR_TYPE_VIVID },
+};
+
+static const std::vector<struct JsEnumInt> g_destHdrMode = {
+    { "SDR", DestHDRMode::SDR },
+    { "AUTO_HDR_VIVID", DestHDRMode::AUTO_HDR_VIVID },
 };
 
 static const std::vector<struct JsEnumInt> g_seekMode = {
@@ -527,6 +533,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "VideoSourceType", g_videoSourceType },
     { "FrameFlags", g_frameFlags },
     { "HdrType", g_hdrType},
+    { "DestHDRMode", g_destHdrMode},
     { "SeekMode", g_seekMode },
     { "SwitchMode", g_switchMode },
     { "AVCodecType", g_AVCodecType },

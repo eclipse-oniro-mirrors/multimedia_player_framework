@@ -35,6 +35,7 @@ public:
     virtual int32_t SetEnableBFrame(bool enableBFrame) = 0;
     virtual int32_t SetVideoBitrateMode(int32_t bitrateMode) = 0;
     virtual int32_t SetVideoSqrFactor(int32_t sqrFactor) = 0;
+    virtual int32_t SetDestHDRMode(DestHDRMode mode) = 0;
     virtual int32_t SetAudioEncoder(AudioCodecFormat encoder) = 0;
     virtual int32_t SetAudioEncodingBitRate(int32_t bitRate) = 0;
     virtual int32_t SetOutputFormat(OutputFormatType format) = 0;
@@ -47,6 +48,7 @@ public:
     virtual int32_t Cancel() = 0;
     virtual int32_t Release() = 0;
     virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) = 0;
+    virtual int32_t SetTimeRange(int64_t startTime, int64_t endTime) = 0;
     virtual int32_t DestroyStub() = 0;
 
     /**
@@ -59,6 +61,7 @@ public:
         SET_VIDEO_ENCODING_BIT_RATE,
         SET_COLOR_SPACE,
         SET_ENABLE_B_FRAME,
+        SET_DEST_HDR_MODE,
         SET_AUDIO_ENCODER,
         SET_AUDIO_ENCODING_BIT_RATE,
         SET_OUTPUT_FORMAT,
@@ -73,6 +76,7 @@ public:
         RELEASE,
         DESTROY,
         ADD_WATERMARK,
+        SET_TIME_RANGE,
         SET_VIDEO_BITRATE_MODE,
         SET_VIDEO_SQR_FACTOR
     };

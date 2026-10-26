@@ -67,6 +67,11 @@ int32_t MockAVTransCoder::SetVideoSqrFactor(int32_t sqrFactor)
     return MSERR_OK;
 }
 
+int32_t MockAVTransCoder::SetDestHDRMode(DestHDRMode mode)
+{
+    return MSERR_OK;
+}
+
 int32_t MockAVTransCoder::SetAudioEncoder(AudioCodecFormat encoder)
 {
     return MSERR_OK;
@@ -141,6 +146,11 @@ int32_t MockAVTransCoder::Release()
 }
 
 int32_t MockAVTransCoder::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height)
+{
+    return MSERR_OK;
+}
+
+int32_t MockAVTransCoder::SetTimeRange(int64_t startTime, int64_t endTime)
 {
     return MSERR_OK;
 }

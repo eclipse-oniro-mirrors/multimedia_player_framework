@@ -275,6 +275,26 @@ int32_t TransCoderServer::SetVideoSqrFactor(int32_t sqrFactor)
     return result.Value();
 }
 
+int32_t TransCoderServer::SetDestHDRMode(DestHDRMode mode)
+{
+    std::unique_lock<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(status_.load() == REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_.load()).c_str());
+    CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.destHdrMode = mode;
+    VideoDestHdrMode destHdrMode(mode);
+    MEDIA_LOGD("SetDestHDRMode: %{public}d", static_cast<int32_t>(mode));
+    auto task = std::make_shared<TaskHandler<int32_t>>([this, destHdrMode]() {
+        return transCoderEngine_->Configure(destHdrMode);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    lock.unlock();
+    auto result = task->GetResult();
+    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task failed");
+    return result.Value();
+}
+
 int32_t TransCoderServer::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::unique_lock<std::mutex> lock(mutex_);
@@ -534,6 +554,25 @@ int32_t TransCoderServer::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
     lock.unlock();
     auto result = task->GetResult();
     CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task failed");
+    return result.Value();
+}
+
+int32_t TransCoderServer::SetTimeRange(int64_t startTime, int64_t endTime)
+{
+    MEDIA_LOGI("SetTimeRange in, startTime: %{public}" PRId64 ", endTime: %{public}" PRId64, startTime, endTime);
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(status_ == REC_CONFIGURED, MSERR_INVALID_OPERATION,
+        "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
+    CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
+    config_.startTime = startTime;
+    config_.endTime = endTime;
+    CHECK_AND_RETURN_RET_LOG(startTime >= -1 && endTime >= -1, MSERR_INVALID_VAL, "timeRange is invalid");
+    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+        return transCoderEngine_->SetTimeRange(startTime, endTime);
+    });
+    int32_t ret = taskQue_.EnqueueTask(task);
+    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
+    auto result = task->GetResult();
     return result.Value();
 }
 

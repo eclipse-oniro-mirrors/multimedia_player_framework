@@ -32,6 +32,7 @@
 #include "surface_encoder_filter.h"
 #include "muxer_filter.h"
 #include "video_resize_filter.h"
+#include "video_resize_opengl_filter.h"
 #include "hitranscoder_callback_looper.h"
 #include "fdsan_fd.h"
 
@@ -67,6 +68,10 @@ public:
     int32_t Resume();
     int32_t Cancel();
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height);
+    int32_t SetTimeRange(int64_t startTime, int64_t endTime);
+    void PropagateTimeRangeToFilters();
+    int32_t ValidateTimeRange();
+    int32_t ValidateTimeRangeStartEnd();
     int32_t AddVideoResize(int32_t width, int32_t height);
     void OnEvent(const Event &event);
     Status OnCallback(std::shared_ptr<Pipeline::Filter> filter, const Pipeline::FilterCallBackCommand cmd,
@@ -89,6 +94,7 @@ private:
     Status LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkVideoResizeFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkWaterMark(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
+    Status LinkVideoResizeOpenGLFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status LinkMuxerFilter(const std::shared_ptr<Pipeline::Filter>& preFilter, Pipeline::StreamType type);
     Status SetSurfacePipeline(int32_t outputVideoWidth, int32_t outputVideoHeight);
     void HandleErrorEvent(int32_t errorCode);
@@ -113,10 +119,23 @@ private:
     Status ConfigureVideoBitrateMode(const TransCoderParam &transCoderParam);
     Status ConfigureSQRFactor(const TransCoderParam &transCoderParam);
     Status ConfigureEnableBFrameEncoding(const TransCoderParam &transCoderParam);
+    Status ConfigureDestHdrMode(const TransCoderParam &transCoderParam);
+    void ConfigureVideoEncoderHdrFormat();
+    // 显式 HDR 色彩空间分支：按映射表填写编码器色彩四元组。
+    void ConfigureHdrByExplicitColorSpace(int32_t colorSpace);
+    // AUTO_HDR_VIVID 分支：从源拷贝色彩属性，缺失时用 HDR 默认值，并反向推导目标色彩空间。
+    void ConfigureHdrByAutoHdrVivid();
+    // 查询源是否为 HDRVivid，srcVideoFormat_ 为空时安全返回 false。
+    bool QuerySrcIsHdrVivid() const;
+    bool IsHdrOutput() const;
+    // Prepare 阶段 HDR 兼容性校验，返回 MSERR_OK 或具体错误码
+    int32_t ValidateHdrCodecCompatibility();
+    int32_t ValidateHdrWatermarkIncompatibility();
     VideoProcessMode DetermineProcessMode();
     Status BuildPipeline(VideoProcessMode mode, int32_t outputVideoWidth, int32_t outputVideoHeight);
     Status ConnectDecoderToEncoder();
     Status ConnectDecoderResizeEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight);
+    Status ConnectDecoderResizeOpenGLEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight);
     Status ConnectDecoderWatermarkEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight);
     static std::string GetModeString(VideoProcessMode mode);
 
@@ -153,6 +172,7 @@ private:
     std::shared_ptr<Pipeline::AudioEncoderFilter> audioEncoderFilter_;
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
     std::shared_ptr<Pipeline::VideoResizeFilter> videoResizeFilter_;
+    std::shared_ptr<Pipeline::VideoResizeOpenGLFilter> videoResizeOpenGLFilter_;
     std::shared_ptr<Pipeline::Filter> waterMarkFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
 
@@ -178,6 +198,7 @@ private:
     int32_t inputVideoHeight_ = 0;
     Plugins::VideoOrientationType orientation_ = Plugins::VideoOrientationType::ROTATE_NONE;
     int32_t rotation_ = 0;
+    int32_t destHdrMode_ = 0; // DestHDRMode::SDR by default
     std::string inputAudioMimeType_;
     bool isExistVideoTrack_ = false;
     bool isExistAudioTrack_ = false;
@@ -196,6 +217,8 @@ private:
     std::mutex handleCompleteMutex_;
     std::mutex muxerMutex_;
     bool ignoreError_ = false;
+    int64_t startTimeMs_ = -1;
+    int64_t endTimeMs_ = -1;
 };
 } // namespace MEDIA
 } // namespace OHOS

@@ -124,6 +124,24 @@ enum TranscoderColorSpace : int32_t {
 };
 
 /**
+ * @brief Enumerates destination HDR mode for transcoding.
+ *
+ * Controls whether the transcoder outputs HDR or SDR video.
+ * HDR Vivid output requires HEVC codec; if a non-HEVC codec is specified
+ * with AUTO_HDR_VIVID and the source is HDR Vivid, Prepare() will fail.
+ *
+ * @since 7.1
+ */
+enum DestHDRMode : int32_t {
+    /** Always output SDR. HDR sources are tone-mapped to SDR by the decoder. */
+    SDR = 0,
+    /** Output HDR Vivid only when source is HDR Vivid; otherwise output SDR. */
+    AUTO_HDR_VIVID = 1,
+    // AutoHDR = 2,     // Reserved for future: source is HDR (Vivid/HLG/HDR10) → output HDR Vivid
+    // HDRVivid = 3,    // Reserved for future: always output HDR Vivid regardless of source
+};
+
+/**
  * @brief Provides listeners for transcodering errors and information events.
  *
  * @since 5.0
@@ -227,6 +245,20 @@ public:
      * @version 1.0
      */
     virtual int32_t SetColorSpace(TranscoderColorSpace colorSpaceFormat) = 0;
+
+    /**
+     * @brief Sets the destination HDR mode for transcoding.
+     *
+     * Controls whether the output is HDR or SDR. Default is SDR.
+     * When AUTO_HDR_VIVID is set and source is HDR Vivid, HEVC codec is required;
+     * otherwise Prepare() will return an error.
+     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.
+     *
+     * @param mode Indicates the destination HDR mode. For details, see {@link DestHDRMode}.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 7.1
+     */
+    virtual int32_t SetDestHDRMode(DestHDRMode mode) = 0;
 
     /**
      * @brief Sets the B frame encoding to transcoder
@@ -378,6 +410,18 @@ public:
      * @version 1.0
     */
     virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) = 0;
+
+    /**
+     * @brief Sets the time range for transcoding.
+     *
+     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.
+     * If not set, the entire video is transcoded. If set, only the specified time range is transcoded.
+     *
+     * @param startTime Indicates the start time in milliseconds. Default -1 means from the beginning.
+     * @param endTime Indicates the end time in milliseconds. Default -1 means to the end of the source.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     */
+    virtual int32_t SetTimeRange(int64_t startTime, int64_t endTime) = 0;
 };
 
 class __attribute__((visibility("default"))) TransCoderFactory {

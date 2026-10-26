@@ -34,6 +34,7 @@ enum TransCoderPublicParamType : uint32_t {
     VIDEO_ENABLE_B_FRAME_ENCODING,
     VIDEO_BITRATE_MODE,
     VIDEO_SQR_FACTOR,
+    DEST_HDR_MODE,
     // audio begin
     AUDIO_PUBLIC_PARAM_BEGIN,
     AUDIO_ENC_FMT,
@@ -46,6 +47,8 @@ enum TransCoderPublicParamType : uint32_t {
     // output begin,
     OUTPUT_PATH,
     OUTPUT_FD,
+    // time range
+    TIME_RANGE,
 };
 
 /*
@@ -99,6 +102,12 @@ struct VideoSqrFactor : public TransCoderParam {
     int32_t sqrFactor;
 };
 
+struct VideoDestHdrMode : public TransCoderParam {
+    explicit VideoDestHdrMode(DestHDRMode mode) : TransCoderParam(
+        TransCoderPublicParamType::DEST_HDR_MODE), destHdrMode(mode) {}
+    DestHDRMode destHdrMode;
+};
+
 struct AudioEnc : public TransCoderParam {
     explicit AudioEnc(AudioCodecFormat fmt) : TransCoderParam(TransCoderPublicParamType::AUDIO_ENC_FMT), encFmt(fmt) {}
     AudioCodecFormat encFmt;
@@ -137,6 +146,14 @@ struct OutputFilePath : public TransCoderParam {
 struct OutputFd : public TransCoderParam {
     explicit OutputFd(int32_t outFd) : TransCoderParam(TransCoderPublicParamType::OUTPUT_FD), fd(outFd) {}
     int32_t fd;
+};
+
+struct TimeRange : public TransCoderParam {
+    TimeRange(int64_t startTime, int64_t endTime)
+        : TransCoderParam(TransCoderPublicParamType::TIME_RANGE),
+          startTime(startTime), endTime(endTime) {}
+    int64_t startTime;
+    int64_t endTime;
 };
 } // namespace Media
 } // namespace OHOS

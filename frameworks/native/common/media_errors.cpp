@@ -215,6 +215,15 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
         "The codec timed out because no video frames were received."},
     {MSERR_CHECK_CAMERA_OUTPUT_STATUS_FAILED_5400102, "Check camera output status failed."},
     {MSERR_SQR_FACTOR_ERROR_401, "SqrFactor value must be in range [0, 51]."},
+    {MSERR_TIME_RANGE_START_ERROR_401,
+        "Transcoder time range startTime is greater than or equal to source duration."},
+    {MSERR_TIME_RANGE_END_ERROR_401, "Transcoder time range endTime is greater than source duration."},
+    {MSERR_TIME_RANGE_INVALID_ERROR_401,
+        "Transcoder time range is invalid, startTime >= endTime or time slice < 100ms."},
+    {MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401,
+        "HDR Vivid output requires HEVC codec, but got non-HEVC codec."},
+    {MSERR_HDR_VIVID_WATERMARK_ERROR_5400106,
+        "Watermark is not supported for HDR Vivid output."}
 };
 
 const std::map<MediaServiceErrCode, MediaServiceExtErrCode> MSERRCODE_TO_EXTERRORCODE = {
@@ -489,6 +498,11 @@ const std::map<MediaServiceErrCode, MediaServiceExtErrCodeAPI9> MSERRCODE_TO_EXT
     {MSERR_AVCODEC_TIMEOUT_NO_VIDEO_FRAME_RECEIVED_5400103, MSERR_EXT_API9_IO},
     {MSERR_CHECK_CAMERA_OUTPUT_STATUS_FAILED_5400102, MSERR_EXT_API9_OPERATE_NOT_PERMIT},
     {MSERR_SQR_FACTOR_ERROR_401,                MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_TIME_RANGE_START_ERROR_401,          MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_TIME_RANGE_END_ERROR_401,            MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_TIME_RANGE_INVALID_ERROR_401,        MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401,  MSERR_EXT_API9_INVALID_PARAMETER},
+    {MSERR_HDR_VIVID_WATERMARK_ERROR_5400106,   MSERR_EXT_API9_UNSUPPORT_FORMAT},
 };
 
 const std::map<MediaServiceExtErrCodeAPI9, std::string> MSEXTERRCODE_API9_INFOS = {
