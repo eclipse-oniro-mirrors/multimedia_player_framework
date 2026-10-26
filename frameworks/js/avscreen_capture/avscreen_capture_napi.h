@@ -140,7 +140,7 @@ private:
      */
     static napi_value JsSetContentAutoRotation(napi_env env, napi_callback_info info);
     /**
-     * setCaptureArea(area: RectangleRegion): Promise<void>
+     * setCaptureArea(displayId: number, area: RectangleRegion): Promise<void>
      */
     static napi_value JsSetCaptureArea(napi_env env, napi_callback_info info);
     /**
@@ -175,7 +175,7 @@ private:
     static std::shared_ptr<TaskHandler<RetInfo>> GetSetPickerModeTask(
         const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const PickerMode pickerMode);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSetCaptureAreaTask(
-        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const OHOS::Rect &area);
+        const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const int32_t displayId, const OHOS::Rect &area);
     static int32_t GetPropertyInt32(napi_env env, napi_value configObj, const std::string &type, int32_t &result);
     static int32_t CheckVideoCodecFormat(const int32_t &preset);
     static int32_t CheckVideoFrameFormat(const int32_t &frameWidth, const int32_t &frameHeight,
@@ -235,7 +235,6 @@ private:
     napi_env env_ = nullptr;
     std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
-    uint64_t displayId_ = AVSCREENCAPTURE_DEFAULT_DISPLAY_ID;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
     std::unique_ptr<TaskQueue> taskQue_;
     static std::map<std::string, AvScreenCaptureTaskqFunc> taskQFuncs_;

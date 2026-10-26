@@ -1357,7 +1357,7 @@ interface AVScreenCaptureRecorder {
     SetCanvasRotationSync(canvasRotation: bool): void;
 
     @gen_promise("setCaptureArea")
-    SetCaptureAreaSync(area: RectangleRegion): void;
+    SetCaptureAreaSync(displayId: i32, area: RectangleRegion): void;
 
     @gen_promise("release")
     ReleaseSync(): void;

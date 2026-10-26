@@ -303,7 +303,6 @@ int32_t AVScreenCaptureRecorderImpl::GetVideoDisplayInfo(std::unique_ptr<AVScree
     CHECK_AND_RETURN_RET(displayId >= 0,
         (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "getDisplayId", "displayId"), MSERR_INVALID_VAL));
     videoConfig.displayId = static_cast<uint64_t>(displayId);
-    asyncCtx->taihe->displayId_ = videoConfig.displayId;
     if (videoConfig.displayId > 0) {
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
     }
@@ -518,7 +517,6 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetInitTask(
 
         int32_t ret = taihe->screenCapture_->Init(config);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, ((void)taihe->screenCapture_->Release(), GetReturnInfo(ret, "Init", "")));
-
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -862,22 +860,24 @@ void AVScreenCaptureRecorderImpl::ExcludePickerWindowsSync(::taihe::array_view<i
 }
 
 std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetCaptureAreaTask(
-    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const OHOS::Media::Rect &area)
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const int32_t displayId,
+    const OHOS::Media::Rect &area)
 {
-    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, area]() {
+    return std::make_shared<TaskHandler<RetInfo>>([taihe = asyncCtx->taihe, displayId, area]() {
         const std::string &option = AVScreenCapturegOpt::SET_CAPTURE_AREA;
         MEDIA_LOGI("%{public}s Start", option.c_str());
 
         CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr, GetReturnInfo(
             MSERR_INVALID_OPERATION, option, "", " screenCapture_ is null, recorder released or not init"));
 
-        int32_t ret = taihe->screenCapture_->SetCaptureArea(taihe->displayId_, area);
+        int32_t ret = taihe->screenCapture_->SetCaptureArea(static_cast<uint64_t>(displayId), area);
         if (ret == MSERR_INVALID_VAL) {
-            MEDIA_LOGE("SetCaptureArea invalid area, left:%{public}d, top:%{public}d, "
+            MEDIA_LOGE("SetCaptureArea invalid parameter, display:%{public}d, left:%{public}d, top:%{public}d, "
                 "width:%{public}d, height:%{public}d, ret = %{public}d",
-                area.left, area.top, area.width, area.height, ret);
+                displayId, area.left, area.top, area.width, area.height, ret);
             return RetInfo(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-                option + " area out of range: left=" + std::to_string(area.left) +
+                option + " out of range: display=" + std::to_string(displayId) +
+                ", left=" + std::to_string(area.left) +
                 ", top=" + std::to_string(area.top) +
                 ", width=" + std::to_string(area.width) +
                 ", height=" + std::to_string(area.height));
@@ -889,7 +889,8 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetCapture
     });
 }
 
-void AVScreenCaptureRecorderImpl::SetCaptureAreaSync(::ohos::multimedia::media::RectangleRegion const& area)
+void AVScreenCaptureRecorderImpl::SetCaptureAreaSync(int32_t displayId,
+    ::ohos::multimedia::media::RectangleRegion const& area)
 {
     MediaTrace trace("AVScreenCapture::TaiheSetCaptureArea");
     const std::string &option = AVScreenCapturegOpt::SET_CAPTURE_AREA;
@@ -901,15 +902,23 @@ void AVScreenCaptureRecorderImpl::SetCaptureAreaSync(::ohos::multimedia::media::
     CHECK_AND_RETURN_LOG(asyncCtx->taihe != nullptr, "failed to GetTaiheInstanceAndArgs");
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
 
-    if (area.left < 0 || area.top < 0 || area.width < 0 || area.height < 0) {
+    if (displayId < 0) {
+        MEDIA_LOGE("SetCaptureArea invalid displayId: %{public}d", displayId);
+        set_business_error(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            option + " invalid display (must be non-negative): " + std::to_string(displayId));
+        return;
+    }
+
+    if (area.left < 0 || area.top < 0 || area.width <= 0 || area.height <= 0) {
         std::string invalidFields;
         if (area.left < 0) invalidFields += "left=" + std::to_string(area.left) + " ";
         if (area.top < 0) invalidFields += "top=" + std::to_string(area.top) + " ";
-        if (area.width < 0) invalidFields += "width=" + std::to_string(area.width) + " ";
-        if (area.height < 0) invalidFields += "height=" + std::to_string(area.height) + " ";
-        MEDIA_LOGE("SetCaptureArea negative parameter, %{public}s", invalidFields.c_str());
-        set_business_error(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            option + " negative value: " + invalidFields);
+        if (area.width <= 0) invalidFields += "width=" + std::to_string(area.width) + " ";
+        if (area.height <= 0) invalidFields += "height=" + std::to_string(area.height) + " ";
+        MEDIA_LOGE("SetCaptureArea invalid parameter, %{public}s", invalidFields.c_str());
+        std::string errorMsg = option + " invalid RectangleRegion (left/top must be non-negative, "
+            "width/height must be positive): " + invalidFields;
+        set_business_error(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE, errorMsg);
         return;
     }
 
@@ -919,7 +928,7 @@ void AVScreenCaptureRecorderImpl::SetCaptureAreaSync(::ohos::multimedia::media::
     region.width = area.width;
     region.height = area.height;
 
-    asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetSetCaptureAreaTask(asyncCtx, region);
+    asyncCtx->task_ = AVScreenCaptureRecorderImpl::GetSetCaptureAreaTask(asyncCtx, displayId, region);
     (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
 
     if (asyncCtx->task_) {

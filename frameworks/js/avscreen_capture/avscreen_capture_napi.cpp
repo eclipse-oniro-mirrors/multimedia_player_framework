@@ -628,8 +628,8 @@ napi_status AVScreenCaptureNapi::GetRectangleRegionParam(OHOS::Rect &area, napi_
     status = napi_get_value_int32(env, value, &height);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, status, "GetRectangleRegionParam field 'height' is not int32");
 
-    if (left < 0 || top < 0 || width < 0 || height < 0) {
-        MEDIA_LOGE("GetRectangleRegionParam negative value, left:%{public}d, top:%{public}d, "
+    if (left < 0 || top < 0 || width <= 0 || height <= 0) {
+        MEDIA_LOGE("GetRectangleRegionParam invalid value, left:%{public}d, top:%{public}d, "
             "width:%{public}d, height:%{public}d", left, top, width, height);
         return napi_invalid_arg;
     }
@@ -647,7 +647,7 @@ napi_value AVScreenCaptureNapi::JsSetCaptureArea(napi_env env, napi_callback_inf
     const std::string &opt = AVScreenCapturegOpt::SET_CAPTURE_AREA;
     MEDIA_LOGI("Js %{public}s Start", opt.c_str());
 
-    const int32_t maxParam = 1;
+    const int32_t maxParam = 2; // displayId + area
     size_t argCount = maxParam;
     napi_value args[maxParam] = { nullptr };
 
@@ -662,17 +662,28 @@ napi_value AVScreenCaptureNapi::JsSetCaptureArea(napi_env env, napi_callback_inf
 
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
 
+    int32_t displayId = -1;
+    napi_valuetype displayIdType = napi_undefined;
+    if (args[0] == nullptr || napi_typeof(env, args[0], &displayIdType) != napi_ok ||
+        displayIdType != napi_number || napi_get_value_int32(env, args[0], &displayId) != napi_ok ||
+        displayId < 0) {
+        asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
+            "SetCaptureArea parameter out of range: display must be non-negative");
+        QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
+        return result;
+    }
+
     OHOS::Rect area;
-    napi_status status = GetRectangleRegionParam(area, env, args[0]);
+    napi_status status = GetRectangleRegionParam(area, env, args[1]);
     if (status != napi_ok) {
         asyncCtx->SignError(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-            "SetCaptureArea parameter out of range: invalid RectangleRegion (left/top/width/height "
-            "must be non-negative int32 and present)");
+            "SetCaptureArea parameter out of range: invalid RectangleRegion (left/top must be non-negative, "
+            "width/height must be positive, and all fields must be present)");
         QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
         return result;
     }
     
-    asyncCtx->task_ = AVScreenCaptureNapi::GetSetCaptureAreaTask(asyncCtx, area);
+    asyncCtx->task_ = AVScreenCaptureNapi::GetSetCaptureAreaTask(asyncCtx, displayId, area);
     (void)asyncCtx->napi->taskQue_->EnqueueTask(asyncCtx->task_);
     
     QueueAsyncWork(asyncCtx, env, opt, AsyncJsTaskExecute);
@@ -868,7 +879,6 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetInitTask(
 
         int32_t ret = napi->screenCapture_->Init(config);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, ((void)napi->screenCapture_->Release(), GetReturnInfo(ret, "Init", "")));
-
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -958,22 +968,23 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetContentAutoRota
 }
 
 std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureNapi::GetSetCaptureAreaTask(
-    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const OHOS::Rect &area)
+    const std::unique_ptr<AVScreenCaptureAsyncContext> &asyncCtx, const int32_t displayId, const OHOS::Rect &area)
 {
-    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, area]() {
+    return std::make_shared<TaskHandler<RetInfo>>([napi = asyncCtx->napi, displayId, area]() {
         const std::string &option = AVScreenCapturegOpt::SET_CAPTURE_AREA;
         MEDIA_LOGI("%{public}s Start", option.c_str());
 
         CHECK_AND_RETURN_RET(napi != nullptr && napi->screenCapture_ != nullptr, GetReturnInfo(MSERR_INVALID_OPERATION,
             option, "", " screenCapture_ is null, recorder released or not init"));
 
-        int32_t ret = napi->screenCapture_->SetCaptureArea(napi->displayId_, area);
+        int32_t ret = napi->screenCapture_->SetCaptureArea(static_cast<uint64_t>(displayId), area);
         if (ret == MSERR_INVALID_VAL) {
-            MEDIA_LOGE("SetCaptureArea invalid area, left:%{public}d, top:%{public}d, "
+            MEDIA_LOGE("SetCaptureArea invalid parameter, display:%{public}d, left:%{public}d, top:%{public}d, "
                 "width:%{public}d, height:%{public}d, ret = %{public}d",
-                area.x, area.y, area.w, area.h, ret);
+                displayId, area.x, area.y, area.w, area.h, ret);
             return RetInfo(MSERR_EXT_API20_PARAM_ERROR_OUT_OF_RANGE,
-                option + " area out of range: left=" + std::to_string(area.x) +
+                option + " out of range: display=" + std::to_string(displayId) +
+                ", left=" + std::to_string(area.x) +
                 ", top=" + std::to_string(area.y) +
                 ", width=" + std::to_string(area.w) +
                 ", height=" + std::to_string(area.h));
@@ -1162,9 +1173,6 @@ int32_t AVScreenCaptureNapi::GetVideoCaptureInfo(std::unique_ptr<AVScreenCapture
     videoConfig.displayId = static_cast<uint64_t>(displayId);
     if (videoConfig.displayId > 0) {
         asyncCtx->config_.captureMode = CaptureMode::CAPTURE_SPECIFIED_SCREEN;
-    }
-    if (asyncCtx->napi != nullptr) {
-        asyncCtx->napi->displayId_ = videoConfig.displayId;
     }
     MEDIA_LOGI("input displayId %{public}" PRIu64, videoConfig.displayId);
     // get video frame info (frameWidth and frameHeight)
