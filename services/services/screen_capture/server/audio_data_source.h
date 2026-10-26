@@ -151,7 +151,7 @@ private:
     bool isUnregistered = false;
     std::atomic<double> frameDurationRatio_{0};
 
-    static constexpr int32_t INNER_SWITCH_MIC_REQUIRE_COUNT = 10;
+    static constexpr int32_t INNER_SWITCH_MIC_REQUIRE_COUNT = 1;
     static constexpr int32_t ADS_LOG_SKIP_NUM = 1000;
     static constexpr int64_t MAX_INNER_AUDIO_TIMEOUT_IN_NS = 2000000000; // 2s
     static constexpr int64_t AUDIO_MIC_TOO_CLOSE_LIMIT_IN_NS = 10000000; // 10ms
