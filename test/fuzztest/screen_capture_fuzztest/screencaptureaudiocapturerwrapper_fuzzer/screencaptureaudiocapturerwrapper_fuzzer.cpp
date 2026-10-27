@@ -190,9 +190,6 @@ bool ScreenCaptureAudioCapturerWrapperFuzzer::FuzzScreenAudioCapturerWrapper(uin
     g_baseFuzzPos = 0;
     RecorderInfo recorderInfo;
     int outputFd = open("/data/test/media/screen_capture_fuzz_server_start_file_01.mp4", O_RDWR);
-    if (outputFd < 0) {
-        return false;
-    }
     recorderInfo.url = "fd://" + std::to_string(outputFd);
     recorderInfo.fileFormat = "mp4";
     SetConfig(recorderInfo, fdp);
