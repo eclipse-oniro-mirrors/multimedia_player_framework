@@ -19,7 +19,7 @@
 #include <mutex>
 #include <queue>
 #include <shared_mutex>
-#include <set>
+#include <unordered_set>
 
 #include "buffer/avbuffer.h"
 #include "common/native_mfmagic.h"
@@ -78,6 +78,10 @@ typedef struct NativeWindow OHNativeWindow;
 using namespace OHOS::Media;
 std::mutex g_bufferMutex;
 static std::queue<OH_NativeBuffer*> referencedBuffer_;
+
+std::mutex g_captureSetMutex;
+std::unordered_set<struct OH_AVScreenCapture *> g_captureSet;
+
 class NativeScreenCaptureCallback;
 struct ScreenCaptureUserSelectionObject;
 
@@ -652,6 +656,8 @@ struct OH_AVScreenCapture *OH_AVScreenCapture_Create(void)
     struct ScreenCaptureObject *object = new(std::nothrow) ScreenCaptureObject(screenCapture);
     CHECK_AND_RETURN_RET_LOG(object != nullptr, nullptr, "failed to new ScreenCaptureObject");
 
+    std::lock_guard<std::mutex> lock(g_captureSetMutex);
+    g_captureSet.insert(object);
     return object;
 }
 
@@ -1056,6 +1062,15 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
     MEDIA_LOGI("OH_AVScreenCapture_Release In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
+    {
+        std::lock_guard<std::mutex> lock(g_captureSetMutex);
+        if (g_captureSet.erase(capture) == 0) {
+            MEDIA_LOGW("OH_AVScreenCapture_Release: capture 0x%{public}06" PRIXPTR
+                " is not a valid or already released capture, skip release.", FAKE_POINTER(capture));
+            return AV_SCREEN_CAPTURE_ERR_INVALID_VAL;
+        }
+    }
+
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
 
     if (screenCaptureObj != nullptr && screenCaptureObj->screenCapture_ != nullptr) {
@@ -1064,7 +1079,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
         }
         int32_t ret = screenCaptureObj->screenCapture_->Release();
         delete capture;
-        capture = nullptr;
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
             "screen capture Release failed!");
     } else {
