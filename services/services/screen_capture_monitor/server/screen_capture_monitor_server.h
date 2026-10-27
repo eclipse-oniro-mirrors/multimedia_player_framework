@@ -53,7 +53,6 @@ public:
 private:
     int32_t Init();
     std::mutex mutex_;
-    std::mutex mutexCb_;
     std::set<sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener>> screenCaptureMonitorCbSet_;
     bool isSystemScreenRecorderWorking_ = false;
 };
