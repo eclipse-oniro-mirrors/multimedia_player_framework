@@ -235,6 +235,16 @@ int32_t TransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer,
     return transCoderService_->AddWatermark(waterMarkBuffer, width, height);
 }
 
+int32_t TransCoderImpl::SetTimeRange(int64_t startTime, int64_t endTime)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetTimeRange in, startTime: %{public}" PRId64
+        ", endTime: %{public}" PRId64, FAKE_POINTER(this), startTime, endTime);
+    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
+        "transcoder service does not exist..");
+    return transCoderService_->SetTimeRange(startTime, endTime);
+}
+
 int32_t TransCoderImpl::SetVideoBitrateMode(int32_t bitrateMode)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -253,6 +263,16 @@ int32_t TransCoderImpl::SetVideoSqrFactor(int32_t sqrFactor)
     CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
         "transcoder service does not exist..");
     return transCoderService_->SetVideoSqrFactor(sqrFactor);
+}
+
+int32_t TransCoderImpl::SetDestHDRMode(DestHDRMode mode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    MEDIA_LOGI("TransCoderImpl:0x%{public}06" PRIXPTR " SetDestHDRMode in, mode is %{public}d",
+        FAKE_POINTER(this), static_cast<int32_t>(mode));
+    CHECK_AND_RETURN_RET_LOG(transCoderService_ != nullptr, MSERR_INVALID_OPERATION,
+        "transcoder service does not exist..");
+    return transCoderService_->SetDestHDRMode(mode);
 }
 } // namespace Media
 } // namespace OHOS

@@ -34,6 +34,7 @@ public:
     int32_t SetEnableBFrame(bool enableBFrame) override;
     int32_t SetVideoBitrateMode(int32_t bitrateMode) override;
     int32_t SetVideoSqrFactor(int32_t sqrFactor) override;
+    int32_t SetDestHDRMode(DestHDRMode mode) override;
     int32_t SetAudioEncoder(AudioCodecFormat encoder) override;
     int32_t SetAudioEncodingBitRate(int32_t bitRate) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
@@ -46,6 +47,7 @@ public:
     int32_t Cancel() override;
     int32_t Release() override;
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) override;
+    int32_t SetTimeRange(int64_t startTime, int64_t endTime) override;
     int32_t DestroyStub() override;
 
 private:

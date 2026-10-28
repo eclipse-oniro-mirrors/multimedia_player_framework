@@ -54,6 +54,8 @@ constexpr int32_t AVTRANSCODER_DEFAULT_AUDIO_BIT_RATE = INT32_MAX;
 constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_BIT_RATE = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_HEIGHT = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_FRAME_WIDTH = -1;
+constexpr int64_t AVTRANSCODER_DEFAULT_START_TIME = -1;
+constexpr int64_t AVTRANSCODER_DEFAULT_END_TIME = -1;
 constexpr int32_t AVTRANSCODER_DEFAULT_VIDEO_SQR_FACTOR = -1;
 constexpr int32_t AVTRANSCODER_SQR_FACTOR_MIN = 0;
 constexpr int32_t AVTRANSCODER_SQR_FACTOR_MAX = 51;
@@ -122,9 +124,12 @@ struct AVTransCoderConfig {
     int32_t videoFrameWidth = AVTRANSCODER_DEFAULT_FRAME_WIDTH;
     int32_t videoFrameHeight = AVTRANSCODER_DEFAULT_FRAME_HEIGHT;
     bool enableBFrame = false;
+    int64_t startTime = AVTRANSCODER_DEFAULT_START_TIME;
+    int64_t endTime = AVTRANSCODER_DEFAULT_END_TIME;
     bool enableStableQualityMode = false;
     int32_t sqrFactor = AVTRANSCODER_DEFAULT_VIDEO_SQR_FACTOR;
     bool sqrFactorSet = false;
+    DestHDRMode destHdrMode = DestHDRMode::SDR;
 };
 
 using RetInfo = std::pair<int32_t, std::string>;

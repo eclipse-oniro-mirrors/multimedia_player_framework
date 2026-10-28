@@ -144,6 +144,15 @@ int32_t TransCoderClient::SetVideoSqrFactor(int32_t sqrFactor)
     return transCoderProxy_->SetVideoSqrFactor(sqrFactor);
 }
 
+int32_t TransCoderClient::SetDestHDRMode(DestHDRMode mode)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
+
+    MEDIA_LOGD("SetDestHDRMode, mode(%{public}d)", static_cast<int32_t>(mode));
+    return transCoderProxy_->SetDestHDRMode(mode);
+}
+
 int32_t TransCoderClient::SetAudioEncoder(AudioCodecFormat encoder)
 {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -272,6 +281,15 @@ int32_t TransCoderClient::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
  
     MEDIA_LOGD("AddWatermark");
     return transCoderProxy_->AddWatermark(waterMarkBuffer, width, height);
+}
+
+int32_t TransCoderClient::SetTimeRange(int64_t startTime, int64_t endTime)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(transCoderProxy_ != nullptr, MSERR_NO_MEMORY, "transcoder service does not exist.");
+
+    MEDIA_LOGD("SetTimeRange startTime(%{public}" PRId64 "), endTime(%{public}" PRId64 ")", startTime, endTime);
+    return transCoderProxy_->SetTimeRange(startTime, endTime);
 }
 } // namespace Media
 } // namespace OHOS

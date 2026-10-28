@@ -41,6 +41,7 @@ public:
     void OnError(TransCoderErrorType errorType, int32_t errorCode) override;
     void OnInfo(TransCoderOnInfoType type, int32_t extra) override;
     void DoReportCompletedTime();
+    void SetTimeRange(int64_t startTime, int64_t endTime);
 
 private:
     void DoReportMediaProgress();
@@ -78,6 +79,8 @@ private:
     bool reportMediaProgress_ {false};
     bool isDropMediaProgress_ {false};
     int64_t reportProgressIntervalMs_ {100}; // default interval is 100 ms
+    int64_t startTimeMs_ = -1;
+    int64_t endTimeMs_ = -1;
 };
 }  // namespace Media
 }  // namespace OHOS

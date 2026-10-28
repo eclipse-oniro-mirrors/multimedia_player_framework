@@ -14,7 +14,9 @@
  */
 #include "hitranscoder_impl.h"
 #include "sync_fence.h"
+#include <algorithm>
 #include <sys/syscall.h>
+#include <vector>
 #include "directory_ex.h"
 #include "osal/task/jobutils.h"
 #include "osal/task/task.h"
@@ -25,6 +27,7 @@
 #include "common/log.h"
 #include "avcodec_info.h"
 #include "osal/task/pipeline_threadpool.h"
+#include "surface/native_buffer.h"
 #include "water_mark_filter.h"
 
 namespace {
@@ -45,10 +48,97 @@ const uint32_t ROTATE_90_VALUE = 90;
 const uint32_t ROTATE_180_VALUE = 180;
 const uint32_t ROTATE_270_VALUE = 270;
 constexpr uint32_t MAX_SQR_FACTOR = 51;
+
+// HDR 色彩空间集合，IsHdrColorSpace 据此判定是否 HDR 输出。
+const std::vector<int32_t> HDR_COLOR_SPACES = {
+    static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_FULL),
+    static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_LIMIT),
+    static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_PQ_FULL),
+    static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_PQ_LIMIT),
+    static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_HLG_FULL),
+    static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_HLG_LIMIT),
+    static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_PQ_FULL),
+    static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_PQ_LIMIT),
+};
+
+bool IsHdrColorSpace(int32_t colorSpace)
+{
+    return std::find(HDR_COLOR_SPACES.begin(), HDR_COLOR_SPACES.end(), colorSpace) != HDR_COLOR_SPACES.end();
+}
 }
 
 namespace OHOS {
 namespace Media {
+namespace {
+// 色彩空间 -> 编码器色彩四元组映射，用于显式 HDR 色彩空间分支的表驱动配置。
+struct HdrColorSpaceMapping {
+    int32_t colorSpace;
+    Plugins::ColorPrimary primaries;
+    Plugins::TransferCharacteristic transfer;
+    bool isFullRange;
+};
+
+// BT2020/P3 系列统一使用 BT2020_NCL 矩阵系数，仅 primaries/transfer/range 随色彩空间变化。
+const std::vector<HdrColorSpaceMapping> HDR_COLOR_SPACE_TABLE = {
+    { static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_LIMIT),
+      Plugins::ColorPrimary::BT2020, Plugins::TransferCharacteristic::HLG, false },
+    { static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_FULL),
+      Plugins::ColorPrimary::BT2020, Plugins::TransferCharacteristic::HLG, true },
+    { static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_PQ_LIMIT),
+      Plugins::ColorPrimary::BT2020, Plugins::TransferCharacteristic::PQ, false },
+    { static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_PQ_FULL),
+      Plugins::ColorPrimary::BT2020, Plugins::TransferCharacteristic::PQ, true },
+    { static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_HLG_LIMIT),
+      Plugins::ColorPrimary::P3D65, Plugins::TransferCharacteristic::HLG, false },
+    { static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_HLG_FULL),
+      Plugins::ColorPrimary::P3D65, Plugins::TransferCharacteristic::HLG, true },
+    { static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_PQ_LIMIT),
+      Plugins::ColorPrimary::P3D65, Plugins::TransferCharacteristic::PQ, false },
+    { static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_PQ_FULL),
+      Plugins::ColorPrimary::P3D65, Plugins::TransferCharacteristic::PQ, true },
+};
+
+const HdrColorSpaceMapping* FindHdrColorSpaceMapping(int32_t colorSpace)
+{
+    for (const auto& item : HDR_COLOR_SPACE_TABLE) {
+        if (item.colorSpace == colorSpace) {
+            return &item;
+        }
+    }
+    return nullptr;
+}
+
+// 根据编码器色彩四元组反向推导 OH_NativeBuffer_ColorSpace，供 AUTO_HDR_VIVID 分支回写
+// AV_TRANSCODER_DST_COLOR_SPACE，使 decoder filter 据此跳过 VPE 色彩转换。
+int32_t DeriveColorSpaceFromAspects(Plugins::ColorPrimary primaries,
+    Plugins::TransferCharacteristic transfer, bool isFullRange)
+{
+    constexpr int32_t DEFAULT_COLOR_SPACE =
+        static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_LIMIT);
+    bool isBt2020 = (primaries == Plugins::ColorPrimary::BT2020 ||
+                     primaries == Plugins::ColorPrimary::UNSPECIFIED);
+    bool isP3 = (primaries == Plugins::ColorPrimary::P3DCI ||
+                 primaries == Plugins::ColorPrimary::P3D65);
+    bool isPq = (transfer == Plugins::TransferCharacteristic::PQ);
+
+    if (isBt2020) {
+        return isPq
+            ? (isFullRange ? static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_PQ_FULL)
+                           : static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_PQ_LIMIT))
+            : (isFullRange ? static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_FULL)
+                           : static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_LIMIT));
+    }
+    if (isP3) {
+        return isPq
+            ? (isFullRange ? static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_PQ_FULL)
+                           : static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_PQ_LIMIT))
+            : (isFullRange ? static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_HLG_FULL)
+                           : static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_P3_HLG_LIMIT));
+    }
+    return DEFAULT_COLOR_SPACE;
+}
+} // namespace
+
 static const std::unordered_set<std::string> AVMETA_KEY = {
     { Tag::MEDIA_ALBUM },
     { Tag::MEDIA_ALBUM_ARTIST },
@@ -282,6 +372,24 @@ void HiTransCoderImpl::ConfigureMetaDataToTrackFormat(const std::shared_ptr<Meta
             (void)SetValueByType(meta, videoEncFormat_);
             (void)SetValueByType(meta, srcVideoFormat_);
             (void)SetValueByType(meta, muxerFormat_);
+            // Copy HDR color metadata from source to srcVideoFormat_ for HDR auto-detection.
+            // These keys are not in AVMETA_KEY so SetValueByType won't copy them.
+            Plugins::ColorPrimary srcColorPrimaries = Plugins::ColorPrimary::UNSPECIFIED;
+            if (meta->Get<Tag::VIDEO_COLOR_PRIMARIES>(srcColorPrimaries)) {
+                srcVideoFormat_->Set<Tag::VIDEO_COLOR_PRIMARIES>(srcColorPrimaries);
+            }
+            Plugins::TransferCharacteristic srcTransferCharacteristic = Plugins::TransferCharacteristic::UNSPECIFIED;
+            if (meta->Get<Tag::VIDEO_COLOR_TRC>(srcTransferCharacteristic)) {
+                srcVideoFormat_->Set<Tag::VIDEO_COLOR_TRC>(srcTransferCharacteristic);
+            }
+            Plugins::MatrixCoefficient srcMatrixCoeff = Plugins::MatrixCoefficient::UNSPECIFIED;
+            if (meta->Get<Tag::VIDEO_COLOR_MATRIX_COEFF>(srcMatrixCoeff)) {
+                srcVideoFormat_->Set<Tag::VIDEO_COLOR_MATRIX_COEFF>(srcMatrixCoeff);
+            }
+            bool srcColorRange = false;
+            if (meta->Get<Tag::VIDEO_COLOR_RANGE>(srcColorRange)) {
+                srcVideoFormat_->Set<Tag::VIDEO_COLOR_RANGE>(srcColorRange);
+            }
             meta->GetData(Tag::VIDEO_WIDTH, inputVideoWidth_);
             meta->GetData(Tag::VIDEO_HEIGHT, inputVideoHeight_);
             meta->GetData(Tag::VIDEO_ORIENTATION_TYPE, orientation_);
@@ -525,6 +633,159 @@ Status HiTransCoderImpl::ConfigureEnableBFrameEncoding(const TransCoderParam &tr
     return Status::OK;
 }
 
+Status HiTransCoderImpl::ConfigureDestHdrMode(const TransCoderParam &transCoderParam)
+{
+    VideoDestHdrMode destHdrMode = static_cast<const VideoDestHdrMode&>(transCoderParam);
+    destHdrMode_ = static_cast<int32_t>(destHdrMode.destHdrMode);
+    MEDIA_LOG_I("HiTranscoderImpl::ConfigureDestHdrMode %{public}d", destHdrMode_);
+    videoEncFormat_->Set<Tag::AV_TRANSCODER_DEST_HDR_MODE>(destHdrMode_);
+    return Status::OK;
+}
+
+void HiTransCoderImpl::ConfigureVideoEncoderHdrFormat()
+{
+    FALSE_RETURN_MSG(videoEncFormat_ != nullptr, "videoEncFormat_ is nullptr, skip HDR configuration");
+
+    int32_t colorSpaceFormat = 0;
+    bool hasExplicitColorSpace = videoEncFormat_->GetData(Tag::AV_TRANSCODER_DST_COLOR_SPACE, colorSpaceFormat);
+
+    // 分支 A：用户显式指定了目标色彩空间
+    if (hasExplicitColorSpace) {
+        if (!IsHdrColorSpace(colorSpaceFormat)) {
+            // 显式 SDR 输出，跳过 HDR 配置，由解码器执行 HDR2SDR
+            return;
+        }
+        ConfigureHdrByExplicitColorSpace(colorSpaceFormat);
+        return;
+    }
+
+    // 分支 B：未显式指定色彩空间，按 destHdrMode_ 决策
+    // SDR：跳过 HDR 配置；非 AUTO_HDR_VIVID：警告并跳过
+    FALSE_RETURN_MSG_I(destHdrMode_ != static_cast<int32_t>(DestHDRMode::SDR),
+        "ConfigureVideoEncoderHdrFormat: destHdrMode=SDR, skip HDR configuration (HDR2SDR path)");
+    FALSE_RETURN_MSG_W(destHdrMode_ == static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID),
+        "ConfigureVideoEncoderHdrFormat: unsupported destHdrMode %{public}d, skip HDR configuration",
+        destHdrMode_);
+    // AUTO_HDR_VIVID：仅当源为 HDRVivid 时才配置 HDR 输出，否则走 SDR
+    FALSE_RETURN_MSG_I(QuerySrcIsHdrVivid(),
+        "ConfigureVideoEncoderHdrFormat: destHdrMode=AUTO_HDR_VIVID but source is not HDRVivid, "
+        "skip HDR configuration (SDR output)");
+    MEDIA_LOG_I("destHdrMode=AUTO_HDR_VIVID, source is HDRVivid, configuring HDR output");
+    ConfigureHdrByAutoHdrVivid();
+}
+
+void HiTransCoderImpl::ConfigureHdrByExplicitColorSpace(int32_t colorSpace)
+{
+    MEDIA_LOG_I("ConfigureVideoEncoderHdrFormat: explicit dst color space is HDR(%{public}d)", colorSpace);
+    if (QuerySrcIsHdrVivid()) {
+        videoEncFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    }
+    // HEVC 编码强制 Main10 profile 以支持 10bit HDR
+    std::string mimeType;
+    if (videoEncFormat_->Get<Tag::MIME_TYPE>(mimeType) && mimeType == Plugins::MimeType::VIDEO_HEVC) {
+        videoEncFormat_->Set<Tag::VIDEO_H265_PROFILE>(Plugins::HEVCProfile::HEVC_PROFILE_MAIN_10);
+    }
+    // 表驱动：按映射表填写色彩四元组，矩阵系数统一为 BT2020_NCL
+    const HdrColorSpaceMapping* mapping = FindHdrColorSpaceMapping(colorSpace);
+    FALSE_RETURN_MSG(mapping != nullptr, "Unsupported HDR color space: %{public}d", colorSpace);
+    videoEncFormat_->Set<Tag::VIDEO_COLOR_PRIMARIES>(mapping->primaries);
+    videoEncFormat_->Set<Tag::VIDEO_COLOR_TRC>(mapping->transfer);
+    videoEncFormat_->Set<Tag::VIDEO_COLOR_MATRIX_COEFF>(Plugins::MatrixCoefficient::BT2020_NCL);
+    videoEncFormat_->Set<Tag::VIDEO_COLOR_RANGE>(mapping->isFullRange);
+}
+
+void HiTransCoderImpl::ConfigureHdrByAutoHdrVivid()
+{
+    // HEVC 编码强制 Main10 profile 以支持 10bit HDR
+    std::string mimeType;
+    if (videoEncFormat_->Get<Tag::MIME_TYPE>(mimeType) && mimeType == Plugins::MimeType::VIDEO_HEVC) {
+        videoEncFormat_->Set<Tag::VIDEO_H265_PROFILE>(Plugins::HEVCProfile::HEVC_PROFILE_MAIN_10);
+    }
+    videoEncFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+
+    // 从源拷贝色彩四元组，缺失时使用 HDR 默认值（BT2020/HLG/BT2020_NCL/Limited）
+    Plugins::ColorPrimary primaries = Plugins::ColorPrimary::UNSPECIFIED;
+    bool hasPrimaries = srcVideoFormat_ != nullptr && srcVideoFormat_->Get<Tag::VIDEO_COLOR_PRIMARIES>(primaries);
+    videoEncFormat_->Set<Tag::VIDEO_COLOR_PRIMARIES>(hasPrimaries ? primaries : Plugins::ColorPrimary::BT2020);
+
+    Plugins::TransferCharacteristic transfer = Plugins::TransferCharacteristic::UNSPECIFIED;
+    bool hasTransfer = srcVideoFormat_ != nullptr && srcVideoFormat_->Get<Tag::VIDEO_COLOR_TRC>(transfer);
+    videoEncFormat_->Set<Tag::VIDEO_COLOR_TRC>(hasTransfer ? transfer : Plugins::TransferCharacteristic::HLG);
+
+    Plugins::MatrixCoefficient matrixCoeff = Plugins::MatrixCoefficient::UNSPECIFIED;
+    bool hasMatrix = srcVideoFormat_ != nullptr && srcVideoFormat_->Get<Tag::VIDEO_COLOR_MATRIX_COEFF>(matrixCoeff);
+    videoEncFormat_->Set<Tag::VIDEO_COLOR_MATRIX_COEFF>(
+        hasMatrix ? matrixCoeff : Plugins::MatrixCoefficient::BT2020_NCL);
+
+    bool colorRange = false;
+    bool hasRange = srcVideoFormat_ != nullptr && srcVideoFormat_->Get<Tag::VIDEO_COLOR_RANGE>(colorRange);
+    videoEncFormat_->Set<Tag::VIDEO_COLOR_RANGE>(hasRange ? colorRange : false);
+
+    // 反向推导目标色彩空间并回写，使 decoder filter 据此跳过 VPE 色彩转换
+    Plugins::ColorPrimary dstPrimaries = hasPrimaries ? primaries : Plugins::ColorPrimary::BT2020;
+    Plugins::TransferCharacteristic dstTransfer = hasTransfer ? transfer : Plugins::TransferCharacteristic::HLG;
+    int32_t dstColorSpace = DeriveColorSpaceFromAspects(dstPrimaries, dstTransfer, hasRange ? colorRange : false);
+    videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(dstColorSpace);
+    MEDIA_LOG_I("ConfigureVideoEncoderHdrFormat: auto-set dst color space to %{public}d", dstColorSpace);
+}
+
+bool HiTransCoderImpl::QuerySrcIsHdrVivid() const
+{
+    FALSE_RETURN_V_NOLOG(srcVideoFormat_ != nullptr, false);
+    bool srcIsHdrVivid = false;
+    (void)srcVideoFormat_->Get<Tag::VIDEO_IS_HDR_VIVID>(srcIsHdrVivid);
+    return srcIsHdrVivid;
+}
+
+bool HiTransCoderImpl::IsHdrOutput() const
+{
+    FALSE_RETURN_V_NOLOG(videoEncFormat_ != nullptr, false);
+    // 1. 用户通过 ConfigureColorSpace 显式设置了目标色彩空间
+    int32_t colorSpaceFormat = 0;
+    if (videoEncFormat_->GetData(Tag::AV_TRANSCODER_DST_COLOR_SPACE, colorSpaceFormat)) {
+        return IsHdrColorSpace(colorSpaceFormat);
+    }
+    // 2. 未显式设置色彩空间时，根据 destHdrMode_ 和源 HDR Vivid 属性判断
+    if (destHdrMode_ == static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID)) {
+        return QuerySrcIsHdrVivid();
+    }
+    return false;
+}
+
+int32_t HiTransCoderImpl::ValidateHdrCodecCompatibility()
+{
+    // HDRVivid 输出要求 HEVC 编码器；仅在 AUTO_HDR_VIVID 且源为 HDRVivid 时校验
+    FALSE_RETURN_V_NOLOG(destHdrMode_ == static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID), MSERR_OK);
+    FALSE_RETURN_V_NOLOG(QuerySrcIsHdrVivid(), MSERR_OK);
+    std::string mimeType;
+    if (videoEncFormat_ != nullptr && videoEncFormat_->Get<Tag::MIME_TYPE>(mimeType) &&
+        mimeType != Plugins::MimeType::VIDEO_HEVC) {
+        MEDIA_LOG_E("HDR Vivid output requires HEVC codec, but got %{public}s", mimeType.c_str());
+        CollectionErrorInfo(MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401,
+            "Prepare error: HDR Vivid output requires HEVC codec, but got " + mimeType);
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
+            static_cast<int32_t>(MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401)});
+        return MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401;
+    }
+    return MSERR_OK;
+}
+
+int32_t HiTransCoderImpl::ValidateHdrWatermarkIncompatibility()
+{
+    // 水印图片为 8bit RGBA，无法在 HDR 10bit 管线上正确混合。
+    // AddWatermark 在 Prepare 之前调用，此时 destHdrMode_ 可能尚未设置，
+    // 因此在 Prepare 阶段（所有配置已就绪）统一校验。
+    if (IsHdrOutput() && skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+        MEDIA_LOG_E("Watermark is not supported for HDR output (8bit watermark vs 10bit HDR pipeline)");
+        CollectionErrorInfo(MSERR_HDR_VIVID_WATERMARK_ERROR_5400106,
+            "Prepare error: watermark is not supported for HDR Vivid output");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
+            static_cast<int32_t>(MSERR_HDR_VIVID_WATERMARK_ERROR_5400106)});
+        return MSERR_HDR_VIVID_WATERMARK_ERROR_5400106;
+    }
+    return MSERR_OK;
+}
+
 Status HiTransCoderImpl::ConfigureVideoBitrate()
 {
     int64_t videoBitrate = 0;
@@ -556,6 +817,10 @@ int32_t HiTransCoderImpl::Configure(const TransCoderParam &transCoderParam)
 {
     MEDIA_LOG_I("HiTransCoderImpl::Configure, type: " PUBLIC_LOG_U32, static_cast<uint32_t>(transCoderParam.type));
     MediaTrace trace("HiTransCoderImpl::Configure()");
+    if (transCoderParam.type == TransCoderPublicParamType::TIME_RANGE) {
+        const TimeRange &timeRange = static_cast<const TimeRange&>(transCoderParam);
+        return SetTimeRange(timeRange.startTime, timeRange.endTime);
+    }
     Status ret = ConfigureAudioParam(transCoderParam);
     FALSE_RETURN_V_NOLOG(ret == Status::OK, TransTranscoderStatus(ret));
     ret = ConfigureVideoParam(transCoderParam);
@@ -599,6 +864,10 @@ Status HiTransCoderImpl::ConfigureVideoParam(const TransCoderParam &transCoderPa
         }
         case TransCoderPublicParamType::VIDEO_SQR_FACTOR: {
             ret = ConfigureSQRFactor(transCoderParam);
+            break;
+        }
+        case TransCoderPublicParamType::DEST_HDR_MODE: {
+            ret = ConfigureDestHdrMode(transCoderParam);
             break;
         }
         default:
@@ -675,6 +944,102 @@ void HiTransCoderImpl::SkipAudioDecAndEnc()
     (void)demuxerFilter_->SetSkippingAudioDecAndEnc();
 }
 
+int32_t HiTransCoderImpl::SetTimeRange(int64_t startTime, int64_t endTime)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::SetTimeRange, startTime: " PUBLIC_LOG_D64 ", endTime: " PUBLIC_LOG_D64,
+        startTime, endTime);
+    startTimeMs_ = startTime;
+    endTimeMs_ = endTime;
+    if (demuxerFilter_ != nullptr) {
+        Status ret = demuxerFilter_->SetTimeRange(startTime, endTime);
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, TransTranscoderStatus(ret),
+            "DemuxerFilter SetTimeRange failed");
+    }
+    return MSERR_OK;
+}
+
+int32_t HiTransCoderImpl::ValidateTimeRange()
+{
+    // Both -1 means no time range set, transcode the entire source.
+    FALSE_RETURN_V_MSG_E(startTimeMs_ >= 0 || endTimeMs_ >= 0, MSERR_OK, "No time range set, skip validation");
+    int64_t sourceDurationMs = durationMs_.load();
+    // Validate startTime against source duration.
+    if (startTimeMs_ > 0 && sourceDurationMs > 0 && startTimeMs_ >= sourceDurationMs) {
+        MEDIA_LOG_E("Invalid time range, startTime: " PUBLIC_LOG_D64 " >= sourceDuration: " PUBLIC_LOG_D64,
+            startTimeMs_, sourceDurationMs);
+        CollectionErrorInfo(MSERR_TIME_RANGE_START_ERROR_401, "Prepare error: startTime >= duration");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
+            static_cast<int32_t>(MSERR_TIME_RANGE_START_ERROR_401)});
+        return MSERR_TIME_RANGE_START_ERROR_401;
+    }
+    // Validate endTime against source duration.
+    if (endTimeMs_ > 0 && sourceDurationMs > 0 && endTimeMs_ > sourceDurationMs) {
+        MEDIA_LOG_E("Invalid time range, endTime: " PUBLIC_LOG_D64 " > sourceDuration: " PUBLIC_LOG_D64,
+            endTimeMs_, sourceDurationMs);
+        CollectionErrorInfo(MSERR_TIME_RANGE_END_ERROR_401, "Prepare error: endTime > duration");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
+            static_cast<int32_t>(MSERR_TIME_RANGE_END_ERROR_401)});
+        return MSERR_TIME_RANGE_END_ERROR_401;
+    }
+    // Validate start-end relationship when both are specified.
+    FALSE_RETURN_V_NOLOG(startTimeMs_ < 0 || endTimeMs_ < 0, ValidateTimeRangeStartEnd());
+    return MSERR_OK;
+}
+
+int32_t HiTransCoderImpl::ValidateTimeRangeStartEnd()
+{
+    if (startTimeMs_ >= endTimeMs_) {
+        MEDIA_LOG_E("Invalid time range, startTime: " PUBLIC_LOG_D64 " >= endTime: " PUBLIC_LOG_D64,
+            startTimeMs_, endTimeMs_);
+        CollectionErrorInfo(MSERR_TIME_RANGE_INVALID_ERROR_401, "Prepare error: startTime >= endTime");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
+            static_cast<int32_t>(MSERR_TIME_RANGE_INVALID_ERROR_401)});
+        return MSERR_TIME_RANGE_INVALID_ERROR_401;
+    }
+    if ((endTimeMs_ - startTimeMs_) < 100) {
+        MEDIA_LOG_E("Invalid time range, slice is less than 100ms, startTime: " PUBLIC_LOG_D64
+            ", endTime: " PUBLIC_LOG_D64, startTimeMs_, endTimeMs_);
+        CollectionErrorInfo(MSERR_TIME_RANGE_INVALID_ERROR_401, "Prepare error: time slice < 100ms");
+        OnEvent({"TranscoderEngine", EventType::EVENT_ERROR,
+            static_cast<int32_t>(MSERR_TIME_RANGE_INVALID_ERROR_401)});
+        return MSERR_TIME_RANGE_INVALID_ERROR_401;
+    }
+    return MSERR_OK;
+}
+
+void HiTransCoderImpl::PropagateTimeRangeToFilters()
+{
+    FALSE_RETURN_MSG(startTimeMs_ >= 0 || endTimeMs_ >= 0, "time range unset, skip seeking");
+    FALSE_RETURN_MSG(demuxerFilter_ != nullptr, "demuxerFilter_ is nullptr");
+
+    int64_t effectiveStart = (startTimeMs_ > 0) ? startTimeMs_ : 0;
+    int64_t sourceDurationMs = durationMs_.load();
+    int64_t effectiveEnd = (endTimeMs_ > 0) ? endTimeMs_ : sourceDurationMs;
+    int64_t transcoderStartPts = demuxerFilter_->GetTranscoderStartPts();
+    int64_t clipStartRelativeUs = effectiveStart * 1000 - transcoderStartPts;
+    int64_t clipEndRelativeUs = effectiveEnd * 1000 - transcoderStartPts;
+    MEDIA_LOG_I("PropagateTimeRangeToFilters, startTimeMs: " PUBLIC_LOG_D64 ", endTimeMs: " PUBLIC_LOG_D64
+        ", effectiveStart: " PUBLIC_LOG_D64 ", effectiveEnd: " PUBLIC_LOG_D64
+        ", transcoderStartPts: " PUBLIC_LOG_D64
+        ", clipStartRelativeUs: " PUBLIC_LOG_D64 ", clipEndRelativeUs: " PUBLIC_LOG_D64,
+        startTimeMs_, endTimeMs_, effectiveStart, effectiveEnd,
+        transcoderStartPts, clipStartRelativeUs, clipEndRelativeUs);
+    if (videoEncoderFilter_ != nullptr) {
+        videoEncoderFilter_->SetTimeRange(effectiveStart, effectiveEnd);
+        videoEncoderFilter_->SetClipStartRelativeUs(clipStartRelativeUs);
+    }
+    if (audioEncoderFilter_ != nullptr) {
+        audioEncoderFilter_->SetClipStartTimeUs(clipStartRelativeUs);
+    }
+    if (muxerFilter_ != nullptr) {
+        muxerFilter_->SetClipStartTimeUs(clipStartRelativeUs);
+        muxerFilter_->SetClipEndTimeUs(clipEndRelativeUs);
+    }
+    if (callbackLooper_ != nullptr) {
+        callbackLooper_->SetTimeRange(effectiveStart, effectiveEnd);
+    }
+}
+
 int32_t HiTransCoderImpl::Prepare()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Prepare()");
@@ -701,6 +1066,14 @@ int32_t HiTransCoderImpl::Prepare()
             return MSERR_INVALID_OUTPUT_RESOLUTION;
         }
         skipProcessFilterFlag_.isSameVideoResolution = (width == inputVideoWidth_) && (height == inputVideoHeight_);
+
+        // HDR 兼容性校验：HDRVivid 输出必须用 HEVC 编码器
+        int32_t hdrCodecRet = ValidateHdrCodecCompatibility();
+        FALSE_RETURN_V_MSG_E(hdrCodecRet == MSERR_OK, hdrCodecRet, "HDR codec compatibility check failed");
+        // HDR 输出与水印互斥：水印图为 8bit RGBA，无法在 10bit HDR 管线上正确混合
+        int32_t hdrWatermarkRet = ValidateHdrWatermarkIncompatibility();
+        FALSE_RETURN_V_MSG_E(hdrWatermarkRet == MSERR_OK, hdrWatermarkRet,
+            "HDR watermark incompatibility check failed");
     }
     if (skipProcessFilterFlag_.CanSkipAudioDecAndEncFilter()) {
         SkipAudioDecAndEnc();
@@ -720,7 +1093,12 @@ int32_t HiTransCoderImpl::Prepare()
             errCode = Status::ERROR_SET_OUTPUT_SURFACE_FAILED;
         }
     }
-    
+    // 判断所设时间范围的有效性
+    int32_t timeRangeErr = ValidateTimeRange();
+    FALSE_RETURN_V_MSG_E(timeRangeErr == MSERR_OK, timeRangeErr, "Time range validation failed");
+
+    PropagateTimeRangeToFilters();
+
     return TransTranscoderStatus(errCode);
 }
 
@@ -735,6 +1113,13 @@ int32_t HiTransCoderImpl::Start()
 {
     MEDIA_LOG_I("HiTransCoderImpl::Start()");
     MediaTrace trace("HiTransCoderImpl::Start()");
+    // Seek to time range start before starting the pipeline
+    if (startTimeMs_ > 0 && demuxerFilter_ != nullptr) {
+        Status seekRet = demuxerFilter_->SeekToClipStartTime();
+        if (seekRet != Status::OK) {
+            MEDIA_LOG_W("Seek to clip start time failed, continue anyway");
+        }
+    }
     startTime_.store(GetCurrentMillisecond());
     int32_t ret = TransTranscoderStatus(pipeline_->Start());
     if (ret != MSERR_OK) {
@@ -832,14 +1217,22 @@ int32_t HiTransCoderImpl::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
 int32_t HiTransCoderImpl::AddVideoResize(int32_t width, int32_t height)
 {
     MEDIA_LOG_I("HiTransCoderImpl::AddVideoResize()");
-    if (!skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
-        skipProcessFilterFlag_.isAddWaterMark = true;
-        waterMarkFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::WaterMarkFilter>(
-            "Watermark", Pipeline::FilterType::WATERMARK);
+    if (skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
+        // Watermark path already created the WaterMarkFilter; reuse it for resize+watermark
+        auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
+        FALSE_RETURN_V_MSG_E(filter != nullptr, MSERR_INVALID_OPERATION, "WaterMark filter is nullptr");
+        filter->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
+        return MSERR_OK;
     }
-    FALSE_RETURN_V_MSG_E(waterMarkFilter_ != nullptr, MSERR_INVALID_OPERATION, "Watermark filter is nullptr");
-    auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
-    filter->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
+    // Pure resize path: create VideoResizeOpenGLFilter (decoupled from WaterMarkFilter)
+    if (videoResizeOpenGLFilter_ == nullptr) {
+        videoResizeOpenGLFilter_ = Pipeline::FilterFactory::Instance()
+            .CreateFilter<Pipeline::VideoResizeOpenGLFilter>(
+                "VideoResizeOpenGL", Pipeline::FilterType::FILTERTYPE_VIDRESIZE_OPENGL);
+    }
+    FALSE_RETURN_V_MSG_E(videoResizeOpenGLFilter_ != nullptr, MSERR_INVALID_OPERATION,
+        "VideoResizeOpenGL filter is nullptr");
+    videoResizeOpenGLFilter_->SetVideoResize(inputVideoWidth_, inputVideoHeight_);
     return MSERR_OK;
 }
 
@@ -906,6 +1299,9 @@ void HiTransCoderImpl::AppendDstMediaInfo(std::shared_ptr<Meta> meta)
     int32_t colorSpaceFormat = 0;
     (void)videoEncFormat_->Get<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(colorSpaceFormat);
     meta->SetData(Tag::AV_TRANSCODER_DST_COLOR_SPACE, colorSpaceFormat);
+    if (IsHdrColorSpace(colorSpaceFormat)) {
+        meta->SetData(Tag::AV_TRANSCODER_DST_HDR_TYPE, 1);
+    }
     bool enableBFrame = false;
     (void)videoEncFormat_->Get<Tag::AV_TRANSCODER_ENABLE_B_FRAME>(enableBFrame);
     meta->SetData(Tag::VIDEO_ENCODER_ENABLE_B_FRAME, enableBFrame);
@@ -934,10 +1330,7 @@ void HiTransCoderImpl::AppendMediaKitTranscoderMediaInfo()
     mediaInfo_.push_back({"SrcVideoMime", srcVideoMime});
     mediaInfo_.push_back({"SrcVideoWidth", std::to_string(inputVideoWidth_)});
     mediaInfo_.push_back({"SrcVideoHeight", std::to_string(inputVideoHeight_)});
-    if (demuxerFilter_ == nullptr) {
-        MEDIA_LOG_E("demuxerFilter_ is nullptr");
-        return;
-    }
+    FALSE_RETURN_MSG(demuxerFilter_ != nullptr, "demuxerFilter_ is nullptr");
     std::shared_ptr<Meta> globalInfo = demuxerFilter_->GetGlobalMetaInfo();
     FALSE_RETURN_MSG(globalInfo != nullptr, "globalInfo is nullptr");
     FileType fileType_ = FileType::UNKNOW;
@@ -1067,6 +1460,9 @@ Status HiTransCoderImpl::LinkAudioEncoderFilter(const std::shared_ptr<Pipeline::
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter SetCodecFormat fail");
     ret = audioEncoderFilter_->SetTranscoderMode();
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter SetTranscoderMode fail");
+    if (startTimeMs_ > 0 || endTimeMs_ > 0) {
+        audioEncoderFilter_->SetClipTimeFilterNeeded();
+    }
     if (!isExistVideoTrack_ && isExistAudioTrack_) {
         ret = audioEncoderFilter_->SetPureAudioMode();
         FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "audioEncoderFilter SetPureAudioMode fail");
@@ -1092,6 +1488,9 @@ Status HiTransCoderImpl::LinkVideoDecoderFilter(const std::shared_ptr<Pipeline::
         "videoDecoderFilter is nullptr");
     std::string bundleName_ = GetClientBundleName(appUid_);
     videoDecoderFilter_->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+    // Configure HDR format before SetCodecFormat so that AV_TRANSCODER_DST_COLOR_SPACE
+    // is set in videoEncFormat_ and the decoder filter can read it to skip VPE conversion.
+    ConfigureVideoEncoderHdrFormat();
     videoDecoderFilter_->SetCodecFormat(videoEncFormat_);
     videoDecoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     videoDecoderFilter_->SetTransCoderMode();
@@ -1122,6 +1521,7 @@ Status HiTransCoderImpl::LinkVideoEncoderFilter(const std::shared_ptr<Pipeline::
         }
     }
     videoEncFormat_->Set<Tag::VIDEO_ENCODE_BITRATE_MODE>(bitrateMode);
+    ConfigureVideoEncoderHdrFormat();
     Status ret = videoEncoderFilter_->SetCodecFormat(videoEncFormat_);
     FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoEncoderFilter SetCodecFormat fail");
     videoEncoderFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
@@ -1232,9 +1632,11 @@ Status HiTransCoderImpl::OnCallback(std::shared_ptr<Pipeline::Filter> filter, co
                 if (filterType == Pipeline::FilterType::FILTERTYPE_VIDEODEC &&
                     !skipProcessFilterFlag_.CanSkipVideoResizeFilter() &&
                     !skipProcessFilterFlag_.AddVideoWaterMarkFilter()) {
-                    MEDIA_LOG_I("Pipeline build mode: video resize");
-                    AddVideoResize(inputVideoWidth_, inputVideoHeight_);
-                    return LinkWaterMark(filter, outType);
+                    MEDIA_LOG_I("Pipeline build mode: video resize (OpenGL)");
+                    int32_t resizeRet = AddVideoResize(inputVideoWidth_, inputVideoHeight_);
+                    FALSE_RETURN_V_MSG_E(resizeRet == MSERR_OK, Status::ERROR_NULL_POINTER,
+                        "AddVideoResize failed, ret: %{public}d", resizeRet);
+                    return LinkVideoResizeOpenGLFilter(filter, outType);
                 }
                 // 水印或其他：直接链接编码器
                 return LinkVideoEncoderFilter(filter, outType);
@@ -1257,13 +1659,27 @@ int32_t HiTransCoderImpl::GetCurrentTime(int32_t& currentPositionMs)
 {
     FALSE_RETURN_V(muxerFilter_ != nullptr, MSERR_UNKNOWN);
     int64_t currentPts = muxerFilter_->GetCurrentPtsMs();
-    currentPositionMs = (int32_t)currentPts;
+    if (startTimeMs_ > 0 || endTimeMs_ > 0) {
+        // In time range mode, MuxerFilter adjusts PTS to start from 0,
+        // so currentPts is already in the range-relative domain (0 ~ effectiveDuration).
+        currentPositionMs = (currentPts > 0) ? static_cast<int32_t>(currentPts) : 0;
+    } else {
+        currentPositionMs = (int32_t)currentPts;
+    }
     return MSERR_OK;
 }
 
 int32_t HiTransCoderImpl::GetDuration(int32_t& durationMs)
 {
-    durationMs = durationMs_.load();
+    // In time range mode, report the effective slice duration (effectiveEnd - effectiveStart).
+    if (startTimeMs_ >= 0 || endTimeMs_ >= 0) {
+        int64_t effectiveStart = (startTimeMs_ > 0) ? startTimeMs_ : 0;
+        int64_t sourceDurationMs = durationMs_.load();
+        int64_t effectiveEnd = (endTimeMs_ > 0) ? endTimeMs_ : sourceDurationMs;
+        durationMs = static_cast<int32_t>(effectiveEnd - effectiveStart);
+    } else {
+        durationMs = durationMs_.load();
+    }
     return MSERR_OK;
 }
 
@@ -1290,7 +1706,7 @@ Status HiTransCoderImpl::BuildPipeline(VideoProcessMode mode, int32_t outputVide
             return ConnectDecoderToEncoder();
  
         case VideoProcessMode::DECODER_RESIZE_ENCODER:
-            return ConnectDecoderResizeEncoder(outputVideoWidth, outputVideoHeight);
+            return ConnectDecoderResizeOpenGLEncoder(outputVideoWidth, outputVideoHeight);
  
         case VideoProcessMode::DECODER_WATERMARK_ENCODER:
         case VideoProcessMode::DECODER_RESIZE_WATERMARK_ENCODER:
@@ -1304,10 +1720,11 @@ Status HiTransCoderImpl::BuildPipeline(VideoProcessMode mode, int32_t outputVide
  
 VideoProcessMode HiTransCoderImpl::DetermineProcessMode()
 {
-    bool hasResize = videoResizeFilter_ != nullptr && !skipProcessFilterFlag_.CanSkipVideoResizeFilter();
+    bool hasResize = (videoResizeFilter_ != nullptr || videoResizeOpenGLFilter_ != nullptr) &&
+                     !skipProcessFilterFlag_.CanSkipVideoResizeFilter();
     bool hasWatermark = waterMarkFilter_ != nullptr && skipProcessFilterFlag_.AddVideoWaterMarkFilter();
     if (hasResize && hasWatermark) {
-        MEDIA_LOG_I("ProcessMode is DECODER_RESIZE_ENCODER");
+        MEDIA_LOG_I("ProcessMode is DECODER_RESIZE_WATERMARK_ENCODER");
         return VideoProcessMode::DECODER_RESIZE_WATERMARK_ENCODER;
     } else if (hasResize) {
         MEDIA_LOG_I("ProcessMode is DECODER_RESIZE_ENCODER");
@@ -1342,10 +1759,28 @@ Status HiTransCoderImpl::LinkWaterMark(const std::shared_ptr<Pipeline::Filter>& 
     auto filter = static_cast<Pipeline::WaterMarkFilter*>(waterMarkFilter_.get());
     FALSE_RETURN_V_MSG_E(filter != nullptr, Status::ERROR_NULL_POINTER,
         "WaterMarkFilter is nullptr");
+    // 将HDR编码格式传递给WaterMarkFilter，使其感知HDR模式并配置10bit管线
+    filter->SetCodecFormat(videoEncFormat_);
+    filter->SetCallingInfo(appUid_, appPid_, GetClientBundleName(appUid_), instanceId_);
     filter->Init(transCoderEventReceiver_, transCoderFilterCallback_);
     FALSE_RETURN_V_MSG_E(pipeline_ != nullptr, Status::ERROR_NULL_POINTER,
         "pipeline_ is nullptr");
     pipeline_->LinkFilters(preFilter, {waterMarkFilter_}, type);
+    return Status::OK;
+}
+
+Status HiTransCoderImpl::LinkVideoResizeOpenGLFilter(const std::shared_ptr<Pipeline::Filter>& preFilter,
+    Pipeline::StreamType type)
+{
+    MEDIA_LOG_I("HiTransCoderImpl::LinkVideoResizeOpenGLFilter()");
+    FALSE_RETURN_V_MSG_E(videoResizeOpenGLFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+        "VideoResizeOpenGLFilter is nullptr");
+    // 将HDR编码格式传递给VideoResizeOpenGLFilter，使其感知HDR模式并配置10bit管线
+    videoResizeOpenGLFilter_->SetCodecFormat(videoEncFormat_);
+    videoResizeOpenGLFilter_->SetCallingInfo(appUid_, appPid_, GetClientBundleName(appUid_), instanceId_);
+    videoResizeOpenGLFilter_->Init(transCoderEventReceiver_, transCoderFilterCallback_);
+    FALSE_RETURN_V_MSG_E(pipeline_ != nullptr, Status::ERROR_NULL_POINTER, "pipeline_ is nullptr");
+    pipeline_->LinkFilters(preFilter, {videoResizeOpenGLFilter_}, type);
     return Status::OK;
 }
 
@@ -1385,6 +1820,31 @@ Status HiTransCoderImpl::ConnectDecoderResizeEncoder(int32_t outputVideoWidth, i
         "encoderSurface is nullptr");
  
     return videoResizeFilter_->SetOutputSurface(encoderSurface, outputVideoWidth, outputVideoHeight);
+}
+
+/**
+*  连接：解码器 -> OpenGL分辨率修改 -> 编码器
+*/
+Status HiTransCoderImpl::ConnectDecoderResizeOpenGLEncoder(int32_t outputVideoWidth, int32_t outputVideoHeight)
+{
+    FALSE_RETURN_V_MSG_E(videoEncoderFilter_ != nullptr && videoDecoderFilter_ != nullptr &&
+        videoResizeOpenGLFilter_ != nullptr, Status::ERROR_NULL_POINTER,
+        "VideoDecoder, VideoEncoder or VideoResizeOpenGLFilter is nullptr");
+    auto filter = videoResizeOpenGLFilter_.get();
+
+    // 解码器 -> OpenGL分辨率修改
+    sptr<Surface> resizeSurface = filter->GetInputSurface();
+    FALSE_RETURN_V_MSG_E(resizeSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
+        "resizeSurface is nullptr");
+    Status ret = videoDecoderFilter_->SetOutputSurface(resizeSurface);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "videoDecoderFilter_ setOutputSurface failed");
+
+    // OpenGL分辨率修改 -> 编码器
+    sptr<Surface> encoderSurface = videoEncoderFilter_->GetInputSurface();
+    FALSE_RETURN_V_MSG_E(encoderSurface != nullptr, Status::ERROR_GET_INPUT_SURFACE_FAILED,
+        "encoderSurface is nullptr");
+
+    return filter->SetOutputSurface(encoderSurface, outputVideoWidth, outputVideoHeight, rotation_);
 }
  
 /**

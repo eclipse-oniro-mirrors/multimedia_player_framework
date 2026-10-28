@@ -112,6 +112,12 @@ void HiTransCoderCallbackLooper::DoReportCompletedTime()
     }
 }
 
+void HiTransCoderCallbackLooper::SetTimeRange(int64_t startTime, int64_t endTime)
+{
+    startTimeMs_ = startTime;
+    endTimeMs_ = endTime;
+}
+
 void HiTransCoderCallbackLooper::DoReportMediaProgress()
 {
     OHOS::Media::AutoLock lock(loopMutex_);

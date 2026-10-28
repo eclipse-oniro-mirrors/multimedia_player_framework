@@ -19,6 +19,7 @@
 #include "avcodec_info.h"
 #include "avtranscoder_callback_taihe.h"
 #include "pixel_map_taihe.h"
+#include <cinttypes>
 
 using namespace ANI::Media;
 
@@ -28,6 +29,7 @@ namespace {
 namespace ANI::Media {
 using namespace OHOS::MediaAVCodec;
 const std::string STATE_PROGRESSUPDATE = "progressUpdate";
+constexpr uint32_t TASK_TIME_LIMIT_MS = 2000; // ms
 
 const std::map<std::string, std::vector<std::string>> STATE_CTRL = {
     {AVTransCoderState::STATE_IDLE, {
@@ -96,6 +98,9 @@ AVTranscoderImpl::~AVTranscoderImpl()
     if (asyncGuard_ != nullptr) {
         std::unique_lock<std::mutex> lock(asyncGuard_->mtx);
         asyncGuard_->cv.wait(lock, [this] { return asyncGuard_->pendingTaskCount == 0; });
+    }
+    if (taskQue_ != nullptr) {
+        taskQue_->Stop();
     }
 }
 
@@ -385,8 +390,8 @@ uintptr_t AVTranscoderImpl::PrepareSync(AVTranscoderConfig const& config)
 
         RetInfo taiheRet = std::make_pair<int32_t, std::string>(0, "");
         if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
+            auto result = asyncCtx->task_->GetResultWithTimeLimit(TASK_TIME_LIMIT_MS);
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
@@ -486,24 +491,24 @@ uintptr_t AVTranscoderImpl::ExecuteByPromise(AVTranscoderImpl *taihe, const std:
     if (asyncCtx->avTransCoder->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = AVTranscoderImpl::GetPromiseTask(asyncCtx->avTransCoder, opt);
         asyncCtx->opt_ = opt;
-        {
-            std::lock_guard<std::mutex> lock(asyncGuard_->mtx);
-            asyncGuard_->pendingTaskCount++;
-        }
         (void)asyncCtx->avTransCoder->taskQue_->EnqueueTask(asyncCtx->task_);
     } else {
         asyncCtx->AVTransCoderSignError(MSERR_INVALID_OPERATION, opt, "");
     }
     CHECK_AND_RETURN_RET_LOG(asyncCtx->promise_ != nullptr, reinterpret_cast<uintptr_t>(nullptr),
         "promise_ is nullptr");
+    {
+        std::lock_guard<std::mutex> lock(asyncGuard_->mtx);
+        asyncGuard_->pendingTaskCount++;
+    }
     ani_object promiseValue = asyncCtx->promise_;
     std::thread([asyncCtx = std::move(asyncCtx), guard = asyncGuard_]() {
         CHECK_AND_RETURN_LOG(asyncCtx != nullptr, "asyncCtx is nullptr!");
 
         RetInfo taiheRet = std::make_pair<int32_t, std::string>(0, "");
         if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
+            auto result = asyncCtx->task_->GetResultWithTimeLimit(TASK_TIME_LIMIT_MS);
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
         }
@@ -662,6 +667,11 @@ RetInfo AVTranscoderImpl::Configure(std::shared_ptr<AVTransCoderConfigInner> con
     ret = transCoder_->SetEnableBFrame(config->enableBFrame);
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoEncoderEnableBFrame", "enableBFrame"));
 
+    if (config->startTime >= 0 || config->endTime >= 0) {
+        ret = transCoder_->SetTimeRange(config->startTime, config->endTime);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetTimeRange", "timeRange"));
+    }
+
     if (config->enableStableQualityMode) {
         ret = transCoder_->SetVideoBitrateMode(static_cast<int32_t>(VideoEncodeBitrateMode::SQR));
         CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoBitrateMode", "enableStableQualityMode"));
@@ -673,6 +683,9 @@ RetInfo AVTranscoderImpl::Configure(std::shared_ptr<AVTransCoderConfigInner> con
             CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetVideoSqrFactor", "sqrFactor"));
         }
     }
+
+    ret = transCoder_->SetDestHDRMode(config->destHdrMode);
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnRet(ret, "SetDestHDRMode", "destHDRMode"));
 
     hasConfiged_.store(true);
     return RetInfo(MSERR_EXT_API9_OK, "");
@@ -847,6 +860,25 @@ int32_t AVTranscoderImpl::GetVideoConfig(AVTranscoderConfig const& config,
     if (config.sqrFactor.has_value()) {
         configInner->sqrFactor = config.sqrFactor.value();
         configInner->sqrFactorSet = true;
+    }
+    if (config.startTime.has_value()) {
+        configInner->startTime = config.startTime.value();
+        if (configInner->startTime < 0) {
+            MEDIA_LOGE("invalid start time range, startTime: %{public}" PRId64, configInner->startTime);
+            asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetVideoConfig", "startTime");
+            return MSERR_INVALID_VAL;
+        }
+    }
+    if (config.endTime.has_value()) {
+        configInner->endTime = config.endTime.value();
+        if (configInner->endTime < 0) {
+            MEDIA_LOGE("invalid end time range, endTime: %{public}" PRId64, configInner->endTime);
+            asyncCtx->AVTransCoderSignError(MSERR_INVALID_VAL, "GetVideoConfig", "endTime");
+            return MSERR_INVALID_VAL;
+        }
+    }
+    if (config.destHDRMode.has_value()) {
+        configInner->destHdrMode = static_cast<DestHDRMode>(config.destHDRMode.value());
     }
     return MSERR_OK;
 }
@@ -1030,8 +1062,8 @@ uintptr_t AVTranscoderImpl::AddWatermarkSync(::ohos::multimedia::image::image::w
 
         RetInfo taiheRet = std::make_pair<int32_t, std::string>(0, "");
         if (asyncCtx->task_) {
-            auto result = asyncCtx->task_->GetResult();
-            if (result.Value().first != MSERR_EXT_API9_OK) {
+            auto result = asyncCtx->task_->GetResultWithTimeLimit(TASK_TIME_LIMIT_MS);
+            if (result.HasResult() && result.Value().first != MSERR_EXT_API9_OK) {
                 asyncCtx->SignError(result.Value().first, result.Value().second);
             }
             taiheRet = result.Value();

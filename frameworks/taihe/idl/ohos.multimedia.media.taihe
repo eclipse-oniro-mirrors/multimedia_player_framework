@@ -1170,6 +1170,9 @@ struct AVTranscoderConfig {
     enableBFrame: Optional<bool>;
     enableStableQualityMode: Optional<bool>;
     sqrFactor: Optional<i32>;
+    startTime: Optional<i64>;
+    endTime: Optional<i64>;
+    destHDRMode: Optional<i32>;
 }
 
 enum AVScreenCaptureRecordPreset:i32 {

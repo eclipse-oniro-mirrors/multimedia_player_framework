@@ -552,6 +552,7 @@ int32_t HiRecorderImpl::BuildSoftWatermarkPipeline()
     FALSE_RETURN_V_MSG_E(filter != nullptr, MSERR_UNKNOWN, "waterMarkFilter_ is null");
     pipeline_->AddHeadFilters({waterMarkFilter_});
 
+    filter->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
     filter->Init(recorderEventReceiver_, recorderCallback_);
     filter->SetAVRecorderMode();
     filter->SetHardWatermarkMode(false);

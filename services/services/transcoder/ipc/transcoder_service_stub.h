@@ -43,6 +43,7 @@ public:
     int32_t SetEnableBFrame(bool enableBFrame) override;
     int32_t SetVideoBitrateMode(int32_t bitrateMode) override;
     int32_t SetVideoSqrFactor(int32_t sqrFactor) override;
+    int32_t SetDestHDRMode(DestHDRMode mode) override;
     int32_t SetAudioEncoder(AudioCodecFormat encoder) override;
     int32_t SetAudioEncodingBitRate(int32_t bitRate) override;
     int32_t SetOutputFormat(OutputFormatType format) override;
@@ -55,6 +56,7 @@ public:
     int32_t Cancel() override;
     int32_t Release() override;
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) override;
+    int32_t SetTimeRange(int64_t startTime, int64_t endTime) override;
     int32_t DumpInfo(int32_t fd);
     int32_t DestroyStub() override;
 
@@ -73,6 +75,7 @@ private:
     int32_t SetEnableBFrame(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoBitrateMode(MessageParcel &data, MessageParcel &reply);
     int32_t SetVideoSqrFactor(MessageParcel &data, MessageParcel &reply);
+    int32_t SetDestHDRMode(MessageParcel &data, MessageParcel &reply);
     int32_t SetAudioEncoder(MessageParcel &data, MessageParcel &reply);
     int32_t SetAudioEncodingBitRate(MessageParcel &data, MessageParcel &reply);
     int32_t SetOutputFormat(MessageParcel &data, MessageParcel &reply);
@@ -86,6 +89,7 @@ private:
     int32_t Cancel(MessageParcel &data, MessageParcel &reply);
     int32_t Release(MessageParcel &data, MessageParcel &reply);
     int32_t AddWatermark(MessageParcel &data, MessageParcel &reply);
+    int32_t SetTimeRange(MessageParcel &data, MessageParcel &reply);
     int32_t DestroyStub(MessageParcel &data, MessageParcel &reply);
 
     std::shared_ptr<ITransCoderService> transCoderServer_ = nullptr;

@@ -74,6 +74,8 @@ constexpr int32_t AVTRANSCODER_SQR_FACTOR_MAX = 51;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_LENGTH = 4096;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_NUM = 5;
 constexpr int32_t AVTRANSCODER_WATERMARK_MAX_ROWSTRIDE_NUM = 5;
+constexpr int64_t AVTRANSCODER_DEFAULT_START_TIME = -1;
+constexpr int64_t AVTRANSCODER_DEFAULT_END_TIME = -1;
 
 const std::map<std::string, std::vector<std::string>> STATE_LIST = {
     {AVTransCoderState::STATE_IDLE, {
@@ -140,6 +142,9 @@ struct AVTransCoderConfigInner {
     bool enableStableQualityMode = false;
     int32_t sqrFactor = AVTRANSCODER_DEFAULT_VIDEO_SQR_FACTOR;
     bool sqrFactorSet = false;
+    int64_t startTime = AVTRANSCODER_DEFAULT_START_TIME;
+    int64_t endTime = AVTRANSCODER_DEFAULT_END_TIME;
+    DestHDRMode destHdrMode = DestHDRMode::SDR;
 };
 
 class AVTranscoderImpl {

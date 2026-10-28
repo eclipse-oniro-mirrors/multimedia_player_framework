@@ -95,6 +95,18 @@ public:
     virtual int32_t SetVideoSqrFactor(int32_t sqrFactor) = 0;
 
     /**
+     * @brief Sets the destination HDR mode for transcoding.
+     *
+     * Controls whether the output is HDR or SDR. Default is SDR.
+     * This function must be called after {@link SetOutputFormat} but before {@link Prepare}.
+     *
+     * @param mode Indicates the destination HDR mode. For details, see {@link DestHDRMode}.
+     * @return Returns {@link MSERR_OK} if the setting is successful; returns an error code otherwise.
+     * @since 7.1
+     */
+    virtual int32_t SetDestHDRMode(DestHDRMode mode) = 0;
+
+    /**
      * @brief Sets the encoder of the audio to transcoder.
      *
      * If this function is not called, the output file does not contain the audio track.
@@ -256,6 +268,15 @@ public:
      * @version 1.0
      */
     virtual int32_t AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffer, int32_t width, int32_t height) = 0;
+
+    /**
+     * @brief Sets the time range for transcoding.
+     *
+     * @param startTime Indicates the start time in milliseconds. -1 means from the beginning.
+     * @param endTime Indicates the end time in milliseconds. -1 means to the end of the source.
+     * @return Returns {@link SUCCESS} if the setting is successful; returns an error code otherwise.
+     */
+    virtual int32_t SetTimeRange(int64_t startTime, int64_t endTime) = 0;
 };
 } // namespace Media
 } // namespace OHOS

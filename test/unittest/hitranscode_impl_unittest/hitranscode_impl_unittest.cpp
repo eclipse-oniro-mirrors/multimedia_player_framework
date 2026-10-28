@@ -1194,5 +1194,676 @@ HWTEST_F(HitranscodeImplUnitTest, CollectionErrorInfo_001, TestSize.Level1)
     EXPECT_EQ(transcoder_->errCode_, errCode);
     EXPECT_EQ(transcoder_->errMsg_, errMsg);
 }
+
+/**
+ * @tc.name  : Test SetTimeRange
+ * @tc.number: SetTimeRange_001
+ * @tc.desc  : Test SetTimeRange sets startTime and endTime
+ */
+HWTEST_F(HitranscodeImplUnitTest, SetTimeRange_001, TestSize.Level1)
+{
+    int64_t start = 1000;
+    int64_t end = 5000;
+    transcoder_->SetTimeRange(start, end);
+    EXPECT_EQ(transcoder_->startTimeMs_, start);
+    EXPECT_EQ(transcoder_->endTimeMs_, end);
+}
+
+/**
+ * @tc.name: Test ValidateTimeRange_0100
+ * @tc.desc: ValidateTimeRange returns OK when both startTime and endTime are -1 (no range set)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateTimeRange_0100, TestSize.Level1)
+{
+    transcoder_->startTimeMs_ = -1;
+    transcoder_->endTimeMs_ = -1;
+    int32_t ret = transcoder_->ValidateTimeRange();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: Test ValidateTimeRange_0200
+ * @tc.desc: ValidateTimeRange returns START_ERROR when startTime >= source duration
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateTimeRange_0200, TestSize.Level1)
+{
+    transcoder_->ignoreError_ = true;  // Suppress OnEvent side effects
+    transcoder_->durationMs_ = 3000;
+    transcoder_->startTimeMs_ = 3000;
+    int32_t ret = transcoder_->ValidateTimeRange();
+    EXPECT_EQ(ret, MSERR_TIME_RANGE_START_ERROR_401);
+}
+
+/**
+ * @tc.name: Test ValidateTimeRange_0300
+ * @tc.desc: ValidateTimeRange returns END_ERROR when endTime > source duration
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateTimeRange_0300, TestSize.Level1)
+{
+    transcoder_->ignoreError_ = true;  // Suppress OnEvent side effects
+    transcoder_->durationMs_ = 3000;
+    transcoder_->endTimeMs_ = 4000;
+    int32_t ret = transcoder_->ValidateTimeRange();
+    EXPECT_EQ(ret, MSERR_TIME_RANGE_END_ERROR_401);
+}
+
+/**
+ * @tc.name: Test ValidateTimeRangeStartEnd_0100
+ * @tc.desc: ValidateTimeRangeStartEnd returns INVALID when startTime >= endTime
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateTimeRangeStartEnd_0100, TestSize.Level1)
+{
+    transcoder_->ignoreError_ = true;  // Suppress OnEvent side effects
+    transcoder_->startTimeMs_ = 5000;
+    transcoder_->endTimeMs_ = 5000;
+    int32_t ret = transcoder_->ValidateTimeRangeStartEnd();
+    EXPECT_EQ(ret, MSERR_TIME_RANGE_INVALID_ERROR_401);
+}
+
+/**
+ * @tc.name: Test ValidateTimeRangeStartEnd_0200
+ * @tc.desc: ValidateTimeRangeStartEnd returns INVALID when time slice < 100ms (strictly below boundary)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateTimeRangeStartEnd_0200, TestSize.Level1)
+{
+    transcoder_->ignoreError_ = true;  // Suppress OnEvent side effects
+    transcoder_->startTimeMs_ = 1000;
+    transcoder_->endTimeMs_ = 1050;  // 50ms < 100ms
+    int32_t ret = transcoder_->ValidateTimeRangeStartEnd();
+    EXPECT_EQ(ret, MSERR_TIME_RANGE_INVALID_ERROR_401);
+}
+
+/**
+ * @tc.name: Test ValidateTimeRangeStartEnd_0250
+ * @tc.desc: ValidateTimeRangeStartEnd returns OK at the 100ms boundary (inclusive)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateTimeRangeStartEnd_0250, TestSize.Level1)
+{
+    transcoder_->startTimeMs_ = 1000;
+    transcoder_->endTimeMs_ = 1100;  // exactly 100ms, allowed
+    int32_t ret = transcoder_->ValidateTimeRangeStartEnd();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: Test ValidateTimeRangeStartEnd_0300
+ * @tc.desc: ValidateTimeRangeStartEnd returns OK when start < 0 (only end set, not reaching the
+ *         start>=end branch because of the early-return on startTimeMs_ < 0)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateTimeRangeStartEnd_0300, TestSize.Level1)
+{
+    transcoder_->startTimeMs_ = -1;
+    transcoder_->endTimeMs_ = 5000;
+    int32_t ret = transcoder_->ValidateTimeRangeStartEnd();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: Test ValidateTimeRange_0400
+ * @tc.desc: ValidateTimeRange returns OK when both start and end are positive, valid
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateTimeRange_0400, TestSize.Level1)
+{
+    transcoder_->durationMs_ = 10000;
+    transcoder_->startTimeMs_ = 1000;
+    transcoder_->endTimeMs_ = 5000;
+    int32_t ret = transcoder_->ValidateTimeRange();
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+/**
+ * @tc.name: Test PropagateTimeRangeToFilters_0100
+ * @tc.desc: PropagateTimeRangeToFilters does nothing when startTime and endTime are both -1
+ */
+HWTEST_F(HitranscodeImplUnitTest, PropagateTimeRangeToFilters_0100, TestSize.Level1)
+{
+    transcoder_->startTimeMs_ = -1;
+    transcoder_->endTimeMs_ = -1;
+    EXPECT_NO_THROW(transcoder_->PropagateTimeRangeToFilters());
+    // Both -1 means no time range set, the function should early-return without
+    // touching state. Verify the inputs remain unchanged after the call.
+    EXPECT_EQ(transcoder_->startTimeMs_, -1);
+    EXPECT_EQ(transcoder_->endTimeMs_, -1);
+}
+
+// ===================== HDR 相关测试 =====================
+
+/**
+ * @tc.name  : Test ConfigureDestHdrMode
+ * @tc.number: ConfigureDestHdrMode_001
+ * @tc.desc  : Test ConfigureDestHdrMode with SDR mode
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureDestHdrMode_001, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    VideoDestHdrMode destHdrMode(DestHDRMode::SDR);
+    Status ret = transcoder_->ConfigureDestHdrMode(destHdrMode);
+    EXPECT_EQ(ret, Status::OK);
+    EXPECT_EQ(transcoder_->destHdrMode_, static_cast<int32_t>(DestHDRMode::SDR));
+    int32_t mode = -1;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::AV_TRANSCODER_DEST_HDR_MODE, mode));
+    EXPECT_EQ(mode, static_cast<int32_t>(DestHDRMode::SDR));
+}
+
+/**
+ * @tc.name  : Test ConfigureDestHdrMode
+ * @tc.number: ConfigureDestHdrMode_002
+ * @tc.desc  : Test ConfigureDestHdrMode with AUTO_HDR_VIVID mode
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureDestHdrMode_002, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    VideoDestHdrMode destHdrMode(DestHDRMode::AUTO_HDR_VIVID);
+    Status ret = transcoder_->ConfigureDestHdrMode(destHdrMode);
+    EXPECT_EQ(ret, Status::OK);
+    EXPECT_EQ(transcoder_->destHdrMode_, static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID));
+    int32_t mode = -1;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::AV_TRANSCODER_DEST_HDR_MODE, mode));
+    EXPECT_EQ(mode, static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID));
+}
+
+/**
+ * @tc.name  : Test QuerySrcIsHdrVivid
+ * @tc.number: QuerySrcIsHdrVivid_001
+ * @tc.desc  : Test QuerySrcIsHdrVivid with nullptr srcVideoFormat_
+ */
+HWTEST_F(HitranscodeImplUnitTest, QuerySrcIsHdrVivid_001, TestSize.Level1)
+{
+    transcoder_->srcVideoFormat_ = nullptr;
+    EXPECT_FALSE(transcoder_->QuerySrcIsHdrVivid());
+}
+
+/**
+ * @tc.name  : Test QuerySrcIsHdrVivid
+ * @tc.number: QuerySrcIsHdrVivid_002
+ * @tc.desc  : Test QuerySrcIsHdrVivid with srcVideoFormat_ not containing HDR Vivid flag
+ */
+HWTEST_F(HitranscodeImplUnitTest, QuerySrcIsHdrVivid_002, TestSize.Level1)
+{
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    EXPECT_FALSE(transcoder_->QuerySrcIsHdrVivid());
+}
+
+/**
+ * @tc.name  : Test QuerySrcIsHdrVivid
+ * @tc.number: QuerySrcIsHdrVivid_003
+ * @tc.desc  : Test QuerySrcIsHdrVivid with srcVideoFormat_ containing HDR Vivid flag = true
+ */
+HWTEST_F(HitranscodeImplUnitTest, QuerySrcIsHdrVivid_003, TestSize.Level1)
+{
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    EXPECT_TRUE(transcoder_->QuerySrcIsHdrVivid());
+}
+
+/**
+ * @tc.name  : Test QuerySrcIsHdrVivid
+ * @tc.number: QuerySrcIsHdrVivid_004
+ * @tc.desc  : Test QuerySrcIsHdrVivid with srcVideoFormat_ containing HDR Vivid flag = false
+ */
+HWTEST_F(HitranscodeImplUnitTest, QuerySrcIsHdrVivid_004, TestSize.Level1)
+{
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(false);
+    EXPECT_FALSE(transcoder_->QuerySrcIsHdrVivid());
+}
+
+/**
+ * @tc.name  : Test IsHdrOutput
+ * @tc.number: IsHdrOutput_001
+ * @tc.desc  : Test IsHdrOutput with nullptr videoEncFormat_
+ */
+HWTEST_F(HitranscodeImplUnitTest, IsHdrOutput_001, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = nullptr;
+    EXPECT_FALSE(transcoder_->IsHdrOutput());
+}
+
+/**
+ * @tc.name  : Test IsHdrOutput
+ * @tc.number: IsHdrOutput_002
+ * @tc.desc  : Test IsHdrOutput with explicit HDR color space set
+ */
+HWTEST_F(HitranscodeImplUnitTest, IsHdrOutput_002, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(
+        static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_LIMIT));
+    EXPECT_TRUE(transcoder_->IsHdrOutput());
+}
+
+/**
+ * @tc.name  : Test IsHdrOutput
+ * @tc.number: IsHdrOutput_003
+ * @tc.desc  : Test IsHdrOutput with explicit SDR color space set
+ */
+HWTEST_F(HitranscodeImplUnitTest, IsHdrOutput_003, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(
+        static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT709_LIMIT));
+    EXPECT_FALSE(transcoder_->IsHdrOutput());
+}
+
+/**
+ * @tc.name  : Test IsHdrOutput
+ * @tc.number: IsHdrOutput_004
+ * @tc.desc  : Test IsHdrOutput with AUTO_HDR_VIVID and source is HDRVivid
+ */
+HWTEST_F(HitranscodeImplUnitTest, IsHdrOutput_004, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    EXPECT_TRUE(transcoder_->IsHdrOutput());
+}
+
+/**
+ * @tc.name  : Test IsHdrOutput
+ * @tc.number: IsHdrOutput_005
+ * @tc.desc  : Test IsHdrOutput with AUTO_HDR_VIVID but source is not HDRVivid
+ */
+HWTEST_F(HitranscodeImplUnitTest, IsHdrOutput_005, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    EXPECT_FALSE(transcoder_->IsHdrOutput());
+}
+
+/**
+ * @tc.name  : Test IsHdrOutput
+ * @tc.number: IsHdrOutput_006
+ * @tc.desc  : Test IsHdrOutput with SDR mode and no explicit color space
+ */
+HWTEST_F(HitranscodeImplUnitTest, IsHdrOutput_006, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::SDR);
+    EXPECT_FALSE(transcoder_->IsHdrOutput());
+}
+
+/**
+ * @tc.name  : Test ValidateHdrCodecCompatibility
+ * @tc.number: ValidateHdrCodecCompatibility_001
+ * @tc.desc  : Test ValidateHdrCodecCompatibility with SDR mode (skip check)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrCodecCompatibility_001, TestSize.Level1)
+{
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::SDR);
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::MIME_TYPE>(std::string(Plugins::MimeType::VIDEO_AVC));
+    EXPECT_EQ(transcoder_->ValidateHdrCodecCompatibility(), MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test ValidateHdrCodecCompatibility
+ * @tc.number: ValidateHdrCodecCompatibility_002
+ * @tc.desc  : Test ValidateHdrCodecCompatibility with AUTO_HDR_VIVID but source not HDRVivid (skip check)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrCodecCompatibility_002, TestSize.Level1)
+{
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::MIME_TYPE>(std::string(Plugins::MimeType::VIDEO_AVC));
+    EXPECT_EQ(transcoder_->ValidateHdrCodecCompatibility(), MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test ValidateHdrCodecCompatibility
+ * @tc.number: ValidateHdrCodecCompatibility_003
+ * @tc.desc  : Test ValidateHdrCodecCompatibility with AUTO_HDR_VIVID, source HDRVivid, HEVC codec (OK)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrCodecCompatibility_003, TestSize.Level1)
+{
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::MIME_TYPE>(std::string(Plugins::MimeType::VIDEO_HEVC));
+    EXPECT_EQ(transcoder_->ValidateHdrCodecCompatibility(), MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test ValidateHdrCodecCompatibility
+ * @tc.number: ValidateHdrCodecCompatibility_004
+ * @tc.desc  : Test ValidateHdrCodecCompatibility with AUTO_HDR_VIVID, source HDRVivid, AVC codec (mismatch)
+ *             Should return MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrCodecCompatibility_004, TestSize.Level1)
+{
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::MIME_TYPE>(std::string(Plugins::MimeType::VIDEO_AVC));
+    transcoder_->ignoreError_ = true;  // Suppress OnEvent side effects
+    int32_t ret = transcoder_->ValidateHdrCodecCompatibility();
+    EXPECT_EQ(ret, MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401);
+    EXPECT_EQ(transcoder_->errCode_, MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401);
+}
+
+/**
+ * @tc.name  : Test ValidateHdrCodecCompatibility
+ * @tc.number: ValidateHdrCodecCompatibility_005
+ * @tc.desc  : Test ValidateHdrCodecCompatibility with AUTO_HDR_VIVID, source HDRVivid, nullptr videoEncFormat_
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrCodecCompatibility_005, TestSize.Level1)
+{
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    transcoder_->videoEncFormat_ = nullptr;
+    EXPECT_EQ(transcoder_->ValidateHdrCodecCompatibility(), MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test ValidateHdrWatermarkIncompatibility
+ * @tc.number: ValidateHdrWatermarkIncompatibility_001
+ * @tc.desc  : Test ValidateHdrWatermarkIncompatibility with SDR output and watermark (OK)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrWatermarkIncompatibility_001, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::SDR);
+    transcoder_->skipProcessFilterFlag_.isAddWaterMark = true;
+    EXPECT_EQ(transcoder_->ValidateHdrWatermarkIncompatibility(), MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test ValidateHdrWatermarkIncompatibility
+ * @tc.number: ValidateHdrWatermarkIncompatibility_002
+ * @tc.desc  : Test ValidateHdrWatermarkIncompatibility with HDR output but no watermark (OK)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrWatermarkIncompatibility_002, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    transcoder_->skipProcessFilterFlag_.isAddWaterMark = false;
+    EXPECT_EQ(transcoder_->ValidateHdrWatermarkIncompatibility(), MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test ValidateHdrWatermarkIncompatibility
+ * @tc.number: ValidateHdrWatermarkIncompatibility_003
+ * @tc.desc  : Test ValidateHdrWatermarkIncompatibility with HDR output and watermark (incompatible)
+ *             Should return MSERR_HDR_VIVID_WATERMARK_ERROR_5400106
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrWatermarkIncompatibility_003, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    transcoder_->skipProcessFilterFlag_.isAddWaterMark = true;
+    transcoder_->ignoreError_ = true;  // Suppress OnEvent side effects
+    int32_t ret = transcoder_->ValidateHdrWatermarkIncompatibility();
+    EXPECT_EQ(ret, MSERR_HDR_VIVID_WATERMARK_ERROR_5400106);
+    EXPECT_EQ(transcoder_->errCode_, MSERR_HDR_VIVID_WATERMARK_ERROR_5400106);
+}
+
+/**
+ * @tc.name  : Test ValidateHdrWatermarkIncompatibility
+ * @tc.number: ValidateHdrWatermarkIncompatibility_004
+ * @tc.desc  : Test ValidateHdrWatermarkIncompatibility with explicit HDR color space and watermark (incompatible)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrWatermarkIncompatibility_004, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(
+        static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_LIMIT));
+    transcoder_->skipProcessFilterFlag_.isAddWaterMark = true;
+    transcoder_->ignoreError_ = true;  // Suppress OnEvent side effects
+    int32_t ret = transcoder_->ValidateHdrWatermarkIncompatibility();
+    EXPECT_EQ(ret, MSERR_HDR_VIVID_WATERMARK_ERROR_5400106);
+}
+
+/**
+ * @tc.name  : Test ValidateHdrWatermarkIncompatibility
+ * @tc.number: ValidateHdrWatermarkIncompatibility_005
+ * @tc.desc  : Test ValidateHdrWatermarkIncompatibility with explicit SDR color space and watermark (OK)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ValidateHdrWatermarkIncompatibility_005, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(
+        static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT709_LIMIT));
+    transcoder_->skipProcessFilterFlag_.isAddWaterMark = true;
+    EXPECT_EQ(transcoder_->ValidateHdrWatermarkIncompatibility(), MSERR_OK);
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoEncoderHdrFormat
+ * @tc.number: ConfigureVideoEncoderHdrFormat_001
+ * @tc.desc  : Test ConfigureVideoEncoderHdrFormat with nullptr videoEncFormat_ (skip)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoEncoderHdrFormat_001, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = nullptr;
+    EXPECT_NO_THROW(transcoder_->ConfigureVideoEncoderHdrFormat());
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoEncoderHdrFormat
+ * @tc.number: ConfigureVideoEncoderHdrFormat_002
+ * @tc.desc  : Test ConfigureVideoEncoderHdrFormat with explicit SDR color space (skip HDR config)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoEncoderHdrFormat_002, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(
+        static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT709_LIMIT));
+    EXPECT_NO_THROW(transcoder_->ConfigureVideoEncoderHdrFormat());
+    // Should not set HDR Vivid flag
+    bool isHdrVivid = false;
+    EXPECT_FALSE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdrVivid));
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoEncoderHdrFormat
+ * @tc.number: ConfigureVideoEncoderHdrFormat_003
+ * @tc.desc  : Test ConfigureVideoEncoderHdrFormat with SDR mode (skip HDR config)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoEncoderHdrFormat_003, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::SDR);
+    EXPECT_NO_THROW(transcoder_->ConfigureVideoEncoderHdrFormat());
+    bool isHdrVivid = false;
+    EXPECT_FALSE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdrVivid));
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoEncoderHdrFormat
+ * @tc.number: ConfigureVideoEncoderHdrFormat_004
+ * @tc.desc  : Test ConfigureVideoEncoderHdrFormat with AUTO_HDR_VIVID but source not HDRVivid (skip)
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoEncoderHdrFormat_004, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    EXPECT_NO_THROW(transcoder_->ConfigureVideoEncoderHdrFormat());
+    bool isHdrVivid = false;
+    EXPECT_FALSE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdrVivid));
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoEncoderHdrFormat
+ * @tc.number: ConfigureVideoEncoderHdrFormat_005
+ * @tc.desc  : Test ConfigureVideoEncoderHdrFormat with AUTO_HDR_VIVID and source HDRVivid
+ *             Should configure HDR output with VIDEO_IS_HDR_VIVID=true
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoEncoderHdrFormat_005, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::MIME_TYPE>(std::string(Plugins::MimeType::VIDEO_HEVC));
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    EXPECT_NO_THROW(transcoder_->ConfigureVideoEncoderHdrFormat());
+    bool isHdrVivid = false;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdrVivid));
+    EXPECT_TRUE(isHdrVivid);
+    // Should set HEVC Main10 profile
+    Plugins::HEVCProfile profile = Plugins::HEVCProfile::HEVC_PROFILE_MAIN;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_H265_PROFILE, profile));
+    EXPECT_EQ(profile, Plugins::HEVCProfile::HEVC_PROFILE_MAIN_10);
+    // Should set AV_TRANSCODER_DST_COLOR_SPACE
+    int32_t colorSpace = 0;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::AV_TRANSCODER_DST_COLOR_SPACE, colorSpace));
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoEncoderHdrFormat
+ * @tc.number: ConfigureVideoEncoderHdrFormat_006
+ * @tc.desc  : Test ConfigureVideoEncoderHdrFormat with explicit HDR color space (BT2020_HLG_LIMIT)
+ *             Should configure HDR color aspects via explicit path
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoEncoderHdrFormat_006, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::MIME_TYPE>(std::string(Plugins::MimeType::VIDEO_HEVC));
+    transcoder_->videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(
+        static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_HLG_LIMIT));
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    EXPECT_NO_THROW(transcoder_->ConfigureVideoEncoderHdrFormat());
+    bool isHdrVivid = false;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdrVivid));
+    EXPECT_TRUE(isHdrVivid);
+    // Should set color primaries to BT2020
+    Plugins::ColorPrimary primaries = Plugins::ColorPrimary::UNSPECIFIED;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_COLOR_PRIMARIES, primaries));
+    EXPECT_EQ(primaries, Plugins::ColorPrimary::BT2020);
+    // Should set transfer to HLG
+    Plugins::TransferCharacteristic transfer = Plugins::TransferCharacteristic::UNSPECIFIED;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_COLOR_TRC, transfer));
+    EXPECT_EQ(transfer, Plugins::TransferCharacteristic::HLG);
+    // Should set matrix to BT2020_NCL
+    Plugins::MatrixCoefficient matrix = Plugins::MatrixCoefficient::UNSPECIFIED;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_COLOR_MATRIX_COEFF, matrix));
+    EXPECT_EQ(matrix, Plugins::MatrixCoefficient::BT2020_NCL);
+    // Should set range to limited (false)
+    bool colorRange = true;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_COLOR_RANGE, colorRange));
+    EXPECT_FALSE(colorRange);
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoEncoderHdrFormat
+ * @tc.number: ConfigureVideoEncoderHdrFormat_007
+ * @tc.desc  : Test ConfigureVideoEncoderHdrFormat with explicit HDR color space but source not HDRVivid
+ *             Should still configure HDR color aspects but not set VIDEO_IS_HDR_VIVID
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoEncoderHdrFormat_007, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::MIME_TYPE>(std::string(Plugins::MimeType::VIDEO_HEVC));
+    transcoder_->videoEncFormat_->Set<Tag::AV_TRANSCODER_DST_COLOR_SPACE>(
+        static_cast<int32_t>(OH_NativeBuffer_ColorSpace::OH_COLORSPACE_BT2020_PQ_LIMIT));
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    EXPECT_NO_THROW(transcoder_->ConfigureVideoEncoderHdrFormat());
+    // Source is not HDRVivid, so VIDEO_IS_HDR_VIVID should not be set
+    bool isHdrVivid = false;
+    EXPECT_FALSE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdrVivid));
+    // But HDR color aspects should still be configured
+    Plugins::TransferCharacteristic transfer = Plugins::TransferCharacteristic::UNSPECIFIED;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_COLOR_TRC, transfer));
+    EXPECT_EQ(transfer, Plugins::TransferCharacteristic::PQ);
+}
+
+/**
+ * @tc.name  : Test ConfigureHdrByAutoHdrVivid
+ * @tc.number: ConfigureHdrByAutoHdrVivid_001
+ * @tc.desc  : Test ConfigureHdrByAutoHdrVivid with source color aspects available
+ *             (indirectly tested via ConfigureVideoEncoderHdrFormat_005)
+ *             This test verifies default HDR values when srcVideoFormat_ is nullptr
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureHdrByAutoHdrVivid_001, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::MIME_TYPE>(std::string(Plugins::MimeType::VIDEO_HEVC));
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = nullptr;
+    // Source is nullptr so QuerySrcIsHdrVivid returns false, HDR config is skipped
+    EXPECT_NO_THROW(transcoder_->ConfigureVideoEncoderHdrFormat());
+    bool isHdrVivid = false;
+    EXPECT_FALSE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_IS_HDR_VIVID, isHdrVivid));
+}
+
+/**
+ * @tc.name  : Test ConfigureHdrByAutoHdrVivid
+ * @tc.number: ConfigureHdrByAutoHdrVivid_002
+ * @tc.desc  : Test ConfigureHdrByAutoHdrVivid with source providing custom color aspects
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureHdrByAutoHdrVivid_002, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    transcoder_->videoEncFormat_->Set<Tag::MIME_TYPE>(std::string(Plugins::MimeType::VIDEO_HEVC));
+    transcoder_->destHdrMode_ = static_cast<int32_t>(DestHDRMode::AUTO_HDR_VIVID);
+    transcoder_->srcVideoFormat_ = std::make_shared<Meta>();
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_IS_HDR_VIVID>(true);
+    // Set custom source color aspects
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_COLOR_PRIMARIES>(Plugins::ColorPrimary::P3D65);
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_COLOR_TRC>(Plugins::TransferCharacteristic::PQ);
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_COLOR_MATRIX_COEFF>(
+        Plugins::MatrixCoefficient::BT2020_NCL);
+    transcoder_->srcVideoFormat_->Set<Tag::VIDEO_COLOR_RANGE>(true);
+    EXPECT_NO_THROW(transcoder_->ConfigureVideoEncoderHdrFormat());
+    // Should copy source color aspects to videoEncFormat_
+    Plugins::ColorPrimary primaries = Plugins::ColorPrimary::UNSPECIFIED;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_COLOR_PRIMARIES, primaries));
+    EXPECT_EQ(primaries, Plugins::ColorPrimary::P3D65);
+    Plugins::TransferCharacteristic transfer = Plugins::TransferCharacteristic::UNSPECIFIED;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_COLOR_TRC, transfer));
+    EXPECT_EQ(transfer, Plugins::TransferCharacteristic::PQ);
+    bool colorRange = false;
+    EXPECT_TRUE(transcoder_->videoEncFormat_->GetData(Tag::VIDEO_COLOR_RANGE, colorRange));
+    EXPECT_TRUE(colorRange);
+}
+
+/**
+ * @tc.name  : Test ConfigureVideoEncoderFormat with HDR
+ * @tc.number: ConfigureVideoEncoderFormat_004
+ * @tc.desc  : Test ConfigureVideoEncoderFormat with H265 (HEVC) for HDR readiness
+ */
+HWTEST_F(HitranscodeImplUnitTest, ConfigureVideoEncoderFormat_004, TestSize.Level1)
+{
+    transcoder_->videoEncFormat_ = std::make_shared<Meta>();
+    VideoEnc videoEnc(VideoCodecFormat::H265);
+    transcoder_->ConfigureVideoEncoderFormat(videoEnc);
+    std::string mime;
+    transcoder_->videoEncFormat_->GetData(Tag::MIME_TYPE, mime);
+    EXPECT_EQ(mime, Plugins::MimeType::VIDEO_HEVC);
+}
+
+/**
+ * @tc.name  : Test CollectionErrorInfo with HDR error codes
+ * @tc.number: CollectionErrorInfo_002
+ * @tc.desc  : Test CollectionErrorInfo with MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401
+ */
+HWTEST_F(HitranscodeImplUnitTest, CollectionErrorInfo_002, TestSize.Level1)
+{
+    transcoder_->CollectionErrorInfo(MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401,
+        "HDR Vivid output requires HEVC codec");
+    EXPECT_EQ(transcoder_->errCode_, MSERR_HDR_VIVID_CODEC_MISMATCH_ERROR_401);
+}
+
+/**
+ * @tc.name  : Test CollectionErrorInfo with HDR error codes
+ * @tc.number: CollectionErrorInfo_003
+ * @tc.desc  : Test CollectionErrorInfo with MSERR_HDR_VIVID_WATERMARK_ERROR_5400106
+ */
+HWTEST_F(HitranscodeImplUnitTest, CollectionErrorInfo_003, TestSize.Level1)
+{
+    transcoder_->CollectionErrorInfo(MSERR_HDR_VIVID_WATERMARK_ERROR_5400106,
+        "Watermark is not supported for HDR Vivid output");
+    EXPECT_EQ(transcoder_->errCode_, MSERR_HDR_VIVID_WATERMARK_ERROR_5400106);
+}
 } // namespace Media
 } // namespace OHOS

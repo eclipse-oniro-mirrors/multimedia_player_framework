@@ -183,6 +183,23 @@ int32_t TransCoderServiceProxy::SetVideoSqrFactor(int32_t sqrFactor)
     return reply.ReadInt32();
 }
 
+int32_t TransCoderServiceProxy::SetDestHDRMode(DestHDRMode mode)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(TransCoderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    data.WriteInt32(static_cast<int32_t>(mode));
+    int error = SendRequest(SET_DEST_HDR_MODE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetDestHDRMode failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
 int32_t TransCoderServiceProxy::SetAudioEncoder(AudioCodecFormat encoder)
 {
     MessageParcel data;
@@ -383,6 +400,24 @@ int32_t TransCoderServiceProxy::AddWatermark(std::shared_ptr<AVBuffer> &waterMar
     int error = SendRequest(ADD_WATERMARK, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
         "AddWatermark failed, error: %{public}d", error);
+
+    return reply.ReadInt32();
+}
+
+int32_t TransCoderServiceProxy::SetTimeRange(int64_t startTime, int64_t endTime)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+
+    bool token = data.WriteInterfaceToken(TransCoderServiceProxy::GetDescriptor());
+    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
+
+    (void)data.WriteInt64(startTime);
+    (void)data.WriteInt64(endTime);
+    int error = Remote()->SendRequest(SET_TIME_RANGE, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "SetTimeRange failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }
