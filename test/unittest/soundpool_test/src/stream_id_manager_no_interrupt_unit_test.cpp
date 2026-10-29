@@ -622,4 +622,3 @@ HWTEST_F(StreamIDManagerNoInterruptUnitTest, streamIdNoInterrupt_function_029, T
 
 }  // namespace Media
 }  // namespace OHOS
-
