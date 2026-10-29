@@ -27,6 +27,9 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Media {
 
+constexpr int32_t TEST_BUFFER_WIDTH = 64;
+constexpr int32_t TEST_BUFFER_HEIGHT = 64;
+
 class MockScreenCaptureCallBackForBuffer : public ScreenCaptureCallBack {
 public:
     MOCK_METHOD(void, OnError, (ScreenCaptureErrorType errorType, int32_t errorCode), (override));
@@ -169,8 +172,8 @@ static sptr<OHOS::Surface> MakeConsumerWithQueuedBuffer(sptr<OHOS::SurfaceBuffer
     sptr<OHOS::SurfaceBuffer> buf = nullptr;
     int32_t fence = -1;
     OHOS::BufferRequestConfig config;
-    config.width = 64;
-    config.height = 64;
+    config.width = TEST_BUFFER_WIDTH;
+    config.height = TEST_BUFFER_HEIGHT;
     config.format = GRAPHIC_PIXEL_FMT_RGBA_8888;
     config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE;
     config.timeout = 0;
