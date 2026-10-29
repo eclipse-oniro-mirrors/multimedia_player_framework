@@ -79,5 +79,9 @@ ohos_unittest("soundpool_unit_test") {
     "qos_manager:qos",
   ]
 
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
+
   resource_config_file = "${multimedia_player_framework_path}/test/unittest/resources/ohos_test.xml"
 }
