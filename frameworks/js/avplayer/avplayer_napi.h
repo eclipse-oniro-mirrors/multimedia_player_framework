@@ -265,6 +265,7 @@ private:
      * getTrackDescription(): Promise<Array<MediaDescription>>
      */
     static napi_value JsGetTrackDescription(napi_env env, napi_callback_info info);
+    static napi_value JsCheckSupportPlaybackCommand(napi_env env, napi_callback_info info);
     /**
      * JsGetSelectedTracks(callback:AsyncCallback<Array<number>>): void
      * JsGetSelectedTracks(): Promise<Array<number>>
@@ -480,6 +481,7 @@ private:
         }
         std::shared_ptr<TaskHandler<TaskRet>> asyncTask = nullptr;
         AVPlayerNapi *napi = nullptr;
+        int32_t commandValue = -1;
         std::vector<Format> trackInfoVec_;
         AVPlayTrackSelectionFilter trackFilter_;
         enum class ListOp : uint8_t {

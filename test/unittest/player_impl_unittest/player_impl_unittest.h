@@ -132,6 +132,7 @@ public:
     MOCK_METHOD(int32_t, SetPCMOutputCallback, (const std::shared_ptr<PlayerCallback> &callback), (override));
     MOCK_METHOD(int32_t, SetPCMProcessorCallback, (const std::shared_ptr<PlayerCallback> &callback), (override));
     MOCK_METHOD(int32_t, SetPCMProcessorMaxLen, (int32_t maxProcessedPcmLen), (override));
+    MOCK_METHOD(int32_t, CheckSupportPlaybackCommand, (PlaybackCommand command, bool &support), (override));
 };
 
 class MockPlayerCallback : public PlayerCallback {

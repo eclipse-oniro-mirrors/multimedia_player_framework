@@ -358,6 +358,13 @@ public:
         return 0;
     }
 
+    virtual int32_t CheckSupportPlaybackCommand(PlaybackCommand command, bool &support)
+    {
+        (void)command;
+        (void)support;
+        return 0;
+    }
+
     /**
      * IPC code ID
      */
@@ -450,6 +457,7 @@ public:
         REMOVE_ADS_MEDIA_SOURCE,
         SKIP_CURRENT_ADS_MEDIA_SOURCE,
         DISABLE_ALL_ADS_MEDIA_SOURCE,
+        CHECK_SUPPORT_PLAYBACK_COMMAND,
     };
 
     DECLARE_INTERFACE_DESCRIPTOR(u"IStandardPlayerService");

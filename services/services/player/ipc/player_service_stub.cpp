@@ -322,6 +322,8 @@ void PlayerServiceStub::FillPlayerFuncPart4()
         [this](MessageParcel &data, MessageParcel &reply) { return SkipCurrentAdsMediaSource(data, reply); } };
     playerFuncs_[DISABLE_ALL_ADS_MEDIA_SOURCE] = { "Player::DisableAllAdsMediaSource",
         [this](MessageParcel &data, MessageParcel &reply) { return DisableAllAdsMediaSource(data, reply); } };
+    playerFuncs_[CHECK_SUPPORT_PLAYBACK_COMMAND] = { "Player::CheckSupportPlaybackCommand",
+        [this](MessageParcel &data, MessageParcel &reply) { return CheckSupportPlaybackCommand(data, reply); } };
 }
 
 int32_t PlayerServiceStub::Init()
@@ -2269,6 +2271,13 @@ int32_t PlayerServiceStub::DisableAllAdsMediaSource()
     CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
     return playerServer_->DisableAllAdsMediaSource();
 }
+
+int32_t PlayerServiceStub::CheckSupportPlaybackCommand(PlaybackCommand command, bool &support)
+{
+    MediaTrace trace("PlayerServiceStub::CheckSupportPlaybackCommand");
+    CHECK_AND_RETURN_RET_LOG(playerServer_ != nullptr, MSERR_NO_MEMORY, "player server is nullptr");
+    return playerServer_->CheckSupportPlaybackCommand(command, support);
+}
  
 int32_t PlayerServiceStub::AddAdsMediaSource(MessageParcel &data, MessageParcel &reply)
 {
@@ -2323,6 +2332,16 @@ int32_t PlayerServiceStub::DisableAllAdsMediaSource(MessageParcel &data, Message
 {
     (void)data;
     reply.WriteInt32(DisableAllAdsMediaSource());
+    return MSERR_OK;
+}
+
+int32_t PlayerServiceStub::CheckSupportPlaybackCommand(MessageParcel &data, MessageParcel &reply)
+{
+    auto command = static_cast<PlaybackCommand>(data.ReadInt32());
+    bool support = false;
+    int32_t ret = CheckSupportPlaybackCommand(command, support);
+    reply.WriteBool(support);
+    reply.WriteInt32(ret);
     return MSERR_OK;
 }
 } // namespace Media

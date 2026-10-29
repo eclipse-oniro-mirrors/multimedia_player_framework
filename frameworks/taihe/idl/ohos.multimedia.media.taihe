@@ -263,6 +263,7 @@ enum MediaDescriptionKey: String {
     MD_KEY_REFERENCE_TRACK_IDS = "ref_track_ids",
     MD_KEY_TRACK_REFERENCE_TYPE = "track_ref_type",
     MD_KEY_MIME_TYPE = "mime_type",
+    MD_KEY_TRACK_PLAYABLE = "is_playable",
 }
 
 union MediaDescriptionValue {
@@ -291,6 +292,11 @@ enum PlaylistLoopMode: i32 {
     PLAYLIST_LOOP_MODE_ONE = 2,
     PLAYLIST_LOOP_MODE_SHUFFLE = 3,
     PLAYLIST_LOOP_MODE_NONE = 4,
+}
+
+enum PlaybackCommand: i32 {
+    PLAYBACK_COMMAND_SEEK = 0,
+    PLAYBACK_COMMAND_RATE = 1,
 }
 
 enum PlaybackMetricsKey: String {
@@ -407,6 +413,9 @@ interface AVPlayer {
     @gen_async("getTrackDescription")
     @gen_promise("getTrackDescription")
     GetTrackDescriptionSync(): Array<@record Map<String, MediaDescriptionValue>>;
+
+    @gen_promise("checkSupportPlaybackCommand")
+    CheckSupportPlaybackCommandSync(command: PlaybackCommand): bool;
 
     @overload("stop")
     StopAsync(callback: @sts_type("AsyncCallback<void>") Opaque): void;

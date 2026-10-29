@@ -55,6 +55,23 @@ public:
     AVPlayTrackSelectionFilter trackFilter_;
 };
 
+// Mock engine for CheckSupportPlaybackCommand: allows controlling
+// IsDolbyStream and IsLiveSeek return values.
+class PlaybackCmdPlayerEngineMock : public PlayerEngineMock {
+public:
+    bool isDolbyStream_ = false;
+    bool isLiveSeek_ = false;
+ 
+    bool IsDolbyStream() override
+    {
+        return isDolbyStream_;
+    }
+    bool IsLiveSeek() override
+    {
+        return isLiveSeek_;
+    }
+};
+
 void PlayerServerUnitTest::SetUpTestCase(void)
 {
 }
@@ -878,6 +895,222 @@ HWTEST_F(PlayerServerUnitTest, Player_SetSubtitleCbDfxStatus_Unregister_001, Tes
     accessor->lastOpStatus_ = PLAYER_STARTED;
     EXPECT_EQ(MSERR_OK, accessor->SetSubtitleCbDfxStatus(false));
     EXPECT_EQ(MSERR_OK, accessor->SetSubtitleCbDfxStatus(true));
+}
+
+// ===========================================================================
+// Tests for PlayerServer::CheckSupportPlaybackCommand
+// ===========================================================================
+ 
+// @tc.name     Test CheckSupportPlaybackCommand with null playerEngine
+// @tc.number   Player_CheckSupportPlaybackCommand_001
+// @tc.desc     When playerEngine_ is nullptr, returns MSERR_NO_MEMORY.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_001, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    server_->playerEngine_ = nullptr;
+    server_->lastOpStatus_ = PLAYER_PREPARED;
+    bool support = true;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, support);
+    EXPECT_EQ(ret, MSERR_NO_MEMORY);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand with invalid state
+// @tc.number   Player_CheckSupportPlaybackCommand_002
+// @tc.desc     When lastOpStatus_ is PLAYER_IDLE (not in allowed set), returns
+//              MSERR_INVALID_OPERATION.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_002, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_IDLE;
+    bool support = true;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, support);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand SEEK on live stream
+// @tc.number   Player_CheckSupportPlaybackCommand_003
+// @tc.desc     SEEK command with isLiveStream true sets support=false, returns MSERR_OK.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_003, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    mockEngine->isLiveSeek_ = false;
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_PREPARED;
+    server_->isLiveStream_ = true;
+    bool support = true;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_FALSE(support);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand SEEK on non-live stream
+// @tc.number   Player_CheckSupportPlaybackCommand_004
+// @tc.desc     SEEK command with isLiveStream false sets support=true, returns MSERR_OK.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_004, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_STARTED;
+    server_->isLiveStream_ = false;
+    bool support = false;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_TRUE(support);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand RATE on live stream
+// @tc.number   Player_CheckSupportPlaybackCommand_005
+// @tc.desc     RATE command with isLiveStream true sets support=false, returns MSERR_OK.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_005, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    mockEngine->isLiveSeek_ = false;
+    mockEngine->isDolbyStream_ = false;
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_PAUSED;
+    server_->isLiveStream_ = true;
+    bool support = true;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_RATE, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_FALSE(support);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand RATE on dolby stream
+// @tc.number   Player_CheckSupportPlaybackCommand_006
+// @tc.desc     RATE command with isDolbyStream true sets support=false, returns MSERR_OK.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_006, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    mockEngine->isDolbyStream_ = true;
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_PLAYBACK_COMPLETE;
+    server_->isLiveStream_ = false;
+    bool support = true;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_RATE, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_FALSE(support);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand RATE under normal conditions
+// @tc.number   Player_CheckSupportPlaybackCommand_007
+// @tc.desc     RATE command with no live/dolby sets support=true, returns MSERR_OK.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_007, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    mockEngine->isDolbyStream_ = false;
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_PREPARED;
+    server_->isLiveStream_ = false;
+    bool support = false;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_RATE, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_TRUE(support);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand with unknown command
+// @tc.number   Player_CheckSupportPlaybackCommand_008
+// @tc.desc     Unknown command (cast to PlaybackCommand) returns MSERR_INVALID_VAL.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_008, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_PREPARED;
+    server_->isLiveStream_ = false;
+    bool support = true;
+    int32_t ret = server_->CheckSupportPlaybackCommand(static_cast<PlaybackCommand>(999), support);
+    EXPECT_EQ(ret, MSERR_INVALID_VAL);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand RATE live stream with IsLiveSeek true
+// @tc.number   Player_CheckSupportPlaybackCommand_009
+// @tc.desc     RATE command when isLiveStream_ true but IsLiveSeek true makes isLiveStream
+//              false; with dolby also false, support=true.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_009, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    mockEngine->isLiveSeek_ = true;
+    mockEngine->isDolbyStream_ = false;
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_STARTED;
+    server_->isLiveStream_ = true;
+    bool support = false;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_RATE, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_TRUE(support);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand with PLAYER_STATE_ERROR state
+// @tc.number   Player_CheckSupportPlaybackCommand_010
+// @tc.desc     PLAYER_STATE_ERROR is not in the allowed state set, returns
+//              MSERR_INVALID_OPERATION.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_010, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_STATE_ERROR;
+    server_->isLiveStream_ = false;
+    bool support = true;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, support);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand SEEK with IsLiveSeek true on live stream
+// @tc.number   Player_CheckSupportPlaybackCommand_011
+// @tc.desc     SEEK command when isLiveStream_ true and IsLiveSeek true makes isLiveStream
+//              false, so support=true.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_011, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    mockEngine->isLiveSeek_ = true;
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_PREPARED;
+    server_->isLiveStream_ = true;
+    bool support = false;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_TRUE(support);
+}
+ 
+// @tc.name     Test CheckSupportPlaybackCommand RATE with all restrictions true
+// @tc.number   Player_CheckSupportPlaybackCommand_012
+// @tc.desc     RATE command when isLiveStream and isDolbyStream all true
+//              sets support=false (short-circuit at first condition), returns MSERR_OK.
+HWTEST_F(PlayerServerUnitTest, Player_CheckSupportPlaybackCommand_012, TestSize.Level0)
+{
+    std::shared_ptr<PlayerServer> server_ = std::make_shared<PlayerServer>();
+    (void)server_->Init();
+    auto mockEngine = std::make_unique<PlaybackCmdPlayerEngineMock>();
+    mockEngine->isLiveSeek_ = false;
+    mockEngine->isDolbyStream_ = true;
+    server_->playerEngine_ = std::move(mockEngine);
+    server_->lastOpStatus_ = PLAYER_PAUSED;
+    server_->isLiveStream_ = true;
+    bool support = true;
+    int32_t ret = server_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_RATE, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_FALSE(support);
 }
 } // namespace Media
 } // namespace OHOS

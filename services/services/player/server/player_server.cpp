@@ -2763,9 +2763,7 @@ std::vector<std::string> PlayerServer::GetDolbyList()
     MEDIA_LOGI("PlayerFilterCallback GetDolbyList.");
     auto callbackInstance = PlayerServer::GetPassthroughCallbackInstance();
     CHECK_AND_RETURN_RET(callbackInstance != nullptr, {});
-    if (dolbyList_.empty()) {
-        dolbyList_ = callbackInstance->GetList();
-    }
+    dolbyList_ = callbackInstance->GetList();
     return dolbyList_;
 }
 
@@ -2931,6 +2929,48 @@ int32_t PlayerServer::DisableAllAdsMediaSource()
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
     MEDIA_LOGI("PlayerServer DisableAllAdsMediaSource in");
     return playerEngine_->DisableAllAdsMediaSource();
+}
+
+int32_t PlayerServer::CheckSupportPlaybackCommand(PlaybackCommand command, bool &support)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+    if (lastOpStatus_ != PLAYER_PREPARED && lastOpStatus_ != PLAYER_PAUSED &&
+        lastOpStatus_ != PLAYER_STARTED && lastOpStatus_ != PLAYER_PLAYBACK_COMPLETE) {
+        MEDIA_LOGE("Can not check support playback command, currentState is %{public}s",
+            GetStatusDescription(lastOpStatus_).c_str());
+        return MSERR_INVALID_OPERATION;
+    }
+ 
+    support = false;
+    bool isLiveStream = isLiveStream_ && !IsLiveSeek();
+    switch (command) {
+        case PLAYBACK_COMMAND_SEEK:
+            if (isLiveStream) {
+                support = false;
+                MEDIA_LOGI("PLAYBACK_COMMAND_SEEK not supported: isLiveStream=%{public}d", isLiveStream);
+            } else {
+                support = true;
+            }
+            break;
+        case PLAYBACK_COMMAND_RATE: {
+            bool isDolbyStream = playerEngine_->IsDolbyStream();
+            if (isLiveStream || isDolbyStream) {
+                support = false;
+                MEDIA_LOGI("PLAYBACK_COMMAND_RATE not supported: isLiveStream=%{public}d, isDolbyStream=%{public}d",
+                    isLiveStream, isDolbyStream);
+            } else {
+                support = true;
+            }
+            break;
+        }
+        default:
+            MEDIA_LOGE("Unknown playback command: %{public}d", static_cast<int32_t>(command));
+            return MSERR_INVALID_VAL;
+    }
+    MEDIA_LOGI("CheckSupportPlaybackCommand command: %{public}d, support: %{public}d",
+        static_cast<int32_t>(command), support);
+    return MSERR_OK;
 }
 
 int32_t PlayerServer::PrepareInner()

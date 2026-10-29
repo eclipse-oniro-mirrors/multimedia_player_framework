@@ -138,6 +138,7 @@ public:
     int32_t RemoveAdsMediaSource(const std::string &id) override;
     int32_t SkipCurrentAdsMediaSource() override;
     int32_t DisableAllAdsMediaSource() override;
+    int32_t CheckSupportPlaybackCommand(PlaybackCommand command, bool &support) override;
 
 protected:
     PlayerServiceStub();
@@ -241,6 +242,7 @@ private:
     int32_t RemoveAdsMediaSource(MessageParcel &data, MessageParcel &reply);
     int32_t SkipCurrentAdsMediaSource(MessageParcel &data, MessageParcel &reply);
     int32_t DisableAllAdsMediaSource(MessageParcel &data, MessageParcel &reply);
+    int32_t CheckSupportPlaybackCommand(MessageParcel &data, MessageParcel &reply);
 
     int32_t ReadMediaStreamListFromMessageParcel(
         MessageParcel &data, const std::shared_ptr<AVMediaSource> &mediaSource);

@@ -1079,6 +1079,16 @@ int32_t PlayerImpl::GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack)
     return ret;
 }
 
+int32_t PlayerImpl::CheckSupportPlaybackCommand(PlaybackCommand command, bool &support)
+{
+    MEDIA_LOGI("PlayerImpl:0x%{public}06" PRIXPTR " CheckSupportPlaybackCommand", FAKE_POINTER(this));
+    CHECK_AND_RETURN_RET_LOG(playerService_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    int32_t ret = MSERR_OK;
+    LISTENER(ret = playerService_->CheckSupportPlaybackCommand(command, support),
+        "CheckSupportPlaybackCommand", false, TIME_OUT_SECOND);
+    return ret;
+}
+
 int32_t PlayerImpl::GetVideoWidth()
 {
     ScopedTimer timer("GetVideoWidth", OVERTIME_WARNING_MS);
