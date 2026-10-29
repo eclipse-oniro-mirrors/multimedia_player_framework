@@ -396,6 +396,7 @@ public:
     static constexpr std::string_view PLAYER_SEI_PAYLOAD_TYPE = "payloadType";
     static constexpr std::string_view PLAYER_SEI_PAYLOAD_CONTENT = "payload";
     static constexpr std::string_view PLAYER_IS_FLV_LIVE = "isFlvLive";
+    static constexpr std::string_view PLAYER_TRACK_PLAYABLE = "is_playable";
     static constexpr std::string_view PLAYER_DECODER_TYPE = "decoder_type";
     static constexpr std::string_view PLAYER_CODEC_ERROR_CODE = "codec_error_code";
     static constexpr std::string_view PLAYER_ASYNC_TYPE = "async_type";
@@ -403,6 +404,11 @@ public:
     static constexpr std::string_view PLAYER_END_TIME = "end_time";
 
     static constexpr std::string_view PLAYER_LIST_MEDIA_SOURCE_CHANGE_ID = "list_media_source_change_id";
+};
+
+enum PlaybackCommand : int32_t {
+    PLAYBACK_COMMAND_SEEK = 0,
+    PLAYBACK_COMMAND_RATE = 1,
 };
 
 enum PlaylistLoopMode : int32_t {
@@ -1755,6 +1761,13 @@ public:
     virtual int32_t DisableAllAdsMediaSource()
     {
         return MSERR_OK;
+    }
+
+    virtual int32_t CheckSupportPlaybackCommand(PlaybackCommand command, bool &support)
+    {
+        (void)command;
+        (void)support;
+        return 0;
     }
 };
 

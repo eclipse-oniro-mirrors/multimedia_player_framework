@@ -978,6 +978,13 @@ public:
     {
         return MSERR_OK;
     }
+
+    virtual int32_t CheckSupportPlaybackCommand(PlaybackCommand command, bool &support)
+    {
+        (void)command;
+        (void)support;
+        return MSERR_OK;
+    }
 };
 } // namespace Media
 } // namespace OHOS

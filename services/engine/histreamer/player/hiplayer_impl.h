@@ -224,6 +224,7 @@ public:
     int32_t GetMediaDescription(Format &format) override;
     bool IsAudioPass(const char* mimeType) override;
     std::vector<std::string> GetDolbyList() override;
+    bool IsDolbyStream() override;
     int32_t NotifySubtitleSeek();
     bool IsLiveSeek() override;
     int32_t SetVideoOutput(sptr<Surface> surface) override;
@@ -357,6 +358,11 @@ private:
     bool HandleEosFlagState(const Event& event);
     int32_t GetSarVideoWidth(std::shared_ptr<Meta> trackInfo);
     int32_t GetSarVideoHeight(std::shared_ptr<Meta> trackInfo);
+    bool IsAudioTrackPlayable(const std::string& mime, int32_t sampleRate, int32_t channelCount);
+    bool CheckAudioDecoderCapability(const std::string& mime, int32_t sampleRate, int32_t channelCount);
+    bool IsVideoTrackPlayable(const std::string& mime, int32_t videoWidth, int32_t videoHeight);
+    int32_t GetVideoTrackInfoInner(std::vector<Format>& videoTrack);
+    int32_t GetAudioTrackInfoInner(std::vector<Format>& audioTrack);
     bool IsLiveStream();
     Status SetSeiMessageListener();
     void UpdatePlayTotalDuration();
@@ -489,6 +495,7 @@ private:
     double maxLivingDelayTime_ = -1;
     bool isSetBufferDurationForPlaying_ {false};
     bool isFlvLive_ {false};
+    bool isDolbyStream_ {false};
     bool preferHDR_ = false;
     std::atomic<bool> isAdsPlaying_ {false};
 

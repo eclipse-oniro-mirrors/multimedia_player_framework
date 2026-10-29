@@ -717,6 +717,20 @@ int32_t PlayerServiceProxy::GetSubtitleTrackInfo(std::vector<Format> &subtitleTr
     return reply.ReadInt32();
 }
 
+int32_t PlayerServiceProxy::CheckSupportPlaybackCommand(PlaybackCommand command, bool &support)
+{
+    MessageParcel data;
+    MessageParcel reply;
+    MessageOption option;
+    data.WriteInterfaceToken(PlayerServiceProxy::GetDescriptor());
+    data.WriteInt32(static_cast<int32_t>(command));
+    int32_t error = SendRequest(CHECK_SUPPORT_PLAYBACK_COMMAND, data, reply, option);
+    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
+        "CheckSupportPlaybackCommand ipc failed, error: %{public}d", error);
+    support = reply.ReadBool();
+    return reply.ReadInt32();
+}
+
 int32_t PlayerServiceProxy::GetVideoWidth()
 {
     MediaTrace trace("PlayerServiceProxy::GetVideoWidth");

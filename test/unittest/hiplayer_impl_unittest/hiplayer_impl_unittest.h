@@ -526,10 +526,14 @@ private:
 };
 class MockIPlayerEngineObs : public IPlayerEngineObs {
 public:
-    MOCK_METHOD(
-        void, OnError, (PlayerErrorType errorType, int32_t errorCode, const std::string &description), (override));
+    ~MockIPlayerEngineObs() override = default;
+    MOCK_METHOD(void, OnError,
+        (PlayerErrorType errorType, int32_t errorCode, const std::string &description), (override));
     MOCK_METHOD(void, OnInfo, (PlayerOnInfoType type, int32_t extra, const Format &infoBody), (override));
-    MOCK_METHOD(void, OnSystemOperation, (PlayerOnSystemOperationType type, PlayerOperationReason reason), (override));
+    MOCK_METHOD(void, OnSystemOperation,
+        (PlayerOnSystemOperationType type, PlayerOperationReason reason), (override));
+    MOCK_METHOD(bool, IsAudioPass, (const char* mime), (override));
+    MOCK_METHOD((std::vector<std::string>), GetDolbyList, (), (override));
 };
 } // namespace Media
 } // namespace OHOS

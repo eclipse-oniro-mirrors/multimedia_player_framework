@@ -447,6 +447,12 @@ static const std::vector<struct JsEnumString> g_mediaDescriptionKey = {
     {"MD_KEY_REFERENCE_TRACK_IDS", "ref_track_ids"},
     {"MD_KEY_TRACK_REFERENCE_TYPE", "track_ref_type"},
     {"MD_KEY_MIME_TYPE", "mime_type"},
+    {"MD_KEY_TRACK_PLAYABLE", "is_playable"},
+};
+
+static const std::vector<struct JsEnumInt> g_playbackCommand = {
+    { "PLAYBACK_COMMAND_SEEK", 0 },
+    { "PLAYBACK_COMMAND_RATE", 1 },
 };
 
 static const std::vector<struct JsEnumInt> g_screenCaptureRecordPreset = {
@@ -561,6 +567,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "AVMetricsEventType", g_avMetricsEventType },
     { "PlaylistLoopMode", g_listLoopMode },
     { "PickerMode", g_pickerMode },
+    { "PlaybackCommand", g_playbackCommand },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {

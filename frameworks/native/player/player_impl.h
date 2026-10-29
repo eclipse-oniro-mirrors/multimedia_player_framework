@@ -61,6 +61,7 @@ public:
     int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics) override;
     int32_t GetVideoWidth() override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
+    int32_t CheckSupportPlaybackCommand(PlaybackCommand command, bool &support) override;
     int32_t GetVideoHeight() override;
     int32_t SetPlaybackSpeed(PlaybackRateMode mode) override;
     int32_t SetPlaybackRate(float rate) override;

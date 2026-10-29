@@ -859,5 +859,13 @@ int32_t PlayerClient::DisableAllAdsMediaSource()
     CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
     return playerProxy_->DisableAllAdsMediaSource();
 }
+
+int32_t PlayerClient::CheckSupportPlaybackCommand(PlaybackCommand command, bool &support)
+{
+    MEDIA_LOGD("PlayerClient:0x%{public}06" PRIXPTR " CheckSupportPlaybackCommand in", FAKE_POINTER(this));
+    std::lock_guard<std::mutex> lock(mutex_);
+    CHECK_AND_RETURN_RET_LOG(playerProxy_ != nullptr, MSERR_SERVICE_DIED, "player service does not exist..");
+    return playerProxy_->CheckSupportPlaybackCommand(command, support);
+}
 } // namespace Media
 } // namespace OHOS

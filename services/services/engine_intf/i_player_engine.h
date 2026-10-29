@@ -455,6 +455,10 @@ public:
     {
         return {};
     }
+    virtual bool IsDolbyStream()
+    {
+        return false;
+    }
     virtual bool IsLiveSeek()
     {
         return false;

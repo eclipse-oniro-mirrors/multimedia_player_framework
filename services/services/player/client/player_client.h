@@ -124,6 +124,7 @@ public:
     int32_t RemoveAdsMediaSource(const std::string &id) override;
     int32_t SkipCurrentAdsMediaSource() override;
     int32_t DisableAllAdsMediaSource() override;
+    int32_t CheckSupportPlaybackCommand(PlaybackCommand command, bool &support) override;
 
 private:
     int32_t CreateListenerObject();

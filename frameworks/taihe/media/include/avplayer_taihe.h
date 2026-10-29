@@ -153,6 +153,7 @@ public:
     void SetVideoScaleType(optional_view<VideoScaleType> videoScaleType);
     bool IsSeekContinuousSupported();
     array<map<string, MediaDescriptionValue>> GetTrackDescriptionSync();
+    bool CheckSupportPlaybackCommandSync(::ohos::multimedia::media::PlaybackCommand command);
     int32_t GetPlaybackPosition();
     int64_t GetCurrentPresentationTimestamp();
     void SetBitrate(int32_t bitrate);

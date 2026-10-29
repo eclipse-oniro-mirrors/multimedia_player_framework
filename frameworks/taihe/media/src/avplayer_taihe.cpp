@@ -957,6 +957,41 @@ array<map<string, MediaDescriptionValue>> AVPlayerImpl::GetTrackDescriptionSync(
     return array<map<string, MediaDescriptionValue>>(tdResult);
 }
 
+bool AVPlayerImpl::CheckSupportPlaybackCommandSync(::ohos::multimedia::media::PlaybackCommand command)
+{
+    MediaTrace trace("AVPlayerImpl::checkSupportPlaybackCommand");
+    MEDIA_LOGI("TaiheCheckSupportPlaybackCommand In");
+    bool isSupported = false;
+ 
+    int32_t commandValue = static_cast<int32_t>(command.get_value());
+    if (commandValue < static_cast<int32_t>(OHOS::Media::PlaybackCommand::PLAYBACK_COMMAND_SEEK) ||
+        commandValue > static_cast<int32_t>(OHOS::Media::PlaybackCommand::PLAYBACK_COMMAND_RATE)) {
+        MEDIA_LOGE("TaiheCheckSupportPlaybackCommand failed, invalid command: %{public}d", commandValue);
+        set_business_error(MSERR_EXT_API9_INVALID_PARAMETER,
+            "invalid parameters, please check playback command");
+        return false;
+    }
+ 
+    {
+        std::shared_lock<std::shared_mutex> lock(syncMutex_);
+        if (player_ != nullptr && IsControllable()) {
+            auto cmd = static_cast<OHOS::Media::PlaybackCommand>(commandValue);
+            int32_t ret = player_->CheckSupportPlaybackCommand(cmd, isSupported);
+            if (ret != OHOS::Media::MSERR_OK) {
+                MEDIA_LOGW("CheckSupportPlaybackCommand failed");
+            }
+        } else {
+            MEDIA_LOGE("current state is not prepared/playing/paused/completed, unsupport CheckSupportPlaybackCommand");
+            set_business_error(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                "current state unsupport check support playback command");
+            return false;
+        }
+    }
+ 
+    MEDIA_LOGI("TaiheCheckSupportPlaybackCommand Out, isSupported: %{public}d", isSupported);
+    return isSupported;
+}
+
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::StopTask()
 {
     auto task = std::make_shared<TaskHandler<TaskRet>>([this]() {

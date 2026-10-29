@@ -178,6 +178,7 @@ napi_value AVPlayerNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("advanceToMediaSource", JsAdvanceToMediaSource),
         DECLARE_NAPI_FUNCTION("setBitrate", JsSelectBitrate),
         DECLARE_NAPI_FUNCTION("getTrackDescription", JsGetTrackDescription),
+        DECLARE_NAPI_FUNCTION("checkSupportPlaybackCommand", JsCheckSupportPlaybackCommand),
         DECLARE_NAPI_FUNCTION("getSelectedTracks", JsGetSelectedTracks),
         DECLARE_NAPI_FUNCTION("selectTrack", JsSelectTrack),
         DECLARE_NAPI_FUNCTION("deselectTrack", JsDeselectTrack),
@@ -1215,6 +1216,64 @@ napi_value AVPlayerNapi::JsGetPlaybackRate(napi_env env, napi_callback_info info
     napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     promiseCtx.release();
     MEDIA_LOGD("JsGetRate Out");
+    return result;
+}
+
+napi_value AVPlayerNapi::JsCheckSupportPlaybackCommand(napi_env env, napi_callback_info info)
+{
+    MediaTrace trace("AVPlayerNapi::checkSupportPlaybackCommand");
+    napi_value result = nullptr;
+    napi_get_undefined(env, &result);
+    MEDIA_LOGI("JsCheckSupportPlaybackCommand In");
+ 
+    auto promiseCtx = std::make_unique<AVPlayerContext>(env);
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+    promiseCtx->napi = AVPlayerNapi::GetJsInstanceWithParameter(env, info, argCount, args);
+    promiseCtx->callbackRef = CommonNapi::CreateReference(env, args[0]);
+    promiseCtx->deferred = CommonNapi::CreatePromise(env, promiseCtx->callbackRef, result);
+ 
+    int32_t commandValue = -1;
+    if (args[0] != nullptr) {
+        napi_get_value_int32(env, args[0], &commandValue);
+    }
+    promiseCtx->commandValue = commandValue;
+ 
+    napi_value resource = nullptr;
+    napi_create_string_utf8(env, "JsCheckSupportPlaybackCommand", NAPI_AUTO_LENGTH, &resource);
+    NAPI_CALL(env, napi_create_async_work(env, nullptr, resource,
+        [](napi_env env, void *data) {
+            auto promiseCtx = reinterpret_cast<AVPlayerContext *>(data);
+            CHECK_AND_RETURN_LOG(promiseCtx != nullptr, "promiseCtx is nullptr!");
+            auto jsPlayer = promiseCtx->napi;
+            CHECK_AND_RETURN_LOG(jsPlayer != nullptr, "jsPlayer is nullptr!");
+            auto player = jsPlayer->GetPlayerInstance();
+            CHECK_AND_RETURN_LOG(player != nullptr, "player_ is nullptr!");
+ 
+            if (promiseCtx->commandValue < static_cast<int32_t>(PlaybackCommand::PLAYBACK_COMMAND_SEEK) ||
+                promiseCtx->commandValue > static_cast<int32_t>(PlaybackCommand::PLAYBACK_COMMAND_RATE)) {
+                promiseCtx->SignError(MSERR_EXT_API9_INVALID_PARAMETER,
+                    "invalid parameters, please check playback command");
+                return;
+            }
+ 
+            if (!jsPlayer->IsControllable()) {
+                promiseCtx->SignError(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
+                    "current state is not prepared/playing/paused/completed, unsupport CheckSupportPlaybackCommand");
+                return;
+            }
+ 
+            bool support = false;
+            auto command = static_cast<PlaybackCommand>(promiseCtx->commandValue);
+            int32_t ret = player->CheckSupportPlaybackCommand(command, support);
+            if (ret != MSERR_OK) {
+                MEDIA_LOGW("check support playback command failed");
+            }
+            promiseCtx->JsResult = std::make_unique<MediaJsResultBoolean>(support);
+        },
+        MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
+    QueueAsyncWork(env, promiseCtx);
+    MEDIA_LOGI("JsCheckSupportPlaybackCommand Out");
     return result;
 }
 

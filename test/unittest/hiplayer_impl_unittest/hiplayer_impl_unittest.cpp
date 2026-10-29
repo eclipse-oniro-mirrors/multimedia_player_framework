@@ -20,6 +20,8 @@
 #include "player.h"
 #include "audio_device_descriptor.h"
 #include "audio_capture_filter.h"
+#include "avcodec_info.h"
+#include "avcodec_list.h"
 #include "plugin/plugin_event.h"
 #include <algorithm>
 #include <chrono>
@@ -1549,6 +1551,347 @@ HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsLiveSeek_001, TestSize.Level0)
 {
     ASSERT_NE(hiplayer_, nullptr);
     EXPECT_FALSE(hiplayer_->IsLiveSeek());
+}
+
+// ===========================================================================
+// Tests for HiPlayerImpl::IsAudioTrackPlayable
+// ===========================================================================
+ 
+// @tc.name     Test IsAudioTrackPlayable with empty mime
+// @tc.number   PHIUT_IsAudioTrackPlayable_001
+// @tc.desc     Empty mime string returns false (invalid input branch).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsAudioTrackPlayable("", 44100, 2);
+    EXPECT_FALSE(ret);
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with mime prefixed by "invalid"
+// @tc.number   PHIUT_IsAudioTrackPlayable_002
+// @tc.desc     Mime starting with "invalid" returns false (invalid prefix branch).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsAudioTrackPlayable("invalid_audio", 44100, 2);
+    EXPECT_FALSE(ret);
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with dolby mime and passthrough supported
+// @tc.number   PHIUT_IsAudioTrackPlayable_003
+// @tc.desc     Dolby mime with IsAudioPass returning true returns true.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    const std::string dolbyMime = "audio/eac3";
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    EXPECT_CALL(*mockObs, GetDolbyList())
+        .WillRepeatedly(Return(std::vector<std::string>{dolbyMime}));
+    EXPECT_CALL(*mockObs, IsAudioPass(::testing::StrEq(dolbyMime)))
+        .WillOnce(Return(true));
+    // Directly set obs_ (weak_ptr) to avoid starting the callback looper thread.
+    hiplayer_->callbackLooper_.obs_ = mockObs;
+ 
+    bool ret = hiplayer_->IsAudioTrackPlayable(dolbyMime, 48000, 6);
+    EXPECT_TRUE(ret);
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with dolby mime, passthrough not supported, fall back to local decoder
+// @tc.number   PHIUT_IsAudioTrackPlayable_004
+// @tc.desc     Dolby mime with IsAudioPass returning false falls back to local decoder capability
+//              check. audio/eac3 may have a local decoder on the device, so the result depends on
+//              AVCodecList::GetCapability. The test verifies the fallback path is taken (not an
+//              unconditional false) by checking that the return value is consistent with local
+//              decoder availability.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_004, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    const std::string dolbyMime = "audio/eac3";
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    EXPECT_CALL(*mockObs, GetDolbyList())
+        .WillRepeatedly(Return(std::vector<std::string>{dolbyMime}));
+    EXPECT_CALL(*mockObs, IsAudioPass(::testing::StrEq(dolbyMime)))
+        .WillOnce(Return(false));
+    // Directly set obs_ (weak_ptr) to avoid starting the callback looper thread.
+    hiplayer_->callbackLooper_.obs_ = mockObs;
+ 
+    bool ret = hiplayer_->IsAudioTrackPlayable(dolbyMime, 48000, 6);
+    // Passthrough not supported: fall back to local decoder check. On a device
+    // with an eac3 decoder, ret is true; without one, ret is false. The key
+    // assertion is that the function does NOT unconditionally return false.
+    std::shared_ptr<MediaAVCodec::AVCodecList> codecList = MediaAVCodec::AVCodecListFactory::CreateAVCodecList();
+    if (codecList == nullptr) {
+        // AVCodecList unavailable: function assumes playable.
+        EXPECT_TRUE(ret);
+        return;
+    }
+    MediaAVCodec::CapabilityData *capabilityData =
+        codecList->GetCapability(dolbyMime, false, MediaAVCodec::AVCodecCategory::AVCODEC_NONE);
+    if (capabilityData == nullptr) {
+        EXPECT_FALSE(ret);
+        return;
+    }
+    // Decoder exists; result depends on sample rate / channel support.
+    MediaAVCodec::AudioCaps audioCaps(capabilityData);
+    auto srRanges = audioCaps.GetSupportedSampleRateRanges();
+    auto chRange = audioCaps.GetSupportedChannel();
+    bool srOk = false;
+    for (const auto &r : srRanges) {
+        if (48000 >= r.minVal && 48000 <= r.maxVal) {
+            srOk = true;
+            break;
+        }
+    }
+    bool chOk = (6 >= chRange.minVal && 6 <= chRange.maxVal);
+    EXPECT_EQ(ret, srOk && chOk);
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with non-dolby mime (decoder capability path)
+// @tc.number   PHIUT_IsAudioTrackPlayable_005
+// @tc.desc     Non-dolby mime queries AVCodecList; on a standard OpenHarmony device
+//              audio/mp4a-latm (AAC) has a decoder with standard 44100Hz / 2ch support.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_005, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    EXPECT_CALL(*mockObs, GetDolbyList())
+        .WillRepeatedly(Return(std::vector<std::string>{}));
+    hiplayer_->callbackLooper_.obs_ = mockObs;
+ 
+    bool ret = hiplayer_->IsAudioTrackPlayable("audio/mp4a-latm", 44100, 2);
+    // audio/mp4a-latm (AAC) is a standard codec with a decoder on OpenHarmony devices,
+    // and 44100Hz stereo is within standard capability ranges.
+    EXPECT_TRUE(ret) << "audio/mp4a-latm 44100Hz 2ch should be playable when a decoder exists";
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with non-dolby mime when obs not set
+// @tc.number   PHIUT_IsAudioTrackPlayable_006
+// @tc.desc     Non-dolby mime with no obs set (GetDolbyList returns empty by default),
+//              falls through to AVCodecList capability check. audio/mpeg with standard
+//              48000Hz / 2ch has a decoder on standard devices.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_006, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    // No obs set: callbackLooper_.GetDolbyList() returns empty, not a dolby mime.
+    bool ret = hiplayer_->IsAudioTrackPlayable("audio/mpeg", 48000, 2);
+    EXPECT_TRUE(ret) << "audio/mpeg 48000Hz 2ch should be playable when a decoder exists";
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with unsupported non-dolby mime
+// @tc.number   PHIUT_IsAudioTrackPlayable_007
+// @tc.desc     Non-dolby mime with no decoder capability returns false. This targets
+//              the capabilityData == nullptr branch.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_007, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    // Use a fabricated mime that is very unlikely to have a registered decoder,
+    // to trigger the capabilityData == nullptr branch.
+    bool ret = hiplayer_->IsAudioTrackPlayable("audio/fake_nonexistent_codec_xyz", 44100, 2);
+    // On a device with AVCodecList: no decoder for fabricated mime, expect false.
+    // (If AVCodecListFactory returns null on a minimal environment, this may be true.)
+    EXPECT_FALSE(ret) << "fabricated mime should not be playable when no decoder exists";
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with zero sample rate and channel
+// @tc.number   PHIUT_IsAudioTrackPlayable_008
+// @tc.desc     When sampleRate or channelCount is 0, the track is not playable.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_008, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    EXPECT_CALL(*mockObs, GetDolbyList())
+        .WillRepeatedly(Return(std::vector<std::string>{}));
+    hiplayer_->callbackLooper_.obs_ = mockObs;
+ 
+    bool ret = hiplayer_->IsAudioTrackPlayable("audio/mp4a-latm", 0, 0);
+    EXPECT_FALSE(ret) << "audio/mp4a-latm with zero sampleRate/channelCount should not be playable";
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with unsupported sample rate
+// @tc.number   PHIUT_IsAudioTrackPlayable_009
+// @tc.desc     A very high sample rate (e.g. 999999) that is outside any decoder's
+//              supported range should return false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_009, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    EXPECT_CALL(*mockObs, GetDolbyList())
+        .WillRepeatedly(Return(std::vector<std::string>{}));
+    hiplayer_->callbackLooper_.obs_ = mockObs;
+ 
+    bool ret = hiplayer_->IsAudioTrackPlayable("audio/mp4a-latm", 999999, 2);
+    // 999999 Hz is far beyond any standard audio decoder's supported sample rate range.
+    EXPECT_FALSE(ret) << "Unsupported sample rate should not be playable";
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with unsupported channel count
+// @tc.number   PHIUT_IsAudioTrackPlayable_010
+// @tc.desc     A very high channel count (e.g. 999) that is outside any decoder's
+//              supported range should return false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_010, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    EXPECT_CALL(*mockObs, GetDolbyList())
+        .WillRepeatedly(Return(std::vector<std::string>{}));
+    hiplayer_->callbackLooper_.obs_ = mockObs;
+ 
+    bool ret = hiplayer_->IsAudioTrackPlayable("audio/mp4a-latm", 44100, 999);
+    // 999 channels is far beyond any standard audio decoder's supported channel range.
+    EXPECT_FALSE(ret) << "Unsupported channel count should not be playable";
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with standard sample rates
+// @tc.number   PHIUT_IsAudioTrackPlayable_011
+// @tc.desc     Common sample rates (8000, 22050, 44100, 48000) should be playable
+//              for AAC with 2 channels on a standard device.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_011, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    EXPECT_CALL(*mockObs, GetDolbyList())
+        .WillRepeatedly(Return(std::vector<std::string>{}));
+    hiplayer_->callbackLooper_.obs_ = mockObs;
+ 
+    // Standard AAC decoder supports common sample rates.
+    int32_t commonRates[] = {8000, 22050, 44100, 48000};
+    for (int32_t sr : commonRates) {
+        bool ret = hiplayer_->IsAudioTrackPlayable("audio/mp4a-latm", sr, 2);
+        EXPECT_TRUE(ret) << "audio/mp4a-latm " << sr << "Hz 2ch should be playable";
+    }
+}
+ 
+// @tc.name     Test IsAudioTrackPlayable with mono and stereo channels
+// @tc.number   PHIUT_IsAudioTrackPlayable_012
+// @tc.desc     1-channel (mono) and 2-channel (stereo) should be playable for AAC
+//              at 44100Hz on a standard device.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsAudioTrackPlayable_012, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    auto mockObs = std::make_shared<MockIPlayerEngineObs>();
+    EXPECT_CALL(*mockObs, GetDolbyList())
+        .WillRepeatedly(Return(std::vector<std::string>{}));
+    hiplayer_->callbackLooper_.obs_ = mockObs;
+ 
+    bool ret1 = hiplayer_->IsAudioTrackPlayable("audio/mp4a-latm", 44100, 1);
+    EXPECT_TRUE(ret1) << "audio/mp4a-latm 44100Hz 1ch should be playable";
+    bool ret2 = hiplayer_->IsAudioTrackPlayable("audio/mp4a-latm", 44100, 2);
+    EXPECT_TRUE(ret2) << "audio/mp4a-latm 44100Hz 2ch should be playable";
+}
+ 
+// ===========================================================================
+// Tests for HiPlayerImpl::IsDolbyStream
+// ===========================================================================
+ 
+// @tc.name     Test IsDolbyStream default value
+// @tc.number   PHIUT_IsDolbyStream_001
+// @tc.desc     Default isDolbyStream_ is false, IsDolbyStream returns false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsDolbyStream_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    EXPECT_FALSE(hiplayer_->isDolbyStream_);
+    bool ret = hiplayer_->IsDolbyStream();
+    EXPECT_FALSE(ret);
+}
+ 
+// @tc.name     Test IsDolbyStream after setting isDolbyStream_ to true
+// @tc.number   PHIUT_IsDolbyStream_002
+// @tc.desc     When isDolbyStream_ is set to true, IsDolbyStream returns true.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsDolbyStream_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    hiplayer_->isDolbyStream_ = true;
+    bool ret = hiplayer_->IsDolbyStream();
+    EXPECT_TRUE(ret);
+    hiplayer_->isDolbyStream_ = false;
+}
+
+// ===========================================================================
+// Tests for HiPlayerImpl::IsVideoTrackPlayable
+// ===========================================================================
+ 
+// @tc.name     Test IsVideoTrackPlayable with empty mime
+// @tc.number   PHIUT_IsVideoTrackPlayable_001
+// @tc.desc     Empty mime string returns false (invalid input branch).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsVideoTrackPlayable_001, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsVideoTrackPlayable("", 1920, 1080);
+    EXPECT_FALSE(ret);
+}
+ 
+// @tc.name     Test IsVideoTrackPlayable with mime prefixed by "invalid"
+// @tc.number   PHIUT_IsVideoTrackPlayable_002
+// @tc.desc     Mime starting with "invalid" returns false (invalid prefix branch).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsVideoTrackPlayable_002, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsVideoTrackPlayable("invalid_video", 1920, 1080);
+    EXPECT_FALSE(ret);
+}
+ 
+// @tc.name     Test IsVideoTrackPlayable with invalid video size (zero width)
+// @tc.number   PHIUT_IsVideoTrackPlayable_003
+// @tc.desc     When videoWidth <= 0, assume playable (returns true).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsVideoTrackPlayable_003, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsVideoTrackPlayable("video/avc", 0, 1080);
+    EXPECT_TRUE(ret);
+}
+ 
+// @tc.name     Test IsVideoTrackPlayable with invalid video size (zero height)
+// @tc.number   PHIUT_IsVideoTrackPlayable_004
+// @tc.desc     When videoHeight <= 0, assume playable (returns true).
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsVideoTrackPlayable_004, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsVideoTrackPlayable("video/avc", 1920, 0);
+    EXPECT_TRUE(ret);
+}
+ 
+// @tc.name     Test IsVideoTrackPlayable with supported video size (H.264 1920x1080)
+// @tc.number   PHIUT_IsVideoTrackPlayable_005
+// @tc.desc     Standard H.264 1080p should be playable if a decoder exists on the device.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsVideoTrackPlayable_005, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsVideoTrackPlayable("video/avc", 1920, 1080);
+    // On a standard OpenHarmony device, H.264 1080p is supported by HW or SW decoder.
+    EXPECT_TRUE(ret) << "H.264 1920x1080 should be playable when a decoder exists";
+}
+ 
+// @tc.name     Test IsVideoTrackPlayable with odd dimensions (alignment check)
+// @tc.number   PHIUT_IsVideoTrackPlayable_006
+// @tc.desc     Odd dimensions (1921x1081) are aligned to even (1922x1082) before
+//              capability check. Standard codec should still support the aligned size.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsVideoTrackPlayable_006, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsVideoTrackPlayable("video/avc", 1921, 1081);
+    // Odd dimensions aligned to 1922x1082; H.264 decoder typically supports this.
+    EXPECT_TRUE(ret) << "Odd dimensions should be aligned and checked against decoder capability";
+}
+ 
+// @tc.name     Test IsVideoTrackPlayable with unsupported video size
+// @tc.number   PHIUT_IsVideoTrackPlayable_007
+// @tc.desc     Extremely large resolution (e.g. 65536x65536) is unlikely to be supported
+//              by any decoder, so the function should return false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsVideoTrackPlayable_007, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsVideoTrackPlayable("video/avc", 65536, 65536);
+    EXPECT_FALSE(ret) << "Extremely large resolution should not be playable";
+}
+ 
+// @tc.name     Test IsVideoTrackPlayable with unsupported mime type
+// @tc.number   PHIUT_IsVideoTrackPlayable_008
+// @tc.desc     Fabricated mime type with no registered decoder returns false.
+HWTEST_F(PlayHiplayerImplUnitTest, PHIUT_IsVideoTrackPlayable_008, TestSize.Level0)
+{
+    ASSERT_NE(hiplayer_, nullptr);
+    bool ret = hiplayer_->IsVideoTrackPlayable("video/fake_nonexistent_codec", 1920, 1080);
+    EXPECT_FALSE(ret) << "Fabricated mime should not be playable when no decoder exists";
 }
 } // namespace Media
 } // namespace OHOS

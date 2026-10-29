@@ -72,6 +72,7 @@ public:
     MOCK_METHOD(int32_t, SetDecryptConfig, (const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy, bool svp), (override));
 #ifdef SUPPORT_VIDEO
     MOCK_METHOD(int32_t, SetVideoSurface, (sptr<Surface> surface), (override));
+    MOCK_METHOD(int32_t, CheckSupportPlaybackCommand, (PlaybackCommand command, bool &support), (override));
 #endif
 };
 

@@ -23,6 +23,8 @@
 #include <shared_mutex>
 
 #include "audio_device_descriptor.h"
+#include "avcodec_info.h"
+#include "avcodec_list.h"
 #include "common/log.h"
 #include "common/media_source.h"
 #include "directory_ex.h"
@@ -336,6 +338,7 @@ void HiPlayerImpl::ReleaseInner()
 {
     pipeline_->Stop();
     audioSink_.reset();
+    isDolbyStream_ = false;
 #ifdef SUPPORT_VIDEO
     if (videoDecoder_) {
         interruptMonitor_->DeregisterListener(videoDecoder_);
@@ -1769,7 +1772,7 @@ bool HiPlayerImpl::NeedSeekClosest()
 {
     MEDIA_LOG_D("NeedSeekClosest begin");
     std::vector<Format> trackInfo;
-    GetAudioTrackInfo(trackInfo);
+    GetAudioTrackInfoInner(trackInfo);
     if (trackInfo.size() == 0) {
         MEDIA_LOG_D("NeedSeekClosest end true");
         return true;
@@ -2114,7 +2117,7 @@ int32_t HiPlayerImpl::InitVideoWidthAndHeight()
 {
 #ifdef SUPPORT_VIDEO
     std::vector<Format> videoTrackInfo;
-    GetVideoTrackInfo(videoTrackInfo);
+    GetVideoTrackInfoInner(videoTrackInfo);
     if (videoTrackInfo.size() == 0) {
         MEDIA_LOG_E("InitVideoWidthAndHeight failed, as videoTrackInfo is empty!");
         return TransStatus(Status::ERROR_INVALID_OPERATION);
@@ -2506,9 +2509,9 @@ int32_t HiPlayerImpl::DeselectTrack(int32_t trackId)
     return MSERR_OK;
 }
 
-int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
+int32_t HiPlayerImpl::GetVideoTrackInfoInner(std::vector<Format>& videoTrack)
 {
-    MEDIA_LOG_D("GetVideoTrackInfo in");
+    MEDIA_LOG_D("GetVideoTrackInfoInner in");
     FALSE_RETURN_V(demuxer_ != nullptr, MSERR_INVALID_STATE);
     std::string mime;
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
@@ -2556,6 +2559,31 @@ int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
     return TransStatus(Status::OK);
 }
 
+int32_t HiPlayerImpl::GetVideoTrackInfo(std::vector<Format>& videoTrack)
+{
+    MEDIA_LOG_D("GetVideoTrackInfo in");
+    int32_t ret = GetVideoTrackInfoInner(videoTrack);
+    if (ret != TransStatus(Status::OK)) {
+        return ret;
+    }
+    std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
+    for (auto& videoTrackInfo : videoTrack) {
+        std::string mime;
+        videoTrackInfo.GetStringValue("codec_mime", mime);
+        int32_t trackIndex = -1;
+        videoTrackInfo.GetIntValue("track_index", trackIndex);
+        int32_t rawVideoWidth = 0;
+        int32_t rawVideoHeight = 0;
+        if (trackIndex >= 0 && static_cast<size_t>(trackIndex) < metaInfo.size()) {
+            metaInfo[trackIndex]->GetData(Tag::VIDEO_WIDTH, rawVideoWidth);
+            metaInfo[trackIndex]->GetData(Tag::VIDEO_HEIGHT, rawVideoHeight);
+        }
+        bool isVideoPlayable = IsVideoTrackPlayable(mime, rawVideoWidth, rawVideoHeight);
+        videoTrackInfo.PutIntValue(PlayerKeys::PLAYER_TRACK_PLAYABLE, isVideoPlayable ? 1 : 0);
+    }
+    return TransStatus(Status::OK);
+}
+
 int32_t HiPlayerImpl::GetSarVideoWidth(std::shared_ptr<Meta> trackInfo)
 {
     int32_t width;
@@ -2578,6 +2606,124 @@ int32_t HiPlayerImpl::GetSarVideoHeight(std::shared_ptr<Meta> trackInfo)
         height = static_cast<int32_t>(height / videoSar);
     }
     return height;
+}
+
+bool HiPlayerImpl::IsAudioTrackPlayable(const std::string& mime, int32_t sampleRate, int32_t channelCount)
+{
+    MEDIA_LOG_I("IsAudioTrackPlayable in, mime: %{public}s, sampleRate: %{public}d, channelCount: %{public}d",
+        mime.c_str(), sampleRate, channelCount);
+    if (mime.empty() || mime.find("invalid") == 0) {
+        MEDIA_LOG_I("invalid mime, not playable");
+        return false;
+    }
+    // Dolby passthrough: query real-time passthrough support to cover external
+    // device hot-plug scenarios (e.g. HDMI disconnected after playback started).
+    // When passthrough is supported, the track is playable via passthrough.
+    // When passthrough is not supported (e.g. device unplugged), fall back to
+    // local decoder capability check, because the stream may still be decodable
+    // locally (consistent with DemuxerFilter::FindStreamType which routes a
+    // non-passthrough dolby mime to STREAMTYPE_ENCODED_AUDIO).
+    auto dolbyList = GetDolbyList();
+    bool isDolbyMime = std::find(dolbyList.begin(), dolbyList.end(), mime) != dolbyList.end();
+    if (isDolbyMime) {
+        bool isPass = IsAudioPass(mime.c_str());
+        MEDIA_LOG_I("dolby mime, passthrough support: %{public}d", isPass);
+        if (isPass) {
+            return true;
+        }
+        MEDIA_LOG_I("dolby passthrough not supported, fall back to local decoder check");
+    }
+    return CheckAudioDecoderCapability(mime, sampleRate, channelCount);
+}
+
+bool HiPlayerImpl::CheckAudioDecoderCapability(const std::string& mime, int32_t sampleRate, int32_t channelCount)
+{
+    std::shared_ptr<MediaAVCodec::AVCodecList> codecList = MediaAVCodec::AVCodecListFactory::CreateAVCodecList();
+    if (codecList == nullptr) {
+        MEDIA_LOG_I("AVCodecList is null, assume playable");
+        return true;
+    }
+    MediaAVCodec::CapabilityData *capabilityData =
+        codecList->GetCapability(mime, false, MediaAVCodec::AVCodecCategory::AVCODEC_NONE);
+    if (capabilityData == nullptr) {
+        MEDIA_LOG_I("no decoder capability, not playable. mime: %{public}s", mime.c_str());
+        return false;
+    }
+    if (sampleRate <= 0) {
+        MEDIA_LOG_I("invalid sample rate %{public}d, not playable", sampleRate);
+        return false;
+    }
+    MediaAVCodec::AudioCaps audioCaps(capabilityData);
+    const auto &sampleRateRanges = audioCaps.GetSupportedSampleRateRanges();
+    bool sampleRateSupported = false;
+    for (const auto &range : sampleRateRanges) {
+        if (sampleRate >= range.minVal && sampleRate <= range.maxVal) {
+            sampleRateSupported = true;
+            break;
+        }
+    }
+    if (!sampleRateSupported) {
+        MEDIA_LOG_I("sample rate %{public}d not supported, not playable. mime: %{public}s",
+            sampleRate, mime.c_str());
+        return false;
+    }
+    if (channelCount <= 0) {
+        MEDIA_LOG_I("invalid channel count %{public}d, not playable", channelCount);
+        return false;
+    }
+    MediaAVCodec::Range channelRange = audioCaps.GetSupportedChannel();
+    if (channelCount < channelRange.minVal || channelCount > channelRange.maxVal) {
+        MEDIA_LOG_I("channel count %{public}d not in range [%{public}d, %{public}d], not playable. mime: %{public}s",
+            channelCount, channelRange.minVal, channelRange.maxVal, mime.c_str());
+        return false;
+    }
+    return true;
+}
+ 
+bool HiPlayerImpl::IsVideoTrackPlayable(const std::string& mime, int32_t videoWidth, int32_t videoHeight)
+{
+    MEDIA_LOG_I("IsVideoTrackPlayable in, mime: %{public}s, width: %{public}d, height: %{public}d",
+        mime.c_str(), videoWidth, videoHeight);
+    if (mime.empty() || mime.find("invalid") == 0) {
+        MEDIA_LOG_I("invalid mime, not playable");
+        return false;
+    }
+    if (videoWidth <= 0 || videoHeight <= 0) {
+        MEDIA_LOG_I("invalid video size, assume playable");
+        return true;
+    }
+    // Align to even dimensions, consistent with DecoderSurfaceFilter::CheckAndInitDecoder.
+    int32_t alignedWidth = videoWidth + videoWidth % 2;
+    int32_t alignedHeight = videoHeight + videoHeight % 2;
+ 
+    std::shared_ptr<MediaAVCodec::AVCodecList> codecList = MediaAVCodec::AVCodecListFactory::CreateAVCodecList();
+    if (codecList == nullptr) {
+        MEDIA_LOG_I("AVCodecList is null, assume playable");
+        return true;
+    }
+    // Check HW decoder capability first, then SW decoder.
+    // Logic mirrors DecoderSurfaceFilter::CheckAndInitDecoder in av_codec.
+    MediaAVCodec::CapabilityData *hwCap =
+        codecList->GetCapability(mime, false, MediaAVCodec::AVCodecCategory::AVCODEC_HARDWARE);
+    if (hwCap != nullptr) {
+        MediaAVCodec::VideoCaps hwVideoCaps(hwCap);
+        if (hwVideoCaps.IsSizeSupported(alignedWidth, alignedHeight)) {
+            MEDIA_LOG_I("Video size %{public}dx%{public}d supported by hw decoder", alignedWidth, alignedHeight);
+            return true;
+        }
+    }
+    MediaAVCodec::CapabilityData *swCap =
+        codecList->GetCapability(mime, false, MediaAVCodec::AVCodecCategory::AVCODEC_SOFTWARE);
+    if (swCap != nullptr) {
+        MediaAVCodec::VideoCaps swVideoCaps(swCap);
+        if (swVideoCaps.IsSizeSupported(alignedWidth, alignedHeight)) {
+            MEDIA_LOG_I("Video size %{public}dx%{public}d supported by sw decoder", alignedWidth, alignedHeight);
+            return true;
+        }
+    }
+    MEDIA_LOG_I("Video size %{public}dx%{public}d not supported by both hw and sw decoder, mime: %{public}s",
+        alignedWidth, alignedHeight, mime.c_str());
+    return false;
 }
 
 int32_t HiPlayerImpl::GetPlaybackInfo(Format& playbackInfo)
@@ -2633,9 +2779,9 @@ int32_t HiPlayerImpl::GetPlaybackStatisticMetrics(Format &playbackStatisticMetri
     return TransStatus(Status::OK);
 }
 
-int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
+int32_t HiPlayerImpl::GetAudioTrackInfoInner(std::vector<Format>& audioTrack)
 {
-    MEDIA_LOG_I("GetAudioTrackInfo in");
+    MEDIA_LOG_D("GetAudioTrackInfoInner in");
     FALSE_RETURN_V_MSG_E(demuxer_ != nullptr, TransStatus(Status::ERROR_NULL_POINTER), "demuxer_ is null");
     std::string mime;
     std::vector<std::shared_ptr<Meta>> metaInfo = demuxer_->GetStreamMetaInfo();
@@ -2675,6 +2821,26 @@ int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
             audioTrackInfo.PutStringValue("track_name", "audio");
             audioTrack.emplace_back(std::move(audioTrackInfo));
         }
+    }
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::GetAudioTrackInfo(std::vector<Format>& audioTrack)
+{
+    MEDIA_LOG_I("GetAudioTrackInfo in");
+    int32_t ret = GetAudioTrackInfoInner(audioTrack);
+    if (ret != TransStatus(Status::OK)) {
+        return ret;
+    }
+    for (auto& audioTrackInfo : audioTrack) {
+        std::string mime;
+        audioTrackInfo.GetStringValue("codec_mime", mime);
+        int32_t sampleRate = 0;
+        int32_t channelCount = 0;
+        audioTrackInfo.GetIntValue("sample_rate", sampleRate);
+        audioTrackInfo.GetIntValue("channel_count", channelCount);
+        bool isPlayable = IsAudioTrackPlayable(mime, sampleRate, channelCount);
+        audioTrackInfo.PutIntValue(PlayerKeys::PLAYER_TRACK_PLAYABLE, isPlayable ? 1 : 0);
     }
     return TransStatus(Status::OK);
 }
@@ -4354,6 +4520,7 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     audioSink_->SetIsCalledBySystemApp(isCalledBySystemApp_);
     if (type == OHOS::Media::Pipeline::StreamType::STREAMTYPE_DOLBY) {
         audioSink_->SetAudioPassFlag(true);
+        isDolbyStream_ = true;
     }
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
@@ -5137,6 +5304,12 @@ std::vector<std::string> HiPlayerImpl::GetDolbyList()
 {
     MEDIA_LOG_I("HiPlayerImpl::GetDolbyList");
     return callbackLooper_.GetDolbyList();
+}
+
+bool HiPlayerImpl::IsDolbyStream()
+{
+    MEDIA_LOG_I("HiPlayerImpl::IsDolbyStream: %{public}d", isDolbyStream_);
+    return isDolbyStream_;
 }
 
 bool HiPlayerImpl::IsLiveSeek()

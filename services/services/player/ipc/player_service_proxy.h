@@ -63,6 +63,7 @@ public:
     int32_t GetPlaybackInfo(Format& playbackInfo) override;
     int32_t GetPlaybackStatisticMetrics(Format &playbackStatisticMetrics) override;
     int32_t GetSubtitleTrackInfo(std::vector<Format> &subtitleTrack) override;
+    int32_t CheckSupportPlaybackCommand(PlaybackCommand command, bool &support) override;
     int32_t GetDuration(int32_t &duration) override;
     int32_t GetSeekableRanges(std::vector<Plugins::SeekRange> &seekableRanges) override;
     int32_t GetLoadedRanges(std::vector<Plugins::SeekRange> &loadedRanges) override;
