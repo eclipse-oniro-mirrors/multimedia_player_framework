@@ -1272,7 +1272,7 @@ napi_value AVPlayerNapi::JsCheckSupportPlaybackCommand(napi_env env, napi_callba
             promiseCtx->JsResult = std::make_unique<MediaJsResultBoolean>(support);
         },
         MediaAsyncContext::CompleteCallback, static_cast<void *>(promiseCtx.get()), &promiseCtx->work));
-    QueueAsyncWork(env, promiseCtx);
+    napi_queue_async_work_with_qos(env, promiseCtx->work, napi_qos_user_initiated);
     MEDIA_LOGI("JsCheckSupportPlaybackCommand Out");
     return result;
 }
