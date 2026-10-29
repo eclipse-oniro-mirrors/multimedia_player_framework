@@ -22,8 +22,11 @@ ohos_unittest("soundpool_unit_test") {
   include_dirs = [
     "./include",
     "${multimedia_player_framework_path}/frameworks/native/soundpool",
+    "${multimedia_player_framework_path}/services/services/engine_intf",
+    "${multimedia_player_framework_path}/services/utils/include",
     "${multimedia_player_framework_path}/test/unittest/common/include",
     "${multimedia_player_framework_path}/interfaces/inner_api/native/soundpool/include",
+    "${root_build_dir}/gen/foundation/multimedia/drm_framework/services/drm_service/idls",
   ]
 
   cflags = [
@@ -36,9 +39,11 @@ ohos_unittest("soundpool_unit_test") {
   if (player_framework_support_jssoundpool) {
     sources = [
       "src/sound_id_manager_unit_test.cpp",
+      "src/soundpool_impl_unit_test.cpp",
       "src/soundpool_mock.cpp",
       "src/soundpool_unit_test.cpp",
       "src/soundpool_unit_test_parallel.cpp",
+      "src/stream_id_manager_no_interrupt_unit_test.cpp",
       "src/stream_id_manager_unit_test.cpp",
     ]
   }
@@ -73,6 +78,10 @@ ohos_unittest("soundpool_unit_test") {
     "media_foundation:media_foundation",
     "qos_manager:qos",
   ]
+
+  if (player_framework_support_drm) {
+    external_deps += [ "drm_framework:drm_framework" ]
+  }
 
   resource_config_file = "${multimedia_player_framework_path}/test/unittest/resources/ohos_test.xml"
 }
