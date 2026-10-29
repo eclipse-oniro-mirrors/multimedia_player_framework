@@ -134,6 +134,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzAvScreenCaptureServiceStub(uint8_t *d
     FuzzSetCapturePresentPickerStub(screen_capture_Stub);
     screen_capture_Stub->StopScreenCapture();
     screen_capture_Stub->Release();
+    screen_capture_Stub->DestroyStub();
     return true;
 }
 } // namespace Media
