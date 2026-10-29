@@ -202,7 +202,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_Foreground_NewMissio
     screenCaptureServer_->missionInfos_.clear();
     std::vector<uint64_t> allIds;
     uint8_t flags = screenCaptureServer_->UpdateMissionData(100, Rosen::SessionState::STATE_FOREGROUND, allIds);
-    ASSERT_EQ(flags, static_cast<uint8_t>(9)); // ADD_WHITE_LIST | NOTIFY_VISIBLE
+    ASSERT_EQ(flags, static_cast<uint8_t>(ADD_WHITE_LIST | NOTIFY_VISIBLE));
     ASSERT_EQ(screenCaptureServer_->missionInfos_.size(), 1u);
     EXPECT_EQ(screenCaptureServer_->missionInfos_.front().missionId, 100u);
 }
@@ -250,7 +250,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_Background_Foregroun
     screenCaptureServer_->missionInfos_.push_back({100u, true});
     std::vector<uint64_t> allIds;
     uint8_t flags = screenCaptureServer_->UpdateMissionData(100, Rosen::SessionState::STATE_BACKGROUND, allIds);
-    ASSERT_EQ(flags, static_cast<uint8_t>(2)); // UPDATE_MIRROR
+    ASSERT_EQ(flags, static_cast<uint8_t>(UPDATE_MIRROR));
     ASSERT_EQ(screenCaptureServer_->missionInfos_.size(), 1u);
     EXPECT_FALSE(screenCaptureServer_->missionInfos_.front().isForeground);
 }
@@ -262,7 +262,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_Disconnect_MissionAb
     screenCaptureServer_->missionInfos_.push_back({100u, true});
     std::vector<uint64_t> allIds;
     uint8_t flags = screenCaptureServer_->UpdateMissionData(999, Rosen::SessionState::STATE_DISCONNECT, allIds);
-    ASSERT_EQ(flags, static_cast<uint8_t>(4)); // REMOVE_WHITE_LIST
+    ASSERT_EQ(flags, static_cast<uint8_t>(REMOVE_WHITE_LIST));
     ASSERT_EQ(screenCaptureServer_->missionInfos_.size(), 1u);
 }
 
@@ -274,7 +274,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_Disconnect_LastMissi
     screenCaptureServer_->missionInfos_.push_back({100u, true});
     std::vector<uint64_t> allIds;
     uint8_t flags = screenCaptureServer_->UpdateMissionData(100, Rosen::SessionState::STATE_DISCONNECT, allIds);
-    ASSERT_EQ(flags, static_cast<uint8_t>(22)); // UPDATE_MIRROR | NOTIFY_UNAVAILABLE | REMOVE_WHITE_LIST
+    ASSERT_EQ(flags, static_cast<uint8_t>(UPDATE_MIRROR | NOTIFY_UNAVAILABLE | REMOVE_WHITE_LIST));
     EXPECT_TRUE(screenCaptureServer_->missionInfos_.empty());
 }
 
@@ -491,9 +491,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckPrivacyWindowSkipPermission_WithP
 }
 
 // L1265 CheckPrivacyProtectPermission: no permission -> false (branch 1)
-// NOTE: CUSTOM_SCREEN_RECORDING / DISABLE_SCREEN_PRIVACY_PROTECTION are restricted system-signed
-// permissions that AllocHapToken cannot grant (even at APL_SYSTEM_CORE), so their GRANTED branches
-// (L2605 branch 1, L1265 branch 0) are not unit-testable.
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckPrivacyProtectPermission_NoPerm_001, TestSize.Level2)
 {
     screenCaptureServer_->appInfo_.appTokenId = 999999; // lacks DISABLE_SCREEN_PRIVACY_PROTECTION

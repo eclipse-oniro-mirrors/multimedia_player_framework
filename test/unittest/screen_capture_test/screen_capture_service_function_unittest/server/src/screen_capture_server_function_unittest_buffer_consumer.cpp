@@ -186,9 +186,7 @@ static sptr<OHOS::Surface> MakeConsumerWithQueuedBuffer(sptr<OHOS::SurfaceBuffer
     return consumer;
 }
 
-// consumer_ with a queued real buffer -> OnBufferAvailableAction. (AcquireBuffer diagnosis pending —
-// currently returns no buffer despite FlushBuffer, so L49 branch 0 / L57 branch 0 / L58 / L65 / L68
-// remain uncovered. Kept as a placeholder; the QueueFull test below exercises the same path.)
+// consumer_ with a queued real buffer -> OnBufferAvailableAction
 HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_WithBuffer_001, TestSize.Level1)
 {
     sptr<OHOS::SurfaceBuffer> buf = nullptr;
@@ -196,9 +194,6 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_WithBuffer
     auto consumer = MakeConsumerWithQueuedBuffer(buf, mockCb_, regListener);
     ASSERT_NE(consumer, nullptr);
     listener_->consumer_ = consumer;
-    // NOTE: Surface::CreateSurfaceAsProducer doesn't queue buffers for AcquireBuffer in the test env
-    // (unlike the Rosen virtual-screen producer in production), so AcquireBuffer returns 406 no-buffer
-    // -> L57 early return -> no callback, availBuffers_ stays empty.
     EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0);
     listener_->OnBufferAvailableAction();
     consumer->UnregisterConsumerListener();
@@ -339,7 +334,7 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, SurfaceBufferThreadRun_QueueOverfl
     EXPECT_TRUE(listener_->isSurfaceCbInThreadStopped_.load());
 }
 
-// ===================== Branch coverage: ReleaseBuffer/ReleaseVideoBuffer consumer_ non-null (L174/L192) =====================
+// Branch coverage: ReleaseBuffer/ReleaseVideoBuffer consumer_ non-null (L174/L192)
 // consumer_ non-null + a queued entry -> consumer_->ReleaseBuffer is invoked (L174/L192 true).
 // ReleaseBuffer(null) likely returns an error -> TRUE_LOG (L176/L194). Either way the entry is popped.
 HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseVideoBuffer_NonNullConsumer_001, TestSize.Level1)
@@ -363,8 +358,7 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseBuffer_NonNullConsumer_001,
     EXPECT_TRUE(listener_->availBuffers_.empty());
 }
 
-// ===================== Branch coverage: OnBufferAvailableAction with a real buffer (L49/L53/L57/L58/L65/L68) =====================
-// (Pending producer-flow diagnosis via Debug_ProducerFlow_001 above.)
+// Branch coverage: OnBufferAvailableAction real buffer (L49/L53/L57/L58/L65/L68)
 
 } // namespace Media
 } // namespace OHOS

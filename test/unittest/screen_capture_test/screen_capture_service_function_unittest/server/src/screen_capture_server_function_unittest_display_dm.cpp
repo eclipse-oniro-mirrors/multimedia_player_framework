@@ -1161,7 +1161,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunn
 }
 
 // L1322 branch 1: CAPTURE_SPECIFIED_WINDOW but missionInfos size != 1 (empty) -> skip interestWindowId set
-HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunning_SpecifiedWindow_NoMission_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunning_NoMission_001, TestSize.Level2)
 {
     SetupCreateVirtualScreenFlow(*smFlow_, *dmFlow_);
     server_->isSurfaceMode_ = true;
@@ -1193,7 +1193,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedApp
 }
 
 // L2656 allDisplayIds empty (CAPTURE_SPECIFIED_SCREEN) -> !allDisplayIds.empty() false -> MSERR_UNKNOWN
-HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScreen_EmptyAllDisplayIds_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScreen_EmptyAllDisp_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
@@ -1356,7 +1356,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetVirtualScreenAutoRotation_NullScre
     EXPECT_EQ(server_->SetVirtualScreenAutoRotation(), MSERR_INVALID_OPERATION);
 }
 
-// L2662 SetupVirtualScreenMirror CAPTURE_SPECIFIED_SCREEN, displayIds_ all filtered out -> displayIds empty -> MSERR_UNKNOWN
+// L2662: filtered out displayIds -> empty -> MSERR_UNKNOWN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScreen_FilteredEmpty_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
