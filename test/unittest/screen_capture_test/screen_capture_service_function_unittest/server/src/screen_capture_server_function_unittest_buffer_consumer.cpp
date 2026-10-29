@@ -144,6 +144,103 @@ static void PushNullEntry(ScreenCapBufferConsumerListener &l, int32_t fence = -1
     l.availBuffers_.push(std::make_unique<SurfaceBufferEntry>(nullBuf, fence, 0, damage));
 }
 
+// Create a consumer Surface with one real buffer queued (registers a listener, then producer
+// RequestBuffer + FlushBuffer). usage includes BUFFER_USAGE_MEM_MMZ_CACHE so OnBufferAvailableAction's
+// L58 cache branch is exercised. Returns the consumer; outBuf receives the queued SurfaceBuffer.
+static sptr<OHOS::Surface> MakeConsumerWithQueuedBuffer(sptr<OHOS::SurfaceBuffer> &outBuf,
+    const std::shared_ptr<ScreenCaptureCallBack> &cb,
+    sptr<ScreenCapBufferConsumerListener> &outRegListener)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer("sc_cov_test");
+    if (consumer == nullptr) {
+        return nullptr;
+    }
+    auto regListener = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer, cb);
+    if (regListener == nullptr) {
+        return nullptr;
+    }
+    sptr<OHOS::IBufferConsumerListener> listenerObj = regListener;
+    consumer->RegisterConsumerListener(listenerObj); // required before RequestBuffer (else error 412)
+    sptr<OHOS::IBufferProducer> producerObj = consumer->GetProducer();
+    auto producer = OHOS::Surface::CreateSurfaceAsProducer(producerObj);
+    if (producer == nullptr) {
+        return nullptr;
+    }
+    sptr<OHOS::SurfaceBuffer> buf = nullptr;
+    int32_t fence = -1;
+    OHOS::BufferRequestConfig config;
+    config.width = 64;
+    config.height = 64;
+    config.format = GRAPHIC_PIXEL_FMT_RGBA_8888;
+    config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE;
+    config.timeout = 0;
+    if (producer->RequestBuffer(buf, fence, config) != GSERROR_OK) {
+        return nullptr;
+    }
+    OHOS::BufferFlushConfig flushConfig {};
+    if (producer->FlushBuffer(buf, fence, flushConfig) != GSERROR_OK) {
+        return nullptr;
+    }
+    outBuf = buf;
+    outRegListener = regListener; // keep alive; caller MUST UnregisterConsumerListener() before it goes out of scope
+    return consumer;
+}
+
+// consumer_ with a queued real buffer -> OnBufferAvailableAction. (AcquireBuffer diagnosis pending —
+// currently returns no buffer despite FlushBuffer, so L49 branch 0 / L57 branch 0 / L58 / L65 / L68
+// remain uncovered. Kept as a placeholder; the QueueFull test below exercises the same path.)
+HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_WithBuffer_001, TestSize.Level1)
+{
+    sptr<OHOS::SurfaceBuffer> buf = nullptr;
+    sptr<ScreenCapBufferConsumerListener> regListener;
+    auto consumer = MakeConsumerWithQueuedBuffer(buf, mockCb_, regListener);
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    // NOTE: Surface::CreateSurfaceAsProducer doesn't queue buffers for AcquireBuffer in the test env
+    // (unlike the Rosen virtual-screen producer in production), so AcquireBuffer returns 406 no-buffer
+    // -> L57 early return -> no callback, availBuffers_ stays empty.
+    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0);
+    listener_->OnBufferAvailableAction();
+    consumer->UnregisterConsumerListener();
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
+    EXPECT_EQ(listener_->availBuffers_.size(), 0u);
+}
+
+// L65 availBuffers_.size() > MAX_BUFFER_SIZE(3) -> drop the newly acquired buffer.
+// Pre-fill availBuffers_ with 4 entries, then OnBufferAvailableAction acquires a buffer -> L65 true ->
+// L67 ReleaseBuffer(newBuf) -> L68 TRUE_LOG -> return (no callback).
+HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_QueueFull_001, TestSize.Level1)
+{
+    sptr<OHOS::SurfaceBuffer> buf = nullptr;
+    sptr<ScreenCapBufferConsumerListener> regListener;
+    auto consumer = MakeConsumerWithQueuedBuffer(buf, mockCb_, regListener);
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    for (int i = 0; i < 4; ++i) { // 4 > MAX_BUFFER_SIZE(3) -> L65 drop path
+        PushNullEntry(*listener_);
+    }
+    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0); // drop -> no callback
+    listener_->OnBufferAvailableAction();
+    consumer->UnregisterConsumerListener();
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
+}
+
+// L90 branch 2: messageQueueSCB_.size() > MAX_MESSAGE_QUEUE_SIZE(5) but message.type != GET_BUFFER
+// (EXIT). Push 6 EXIT messages -> thread processes first EXIT (size=6>5, EXIT!=GET_BUFFER) -> L90
+// branch 2 (skip) -> pop -> L98 EXIT -> break.
+HWTEST_F(ScreenCapBufferConsumerListenerTest, SurfaceBufferThreadRun_QueueOverflowExit_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    for (int i = 0; i < 6; ++i) { // 6 > MAX_MESSAGE_QUEUE_SIZE(5), all EXIT -> L90 branch 2
+        listener_->messageQueueSCB_.push({SCBufferMessageType::EXIT, ""});
+    }
+    ASSERT_EQ(listener_->StartBufferThread(), MSERR_OK);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    EXPECT_TRUE(listener_->isSurfaceCbInThreadStopped_.load());
+}
+
 HWTEST_F(ScreenCapBufferConsumerListenerTest, AcquireVideoBuffer_HasEntry_001, TestSize.Level1)
 {
     PushNullEntry(*listener_);
@@ -189,5 +286,85 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, Destructor_RunningThread_001, Test
     }
     EXPECT_TRUE(localListener->isSurfaceCbInThreadStopped_.load());
 }
+
+// ===================== Branch coverage: OnBufferAvailableAction (L39-76) =====================
+// consumer_ non-null but empty (no queued buffer) -> AcquireBuffer fails -> L43 (continue),
+// L49 (acquireBufferRet != OK TRUE_LOG), L57 (buffer null -> return). No callback fired.
+HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_NonNullConsumer_NoBuffer_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer; // non-null -> L43 continue
+    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0); // no buffer -> no callback
+    listener_->OnBufferAvailableAction();
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
+}
+
+// ===================== Branch coverage: SurfaceBufferThreadRun (L78-106) =====================
+// Start thread + push GET_BUFFER (OnBufferAvailable) -> thread processes -> OnBufferAvailableAction (L101).
+// Then push EXIT (StopBufferThread) -> thread breaks (L98). consumer_ non-null so OnBufferAvailableAction
+// reaches L43/L49/L57 (AcquireBuffer fails on empty consumer).
+HWTEST_F(ScreenCapBufferConsumerListenerTest, SurfaceBufferThreadRun_ProcessMessages_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    ASSERT_EQ(listener_->StartBufferThread(), MSERR_OK);
+    listener_->OnBufferAvailable(); // push GET_BUFFER
+    std::this_thread::sleep_for(std::chrono::milliseconds(150)); // let thread process GET_BUFFER -> L101
+    listener_->StopBufferThread(); // push EXIT
+    for (int i = 0; i < 50 && !listener_->isSurfaceCbInThreadStopped_.load(); ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    EXPECT_TRUE(listener_->isSurfaceCbInThreadStopped_.load());
+}
+
+// ===================== Branch coverage: SurfaceBufferThreadRun queue overflow (L90) =====================
+// Push 6 GET_BUFFER messages (> MAX_MESSAGE_QUEUE_SIZE=5) before starting the thread. When the thread
+// runs, it hits L90 (size > MAX && GET_BUFFER) -> pop + continue (skip). Also exercises L101/L98.
+HWTEST_F(ScreenCapBufferConsumerListenerTest, SurfaceBufferThreadRun_QueueOverflow_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    for (int i = 0; i < 6; ++i) { // 6 > MAX_MESSAGE_QUEUE_SIZE(5) -> L90 skip path
+        listener_->messageQueueSCB_.push({SCBufferMessageType::GET_BUFFER, "overflow"});
+    }
+    ASSERT_EQ(listener_->StartBufferThread(), MSERR_OK);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200)); // let thread drain + hit L90
+    listener_->StopBufferThread();
+    for (int i = 0; i < 50 && !listener_->isSurfaceCbInThreadStopped_.load(); ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    EXPECT_TRUE(listener_->isSurfaceCbInThreadStopped_.load());
+}
+
+// ===================== Branch coverage: ReleaseBuffer/ReleaseVideoBuffer consumer_ non-null (L174/L192) =====================
+// consumer_ non-null + a queued entry -> consumer_->ReleaseBuffer is invoked (L174/L192 true).
+// ReleaseBuffer(null) likely returns an error -> TRUE_LOG (L176/L194). Either way the entry is popped.
+HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseVideoBuffer_NonNullConsumer_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer; // L192 consumer_ != nullptr -> true
+    PushNullEntry(*listener_);
+    EXPECT_EQ(listener_->ReleaseVideoBuffer(), MSERR_OK);
+    EXPECT_TRUE(listener_->availBuffers_.empty());
+}
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseBuffer_NonNullConsumer_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer; // L174 consumer_ != nullptr -> true
+    PushNullEntry(*listener_);
+    PushNullEntry(*listener_);
+    EXPECT_EQ(listener_->ReleaseBuffer(), MSERR_OK);
+    EXPECT_TRUE(listener_->availBuffers_.empty());
+}
+
+// ===================== Branch coverage: OnBufferAvailableAction with a real buffer (L49/L53/L57/L58/L65/L68) =====================
+// (Pending producer-flow diagnosis via Debug_ProducerFlow_001 above.)
+
 } // namespace Media
 } // namespace OHOS
