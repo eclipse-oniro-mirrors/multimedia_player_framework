@@ -973,7 +973,7 @@ bool AVPlayerImpl::CheckSupportPlaybackCommandSync(::ohos::multimedia::media::Pl
     }
  
     {
-        std::shared_lock<std::shared_mutex> lock(syncMutex_);
+        std::lock_guard<std::mutex> lock(syncMutex_);
         if (player_ != nullptr && IsControllable()) {
             auto cmd = static_cast<OHOS::Media::PlaybackCommand>(commandValue);
             int32_t ret = player_->CheckSupportPlaybackCommand(cmd, isSupported);
