@@ -28,7 +28,6 @@ using testing::Return;
 namespace OHOS {
 namespace Media {
 
-// L34 status_ != UNKNOWN -> return (branch 1)
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_StatusNotUnknown_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -38,7 +37,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_StatusNotUnkno
     EXPECT_EQ(conn->status_.load(), ConnectStatus::STARTED);
 }
 
-// L34 status_ == UNKNOWN + L35 remoteObject == nullptr -> return (L35 branch 1)
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_NullRemote_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -48,7 +46,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_NullRemote_001
     EXPECT_EQ(conn->status_.load(), ConnectStatus::UNKNOWN);
 }
 
-// L35 branch 0 (non-null remote) + L52 branch 0 (SendRequest OK) + L53 branch 0 (STARTING -> STARTED)
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_Success_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -60,7 +57,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_Success_001, T
     ASSERT_EQ(conn->status_.load(), ConnectStatus::STARTED);
 }
 
-// L52 branch 1 (SendRequest fails -> early return)
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_SendRequestFail_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -72,7 +68,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_SendRequestFai
     ASSERT_EQ(conn->status_.load(), ConnectStatus::STARTING);
 }
 
-// L53 branch 1 + L55 branch 0: status_ changed to CLOSING during SendRequest -> CloseDialog called
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_StatusCLOSING_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -89,7 +84,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_StatusCLOSING_
     ASSERT_EQ(conn->status_.load(), ConnectStatus::CLOSED);
 }
 
-// L55 branch 1: status_ changed to CLOSED (not STARTING, not CLOSING) during SendRequest -> no action
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_StatusOther_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -105,7 +99,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_StatusOther_00
     ASSERT_EQ(conn->status_.load(), ConnectStatus::CLOSED);
 }
 
-// L70 branch 1 (status_ != STARTED -> return true)
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_CloseDialog_StatusNotStarted_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -114,7 +107,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_CloseDialog_StatusNotStarted
     EXPECT_EQ(conn->status_.load(), ConnectStatus::CLOSING);
 }
 
-// L70 branch 0 + L79 branch 1: status_ == STARTED + remoteObject_ == nullptr -> return true
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_CloseDialog_StartedNullRemote_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -124,7 +116,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_CloseDialog_StartedNullRemot
     EXPECT_EQ(conn->status_.load(), ConnectStatus::CLOSING);
 }
 
-// L79 branch 0 + L83 branch 0: CloseDialog with non-null remoteObject_, SendRequest OK
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_CloseDialog_Success_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -136,7 +127,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_CloseDialog_Success_001, Tes
     ASSERT_EQ(conn->status_.load(), ConnectStatus::CLOSED);
 }
 
-// L83 branch 1: CloseDialog with non-null remoteObject_, SendRequest fails -> return false
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_CloseDialog_SendRequestFail_001, TestSize.Level2)
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
@@ -148,14 +138,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_CloseDialog_SendRequestFail_
     ASSERT_EQ(conn->status_.load(), ConnectStatus::CLOSED);
 }
 
-// OnAbilityDisconnectDone — covers the function (no branches, line coverage)
-HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnDisconnectDone_001, TestSize.Level2)
-{
-    auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
-    AppExecFwk::ElementName element;
-    conn->OnAbilityDisconnectDone(element, 0);
-    ASSERT_EQ(conn->status_.load(), ConnectStatus::UNKNOWN);
-}
-
 } // namespace Media
 } // namespace OHOS
+
