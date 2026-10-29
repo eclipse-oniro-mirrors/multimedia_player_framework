@@ -208,7 +208,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, GetDisplayIdOfWindows_DefaultDisplayO
 }
 
 // ---- GetDefaultDisplaySync non-null + GetDisplayById non-null + MakeMirror ----
-// SetupVirtualScreenMirror (CAPTURE_HOME_SCREEN) success path (L2670-2705).
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_HomeScreen_Success, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
@@ -313,10 +312,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, PrepareVirtualScreenMirror_Mirror_Suc
     EXPECT_EQ(server_->PrepareVirtualScreenMirror(), MSERR_OK);
 }
 
-// ---- PrepareVirtualScreenMirror: non-empty windowIDsVec (L2525 branch 0) + showCursor_ false (L2531 branch 1) ----
-// showCursor_ defaults to true (-> !showCursor_ false, branch 0 covered by existing tests); setting it false makes
-// !showCursor_ true (branch 1, push_back cursor surface type). A non-empty windowIDsVec makes the L2525 for-loop
-// body execute (branch 0). Asserts the success return (non-null).
 HWTEST_F(ScreenCaptureServerDisplayDmTest, PrepareVirtualScreenMirror_NonEmptyWindowList_NoCursor_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
@@ -332,8 +327,8 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, PrepareVirtualScreenMirror_NonEmptyWi
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
     server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->canvasRotation_ = false;
-    server_->showCursor_ = false; // L2531 !showCursor_ == true -> branch 1 (push_back cursor surface type)
-    server_->contentFilter_.windowIDsVec = {100, 200}; // L2525 for-loop condition true -> branch 0 (body runs)
+    server_->showCursor_ = false;
+    server_->contentFilter_.windowIDsVec = {100, 200};
     server_->captureState_ = AVScreenCaptureState::CREATED;
     EXPECT_EQ(server_->PrepareVirtualScreenMirror(), MSERR_OK);
 }
@@ -410,7 +405,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CreateVirtualScreen_FileHome_Success,
 
 // ===================== error paths within display functions =====================
 
-// SetupVirtualScreenMirror: GetDefaultDisplaySync null -> MSERR_UNKNOWN (L2673)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_DefaultDisplayNull, TestSize.Level2)
 {
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(sptr<Rosen::Display>(nullptr)));
@@ -421,7 +415,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_DefaultDispl
     EXPECT_EQ(server_->SetupVirtualScreenMirror(mirrorIds), MSERR_UNKNOWN);
 }
 
-// SetupVirtualScreenMirror: CreateMirror(MakeMirror) fails -> MSERR_UNKNOWN (L2698)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_MakeMirrorFail, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
@@ -434,7 +427,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_MakeMirrorFa
     EXPECT_EQ(server_->SetupVirtualScreenMirror(mirrorIds), MSERR_UNKNOWN);
 }
 
-// SetupVirtualScreenMirror SPECIFIED_SCREEN: allDisplayIds empty -> MSERR_UNKNOWN (L2684)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScreen_AllIdsEmpty, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
@@ -448,7 +440,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScr
     EXPECT_EQ(server_->SetupVirtualScreenMirror(mirrorIds), MSERR_UNKNOWN);
 }
 
-// MakeVirtualScreenExtended: GetDisplayById null -> MSERR_INVALID_VAL (L2730)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_DisplayNull, TestSize.Level2)
 {
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(sptr<Rosen::Display>(nullptr)));
@@ -457,7 +448,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_DisplayNull
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_INVALID_VAL);
 }
 
-// MakeVirtualScreenExtended: ConvertScreenIdToRsScreenId false -> MSERR_UNKNOWN (L2735)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_ConvertFail, TestSize.Level2)
 {
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -468,7 +458,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_ConvertFail
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);
 }
 
-// MakeVirtualScreenExtended: SetMultiScreenMode fails -> MSERR_UNSUPPORT
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetMultiScreenModeFail, TestSize.Level2)
 {
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -480,7 +469,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetMultiScr
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNSUPPORT);
 }
 
-// MakeVirtualScreenExtended: SetMultiScreenRelativePosition fails -> MSERR_UNKNOWN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetRelativePositionFail, TestSize.Level2)
 {
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -493,15 +481,12 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_SetRelative
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);
 }
 
-// MakeVirtualScreenExtended: displayIds_ empty -> MSERR_INVALID_VAL (L2727)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_DisplayIdsEmpty, TestSize.Level2)
 {
     server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_.clear();
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_INVALID_VAL);
 }
-
-// ===================== StartScreenCaptureFile (L1412-1443) =====================
 
 // Full success path: InitRecorder (INNER_MODE) -> SyncAudioCaptures -> Start -> CreateVirtualScreen
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_Success_InnerMode, TestSize.Level2)
@@ -591,8 +576,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_CreateVir
     EXPECT_EQ(server_->recorder_, nullptr);
 }
 
-// ===================== StartStreamHomeVideoCapture (L2440-2489) =====================
-
 // surface mode: isSurfaceMode_ true -> CreateVirtualScreen(surface_) success
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartStreamHomeVideoCapture_SurfaceMode_Success, TestSize.Level2)
 {
@@ -616,10 +599,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartStreamVideoCapture_VideoIgn
     EXPECT_EQ(server_->StartStreamVideoCapture(), MSERR_OK);
 }
 
-// ===================== CreateVirtualScreen / PrepareVirtualScreenMirror (L2502-2588) =====================
-
-// GetDefaultDisplaySync null -> density skipped at L2509, but SetupVirtualScreenMirror
-// later requires display -> MSERR_UNKNOWN_MAKE_MIRROR (covers the display-null density branch)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CreateVirtualScreen_DisplayNull_DensitySkipped, TestSize.Level2)
 {
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(sptr<Rosen::Display>(nullptr)));
@@ -660,7 +639,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PrepareVirtualScreenMirror_Canva
     EXPECT_EQ(server_->PrepareVirtualScreenMirror(), MSERR_OK);
 }
 
-// GetScreenById null -> MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PrepareVirtualScreenMirror_GetScreenByIdNull, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
@@ -672,7 +650,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PrepareVirtualScreenMirror_GetSc
     EXPECT_EQ(server_->PrepareVirtualScreenMirror(), MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN);
 }
 
-// MakeVirtualScreen (SetupVirtualScreenMirror) fails via MakeMirror error -> MSERR_UNKNOWN_MAKE_MIRROR
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PrepareVirtualScreenMirror_MakeVirtualScreenFail, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
@@ -689,8 +666,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_PrepareVirtualScreenMirror_MakeV
     server_->canvasRotation_ = false;
     EXPECT_EQ(server_->PrepareVirtualScreenMirror(), MSERR_UNKNOWN_MAKE_MIRROR);
 }
-
-// ===================== SetupVirtualScreenMirror / CreateMirror (L2670-2705, L639-658) =====================
 
 // CAPTURE_SPECIFIED_WINDOW with displayIds_ already set -> uses displayIds_.front()
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetupVirtualScreenMirror_SpecifiedWindow_DisplayIdsSet, TestSize.Level2)
@@ -728,8 +703,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CreateMirror_ActiveState, TestSi
     EXPECT_EQ(server_->CreateMirror(displayIds, mirrorIds), DMError::DM_OK);
 }
 
-// ===================== MakeVirtualScreenMirror region (L2715-2717) =====================
-
 // isRegionCapture_ true -> delegates to SetCaptureAreaInner
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_MakeVirtualScreenMirror_RegionCapture, TestSize.Level2)
 {
@@ -741,8 +714,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_MakeVirtualScreenMirror_RegionCa
     server_->regionArea_ = {0, 0, 100, 100};
     EXPECT_EQ(server_->MakeVirtualScreenMirror(), MSERR_OK);
 }
-
-// ===================== SetCaptureAreaInner (L3042-3075) =====================
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureAreaInner_Success, TestSize.Level2)
 {
@@ -772,9 +743,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureAreaInner_MakeMirrorRe
     EXPECT_EQ(server_->SetCaptureAreaInner(TEST_SCREEN_ID, area), MSERR_UNKNOWN);
 }
 
-// ===================== SetCaptureArea (L3026-3040) =====================
-
-// Not running + valid area -> MSERR_OK, isRegionCapture_ set
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureArea_NotRunning_Ok, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -799,7 +767,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureArea_Running_Success, 
     EXPECT_EQ(server_->SetCaptureArea(TEST_SCREEN_ID, area), MSERR_OK);
 }
 
-// Invalid area (negative) -> CheckDisplayArea fails -> MSERR_INVALID_VAL
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureArea_InvalidArea, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -808,8 +775,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCaptureArea_InvalidArea, Test
     OHOS::Rect area = {-1, 0, 100, 100};
     EXPECT_EQ(server_->SetCaptureArea(TEST_SCREEN_ID, area), MSERR_INVALID_VAL);
 }
-
-// ===================== CheckDisplayArea (L3095-3114) =====================
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CheckDisplayArea_DisplayNull, TestSize.Level2)
 {
@@ -842,8 +807,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CheckDisplayArea_Success, TestSi
     EXPECT_TRUE(server_->CheckDisplayArea(TEST_SCREEN_ID, area));
 }
 
-// ===================== GetMultiDisplayCaptureCapability (L3077-3093) =====================
-
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_GetMultiDisplayCaptureCapability_Success, TestSize.Level2)
 {
     EXPECT_CALL(*smFlow_, QueryMultiScreenCapture(_, _)).WillOnce(Return(DMError::DM_OK));
@@ -869,8 +832,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_GetMultiDisplayCaptureCapability
     EXPECT_EQ(server_->GetMultiDisplayCaptureCapability(displayIds, capability), MSERR_UNKNOWN);
 }
 
-// ===================== ResizeCanvas (L3388-3417) =====================
-
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResizeCanvas_Success, TestSize.Level2)
 {
     EXPECT_CALL(*smFlow_, ResizeVirtualScreen(_, _, _, _, _)).WillOnce(Return(DMError::DM_OK));
@@ -894,8 +855,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResizeCanvas_ResizeFail, TestSiz
     server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     EXPECT_EQ(server_->ResizeCanvas(100, 100), MSERR_INVALID_OPERATION);
 }
-
-// ===================== UpdateSurface (L3419-3437) =====================
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_UpdateSurface_Success, TestSize.Level2)
 {
@@ -926,8 +885,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_UpdateSurface_SetSurfaceFail, Te
     EXPECT_EQ(server_->UpdateSurface(surface), MSERR_UNSUPPORT);
 }
 
-// ===================== SetMaxVideoFrameRate (L3469-3493) =====================
-
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetMaxVideoFrameRate_Success, TestSize.Level2)
 {
     EXPECT_CALL(*smFlow_, SetVirtualScreenMaxRefreshRate(_, _, _)).WillOnce(Return(DMError::DM_OK));
@@ -949,8 +906,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetMaxVideoFrameRate_SetFail, Te
     server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     EXPECT_EQ(server_->SetMaxVideoFrameRate(30), MSERR_INVALID_OPERATION);
 }
-
-// ===================== SkipPrivacyMode / SkipPrivacyModeInner (L3439-3467) =====================
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SkipPrivacyMode_NotActive_Ok, TestSize.Level2)
 {
@@ -977,8 +932,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SkipPrivacyMode_Active_Fail, Tes
     std::vector<uint64_t> windows = {1};
     EXPECT_EQ(server_->SkipPrivacyMode(windows), MSERR_UNKNOWN);
 }
-
-// ===================== SetCanvasRotation (L3312-3337) =====================
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCanvasRotation_NotActive_Ok, TestSize.Level2)
 {
@@ -1013,8 +966,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_SetCanvasRotation_Active_Unsuppo
     EXPECT_EQ(server_->SetCanvasRotation(true), MSERR_UNSUPPORT);
     server_->appVersion_ = -1;
 }
-
-// ===================== AddWhiteListWindows / RemoveWhiteListWindows (L2963-2997) =====================
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_AddWhiteListWindows_Success, TestSize.Level2)
 {
@@ -1051,8 +1002,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_RemoveWhiteListWindows_Fail, Tes
     std::vector<uint64_t> windows = {1};
     EXPECT_EQ(server_->RemoveWhiteListWindows(windows), MSERR_UNKNOWN);
 }
-
-// ===================== ResumeVideoCapture (L4082-4103) =====================
 
 // Extended screen + surface set + CreateVirtualScreen success (needs extended mirror flow)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_ExtendedScreen_Success, TestSize.Level2)
@@ -1117,7 +1066,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_Mirror_Succes
     server_->surface_ = nullptr;
 }
 
-// Mirror screen + surface null -> MSERR_INVALID_OPERATION
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_Mirror_Fail, TestSize.Level2)
 {
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
@@ -1146,8 +1094,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunn
 }
 #endif
 
-// ===================== OnReceiveUserPrivacyAuthority CAP_RUNNING branches (L1320/L1322) =====================
-// L1320 branch 0: captureMode != CAPTURE_SPECIFIED_WINDOW (HOME_SCREEN) -> skip window setup
 HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunning_HomeScreen_001, TestSize.Level2)
 {
     SetupCreateVirtualScreenFlow(*smFlow_, *dmFlow_);
@@ -1156,11 +1102,10 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunn
     server_->displayIds_ = {TEST_SCREEN_ID};
     server_->captureState_ = AVScreenCaptureState::STARTED;
     server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
-    server_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN; // != SPECIFIED_WINDOW -> L1320 false
+    server_->captureConfig_.captureMode = CaptureMode::CAPTURE_HOME_SCREEN;
     ASSERT_EQ(server_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
 }
 
-// L1322 branch 1: CAPTURE_SPECIFIED_WINDOW but missionInfos size != 1 (empty) -> skip interestWindowId set
 HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunning_NoMission_001, TestSize.Level2)
 {
     SetupCreateVirtualScreenFlow(*smFlow_, *dmFlow_);
@@ -1170,13 +1115,12 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunn
     server_->captureState_ = AVScreenCaptureState::STARTED;
     server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
-    server_->missionInfos_.clear(); // size 0 -> L1322 false
+    server_->missionInfos_.clear();
     ASSERT_EQ(server_->OnReceiveUserPrivacyAuthority(true), MSERR_OK);
 }
 
 // ===================== Branch-cov: SetupVirtualScreenMirror / MakeVirtualScreenExtended =====================
 
-// L2648 CAPTURE_SPECIFIED_APP branch (WINDOW||APP): displayIds = {displayIds_.front()} -> success
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedApp_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
@@ -1192,7 +1136,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedApp
     EXPECT_EQ(server_->SetupVirtualScreenMirror(mirrorIds), MSERR_OK);
 }
 
-// L2656 allDisplayIds empty (CAPTURE_SPECIFIED_SCREEN) -> !allDisplayIds.empty() false -> MSERR_UNKNOWN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScreen_EmptyAllDisp_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
@@ -1210,7 +1153,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScr
     EXPECT_EQ(server_->SetupVirtualScreenMirror(mirrorIds), MSERR_UNKNOWN);
 }
 
-// L2704 ConvertScreenIdToRsScreenId false -> condition false -> MSERR_UNKNOWN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_ConvertFail_001, TestSize.Level2)
 {
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -1222,7 +1164,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_ConvertFail
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);
 }
 
-// L2712 SetMultiScreenMode returns non-OK (DM_ERROR_INVALID_PARAM) -> else-if true -> MSERR_UNKNOWN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_NonOkRet_001, TestSize.Level2)
 {
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -1235,12 +1176,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_NonOkRet_00
     EXPECT_EQ(server_->MakeVirtualScreenExtended(), MSERR_UNKNOWN);
 }
 
-// ===================== InitRecorderInfo error paths (L1784-1817) =====================
-// Each test makes one recorder SetX call fail -> a distinct CHECK_AND_RETURN_RET_LOG branch ->
-// InitRecorder returns MSERR_UNKNOWN_RECORDER_INIT (and releases recorder via ON_SCOPE_EXIT).
-// Modeled on Flow_StartScreenCaptureFile_InitRecorderFail_GetSurface.
-
-// L1790 SetVideoSource failed (videoCapInfo VALID -> L1789 reached)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetVideoSourceFail, TestSize.Level2)
 {
     auto mock = std::make_shared<MockRecorderService>();
@@ -1258,7 +1193,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetVideoSourceF
     EXPECT_EQ(server_->recorder_, nullptr);
 }
 
-// L1793 SetOutputFormat failed
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetOutputFormatFail, TestSize.Level2)
 {
     auto mock = std::make_shared<MockRecorderService>();
@@ -1276,7 +1210,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetOutputFormat
     EXPECT_EQ(server_->recorder_, nullptr);
 }
 
-// L1795 SetAudioEncoder failed
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetAudioEncoderFail, TestSize.Level2)
 {
     auto mock = std::make_shared<MockRecorderService>();
@@ -1294,7 +1227,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetAudioEncoder
     EXPECT_EQ(server_->recorder_, nullptr);
 }
 
-// L1797 SetAudioSampleRate failed
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetAudioSampleRateFail, TestSize.Level2)
 {
     auto mock = std::make_shared<MockRecorderService>();
@@ -1312,7 +1244,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetAudioSampleR
     EXPECT_EQ(server_->recorder_, nullptr);
 }
 
-// L1799 SetAudioChannels failed
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetAudioChannelsFail, TestSize.Level2)
 {
     auto mock = std::make_shared<MockRecorderService>();
@@ -1332,7 +1263,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_InitRecorderInfo_SetAudioChannel
 
 // ===================== CreateVirtualScreen / GetDisplayIdOfWindows error paths =====================
 
-// L2510 CreateVirtualScreen returns SCREEN_ID_INVALID -> virtualScreen_ invalid -> MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, CreateVirtualScreen_InvalidScreenId_001, TestSize.Level2)
 {
     BuildHomeScreenFileConfig();
@@ -1348,7 +1278,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CreateVirtualScreen_InvalidScreenId_0
     EXPECT_EQ(server_->CreateVirtualScreen(), MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN);
 }
 
-// L2492 SetVirtualScreenAutoRotation virtualScreen_ null -> MSERR_INVALID_OPERATION
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetVirtualScreenAutoRotation_NullScreen_001, TestSize.Level2)
 {
     server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
@@ -1356,7 +1285,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetVirtualScreenAutoRotation_NullScre
     EXPECT_EQ(server_->SetVirtualScreenAutoRotation(), MSERR_INVALID_OPERATION);
 }
 
-// L2662: filtered out displayIds -> empty -> MSERR_UNKNOWN
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScreen_FilteredEmpty_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
@@ -1373,17 +1301,14 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetupVirtualScreenMirror_SpecifiedScr
     EXPECT_EQ(server_->SetupVirtualScreenMirror(mirrorIds), MSERR_UNKNOWN);
 }
 
-// L2570 GetDisplayIdOfWindows: missionInfos_ non-empty but GetDefaultDisplaySync null -> SCREEN_ID_INVALID
 HWTEST_F(ScreenCaptureServerDisplayDmTest, GetDisplayIdOfWindows_DefaultDisplayNull_001, TestSize.Level2)
 {
     server_->missionInfos_.clear();
-    server_->missionInfos_.push_back({100, true}); // non-empty -> pass L2572
+    server_->missionInfos_.push_back({100, true});
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(nullptr));
     EXPECT_EQ(server_->GetDisplayIdOfWindows(), Rosen::SCREEN_ID_INVALID);
 }
 
-// ===================== CheckDisplayArea (L3047-3067) — pure bool function =====================
-// L3056 negative area (x/y/w/h < 0) -> false
 HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_NegativeArea_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -1391,7 +1316,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_NegativeArea_001, Te
     EXPECT_FALSE(server_->CheckDisplayArea(TEST_SCREEN_ID, {-1, 0, 10, 10}));
 }
 
-// L3061 area out of range (x+w > screenWidth) -> false
 HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_OutOfRange_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -1407,14 +1331,12 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_Success_001, TestSiz
     EXPECT_TRUE(server_->CheckDisplayArea(TEST_SCREEN_ID, {0, 0, 10, 10}));
 }
 
-// L3051 targetDisplay null -> false
 HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_DisplayNull_001, TestSize.Level2)
 {
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(nullptr));
     EXPECT_FALSE(server_->CheckDisplayArea(TEST_SCREEN_ID, {0, 0, 10, 10}));
 }
 
-// L3056 branch 5: area.w < 0 (x,y >= 0 so reaches w operand) -> false
 HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_NegativeW_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -1422,7 +1344,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_NegativeW_001, TestS
     EXPECT_FALSE(server_->CheckDisplayArea(TEST_SCREEN_ID, {0, 0, -1, 10}));
 }
 
-// L3056 branch 6: area.h < 0 (x,y,w >= 0 so reaches h operand) -> false
 HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_NegativeH_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -1430,7 +1351,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_NegativeH_001, TestS
     EXPECT_FALSE(server_->CheckDisplayArea(TEST_SCREEN_ID, {0, 0, 0, -1}));
 }
 
-// L3061 branch 3: area.x+w <= screenWidth but area.y+h > screenHeight -> false (second operand)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_HeightOutOfRange_001, TestSize.Level2)
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
@@ -1438,7 +1358,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_HeightOutOfRange_001
     EXPECT_FALSE(server_->CheckDisplayArea(TEST_SCREEN_ID, {0, 0, 10, 99999}));
 }
 
-// L3473 SetVirtualMirrorScreenScaleMode returns non-DM_OK -> return static_cast<int32_t>(ret)
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetScreenScaleMode_NonOk_001, TestSize.Level2)
 {
     server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
@@ -1446,7 +1365,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetScreenScaleMode_NonOk_001, TestSiz
     EXPECT_EQ(server_->SetScreenScaleMode(), static_cast<int32_t>(DMError::DM_ERROR_INVALID_PARAM));
 }
 
-// L3359 CheckAppVersionForUnsupport true (appVersion_ >= ISOLATION + DM_ERROR_DEVICE_NOT_SUPPORT) -> MSERR_UNSUPPORT
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResizeCanvas_CheckAppVersionUnsupport, TestSize.Level2)
 {
     EXPECT_CALL(*smFlow_, ResizeVirtualScreen(_, _, _, _, _)).WillOnce(Return(DMError::DM_ERROR_DEVICE_NOT_SUPPORT));
@@ -1457,7 +1375,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResizeCanvas_CheckAppVersionUnsu
     EXPECT_EQ(server_->ResizeCanvas(100, 100), MSERR_UNSUPPORT);
 }
 
-// L3408 SkipPrivacyModeInner CheckAppVersionForUnsupport true -> MSERR_UNKNOWN_UNSUPPORT
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SkipPrivacyMode_CheckAppVersionUnsupport_001, TestSize.Level2)
 {
     server_->captureState_ = AVScreenCaptureState::STARTED; // CAP_ACTIVE -> reaches SkipPrivacyModeInner
@@ -1469,10 +1386,9 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SkipPrivacyMode_CheckAppVersionUnsupp
     EXPECT_EQ(server_->SkipPrivacyMode(windowIDs), MSERR_UNKNOWN_UNSUPPORT);
 }
 
-// L3423 SetMaxVideoFrameRateInner CheckAppVersionForUnsupport true -> MSERR_UNSUPPORT
 HWTEST_F(ScreenCaptureServerDisplayDmTest, SetMaxVideoFrameRate_CheckAppVersionUnsupport_001, TestSize.Level2)
 {
-    server_->captureState_ = AVScreenCaptureState::STARTED; // CAP_ACTIVE -> passes L3437
+    server_->captureState_ = AVScreenCaptureState::STARTED;
     server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->appVersion_ = 100000;
     ON_CALL(*smFlow_, SetVirtualScreenMaxRefreshRate(_, _, _)).WillByDefault(
@@ -1482,3 +1398,4 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, SetMaxVideoFrameRate_CheckAppVersionU
 
 } // namespace Media
 } // namespace OHOS
+
