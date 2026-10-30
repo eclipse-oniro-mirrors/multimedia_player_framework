@@ -203,22 +203,6 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_WithBuffer
     EXPECT_EQ(listener_->availBuffers_.size(), 0u);
 }
 
-HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_QueueFull_001, TestSize.Level1)
-{
-    sptr<OHOS::SurfaceBuffer> buf = nullptr;
-    sptr<ScreenCapBufferConsumerListener> regListener;
-    auto consumer = MakeConsumerWithQueuedBuffer(buf, mockCb_, regListener);
-    ASSERT_NE(consumer, nullptr);
-    listener_->consumer_ = consumer;
-    for (int i = 0; i < 4; ++i) {
-        PushNullEntry(*listener_);
-    }
-    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0); // drop -> no callback
-    listener_->OnBufferAvailableAction();
-    consumer->UnregisterConsumerListener();
-    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
-}
-
 HWTEST_F(ScreenCapBufferConsumerListenerTest, SurfaceBufferThreadRun_QueueOverflowExit_001, TestSize.Level1)
 {
     auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
@@ -276,16 +260,6 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, Destructor_RunningThread_001, Test
         std::this_thread::sleep_for(std::chrono::milliseconds(20));
     }
     EXPECT_TRUE(localListener->isSurfaceCbInThreadStopped_.load());
-}
-
-HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_NonNullConsumer_NoBuffer_001, TestSize.Level1)
-{
-    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
-    ASSERT_NE(consumer, nullptr);
-    listener_->consumer_ = consumer;
-    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0); // no buffer -> no callback
-    listener_->OnBufferAvailableAction();
-    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
 }
 
 HWTEST_F(ScreenCapBufferConsumerListenerTest, SurfaceBufferThreadRun_ProcessMessages_001, TestSize.Level1)

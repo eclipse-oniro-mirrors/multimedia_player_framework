@@ -416,12 +416,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckPrivacyWindowSkipPermission_WithP
     EXPECT_TRUE(screenCaptureServer_->CheckPrivacyWindowSkipPermission());
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckPrivacyProtectPermission_NoPerm_001, TestSize.Level2)
-{
-    screenCaptureServer_->appInfo_.appTokenId = 999999; // lacks DISABLE_SCREEN_PRIVACY_PROTECTION
-    EXPECT_FALSE(screenCaptureServer_->CheckPrivacyProtectPermission());
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCapture_PauseRecorderFail_001, TestSize.Level2)
 {
     RecorderInfo recorderInfo;

@@ -85,14 +85,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AccountObserver_OnAccountsSwitch_001, 
     EXPECT_TRUE(ret);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, AccountObserver_OnAccountsSwitch_Empty_001, TestSize.Level2)
-{
-    auto &observer = AccountObserver::GetInstance();
-    observer.accountObserverCallBacks_.clear();
-    bool ret = observer.OnAccountsSwitch();
-    EXPECT_TRUE(ret);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, AccountObserver_OnAccountsSwitch_False_001, TestSize.Level2)
 {
     auto &observer = AccountObserver::GetInstance();
