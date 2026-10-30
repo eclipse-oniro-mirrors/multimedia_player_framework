@@ -27,6 +27,9 @@ using namespace testing::ext;
 namespace OHOS {
 namespace Media {
 
+constexpr int32_t TEST_BUFFER_WIDTH = 64;
+constexpr int32_t TEST_BUFFER_HEIGHT = 64;
+
 class MockScreenCaptureCallBackForBuffer : public ScreenCaptureCallBack {
 public:
     MOCK_METHOD(void, OnError, (ScreenCaptureErrorType errorType, int32_t errorCode), (override));
@@ -144,6 +147,75 @@ static void PushNullEntry(ScreenCapBufferConsumerListener &l, int32_t fence = -1
     l.availBuffers_.push(std::make_unique<SurfaceBufferEntry>(nullBuf, fence, 0, damage));
 }
 
+// Create a consumer Surface with one real buffer queued (registers a listener, then producer
+// RequestBuffer + FlushBuffer). usage includes BUFFER_USAGE_MEM_MMZ_CACHE so OnBufferAvailableAction's
+static sptr<OHOS::Surface> MakeConsumerWithQueuedBuffer(sptr<OHOS::SurfaceBuffer> &outBuf,
+    const std::shared_ptr<ScreenCaptureCallBack> &cb,
+    sptr<ScreenCapBufferConsumerListener> &outRegListener)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer("sc_cov_test");
+    if (consumer == nullptr) {
+        return nullptr;
+    }
+    auto regListener = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer, cb);
+    if (regListener == nullptr) {
+        return nullptr;
+    }
+    sptr<OHOS::IBufferConsumerListener> listenerObj = regListener;
+    consumer->RegisterConsumerListener(listenerObj); // required before RequestBuffer (else error 412)
+    sptr<OHOS::IBufferProducer> producerObj = consumer->GetProducer();
+    auto producer = OHOS::Surface::CreateSurfaceAsProducer(producerObj);
+    if (producer == nullptr) {
+        return nullptr;
+    }
+    sptr<OHOS::SurfaceBuffer> buf = nullptr;
+    int32_t fence = -1;
+    OHOS::BufferRequestConfig config;
+    config.width = TEST_BUFFER_WIDTH;
+    config.height = TEST_BUFFER_HEIGHT;
+    config.format = GRAPHIC_PIXEL_FMT_RGBA_8888;
+    config.usage = BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE;
+    config.timeout = 0;
+    if (producer->RequestBuffer(buf, fence, config) != GSERROR_OK) {
+        return nullptr;
+    }
+    OHOS::BufferFlushConfig flushConfig {};
+    if (producer->FlushBuffer(buf, fence, flushConfig) != GSERROR_OK) {
+        return nullptr;
+    }
+    outBuf = buf;
+    outRegListener = regListener; // keep alive; caller MUST UnregisterConsumerListener() before it goes out of scope
+    return consumer;
+}
+
+// consumer_ with a queued real buffer -> OnBufferAvailableAction
+HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailableAction_WithBuffer_001, TestSize.Level1)
+{
+    sptr<OHOS::SurfaceBuffer> buf = nullptr;
+    sptr<ScreenCapBufferConsumerListener> regListener;
+    auto consumer = MakeConsumerWithQueuedBuffer(buf, mockCb_, regListener);
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0);
+    listener_->OnBufferAvailableAction();
+    consumer->UnregisterConsumerListener();
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
+    EXPECT_EQ(listener_->availBuffers_.size(), 0u);
+}
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, SurfaceBufferThreadRun_QueueOverflowExit_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    for (int i = 0; i < 6; ++i) {
+        listener_->messageQueueSCB_.push({SCBufferMessageType::EXIT, ""});
+    }
+    ASSERT_EQ(listener_->StartBufferThread(), MSERR_OK);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    EXPECT_TRUE(listener_->isSurfaceCbInThreadStopped_.load());
+}
+
 HWTEST_F(ScreenCapBufferConsumerListenerTest, AcquireVideoBuffer_HasEntry_001, TestSize.Level1)
 {
     PushNullEntry(*listener_);
@@ -189,5 +261,60 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, Destructor_RunningThread_001, Test
     }
     EXPECT_TRUE(localListener->isSurfaceCbInThreadStopped_.load());
 }
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, SurfaceBufferThreadRun_ProcessMessages_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    ASSERT_EQ(listener_->StartBufferThread(), MSERR_OK);
+    listener_->OnBufferAvailable(); // push GET_BUFFER
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+    listener_->StopBufferThread(); // push EXIT
+    for (int i = 0; i < 50 && !listener_->isSurfaceCbInThreadStopped_.load(); ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    EXPECT_TRUE(listener_->isSurfaceCbInThreadStopped_.load());
+}
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, SurfaceBufferThreadRun_QueueOverflow_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    for (int i = 0; i < 6; ++i) {
+        listener_->messageQueueSCB_.push({SCBufferMessageType::GET_BUFFER, "overflow"});
+    }
+    ASSERT_EQ(listener_->StartBufferThread(), MSERR_OK);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    listener_->StopBufferThread();
+    for (int i = 0; i < 50 && !listener_->isSurfaceCbInThreadStopped_.load(); ++i) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    }
+    EXPECT_TRUE(listener_->isSurfaceCbInThreadStopped_.load());
+}
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseVideoBuffer_NonNullConsumer_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    PushNullEntry(*listener_);
+    EXPECT_EQ(listener_->ReleaseVideoBuffer(), MSERR_OK);
+    EXPECT_TRUE(listener_->availBuffers_.empty());
+}
+
+HWTEST_F(ScreenCapBufferConsumerListenerTest, ReleaseBuffer_NonNullConsumer_001, TestSize.Level1)
+{
+    auto consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(consumer, nullptr);
+    listener_->consumer_ = consumer;
+    PushNullEntry(*listener_);
+    PushNullEntry(*listener_);
+    EXPECT_EQ(listener_->ReleaseBuffer(), MSERR_OK);
+    EXPECT_TRUE(listener_->availBuffers_.empty());
+}
+
 } // namespace Media
 } // namespace OHOS
+
