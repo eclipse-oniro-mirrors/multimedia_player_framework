@@ -1631,5 +1631,74 @@ HWTEST_F(PlayerImplUnitTest, SetSubtitleCbDfxStatus_NullService_001, TestSize.Le
     auto ret = playerImpl_->SetSubtitleCbDfxStatus(true);
     EXPECT_EQ(ret, MSERR_SERVICE_DIED);
 }
+
+/**
+ * @tc.name  : Test CheckSupportPlaybackCommand
+ * @tc.number: CheckSupportPlaybackCommand_001
+ * @tc.desc  : Test service supports PLAYBACK_COMMAND_SEEK, support is set to true and return MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, CheckSupportPlaybackCommand_001, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+    bool support = false;
+    EXPECT_CALL(*mockService, CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, _))
+        .WillOnce(DoAll(SetArgReferee<1>(true), Return(MSERR_OK)));
+    auto ret = playerImpl_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_TRUE(support);
+}
+
+/**
+ * @tc.name  : Test CheckSupportPlaybackCommand
+ * @tc.number: CheckSupportPlaybackCommand_002
+ * @tc.desc  : Test service does not support PLAYBACK_COMMAND_RATE, support is set to false and return MSERR_OK
+ */
+HWTEST_F(PlayerImplUnitTest, CheckSupportPlaybackCommand_002, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+    bool support = true;
+    EXPECT_CALL(*mockService, CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_RATE, _))
+        .WillOnce(DoAll(SetArgReferee<1>(false), Return(MSERR_OK)));
+    auto ret = playerImpl_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_RATE, support);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_FALSE(support);
+}
+
+/**
+ * @tc.name  : Test CheckSupportPlaybackCommand
+ * @tc.number: CheckSupportPlaybackCommand_003
+ * @tc.desc  : Test player service is nullptr, return MSERR_SERVICE_DIED
+ */
+HWTEST_F(PlayerImplUnitTest, CheckSupportPlaybackCommand_003, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    playerImpl_->playerService_ = nullptr;
+    bool support = false;
+    auto ret = playerImpl_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, support);
+    EXPECT_EQ(ret, MSERR_SERVICE_DIED);
+    EXPECT_FALSE(support);
+}
+
+/**
+ * @tc.name  : Test CheckSupportPlaybackCommand
+ * @tc.number: CheckSupportPlaybackCommand_004
+ * @tc.desc  : Test service returns error code, the error code is propagated to caller
+ */
+HWTEST_F(PlayerImplUnitTest, CheckSupportPlaybackCommand_004, TestSize.Level0)
+{
+    ASSERT_NE(playerImpl_, nullptr);
+    auto mockService = std::make_shared<MockIPlayerService>();
+    playerImpl_->playerService_ = mockService;
+    bool support = false;
+    EXPECT_CALL(*mockService, CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, _))
+        .WillOnce(Return(MSERR_INVALID_OPERATION));
+    auto ret = playerImpl_->CheckSupportPlaybackCommand(PlaybackCommand::PLAYBACK_COMMAND_SEEK, support);
+    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+    EXPECT_FALSE(support);
+}
 } // namespace Media
 } // namespace OHOS
