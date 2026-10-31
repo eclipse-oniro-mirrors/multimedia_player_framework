@@ -87,6 +87,9 @@ int32_t ScreenCaptureListenerManager::RegisterListeners(uint32_t listenerFlags, 
     ExecuteIf(listenerFlags, LF_SCREEN_CONN, [this]() { return RegisterScreenConnectListener(); });
     ExecuteIf(listenerFlags, LF_LANG_SWITCH, [this]() { return RegisterLanguageSwitchListener(); });
     ExecuteIf(listenerFlags, LF_ACCOUNT, [this]() { return RegisterAccountObserver(); });
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    ExecuteIf(listenerFlags, LF_THERMAL, [this]() { return RegisterThermalObserver(); });
+#endif
 #ifdef SUPPORT_CALL
     ExecuteIf(listenerFlags, LF_CALL, [this]() { return RegisterInCallObserver(); });
 #endif
@@ -114,6 +117,9 @@ int32_t ScreenCaptureListenerManager::UnregisterListeners(uint32_t listenerFlags
     ExecuteIf(listenerFlags, LF_SCREEN_CONN, [this]() { return UnregisterScreenConnectListener(); });
     ExecuteIf(listenerFlags, LF_LANG_SWITCH, [this]() { return UnregisterLanguageSwitchListener(); });
     ExecuteIf(listenerFlags, LF_ACCOUNT, [this]() { return UnregisterAccountObserver(); });
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    ExecuteIf(listenerFlags, LF_THERMAL, [this]() { return UnregisterThermalObserver(); });
+#endif
 #ifdef SUPPORT_CALL
     ExecuteIf(listenerFlags, LF_CALL, [this]() { return UnregisterInCallObserver(); });
 #endif
@@ -167,7 +173,7 @@ void ScreenCaptureListenerManager::SetupSceneSessionManagerDeathRecipient()
     }
 
     auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(registerParams_.appUserId)
-        .GetSceneSessionManagerLiteProxy();
+                                   .GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_LOG(sceneSessionManager != nullptr, "sceneSessionManager is nullptr");
 
     lifecycleListenerDeathRecipient_ = sptr<SceneSessionDeathRecipient>::MakeSptr(weak_from_this());
@@ -214,14 +220,11 @@ int32_t ScreenCaptureListenerManager::RegisterWindowLifecycleListener()
     }
 
     auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(registerParams_.appUserId)
-        .GetSceneSessionManagerLiteProxy();
+                                   .GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION, "sceneSessionManager is nullptr");
     SetupSceneSessionManagerDeathRecipient();
 
     windowLifecycleListener_ = sptr<SessionLifecycleListenerWrapper>::MakeSptr(eventListener_);
-    CHECK_AND_RETURN_RET_LOG(windowLifecycleListener_ != nullptr, MSERR_INVALID_OPERATION,
-        "create windowLifecycleListener failed");
-
     auto ret = sceneSessionManager->RegisterSessionLifecycleListenerByIds(windowLifecycleListener_,
         registerParams_.windowIdList);
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
@@ -239,7 +242,7 @@ int32_t ScreenCaptureListenerManager::UnregisterWindowLifecycleListener()
     }
 
     auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(registerParams_.appUserId)
-        .GetSceneSessionManagerLiteProxy();
+                                   .GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION, "sceneSessionManager is nullptr");
 
     if (lifecycleListenerDeathRecipient_) {
@@ -267,9 +270,6 @@ int32_t ScreenCaptureListenerManager::RegisterWindowInfoChangedListener()
     }
 
     windowInfoChangedListener_ = sptr<WindowInfoListenerWrapper>::MakeSptr(eventListener_);
-    CHECK_AND_RETURN_RET_LOG(windowInfoChangedListener_ != nullptr, MSERR_INVALID_OPERATION,
-        "create windowInfoChangedListener failed");
-
     windowInfoChangedListener_->AddInterestInfo(Rosen::WindowInfoKey::WINDOW_ID);
     CHECK_AND_RETURN_RET_LOG(!registerParams_.windowIdList.empty(), MSERR_INVALID_OPERATION, "windowIdList is empty");
     windowInfoChangedListener_->SetWindowId(registerParams_.windowIdList.front());
@@ -277,7 +277,7 @@ int32_t ScreenCaptureListenerManager::RegisterWindowInfoChangedListener()
     std::unordered_set<Rosen::WindowInfoKey> observedInfo;
     observedInfo.insert(Rosen::WindowInfoKey::DISPLAY_ID);
     Rosen::WMError ret = Rosen::WindowManager::GetInstance(registerParams_.appUserId)
-        .RegisterWindowInfoChangeCallback(observedInfo, windowInfoChangedListener_);
+                             .RegisterWindowInfoChangeCallback(observedInfo, windowInfoChangedListener_);
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
         "RegisterWindowInfoChangeCallback failed");
 
@@ -295,7 +295,7 @@ int32_t ScreenCaptureListenerManager::UnregisterWindowInfoChangedListener()
     std::unordered_set<Rosen::WindowInfoKey> observedInfo;
     observedInfo.insert(Rosen::WindowInfoKey::DISPLAY_ID);
     Rosen::WMError ret = Rosen::WindowManager::GetInstance(registerParams_.appUserId)
-        .UnregisterWindowInfoChangeCallback(observedInfo, windowInfoChangedListener_);
+                             .UnregisterWindowInfoChangeCallback(observedInfo, windowInfoChangedListener_);
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
         "UnregisterWindowInfoChangeCallback failed");
 
@@ -348,8 +348,6 @@ int32_t ScreenCaptureListenerManager::RegisterPrivateWindowListener()
     }
 
     privateWindowListener_ = sptr<PrivateWindowListenerWrapper>::MakeSptr(eventListener_);
-    CHECK_AND_RETURN_RET_LOG(privateWindowListener_ != nullptr, MSERR_NO_MEMORY, "create privateWindowListener failed");
-
     Rosen::DMError ret = Rosen::DisplayManager::GetInstance().RegisterPrivateWindowListener(privateWindowListener_);
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::DMError::DM_OK, MSERR_INVALID_OPERATION,
         "RegisterPrivateWindowListener failed, ret: %{public}d", ret);
@@ -382,8 +380,6 @@ int32_t ScreenCaptureListenerManager::RegisterScreenConnectListener()
     }
 
     screenConnectListener_ = sptr<ScreenConnectListenerWrapper>::MakeSptr(eventListener_);
-    CHECK_AND_RETURN_RET_LOG(screenConnectListener_ != nullptr, MSERR_NO_MEMORY, "create screenConnectListener failed");
-
     Rosen::DMError ret = Rosen::ScreenManager::GetInstance().RegisterScreenListener(screenConnectListener_);
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::DMError::DM_OK, MSERR_INVALID_OPERATION,
         "RegisterScreenListener failed, ret: %{public}d", ret);
@@ -420,9 +416,6 @@ int32_t ScreenCaptureListenerManager::RegisterLanguageSwitchListener()
     EventFwk::CommonEventSubscribeInfo subscribeInfo(matchingSkills);
 
     languageSwitchSubscriber_ = std::make_shared<LanguageSwitchSubscriberWrapper>(subscribeInfo, eventListener_);
-    CHECK_AND_RETURN_RET_LOG(languageSwitchSubscriber_ != nullptr, MSERR_NO_MEMORY,
-        "create languageSwitchSubscriber failed");
-
     bool ret = EventFwk::CommonEventManager::SubscribeCommonEvent(languageSwitchSubscriber_);
     CHECK_AND_RETURN_RET_LOG(ret, MSERR_INVALID_OPERATION, "SubscribeCommonEvent failed");
 
@@ -453,9 +446,6 @@ int32_t ScreenCaptureListenerManager::RegisterAccountObserver()
     }
 
     accountObserverCallback_ = std::make_shared<AccountObserverCallbackWrapper>(eventListener_);
-    CHECK_AND_RETURN_RET_LOG(accountObserverCallback_ != nullptr, MSERR_NO_MEMORY,
-        "create accountObserverCallback failed");
-
     CHECK_AND_RETURN_RET_LOG(providers_->GetAccountObserver().RegisterAccountObserverCallBack(accountObserverCallback_),
         MSERR_INVALID_OPERATION, "RegisterAccountObserverCallBack failed");
 
@@ -474,6 +464,34 @@ int32_t ScreenCaptureListenerManager::UnregisterAccountObserver()
     return MSERR_OK;
 }
 
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+int32_t ScreenCaptureListenerManager::RegisterThermalObserver()
+{
+    if (thermalObserverCallback_ != nullptr) {
+        MEDIA_LOGI("thermalObserverCallback already registered");
+        return MSERR_OK;
+    }
+
+    thermalObserverCallback_ = std::make_shared<ThermalObserverCallbackWrapper>(eventListener_);
+    CHECK_AND_RETURN_RET_LOG(ThermalObserver::GetInstance().RegisterThermalObserverCallBack(thermalObserverCallback_),
+        MSERR_INVALID_OPERATION, "RegisterThermalObserverCallBack failed");
+
+    MEDIA_LOGI("RegisterThermalObserver end");
+    return MSERR_OK;
+}
+
+int32_t ScreenCaptureListenerManager::UnregisterThermalObserver()
+{
+    if (thermalObserverCallback_ != nullptr) {
+        ThermalObserver::GetInstance().UnregisterThermalObserverCallBack(thermalObserverCallback_);
+        thermalObserverCallback_ = nullptr;
+    }
+
+    MEDIA_LOGI("UnregisterThermalObserver end");
+    return MSERR_OK;
+}
+#endif
+
 #ifdef SUPPORT_CALL
 int32_t ScreenCaptureListenerManager::RegisterInCallObserver()
 {
@@ -483,9 +501,6 @@ int32_t ScreenCaptureListenerManager::RegisterInCallObserver()
     }
 
     incallObserverCallback_ = std::make_shared<InCallObserverCallbackWrapper>(eventListener_);
-    CHECK_AND_RETURN_RET_LOG(incallObserverCallback_ != nullptr, MSERR_NO_MEMORY,
-        "create incallObserverCallback failed");
-
     CHECK_AND_RETURN_RET_LOG(providers_->GetInCallObserver().RegisterInCallObserverCallBack(incallObserverCallback_),
         MSERR_INVALID_OPERATION, "RegisterInCallObserverCallBack failed");
 
@@ -626,6 +641,23 @@ bool AccountObserverCallbackWrapper::OnAccountsSwitch()
     return true;
 }
 
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+ThermalObserverCallbackWrapper::ThermalObserverCallbackWrapper(std::weak_ptr<IScreenCaptureEventListener> listener)
+    : eventListener_(listener)
+{
+    MEDIA_LOGI("ThermalObserverCallbackWrapper created");
+}
+
+void ThermalObserverCallbackWrapper::OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel level)
+{
+    MEDIA_LOGI("ThermalObserverCallbackWrapper::OnThermalLevelChanged level: %{public}d", static_cast<int32_t>(level));
+    auto listener = eventListener_.lock();
+    if (listener) {
+        listener->OnThermalLevelChanged(level);
+    }
+}
+#endif
+
 #ifdef SUPPORT_CALL
 InCallObserverCallbackWrapper::InCallObserverCallbackWrapper(std::weak_ptr<IScreenCaptureEventListener> listener)
     : eventListener_(listener)
@@ -662,14 +694,11 @@ int32_t ScreenCaptureListenerManager::RegisterAppLifecycleListener()
     }
 
     auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(registerParams_.appUserId)
-        .GetSceneSessionManagerLiteProxy();
+                                   .GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION, "sceneSessionManager is nullptr");
     SetupSceneSessionManagerDeathRecipient();
 
     appLifecycleListener_ = sptr<SessionLifecycleListenerWrapper>::MakeSptr(eventListener_);
-    CHECK_AND_RETURN_RET_LOG(appLifecycleListener_ != nullptr, MSERR_INVALID_OPERATION,
-        "create appLifecycleListener failed.");
-
     Rosen::WMError ret = sceneSessionManager->RegisterSessionLifecycleListenerByAppInstance(appLifecycleListener_,
         registerParams_.appBundleName, registerParams_.appIndex, "");
     CHECK_AND_RETURN_RET_LOG(ret == Rosen::WMError::WM_OK, MSERR_INVALID_OPERATION,
@@ -687,7 +716,7 @@ int32_t ScreenCaptureListenerManager::UnregisterAppLifecycleListener()
     }
 
     auto sceneSessionManager = Rosen::SessionManagerLite::GetInstance(registerParams_.appUserId)
-        .GetSceneSessionManagerLiteProxy();
+                                   .GetSceneSessionManagerLiteProxy();
     CHECK_AND_RETURN_RET_LOG(sceneSessionManager != nullptr, MSERR_INVALID_OPERATION,
         "sceneSessionManager is nullptr, UnregisterAppLifecycleListener failed.");
 

@@ -19,6 +19,8 @@ import("//foundation/multimedia/player_framework/config.gni")
 _sc =
     "//foundation/multimedia/player_framework/services/services/screen_capture"
 
+screen_capture_support_power = player_framework_support_power_manager
+
 screen_capture_sources = [
   "$_sc/server/audio_capturer_wrapper.cpp",
   "$_sc/server/audio_data_source_generic.cpp",
@@ -32,6 +34,13 @@ screen_capture_sources = [
   "$_sc/server/screen_capture_server_manager.cpp",
   "$_sc/server/ui_extension_ability_connection.cpp",
 ]
+
+if (screen_capture_support_power) {
+  screen_capture_sources += [
+    "//foundation/multimedia/player_framework/services/services/observer/thermal_level_listener.cpp",
+    "//foundation/multimedia/player_framework/services/services/observer/thermal_observer.cpp",
+  ]
+}
 
 screen_capture_external_deps = [
   "ability_base:base",
@@ -68,6 +77,8 @@ screen_capture_external_deps = [
   "hitrace:libhitracechain",
   "hiview:libucollection_client",
   "i18n:intl_util",
+  "icu:shared_icui18n",
+  "icu:shared_icuuc",
   "image_framework:image_native",
   "init:libbegetutil",
   "ipc:ipc_single",
@@ -88,8 +99,6 @@ screen_capture_external_deps = [
   "window_manager:scene_session",
   "window_manager:scene_session_manager",
   "window_manager:session_manager_lite",
-  "icu:shared_icuuc",
-  "icu:shared_icui18n",
 ]
 
 if (player_framework_support_screen_capture_stopbycall) {
@@ -106,6 +115,13 @@ if (player_framework_support_drm) {
 
 if (player_framework_support_power_manager) {
   screen_capture_external_deps += [ "power_manager:powermgr_client" ]
+}
+
+if (screen_capture_support_power) {
+  screen_capture_external_deps += [
+    "thermal_manager:thermalmgr_listener",
+    "thermal_manager:thermalsrv_client",
+  ]
 }
 
 screen_capture_deps = [

@@ -13,6 +13,7 @@
 
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+import("//foundation/multimedia/player_framework/services/services/screen_capture/screen_capture_common.gni")
 
 module_output_path = "player_framework/ScreenCapture/screen_capture"
 
@@ -127,6 +128,13 @@ ohos_unittest("screen_capture_server_function_unit_test") {
 
   if (player_framework_support_power_manager) {
     external_deps += [ "power_manager:powermgr_client" ]
+  }
+
+  if (screen_capture_support_power) {
+    external_deps += [
+      "thermal_manager:thermalmgr_listener",
+      "thermal_manager:thermalsrv_client",
+    ]
   }
 
   if (player_framework_support_drm) {

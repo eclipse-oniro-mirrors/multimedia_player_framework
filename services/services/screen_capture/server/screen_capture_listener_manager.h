@@ -32,6 +32,9 @@
 #include "incall_observer.h"
 #endif
 #include "account_observer.h"
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+#include "thermal_observer.h"
+#endif
 
 namespace OHOS::Media {
 
@@ -49,6 +52,9 @@ enum ListenerFlag : uint32_t {
 #endif
     LF_AUDIO_RENDERER = 1 << 8,
     LF_APP_LIFECYCLE = 1 << 9,
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    LF_THERMAL = 1 << 10,
+#endif
     LF_ALL = 0xffffffff,
 };
 
@@ -156,6 +162,19 @@ private:
     std::weak_ptr<IScreenCaptureEventListener> eventListener_;
 };
 
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+class ThermalObserverCallbackWrapper : public ThermalObserverCallBack {
+public:
+    explicit ThermalObserverCallbackWrapper(std::weak_ptr<IScreenCaptureEventListener> listener);
+    ~ThermalObserverCallbackWrapper() override = default;
+
+    void OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel level) override;
+
+private:
+    std::weak_ptr<IScreenCaptureEventListener> eventListener_;
+};
+#endif
+
 #ifdef SUPPORT_CALL
 class InCallObserverCallbackWrapper : public InCallObserverCallBack {
 public:
@@ -235,6 +254,11 @@ private:
     int32_t RegisterAccountObserver();
     int32_t UnregisterAccountObserver();
 
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    int32_t RegisterThermalObserver();
+    int32_t UnregisterThermalObserver();
+#endif
+
 #ifdef SUPPORT_CALL
     int32_t RegisterInCallObserver();
     int32_t UnregisterInCallObserver();
@@ -257,6 +281,9 @@ private:
     sptr<IRemoteObject::DeathRecipient> lifecycleListenerDeathRecipient_;
     std::shared_ptr<LanguageSwitchSubscriberWrapper> languageSwitchSubscriber_;
     std::shared_ptr<AccountObserverCallbackWrapper> accountObserverCallback_;
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    std::shared_ptr<ThermalObserverCallbackWrapper> thermalObserverCallback_;
+#endif
 #ifdef SUPPORT_CALL
     std::shared_ptr<InCallObserverCallbackWrapper> incallObserverCallback_;
 #endif

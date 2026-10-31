@@ -331,7 +331,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnCallStateChanged_Same
 }
 #endif
 
-
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnScreenDisconnect_NotInList_001, TestSize.Level2)
 {
     MEDIA_LOGI("ServerCallback_OnScreenDisconnect_NotInList_001 start");
@@ -707,5 +706,57 @@ HWTEST_F(ScreenCaptureServerFunctionTest, Server_UpdateMissionData_DisconnectNot
         [](const auto &m) { return m.missionId == 500; });
     EXPECT_TRUE(it != screenCaptureServer_->missionInfos_.end());
 }
+
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_OnThermalLevelChanged_UpdatesFpsLevel_001, TestSize.Level2)
+{
+    ASSERT_NE(screenCaptureServer_, nullptr);
+    screenCaptureServer_->virtualScreenFrameRate_ = 60;
+    screenCaptureServer_->lastFpsLevel_ = ThermalFpsLevel::FPS_RESTORE;
+    screenCaptureServer_->OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel::OVERHEATED);
+    WaitForTaskComplete();
+    EXPECT_EQ(screenCaptureServer_->lastFpsLevel_, ThermalFpsLevel::FPS_HIGH);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_OnThermalLevelChanged_FpsLow_001, TestSize.Level2)
+{
+    ASSERT_NE(screenCaptureServer_, nullptr);
+    screenCaptureServer_->virtualScreenFrameRate_ = 60;
+    screenCaptureServer_->lastFpsLevel_ = ThermalFpsLevel::FPS_RESTORE;
+    screenCaptureServer_->OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel::WARNING);
+    WaitForTaskComplete();
+    EXPECT_EQ(screenCaptureServer_->lastFpsLevel_, ThermalFpsLevel::FPS_LOW);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_OnThermalLevelChanged_SameLevelSkip_001, TestSize.Level2)
+{
+    ASSERT_NE(screenCaptureServer_, nullptr);
+    screenCaptureServer_->virtualScreenFrameRate_ = 60;
+    screenCaptureServer_->lastFpsLevel_ = ThermalFpsLevel::FPS_HIGH;
+    screenCaptureServer_->OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel::OVERHEATED);
+    WaitForTaskComplete();
+    EXPECT_EQ(screenCaptureServer_->lastFpsLevel_, ThermalFpsLevel::FPS_HIGH);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_OnThermalLevelChanged_Restore_001, TestSize.Level2)
+{
+    ASSERT_NE(screenCaptureServer_, nullptr);
+    screenCaptureServer_->virtualScreenFrameRate_ = 60;
+    screenCaptureServer_->lastFpsLevel_ = ThermalFpsLevel::FPS_HIGH;
+    screenCaptureServer_->OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel::COOL);
+    WaitForTaskComplete();
+    EXPECT_EQ(screenCaptureServer_->lastFpsLevel_, ThermalFpsLevel::FPS_RESTORE);
+}
+
+HWTEST_F(ScreenCaptureServerFunctionTest, Server_OnThermalLevelChanged_NoUpscale_001, TestSize.Level2)
+{
+    ASSERT_NE(screenCaptureServer_, nullptr);
+    screenCaptureServer_->virtualScreenFrameRate_ = 15;
+    screenCaptureServer_->lastFpsLevel_ = ThermalFpsLevel::FPS_RESTORE;
+    screenCaptureServer_->OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel::OVERHEATED);
+    WaitForTaskComplete();
+    EXPECT_EQ(screenCaptureServer_->lastFpsLevel_, ThermalFpsLevel::FPS_HIGH);
+}
+#endif
 } // namespace Media
 } // namespace OHOS

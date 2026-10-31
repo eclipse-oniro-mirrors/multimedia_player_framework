@@ -2551,7 +2551,7 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
     if (ret != MSERR_OK) {
         return ret;
     }
-    SetMaxVideoFrameRateInner();
+    SetMaxVideoFrameRateInner(virtualScreenFrameRate_);
     return MSERR_OK;
 }
 
@@ -3419,19 +3419,18 @@ int32_t ScreenCaptureServer::SkipPrivacyModeInner()
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServer::SetMaxVideoFrameRateInner()
+int32_t ScreenCaptureServer::SetMaxVideoFrameRateInner(uint32_t rate)
 {
     CHECK_AND_RETURN_RET_LOG(virtualScreen_ != nullptr, MSERR_INVALID_VAL,
         "SetMaxVideoFrameRateInner failed virtual screen not init");
     uint32_t actualRefreshRate = 0;
     auto res = Rosen::ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(virtualScreen_->GetScreenId(),
-        virtualScreenFrameRate_, actualRefreshRate);
+        rate, actualRefreshRate);
     CHECK_AND_RETURN_RET_LOG(!CheckAppVersionForUnsupport(res), MSERR_UNSUPPORT,
         "SetVirtualScreenMaxRefreshRate failed, res: %{public}d", res);
     CHECK_AND_RETURN_RET_LOG(res == DMError::DM_OK, MSERR_INVALID_OPERATION, "SetMaxVideoFrameRate failed");
 
-    MEDIA_LOGI("ScreenCaptureServer::SetMaxVideoFrameRate end, frameRate:%{public}u, actualRefreshRate:%{public}u",
-        virtualScreenFrameRate_, actualRefreshRate);
+    MEDIA_LOGI("SetMaxVideoFrameRateInner rate:%{public}u, actualRefreshRate:%{public}u", rate, actualRefreshRate);
     return MSERR_OK;
 }
 
@@ -3449,7 +3448,7 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRate(int32_t frameRate)
         return MSERR_INVALID_VAL;
     }
     virtualScreenFrameRate_ = static_cast<uint32_t>(frameRate);
-    return SetMaxVideoFrameRateInner();
+    return SetMaxVideoFrameRateInner(virtualScreenFrameRate_);
 }
 
 ScreenScaleMode ScreenCaptureServer::GetScreenScaleMode(const AVScreenCaptureFillMode &fillMode)

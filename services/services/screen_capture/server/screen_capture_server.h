@@ -25,6 +25,9 @@
 #include "screen_capture_callback_proxy.h"
 #include "screen_capture_listener_manager.h"
 #include "screen_capture_server_base.h"
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+#include "thermal_observer.h"
+#endif
 #include "task_queue.h"
 #include <atomic>
 #include <chrono>
@@ -46,6 +49,15 @@ struct MissionInfo {
     uint64_t missionId;
     bool isForeground;
 };
+
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+enum class ThermalFpsLevel : int32_t {
+    FPS_RESTORE = -1,
+    FPS_HIGH = 30,
+    FPS_LOW = 20,
+};
+ThermalFpsLevel MapThermalLevelToFps(OHOS::PowerMgr::ThermalLevel level);
+#endif
 
 enum MissionSideEffect : uint8_t {
     NONE = 0,
@@ -147,7 +159,7 @@ public:
     int32_t ResizeCanvas(int32_t width, int32_t height) override;
     int32_t SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec) override;
     int32_t SetMaxVideoFrameRate(int32_t frameRate) override;
-    int32_t SetMaxVideoFrameRateInner();
+    int32_t SetMaxVideoFrameRateInner(uint32_t rate);
     void Release() override;
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override;
     int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override;
@@ -178,6 +190,9 @@ public:
     void OnCallStateChanged(bool isInCall) override;
 #endif
     void OnAccountSwitched() override;
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    void OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel level) override;
+#endif
     void OnAudioRendererStateChanged(
         const std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> &audioRendererChangeInfos) override;
     void OnBatchLifecycleEvent(
@@ -236,12 +251,8 @@ private:
     int32_t StartScreenCaptureStream();
     int32_t SyncAudioCaptures(bool ignoreMicError = false);
     std::string GenerateThreadNameByPrefix(std::string threadName);
-    int32_t StartAudioCapture(
-        std::shared_ptr<AudioCapturerWrapper> &capturer,
-        AudioCaptureInfo &capInfo,
-        const ScreenCaptureContentFilter &filter,
-        AudioCaptureSourceType sourceType,
-        bool isVoip);
+    int32_t StartAudioCapture(std::shared_ptr<AudioCapturerWrapper> &capturer, AudioCaptureInfo &capInfo,
+        const ScreenCaptureContentFilter &filter, AudioCaptureSourceType sourceType, bool isVoip);
     int32_t StartInnerAudioCapture();
     int32_t StartMicAudioCapture(bool isVoip);
     int32_t StartStreamVideoCapture();
@@ -473,6 +484,10 @@ private:
     static constexpr int32_t VIDEO_BITRATE_MAX = 30000000;
     static constexpr int32_t VIDEO_FRAME_RATE_MIN = 1;
     static constexpr int32_t VIDEO_FRAME_RATE_MAX = 60;
+
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    ThermalFpsLevel lastFpsLevel_{ThermalFpsLevel::FPS_RESTORE};
+#endif
     static constexpr int32_t VIDEO_FRAME_WIDTH_MAX = 10240;
     static constexpr int32_t VIDEO_FRAME_HEIGHT_MAX = 4320;
     static constexpr int32_t SESSION_ID_INVALID = -1;

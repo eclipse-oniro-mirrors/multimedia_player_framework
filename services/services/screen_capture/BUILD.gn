@@ -62,6 +62,9 @@ config("screen_capture_service_config") {
 
   defines = []
   defines += player_framework_defines
+  if (screen_capture_support_power) {
+    defines += [ "SCREEN_CAPTURE_SUPPORT_POWER" ]
+  }
   if (player_framework_feature_pc_select_window) {
     defines += [ "PC_STANDARD" ]
   }
