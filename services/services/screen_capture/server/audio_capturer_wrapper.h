@@ -28,6 +28,7 @@
 #include "audio_capturer.h"
 #include "cache_buffer.h"
 #include "screen_capture.h"
+#include "screen_capture_server_base.h"
 #include "securec.h"
 
 namespace OHOS {

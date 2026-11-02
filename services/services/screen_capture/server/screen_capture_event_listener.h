@@ -20,6 +20,9 @@
 #include "display_manager.h"
 #include "screen_manager.h"
 #include "session_lifecycle_listener_stub.h"
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+#include "thermal_level_info.h"
+#endif
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -27,7 +30,7 @@
 namespace OHOS::Media {
 
 class IScreenCaptureEventListener {
-  public:
+public:
     virtual ~IScreenCaptureEventListener() = default;
 
     virtual void OnWindowLifecycle(Rosen::ISessionLifecycleListener::SessionLifecycleEvent event) = 0;
@@ -41,12 +44,15 @@ class IScreenCaptureEventListener {
     virtual void OnCallStateChanged(bool isInCall) = 0;
 #endif
     virtual void OnAccountSwitched() = 0;
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    virtual void OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel level) = 0;
+#endif
     virtual void OnAudioRendererStateChanged(
         const std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> &audioRendererChangeInfos) = 0;
-    virtual void
-    OnBatchLifecycleEvent(const std::vector<Rosen::ISessionLifecycleListener::LifecycleEventPayload> &payloads) = 0;
-    virtual void
-    OnAppInstanceLifecycleEvent(const Rosen::ISessionLifecycleListener::LifecycleEventPayload &payload) = 0;
+    virtual void OnBatchLifecycleEvent(
+        const std::vector<Rosen::ISessionLifecycleListener::LifecycleEventPayload> &payloads) = 0;
+    virtual void OnAppInstanceLifecycleEvent(
+        const Rosen::ISessionLifecycleListener::LifecycleEventPayload &payload) = 0;
 };
 
 } // namespace OHOS::Media

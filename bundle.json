@@ -123,6 +123,7 @@
           "data_share",
           "ringtone_library",
           "os_account",
+          "thermal_manager",
           "i18n",
           "icu",
           "skia",

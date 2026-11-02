@@ -169,6 +169,44 @@ void ScreenCaptureServer::OnAccountSwitched()
     taskQue_.EnqueueTask(task);
 }
 
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+ThermalFpsLevel MapThermalLevelToFps(OHOS::PowerMgr::ThermalLevel level)
+{
+    if (level <= OHOS::PowerMgr::ThermalLevel::HOT) {
+        return ThermalFpsLevel::FPS_RESTORE;
+    }
+    if (level <= OHOS::PowerMgr::ThermalLevel::OVERHEATED) {
+        return ThermalFpsLevel::FPS_HIGH;
+    }
+    return ThermalFpsLevel::FPS_LOW;
+}
+
+void ScreenCaptureServer::OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel level)
+{
+    MEDIA_LOGI("OnThermalLevelChanged level: %{public}d", static_cast<int32_t>(level));
+    auto task = std::make_shared<TaskHandler<void>>([this, level] {
+        ThermalFpsLevel target = MapThermalLevelToFps(level);
+        if (target == lastFpsLevel_) {
+            MEDIA_LOGD("ThermalLevel %{public}d same level, skip", static_cast<int32_t>(level));
+            return;
+        }
+        lastFpsLevel_ = target;
+        uint32_t targetRate = virtualScreenFrameRate_;
+        if (target != ThermalFpsLevel::FPS_RESTORE) {
+            uint32_t cap = static_cast<uint32_t>(target);
+            if (cap < targetRate) {
+                targetRate = cap;
+            }
+        }
+        MEDIA_LOGI("ThermalLevel %{public}d -> SetMaxVideoFrameRateInner %{public}u", static_cast<int32_t>(level),
+            targetRate);
+        std::lock_guard<std::mutex> lock(mutex_);
+        SetMaxVideoFrameRateInner(targetRate);
+    });
+    taskQue_.EnqueueTask(task);
+}
+#endif
+
 void ScreenCaptureServer::OnAudioRendererStateChanged(
     const std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {

@@ -107,6 +107,14 @@ public:
         eventCount_++;
     }
 
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    void OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel level) override
+    {
+        thermalLevel_ = level;
+        eventCount_++;
+    }
+#endif
+
     void OnAudioRendererStateChanged(
         const std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> &audioRendererChangeInfos) override
     {
@@ -139,6 +147,9 @@ public:
     bool isInCall_ = false;
 #endif
     bool accountStateChanged_ = false;
+#ifdef SCREEN_CAPTURE_SUPPORT_POWER
+    OHOS::PowerMgr::ThermalLevel thermalLevel_ = OHOS::PowerMgr::ThermalLevel::COOL;
+#endif
     std::vector<std::shared_ptr<AudioStandard::AudioRendererChangeInfo>> audioRendererChangeInfos_;
     std::vector<Rosen::ISessionLifecycleListener::LifecycleEventPayload> batchLifecyclePayloads_;
     Rosen::ISessionLifecycleListener::LifecycleEventPayload appInstancePayload_;
