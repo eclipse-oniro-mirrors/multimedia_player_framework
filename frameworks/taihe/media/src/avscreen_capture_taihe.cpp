@@ -121,10 +121,10 @@ RetInfo GetReturnInfo(int32_t errCode, const std::string &operate, const std::st
     MediaServiceExtErrCodeAPI9 err = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(errCode));
 
     std::string message;
-    if (err == MSERR_EXT_API9_INVALID_PARAMETER) {
+    if (errCode == MSERR_INVALID_VAL) {
         message = MSExtErrorAPI9ToString(err, param, "") + add;
     } else {
-        message = MSExtErrorAPI9ToString(err, operate, "") + add;
+        message = operate + " " + MSErrorToString(static_cast<MediaServiceErrCode>(errCode)) + add;
     }
 
     MEDIA_LOGE("errCode: %{public}d, errMsg: %{public}s", err, message.c_str());
@@ -136,7 +136,7 @@ int32_t AVScreenCaptureRecorderImpl::CheckAudioSampleRate(const int32_t &audioSa
     if (audioSampleRate == 48000 || audioSampleRate == 16000) { // 16000 48000 AudioSampleRate options
         return MSERR_OK;
     }
-    return MSERR_INVALID_VAL;
+    return MSERR_INVALID_AUD_SAMPLE_RATE;
 }
 
 int32_t AVScreenCaptureRecorderImpl::CheckAudioChannelCount(const int32_t &audioChannelCount)
@@ -144,7 +144,7 @@ int32_t AVScreenCaptureRecorderImpl::CheckAudioChannelCount(const int32_t &audio
     if (audioChannelCount == 1 || audioChannelCount == 2) { // 1 2 channelCount number options
         return MSERR_OK;
     }
-    return MSERR_INVALID_VAL;
+    return MSERR_INVALID_AUD_CHANNEL;
 }
 
 int32_t AVScreenCaptureRecorderImpl::CheckVideoCodecFormat(const int32_t &preset)
@@ -153,7 +153,7 @@ int32_t AVScreenCaptureRecorderImpl::CheckVideoCodecFormat(const int32_t &preset
         static_cast<int32_t>(AVScreenCaptureRecorderPreset::SCREEN_RECORD_PRESET_H265_AAC_MP4) >= preset) {
         return MSERR_OK;
     }
-    return MSERR_INVALID_VAL;
+    return MSERR_INVALID_VID_CODEC_FORMAT;
 }
 
 VideoCodecFormat AVScreenCaptureRecorderImpl::GetVideoCodecFormat(const int32_t &preset)
@@ -178,7 +178,7 @@ int32_t AVScreenCaptureRecorderImpl::CheckVideoFrameFormat(const int32_t &frameW
         !(frameWidth == 0 && frameHeight == 0)) { // 0 one of width height is zero, use default display
         OHOS::sptr<OHOS::Rosen::Display> display = OHOS::Rosen::DisplayManager::GetInstance().GetDefaultDisplaySync();
         if (display == nullptr) {
-            return MSERR_INVALID_VAL;
+            return MSERR_INVALID_VID_WIDTH_HEIGHT;
         }
         MEDIA_LOGI("check video frame get displayInfo width:%{public}d,height:%{public}d,density:%{public}f",
             display->GetWidth(), display->GetHeight(), display->GetVirtualPixelRatio());
@@ -367,10 +367,10 @@ int32_t AVScreenCaptureRecorderImpl::GetRecorderInfo(std::unique_ptr<AVScreenCap
     int32_t fd = -1;
     fd = config.fd;
     CHECK_AND_RETURN_RET(fd > 0, // 0 to 2 for system std log
-        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_FD, "GetRecorderInfo", "url"), MSERR_INVALID_FD));
     recorderConfig.url = "fd://" + std::to_string(fd);
     CHECK_AND_RETURN_RET(recorderConfig.url != "",
-        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_VAL, "GetRecorderInfo", "url"), MSERR_INVALID_VAL));
+        (asyncCtx->AVScreenCaptureSignError(MSERR_INVALID_FD, "GetRecorderInfo", "url"), MSERR_INVALID_FD));
     MEDIA_LOGI("input url %{public}s", recorderConfig.url.c_str());
     return MSERR_OK;
 }
@@ -598,7 +598,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSkipPrivac
         CHECK_AND_RETURN_RET(taihe != nullptr && taihe->screenCapture_ != nullptr,
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
         int32_t ret = taihe->screenCapture_->SkipPrivacyMode(const_cast<std::vector<uint64_t> &>(windowIDsVec));
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
     });
@@ -648,7 +648,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetMicroph
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
 
         int32_t ret = taihe->screenCapture_->SetMicrophoneEnabled(enable);
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
 
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
@@ -666,7 +666,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetPresentPic
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
 
         int32_t ret = taihe->screenCapture_->PresentPicker();
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
 
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
@@ -740,7 +740,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetSetPickerM
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
 
         int32_t ret = taihe->screenCapture_->SetPickerMode(static_cast<OHOS::Media::PickerMode>(mode));
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
 
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
@@ -801,7 +801,7 @@ std::shared_ptr<TaskHandler<RetInfo>> AVScreenCaptureRecorderImpl::GetExcludePic
             GetReturnInfo(MSERR_INVALID_OPERATION, option, ""));
 
         int32_t ret = taihe->screenCapture_->ExcludePickerWindows(const_cast<std::vector<int32_t> &>(windowIDsVec));
-        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(MSERR_UNKNOWN, option, ""));
+        CHECK_AND_RETURN_RET(ret == MSERR_OK, GetReturnInfo(ret, option, ""));
 
         MEDIA_LOGI("%{public}s End", option.c_str());
         return RetInfo(MSERR_EXT_API9_OK, "");
