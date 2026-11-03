@@ -4478,6 +4478,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
     audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
 
     audioDecoder_->SetCallerInfo(instanceId_, bundleName_);
+    audioDecoder_->SetPlayerMode();
     audioDecoder_->SetDumpFlag(isDump_);
     // set decrypt config for drm audios
     if (isDrmProtected_) {
@@ -4500,7 +4501,14 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
     } else {
         MEDIA_LOG_D("HiPlayerImpl::LinkAudioDecoderFilter, and it's not drm-protected.");
     }
-    return pipeline_->LinkFilters(preFilter, {audioDecoder_}, type, true);
+    auto ret = pipeline_->LinkFilters(preFilter, {audioDecoder_}, type, true);
+    FALSE_RETURN_V_NOLOG(ret != Status::OK, Status::OK);
+
+    MEDIA_LOG_E("LinkAudioDecoderFilter failed, ret: %{public}d, cleanup audiodecoder_ for retry",
+        static_cast<int32_t>(ret));
+    FALSE_GOON_NOEXEC(interruptMonitor_ != nullptr, interruptMonitor_->DeregisterListener(audioDecoder_));
+    audioDecoder_.reset();
+    return ret;
 }
 
 Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilter,
