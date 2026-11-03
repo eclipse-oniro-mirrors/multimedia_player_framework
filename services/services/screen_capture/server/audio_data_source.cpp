@@ -595,15 +595,10 @@ void AudioDataSource::HandleSwitchToSpeakerOptimise(std::shared_ptr<AudioBuffer>
     if (speakerAliveStatus_ && screenCaptureServer_ && screenCaptureServer_->IsMicrophoneSwitchTurnOn() &&
         !isInVoIPCall_ && micAudioBuffer->buffer &&
         lastWriteType_ == AVScreenCaptureMixBufferType::MIX && screenCaptureServer_->GetInnerAudioCapture()) {
-        if (stableStopInnerSwitchCount_ > 1) { // optimise inner while use speaker
-            MEDIA_LOGI("ABuffer stop mix inner optimise cur:%{public}" PRId64 " last: %{public}" PRId64,
-                innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
-            innerAudioBuffer = nullptr;
-            screenCaptureServer_->StopInnerAudioCapture();
-            stableStopInnerSwitchCount_ = 0;
-        } else {
-            stableStopInnerSwitchCount_++;
-        }
+        MEDIA_LOGI("ABuffer stop mix inner optimise cur:%{public}" PRId64 " last: %{public}" PRId64,
+            innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
+        innerAudioBuffer = nullptr;
+        screenCaptureServer_->StopInnerAudioCapture();
     }
 }
 
