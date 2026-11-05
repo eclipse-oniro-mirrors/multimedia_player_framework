@@ -94,7 +94,8 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout, const std::shared_ptr<Pip
         demuxer_->ResumeForSeek();
         MEDIA_LOG_I("ResumeForSeek end");
         isClosetSeekDone = targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {
-            return (isAudioTargetArrived_ && (isVideoTargetArrived_ || demuxer_->IsVideoMuted())) || isInterruptNeeded_.load();
+            return (isAudioTargetArrived_ && (isVideoTargetArrived_ || demuxer_->IsVideoMuted()))
+                || isInterruptNeeded_.load();
         });
         receiver->OnEvent({"seek_agent", EventType::EVENT_NOTIFY_SEEK_CLOSEST, true});
         MEDIA_LOG_I("Wait end");
