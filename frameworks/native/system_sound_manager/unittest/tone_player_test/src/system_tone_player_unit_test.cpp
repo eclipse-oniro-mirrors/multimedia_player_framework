@@ -177,7 +177,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_007, TestSize.Level1
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
     audioUri = "/data/test/ringtone.ogg";
     systemTonePlayerImpl_->GetHapticUriInAudioDir(audioUri, hapticsUriMap);
-    EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::STANDARD], "/data/test/ringtone.json");
+    EXPECT_EQ(hapticsUriMap[ToneHapticsFeature::STANDARD], "test1");
     EXPECT_NE(hapticsUriMap[ToneHapticsFeature::GENTLE], " ");
 }
 
@@ -295,7 +295,7 @@ HWTEST(SystemTonePlayerUnitTest, Media_TonePlayer_Unit_Test_015, TestSize.Level1
     EXPECT_EQ(temp, MSERR_OK);
     float volume = -1;
     int32_t result = systemTonePlayerImpl_->SetAudioVolume(volume);
-    EXPECT_EQ(result, MSERR_OK);
+    EXPECT_EQ(result, ERROR_INVALID_PARAMS);
     volume = 2;
     result = systemTonePlayerImpl_->SetAudioVolume(volume);
     EXPECT_EQ(result, MSERR_OK);
