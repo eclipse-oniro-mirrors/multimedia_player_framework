@@ -368,6 +368,10 @@ enum AVMetadataCode : int32_t {
      * The metadata key to represent the software or hardware and setting used for encoding.
      */
     AV_KEY_ENCODER = 48,
+    /**
+     * The metadata key to retrieve the original creation time of the media source.
+     */
+    AV_KEY_CREATION_TIME = 49,
 };
 
 /**
