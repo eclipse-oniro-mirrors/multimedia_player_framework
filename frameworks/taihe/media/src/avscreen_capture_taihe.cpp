@@ -469,8 +469,11 @@ int32_t AVScreenCaptureRecorderImpl::GetContentAutoPauseScenes(ScreenCaptureStra
     const auto &scenes = avStrategy.contentAutoPauseScenes.value();
     uint32_t mask = 0;
     for (const auto &scene : scenes) {
-        CHECK_AND_RETURN_RET_LOG(scene == ohos::multimedia::media::AVScreenCaptureAutoPauseScene::key_t::SCENE_NONE ||
-                scene == ohos::multimedia::media::AVScreenCaptureAutoPauseScene::key_t::SCENE_SCREEN_FOLD_STATE_CHANGE,
+        CHECK_AND_RETURN_RET_LOG(scene ==
+                    ohos::multimedia::media::AVScreenCaptureAutoPauseCaptureScene::key_t::SCENE_NONE ||
+                scene ==
+                    ohos::multimedia::media::AVScreenCaptureAutoPauseCaptureScene::key_t::
+                        SCENE_SCREEN_FOLD_STATE_CHANGE,
             MSERR_INVALID_VAL, "scene out of range");
         mask |= static_cast<uint32_t>(static_cast<int32_t>(scene));
     }
