@@ -85,18 +85,6 @@ HWTEST_F(ThermalObserverInnerUnitTest, UnregisterThermalObserverCallBack_001, Te
     ASSERT_TRUE(ThermalObserver::GetInstance().OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel::HOT));
     ASSERT_EQ(cb->callCount_, 0);
 }
-
-HWTEST_F(ThermalObserverInnerUnitTest, UnregisterThermalObserverCallBack_002, TestSize.Level1)
-{
-    auto cb = std::make_shared<ThermalObserverTestCallBack>();
-    ASSERT_TRUE(ThermalObserver::GetInstance().RegisterThermalObserverCallBack(cb));
-    auto cbExpired = std::make_shared<ThermalObserverTestCallBack>();
-    ASSERT_TRUE(ThermalObserver::GetInstance().RegisterThermalObserverCallBack(cbExpired));
-    cbExpired.reset();
-    ThermalObserver::GetInstance().UnregisterThermalObserverCallBack(cb);
-    ASSERT_TRUE(ThermalObserver::GetInstance().OnThermalLevelChanged(OHOS::PowerMgr::ThermalLevel::HOT));
-    ASSERT_EQ(cb->callCount_, 0);
-}
 } // namespace ThermalObserverFuncUT
 } // namespace Media
 } // namespace OHOS

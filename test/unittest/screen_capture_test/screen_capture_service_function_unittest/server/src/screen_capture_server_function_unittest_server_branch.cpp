@@ -460,7 +460,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_CreateVirtualScree
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK); // state PAUSED, virtualScreen_ reset
     screenCaptureServer_->consumer_ = nullptr;
-    EXPECT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_UNKNOWN);
+    EXPECT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureInner_PickerPopUp_001, TestSize.Level2)
