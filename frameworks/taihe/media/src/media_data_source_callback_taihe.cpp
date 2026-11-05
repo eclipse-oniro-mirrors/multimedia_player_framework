@@ -81,7 +81,7 @@ int32_t MediaDataSourceCallback::ReadAt(const std::shared_ptr<OHOS::Media::AVSha
 
     UvWork(cbWrap);
     cb_->WaitResult();
-    CHECK_AND_RETURN_RET_LOG(static_case<uint32_t>(cb_->readSize_) <= length, SOURCE_ERROR_IO,
+    CHECK_AND_RETURN_RET_LOG(static_cast<uint32_t>(cb_->readSize_) <= length, OHOS::Media::SOURCE_ERROR_IO,
         "read size exceeds requested length");
     MEDIA_LOGD("ReadAt out");
     return cb_->readSize_;

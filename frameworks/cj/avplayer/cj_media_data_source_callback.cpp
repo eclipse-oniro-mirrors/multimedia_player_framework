@@ -50,7 +50,7 @@ int32_t CJMediaDataSourceCallback::ReadAt(const std::shared_ptr<AVSharedMemory> 
     }
     CArrUI8 buffer = CArrUI8{.head = raw, .size = size};
     auto res = cb_(buffer, length, pos);
-    CHECK_AND_RETURN_RET_LOG(static_case<uint32_t>(res) <= length, SOURCE_ERROR_IO,
+    CHECK_AND_RETURN_RET_LOG(static_cast<uint32_t>(res) <= length, SOURCE_ERROR_IO,
         "read size exceeds requested length");
     return res;
 }
