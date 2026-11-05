@@ -88,7 +88,7 @@ class VirtualScreen {
 public:
     explicit VirtualScreen(const Rosen::VirtualScreenOption &option)
     {
-        screenId_ = Rosen::ScreenManager::GetInstance().CreateVirtualScreen(option);
+        screenId_ = Rosen::ScreenManager::GetInstance().CreateVirtualScreen(option, error_);
     }
     explicit VirtualScreen(Rosen::ScreenId id) : screenId_(id) {}
 
@@ -110,6 +110,12 @@ public:
     {
         return screenId_;
     }
+
+    Rosen::DMError GetError() const
+    {
+        return error_;
+    }
+    
     bool IsValid() const
     {
         return screenId_ != Rosen::SCREEN_ID_INVALID;
@@ -118,6 +124,7 @@ public:
 private:
     VirtualScreen() = default;
     Rosen::ScreenId screenId_ = Rosen::SCREEN_ID_INVALID;
+    Rosen::DMError error_ = Rosen::DM_ERROR_OK;
 };
 
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,

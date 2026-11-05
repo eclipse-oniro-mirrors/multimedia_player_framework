@@ -1640,6 +1640,9 @@ void ScreenCaptureServer::PostStartScreenCapture(int32_t ret)
             listenerFlags |= LF_WIN_LIFECYCLE | LF_WIN_INFO | LF_RECORD_DISP;
         }
     }
+    if (captureConfig_.strategy.enableHDRCapture && captureConfig_.strategy.enableAEC) {
+        listenerFlags |= LF_THERMAL;
+    }
     auto regRet = listenerManager_->RegisterListeners(listenerFlags,
         {.windowIdList = {interestWindowId_}, .appUserId = appUserId_.load()});
     CHECK_AND_RETURN_LOG(regRet == MSERR_OK, "PostStartScreenCapture RegisterListeners failed");
@@ -2503,7 +2506,10 @@ int32_t ScreenCaptureServer::CreateVirtualScreen()
                                                                      : (isSurfaceMode_ ? surface_ : producerSurface_);
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_UNKNOWN, "CreateVirtualScreen failed, surface is nullptr");
     virtualScreen_ = std::make_unique<VirtualScreen>(InitVirtualScreenOption(surface));
-    CHECK_AND_RETURN_RET_LOG(virtualScreen_ && virtualScreen_->IsValid(), MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN,
+    CHECK_AND_RETURN_RET_LOG(virtualScreen_ && virtualScreen_->GetError() != Rosen::DM_ERROR_HDR_NOT_SUPPORT,
+        MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN_HDR,
+        "CreateVirtualScreen failed, hdr not support");
+    CHECK_AND_RETURN_RET_LOG(virtualScreen_->IsValid(), MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN,
         "CreateVirtualScreen failed, invalid screenId");
     SetVirtualScreenAutoRotation();
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
