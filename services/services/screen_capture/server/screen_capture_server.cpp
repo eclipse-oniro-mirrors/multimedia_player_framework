@@ -2507,8 +2507,7 @@ int32_t ScreenCaptureServer::CreateVirtualScreen()
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_UNKNOWN, "CreateVirtualScreen failed, surface is nullptr");
     virtualScreen_ = std::make_unique<VirtualScreen>(InitVirtualScreenOption(surface));
     CHECK_AND_RETURN_RET_LOG(virtualScreen_ && virtualScreen_->GetError() != Rosen::DM_ERROR_HDR_NOT_SUPPORT,
-        MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN_HDR,
-        "CreateVirtualScreen failed, hdr not support");
+        MSERR_INVALID_OPERATION_CREATE_HDR, "CreateVirtualScreen failed, hdr not support");
     CHECK_AND_RETURN_RET_LOG(virtualScreen_->IsValid(), MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN,
         "CreateVirtualScreen failed, invalid screenId");
     SetVirtualScreenAutoRotation();
