@@ -189,6 +189,7 @@ void OH_AVMediaSourceLoadingRequest_RespondHeader(
     CHECK_AND_RETURN_LOG(requestObj->request_ != nullptr, "request is null");
     std::map<std::string, std::string> headerMap;
     if (header != nullptr) {
+        std::lock_guard<std::mutex> lock(header->recordsMutex);
         headerMap = header->records;
     }
     std::string redirectUrlStr = (redirectUrl != nullptr) ? std::string(redirectUrl) : "";

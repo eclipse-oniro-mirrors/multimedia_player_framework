@@ -94,7 +94,7 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout, const std::shared_ptr<Pip
         demuxer_->ResumeForSeek();
         MEDIA_LOG_I("ResumeForSeek end");
         isClosetSeekDone = targetArrivedCond_.WaitFor(lock, WAIT_MAX_MS, [this] {
-            return (isAudioTargetArrived_ && (isVideoTargetArrived_ || demuxer_->IsVideoMuted())) || isInterruptNeeded_;
+            return (isAudioTargetArrived_ && (isVideoTargetArrived_ || demuxer_->IsVideoMuted())) || isInterruptNeeded_.load();
         });
         receiver->OnEvent({"seek_agent", EventType::EVENT_NOTIFY_SEEK_CLOSEST, true});
         MEDIA_LOG_I("Wait end");
@@ -103,7 +103,7 @@ Status SeekAgent::Seek(int64_t seekPos, bool &timeout, const std::shared_ptr<Pip
     demuxer_->PauseForSeek();
     st = RemoveBufferFilledListener();
     // interrupt with error
-    if (isInterruptNeeded_) {
+    if (isInterruptNeeded_.load()) {
         return Status::ERROR_INVALID_OPERATION;
     }
     if (!isClosetSeekDone) {
@@ -314,7 +314,7 @@ Status SeekAgent::AlignAudioPosition(int64_t audioPosition)
 void SeekAgent::OnInterrupted(bool isInterruptNeeded)
 {
     MEDIA_LOG_D("SeekAgent onInterrupted %{public}d", isInterruptNeeded);
-    isInterruptNeeded_ = isInterruptNeeded;
+    isInterruptNeeded_.store(isInterruptNeeded);
     targetArrivedCond_.NotifyAll();
 }
 }  // namespace Media

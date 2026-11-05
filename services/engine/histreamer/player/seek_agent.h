@@ -56,7 +56,7 @@ private:
 
     int64_t seekTargetPts_{-1};
     int64_t mediaStartPts_{0};
-    bool isInterruptNeeded_{false};
+    std::atomic<bool> isInterruptNeeded_{false};
     std::atomic<bool> isSeeking_{false};
     std::map<int32_t, sptr<AVBufferQueueProducer>> producerMap_;
     std::map<uint32_t, sptr<IBrokerListener>> listenerMap_;
