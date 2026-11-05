@@ -1176,7 +1176,7 @@ HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_007, TestSize.Level0
     databaseTool.dataShareHelper = CreateDataShareHelper(STORAGE_MANAGER_MANAGER_ID);
     ASSERT_NE(databaseTool.dataShareHelper, nullptr);
     ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_NOTIFICATION);
-    EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_NOTIFICATION);
+    EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_ALARM);
 }
 
 /**
@@ -3234,7 +3234,7 @@ HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_002, TestSize.L
 
     ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_NOTIFICATION);
     EXPECT_FALSE(result.GetUri().empty());
-    EXPECT_EQ(result.GetCategory(), TONE_TYPE_NOTIFICATION);
+    EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_NOTIFICATION);
 }
 
 /**
@@ -3267,7 +3267,7 @@ HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_003, TestSize.L
 
     ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, TONE_SET_FLAG, TONE_TYPE_ALARM);
     EXPECT_FALSE(result.GetUri().empty());
-    EXPECT_EQ(result.GetCategory(), TONE_TYPE_ALARM);
+    EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_ALARM);
 }
 
 /**
@@ -3301,7 +3301,7 @@ HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_004, TestSize.L
     uint32_t targetToneType = 1u << (SYSTEM_TONE_TYPE_SIM_CARD_0 - SYSTEM_TONE_TYPE_SIM_CARD_0);
     ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, targetToneType, TONE_TYPE_SHOT);
     EXPECT_FALSE(result.GetUri().empty());
-    EXPECT_EQ(result.GetCategory(), TONE_TYPE_SHOT);
+    EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_TEXT_MESSAGE);
 }
 
 /**
