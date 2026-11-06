@@ -124,7 +124,7 @@ public:
 private:
     VirtualScreen() = default;
     Rosen::ScreenId screenId_ = Rosen::SCREEN_ID_INVALID;
-    Rosen::DMError error_ = Rosen::DM_ERROR_OK;
+    Rosen::DMError error_ = Rosen::DMError::DM_OK;
 };
 
 class ScreenCaptureServer : public std::enable_shared_from_this<ScreenCaptureServer>,
