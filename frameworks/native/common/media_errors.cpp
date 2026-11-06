@@ -160,7 +160,7 @@ const std::map<MediaServiceErrCode, std::string> MSERRCODE_INFOS = {
     {MSERR_UNKNOWN_RECORDER_PAUSE,              "AVRecorder pause failed."},
     {MSERR_UNKNOWN_RECORDER_WATERMASK,          "AVRecorder addWatermark failed."},
     {MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN,       "CreateVirtualScreen failed."},
-    {MSERR_INVALID_OPERATION_CREATE_HDR,   "CreateVirtualScreenHdr failed, hdr not support."},
+    {MSERR_INVALID_OPERATION_CREATE_HDR,        "CreateVirtualScreenHdr failed, hdr not support."},
     {MSERR_UNKNOWN_MAKE_MIRROR,                 "MakeVirtualScreenMirror failed."},
     {MSERR_UNKNOWN_INCALL,                      "Screen capture failed because a call is currently in progress."},
     {MSERR_UNSUPPORT_INCALL,                    "Screen capture failed because a call is currently in progress."},
