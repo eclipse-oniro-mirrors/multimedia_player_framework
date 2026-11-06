@@ -235,7 +235,6 @@ int64_t AudioDataSource::GetCurrentTimeNs()
 
 double AudioDataSource::GetFrameDurationRatio()
 {
-    CHECK_AND_RETURN_RET_NOLOG(frameDurationRatio_.load() <= 0, frameDurationRatio_.load());
     CHECK_AND_RETURN_RET(screenCaptureServer_ != nullptr, 1.0);
     auto innerCapture = screenCaptureServer_->GetInnerAudioCapture();
     if (innerCapture != nullptr) {
@@ -244,7 +243,9 @@ double AudioDataSource::GetFrameDurationRatio()
             frameDurationRatio_.store(static_cast<double>(duration) / FILL_AUDIO_FRAME_DURATION_IN_NS);
         }
     }
-    CHECK_AND_RETURN_RET(frameDurationRatio_.load() <= 0, frameDurationRatio_.load());
+    MEDIA_LOGD("inner GetFrameDurationRatio: %{public}f", frameDurationRatio_.load());
+    CHECK_AND_RETURN_RET_NOLOG(frameDurationRatio_.load() <= 0 || innerCapture == nullptr ||
+        innerCapture->IsStop(), frameDurationRatio_.load());
     auto micCapture = screenCaptureServer_->GetMicAudioCapture();
     if (micCapture != nullptr) {
         int64_t duration = micCapture->GetFrameDuration();
@@ -253,7 +254,7 @@ double AudioDataSource::GetFrameDurationRatio()
         }
     }
     CHECK_AND_RETURN_RET(frameDurationRatio_.load() > 0, 1.0);
-    MEDIA_LOGI("GetFrameDurationRatio: %{public}f", frameDurationRatio_.load());
+    MEDIA_LOGD("mic GetFrameDurationRatio: %{public}f", frameDurationRatio_.load());
     return frameDurationRatio_.load();
 }
 
@@ -592,17 +593,11 @@ void AudioDataSource::HandleSwitchToSpeakerOptimise(std::shared_ptr<AudioBuffer>
     std::shared_ptr<AudioBuffer> &micAudioBuffer)
 {
     if (speakerAliveStatus_ && screenCaptureServer_ && screenCaptureServer_->IsMicrophoneSwitchTurnOn() &&
-        !isInVoIPCall_ && micAudioBuffer->buffer &&
-        lastWriteType_ == AVScreenCaptureMixBufferType::MIX && screenCaptureServer_->GetInnerAudioCapture()) {
-        if (stableStopInnerSwitchCount_ > INNER_SWITCH_MIC_REQUIRE_COUNT) { // optimise inner while use speaker
-            MEDIA_LOGI("ABuffer stop mix inner optimise cur:%{public}" PRId64 " last: %{public}" PRId64,
-                innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
-            innerAudioBuffer = nullptr;
-            screenCaptureServer_->StopInnerAudioCapture();
-            stableStopInnerSwitchCount_ = 0;
-        } else {
-            stableStopInnerSwitchCount_++;
-        }
+        !isInVoIPCall_ && micAudioBuffer->buffer && screenCaptureServer_->GetInnerAudioCapture()) {
+        MEDIA_LOGI("ABuffer stop mix inner optimise cur:%{public}" PRId64 " last: %{public}" PRId64,
+            innerAudioBuffer->timestamp, lastWriteAudioFramePts_.load());
+        innerAudioBuffer = nullptr;
+        screenCaptureServer_->StopInnerAudioCapture();
     }
 }
 
