@@ -485,7 +485,7 @@ int64_t AudioCapturerWrapper::GetFrameDuration()
         if (audioCapturer_->GetFrameCount(frameCount) == MSERR_OK && frameCount > 0) {
             frameDuration_.store(static_cast<int64_t>(frameCount) * AUDIO_NS_PER_SECOND
                 / audioInfo_.audioSampleRate);
-            MEDIA_LOGI("GetFrameDuration: %{public}" PRId64 ", frameCount: %{public}" PRIu32
+            MEDIA_LOGD("GetFrameDuration: %{public}" PRId64 ", frameCount: %{public}" PRIu32
                 ", sampleRate: %{public}d", frameDuration_.load(), frameCount, audioInfo_.audioSampleRate);
         }
     }

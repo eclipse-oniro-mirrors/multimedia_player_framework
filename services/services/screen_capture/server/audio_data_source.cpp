@@ -243,9 +243,9 @@ double AudioDataSource::GetFrameDurationRatio()
             frameDurationRatio_.store(static_cast<double>(duration) / FILL_AUDIO_FRAME_DURATION_IN_NS);
         }
     }
-    CHECK_AND_RETURN_RET_LOG(frameDurationRatio_.load() <= 0 || innerCapture == nullptr ||
-        innerCapture->IsStop(), frameDurationRatio_.load(),
-        "inner GetFrameDurationRatio: %{public}f", frameDurationRatio_.load());
+    MEDIA_LOGD("inner GetFrameDurationRatio: %{public}f", frameDurationRatio_.load());
+    CHECK_AND_RETURN_RET_NOLOG(frameDurationRatio_.load() <= 0 || innerCapture == nullptr ||
+        innerCapture->IsStop(), frameDurationRatio_.load());
     auto micCapture = screenCaptureServer_->GetMicAudioCapture();
     if (micCapture != nullptr) {
         int64_t duration = micCapture->GetFrameDuration();
@@ -254,7 +254,7 @@ double AudioDataSource::GetFrameDurationRatio()
         }
     }
     CHECK_AND_RETURN_RET(frameDurationRatio_.load() > 0, 1.0);
-    MEDIA_LOGI("mic GetFrameDurationRatio: %{public}f", frameDurationRatio_.load());
+    MEDIA_LOGD("mic GetFrameDurationRatio: %{public}f", frameDurationRatio_.load());
     return frameDurationRatio_.load();
 }
 
