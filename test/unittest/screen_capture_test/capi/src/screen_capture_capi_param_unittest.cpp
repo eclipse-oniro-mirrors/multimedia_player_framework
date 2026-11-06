@@ -55,8 +55,8 @@ HWTEST_F(ScreenCaptureUnitTest, capi_release_repeated_001, TestSize.Level2)
     OH_AVScreenCapture *capture = OH_AVScreenCapture_Create();
     ASSERT_NE(capture, nullptr);
     EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OK, OH_AVScreenCapture_Release(capture));
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OK, OH_AVScreenCapture_Release(capture));
-    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_OK, OH_AVScreenCapture_Release(capture));
+    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_INVALID_VAL, OH_AVScreenCapture_Release(capture));
+    EXPECT_EQ(AV_SCREEN_CAPTURE_ERR_INVALID_VAL, OH_AVScreenCapture_Release(capture));
 }
 
 /* ==================== Init nullptr paths ==================== */

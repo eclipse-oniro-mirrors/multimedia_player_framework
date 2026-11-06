@@ -125,9 +125,15 @@ void ScreenCaptureMonitorNapi::Destructor(napi_env env, void *nativeObject, void
     (void)finalize;
     if (nativeObject != nullptr) {
         ScreenCaptureMonitorNapi *napi = reinterpret_cast<ScreenCaptureMonitorNapi *>(nativeObject);
-        if (napi->monitorCb_ != nullptr) {
-            ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(napi->monitorCb_);
+        sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> cb;
+        {
+            std::lock_guard<std::mutex> lock(napi->eventCbMutex_);
+            cb = napi->monitorCb_;
             napi->monitorCb_ = nullptr;
+            napi->eventCbMap_.clear();
+        }
+        if (cb != nullptr) {
+            ScreenCaptureMonitor::GetInstance()->UnregisterScreenCaptureMonitorListener(cb);
         }
         delete napi;
     }
@@ -303,18 +309,28 @@ ScreenCaptureMonitorNapi *ScreenCaptureMonitorNapi::GetJsInstanceAndArgs(
 
 void ScreenCaptureMonitorNapi::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
-    eventCbMap_[callbackName] = ref;
-    CHECK_AND_RETURN_LOG(monitorCb_ != nullptr, "monitorCb_ is nullptr!");
-    auto napiCb = static_cast<ScreenCaptureMonitorCallback*>(monitorCb_.GetRefPtr());
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> cb;
+    {
+        std::lock_guard<std::mutex> lock(eventCbMutex_);
+        eventCbMap_[callbackName] = ref;
+        cb = monitorCb_;
+    }
+    CHECK_AND_RETURN_LOG(cb != nullptr, "monitorCb_ is nullptr!");
+    auto napiCb = static_cast<ScreenCaptureMonitorCallback*>(cb.GetRefPtr());
     napiCb->SaveCallbackReference(callbackName, ref);
 }
 
 void ScreenCaptureMonitorNapi::CancelCallbackReference(const std::string &callbackName)
 {
-    CHECK_AND_RETURN_LOG(monitorCb_ != nullptr, "monitorCb_ is nullptr!");
-    auto napiCb = static_cast<ScreenCaptureMonitorCallback*>(monitorCb_.GetRefPtr());
+    sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> cb;
+    {
+        std::lock_guard<std::mutex> lock(eventCbMutex_);
+        cb = monitorCb_;
+        eventCbMap_.erase(callbackName);
+    }
+    CHECK_AND_RETURN_LOG(cb != nullptr, "monitorCb_ is nullptr!");
+    auto napiCb = static_cast<ScreenCaptureMonitorCallback*>(cb.GetRefPtr());
     napiCb->CancelCallbackReference(callbackName);
-    eventCbMap_[callbackName] = nullptr;
 }
 } // Media
 } // OHOS

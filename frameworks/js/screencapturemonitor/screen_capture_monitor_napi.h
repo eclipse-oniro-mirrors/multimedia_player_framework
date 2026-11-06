@@ -21,6 +21,7 @@
 #include "napi/native_api.h"
 #include "napi/native_node_api.h"
 #include "common_napi.h"
+#include <mutex>
 
 namespace OHOS {
 namespace Media {
@@ -63,6 +64,7 @@ private:
     static thread_local napi_ref constructor_;
     napi_env env_ = nullptr;
 
+    std::mutex eventCbMutex_;
     sptr<ScreenCaptureMonitor::ScreenCaptureMonitorListener> monitorCb_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
 };

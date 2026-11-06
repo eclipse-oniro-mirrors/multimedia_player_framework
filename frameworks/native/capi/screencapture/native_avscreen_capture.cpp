@@ -14,6 +14,7 @@
  */
 
 #include "native_avscreen_capture.h"
+#include "native_avscreen_capture_impl.h"
 
 #include <atomic>
 #include <mutex>
@@ -76,9 +77,6 @@ const char *OH_SCREEN_CAPTURE_CONTENT_RECT = "screen_capture_content_rect";
 typedef struct NativeWindow OHNativeWindow;
 
 using namespace OHOS::Media;
-std::mutex g_bufferMutex;
-static std::queue<OH_NativeBuffer*> referencedBuffer_;
-
 std::mutex g_captureSetMutex;
 std::unordered_set<struct OH_AVScreenCapture *> g_captureSet;
 
@@ -91,8 +89,12 @@ struct ScreenCaptureObject : public OH_AVScreenCapture {
     ~ScreenCaptureObject() = default;
 
     const std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
+    std::mutex callbackMutex;
     std::shared_ptr<NativeScreenCaptureCallback> callback_ = nullptr;
     std::atomic<bool> isStart{false};
+
+    std::mutex bufferMutex;
+    std::queue<NativeBufferRef> referencedBuffer_;
 };
 
 struct ScreenCaptureUserSelectionObject : public OH_AVScreenCapture_UserSelectionInfo {
@@ -515,6 +517,12 @@ public:
         MEDIA_LOGD("StopCallback before lock"); // waiting for OnBufferAvailable
         std::unique_lock<std::shared_mutex> lock(mutex_);
         MEDIA_LOGD("StopCallback after lock");
+    }
+
+    void ClearCapture()
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex_);
+        capture_ = nullptr;
     }
 
     void SetCallback(struct OH_AVScreenCaptureCallback callback)
@@ -980,14 +988,16 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
     region->height = damage.h;
     CHECK_AND_RETURN_RET_LOG(sufacebuffer != nullptr, nullptr, "AcquireVideoBuffer failed!");
 
-    OH_NativeBuffer* nativebuffer = sufacebuffer->SurfaceBufferToNativeBuffer();
-    std::unique_lock<std::mutex> lock(g_bufferMutex);
-    auto errCode = OH_NativeBuffer_Reference(nativebuffer);
-    CHECK_AND_RETURN_RET_LOG(errCode == 0, nullptr, "Reference failed!");
-    referencedBuffer_.push(nativebuffer);
-    MEDIA_LOGD("return and reference the nativebuffer");
-
-    return nativebuffer;
+    OH_NativeBuffer *nativebuffer = sufacebuffer->SurfaceBufferToNativeBuffer();
+    NativeBufferRef ref = NativeBufferRef::Acquire(nativebuffer);
+    if (ref) {
+        std::lock_guard<std::mutex> lock(screenCaptureObj->bufferMutex);
+        screenCaptureObj->referencedBuffer_.push(std::move(ref));
+        MEDIA_LOGD("return and reference the nativebuffer");
+        return nativebuffer;
+    }
+    MEDIA_LOGE("OH_NativeBuffer_Reference failed");
+    return nullptr;
 }
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVScreenCapture *capture)
@@ -1002,12 +1012,12 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVSc
         MEDIA_LOGE("ReleaseVideoBuffer() not permit for has set DataCallback");
         return AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT;
     }
+    NativeBufferRef ref;
     {
-        std::unique_lock<std::mutex> lock(g_bufferMutex);
-        if (!referencedBuffer_.empty()) {
-            OH_NativeBuffer* nativebuffer = referencedBuffer_.front();
-            OH_NativeBuffer_Unreference(nativebuffer);
-            referencedBuffer_.pop();
+        std::lock_guard<std::mutex> lock(screenCaptureObj->bufferMutex);
+        if (!screenCaptureObj->referencedBuffer_.empty()) {
+            ref = std::move(screenCaptureObj->referencedBuffer_.front());
+            screenCaptureObj->referencedBuffer_.pop();
             MEDIA_LOGD("unreference the front nativebuffer");
         }
     }
@@ -1044,14 +1054,16 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCallback(struct OH_AVScreenCap
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is null");
-
-    if (screenCaptureObj->callback_ == nullptr) {
-        screenCaptureObj->callback_ = std::make_shared<NativeScreenCaptureCallback>(capture, callback);
-    } else {
-        screenCaptureObj->callback_->SetCallback(callback);
+    std::shared_ptr<NativeScreenCaptureCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(screenCaptureObj->callbackMutex);
+        if (screenCaptureObj->callback_ == nullptr) {
+            screenCaptureObj->callback_ = std::make_shared<NativeScreenCaptureCallback>(capture, callback);
+        }
+        cb = screenCaptureObj->callback_;
     }
-
-    int32_t ret = screenCaptureObj->screenCapture_->SetScreenCaptureCallback(screenCaptureObj->callback_);
+    cb->SetCallback(callback);
+    int32_t ret = screenCaptureObj->screenCapture_->SetScreenCaptureCallback(cb);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
         "SetScreenCaptureCallback failed!");
     return AV_SCREEN_CAPTURE_ERR_OK;
@@ -1078,6 +1090,14 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
             screenCaptureObj->callback_->StopCallback();
         }
         int32_t ret = screenCaptureObj->screenCapture_->Release();
+        if (screenCaptureObj->callback_ != nullptr) {
+            screenCaptureObj->callback_->ClearCapture();
+        }
+        {
+            std::queue<NativeBufferRef> drained;
+            std::lock_guard<std::mutex> lock(screenCaptureObj->bufferMutex);
+            drained.swap(screenCaptureObj->referencedBuffer_);
+        }
         delete capture;
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
             "screen capture Release failed!");
@@ -1109,15 +1129,24 @@ static OH_AVSCREEN_CAPTURE_ErrCode AVScreenCaptureSetCallback(struct OH_AVScreen
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj != nullptr && screenCaptureObj->screenCapture_ != nullptr,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "screenCapture_ is nullptr!");
-    if (screenCaptureObj->callback_ == nullptr) {
-        MEDIA_LOGD("AVScreenCaptureSetCallback new NativeScreenCaptureCallback");
-        OH_AVScreenCaptureCallback dummyCallback = {
-            .onError = nullptr,
-            .onAudioBufferAvailable = nullptr,
-            .onVideoBufferAvailable = nullptr
-        };
-        screenCaptureObj->callback_ = std::make_shared<NativeScreenCaptureCallback>(capture, dummyCallback);
-        int32_t ret = screenCaptureObj->screenCapture_->SetScreenCaptureCallback(screenCaptureObj->callback_);
+    bool needRegister = false;
+    std::shared_ptr<NativeScreenCaptureCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(screenCaptureObj->callbackMutex);
+        if (screenCaptureObj->callback_ == nullptr) {
+            MEDIA_LOGD("AVScreenCaptureSetCallback new NativeScreenCaptureCallback");
+            OH_AVScreenCaptureCallback dummyCallback = {
+                .onError = nullptr,
+                .onAudioBufferAvailable = nullptr,
+                .onVideoBufferAvailable = nullptr
+            };
+            screenCaptureObj->callback_ = std::make_shared<NativeScreenCaptureCallback>(capture, dummyCallback);
+            needRegister = true;
+        }
+        cb = screenCaptureObj->callback_;
+    }
+    if (needRegister) {
+        int32_t ret = screenCaptureObj->screenCapture_->SetScreenCaptureCallback(cb);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_SCREEN_CAPTURE_ERR_OPERATE_NOT_PERMIT,
             "SetScreenCaptureCallback failed!");
     }
