@@ -64,6 +64,7 @@ ohos_static_library("media_engine_histreamer_player") {
   sources = [
     "dfx_agent.cpp",
     "dragging_player_agent.cpp",
+    "hiplayer_audio_track_rebuild.cpp",
     "hiplayer_callback_looper.cpp",
     "hiplayer_impl.cpp",
     "live_controller.cpp",

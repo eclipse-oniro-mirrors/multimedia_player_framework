@@ -264,6 +264,21 @@ private:
     void HandleAudioTrackChangeEvent(const Event& event);
     void HandleVideoTrackChangeEvent(const Event& event);
     void HandleSubtitleTrackChangeEvent(const Event& event);
+    Status RebuildAudioPipeline(std::shared_ptr<Meta>& meta,
+        OHOS::Media::Pipeline::StreamType newStreamType, int32_t innerTrackId, int32_t trackIndex);
+    void HandleRebuildFailure(const char* scenario);
+    void ReportAudioUnsupportedWarning();
+    void HandleAudioUnsupported();
+    void MuteAudioToVideoOnly();
+    void StopAudioDataFlow();
+    void UnlinkOldAudioTopology();
+    void ReleaseOldAudioFilters();
+    Status BuildNewAudioTopology(OHOS::Media::Pipeline::StreamType newStreamType, int32_t trackIndex);
+    Status PrepareNewAudioFilters();
+    Status StartAudioDataFlow(bool wasRunning, int32_t innerTrackId);
+    Status StartThenPauseFilter(const std::shared_ptr<OHOS::Media::Pipeline::Filter>& filter, bool wasRunning);
+    bool ChangeAudioTrackSameTopology(std::shared_ptr<Meta>& meta, int32_t innerTrackId,
+        int32_t index, std::vector<std::shared_ptr<Meta>>& metaInfo);
     void HandleFlvAutoSelectBitRate(uint32_t bitRate);
     void HandleSeiInfoEvent(const Event &event);
     void HandleTimedMetaData(std::shared_ptr<MediaAVCodec::AVTimedMetaData> meta);
@@ -278,6 +293,10 @@ private:
     void NotifyAudioInterrupt(const Event& event);
     void NotifyAudioStatusDfxEvent(int32_t hintType);
     void NotifyAudioDeviceChange(const Event& event);
+    void CheckAudioSupportOnDevice();
+    std::shared_ptr<Meta> GetCurrentAudioMeta();
+    void HandleAudioUnsupportedOnDevice(const std::string& mime);
+    bool CheckAudioTopologyRebuild(std::shared_ptr<Meta>& meta, const std::string& mime);
     void NotifyAudioServiceDied();
     void NotifyAudioFirstFrame(const Event& event);
     void NotifyResolutionChange();
@@ -400,6 +419,8 @@ private:
     void InitPcmCallback();
     bool IsNeedAudioSinkChangeTrack(std::shared_ptr<Meta> preMeta, std::shared_ptr<Meta> meta);
     bool HandleAudioDecoderChangeEvent(const Event& event);
+    bool ChangeAudioDecoderSameTopology(std::shared_ptr<Meta> meta, const std::string& mime,
+        bool isStreamSwitch);
     bool HandleAudioTrackChangeReportEvent(const Event& event);
 
     bool isNetWorkPlay_ = false;
@@ -512,6 +533,14 @@ private:
     int32_t defaultVideoTrackId_ = -1;
     int32_t currentSubtitleTrackId_ = -1;
     int32_t defaultSubtitleTrackId_ = -1;
+    OHOS::Media::Pipeline::StreamType currentAudioStreamType_ {OHOS::Media::Pipeline::StreamType::STREAMTYPE_PACKED};
+    std::mutex audioRebuildMutex_;
+    // Per-play-cycle dedup for MSERR_UNSUPPORT_AUD_DEC_TYPE warning. Reset in Pause(),
+    // set after each WARN_MSG report. atomic: accessed from event and API threads.
+    std::atomic<bool> audioMutedReportedInPlayCycle_ {false};
+    // True if Prepare reported MSERR_UNSUPPORT_AUD_DEC_TYPE. Suppresses guard reset in
+    // Pause/Play so the same Prepare-time warning is not re-notified. Reset in Stop().
+    std::atomic<bool> audioUnsupportedInPrepare_ {false};
     PlayStatisticalInfo playStatisticalInfo_;
     std::atomic<int64_t> startTime_ = 0;
     int64_t maxSeekLatency_ = 0;

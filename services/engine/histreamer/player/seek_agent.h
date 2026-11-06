@@ -42,6 +42,7 @@ public:
         sptr<AVBufferQueueProducer> producer, int32_t trackId);
     Status AlignAudioPosition(int64_t audioPosition);
     void OnInterrupted(bool isInterruptNeeded) override;
+    void SetAudioMuted(bool isMuted);
 private:
     Status SetBufferFilledListener();
     Status RemoveBufferFilledListener();
@@ -53,6 +54,7 @@ private:
     ConditionVariable targetArrivedCond_;
     bool isAudioTargetArrived_{true};
     bool isVideoTargetArrived_{true};
+    bool isAudioMuted_{false};
 
     int64_t seekTargetPts_{-1};
     int64_t mediaStartPts_{0};

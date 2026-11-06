@@ -2050,7 +2050,7 @@ void PlayerServer::InnerOnInfo(PlayerOnInfoType type, int32_t extra, const Forma
     if (type == INFO_TYPE_DEFAULTTRACK || type == INFO_TYPE_TRACK_DONE || type == INFO_TYPE_ADD_SUBTITLE_DONE) {
         return;
     }
-    if (playerCb_ != nullptr && type == INFO_TYPE_ERROR_MSG) {
+    if (playerCb_ != nullptr && (type == INFO_TYPE_ERROR_MSG || type == INFO_TYPE_WARN_MSG)) {
         int32_t errorCode = extra;
         Format newInfo = infoBody;
         auto errorMsg = MSErrorToString(static_cast<MediaServiceErrCode>(errorCode));

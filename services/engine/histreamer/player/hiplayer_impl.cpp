@@ -19,6 +19,7 @@
 
 #include "hiplayer_impl.h"
 
+#include <algorithm>
 #include <chrono>
 #include <shared_mutex>
 
@@ -1078,6 +1079,11 @@ int32_t HiPlayerImpl::Play()
         ret = ((GetPlayRangeStartTime() > PLAY_RANGE_DEFAULT_VALUE) ?
             TransStatus(Seek(GetPlayStartTime(), playRangeSeekMode_, false)) :
             TransStatus(Seek(0, PlayerSeekMode::SEEK_PREVIOUS_SYNC, false)));
+        // New play cycle after completion: reset dedup guard and re-check audio support.
+        if (!audioUnsupportedInPrepare_.load()) {
+            audioMutedReportedInPlayCycle_.store(false);
+        }
+        CheckAudioSupportOnDevice();
         callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
         callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
     } else if (pipelineStates_ == PlayerStates::PLAYER_PAUSED) {
@@ -1114,6 +1120,11 @@ void HiPlayerImpl::DoPausedPlay(int32_t &ret)
     }
     callbackLooper_.StartReportMediaProgress(REPORT_PROGRESS_INTERVAL);
     callbackLooper_.StartCollectMaxAmplitude(SAMPLE_AMPLITUDE_INTERVAL);
+    // Reset dedup guard so Resume()->CheckAudioSupportOnDevice() re-notifies if audio is
+    // still unsupported. Skip when Prepare already reported (audioUnsupportedInPrepare_).
+    if (!audioUnsupportedInPrepare_.load()) {
+        audioMutedReportedInPlayCycle_.store(false);
+    }
     ret = TransStatus(Resume());
     return;
 }
@@ -1125,6 +1136,11 @@ int32_t HiPlayerImpl::Pause(bool isSystemOperation)
     FALSE_RETURN_V_MSG_E(pipelineStates_ != PlayerStates::PLAYER_PLAYBACK_COMPLETE,
         TransStatus(Status::OK), "completed not allow pause");
     Status ret = Status::OK;
+    // Reset guard so next Resume() re-notifies if audio is still unsupported.
+    // Skip when Prepare already reported (audioUnsupportedInPrepare_).
+    if (!audioUnsupportedInPrepare_.load()) {
+        audioMutedReportedInPlayCycle_.store(false);
+    }
     CacheBuffer();
     ret = pipeline_->Pause();
     syncManager_->Pause();
@@ -1317,6 +1333,9 @@ int32_t HiPlayerImpl::Stop()
 
     AutoLock lock(handleCompleteMutex_);
     UpdatePlayStatistics();
+    // Reset dedup guards so a fresh Prepare->Play starts clean.
+    audioMutedReportedInPlayCycle_.store(false);
+    audioUnsupportedInPrepare_.store(false);
     callbackLooper_.StopReportMediaProgress();
     StopFlvCheckLiveDelayTime();
     callbackLooper_.StopCollectMaxAmplitude();
@@ -1840,6 +1859,11 @@ Status HiPlayerImpl::HandleSeekClosest(int64_t seekPos, int64_t seekTimeUs)
     }
     seekAgent_ = std::make_shared<SeekAgent>(demuxer_, mediaStartPts_);
     interruptMonitor_->RegisterListener(seekAgent_);
+    if (audioDecoder_ == nullptr && audioSink_ == nullptr &&
+        currentAudioStreamType_ == StreamType::STREAMTYPE_PACKED) {
+        MEDIA_LOG_I("Audio pipeline torn down, SeekAgent will skip audio target wait");
+        seekAgent_->SetAudioMuted(true);
+    }
     FALSE_RETURN_V(!isInterruptNeeded_, Status::OK);
     SetFrameRateForSeekPerformance(FRAME_RATE_FOR_SEEK_PERFORMANCE);
     bool timeout = false;
@@ -3022,6 +3046,18 @@ void HiPlayerImpl::OnEvent(const Event &event)
             HandleErrorEvent(event);
             break;
         }
+        case EventType::EVENT_WARN: {
+            int32_t errorCode = AnyCast<int32_t>(event.param);
+            MEDIA_LOG_I("EVENT_WARN received, errorCode: %{public}d, srcFilter: %{public}s",
+                errorCode, event.srcFilter.c_str());
+            Format format;
+            callbackLooper_.OnInfo(INFO_TYPE_WARN_MSG, errorCode, format);
+            if (errorCode == MSERR_UNSUPPORT_AUD_DEC_TYPE) {
+                audioMutedReportedInPlayCycle_.store(true);
+                audioUnsupportedInPrepare_.store(true);
+            }
+            break;
+        }
         case EventType::EVENT_READY: {
             OnStateChanged(PlayerStateId::READY);
             break;
@@ -3182,6 +3218,10 @@ void HiPlayerImpl::OnEventSub(const Event &event)
         }
         case EventType::EVENT_AUDIO_TRACK_CHANGE_REPORT: {
             HandleAudioTrackChangeReportEvent(event);
+            break;
+        }
+        case EventType::EVENT_AUDIO_PREFERRED_OUTPUT_DEVICE_CHANGE: {
+            CheckAudioSupportOnDevice();
             break;
         }
         default:
@@ -3398,6 +3438,9 @@ Status HiPlayerImpl::Resume()
     if (ret != Status::OK) {
         UpdateStateNoLock(PlayerStates::PLAYER_STATE_ERROR);
     }
+    // Re-check audio support in case device changed while paused. After pipeline_->Resume()
+    // so rebuild sees wasRunning=true, avoiding Start→Pause→Resume triple transition.
+    CheckAudioSupportOnDevice();
     startTime_ = GetCurrentMillisecond();
     return ret;
 }
@@ -4013,30 +4056,48 @@ void HiPlayerImpl::HandleAudioTrackChangeEvent(const Event& event)
         return;
     }
     if (IsAudioMime(mime)) {
+        if (!demuxer_->IsAudioSupportedOnDevice(mime)) {
+            MEDIA_LOG_E("Audio track not supported on current device, mime: %{public}s", mime.c_str());
+            HandleAudioUnsupported();
+            currentAudioTrackId_ = index;
+            NotifyUpdateTrackInfo();
+            return;
+        }
         if (currentAudioTrackId_ < 0) {
             FALSE_RETURN(Status::OK == InitAudioDefaultTrackIndex());
         }
-        if (Status::OK != audioDecoder_->ChangePlugin(meta)) {
-            MEDIA_LOG_E("HandleAudioTrackChangeEvent audioDecoder change plugin error");
+        OHOS::Media::Pipeline::StreamType newStreamType;
+        if (!demuxer_->GetAudioStreamType(newStreamType, mime, static_cast<size_t>(index), meta)) {
+            MEDIA_LOG_E("HandleAudioTrackChangeEvent GetAudioStreamType failed");
             return;
         }
-        // Firstly, clear obsolete data first to avoid cacophony of noise. Then start audio decoder and audio sink.
-        audioDecoder_->DoFlush();
-        audioSink_->DoFlush();
-        audioDecoder_->Start();
-        if (IsNeedAudioSinkChangeTrack(metaInfo, index)) {
-            FALSE_RETURN_MSG(Status::OK == audioSink_->ChangeTrack(meta),
-                "HandleAudioTrackChangeEvent audioSink change track error");
-        }
-        if (Status::OK != demuxer_->StartTask(innerTrackId)) {
-            MEDIA_LOG_E("HandleAudioTrackChangeEvent StartTask error. trackId is " PUBLIC_LOG_D32, innerTrackId);
-            return;
+        bool needRebuild = (newStreamType != currentAudioStreamType_);
+        if (needRebuild) {
+            MEDIA_LOG_I("Audio pipeline rebuild needed, oldStreamType: %{public}d, newStreamType: %{public}d",
+                static_cast<int32_t>(currentAudioStreamType_), static_cast<int32_t>(newStreamType));
+            Status ret = RebuildAudioPipeline(meta, newStreamType, innerTrackId, index);
+            if (ret != Status::OK) {
+                // Rebuild failed: HandleRebuildFailure resets state, reports warning,
+                // and sets dedup guard.
+                HandleRebuildFailure("HandleAudioTrackChangeEvent");
+                return;
+            }
+        } else {
+            if (!ChangeAudioTrackSameTopology(meta, innerTrackId, index, metaInfo)) {
+                // Sub-method handled pipeline teardown and error reporting.
+                // Caller handles track-level state updates.
+                currentAudioStreamType_ = OHOS::Media::Pipeline::StreamType::STREAMTYPE_PACKED;
+                currentAudioTrackId_ = index;
+                NotifyUpdateTrackInfo();
+                return;
+            }
         }
         Format audioTrackInfo {};
         audioTrackInfo.PutIntValue("track_index", static_cast<int32_t>(index));
         audioTrackInfo.PutIntValue("track_is_select", 1);
         callbackLooper_.OnInfo(INFO_TYPE_TRACKCHANGE, 0, audioTrackInfo);
         currentAudioTrackId_ = index;
+        currentAudioStreamType_ = newStreamType;
         NotifyUpdateTrackInfo();
     }
     return;
@@ -4429,11 +4490,22 @@ Status HiPlayerImpl::OnCallback(std::shared_ptr<Filter> filter, const FilterCall
             case OHOS::Media::Pipeline::StreamType::STREAMTYPE_SUBTITLE:
                 return LinkSubtitleSinkFilter(filter, outType);
             case OHOS::Media::Pipeline::StreamType::STREAMTYPE_RAW_AUDIO:
+                if (filter == demuxer_) {
+                    currentAudioStreamType_ = outType;
+                }
                 return LinkAudioSinkFilter(filter, outType);
             case OHOS::Media::Pipeline::StreamType::STREAMTYPE_DOLBY:
+                if (filter == demuxer_) {
+                    currentAudioStreamType_ = outType;
+                }
                 return LinkAudioSinkFilter(filter, outType);
-            case OHOS::Media::Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO:
-                return LinkAudioDecoderFilter(filter, outType);
+            case OHOS::Media::Pipeline::StreamType::STREAMTYPE_ENCODED_AUDIO: {
+                Status linkRet = LinkAudioDecoderFilter(filter, outType);
+                if (linkRet == Status::OK) {
+                    currentAudioStreamType_ = outType;
+                }
+                return linkRet;
+            }
 #ifdef SUPPORT_VIDEO
             case OHOS::Media::Pipeline::StreamType::STREAMTYPE_RAW_VIDEO:
                 break;
@@ -4474,7 +4546,7 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
         FilterType::FILTERTYPE_ADEC);
     FALSE_RETURN_V(audioDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
     FALSE_GOON_NOEXEC(demuxer_, audioDecoder_->UpdateIsAsyncMode(demuxer_->IsAudioDemuxDecodeAsync()));
-    interruptMonitor_->RegisterListener(audioDecoder_);
+    FALSE_GOON_NOEXEC(interruptMonitor_ != nullptr, interruptMonitor_->RegisterListener(audioDecoder_));
     audioDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
 
     audioDecoder_->SetCallerInfo(instanceId_, bundleName_);
@@ -4529,6 +4601,9 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
     if (type == OHOS::Media::Pipeline::StreamType::STREAMTYPE_DOLBY) {
         audioSink_->SetAudioPassFlag(true);
         isDolbyStream_ = true;
+    } else {
+        audioSink_->SetAudioPassFlag(false);
+        isDolbyStream_ = false;
     }
     if (demuxer_ != nullptr && audioRenderInfo_ == nullptr) {
         std::vector<std::shared_ptr<Meta>> trackInfos = demuxer_->GetStreamMetaInfo();
@@ -5521,35 +5596,25 @@ bool HiPlayerImpl::HandleAudioDecoderChangeEvent(const Event& event)
         MEDIA_LOG_E("get mime error");
         return false;
     }
-
-    if (IsAudioMime(mime)) {
-        if (currentAudioTrackId_ < 0) {
-            FALSE_RETURN_V(Status::OK == InitAudioDefaultTrackIndex(), false);
-        }
-        std::shared_ptr<Meta> preMeta = std::make_shared<Meta>();
-        FALSE_RETURN_V(audioSink_ != nullptr, false);
-        audioSink_->GetParameter(preMeta);
-        FALSE_GOON_NOEXEC(audioDecoder_ != nullptr, audioDecoder_->UpdateTrackInfoSampleFormat(mime, meta));
-        if (!IsNeedAudioSinkChangeTrack(preMeta, meta)) {
-            demuxer_->StartTask(OHOS::Media::Plugins::MediaType::AUDIO);
-            return false;
-        }
-        if (audioDecoder_ != nullptr && Status::OK != audioDecoder_->ChangePlugin(meta)) {
-            MEDIA_LOG_E("audioDecoder change plugin error");
-            Event errorEvent {"audioDecoder", EventType::EVENT_ERROR, MSERR_UNSUPPORT_AUD_DEC_TYPE, mime};
-            HandleErrorEvent(errorEvent);
-            return false;
-        }
-        FALSE_GOON_NOEXEC(audioDecoder_ != nullptr, audioDecoder_->DoFlush());
-        audioSink_->DoFlush();
-        FALSE_GOON_NOEXEC(audioDecoder_ != nullptr, audioDecoder_->Start());
-        if (Status::OK != audioSink_->ChangeTrack(meta)) {
-            MEDIA_LOG_E("audioSink change track error");
-            return false;
-        }
-        demuxer_->StartTask(OHOS::Media::Plugins::MediaType::AUDIO);
+    FALSE_RETURN_V(IsAudioMime(mime), true);
+    FALSE_RETURN_V(demuxer_ != nullptr, false);
+    // Check device support BEFORE any topology/codec change — mirrors HandleAudioTrackChangeEvent.
+    if (!demuxer_->IsAudioSupportedOnDevice(mime)) {
+        MEDIA_LOG_E("Audio track not supported on current device, mime: %{public}s", mime.c_str());
+        HandleAudioUnsupported();
+        return false;
     }
-    return true;
+    if (currentAudioTrackId_ < 0) {
+        FALSE_RETURN_V(Status::OK == InitAudioDefaultTrackIndex(), false);
+    }
+    bool isStreamSwitch = false;
+    meta->GetData(Tag::IS_STREAM_SWITCH, isStreamSwitch);
+    // DASH/HLS stream switch (e.g. aac->ac3) may need a different pipeline topology.
+    // CheckAudioTopologyRebuild returns true if pipeline was rebuilt (cross-topology).
+    if (isStreamSwitch && CheckAudioTopologyRebuild(meta, mime)) {
+        return true;
+    }
+    return ChangeAudioDecoderSameTopology(meta, mime, isStreamSwitch);
 }
 
 bool HiPlayerImpl::HandleAudioTrackChangeReportEvent(const Event& event)

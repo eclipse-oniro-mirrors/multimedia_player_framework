@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright (C) 2022-2026 Huawei Device Co., Ltd.
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1257,6 +1257,8 @@ void AVPlayerCallback::InitInfoFuncsPart2()
         [this](const int32_t extra, const Format &infoBody) { OnTimedMetaDataCb(extra, infoBody); };
     onInfoFuncs_[INFO_TYPE_ADS_CHANGE] =
         [this](const int32_t extra, const Format &infoBody) { OnAdsChangeCb(extra, infoBody); };
+    onInfoFuncs_[INFO_TYPE_WARN_MSG] =
+        [this](const int32_t extra, const Format &infoBody) { OnWarnMsgCb(extra, infoBody); };
 }
 
 void AVPlayerCallback::OnAudioDeviceChangeCb(const int32_t extra, const Format &infoBody)
@@ -1312,9 +1314,15 @@ void AVPlayerCallback::OnError(int32_t errorCode, const std::string &errorMsg)
 
 void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
 {
-    std::string message = MSExtAVErrorToString(errorCode) + errorMsg;
-    MEDIA_LOGE("OnErrorCb:errorCode %{public}d, errorMsg %{public}s", errorCode, message.c_str());
     std::lock_guard<std::mutex> lock(mutex_);
+    DispatchErrorToApp(errorCode, errorMsg);
+}
+
+void AVPlayerCallback::DispatchErrorToApp(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg)
+{
+    // Shared dispatch for OnErrorCb and OnWarnMsgCb. Caller must hold mutex_.
+    std::string message = MSExtAVErrorToString(errorCode) + errorMsg;
+    MEDIA_LOGE("DispatchErrorToApp:errorCode %{public}d, errorMsg %{public}s", errorCode, message.c_str());
     if (refMap_.find(AVPlayerEvent::EVENT_ERROR) == refMap_.end()) {
         MEDIA_LOGW("0x%{public}06" PRIXPTR " can not find error callback!", FAKE_POINTER(this));
         return;
@@ -1328,6 +1336,16 @@ void AVPlayerCallback::OnErrorCb(MediaServiceExtErrCodeAPI9 errorCode, const std
     cb->errorCode = errorCode;
     cb->errorMsg = message;
     NapiCallback::CompleteCallback(env_, cb);
+}
+
+void AVPlayerCallback::OnWarnMsgCb(const int32_t extra, const Format &infoBody)
+{
+    // Non-fatal warning: dispatch to onError without triggering PLAYER_STATE_ERROR.
+    // OnInfo already holds mutex_; call DispatchErrorToApp (no lock) to avoid deadlock.
+    MediaServiceExtErrCodeAPI9 errorCodeApi9 = MSErrorToExtErrorAPI9(static_cast<MediaServiceErrCode>(extra));
+    std::string errorMsg;
+    infoBody.GetStringValue(std::string(PlayerKeys::PLAYER_ERROR_MSG), errorMsg);
+    DispatchErrorToApp(errorCodeApi9, errorMsg);
 }
 
 void AVPlayerCallback::OnInfo(PlayerOnInfoType type, int32_t extra, const Format &infoBody)
