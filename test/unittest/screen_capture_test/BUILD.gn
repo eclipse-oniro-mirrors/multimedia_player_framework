@@ -128,6 +128,7 @@ template("ohos_screen_capture_unittest") {
       "./screen_capture_unittest/include",
       "$MEDIA_PLAYER_ROOT_DIR/test/unittest/common/include",
       "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native",
+      "$MEDIA_PLAYER_ROOT_DIR/frameworks/native/capi/screencapture",
     ]
 
     common_external_deps = [
@@ -201,6 +202,7 @@ ohos_screen_capture_unittest("screen_capture_capi_unit_test") {
     "capi/src/screen_capture_capi_mock.cpp",
     "capi/src/screen_capture_capi_param_unittest.cpp",
     "capi/src/screen_capture_capi_callback_unittest.cpp",
+    "screen_capture_unittest/src/screen_capture_native_buffer_ref_unittest.cpp",
   ]
   deps = [
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/inner_api/native:media_client",
