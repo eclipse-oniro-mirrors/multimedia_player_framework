@@ -116,7 +116,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetAndCheckSaLimit_002, TestSize.Level
 {
     ON_CALL(GetMockMediaUtils(), IsSACalling()).WillByDefault(Return(true));
     ScreenCaptureServerManager::GetInstance().saUidAppUidMap_.clear();
-    int32_t saUid = IPCSkeleton::GetCallingUid();
+    int32_t saUid = IPCSkeleton::GetCallingAppUid();
     ScreenCaptureServerManager::GetInstance().saUidAppUidMap_[saUid] = {999, 0};
     OHOS::AudioStandard::AppInfo appInfo;
     appInfo.appUid = 100;

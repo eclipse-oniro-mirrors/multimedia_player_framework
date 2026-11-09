@@ -474,7 +474,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetAndCheckLimit_002, TestSize.Level2)
         serverList.push_back(server);
         int32_t sessionId = gIdGenerator.GetNewID();
         server->sessionId_ = sessionId;
-        server->appInfo_.appUid = IPCSkeleton::GetCallingUid();
+        server->appInfo_.appUid = IPCSkeleton::GetCallingAppUid();
         ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
     }
     std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
@@ -559,7 +559,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckSpecifiedDataTypeNum_002, TestSiz
         serverList.push_back(server);
         int32_t sessionId = gIdGenerator.GetNewID();
         server->sessionId_ = sessionId;
-        server->appInfo_.appUid = IPCSkeleton::GetCallingUid();
+        server->appInfo_.appUid = IPCSkeleton::GetCallingAppUid();
         server->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
         ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
         ScreenCaptureServerManager::GetInstance().UpdateServerDataType(sessionId, server->captureConfig_.dataType);
@@ -570,7 +570,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckSpecifiedDataTypeNum_002, TestSiz
     std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
     int32_t sessionId = gIdGenerator.GetNewID();
     server->sessionId_ = sessionId;
-    server->appInfo_.appUid = IPCSkeleton::GetCallingUid();
+    server->appInfo_.appUid = IPCSkeleton::GetCallingAppUid();
     server->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
     ScreenCaptureServerManager::GetInstance().UpdateServerDataType(sessionId, server->captureConfig_.dataType);

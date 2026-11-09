@@ -282,7 +282,7 @@ std::shared_ptr<IScreenCaptureService> ScreenCaptureServer::Create(
 int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo)
 {
     MEDIA_LOGI("SetAndCheckSaLimit START.");
-    const int32_t saUid = IPCSkeleton::GetCallingUid();
+    const int32_t saUid = IPCSkeleton::GetCallingAppUid();
     std::lock_guard<std::mutex> lock(mutex_);
     if (!ScreenCaptureServerManager::GetInstance().IsSAUidValid(saUid, appInfo.appUid)) {
         MEDIA_LOGE("SetAndCheckSaLimit failed, saUid-appUid exists.");
@@ -312,7 +312,7 @@ int32_t ScreenCaptureServer::SetAndCheckLimit()
 {
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetAndCheckLimit START.", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(
-        ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingUid()),
+        ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(IPCSkeleton::GetCallingAppUid()),
         MSERR_INVALID_OPERATION, "SetAndCheckLimit failed, cannot create ScreenCapture Instance.");
     InitAppUserId();
     return MSERR_OK;
@@ -739,7 +739,7 @@ ScreenCaptureServer::ScreenCaptureServer(std::unique_ptr<IScreenCaptureServicePr
     cbProxy_ = std::make_shared<ScreenCaptureCallbackProxy>();
     InitAppInfo();
     instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
-    CreateMediaInfo(SCREEN_CAPTRUER, IPCSkeleton::GetCallingUid(), instanceId_);
+    CreateMediaInfo(SCREEN_CAPTRUER, IPCSkeleton::GetCallingAppUid(), instanceId_);
     taskQue_.Start();
 }
 
@@ -1215,7 +1215,7 @@ void ScreenCaptureServer::InitAppInfo()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitAppInfo start.", FAKE_POINTER(this));
     appInfo_.appTokenId = IPCSkeleton::GetCallingTokenID();
     appInfo_.appFullTokenId = IPCSkeleton::GetCallingFullTokenID();
-    appInfo_.appUid = IPCSkeleton::GetCallingUid();
+    appInfo_.appUid = IPCSkeleton::GetCallingAppUid();
     appInfo_.appPid = IPCSkeleton::GetCallingPid();
     appName_ = GetClientBundleName(appInfo_.appUid);
     isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
@@ -3423,14 +3423,16 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRateInner(uint32_t rate)
 {
     CHECK_AND_RETURN_RET_LOG(virtualScreen_ != nullptr, MSERR_INVALID_VAL,
         "SetMaxVideoFrameRateInner failed virtual screen not init");
+    uint32_t clippedRate = std::min(rate, VIDEO_FRAME_RATE_MAX);
     uint32_t actualRefreshRate = 0;
     auto res = Rosen::ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(virtualScreen_->GetScreenId(),
-        rate, actualRefreshRate);
+        clippedRate, actualRefreshRate);
     CHECK_AND_RETURN_RET_LOG(!CheckAppVersionForUnsupport(res), MSERR_UNSUPPORT,
         "SetVirtualScreenMaxRefreshRate failed, res: %{public}d", res);
     CHECK_AND_RETURN_RET_LOG(res == DMError::DM_OK, MSERR_INVALID_OPERATION, "SetMaxVideoFrameRate failed");
 
-    MEDIA_LOGI("SetMaxVideoFrameRateInner rate:%{public}u, actualRefreshRate:%{public}u", rate, actualRefreshRate);
+    MEDIA_LOGI("SetMaxVideoFrameRateInner rate:%{public}u, clippedRate:%{public}u, actualRefreshRate:%{public}u",
+        rate, clippedRate, actualRefreshRate);
     return MSERR_OK;
 }
 
