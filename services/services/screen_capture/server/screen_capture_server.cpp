@@ -3423,7 +3423,7 @@ int32_t ScreenCaptureServer::SetMaxVideoFrameRateInner(uint32_t rate)
 {
     CHECK_AND_RETURN_RET_LOG(virtualScreen_ != nullptr, MSERR_INVALID_VAL,
         "SetMaxVideoFrameRateInner failed virtual screen not init");
-    uint32_t clippedRate = std::min(rate, VIDEO_FRAME_RATE_MAX);
+    uint32_t clippedRate = std::min(rate, static_cast<uint32_t>(VIDEO_FRAME_RATE_MAX));
     uint32_t actualRefreshRate = 0;
     auto res = Rosen::ScreenManager::GetInstance().SetVirtualScreenMaxRefreshRate(virtualScreen_->GetScreenId(),
         clippedRate, actualRefreshRate);
