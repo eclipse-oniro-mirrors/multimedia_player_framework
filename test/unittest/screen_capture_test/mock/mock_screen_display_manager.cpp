@@ -98,10 +98,13 @@ sptr<Screen> ScreenManager::GetScreenById(ScreenId screenId)
     return MakeMockScreen(screenId);
 }
 
-ScreenId ScreenManager::CreateVirtualScreen(VirtualScreenOption option)
+ScreenId ScreenManager::CreateVirtualScreen(VirtualScreenOption option, DMError *errorCode)
 {
     if (MockScreenManagerFlowActions::current) {
-        return MockScreenManagerFlowActions::current->CreateVirtualScreen(option);
+        return MockScreenManagerFlowActions::current->CreateVirtualScreen(option, errorCode);
+    }
+    if (errorCode != nullptr) {
+        *errorCode = DMError::DM_OK;
     }
     return static_cast<ScreenId>(1);
 }
