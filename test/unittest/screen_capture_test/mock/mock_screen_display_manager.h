@@ -84,7 +84,7 @@ public:
     }
 
     MOCK_METHOD(sptr<Screen>, GetScreenById, (ScreenId screenId));
-    MOCK_METHOD(ScreenId, CreateVirtualScreen, (VirtualScreenOption option));
+    MOCK_METHOD(ScreenId, CreateVirtualScreen, (VirtualScreenOption option, DMError *errorCode));
     MOCK_METHOD(DMError, DestroyVirtualScreen, (ScreenId screenId, bool isCallingByThirdParty));
     MOCK_METHOD(DMError, MakeMirror,
         (ScreenId mainScreenId, std::vector<ScreenId> mirrorScreenId, ScreenId &screenGroupId));

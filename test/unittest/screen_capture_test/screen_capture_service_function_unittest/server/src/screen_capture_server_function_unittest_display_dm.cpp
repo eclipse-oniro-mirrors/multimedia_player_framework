@@ -74,7 +74,7 @@ void SetupCreateVirtualScreenFlow(MockScreenManagerFlowActions &sm, MockDisplayM
     ON_CALL(dm, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     ON_CALL(dm, GetDisplayById(_)).WillByDefault(Return(display));
     auto screen = MakeMockScreen(TEST_VIRTUAL_SCREEN_ID);
-    ON_CALL(sm, CreateVirtualScreen(_)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
+    ON_CALL(sm, CreateVirtualScreen(_, _)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
     ON_CALL(sm, SetVirtualScreenAutoRotation(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(sm, SetScreenSkipProtectedWindow(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(sm, SetScreenPrivacyWindowTagSwitch(_, _, _)).WillByDefault(Return(DMError::DM_OK));
@@ -387,7 +387,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CreateVirtualScreen_FileHome_Success,
     auto screen = MakeMockScreen(TEST_VIRTUAL_SCREEN_ID);
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(display));
-    ON_CALL(*smFlow_, CreateVirtualScreen(_)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
+    ON_CALL(*smFlow_, CreateVirtualScreen(_, _)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
     ON_CALL(*smFlow_, SetVirtualScreenAutoRotation(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetScreenSkipProtectedWindow(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetScreenPrivacyWindowTagSwitch(_, _, _)).WillByDefault(Return(DMError::DM_OK));
@@ -567,7 +567,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_CreateVir
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     auto screen = MakeMockScreen(TEST_VIRTUAL_SCREEN_ID);
-    ON_CALL(*smFlow_, CreateVirtualScreen(_)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
+    ON_CALL(*smFlow_, CreateVirtualScreen(_, _)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
     ON_CALL(*smFlow_, GetScreenById(_)).WillByDefault(Return(screen));
     ON_CALL(*smFlow_, SetVirtualMirrorScreenScaleMode(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, MakeMirror(_, _, _)).WillByDefault(Return(DMError::DM_ERROR_INVALID_MODE_ID));
@@ -603,7 +603,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CreateVirtualScreen_DisplayNull_
 {
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(sptr<Rosen::Display>(nullptr)));
     auto screen = MakeMockScreen(TEST_VIRTUAL_SCREEN_ID);
-    ON_CALL(*smFlow_, CreateVirtualScreen(_)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
+    ON_CALL(*smFlow_, CreateVirtualScreen(_, _)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
     ON_CALL(*smFlow_, SetVirtualScreenAutoRotation(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetScreenSkipProtectedWindow(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetScreenPrivacyWindowTagSwitch(_, _, _)).WillByDefault(Return(DMError::DM_OK));
@@ -1006,7 +1006,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_ExtendedScree
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     auto screen = MakeMockScreen(TEST_VIRTUAL_SCREEN_ID);
-    ON_CALL(*smFlow_, CreateVirtualScreen(_)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
+    ON_CALL(*smFlow_, CreateVirtualScreen(_, _)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
     ON_CALL(*smFlow_, SetVirtualScreenAutoRotation(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetScreenSkipProtectedWindow(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetScreenPrivacyWindowTagSwitch(_, _, _)).WillByDefault(Return(DMError::DM_OK));
@@ -1042,7 +1042,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_Mirror_Succes
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     auto screen = MakeMockScreen(TEST_VIRTUAL_SCREEN_ID);
-    ON_CALL(*smFlow_, CreateVirtualScreen(_)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
+    ON_CALL(*smFlow_, CreateVirtualScreen(_, _)).WillByDefault(Return(TEST_VIRTUAL_SCREEN_ID));
     ON_CALL(*smFlow_, SetVirtualScreenAutoRotation(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetScreenSkipProtectedWindow(_, _)).WillByDefault(Return(DMError::DM_OK));
     ON_CALL(*smFlow_, SetScreenPrivacyWindowTagSwitch(_, _, _)).WillByDefault(Return(DMError::DM_OK));
@@ -1260,7 +1260,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CreateVirtualScreen_InvalidScreenId_0
     auto display = MakeMockDisplay(TEST_SCREEN_ID);
     ON_CALL(*dmFlow_, GetDefaultDisplaySync(_, _)).WillByDefault(Return(display));
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(display));
-    ON_CALL(*smFlow_, CreateVirtualScreen(_)).WillByDefault(Return(SCREEN_ID_INVALID));
+    ON_CALL(*smFlow_, CreateVirtualScreen(_, _)).WillByDefault(Return(SCREEN_ID_INVALID));
     server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     server_->consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
     ASSERT_NE(server_->consumer_, nullptr);
