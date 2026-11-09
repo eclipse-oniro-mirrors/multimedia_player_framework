@@ -521,8 +521,6 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_POSITION_UPDATE,
     /* return the playback message. */
     INFO_TYPE_MESSAGE,
-    /* return the message when media source changed in list mode. */
-    INFO_TYPE_PLAYBACK_CONTENT_CHANGE,
     /* return the message when volume changed. */
     INFO_TYPE_VOLUME_CHANGE,
     /* return the message when video size is first known or updated. */
@@ -585,6 +583,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_TIMED_META_DATA,
     /* return the message when ads playback content/state changes. */
     INFO_TYPE_ADS_CHANGE,
+    /* return the message when media source changed in list mode. */
+    INFO_TYPE_PLAYBACK_CONTENT_CHANGE,
 };
 
 enum PlayerStates : int32_t {
