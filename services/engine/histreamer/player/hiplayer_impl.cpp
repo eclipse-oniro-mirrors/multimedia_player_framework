@@ -3158,6 +3158,24 @@ void HiPlayerImpl::DoSetPlayMediaStream(const std::shared_ptr<MediaSource>& sour
     }
 }
 
+void HiPlayerImpl::DisableMediaTrackByStrategy()
+{
+    MEDIA_LOG_I("HiPlayerImpl::DisableMediaTrackByStrategy");
+    if (disableMedia_ == OHOS::Media::MediaType::MEDIA_TYPE_VID) {
+        MEDIA_LOG_I("HiPlayerImpl::MEDIA_TYPE_VID");
+        demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
+    } else if (disableMedia_ == OHOS::Media::MediaType::MEDIA_TYPE_AUD) {
+        MEDIA_LOG_I("HiPlayerImpl::MEDIA_TYPE_AUD");
+        demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::AUDIO);
+    }
+    if (!seiMessageCbStatus_ && surface_ == nullptr && !isForceLoadVideo_ &&
+        mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID &&
+        disableMedia_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
+        MEDIA_LOG_D("HiPlayerImpl::DisableMediaTrack");
+        demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
+    }
+}
+
 bool HiPlayerImpl::IsLivingMaxDelayTimeValid()
 {
     if (maxLivingDelayTime_ < 0) {
@@ -3183,11 +3201,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
-    if (!seiMessageCbStatus_ && surface_ == nullptr && !isForceLoadVideo_ &&
-        mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
-        MEDIA_LOG_D("HiPlayerImpl::DisableMediaTrack");
-        demuxer_->DisableMediaTrack(OHOS::Media::Plugins::MediaType::VIDEO);
-    }
+    DisableMediaTrackByStrategy()
     if (!playMediaStreamVec_.empty()) {
         DoSetPlayMediaStream(source);
     }
@@ -3197,6 +3211,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     MEDIA_LOG_I("SetDataSource cost ms %{public}" PRId64, CALC_EXPR_TIME_MS(ret = demuxer_->SetDataSource(source)));
     demuxer_->SetCallerInfo(instanceId_, bundleName_);
     demuxer_->SetDumpFlag(isDump_);
+    demuxer_->SetDisableMedia(disableMedia_);
     std::shared_ptr<Meta> globalMeta = demuxer_->GetGlobalMetaInfo();
     if (globalMeta != nullptr && globalMeta->GetData(Tag::MEDIA_FILE_TYPE, fileType_)) {
         MEDIA_LOG_D("DoSetSource getFileType: %{public}d", static_cast<int32_t>(fileType_));
@@ -4299,6 +4314,8 @@ Status HiPlayerImpl::LinkAudioDecoderFilter(const std::shared_ptr<Filter>& preFi
 {
     MediaTrace trace("HiPlayerImpl::LinkAudioDecoderFilter");
     MEDIA_LOG_I_SHORT("HiPlayerImpl::LinkAudioDecoderFilter");
+    FALSE_RETURN_V_MSG_I(disableMedia_ != OHOS::Media::MediaType::MEDIA_TYPE_AUD,
+        Status::OK, "disableMedia_ is audio");
     FALSE_RETURN_V(audioDecoder_ == nullptr, Status::OK);
 
     audioDecoder_ = FilterFactory::Instance().CreateFilter<AudioDecoderFilter>("player.audiodecoder",
@@ -4343,6 +4360,8 @@ Status HiPlayerImpl::LinkAudioSinkFilter(const std::shared_ptr<Filter>& preFilte
 {
     MediaTrace trace("HiPlayerImpl::LinkAudioSinkFilter");
     MEDIA_LOG_I("HiPlayerImpl::LinkAudioSinkFilter");
+    FALSE_RETURN_V_MSG_I(disableMedia_ != OHOS::Media::MediaType::MEDIA_TYPE_AUD,
+        Status::OK, "disableMedia_ is audio");
     FALSE_RETURN_V(audioSink_ == nullptr, Status::OK);
 
     audioSink_ = FilterFactory::Instance().CreateFilter<AudioSinkFilter>("player.audiosink",
@@ -4437,6 +4456,8 @@ Status HiPlayerImpl::LinkVideoDecoderFilter(const std::shared_ptr<Filter>& preFi
 {
     MediaTrace trace("HiPlayerImpl::LinkVideoDecoderFilter");
     MEDIA_LOG_I("LinkVideoDecoderFilter");
+    FALSE_RETURN_V_MSG_I(disableMedia_ != OHOS::Media::MediaType::MEDIA_TYPE_VID,
+        Status::OK, "disableMedia_ is video");
     if (surface_ == nullptr && seiMessageCbStatus_ && IsLiveStream()) {
         return LinkSeiDecoder(preFilter, type);
     }
@@ -4511,7 +4532,14 @@ int32_t HiPlayerImpl::SetMediaMuted(OHOS::Media::MediaType mediaType, bool isMut
 
 int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
 {
-    mutedMediaType_ = playbackStrategy.mutedMediaType;
+    disableMedia_ = playbackStrategy.disableMedia;
+    if (disableMedia_ != OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT &&
+        disableMedia_ == playbackStrategy.mutedMediaType) {
+        mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    } else {
+        mutedMediaType_ = playbackStrategy.mutedMediaType;
+    }
+    MEDIA_LOG_I("HiPlayerImpl::SetPlaybackStrategy disableMedia_ %{public}d", static_cast<int32_t>(disableMedia_));
     preferedWidth_ = playbackStrategy.preferredWidth;
     preferedHeight_ = playbackStrategy.preferredHeight;
     bufferDuration_ = playbackStrategy.preferredBufferDuration;
@@ -5160,7 +5188,13 @@ void HiPlayerImpl::ExtractStrategyParams(const AVPlayStrategy &strategy)
     bufferDuration_ = strategy.preferredBufferDuration;
     preferHDR_ = strategy.preferredHdr;
     renderFirstFrame_ = strategy.showFirstFrameOnPrepare;
-    mutedMediaType_ = strategy.mutedMediaType;
+    disableMedia_ = strategy.disableMedia;
+    if (disableMedia_ != OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT &&
+        disableMedia_ == strategy.mutedMediaType) {
+        mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    } else {
+        mutedMediaType_ = strategy.mutedMediaType;
+    }
     audioLanguage_ = strategy.preferredAudioLanguage;
     subtitleLanguage_ = strategy.preferredSubtitleLanguage;
     enableCameraPostprocessing_ = strategy.enableCameraPostprocessing;

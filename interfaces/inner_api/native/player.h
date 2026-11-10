@@ -65,6 +65,7 @@ struct AVPlayStrategy {
     std::string preferredAudioLanguage = "";
     std::string preferredSubtitleLanguage = "";
     bool keepDecodingOnMute = false;
+    OHOS::Media::MediaType disableMedia = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
 };
 
 struct AVPlayTrackSelectionFilter {

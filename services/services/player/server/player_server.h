@@ -350,6 +350,7 @@ private:
     std::atomic<bool> isFrozen_ = false;
     bool isMemoryExchanged_ = false;
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    OHOS::Media::MediaType disableMedia_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     static std::vector<std::string> dolbyList_;
     sptr<Surface> sideOutputSurface_ = nullptr;
     std::mutex sideOutputSurfaceMutex_;

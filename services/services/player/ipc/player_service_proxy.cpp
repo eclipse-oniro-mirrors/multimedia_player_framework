@@ -1578,6 +1578,7 @@ void PlayerServiceProxy::WritePlaybackStrategy(MessageParcel &data, const AVPlay
     (void)data.WriteString(strategy.preferredAudioLanguage);
     (void)data.WriteString(strategy.preferredSubtitleLanguage);
     (void)data.WriteBool(strategy.keepDecodingOnMute);
+    (void)data.WriteInt32(static_cast<int32_t>(strategy.disableMedia));
 }
 
 void PlayerServiceProxy::WriteTrackSelectionFilter(MessageParcel &data, const AVPlayTrackSelectionFilter &filter)

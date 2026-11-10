@@ -594,7 +594,8 @@ void AVPlayerImpl::SetSurfaceId(optional_view<string> surfaceId)
     } else if (switchSurface) {
         MEDIA_LOGI("TaiheSetSurfaceID switch surface in %{public}s state", curState.c_str());
         std::string oldSurface = surface_;
-        if (oldSurface.empty() && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
+        if (oldSurface.empty() && mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID &&
+            disableMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
             OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                 "switch surface with no old surface");
             return;
@@ -1050,6 +1051,7 @@ void AVPlayerImpl::GetDefaultStrategy(AVPlayStrategyTmp &playStrategy)
     playStrategy.thresholdForAutoQuickPlay = -1;
     playStrategy.isSetThresholdForAutoQuickPlay = false;
     playStrategy.keepDecodingOnMute = false;
+    playStrategy.disableMedia = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
 }
 
 void AVPlayerImpl::GetPlayStrategy(AVPlayStrategyTmp &playStrategy, PlaybackStrategy strategy)
@@ -1091,6 +1093,9 @@ void AVPlayerImpl::GetPlayStrategy(AVPlayStrategyTmp &playStrategy, PlaybackStra
     }
     if (strategy.keepDecodingOnMute.has_value()) {
         playStrategy.keepDecodingOnMute = strategy.keepDecodingOnMute.value();
+    }
+    if (strategy.disableMedia.has_value()) {
+        playStrategy.disableMedia = strategy.disableMedia.value().get_value();
     }
 }
 
@@ -2041,6 +2046,7 @@ void AVPlayerImpl::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
     strategy.thresholdForAutoQuickPlay = strategyTmp.isSetThresholdForAutoQuickPlay ?
         strategyTmp.thresholdForAutoQuickPlay : -1;
     strategy.keepDecodingOnMute = strategyTmp.keepDecodingOnMute;
+    strategy.disableMedia = static_cast<OHOS::Media::MediaType>(strategyTmp.disableMedia);
 }
 
 std::shared_ptr<TaskHandler<TaskRet>> AVPlayerImpl::SetPlaybackStrategyTask(AVPlayStrategy playStrategy)

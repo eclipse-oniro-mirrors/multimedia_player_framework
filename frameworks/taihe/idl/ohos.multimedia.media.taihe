@@ -191,6 +191,7 @@ struct PlaybackStrategy {
     enableSuperResolution: Optional<bool>;
     thresholdForAutoQuickPlay: Optional<f64>;
     keepDecodingOnMute: Optional<bool>;
+    disableMedia: Optional<MediaType>;
 }
 
 interface AVMetadataExtractor {

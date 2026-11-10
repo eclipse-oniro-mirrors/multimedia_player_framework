@@ -374,6 +374,7 @@ private:
     int32_t SetAudioHapticsSyncId(int32_t syncId);
     void ApplyAudioHapticsSyncId();
     void DoInitDemuxer();
+    void DisableMediaTrackByStrategy();
     void ReleaseVideoDecoderOnMuted();
     void CacheBuffer();
     void NotifyBufferEnd();
@@ -493,6 +494,7 @@ private:
     std::atomic<bool> isAdsPlaying_ {false};
 
     OHOS::Media::MediaType mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    OHOS::Media::MediaType disableMedia_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     std::string audioLanguage_;
     std::string subtitleLanguage_;
     std::vector<AVPlayMediaStream> playMediaStreamVec_;

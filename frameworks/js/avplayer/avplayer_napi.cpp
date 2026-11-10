@@ -1878,6 +1878,7 @@ void AVPlayerNapi::GetAVPlayStrategyFromStrategyTmp(AVPlayStrategy &strategy, co
     strategy.thresholdForAutoQuickPlay = strategyTmp.isSetThresholdForAutoQuickPlay ?
         strategyTmp.thresholdForAutoQuickPlay : -1;
     strategy.keepDecodingOnMute = strategyTmp.keepDecodingOnMute;
+    strategy.disableMedia = static_cast<MediaType>(strategyTmp.disableMedia);
 }
 
 bool AVPlayerNapi::IsPalyingDurationValid(const AVPlayStrategyTmp &strategyTmp)
@@ -1911,6 +1912,17 @@ bool AVPlayerNapi::IsRateValid(float rate)
         return false;
     }
     return true;
+}
+
+void AVPlayerNapi::UpdateMediaMuteStrategy(const AVPlayStrategy &strategy)
+{
+    disableMediaType_ = strategy.disableMedia;
+    if (disableMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT &&
+        disableMediaType_ == strategy.mutedMediaType) {
+        mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    } else {
+        mutedMediaType_ = strategy.mutedMediaType;
+    }
 }
 
 napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info info)
@@ -1947,7 +1959,7 @@ napi_value AVPlayerNapi::JsSetPlaybackStrategy(napi_env env, napi_callback_info 
             AVPlayStrategy strategy;
             jsPlayer->GetAVPlayStrategyFromStrategyTmp(strategy, strategyTmp);
             promiseCtx->asyncTask = jsPlayer->SetPlaybackStrategyTask(strategy);
-            jsPlayer->mutedMediaType_ = strategy.mutedMediaType;
+            jsPlayer->UpdateMediaMuteStrategy(strategy);
         }
     }
     napi_value resource = nullptr;
@@ -2802,7 +2814,8 @@ napi_value AVPlayerNapi::JsSetSurfaceID(napi_env env, napi_callback_info info)
         MEDIA_LOGI("JsSetSurfaceID switch surface in %{public}s state", curState.c_str());
         std::string oldSurface = jsPlayer->surface_;
         if (oldSurface.empty() && !jsPlayer->isForceLoadVideo_ &&
-            jsPlayer->mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
+            jsPlayer->mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID &&
+            jsPlayer->disableMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
             jsPlayer->OnErrorCb(MSERR_EXT_API9_OPERATE_NOT_PERMIT,
                 "switch surface with no old surface");
             return result;

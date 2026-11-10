@@ -506,6 +506,7 @@ struct AVPlayStrategyTmp {
     bool isSetBufferDurationForPlaying {false};
     bool isSetThresholdForAutoQuickPlay {false};
     bool keepDecodingOnMute {false};
+    int32_t disableMedia = static_cast<int32_t>(MediaType::MEDIA_TYPE_MAX_COUNT);
 };
 
 struct AVPlayMediaStreamTmp {
