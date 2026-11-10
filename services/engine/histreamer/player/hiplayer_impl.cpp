@@ -3201,7 +3201,7 @@ Status HiPlayerImpl::DoSetSource(const std::shared_ptr<MediaSource> source)
     if (!mimeType_.empty()) {
         source->SetMimeType(mimeType_);
     }
-    DisableMediaTrackByStrategy()
+    DisableMediaTrackByStrategy();
     if (!playMediaStreamVec_.empty()) {
         DoSetPlayMediaStream(source);
     }
