@@ -28,6 +28,7 @@ namespace {
     const std::string MEDIA_ROOT = "file:///data/test/";
     const std::string VIDEO_FILE1 = MEDIA_ROOT + "H264_AAC.mp4";
     const std::string TOTAL_MEMORY_SIZE = "TOTAL_MEMORY_SIZE";
+    constexpr uint32_t ASYNC_TASK_WAIT_TIME = 1000;
 }
 
 void HiplayerImplUnitTest::SetUpTestCase(void)
@@ -45,6 +46,7 @@ void HiplayerImplUnitTest::SetUp(void)
 
 void HiplayerImplUnitTest::TearDown(void)
 {
+    usleep(ASYNC_TASK_WAIT_TIME);
     hiplayer_ = nullptr;
 }
 

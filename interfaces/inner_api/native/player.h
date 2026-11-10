@@ -585,6 +585,8 @@ enum PlayerOnInfoType : int32_t {
     INFO_TYPE_ADS_CHANGE,
     /* return the message when media source changed in list mode. */
     INFO_TYPE_PLAYBACK_CONTENT_CHANGE,
+    /* Return warning-level error to app's onError without entering ERROR state. */
+    INFO_TYPE_WARN_MSG,
 };
 
 enum PlayerStates : int32_t {

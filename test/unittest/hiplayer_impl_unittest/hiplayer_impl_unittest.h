@@ -72,14 +72,18 @@ public:
         (int recvArg, bool dropFrame, bool byIdx, uint32_t idx, int64_t renderTime), ());
     MOCK_METHOD(void, SetParameter, (const std::shared_ptr<Meta>& meta), ());
     MOCK_METHOD(void, GetParameter, (std::shared_ptr<Meta>& meta), ());
-    MOCK_METHOD(Status, LinkNext, (const std::shared_ptr<Filter>& nextFilter, StreamType outType), ());
-    MOCK_METHOD(Status, UpdateNext, (const std::shared_ptr<Filter>& nextFilter, StreamType outType), ());
-    MOCK_METHOD(Status, UnLinkNext, (const std::shared_ptr<Filter>& nextFilter, StreamType outType), ());
-    MOCK_METHOD(Status, OnLinked, (StreamType inType, const std::shared_ptr<Meta>& meta,
+    MOCK_METHOD(Status, LinkNext, (const std::shared_ptr<Filter>& nextFilter,
+        OHOS::Media::Pipeline::StreamType outType), ());
+    MOCK_METHOD(Status, UpdateNext, (const std::shared_ptr<Filter>& nextFilter,
+        OHOS::Media::Pipeline::StreamType outType), ());
+    MOCK_METHOD(Status, UnLinkNext, (const std::shared_ptr<Filter>& nextFilter,
+        OHOS::Media::Pipeline::StreamType outType), ());
+    MOCK_METHOD(Status, OnLinked, (OHOS::Media::Pipeline::StreamType inType, const std::shared_ptr<Meta>& meta,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
-    MOCK_METHOD(Status, OnUpdated, (StreamType inType, const std::shared_ptr<Meta>& meta,
+    MOCK_METHOD(Status, OnUpdated, (OHOS::Media::Pipeline::StreamType inType, const std::shared_ptr<Meta>& meta,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
-    MOCK_METHOD(Status, OnUnLinked, (StreamType inType, const std::shared_ptr<FilterLinkCallback>& callback), ());
+    MOCK_METHOD(Status, OnUnLinked, (OHOS::Media::Pipeline::StreamType inType,
+        const std::shared_ptr<FilterLinkCallback>& callback), ());
     MOCK_METHOD(Status, ClearAllNextFilters, (), ());
 };
 
@@ -183,9 +187,12 @@ public:
     MOCK_METHOD(std::vector<Plugins::SeekRange>, GetLoadedRanges, (), ());
     MOCK_METHOD(std::vector<std::shared_ptr<Meta>>, GetStreamMetaInfo, (), (const));
     MOCK_METHOD(std::shared_ptr<Meta>, GetGlobalMetaInfo, (), (const));
-    MOCK_METHOD(Status, LinkNext, (const std::shared_ptr<Filter> &nextFilter, StreamType outType), ());
-    MOCK_METHOD(Status, UpdateNext, (const std::shared_ptr<Filter> &nextFilter, StreamType outType), ());
-    MOCK_METHOD(Status, UnLinkNext, (const std::shared_ptr<Filter> &nextFilter, StreamType outType), ());
+    MOCK_METHOD(Status, LinkNext, (const std::shared_ptr<Filter> &nextFilter,
+        OHOS::Media::Pipeline::StreamType outType), ());
+    MOCK_METHOD(Status, UpdateNext, (const std::shared_ptr<Filter> &nextFilter,
+        OHOS::Media::Pipeline::StreamType outType), ());
+    MOCK_METHOD(Status, UnLinkNext, (const std::shared_ptr<Filter> &nextFilter,
+        OHOS::Media::Pipeline::StreamType outType), ());
     MOCK_METHOD(Status, GetBitRates, (std::vector<uint32_t>& bitRates), ());
     MOCK_METHOD(Status, SelectBitRate, (uint32_t bitRate, bool isAutoSelect), ());
     MOCK_METHOD(Status, StopBufferring, (bool flag), ());
@@ -227,18 +234,18 @@ public:
     MOCK_METHOD(uint64_t, GetCachedDuration, (), ());
     MOCK_METHOD(void, RestartAndClearBuffer, (), ());
     MOCK_METHOD(bool, IsFlvLive, (), ());
-    MOCK_METHOD(Status, OnLinked, (StreamType inType, const std::shared_ptr<Meta> &meta,
+    MOCK_METHOD(Status, OnLinked, (OHOS::Media::Pipeline::StreamType inType, const std::shared_ptr<Meta> &meta,
         const std::shared_ptr<FilterLinkCallback> &callback), ());
-    MOCK_METHOD(Status, OnUpdated, (StreamType inType, const std::shared_ptr<Meta> &meta,
+    MOCK_METHOD(Status, OnUpdated, (OHOS::Media::Pipeline::StreamType inType, const std::shared_ptr<Meta> &meta,
         const std::shared_ptr<FilterLinkCallback> &callback), ());
     MOCK_METHOD(Status, OnUnLinked,
-        (StreamType inType, const std::shared_ptr<FilterLinkCallback>& callback), ());
-    MOCK_METHOD(bool, FindTrackId, (StreamType outType, int32_t &trackId), ());
-    MOCK_METHOD(bool, FindStreamType, (StreamType &streamType, Plugins::MediaType mediaType,
+        (OHOS::Media::Pipeline::StreamType inType, const std::shared_ptr<FilterLinkCallback>& callback), ());
+    MOCK_METHOD(bool, FindTrackId, (OHOS::Media::Pipeline::StreamType outType, int32_t &trackId), ());
+    MOCK_METHOD(bool, FindStreamType, (OHOS::Media::Pipeline::StreamType &streamType, Plugins::MediaType mediaType,
         std::string mime, size_t index, std::shared_ptr<Meta> &meta), ());
     MOCK_METHOD(bool, ShouldTrackSkipped, (Plugins::MediaType mediaType, std::string mime, size_t index), ());
-    MOCK_METHOD(void, UpdateTrackIdMap, (StreamType streamType, int32_t index), ());
-    MOCK_METHOD(Status, FaultDemuxerEventInfoWrite, (StreamType& streamType), ());
+    MOCK_METHOD(void, UpdateTrackIdMap, (OHOS::Media::Pipeline::StreamType streamType, int32_t index), ());
+    MOCK_METHOD(Status, FaultDemuxerEventInfoWrite, (OHOS::Media::Pipeline::StreamType& streamType), ());
     MOCK_METHOD(bool, IsVideoMime, (const std::string& mime), ());
     MOCK_METHOD(bool, IsAudioMime, (const std::string& mime), ());
     MOCK_METHOD(bool, CheckIsBigendian, (std::shared_ptr<Meta> &meta), ());
@@ -268,7 +275,7 @@ public:
     MOCK_METHOD(Status, DoProcessInputBuffer, (int recvArg, bool dropFrame), ());
     MOCK_METHOD(void, SetParameter, (const std::shared_ptr<Meta>& meta), ());
     MOCK_METHOD(void, GetParameter, (std::shared_ptr<Meta>& meta), ());
-    MOCK_METHOD(Status, OnLinked, (StreamType inType, const std::shared_ptr<Meta>& meta,
+    MOCK_METHOD(Status, OnLinked, (OHOS::Media::Pipeline::StreamType inType, const std::shared_ptr<Meta>& meta,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
     MOCK_METHOD(Status, DoSetPerfRecEnabled, (bool isPerfRecEnabled), ());
     MOCK_METHOD(Status, SetVolume, (float volume), ());
@@ -289,9 +296,9 @@ public:
     MOCK_METHOD(Status, SetIsCalledBySystemApp, (bool isCalledBySystemApp), ());
     MOCK_METHOD(Status, SetLooping, (bool loop), ());
 protected:
-    MOCK_METHOD(Status, OnUpdated, (StreamType inType, const std::shared_ptr<Meta>& meta,
+    MOCK_METHOD(Status, OnUpdated, (OHOS::Media::Pipeline::StreamType inType, const std::shared_ptr<Meta>& meta,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
-    MOCK_METHOD(Status, OnUnLinked, (StreamType inType,
+    MOCK_METHOD(Status, OnUnLinked, (OHOS::Media::Pipeline::StreamType inType,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
 };
 class MockAudioDecoderFilter : public AudioDecoderFilter {
@@ -310,9 +317,12 @@ public:
     MOCK_METHOD(void, SetParameter, (const std::shared_ptr<Meta>& parameter), ());
     MOCK_METHOD(void, SetDumpFlag, (bool isDump), ());
     MOCK_METHOD(void, GetParameter, (std::shared_ptr<Meta>& parameter), ());
-    MOCK_METHOD(Status, LinkNext, (const std::shared_ptr<Filter>& nextFilter, StreamType outType), ());
-    MOCK_METHOD(Status, UpdateNext, (const std::shared_ptr<Filter>& nextFilter, StreamType outType), ());
-    MOCK_METHOD(Status, UnLinkNext, (const std::shared_ptr<Filter>& nextFilter, StreamType outType), ());
+    MOCK_METHOD(Status, LinkNext, (const std::shared_ptr<Filter>& nextFilter,
+        OHOS::Media::Pipeline::StreamType outType), ());
+    MOCK_METHOD(Status, UpdateNext, (const std::shared_ptr<Filter>& nextFilter,
+        OHOS::Media::Pipeline::StreamType outType), ());
+    MOCK_METHOD(Status, UnLinkNext, (const std::shared_ptr<Filter>& nextFilter,
+        OHOS::Media::Pipeline::StreamType outType), ());
     MOCK_METHOD(void, OnInterrupted, (bool isInterruptNeeded), ());
     MOCK_METHOD(Status, DoProcessInputBuffer, (int recvArg, bool dropFrame), ());
     MOCK_METHOD(Status, HandleInputBuffer, (bool isTriggeredByOutPort), ());
@@ -327,11 +337,11 @@ public:
     MOCK_METHOD(void, OnDumpInfo, (int32_t fd), ());
     MOCK_METHOD(void, SetCallerInfo, (uint64_t instanceId, const std::string& appName), ());
     MOCK_METHOD(void, OnError, (CodecErrorType errorType, int32_t errorCode, const std::string &description), ());
-    MOCK_METHOD(Status, OnLinked, (StreamType inType, const std::shared_ptr<Meta>& meta,
+    MOCK_METHOD(Status, OnLinked, (OHOS::Media::Pipeline::StreamType inType, const std::shared_ptr<Meta>& meta,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
-    MOCK_METHOD(Status, OnUpdated, (StreamType inType, const std::shared_ptr<Meta>& meta,
+    MOCK_METHOD(Status, OnUpdated, (OHOS::Media::Pipeline::StreamType inType, const std::shared_ptr<Meta>& meta,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
-    MOCK_METHOD(Status, OnUnLinked, (StreamType inType,
+    MOCK_METHOD(Status, OnUnLinked, (OHOS::Media::Pipeline::StreamType inType,
         const std::shared_ptr<FilterLinkCallback>& callback), ());
     MOCK_METHOD(Status, SetInputBufferQueueConsumerListener, (), ());
     MOCK_METHOD(Status, SetOutputBufferQueueProducerListener, (), ());

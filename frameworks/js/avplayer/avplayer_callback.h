@@ -107,6 +107,8 @@ private:
     void NotifyIsLiveStream(const int32_t extra, const Format &infoBody);
     void OnTrackChangedCb(const int32_t extra, const Format &infoBody);
     void OnTrackInfoUpdate(const int32_t extra, const Format &infoBody);
+    void OnWarnMsgCb(const int32_t extra, const Format &infoBody);
+    void DispatchErrorToApp(MediaServiceExtErrCodeAPI9 errorCode, const std::string &errorMsg);
     bool IsValidState(PlayerStates state, std::string &stateStr);
     int32_t SetDrmInfoData(const uint8_t *drmInfoAddr, int32_t infoCount,
         std::multimap<std::string, std::vector<uint8_t>> &drmInfoMap);

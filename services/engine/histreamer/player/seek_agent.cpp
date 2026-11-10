@@ -185,6 +185,11 @@ Status SeekAgent::SetBufferFilledListener()
             continue;
         }
         if (std::find(audioTrackIds.begin(), audioTrackIds.end(), it->first) != audioTrackIds.end()) {
+            if (isAudioMuted_) {
+                MEDIA_LOG_I("Audio muted, skip listener for audio id : %{public}d", it->first);
+                it++;
+                continue;
+            }
             sptr<IBrokerListener> audioListener
                 = new AudioBufferFilledListener(shared_from_this(), it->second, it->first);
             {
@@ -316,6 +321,12 @@ void SeekAgent::OnInterrupted(bool isInterruptNeeded)
     MEDIA_LOG_D("SeekAgent onInterrupted %{public}d", isInterruptNeeded);
     isInterruptNeeded_ = isInterruptNeeded;
     targetArrivedCond_.NotifyAll();
+}
+
+void SeekAgent::SetAudioMuted(bool isMuted)
+{
+    isAudioMuted_ = isMuted;
+    MEDIA_LOG_I("SetAudioMuted: %{public}d", isMuted);
 }
 }  // namespace Media
 }  // namespace OHOS
