@@ -403,7 +403,7 @@ private:
     int32_t listLoopMode_ = 1; // PLAYLIST_LOOP_MODE_ALL
     std::vector<std::pair<std::string, ohos::multimedia::media::MediaSource>> mediaSourceRefList_;
     int32_t mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
-    int32_t disableMedia = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    int32_t disableMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     int32_t privacyType_ = 0;
 };
 } // namespace ANI::Media
