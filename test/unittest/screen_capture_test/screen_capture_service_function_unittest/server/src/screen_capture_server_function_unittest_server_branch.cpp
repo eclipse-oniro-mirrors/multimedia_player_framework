@@ -19,6 +19,7 @@
 #include "screen_capture_server_function_unittest.h"
 #include <json/json.h>
 #include <limits>
+#include <surface.h>
 
 using namespace testing::ext;
 using namespace OHOS::Media::ScreenCaptureTestParam;
@@ -94,7 +95,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_SurfaceModeNu
 {
     SetValidConfig(); // dataType = ORIGINAL_STREAM, valid audio (16000/2) + video (720x1280)
     screenCaptureServer_->captureConfig_ = config_;
-    screenCaptureServer_->isSurfaceMode_ = true;
     screenCaptureServer_->surface_ = nullptr;
     ASSERT_EQ(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_INVALID_VAL);
 }
@@ -107,7 +107,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_BothIgnore_Di
     config_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0; // -> CheckVideoCapInfo sets IGNORE
     screenCaptureServer_->captureConfig_ = config_;
-    screenCaptureServer_->isSurfaceMode_ = false;
     ASSERT_EQ(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_INVALID_VAL);
 }
 
@@ -116,7 +115,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_InnerCapInval
     SetValidConfig();
     config_.audioInfo.innerCapInfo.audioSampleRate = 1; // 1 not in supported rates -> INVALID
     screenCaptureServer_->captureConfig_ = config_;
-    screenCaptureServer_->isSurfaceMode_ = false;
     ASSERT_EQ(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_INVALID_VAL);
 }
 
@@ -253,14 +251,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_DefaultState_001, Te
     EXPECT_TRUE(screenCaptureServer_->missionInfos_.front().isForeground);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_InnerIgnoreVideoValid_Direct_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_InnerIgnoreVideoValid_SurfaceMode_001,
+    TestSize.Level2)
 {
     SetValidConfig();
     config_.audioInfo.innerCapInfo.audioSampleRate = 0;
     config_.audioInfo.innerCapInfo.audioChannels = 0; // -> CheckAudioCapInfo sets IGNORE
-    // videoCapInfo stays 720x1280 -> CheckVideoCapInfo sets VALID
+    // videoCapInfo stays 720x1280 -> CheckVideoCapInfo sets VALID; surface ready -> OK
     screenCaptureServer_->captureConfig_ = config_;
-    screenCaptureServer_->isSurfaceMode_ = false;
+    screenCaptureServer_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     ASSERT_EQ(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_OK);
 }
 
@@ -448,19 +447,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_ResumeRecorderFail
     EXPECT_CALL(*mock, Release()).WillOnce(Return(MSERR_OK));
     screenCaptureServer_->recorder_ = mock;
     EXPECT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_UNKNOWN_RECORDER_RESUME);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_CreateVirtualScreenFail_001, TestSize.Level2)
-{
-    RecorderInfo recorderInfo;
-    SetRecorderInfo(recorderInfo);
-    SetValidConfigFile(recorderInfo);
-    ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
-    screenCaptureServer_->captureConfig_.strategy.enablePause = true;
-    ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK); // state PAUSED, virtualScreen_ reset
-    screenCaptureServer_->consumer_ = nullptr;
-    EXPECT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StopScreenCaptureInner_PickerPopUp_001, TestSize.Level2)

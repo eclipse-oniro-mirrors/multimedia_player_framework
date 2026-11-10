@@ -126,13 +126,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResizeCanvas_NotOriginalStream_B2, Tes
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_NotSurfaceMode_B2, TestSize.Level2)
 {
-    screenCaptureServer_->isSurfaceMode_ = false;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     EXPECT_EQ(screenCaptureServer_->UpdateSurface(nullptr), MSERR_INVALID_OPERATION);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_NotRunning_B2, TestSize.Level2)
 {
-    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     sptr<OHOS::Surface> surface = OHOS::Surface::CreateSurfaceAsConsumer();
     EXPECT_EQ(screenCaptureServer_->UpdateSurface(surface), MSERR_INVALID_OPERATION);

@@ -39,12 +39,7 @@ void ScreenCaptureListenerCallback::OnAudioBufferAvailable(bool isReady, AudioCa
     }
 }
 
-void ScreenCaptureListenerCallback::OnVideoBufferAvailable(bool isReady)
-{
-    if (listener_ != nullptr) {
-        listener_->OnVideoBufferAvailable(isReady);
-    }
-}
+void ScreenCaptureListenerCallback::OnVideoBufferAvailable(bool isReady) {}
 
 void ScreenCaptureListenerCallback::OnStateChange(AVScreenCaptureStateCode stateCode)
 {

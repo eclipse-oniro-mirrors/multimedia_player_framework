@@ -397,6 +397,9 @@ int32_t ScreenCaptureServerFunctionTest::InitStreamScreenCaptureServer()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "init innerCapInfo failed, innerCapInfo should be valid");
     ret = screenCaptureServer_->InitVideoCap(config_.videoInfo.videoCapInfo);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "InitVideoCap failed");
+    if (screenCaptureServer_->surface_ == nullptr) {
+        screenCaptureServer_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
+    }
     return MSERR_OK;
 }
 
@@ -523,7 +526,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CaptureStreamParamsInvalid_005, TestSi
     config_.audioInfo.innerCapInfo.audioChannels = 2;
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     screenCaptureServer_->surface_ = nullptr;
     ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_INVALID_VAL);
 }
@@ -944,6 +947,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_002, TestSize.L
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
+    screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
@@ -972,6 +976,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_003, TestSize.L
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
+    screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
@@ -1002,6 +1007,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_004, TestSize.L
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
+    screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
@@ -1375,7 +1381,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_001, TestSize.Level2)
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_002, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     int ret = screenCaptureServer_->UpdateSurface(nullptr);
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
@@ -1383,7 +1389,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_002, TestSize.Level2)
 HWTEST_F(ScreenCaptureServerFunctionTest, UpdateSurface_003, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     int ret = screenCaptureServer_->UpdateSurface(nullptr);
     ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
 }
@@ -1512,12 +1518,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetMicrophoneEnabled_001, TestSize.Lev
     EXPECT_EQ(screenCaptureServer_->isMicrophoneSwitchTurnOn_, true);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamHomeVideoCapture_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureStream_001, TestSize.Level2)
 {
     SetValidConfig();
     screenCaptureServer_->captureConfig_ = config_;
-    screenCaptureServer_->isSurfaceMode_ = false;
-    ASSERT_EQ(screenCaptureServer_->StartStreamHomeVideoCapture(), MSERR_OK);
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
+    ASSERT_EQ(screenCaptureServer_->StartScreenCaptureStream(), MSERR_INVALID_OPERATION);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckDataType_001, TestSize.Level2)

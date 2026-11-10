@@ -164,6 +164,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureStream_001, TestSize.Leve
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
+    screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);

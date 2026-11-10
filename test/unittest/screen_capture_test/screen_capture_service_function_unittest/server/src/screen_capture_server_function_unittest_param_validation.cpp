@@ -13,17 +13,17 @@
  * limitations under the License.
  */
 
-#include <unistd.h>
-#include <algorithm>
-#include <gtest/gtest.h>
-#include "screen_capture_server_function_unittest.h"
-#include "screen_capture_server_manager.h"
+#include "audio_capturer_wrapper.h"
+#include "media_errors.h"
+#include "media_log.h"
+#include "media_utils.h"
 #include "mock/mock_audio_capturer.h"
 #include "mock/mock_screen_capture_service_providers.h"
-#include "media_log.h"
-#include "media_errors.h"
-#include "media_utils.h"
-#include "audio_capturer_wrapper.h"
+#include "screen_capture_server_function_unittest.h"
+#include "screen_capture_server_manager.h"
+#include <algorithm>
+#include <gtest/gtest.h>
+#include <unistd.h>
 
 using testing::Return;
 using namespace testing::ext;
@@ -172,7 +172,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_SurfaceModeVi
 {
     SetValidConfig();
     screenCaptureServer_->captureConfig_ = config_;
-    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     screenCaptureServer_->surface_ = nullptr;
     ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_INVALID_VAL);
 }
@@ -243,8 +243,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, InitAudioCap_MicSource_001, TestSize.L
         .state = AVScreenCaptureParamValidationState::VALIDATION_VALID,
     };
     ASSERT_EQ(screenCaptureServer_->InitAudioCap(audioInfo), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.audioSource,
-        AudioCaptureSourceType::MIC);
+    ASSERT_EQ(screenCaptureServer_->captureConfig_.audioInfo.micCapInfo.audioSource, AudioCaptureSourceType::MIC);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, InitAudioCap_NotInConfigState_001, TestSize.Level2)
@@ -302,8 +301,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, GenerateThreadNameByPrefix_001, TestSi
 
 HWTEST_F(ScreenCaptureServerFunctionTest, SetErrorInfo_001, TestSize.Level2)
 {
-    screenCaptureServer_->SetErrorInfo(MSERR_UNKNOWN, "test error",
-        StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE, true);
+    screenCaptureServer_->SetErrorInfo(MSERR_UNKNOWN, "test error", StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE,
+        true);
     ASSERT_EQ(screenCaptureServer_->statisticalEventInfo_.errCode, MSERR_UNKNOWN);
     ASSERT_EQ(screenCaptureServer_->statisticalEventInfo_.errMsg, "test error");
 }
@@ -412,5 +411,5 @@ HWTEST_F(ScreenCaptureServerFunctionTest, IsState_MultipleStates_001, TestSize.L
     ASSERT_EQ(screenCaptureServer_->IsState(CAP_PAUSED), false);
 }
 
-} // Media
-} // OHOS
+} // namespace Media
+} // namespace OHOS

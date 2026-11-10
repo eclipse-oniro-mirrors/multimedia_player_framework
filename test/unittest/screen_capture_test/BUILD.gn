@@ -13,6 +13,7 @@
 
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
+import("//foundation/multimedia/player_framework/services/services/screen_capture/screen_capture_common.gni")
 
 screen_capture_support_power = player_framework_support_power_manager
 
@@ -74,6 +75,7 @@ config("screen_capture_test_config") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/ipc",
@@ -263,6 +265,7 @@ ohos_unittest("screen_capture_ipc_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/server",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/server",
+    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/client",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/server",
@@ -283,7 +286,6 @@ ohos_unittest("screen_capture_ipc_unit_test") {
 
   if (player_framework_support_screen_capture) {
     sources = [
-      "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/client/screen_capture_client.cpp",
       "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_controller_proxy.cpp",
       "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
       "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_ipc.cpp",
@@ -294,7 +296,10 @@ ohos_unittest("screen_capture_ipc_unit_test") {
       "screen_capture_ipc_test/screen_capture_strategy_parcel_unittest.cpp",
       "screen_capture_ipc_test/screen_capture_client_param_unittest.cpp",
       "screen_capture_ipc_test/screen_capture_client_func_unittest.cpp",
+      "screen_capture_ipc_test/screen_cap_buffer_consumer_listener_unittest.cpp",
+      "screen_capture_ipc_test/screen_capture_local_surface_unittest.cpp",
     ]
+    sources += screen_capture_client_sources
   }
 
   external_deps = [

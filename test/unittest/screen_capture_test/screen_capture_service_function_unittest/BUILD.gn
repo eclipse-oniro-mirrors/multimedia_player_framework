@@ -60,7 +60,6 @@ ohos_unittest("screen_capture_server_function_unit_test") {
       "server/src/screen_capture_server_function_unittest_audio_data_source_generic.cpp",
       "server/src/screen_capture_server_function_unittest_server_branch.cpp",
       "server/src/screen_capture_server_function_unittest_buffer.cpp",
-      "server/src/screen_capture_server_function_unittest_buffer_consumer.cpp",
       "server/src/screen_capture_server_function_unittest_callback_proxy.cpp",
       "server/src/screen_capture_server_function_unittest_callbacks.cpp",
       "server/src/screen_capture_server_function_unittest_capability.cpp",

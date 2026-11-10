@@ -167,9 +167,7 @@ void AvScreenCaptureServiceStubFuzzer::PrepareFuzzData(sptr<IRemoteStub<IStandar
     FuzzSetCapturePickerModeStub(screen_capture_Stub);
     FuzzStopScreenCapture(screen_capture_Stub, data, size);
     FuzzAcquireAudioBuffer(screen_capture_Stub, data, size);
-    FuzzAcquireVideoBuffer(screen_capture_Stub, data, size);
     FuzzReleaseAudioBuffer(screen_capture_Stub, data, size);
-    FuzzReleaseVideoBuffer(screen_capture_Stub, data, size);
     FuzzSetScreenCaptureStrategy(screen_capture_Stub, data, size);
     FuzzSetCaptureArea(screen_capture_Stub, data, size);
     FuzzUpdateSurface(screen_capture_Stub, data, size);
@@ -507,20 +505,6 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzAcquireAudioBuffer(
     return true;
 }
 
-bool AvScreenCaptureServiceStubFuzzer::FuzzAcquireVideoBuffer(
-    sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_Stub, uint8_t *data, size_t size)
-{
-    MessageParcel msg;
-    msg.WriteInterfaceToken(screen_capture_Stub->GetDescriptor());
-    msg.WriteBuffer(data, size);
-    msg.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::ACQUIRE_VIDEO_BUF,
-        msg, reply, option);
-    return true;
-}
-
 bool AvScreenCaptureServiceStubFuzzer::FuzzReleaseAudioBuffer(
     sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_Stub, uint8_t *data, size_t size)
 {
@@ -534,21 +518,6 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzReleaseAudioBuffer(
         msg, reply, option);
     AudioCaptureSourceType audioCaptureSourceType = AudioCaptureSourceType::MIC;
     screen_capture_Stub->ReleaseAudioBuffer(audioCaptureSourceType);
-    return true;
-}
-
-bool AvScreenCaptureServiceStubFuzzer::FuzzReleaseVideoBuffer(
-    sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_Stub, uint8_t *data, size_t size)
-{
-    MessageParcel msg;
-    msg.WriteInterfaceToken(screen_capture_Stub->GetDescriptor());
-    msg.WriteBuffer(data, size);
-    msg.RewindRead(0);
-    MessageParcel reply;
-    MessageOption option;
-    screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::RELEASE_VIDEO_BUF,
-        msg, reply, option);
-    screen_capture_Stub->ReleaseVideoBuffer();
     return true;
 }
 

@@ -13,10 +13,10 @@
  * limitations under the License.
  */
 
-#include "screen_capture_server_function_unittest.h"
-#include "screen_capture_controller_server.h"
-#include "screen_capture_server_manager.h"
 #include "media_errors.h"
+#include "screen_capture_controller_server.h"
+#include "screen_capture_server_function_unittest.h"
+#include "screen_capture_server_manager.h"
 #include <gtest/gtest.h>
 
 using namespace testing::ext;

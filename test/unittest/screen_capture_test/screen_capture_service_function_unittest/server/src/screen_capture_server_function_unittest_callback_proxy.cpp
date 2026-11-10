@@ -86,21 +86,6 @@ HWTEST_F(ScreenCaptureCallbackProxyTest, OnAudioBufferAvailable_NullCb_001, Test
 }
 
 /**
- * @tc.name    : OnVideoBufferAvailable_NullCb_001
- * @tc.number  : OnVideoBufferAvailable_NullCb_001
- * @tc.desc    : Test OnVideoBufferAvailable when screenCaptureCb_ is nullptr (null branch)
- */
-HWTEST_F(ScreenCaptureCallbackProxyTest, OnVideoBufferAvailable_NullCb_001, TestSize.Level1)
-{
-    proxy_->SetBufferActive(true);
-    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0);
-    proxy_->OnVideoBufferAvailable(true);
-    proxy_->SetCallback(mockCb_);
-    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(true)).Times(1);
-    proxy_->OnVideoBufferAvailable(true);
-}
-
-/**
  * @tc.name    : OnStateChange_NullCb_001
  * @tc.number  : OnStateChange_NullCb_001
  * @tc.desc    : Test OnStateChange when screenCaptureCb_ is nullptr (null branch)
@@ -184,19 +169,6 @@ HWTEST_F(ScreenCaptureCallbackProxyTest, OnAudioBufferAvailable_BufferInactive_0
     EXPECT_CALL(*mockCb_, OnAudioBufferAvailable(_, _)).Times(0);
     proxy_->SetBufferActive(false);
     proxy_->OnAudioBufferAvailable(true, AudioCaptureSourceType::SOURCE_DEFAULT);
-}
-
-/**
- * @tc.name    : OnVideoBufferAvailable_BufferInactive_001
- * @tc.number  : OnVideoBufferAvailable_BufferInactive_001
- * @tc.desc    : Test OnVideoBufferAvailable when bufferActive_ is false (early return branch)
- */
-HWTEST_F(ScreenCaptureCallbackProxyTest, OnVideoBufferAvailable_BufferInactive_001, TestSize.Level1)
-{
-    proxy_->SetCallback(mockCb_);
-    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(_)).Times(0);
-    proxy_->SetBufferActive(false);
-    proxy_->OnVideoBufferAvailable(true);
 }
 
 /**

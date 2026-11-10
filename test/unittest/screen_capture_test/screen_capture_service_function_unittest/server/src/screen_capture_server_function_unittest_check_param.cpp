@@ -81,6 +81,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_001, TestSize.
     screenCaptureServer_->captureConfig_ = config_;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
     screenCaptureServer_->displayIds_.clear();
+    screenCaptureServer_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
@@ -97,6 +98,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckAllParams_Extended_002, TestSize.
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
     screenCaptureServer_->displayIds_.clear();
     screenCaptureServer_->displayIds_.push_back(99999);
+    screenCaptureServer_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     ASSERT_EQ(screenCaptureServer_->CheckAllParams(), MSERR_OK);
 }
 
@@ -478,7 +480,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_SurfaceNullVa
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.videoFrameWidth = 720;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.videoFrameHeight = 1280;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     screenCaptureServer_->surface_ = nullptr;
     EXPECT_EQ(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_INVALID_VAL);
 }
@@ -496,7 +498,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_BothIgnore_B2
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.videoFrameWidth = 0;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.videoFrameHeight = 0;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
-    screenCaptureServer_->isSurfaceMode_ = false;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     EXPECT_EQ(screenCaptureServer_->CheckCaptureStreamParams(), MSERR_INVALID_VAL);
 }
 
