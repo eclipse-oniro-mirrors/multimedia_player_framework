@@ -1640,9 +1640,6 @@ void ScreenCaptureServer::PostStartScreenCapture(int32_t ret)
             listenerFlags |= LF_WIN_LIFECYCLE | LF_WIN_INFO | LF_RECORD_DISP;
         }
     }
-    if (captureConfig_.strategy.enableHDRCapture && captureConfig_.strategy.enableAEC) {
-        listenerFlags |= LF_THERMAL;
-    }
     auto regRet = listenerManager_->RegisterListeners(listenerFlags,
         {.windowIdList = {interestWindowId_}, .appUserId = appUserId_.load()});
     CHECK_AND_RETURN_LOG(regRet == MSERR_OK, "PostStartScreenCapture RegisterListeners failed");
