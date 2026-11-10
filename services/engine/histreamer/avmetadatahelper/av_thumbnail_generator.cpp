@@ -609,8 +609,8 @@ void AVThumbnailGenerator::OnOutputBufferAvailable(uint32_t index, std::shared_p
         bufferIndex_ = index;
         avBuffer_ = buffer;
     }
-    MEDIA_LOGI("dstTime=%{public}lld|resTime=%{public}lld|avBuffer_resTime=%{public}lld", seekTime_, buffer->pts_,
-        avBuffer_->pts_);
+    MEDIA_LOGI("dstTime=%{public}" PRId64 "|resTime=%{public}" PRId64 "|avBuffer_resTime=%{public}" PRId64,
+        seekTime_, buffer->pts_, avBuffer_->pts_);
     cond_.notify_all();
     PauseFetchFrame();
 }
@@ -1170,11 +1170,13 @@ int32_t AVThumbnailGenerator::CalculateTotalBytesOfAVSharedMemory(size_t baseSiz
         MEDIA_LOGE("width * height overflow: width=%{public}d|height=%{public}d", width, height);
         return MSERR_INVALID_VAL;
     }
-    
-    if (pixelCount > static_cast<int32_t>(INT32_MAX / bytesPerPixel)) {
-        MEDIA_LOGE("yPlaneSize * bytesPerPixel overflow: pixelCount=%{public}d", pixelCount);
-        return MSERR_INVALID_VAL;
-    }
+
+    const size_t MAX_INT32_AS_SIZE = static_cast<size_t>(INT32_MAX);
+        if (pixelCount > MAX_INT32_AS_SIZE / bytesPerPixel) {
+            MEDIA_LOGE("yPlaneSize * bytesPerPixel overflow: pixelCount=%{public}zu", pixelCount);
+            return MSERR_INVALID_VAL;
+        }       
+
     int32_t bytesOfTotalPixel = static_cast<int32_t>(pixelCount * bytesPerPixel);
     
     int32_t totalBytes = 0;
