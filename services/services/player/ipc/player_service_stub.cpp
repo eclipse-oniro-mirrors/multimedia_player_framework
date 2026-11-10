@@ -2294,11 +2294,12 @@ int32_t PlayerServiceStub::AddAdsMediaSource(MessageParcel &data, MessageParcel 
         return ret;
     }
 
-    if (mimeType == AVMimeType::APPLICATION_M3U8 && fd != -1) {
-        (void)::close(fd);
-    }
+    ON_SCOPE_EXIT(fdGuard) {
+        FdUtils::CloseFdSafely(fd);
+        CHECK_AND_RETURN_NOLOG(mediaSource != nullptr && mediaSource->IsFileDescriptorSet());
+        FdsanFd fdsanFd(mediaSource->GetFileDescriptor().fd);
+    };
 
-    // Stub-layer URL security check: reject file/fd URLs (aligned with SetMediaSource stub guard)
     ret = ValidateMediaSourceUrl(mediaSource, mimeType, fd);
     if (ret != MSERR_OK) {
         MEDIA_LOGE("AddAdsMediaSource rejected: file/fd URL not allowed");

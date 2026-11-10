@@ -223,6 +223,7 @@ protected:
     std::string lastErrMsg_;
     std::unique_ptr<UriHelper> uriHelper_ = nullptr;
     std::vector<std::shared_ptr<UriHelper>> subUriHelpers_;
+    std::vector<std::shared_ptr<UriHelper>> adsUriHelpers_;
     std::mutex mutex_;
     std::mutex mutexCb_;
     std::atomic<PlayerStates> lastOpStatus_ = PLAYER_IDLE;

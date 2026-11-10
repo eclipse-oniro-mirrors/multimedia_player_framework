@@ -924,6 +924,10 @@ int32_t PlayerServer::HandleReset()
         decltype(subUriHelpers_) temp;
         temp.swap(subUriHelpers_);
     }
+    {
+        decltype(adsUriHelpers_) temp;
+        temp.swap(adsUriHelpers_);
+    }
     lastErrMsg_.clear();
     errorCbOnce_ = false;
     disableNextSeekDone_ = false;
@@ -2903,6 +2907,15 @@ int32_t PlayerServer::AddAdsMediaSource(const std::shared_ptr<AVMediaSource> &me
 {
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "playerEngine_ is nullptr");
+
+    if (mediaSource->IsFileDescriptorSet()) {
+        const auto &fdesc = mediaSource->GetFileDescriptor();
+        auto uriHelper = std::make_shared<UriHelper>(fdesc.fd, fdesc.offset, fdesc.size);
+        CHECK_AND_RETURN_RET_LOG(uriHelper->AccessCheck(UriHelper::URI_READ), MSERR_INVALID_VAL, "Failed to read fd.");
+        mediaSource->url = uriHelper->FormattedUri();
+        adsUriHelpers_.emplace_back(uriHelper);
+    }
+
     MEDIA_LOGI("PlayerServer AddAdsMediaSource in, startMs: %{public}" PRId64, startMs);
     return playerEngine_->AddAdsMediaSource(mediaSource, startMs, outId);
 }
