@@ -195,6 +195,14 @@ public:
     {
         return enable_;
     }
+    void SetTransparentVideoLayoutMode(int32_t mode)
+    {
+        transparentVideoLayoutMode_ = mode;
+    }
+    int32_t GetTransparentVideoLayoutMode() const
+    {
+        return transparentVideoLayoutMode_;
+    }
 
     const std::vector<AVPlayMediaStream>& GetAVPlayMediaStreamList()
     {
@@ -259,6 +267,7 @@ public:
     std::string url {};
     std::string mimeType_ {};
     bool enable_ {false};
+    int32_t transparentVideoLayoutMode_ {-1};
     std::map<std::string, std::string> header;
     std::shared_ptr<LoaderCallback> mediaSourceLoaderCb_ {nullptr};
     std::shared_ptr<Plugins::IMediaSourceLoader> sourceLoader_ {nullptr};

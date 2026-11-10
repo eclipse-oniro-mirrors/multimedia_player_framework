@@ -47,6 +47,7 @@ public:
     void SetRetrieveKey(::taihe::string_view key);
     void SetTrackSelectionFilter(::ohos::multimedia::media::TrackSelectionFilter filter);
     optional<::ohos::multimedia::media::TrackSelectionFilter> GetTrackSelectionFilter();
+    void SetTransparentVideoLayoutMode(::ohos::multimedia::media::SideBySideTransparentVideoLayoutMode mode);
 private:
     static optional<::ohos::multimedia::media::MediaSource> CreateMediaSourceWithUrl(string_view url,
         optional_view<map<string, string>> headers);

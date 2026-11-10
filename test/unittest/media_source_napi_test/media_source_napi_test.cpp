@@ -123,5 +123,57 @@ HWTEST_F(MediaSourceNapiTest, DirectoryPath_SetGet_RoundTrip, TestSize.Level0)
     EXPECT_EQ(mediaSource_->GetDirectoryPath(), "/data/cache/test");
 }
 
+HWTEST_F(MediaSourceNapiTest, TransparentVideoLayoutMode_Default_001, TestSize.Level0)
+{
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    EXPECT_EQ(mediaSource_->GetTransparentVideoLayoutMode(), -1);
+}
+ 
+HWTEST_F(MediaSourceNapiTest, TransparentVideoLayoutMode_SetHorizontal_001, TestSize.Level0)
+{
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    mediaSource_->SetTransparentVideoLayoutMode(
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_HORIZONTAL));
+    EXPECT_EQ(mediaSource_->GetTransparentVideoLayoutMode(),
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_HORIZONTAL));
+}
+ 
+HWTEST_F(MediaSourceNapiTest, TransparentVideoLayoutMode_SetVertical_001, TestSize.Level0)
+{
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    mediaSource_->SetTransparentVideoLayoutMode(
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_VERTICAL));
+    EXPECT_EQ(mediaSource_->GetTransparentVideoLayoutMode(),
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_VERTICAL));
+}
+ 
+HWTEST_F(MediaSourceNapiTest, TransparentVideoLayoutMode_SetHorizontalReverse_001, TestSize.Level0)
+{
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    mediaSource_->SetTransparentVideoLayoutMode(
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_HORIZONTAL_REVERSE));
+    EXPECT_EQ(mediaSource_->GetTransparentVideoLayoutMode(),
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_HORIZONTAL_REVERSE));
+}
+ 
+HWTEST_F(MediaSourceNapiTest, TransparentVideoLayoutMode_SetVerticalReverse_001, TestSize.Level0)
+{
+    mediaSource_ =
+        std::make_shared<AVMediaSource>("http://example.com/test.mp4", std::map<std::string, std::string>{});
+    ASSERT_NE(mediaSource_, nullptr);
+    mediaSource_->SetTransparentVideoLayoutMode(
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_VERTICAL_REVERSE));
+    EXPECT_EQ(mediaSource_->GetTransparentVideoLayoutMode(),
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_VERTICAL_REVERSE));
+}
+
 } // namespace Media
 } // namespace OHOS

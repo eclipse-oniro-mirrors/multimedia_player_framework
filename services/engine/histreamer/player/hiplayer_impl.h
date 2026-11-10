@@ -401,6 +401,8 @@ private:
     bool IsNeedAudioSinkChangeTrack(std::shared_ptr<Meta> preMeta, std::shared_ptr<Meta> meta);
     bool HandleAudioDecoderChangeEvent(const Event& event);
     bool HandleAudioTrackChangeReportEvent(const Event& event);
+    int32_t SetTransparentVideoLayoutMode();
+    void DoReportTrans(int32_t ret);
 
     bool isNetWorkPlay_ = false;
     bool isDump_ = false;
@@ -589,6 +591,9 @@ private:
     bool isReInitPostProcessor_ = false;
     bool isVideoDecoderInited_ = false;
     bool enable_ = false;
+    int32_t transparentVideoLayoutMode_ {-1};
+    bool transparentVideoLayoutModeSet_ {false};
+    bool transparentVideoPlayReported_ {false};
     AVPlayTrackSelectionFilter trackSelectionFilter_;
     std::atomic<bool> hasTrackSelectionFilter_ {false};
     PlayerDfxSourceType sourceType_ = PlayerDfxSourceType::DFX_SOURCE_TYPE_UNKNOWN;

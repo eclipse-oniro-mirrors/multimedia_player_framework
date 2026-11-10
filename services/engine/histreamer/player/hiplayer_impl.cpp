@@ -15,6 +15,7 @@
 
 
 #include "player.h"
+#include "transparent_video_layout_mode.h"
 #define HST_LOG_TAG "HiPlayer"
 
 #include "hiplayer_impl.h"
@@ -66,6 +67,7 @@ constexpr int32_t NOTIFY_BUFFERING_END_PARAM = 0;
 constexpr int64_t FIRST_FRAME_FRAME_REPORT_DELAY_MS = 50;
 constexpr double PAUSE_LONG_TIME_FACTOR = 5;
 constexpr int64_t DEMUXER_INIT_WARNING_MS = 50;
+constexpr int32_t MAX_TRANS_LAYOUT_MODE = 3;
 static const std::unordered_set<OHOS::AudioStandard::StreamUsage> FOCUS_EVENT_USAGE_SET = {
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN,
     OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MEDIA,
@@ -577,6 +579,7 @@ bool HiPlayerImpl::ValidateAndInitMediaSource(const std::shared_ptr<AVMediaSourc
         return false;
     }
     enable_ = mediaSource->GetenableOfflineCache();
+    transparentVideoLayoutMode_ = mediaSource->GetTransparentVideoLayoutMode();
     header_ = mediaSource->header;
     playMediaStreamVec_ = mediaSource->GetAVPlayMediaStreamList();
     url_ = playMediaStreamVec_.empty() ? mediaSource->url : playMediaStreamVec_[0].url;
@@ -1095,16 +1098,31 @@ int32_t HiPlayerImpl::Play()
         }
     }
     StartFlvCheckLiveDelayTime();
+    DoReportTrans(ret);
+    return ret;
+}
+
+void HiPlayerImpl::DoReportTrans(int32_t ret)
+{
     if (ret == MSERR_OK) {
         if (!isInitialPlay_) {
             OnStateChanged(PlayerStateId::PLAYING);
         } else {
-            MEDIA_LOG_D_SHORT("InitialPlay, pending to change state of playing");
+            MEDIA_LOG_I("InitialPlay, pending to change state of playing");
         }
     } else {
         CollectionErrorInfo(ret, "Play failed");
     }
-    return ret;
+    if (ret == MSERR_OK && transparentVideoLayoutModeSet_ && !transparentVideoPlayReported_) {
+        transparentVideoPlayReported_ = true;
+        nlohmann::json layoutModeInfo;
+        layoutModeInfo["transparentVideoLayoutMode"] = transparentVideoLayoutMode_;
+        std::string events = layoutModeInfo.dump();
+        std::string instanceIdStr = std::to_string(instanceId_);
+        OHOS::Media::MediaEvent event;
+        event.MediaKitStatistics("AVPlayer", bundleName_, instanceIdStr,
+            "avplayer play with transparentVideo", events);
+    }
 }
 
 void HiPlayerImpl::DoPausedPlay(int32_t &ret)
@@ -4687,8 +4705,8 @@ int32_t HiPlayerImpl::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     subtitleLanguage_ = playbackStrategy.preferredSubtitleLanguage;
     videoPostProcessorType_ = playbackStrategy.enableSuperResolution ? VideoPostProcessorType::SUPER_RESOLUTION
                                 : VideoPostProcessorType::NONE;
-    enableCameraPostprocessing_ = playbackStrategy.enableCameraPostprocessing;
-    isPostProcessorOn_ = playbackStrategy.enableSuperResolution;
+    enableCameraPostprocessing_ = transparentVideoLayoutModeSet_ ? false : playbackStrategy.enableCameraPostprocessing;
+    isPostProcessorOn_ = transparentVideoLayoutModeSet_ ? false : playbackStrategy.enableSuperResolution;
     keepDecodingOnMute_ = playbackStrategy.keepDecodingOnMute;
 
     SetFlvLiveParams(playbackStrategy);
@@ -4722,6 +4740,7 @@ int32_t HiPlayerImpl::SetTrackSelectionFilter(AVPlayTrackSelectionFilter avTrack
 
 int32_t HiPlayerImpl::SetSuperResolution(bool enabled)
 {
+    FALSE_RETURN_V(!transparentVideoLayoutModeSet_, TransStatus(Status::ERROR_INVALID_OPERATION));
     FALSE_RETURN_V(videoPostProcessorType_ == VideoPostProcessorType::SUPER_RESOLUTION,
         MSERR_SUPER_RESOLUTION_NOT_ENABLED);
     isPostProcessorOn_ = enabled;
@@ -5219,6 +5238,7 @@ Status HiPlayerImpl::InitVideoDecoder()
     FALSE_RETURN_V(videoDecoder_ != nullptr, Status::ERROR_NULL_POINTER);
     videoDecoder_->Init(playerEventReceiver_, playerFilterCallback_);
     videoDecoder_->SetIsSwDecoder(isNeedSwDecoder_);
+    SetTransparentVideoLayoutMode();
     SetPostProcessor();
     interruptMonitor_->RegisterListener(videoDecoder_);
     videoDecoder_->SetSyncCenter(syncManager_);
@@ -5364,6 +5384,7 @@ int32_t HiPlayerImpl::SetVideoOutput(sptr<Surface> surface)
 {
     MEDIA_LOG_I("SetVideoOutput in");
 #ifdef SUPPORT_VIDEO
+    FALSE_RETURN_V(!transparentVideoLayoutModeSet_, TransStatus(Status::ERROR_INVALID_OPERATION));
     FALSE_RETURN_V_MSG_E(surface != nullptr, (int32_t)(Status::ERROR_INVALID_PARAMETER),
         "Set video output surface failed, surface == nullptr");
     sideOutputSurface_ = surface;
@@ -5374,6 +5395,21 @@ int32_t HiPlayerImpl::SetVideoOutput(sptr<Surface> surface)
         videoDecoder_->SetVideoOutput(surface);
     }
 #endif
+    return TransStatus(Status::OK);
+}
+
+int32_t HiPlayerImpl::SetTransparentVideoLayoutMode()
+{
+    FALSE_RETURN_V_MSG_E(videoDecoder_ != nullptr, MSERR_INVALID_OPERATION, "videoDecoder_ is nullptr");
+    if (transparentVideoLayoutMode_ >= 0 && transparentVideoLayoutMode_ <= MAX_TRANS_LAYOUT_MODE) {
+        videoPostProcessorType_ = VideoPostProcessorType::ALPHA_VIDEO;
+        isPostProcessorOn_ = true;
+        videoDecoder_->SetPostProcessorOn(isPostProcessorOn_);
+        videoDecoder_->SetPostProcessorType(videoPostProcessorType_);
+        videoDecoder_->SetTransparentVideoLayoutMode(transparentVideoLayoutMode_);
+        transparentVideoLayoutModeSet_ = true;
+    }
+ 
     return TransStatus(Status::OK);
 }
 

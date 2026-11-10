@@ -1052,6 +1052,7 @@ std::shared_ptr<AVMediaSource> AVPlayerImpl::GetAVMediaSource(ohos::multimedia::
     if (!srcTmp->retrieveKey.empty()) {
         mediaSource->SetRetrieveKey(srcTmp->retrieveKey);
     }
+    mediaSource->SetTransparentVideoLayoutMode(srcTmp->GetTransparentVideoLayoutMode());
     mediaSource->mediaSourceLoaderCb_ = MediaSourceImpl::GetSourceLoader(src);
     if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
         MEDIA_LOGI("mediaSourceLoaderCb_ nullptr");
