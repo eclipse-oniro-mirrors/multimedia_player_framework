@@ -13,7 +13,6 @@
  * limitations under the License.
  */
 
-
 #include "avplayer_napi.h"
 #include <algorithm>
 #include "avplayer_callback.h"
