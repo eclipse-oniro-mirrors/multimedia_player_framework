@@ -88,7 +88,7 @@ class VirtualScreen {
 public:
     explicit VirtualScreen(const Rosen::VirtualScreenOption &option)
     {
-        screenId_ = Rosen::ScreenManager::GetInstance().CreateVirtualScreen(option, error_);
+        screenId_ = Rosen::ScreenManager::GetInstance().CreateVirtualScreen(option, &error_);
     }
     explicit VirtualScreen(Rosen::ScreenId id) : screenId_(id) {}
 
