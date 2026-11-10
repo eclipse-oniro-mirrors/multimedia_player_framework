@@ -1167,11 +1167,13 @@ int32_t AVThumbnailGenerator::CalculateTotalBytesOfAVSharedMemory(size_t baseSiz
         MEDIA_LOGE("width * height overflow: width=%{public}d|height=%{public}d", width, height);
         return MSERR_INVALID_VAL;
     }
-    
-    if (static_cast<float>(pixelCount) > static_cast<float>(INT32_MAX) / bytesPerPixel) {
-        MEDIA_LOGE("yPlaneSize * bytesPerPixel overflow: pixelCount=%{public}d", pixelCount);
-        return MSERR_INVALID_VAL;
-    }
+
+    const size_t MAX_INT32_AS_SIZE = static_cast<size_t>(INT32_MAX);
+        if (pixelCount > MAX_INT32_AS_SIZE / bytesPerPixel) {
+            MEDIA_LOGE("yPlaneSize * bytesPerPixel overflow: pixelCount=%{public}zu", pixelCount);
+            return MSERR_INVALID_VAL;
+        }       
+
     int32_t bytesOfTotalPixel = static_cast<int32_t>(pixelCount * bytesPerPixel);
     
     int32_t totalBytes = 0;
