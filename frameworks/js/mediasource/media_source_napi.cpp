@@ -25,6 +25,7 @@ namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_PLAYER, "MediaSourceNapi"};
 constexpr uint32_t MAX_MEDIA_STREAM_ARRAY_LENGTH = 10;
 constexpr int32_t ERR_MEDIA_DIRECTORY_NOT_ACCESSIBLE = 5411007;
+constexpr int32_t MAX_TRANS_LAYOUT_MODE = 3;
 
 napi_value ThrowAndReturnUndefined(napi_env env, int32_t code, const std::string &msg)
 {
@@ -70,6 +71,7 @@ napi_value MediaSourceNapi::Init(napi_env env, napi_value exports)
         DECLARE_NAPI_FUNCTION("setMimeType", JsSetMimeType),
         DECLARE_NAPI_FUNCTION("setMediaResourceLoaderDelegate", JsSetMediaResourceLoaderDelegate),
         DECLARE_NAPI_FUNCTION("enableOfflineCache", JsEnableOfflineCache),
+        DECLARE_NAPI_FUNCTION("setTransparentVideoLayoutMode", JsSetTransparentVideoLayoutMode),
         DECLARE_NAPI_FUNCTION("getID", JsGetID),
         DECLARE_NAPI_FUNCTION("setRetrieveKey", JsSetRetrieveKey),
         DECLARE_NAPI_FUNCTION("setTrackSelectionFilter", JsSetTrackSelectionFilter),
@@ -452,6 +454,36 @@ napi_value MediaSourceNapi::JsEnableOfflineCache(napi_env env, napi_callback_inf
  
     mediaSource->enableOfflineCache(enable);
 
+    return undefinedResult;
+}
+
+napi_value MediaSourceNapi::JsSetTransparentVideoLayoutMode(napi_env env, napi_callback_info info)
+{
+    napi_value undefinedResult = nullptr;
+    napi_get_undefined(env, &undefinedResult);
+    MEDIA_LOGI("JsSetTransparentVideoLayoutMode In");
+ 
+    napi_value args[1] = { nullptr };
+    size_t argCount = 1;
+ 
+    napi_value jsThis = nullptr;
+    napi_status status = napi_get_cb_info(env, info, &argCount, args, &jsThis, nullptr);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && jsThis != nullptr, nullptr, "failed to napi_get_cb_info");
+ 
+    int32_t mode = 0;
+    status = napi_get_value_int32(env, args[0], &mode);
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok, undefinedResult, "napi_get_value_int32 failed");
+    CHECK_AND_RETURN_RET_LOG(mode >= 0 && mode <= MAX_TRANS_LAYOUT_MODE,
+        undefinedResult, "invalid parameters, please check layout mode");
+ 
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(env, jsThis);
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return undefinedResult;
+    }
+ 
+    mediaSource->SetTransparentVideoLayoutMode(mode);
+ 
     return undefinedResult;
 }
 

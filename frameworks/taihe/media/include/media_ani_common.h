@@ -57,6 +57,16 @@ public:
         return mimeType_;
     }
 
+    void SetTransparentVideoLayoutMode(int32_t mode)
+    {
+        transparentVideoLayoutMode_ = mode;
+    }
+ 
+    int32_t GetTransparentVideoLayoutMode() const
+    {
+        return transparentVideoLayoutMode_;
+    }
+
     void AddAVPlayMediaStreamTmp(const AVPlayMediaStreamTmp& avPlayMediaStreamTmp)
     {
         mediaStreamVec_.push_back(avPlayMediaStreamTmp);
@@ -97,6 +107,7 @@ public:
     std::string url {};
     std::string mimeType_ {};
     std::string id_ {};
+    int32_t transparentVideoLayoutMode_ {-1};
     ::ohos::multimedia::media::AVFileDescriptor fd {};
     DataSrcDescriptor dataSrc {};
     std::string directoryPath {};

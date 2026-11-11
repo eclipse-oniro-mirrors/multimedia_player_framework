@@ -1440,6 +1440,7 @@ interface MediaSource {
     SetRetrieveKey(key: String): void;
     SetTrackSelectionFilter(filter: TrackSelectionFilter): void;
     GetTrackSelectionFilter(): Optional<TrackSelectionFilter>;
+    SetTransparentVideoLayoutMode(mode: SideBySideTransparentVideoLayoutMode): void;
 }
 
 enum AVDownloadTaskState: i32 {
@@ -1450,6 +1451,13 @@ enum AVDownloadTaskState: i32 {
     PAUSED = 4,
     REMOVING = 5,
     ERROR = 6
+}
+
+enum SideBySideTransparentVideoLayoutMode : i32 {
+    SIDE_BY_SIDE_LAYOUT_HORIZONTAL = 0,
+    SIDE_BY_SIDE_LAYOUT_VERTICAL = 1,
+    SIDE_BY_SIDE_LAYOUT_HORIZONTAL_REVERSE = 2,
+    SIDE_BY_SIDE_LAYOUT_VERTICAL_REVERSE = 3,
 }
 
 function CreateAVDownloaderManagerSync(): Optional<AVDownloaderManager>;

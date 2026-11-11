@@ -2659,6 +2659,7 @@ std::shared_ptr<AVMediaSource> AVPlayerNapi::GetAVMediaSource(napi_env env, napi
     if (!srcTmp->retrieveKey.empty()) {
         mediaSource->SetRetrieveKey(srcTmp->retrieveKey);
     }
+    mediaSource->SetTransparentVideoLayoutMode(srcTmp->GetTransparentVideoLayoutMode());
     mediaSource->mediaSourceLoaderCb_ = MediaSourceNapi::GetSourceLoader(env, value);
     if (mediaSource->mediaSourceLoaderCb_ == nullptr) {
         MEDIA_LOGI("mediaSourceLoaderCb_ nullptr");

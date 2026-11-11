@@ -17,6 +17,7 @@
 #include "hiplayer_impl_unit_test.h"
 #include "pipeline/pipeline.h"
 #include "player.h"
+#include "transparent_video_layout_mode.h"
 
 namespace OHOS {
 namespace Media {
@@ -2158,6 +2159,114 @@ HWTEST_F(HiplayerImplUnitTest, HandleAudioTrackChangeReportEvent_005, TestSize.L
     hiplayer_->demuxer_->demuxer_->mediaMetaData_.trackMetas.push_back(meta2);
     bool ret = hiplayer_->HandleAudioTrackChangeReportEvent({"hiplayer", EventType::EVENT_AUDIO_TRACK_CHANGE_REPORT, 1});
     EXPECT_EQ(ret, false);
+}
+
+/**
+* @tc.name    : Test SetTransparentVideoLayoutMode with HORIZONTAL mode
+* @tc.number  : SetTransparentVideoLayoutMode_002
+* @tc.desc    : transparentVideoLayoutMode_ = 0, should set post processor to ALPHA_VIDEO
+ 
+*/
+HWTEST_F(HiplayerImplUnitTest, SetTransparentVideoLayoutMode_002, TestSize.Level0)
+{
+    hiplayer_->transparentVideoLayoutMode_ =
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_HORIZONTAL);
+    hiplayer_->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+    // 预置为非 if 分支应设置的值，验证 if 分支确实改写了状态
+    hiplayer_->videoPostProcessorType_ = VideoPostProcessorType::NONE;
+    hiplayer_->isPostProcessorOn_ = false;
+    hiplayer_->transparentVideoLayoutModeSet_ = false;
+    int32_t ret = hiplayer_->SetTransparentVideoLayoutMode();
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::ALPHA_VIDEO);
+    EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
+    EXPECT_EQ(hiplayer_->transparentVideoLayoutModeSet_, true);
+}
+ 
+/**
+* @tc.name    : Test SetTransparentVideoLayoutMode with VERTICAL mode
+* @tc.number  : SetTransparentVideoLayoutMode_003
+* @tc.desc    : transparentVideoLayoutMode_ = 1, should set post processor to ALPHA_VIDEO
+*/
+HWTEST_F(HiplayerImplUnitTest, SetTransparentVideoLayoutMode_003, TestSize.Level0)
+{
+    hiplayer_->transparentVideoLayoutMode_ =
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_VERTICAL);
+    hiplayer_->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+    hiplayer_->videoPostProcessorType_ = VideoPostProcessorType::NONE;
+    hiplayer_->isPostProcessorOn_ = false;
+    hiplayer_->transparentVideoLayoutModeSet_ = false;
+    int32_t ret = hiplayer_->SetTransparentVideoLayoutMode();
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::ALPHA_VIDEO);
+    EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
+    EXPECT_EQ(hiplayer_->transparentVideoLayoutModeSet_, true);
+}
+ 
+/**
+* @tc.name    : Test SetTransparentVideoLayoutMode with HORIZONTAL_REVERSE mode
+* @tc.number  : SetTransparentVideoLayoutMode_004
+* @tc.desc    : transparentVideoLayoutMode_ = 2, should set post processor to ALPHA_VIDEO
+*/
+HWTEST_F(HiplayerImplUnitTest, SetTransparentVideoLayoutMode_004, TestSize.Level0)
+{
+    hiplayer_->transparentVideoLayoutMode_ =
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_HORIZONTAL_REVERSE);
+    hiplayer_->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+    hiplayer_->videoPostProcessorType_ = VideoPostProcessorType::NONE;
+    hiplayer_->isPostProcessorOn_ = false;
+    hiplayer_->transparentVideoLayoutModeSet_ = false;
+    int32_t ret = hiplayer_->SetTransparentVideoLayoutMode();
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::ALPHA_VIDEO);
+    EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
+    EXPECT_EQ(hiplayer_->transparentVideoLayoutModeSet_, true);
+}
+ 
+/**
+* @tc.name    : Test SetTransparentVideoLayoutMode with VERTICAL_REVERSE mode
+* @tc.number  : SetTransparentVideoLayoutMode_005
+* @tc.desc    : transparentVideoLayoutMode_ = 3, should set post processor to ALPHA_VIDEO
+*/
+HWTEST_F(HiplayerImplUnitTest, SetTransparentVideoLayoutMode_005, TestSize.Level0)
+{
+    hiplayer_->transparentVideoLayoutMode_ =
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_VERTICAL_REVERSE);
+    hiplayer_->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+    hiplayer_->videoPostProcessorType_ = VideoPostProcessorType::NONE;
+    hiplayer_->isPostProcessorOn_ = false;
+    hiplayer_->transparentVideoLayoutModeSet_ = false;
+    int32_t ret = hiplayer_->SetTransparentVideoLayoutMode();
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::ALPHA_VIDEO);
+    EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
+    EXPECT_EQ(hiplayer_->transparentVideoLayoutModeSet_, true);
+}
+ 
+/**
+* @tc.name    : Test SetTransparentVideoLayoutMode with invalid negative value
+* @tc.number  : SetTransparentVideoLayoutMode_006
+* @tc.desc    : transparentVideoLayoutMode_ = -2, should hit default branch and do nothing
+*/
+HWTEST_F(HiplayerImplUnitTest, SetTransparentVideoLayoutMode_006, TestSize.Level0)
+{
+    hiplayer_->transparentVideoLayoutMode_ = -2;
+    hiplayer_->videoDecoder_ = FilterFactory::Instance().CreateFilter<DecoderSurfaceFilter>("player.videodecoder",
+        FilterType::FILTERTYPE_VDEC);
+    // 反向预置为 if 分支应设置的值，default 分支必须保持不变
+    hiplayer_->videoPostProcessorType_ = VideoPostProcessorType::ALPHA_VIDEO;
+    hiplayer_->isPostProcessorOn_ = true;
+    hiplayer_->transparentVideoLayoutModeSet_ = true;
+    int32_t ret = hiplayer_->SetTransparentVideoLayoutMode();
+    EXPECT_EQ(ret, MSERR_OK);
+    // default 分支不得修改任何副作用状态
+    EXPECT_EQ(hiplayer_->videoPostProcessorType_, VideoPostProcessorType::ALPHA_VIDEO);
+    EXPECT_EQ(hiplayer_->isPostProcessorOn_, true);
+    EXPECT_EQ(hiplayer_->transparentVideoLayoutModeSet_, true);
 }
 } // namespace Media
 } // namespace OHOS

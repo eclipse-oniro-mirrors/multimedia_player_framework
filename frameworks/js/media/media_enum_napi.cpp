@@ -19,6 +19,7 @@
 #include "media_log.h"
 #include "media_errors.h"
 #include "player.h"
+#include "transparent_video_layout_mode.h"
 #include "meta/video_types.h"
 #include "meta/media_types.h"
 #include "recorder.h"
@@ -522,6 +523,17 @@ static const std::vector<struct JsEnumInt> g_pickerMode = {
     { "SCREEN_WINDOW_AND_APP", static_cast<int32_t>(PickerMode::SCREEN_WINDOW_AND_APP) },
 };
 
+static const std::vector<struct JsEnumInt> g_sideBySideTransparentVideoLayoutMode = {
+    { "SIDE_BY_SIDE_LAYOUT_HORIZONTAL",
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_HORIZONTAL) },
+    { "SIDE_BY_SIDE_LAYOUT_VERTICAL",
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_VERTICAL) },
+    { "SIDE_BY_SIDE_LAYOUT_HORIZONTAL_REVERSE",
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_HORIZONTAL_REVERSE) },
+    { "SIDE_BY_SIDE_LAYOUT_VERTICAL_REVERSE",
+        static_cast<int32_t>(SideBySideTransparentVideoLayoutMode::SIDE_BY_SIDE_LAYOUT_VERTICAL_REVERSE) },
+};
+
 static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_intEnumClassMap = {
     { "AVErrorCode", g_AVErrorCode},
     { "MediaErrorCode", g_mediaErrorCode },
@@ -568,6 +580,7 @@ static const std::map<std::string_view, const std::vector<struct JsEnumInt>&> g_
     { "PlaylistLoopMode", g_listLoopMode },
     { "PickerMode", g_pickerMode },
     { "PlaybackCommand", g_playbackCommand },
+    { "SideBySideTransparentVideoLayoutMode", g_sideBySideTransparentVideoLayoutMode },
 };
 
 static const std::map<std::string_view, const std::vector<struct JsEnumString>&> g_stringEnumClassMap = {

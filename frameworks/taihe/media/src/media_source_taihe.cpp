@@ -246,6 +246,21 @@ void MediaSourceImpl::SetMimeType(::ohos::multimedia::media::AVMimeTypes mimeTyp
     mediaSource->SetMimeType(mimeTypeStr);
 }
 
+void MediaSourceImpl::SetTransparentVideoLayoutMode(
+    ::ohos::multimedia::media::SideBySideTransparentVideoLayoutMode mode)
+{
+    MEDIA_LOGI("TaiheSetTransparentVideoLayoutMode In");
+    std::shared_ptr<AVMediaSourceTmp> mediaSource = GetMediaSource(this);
+ 
+    if (mediaSource == nullptr) {
+        MEDIA_LOGE("Fail to get mediaSource instance.");
+        return;
+    }
+    int32_t modeValue = static_cast<int32_t>(mode.get_value());
+    
+    mediaSource->SetTransparentVideoLayoutMode(modeValue);
+}
+
 void MediaSourceImpl::SetMediaResourceLoaderDelegate(::ohos::multimedia::media::MediaSourceLoader const& resourceLoader)
 {
     MediaTrace trace("MediaSourceTaihe::SetMediaResourceLoaderDelegate");

@@ -21,6 +21,7 @@
 #include <map>
 #include <memory>
 #include "player.h"
+#include "transparent_video_layout_mode.h"
 
 namespace OHOS {
 namespace Media {

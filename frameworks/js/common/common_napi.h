@@ -452,6 +452,16 @@ public:
         return enable_;
     }
 
+    void SetTransparentVideoLayoutMode(int32_t mode)
+    {
+        transparentVideoLayoutMode_ = mode;
+    }
+ 
+    int32_t GetTransparentVideoLayoutMode() const
+    {
+        return transparentVideoLayoutMode_;
+    }
+
     void SetID(const std::string& id)
     {
         id_ = id;
@@ -483,6 +493,7 @@ public:
     std::string mimeType_ {};
     std::string id_ {};
     bool enable_ {false};
+    int32_t transparentVideoLayoutMode_ {-1};
     AVFileDescriptor fd {};
     AVDataSrcDescriptor dataSrc {};
     std::string directoryPath {};

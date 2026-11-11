@@ -1306,6 +1306,8 @@ int32_t PlayerServiceStub::SetMediaSource(MessageParcel &data, MessageParcel &re
     ReadPlayStrategyFromMessageParcel(data, strategy);
     bool enableOfflineCache = data.ReadBool();
     mediaSource->enableOfflineCache(enableOfflineCache);
+    int32_t transparentVideoLayoutMode = data.ReadInt32();
+    mediaSource->SetTransparentVideoLayoutMode(transparentVideoLayoutMode);
 
     // Stub-layer URL security check after deserialization: reject file/fd URLs (aligned with SetSource stub guard)
     ret = ValidateMediaSourceUrl(mediaSource, mimeType, fd);

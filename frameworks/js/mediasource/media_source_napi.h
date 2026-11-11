@@ -62,6 +62,11 @@ private:
     static napi_value JsEnableOfflineCache(napi_env env, napi_callback_info info);
 
     /**
+     * function setTransparentVideoLayoutMode(mode: SideBySideTransparentVideoLayoutMode): void;
+     */
+    static napi_value JsSetTransparentVideoLayoutMode(napi_env env, napi_callback_info info);
+
+    /**
      * function setMimeType(mimeType: AVMimeType): MediaSource
      */
     static napi_value JsSetMimeType(napi_env env, napi_callback_info info);
