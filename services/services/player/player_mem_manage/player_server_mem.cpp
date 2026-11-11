@@ -359,7 +359,7 @@ int32_t PlayerServerMem::Stop()
     CHECK_AND_RETURN_RET_LOG(RecoverMemByUser() == MSERR_OK, MSERR_INVALID_OPERATION, "Stop:RecoverMemByUser fail");
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
+        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_.load());
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Stop();
@@ -375,7 +375,7 @@ int32_t PlayerServerMem::Reset()
     }
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
+        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_.load());
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Reset();
@@ -391,7 +391,7 @@ int32_t PlayerServerMem::Release()
     }
 
     recoverCond_.wait_for(lock, std::chrono::seconds(WAIT_RECOVER_TIME_SEC), [this] {
-        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_);
+        return isLocalResource_ ? (!isRecoverMemByUser_) : (!isSeekToCurrentTime_.load());
     });
     lastestUserSetTime_ = std::chrono::steady_clock::now();
     return PlayerServer::Release();
@@ -723,7 +723,7 @@ int32_t PlayerServerMem::SeekToCurrentTime(int32_t mSeconds, PlayerSeekMode mode
         MEDIA_LOGI("Interrupted seek action");
         taskMgr_.MarkTaskDone("interrupted seek done");
     });
-    isSeekToCurrentTime_ = true;
+    isSeekToCurrentTime_.store(true);
     int32_t ret = taskMgr_.SeekTask(seekTask, cancelTask, "seek", mode, mSeconds);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Seek failed");
     recoverCond_.notify_all();
@@ -738,10 +738,10 @@ void PlayerServerMem::OnInfo(PlayerOnInfoType type, int32_t extra, const Format 
         PlayerServer::OnInfo(type, extra, infoBody);
         CheckHasRecover(type, extra);
     } else {
-        if (isSeekToCurrentTime_ && type == INFO_TYPE_SEEKDONE) {
+        if (isSeekToCurrentTime_.load() && type == INFO_TYPE_SEEKDONE) {
             MediaTrace::TraceEnd("PlayerServerMem::Seek", FAKE_POINTER(this));
             std::lock_guard<std::mutex> lockCb(PlayerServer::mutexCb_);
-            isSeekToCurrentTime_ = false;
+            isSeekToCurrentTime_.store(false);
             recoverCond_.notify_all();
             PlayerServer::HandleMessage(type, extra, infoBody);
         } else {

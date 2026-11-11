@@ -92,7 +92,6 @@ int32_t __attribute__((no_sanitize("cfi"))) EngineFactoryRepo::LoadLib(const std
 
 int32_t EngineFactoryRepo::LoadHistreamerEngine(const int32_t& appUid)
 {
-    std::unique_lock<std::mutex> lock(mutex_);
     if (histreamerLoad_) {
         MEDIA_LOGD("Histreamer is enabled");
         return MSERR_OK;
@@ -119,6 +118,7 @@ std::shared_ptr<IEngineFactory> EngineFactoryRepo::GetEngineFactory(
     IEngineFactory::Scene scene, const int32_t& appUid, const std::string &uri)
 {
     MEDIA_LOGD("GetEngineFactory entered.");
+    std::unique_lock<std::mutex> lock(mutex_);
     (void)LoadHistreamerEngine(appUid);
 
     if (factorys_.empty()) {

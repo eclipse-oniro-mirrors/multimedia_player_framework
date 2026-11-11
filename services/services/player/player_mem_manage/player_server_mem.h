@@ -165,7 +165,7 @@ private:
     __attribute__((visibility("hidden")))
     int32_t defaultAudioIndex_ = -1;
     __attribute__((visibility("hidden")))
-    bool isSeekToCurrentTime_ = false;
+    std::atomic<bool> isSeekToCurrentTime_ = false;
     __attribute__((visibility("hidden")))
     bool isLocalResource_ = false;
 
