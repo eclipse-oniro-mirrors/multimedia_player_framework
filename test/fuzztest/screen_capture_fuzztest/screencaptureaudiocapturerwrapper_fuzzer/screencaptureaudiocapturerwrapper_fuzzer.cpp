@@ -144,7 +144,7 @@ void ScreenCaptureAudioCapturerWrapperFuzzer::TestCapturerWrapperOperations(
     OHOS::AudioStandard::AppInfo appInfo;
     appInfo.appTokenId = IPCSkeleton::GetCallingTokenID();
     appInfo.appFullTokenId = IPCSkeleton::GetCallingFullTokenID();
-    appInfo.appUid = IPCSkeleton::GetCallingUid();
+    appInfo.appUid = IPCSkeleton::GetCallingAppUid();
     appInfo.appPid = IPCSkeleton::GetCallingPid();
     audioCapturerWrapper->Start(appInfo, static_cast<DataType>(fdp.ConsumeIntegral<int32_t>()),
         fdp.ConsumeIntegral<int32_t>());

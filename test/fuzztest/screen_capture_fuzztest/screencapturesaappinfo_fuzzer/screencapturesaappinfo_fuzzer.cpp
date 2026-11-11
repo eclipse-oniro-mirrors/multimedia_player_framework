@@ -78,7 +78,7 @@ bool ScreenCaptureSaAppInfoFuzzer::FuzzScreenCaptureSaAppInfo(uint8_t *data, siz
     OHOS::AudioStandard::AppInfo appInfo;
     appInfo.appTokenId = IPCSkeleton::GetCallingTokenID();
     appInfo.appFullTokenId = IPCSkeleton::GetCallingFullTokenID();
-    appInfo.appUid = IPCSkeleton::GetCallingUid();
+    appInfo.appUid = IPCSkeleton::GetCallingAppUid();
     appInfo.appPid = fdp.ConsumeIntegral<int32_t>();
 
     bool retFlags = TestScreenCapture::CreateScreenCapture(appInfo);
