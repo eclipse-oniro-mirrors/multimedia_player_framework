@@ -416,34 +416,6 @@ int32_t ScreenCaptureServiceProxy::AcquireAudioBuffer(std::shared_ptr<AudioBuffe
     return ret;
 }
 
-int32_t ScreenCaptureServiceProxy::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                                                      int64_t &timestamp, OHOS::Rect &damage)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
-    int error = Remote()->SendRequest(ACQUIRE_VIDEO_BUF, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-                             "AcquireVideoBuffer failed, error: %{public}d", error);
-    int ret = reply.ReadInt32();
-    if (ret == MSERR_OK) {
-        if (surfaceBuffer != nullptr) {
-            surfaceBuffer->ReadFromMessageParcel(reply);
-        }
-        fence = reply.ReadInt32();
-        timestamp = reply.ReadInt64();
-        damage.x = reply.ReadInt32();
-        damage.y = reply.ReadInt32();
-        damage.w = reply.ReadInt32();
-        damage.h = reply.ReadInt32();
-    }
-    return ret;
-}
-
 int32_t ScreenCaptureServiceProxy::ReleaseAudioBuffer(AudioCaptureSourceType type)
 {
     MessageParcel data;
@@ -459,21 +431,6 @@ int32_t ScreenCaptureServiceProxy::ReleaseAudioBuffer(AudioCaptureSourceType typ
     int error = Remote()->SendRequest(RELEASE_AUDIO_BUF, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
                              "ReleaseAudioBuffer failed, error: %{public}d", error);
-    return reply.ReadInt32();
-}
-
-int32_t ScreenCaptureServiceProxy::ReleaseVideoBuffer()
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-
-    bool token = data.WriteInterfaceToken(ScreenCaptureServiceProxy::GetDescriptor());
-    CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write descriptor!");
-
-    int error = Remote()->SendRequest(RELEASE_VIDEO_BUF, data, reply, option);
-    CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-                             "ReleaseVideoBuffer failed, error: %{public}d", error);
     return reply.ReadInt32();
 }
 

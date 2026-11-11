@@ -13,8 +13,8 @@
 
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
-import(
-    "//foundation/multimedia/player_framework/services/services/media_source/media_source_sources.gni")
+import("//foundation/multimedia/player_framework/services/services/media_source/media_source_sources.gni")
+import("//foundation/multimedia/player_framework/services/services/screen_capture/screen_capture_common.gni")
 
 module_output_path = "player_framework/player_framework/sa_media"
 
@@ -131,8 +131,6 @@ ohos_unittest("sa_media_client_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/services/recorder_profiles/client/recorder_profiles_client.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/client/media_client.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/sa_media/ipc/media_listener_stub.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/client/screen_capture_client.cpp",
-    "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/client/screen_capture_controller_client.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture/ipc/screen_capture_listener_stub.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/client/screen_capture_monitor_client.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/services/screen_capture_monitor/ipc/screen_capture_monitor_listener_stub.cpp",
@@ -141,6 +139,7 @@ ohos_unittest("sa_media_client_unit_test") {
     "media_client_unit_test.cpp",
   ]
   sources += downloaded_cache_loader_sources
+  sources += screen_capture_client_sources
 
   if (player_framework_support_lowpower_av_sink) {
     include_dirs += [

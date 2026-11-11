@@ -76,6 +76,7 @@ private:
     int32_t InitOriginalStream(AVScreenCaptureConfig config);
     int32_t InitCaptureFile(AVScreenCaptureConfig config);
     int32_t SetPrivacyAuthorityEnabledInner();
+    std::shared_ptr<IScreenCaptureService> GetService();
     std::shared_ptr<IScreenCaptureService> screenCaptureService_ = nullptr;
     DataType dataType_ = DataType::INVAILD;
     bool isPrivacyAuthorityEnabled_ = false;

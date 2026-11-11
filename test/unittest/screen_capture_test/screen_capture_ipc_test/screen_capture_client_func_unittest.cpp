@@ -57,11 +57,7 @@ public:
     int32_t SetListenerObject(const sptr<IRemoteObject> &object) override { return MSERR_OK; }
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer,
         AudioCaptureSourceType type) override { return MSERR_OK; }
-    int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer,
-        int32_t &fence,
-        int64_t &timestamp, OHOS::Rect &damage) override { return MSERR_OK; }
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override { return MSERR_OK; }
-    int32_t ReleaseVideoBuffer() override { return MSERR_OK; }
     int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) override { return MSERR_OK; }
     int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override { return MSERR_OK; }
     int32_t RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) override { return MSERR_OK; }
@@ -141,9 +137,9 @@ HWTEST_F(ScreenCaptureClientUnitTest, MockProxy_CaptureMethods_001, TestSize.Lev
     int32_t fence = 0;
     int64_t ts = 0;
     OHOS::Rect damage;
-    EXPECT_EQ(MSERR_OK, client->AcquireVideoBuffer(sb, fence, ts, damage));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, client->AcquireVideoBuffer(sb, fence, ts, damage));
     EXPECT_EQ(MSERR_OK, client->ReleaseAudioBuffer(AudioCaptureSourceType::MIC));
-    EXPECT_EQ(MSERR_OK, client->ReleaseVideoBuffer());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, client->ReleaseVideoBuffer());
     client->Release();
 }
 

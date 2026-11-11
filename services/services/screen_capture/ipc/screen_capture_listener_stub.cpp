@@ -100,11 +100,6 @@ int ScreenCaptureListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &dat
             OnAudioBufferAvailable(isReady, type);
             return MSERR_OK;
         }
-        case ScreenCaptureListenerMsg::ON_VIDEO_AVAILABLE: {
-            bool isReady = data.ReadBool();
-            OnVideoBufferAvailable(isReady);
-            return MSERR_OK;
-        }
         case ScreenCaptureListenerMsg::ON_STAGE_CHANGE: {
             AVScreenCaptureStateCode stateCode = static_cast<AVScreenCaptureStateCode>(data.ReadInt32());
             OnStateChange(stateCode);
@@ -169,18 +164,6 @@ void ScreenCaptureListenerStub::OnAudioBufferAvailable(bool isReady, AudioCaptur
     }
     if (cb != nullptr) {
         cb->OnAudioBufferAvailable(isReady, type);
-    }
-}
-
-void ScreenCaptureListenerStub::OnVideoBufferAvailable(bool isReady)
-{
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        cb = callback_;
-    }
-    if (cb != nullptr) {
-        cb->OnVideoBufferAvailable(isReady);
     }
 }
 

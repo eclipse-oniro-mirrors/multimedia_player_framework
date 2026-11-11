@@ -19,6 +19,7 @@
 #include "i_screen_capture_service.h"
 #include "i_standard_screen_capture_service.h"
 #include "screen_capture_listener_stub.h"
+#include "screen_capture_local_surface.h"
 
 namespace OHOS {
 namespace Media {
@@ -79,6 +80,8 @@ private:
     sptr<IStandardScreenCaptureService> screenCaptureProxy_ = nullptr;
     sptr<ScreenCaptureListenerStub> listenerStub_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> callback_ = nullptr;
+    std::unique_ptr<ScreenCaptureLocalSurface> localSurface_;
+    DataType dataType_ = DataType::ORIGINAL_STREAM;
     std::mutex mutex_;
 };
 } // namespace Media

@@ -22,7 +22,6 @@
 #include "param_wrapper.h"
 #include "pixel_map.h"
 #include "scope_guard.h"
-#include "screen_cap_buffer_consumer_listener.h"
 #include "screen_capture_server_function_unittest.h"
 #include "ui_extension_ability_connection.h"
 #include "uri_helper.h"
@@ -35,55 +34,6 @@ using namespace OHOS::Media;
 
 namespace OHOS {
 namespace Media {
-/**
- * @tc.name: AcquireVideoBuffer_001
- * @tc.desc: isDump_ = false
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
-    screenCaptureServer_->surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(
-        screenCaptureServer_->consumer_, screenCaptureServer_->cbProxy_);
-    sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
-    int32_t fence = 0;
-    int64_t timestamp = 0;
-    OHOS::Rect damage;
-    screenCaptureServer_->isDump_ = false;
-    ASSERT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_UNKNOWN);
-    screenCaptureServer_->ReleaseVideoBuffer();
-}
-
-/**
- * @tc.name: AcquireVideoBuffer_002
- * @tc.desc: isDump_ = true
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_002, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
-    screenCaptureServer_->surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(
-        screenCaptureServer_->consumer_, screenCaptureServer_->cbProxy_);
-    sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
-    int32_t fence = 0;
-    int64_t timestamp = 0;
-    OHOS::Rect damage;
-    screenCaptureServer_->isDump_ = true;
-    ASSERT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage), MSERR_UNKNOWN);
-    screenCaptureServer_->ReleaseVideoBuffer();
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, StartBufferThread_NullParams_001, TestSize.Level2)
-{
-    ScreenCapBufferConsumerListener *surfaceCb = new ScreenCapBufferConsumerListener(nullptr, nullptr);
-    surfaceCb->isSurfaceCbInThreadStopped_ = false;
-    EXPECT_EQ(surfaceCb->StartBufferThread(), MSERR_OK);
-    delete surfaceCb;
-    surfaceCb = nullptr;
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_001, TestSize.Level2)
 {
     screenCaptureServer_->virtualScreen_.reset();
@@ -108,7 +58,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_004, TestSize.Level2)
 {
     screenCaptureServer_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(0);
     screenCaptureServer_->consumer_ = nullptr;
-    screenCaptureServer_->isSurfaceMode_ = false;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
 }
 
@@ -116,15 +66,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_005, TestSize.Level2)
 {
     screenCaptureServer_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(0);
     screenCaptureServer_->consumer_ = nullptr;
-    screenCaptureServer_->isSurfaceMode_ = true;
-    ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_006, TestSize.Level2)
-{
-    screenCaptureServer_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(0);
-    screenCaptureServer_->consumer_ = nullptr;
-    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     ASSERT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
 }
 
@@ -182,64 +124,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseAudioBuffer_UnsupportedType_001
     screenCaptureServer_->micAudioCapture_ = nullptr;
     screenCaptureServer_->innerAudioCapture_ = nullptr;
     EXPECT_EQ(screenCaptureServer_->ReleaseAudioBuffer(AudioCaptureSourceType::SOURCE_INVALID), MSERR_UNKNOWN);
-}
-
-/**
- * @tc.name: AcquireVideoBuffer_NotActive_001
- * @tc.desc: AcquireVideoBuffer rejected when capture is not STARTED/RESUMED (L2870)
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_NotActive_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->surfaceCb_ = nullptr;
-    sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
-    int32_t fence = 0;
-    int64_t timestamp = 0;
-    OHOS::Rect damage;
-    EXPECT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage),
-        MSERR_INVALID_OPERATION);
-}
-
-/**
- * @tc.name: AcquireVideoBuffer_NullSurfaceCb_001
- * @tc.desc: AcquireVideoBuffer returns MSERR_NO_MEMORY when surfaceCb_ is null (L2873)
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, AcquireVideoBuffer_NullSurfaceCb_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->surfaceCb_ = nullptr;
-    sptr<OHOS::SurfaceBuffer> surfaceBuffer = nullptr;
-    int32_t fence = 0;
-    int64_t timestamp = 0;
-    OHOS::Rect damage;
-    EXPECT_EQ(screenCaptureServer_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage),
-        MSERR_NO_MEMORY);
-}
-
-/**
- * @tc.name: ReleaseVideoBuffer_NotActive_001
- * @tc.desc: ReleaseVideoBuffer rejected when capture is not STARTED/RESUMED (L2915)
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseVideoBuffer_NotActive_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
-    screenCaptureServer_->surfaceCb_ = nullptr;
-    EXPECT_EQ(screenCaptureServer_->ReleaseVideoBuffer(), MSERR_INVALID_OPERATION);
-}
-
-/**
- * @tc.name: ReleaseVideoBuffer_NullSurfaceCb_001
- * @tc.desc: ReleaseVideoBuffer returns MSERR_NO_MEMORY when surfaceCb_ is null (L2918)
- * @tc.type: FUNC
- */
-HWTEST_F(ScreenCaptureServerFunctionTest, ReleaseVideoBuffer_NullSurfaceCb_001, TestSize.Level2)
-{
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
-    screenCaptureServer_->surfaceCb_ = nullptr;
-    EXPECT_EQ(screenCaptureServer_->ReleaseVideoBuffer(), MSERR_NO_MEMORY);
 }
 
 /**

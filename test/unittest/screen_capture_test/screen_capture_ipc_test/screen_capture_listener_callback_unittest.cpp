@@ -29,7 +29,6 @@ class MockScreenCaptureListener : public IStandardScreenCaptureListener {
 public:
     MOCK_METHOD(void, OnError, (ScreenCaptureErrorType errorType, int32_t errorCode), (override));
     MOCK_METHOD(void, OnAudioBufferAvailable, (bool isReady, AudioCaptureSourceType type), (override));
-    MOCK_METHOD(void, OnVideoBufferAvailable, (bool isReady), (override));
     MOCK_METHOD(void, OnStateChange, (AVScreenCaptureStateCode stateCode), (override));
     MOCK_METHOD(void, OnDisplaySelected, (uint64_t displayId), (override));
     MOCK_METHOD(void, OnCaptureContentChanged, (AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area),
@@ -108,28 +107,6 @@ HWTEST_F(ScreenCaptureListenerCallbackTest, OnAudioBufferAvailable_ValidListener
 {
     EXPECT_CALL(*mockListener_, OnAudioBufferAvailable(true, AudioCaptureSourceType::SOURCE_DEFAULT)).Times(1);
     validCb_->OnAudioBufferAvailable(true, AudioCaptureSourceType::SOURCE_DEFAULT);
-    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockListener_.GetRefPtr()));
-}
-
-/**
- * @tc.name    : OnVideoBufferAvailable_NullListener_001
- * @tc.desc    : OnVideoBufferAvailable with null listener should not forward
- */
-HWTEST_F(ScreenCaptureListenerCallbackTest, OnVideoBufferAvailable_NullListener_001, TestSize.Level1)
-{
-    EXPECT_CALL(*mockListener_, OnVideoBufferAvailable(_)).Times(0);
-    nullCb_->OnVideoBufferAvailable(true);
-    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockListener_.GetRefPtr()));
-}
-
-/**
- * @tc.name    : OnVideoBufferAvailable_ValidListener_001
- * @tc.desc    : OnVideoBufferAvailable with valid listener should forward with correct args
- */
-HWTEST_F(ScreenCaptureListenerCallbackTest, OnVideoBufferAvailable_ValidListener_001, TestSize.Level1)
-{
-    EXPECT_CALL(*mockListener_, OnVideoBufferAvailable(true)).Times(1);
-    validCb_->OnVideoBufferAvailable(true);
     ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockListener_.GetRefPtr()));
 }
 

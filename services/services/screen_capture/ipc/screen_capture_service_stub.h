@@ -55,10 +55,7 @@ public:
     int32_t StopScreenCapture() override;
     int32_t PresentPicker() override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
-    int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                               int64_t &timestamp, OHOS::Rect &damage) override;
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override;
-    int32_t ReleaseVideoBuffer() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
     int32_t SetCanvasRotation(bool canvasRotation) override;
     int32_t SetContentAutoRotation(bool contentAutoRotation) override;
@@ -104,9 +101,7 @@ private:
     int32_t PresentPicker(MessageParcel &data, MessageParcel &reply);
     int32_t SetListenerObject(MessageParcel &data, MessageParcel &reply);
     int32_t AcquireAudioBuffer(MessageParcel &data, MessageParcel &reply);
-    int32_t AcquireVideoBuffer(MessageParcel &data, MessageParcel &reply);
     int32_t ReleaseAudioBuffer(MessageParcel &data, MessageParcel &reply);
-    int32_t ReleaseVideoBuffer(MessageParcel &data, MessageParcel &reply);
     int32_t SetMicrophoneEnabled(MessageParcel &data, MessageParcel &reply);
     int32_t SetCanvasRotation(MessageParcel &data, MessageParcel &reply);
     int32_t SetContentAutoRotation(MessageParcel &data, MessageParcel &reply);

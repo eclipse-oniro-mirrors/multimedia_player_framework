@@ -20,7 +20,6 @@
 #include "audio_data_source_generic.h"
 #include "fdsan_fd.h"
 #include "i_screen_capture_service.h"
-#include "screen_cap_buffer_consumer_listener.h"
 #include "screen_capture.h"
 #include "screen_capture_callback_proxy.h"
 #include "screen_capture_listener_manager.h"
@@ -255,8 +254,6 @@ private:
         const ScreenCaptureContentFilter &filter, AudioCaptureSourceType sourceType, bool isVoip);
     int32_t StartInnerAudioCapture();
     int32_t StartMicAudioCapture(bool isVoip);
-    int32_t StartStreamVideoCapture();
-    int32_t StartStreamHomeVideoCapture();
     int32_t StopScreenCaptureInner(AVScreenCaptureStateCode stateCode);
     int32_t StopAudioAndVideoCapture();
     bool IsLastStartedPidInstance(int32_t pid);
@@ -405,7 +402,6 @@ private:
     AVScreenCaptureDataMode dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
     StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
-    sptr<OHOS::Surface> producerSurface_ = nullptr;
     bool isDump_ = false;
     bool isSystemUI2_ = false;
     std::unique_ptr<VirtualScreen> virtualScreen_;
@@ -433,9 +429,7 @@ private:
     OHOS::Rect regionArea_ = {0, 0, 0, 0};
 
     /* used for CAPTURE STREAM */
-    sptr<ScreenCapBufferConsumerListener> surfaceCb_ = nullptr;
     sptr<OHOS::Surface> surface_ = nullptr;
-    std::atomic<bool> isSurfaceMode_{false};
     std::shared_ptr<AudioCapturerWrapper> innerAudioCapture_;
     std::shared_ptr<AudioCapturerWrapper> micAudioCapture_;
     std::mutex audioMutex_;

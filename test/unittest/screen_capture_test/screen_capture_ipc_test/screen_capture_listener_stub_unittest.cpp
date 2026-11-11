@@ -381,24 +381,6 @@ HWTEST_F(ScreenCaptureListenerStubTest, OnAudioBufferAvailable_NullCb_001, TestS
 }
 
 /**
- * @tc.name  : OnVideoBufferAvailable_NullCb_001
- * @tc.number: OnVideoBufferAvailable_NullCb_001
- * @tc.desc  : Test OnVideoBufferAvailable when callback_ is nullptr (null branch)
- */
-HWTEST_F(ScreenCaptureListenerStubTest, OnVideoBufferAvailable_NullCb_001, TestSize.Level1)
-{
-    auto mockCb = std::make_shared<MockListenerStubCallBack>();
-    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
-    ASSERT_NE(stub, nullptr);
-    EXPECT_CALL(*mockCb, OnVideoBufferAvailable(_)).Times(0);
-    stub->OnVideoBufferAvailable(true);
-    stub->SetScreenCaptureCallback(mockCb);
-    EXPECT_CALL(*mockCb, OnVideoBufferAvailable(true)).Times(1);
-    stub->OnVideoBufferAvailable(true);
-    stub = nullptr;
-}
-
-/**
  * @tc.name  : OnStateChange_NullCb_001
  * @tc.number: OnStateChange_NullCb_001
  * @tc.desc  : Test OnStateChange when callback_ is nullptr (null branch)
@@ -520,28 +502,6 @@ HWTEST_F(ScreenCaptureListenerStubTest, OnRemoteRequest_AudioAvailable_001, Test
     data.WriteInt32(static_cast<int32_t>(AudioCaptureSourceType::MIC));
     int ret = stub->OnRemoteRequest(static_cast<uint32_t>(
         IStandardScreenCaptureListener::ScreenCaptureListenerMsg::ON_AUDIO_AVAILABLE), data, reply, option);
-    EXPECT_EQ(MSERR_OK, ret);
-    stub = nullptr;
-}
-
-/**
- * @tc.name  : OnRemoteRequest_VideoAvailable_001
- * @tc.desc  : Test OnRemoteRequest with ON_VIDEO_AVAILABLE code
- */
-HWTEST_F(ScreenCaptureListenerStubTest, OnRemoteRequest_VideoAvailable_001, TestSize.Level1)
-{
-    sptr<ScreenCaptureListenerStub> stub = new ScreenCaptureListenerStub();
-    ASSERT_NE(stub, nullptr);
-    auto mockCb = std::make_shared<MockListenerStubCallBack>();
-    stub->SetScreenCaptureCallback(mockCb);
-    EXPECT_CALL(*mockCb, OnVideoBufferAvailable(_)).Times(1);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    data.WriteInterfaceToken(stub->GetDescriptor());
-    data.WriteBool(true);
-    int ret = stub->OnRemoteRequest(static_cast<uint32_t>(
-        IStandardScreenCaptureListener::ScreenCaptureListenerMsg::ON_VIDEO_AVAILABLE), data, reply, option);
     EXPECT_EQ(MSERR_OK, ret);
     stub = nullptr;
 }

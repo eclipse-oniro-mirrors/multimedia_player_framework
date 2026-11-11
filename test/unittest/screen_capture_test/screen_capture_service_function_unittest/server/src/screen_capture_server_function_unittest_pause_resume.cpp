@@ -388,6 +388,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_PauseButton_001, TestSize.L
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->captureConfig_.strategy.enablePause = true;
+    screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
@@ -418,6 +419,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_ResumeButton_001, TestSize.
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->captureConfig_.strategy.enablePause = true;
+    screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
@@ -453,7 +455,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, MakeVirtualScreenExtended_EmptyDisplay
 HWTEST_F(ScreenCaptureServerFunctionTest, ResumeVideoCapture_ExtendedMode_002, TestSize.Level2)
 {
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN;
-    screenCaptureServer_->isSurfaceMode_ = true;
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     screenCaptureServer_->surface_ = nullptr;
     ASSERT_EQ(screenCaptureServer_->CreateVirtualScreen(), MSERR_UNKNOWN);
 }
@@ -486,9 +488,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCaptureInner_InCallStop_B1
 HWTEST_F(ScreenCaptureServerFunctionTest, ResumeVideoCapture_ExtendedSurfaceNull_B1, TestSize.Level2)
 {
     screenCaptureServer_->captureConfig_.captureMode = CAPTURE_VIRTUAL_EXTENDED_SCREEN;
-    screenCaptureServer_->isSurfaceMode_ = false;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     screenCaptureServer_->surface_ = nullptr;
-    screenCaptureServer_->producerSurface_ = nullptr;
     EXPECT_EQ(screenCaptureServer_->CreateVirtualScreen(), MSERR_UNKNOWN);
 }
 
@@ -510,7 +511,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_NotStarted_001, TestS
 {
     screenCaptureServer_->virtualScreen_.reset();
     screenCaptureServer_->consumer_ = nullptr;
-    screenCaptureServer_->isSurfaceMode_ = false;
+    screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     EXPECT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
 }
 

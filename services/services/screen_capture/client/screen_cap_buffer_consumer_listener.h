@@ -16,72 +16,52 @@
 #ifndef SCREEN_CAP_BUFFER_CONSUMER_LISTENER_H
 #define SCREEN_CAP_BUFFER_CONSUMER_LISTENER_H
 
+#include "screen_capture.h"
+#include <memory>
 #include <queue>
 #include <surface.h>
-#include "screen_capture.h"
 
 namespace OHOS::Media {
-struct SurfaceBufferEntry {
-    SurfaceBufferEntry(sptr<OHOS::SurfaceBuffer> buf, int32_t fence, int64_t timeStamp, OHOS::Rect& damage)
-        : buffer(std::move(buf)), flushFence(fence), timeStamp(timeStamp), damageRect(damage) {}
-    ~SurfaceBufferEntry() noexcept = default;
-
-    sptr<OHOS::SurfaceBuffer> buffer;
-    int32_t flushFence;
-    int64_t timeStamp = 0;
-    OHOS::Rect damageRect = {0, 0, 0, 0};
-};
-
-enum class SCBufferMessageType {
-    EXIT,
-    GET_BUFFER
-};
+enum class SCBufferMessageType { EXIT, NOTIFY };
 
 struct SCBufferMessage {
     SCBufferMessageType type;
-    std::string text;
 };
 
 class ScreenCapBufferConsumerListener : public IBufferConsumerListener {
 public:
-    ScreenCapBufferConsumerListener(
-        sptr<Surface> consumer, const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
-        : consumer_(consumer), screenCaptureCb_(screenCaptureCb) {}
+    ScreenCapBufferConsumerListener(sptr<Surface> consumer,
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
+        : consumer_(consumer), screenCaptureCb_(screenCaptureCb)
+    {
+    }
     ~ScreenCapBufferConsumerListener();
 
     void OnBufferAvailable() override;
     int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence, int64_t &timestamp,
         OHOS::Rect &damage);
     int32_t ReleaseVideoBuffer();
-    int32_t Release();
     int32_t StartBufferThread();
-    void OnBufferAvailableAction();
-    void SurfaceBufferThreadRun();
     void StopBufferThread();
+    void SetCallback(const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb);
 
 private:
-    int32_t ReleaseBuffer();
-    void ProcessVideoBufferCallBack();
+    void NotifyThreadRun();
 
-private:
-    std::mutex bufferAvailableWorkerMtx_;
-    std::condition_variable bufferAvailableWorkerCv_;
-    std::queue<SCBufferMessage> messageQueueSCB_;
+    std::mutex notifyMtx_;
+    std::condition_variable notifyCv_;
+    std::queue<SCBufferMessage> messageQueue_;
 
     std::mutex mutex_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
-    std::atomic<bool> isSurfaceCbInThreadStopped_ {true};
-    std::thread* surfaceCbInThread_ = nullptr;
+    sptr<OHOS::SurfaceBuffer> currentBuffer_ = nullptr;
 
-    std::mutex bufferMutex_;
-    std::condition_variable bufferCond_;
-    std::queue<std::unique_ptr<SurfaceBufferEntry>> availBuffers_;
+    std::unique_ptr<std::thread> notifyThread_;
 
     static constexpr uint64_t MAX_MESSAGE_QUEUE_SIZE = 5;
-    static constexpr uint32_t MAX_BUFFER_SIZE = 3;
-    static constexpr uint32_t OPERATION_TIMEOUT_IN_MS = 1000; // 1000ms
+    static constexpr int32_t FENCE_WAIT_MS = 1000;
 };
-}
+} // namespace OHOS::Media
 
 #endif

@@ -156,20 +156,22 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StopAndRelease_NotAlive_B1, TestSize.L
         MSERR_OK);
 }
 
-// ===================== StartStreamVideoCapture (L2422-2438) =====================
+// ===================== StartScreenCaptureStream (L2422-2438) =====================
 
-HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamVideoCapture_IgnoreState_B2, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureStream_IgnoreState_B2, TestSize.Level2)
 {
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
-    EXPECT_EQ(screenCaptureServer_->StartStreamVideoCapture(), MSERR_OK);
+    EXPECT_EQ(screenCaptureServer_->StartScreenCaptureStream(), MSERR_OK);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, StartStreamVideoCapture_InvalidState_B2, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureStream_InvalidState_B2, TestSize.Level2)
 {
+    screenCaptureServer_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     screenCaptureServer_->captureConfig_.videoInfo.videoCapInfo
         .state = AVScreenCaptureParamValidationState::VALIDATION_INVALID;
-    EXPECT_EQ(screenCaptureServer_->StartStreamVideoCapture(), MSERR_INVALID_VAL);
+    EXPECT_EQ(screenCaptureServer_->StartScreenCaptureStream(), MSERR_INVALID_VAL);
 }
 
 // ===================== PostStartScreenCaptureSuccessAction (L1575-1596) =====================
@@ -202,17 +204,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartScreenCaptureWithSurface_SurfaceN
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     EXPECT_EQ(screenCaptureServer_->StartScreenCaptureWithSurface(nullptr, false), MSERR_INVALID_OPERATION);
-}
-
-// ===================== StopVideoCapture (L3571-3597) =====================
-
-HWTEST_F(ScreenCaptureServerFunctionTest, StopVideoCapture_SurfaceCbNotNull_B2, TestSize.Level2)
-{
-    screenCaptureServer_->virtualScreen_.reset();
-    screenCaptureServer_->consumer_ = nullptr;
-    screenCaptureServer_->isSurfaceMode_ = false;
-    screenCaptureServer_->surfaceCb_ = nullptr;
-    EXPECT_EQ(screenCaptureServer_->StopVideoCapture(), MSERR_OK);
 }
 
 // StartScreenCaptureFile: dataType != CAPTURE_FILE -> MSERR_INVALID_OPERATION (L1414)

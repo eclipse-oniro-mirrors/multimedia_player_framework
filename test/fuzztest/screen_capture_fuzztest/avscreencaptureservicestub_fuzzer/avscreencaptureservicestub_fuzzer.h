@@ -75,11 +75,7 @@ public:
                             uint8_t *data, size_t size);
     bool FuzzAcquireAudioBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
                             uint8_t *data, size_t size);
-    bool FuzzAcquireVideoBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
-                            uint8_t *data, size_t size);
     bool FuzzReleaseAudioBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
-                            uint8_t *data, size_t size);
-    bool FuzzReleaseVideoBuffer(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
                             uint8_t *data, size_t size);
     bool FuzzSetScreenCaptureStrategy(sptr<IRemoteStub<IStandardScreenCaptureService>> screen_capture_stub,
                             uint8_t *data, size_t size);

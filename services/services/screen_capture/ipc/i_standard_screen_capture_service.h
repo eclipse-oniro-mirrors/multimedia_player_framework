@@ -55,10 +55,7 @@ public:
     virtual int32_t SetMaxVideoFrameRate(int32_t frameRate) = 0;
     virtual int32_t SetListenerObject(const sptr<IRemoteObject> &object) = 0;
     virtual int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) = 0;
-    virtual int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                                       int64_t &timestamp, OHOS::Rect &damage) = 0;
     virtual int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) = 0;
-    virtual int32_t ReleaseVideoBuffer() = 0;
     virtual int32_t ExcludeContent(ScreenCaptureContentFilter &contentFilter) = 0;
     virtual int32_t AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) = 0;
     virtual int32_t RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec) = 0;
@@ -90,9 +87,7 @@ public:
         INIT_VIDEO_ENC_INFO = 9,
         INIT_VIDEO_CAP = 10,
         ACQUIRE_AUDIO_BUF = 11,
-        ACQUIRE_VIDEO_BUF = 12,
         RELEASE_AUDIO_BUF = 13,
-        RELEASE_VIDEO_BUF = 14,
         SET_MIC_ENABLE = 15,
         START_SCREEN_CAPTURE = 16,
         START_SCREEN_CAPTURE_WITH_SURFACE = 17,

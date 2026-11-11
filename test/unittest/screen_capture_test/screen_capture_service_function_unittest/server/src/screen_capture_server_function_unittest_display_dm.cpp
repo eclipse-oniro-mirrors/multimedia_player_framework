@@ -576,10 +576,10 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureFile_CreateVir
     EXPECT_EQ(server_->recorder_, nullptr);
 }
 
-// surface mode: isSurfaceMode_ true -> CreateVirtualScreen(surface_) success
-HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartStreamHomeVideoCapture_SurfaceMode_Success, TestSize.Level2)
+// surface mode: dataType ORIGINAL_STREAM -> CreateVirtualScreen(surface_) success
+HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureStream_SurfaceMode_Success, TestSize.Level2)
 {
-    server_->isSurfaceMode_ = true;
+    server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     ASSERT_NE(server_->surface_, nullptr);
     server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
@@ -588,15 +588,16 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartStreamHomeVideoCapture_Surf
     server_->captureConfig_.videoInfo.videoCapInfo.videoFrameHeight = TEST_DISPLAY_HEIGHT;
     server_->showCursor_ = true;
     SetupCreateVirtualScreenFlow(*smFlow_, *dmFlow_);
-    EXPECT_EQ(server_->StartStreamHomeVideoCapture(), MSERR_OK);
+    EXPECT_EQ(server_->StartScreenCaptureStream(), MSERR_OK);
     server_->surface_ = nullptr;
 }
 
-// VALIDATION_IGNORE -> StartStreamVideoCapture returns OK without invoking home video
-HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartStreamVideoCapture_VideoIgnore_ReturnsOk, TestSize.Level2)
+// VALIDATION_IGNORE -> StartScreenCaptureStream returns OK without invoking home video
+HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_StartScreenCaptureStream_VideoIgnore_ReturnsOk, TestSize.Level2)
 {
+    server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server_->captureConfig_.videoInfo.videoCapInfo.state = AVScreenCaptureParamValidationState::VALIDATION_IGNORE;
-    EXPECT_EQ(server_->StartStreamVideoCapture(), MSERR_OK);
+    EXPECT_EQ(server_->StartScreenCaptureStream(), MSERR_OK);
 }
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CreateVirtualScreen_DisplayNull_DensitySkipped, TestSize.Level2)
@@ -848,7 +849,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResizeCanvas_ResizeFail, TestSiz
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_UpdateSurface_Success, TestSize.Level2)
 {
     EXPECT_CALL(*smFlow_, SetVirtualScreenSurface(_, _)).WillOnce(Return(DMError::DM_OK));
-    server_->isSurfaceMode_ = true;
+    server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server_->captureState_ = AVScreenCaptureState::STARTED;
     server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     sptr<OHOS::Surface> surface = OHOS::Surface::CreateSurfaceAsConsumer();
@@ -859,7 +860,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_UpdateSurface_Success, TestSize.
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_UpdateSurface_SurfaceNull, TestSize.Level2)
 {
-    server_->isSurfaceMode_ = true;
+    server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server_->captureState_ = AVScreenCaptureState::STARTED;
     EXPECT_EQ(server_->UpdateSurface(nullptr), MSERR_INVALID_OPERATION);
 }
@@ -867,7 +868,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_UpdateSurface_SurfaceNull, TestS
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_UpdateSurface_SetSurfaceFail, TestSize.Level2)
 {
     EXPECT_CALL(*smFlow_, SetVirtualScreenSurface(_, _)).WillOnce(Return(DMError::DM_ERROR_UNKNOWN));
-    server_->isSurfaceMode_ = true;
+    server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server_->captureState_ = AVScreenCaptureState::STARTED;
     server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     sptr<OHOS::Surface> surface = OHOS::Surface::CreateSurfaceAsConsumer();
@@ -996,7 +997,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_RemoveWhiteListWindows_Fail, Tes
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_ExtendedScreen_Success, TestSize.Level2)
 {
     server_->captureConfig_.captureMode = CAPTURE_VIRTUAL_EXTENDED_SCREEN;
-    server_->isSurfaceMode_ = true;
+    server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(mainDisplay));
@@ -1023,8 +1024,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_ExtendedScree
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_ExtendedScreen_SurfaceNull, TestSize.Level2)
 {
     server_->captureConfig_.captureMode = CAPTURE_VIRTUAL_EXTENDED_SCREEN;
-    server_->isSurfaceMode_ = false;
-    server_->producerSurface_ = nullptr;
+    server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     EXPECT_EQ(server_->CreateVirtualScreen(), MSERR_UNKNOWN);
 }
 
@@ -1032,7 +1032,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_ExtendedScree
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_Mirror_Success, TestSize.Level2)
 {
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->isSurfaceMode_ = true;
+    server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(mainDisplay));
@@ -1058,8 +1058,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_Mirror_Succes
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_ResumeVideoCapture_Mirror_Fail, TestSize.Level2)
 {
     server_->captureConfig_.captureMode = CAPTURE_HOME_SCREEN;
-    server_->isSurfaceMode_ = false;
-    server_->producerSurface_ = nullptr;
+    server_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     EXPECT_EQ(server_->CreateVirtualScreen(), MSERR_UNKNOWN);
 }
 
@@ -1072,7 +1071,7 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunn
 {
     SetupCreateVirtualScreenFlow(*smFlow_, *dmFlow_);
     auto ssmMock = InjectMockSceneSessionManagerLite();
-    server_->isSurfaceMode_ = true;
+    server_->captureConfig_.dataType = DataType::ORIGINAL_STREAM;
     server_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     server_->displayIds_ = {TEST_SCREEN_ID};
     server_->captureState_ = AVScreenCaptureState::STARTED;
@@ -1086,7 +1085,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunn
 HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunning_HomeScreen_001, TestSize.Level2)
 {
     SetupCreateVirtualScreenFlow(*smFlow_, *dmFlow_);
-    server_->isSurfaceMode_ = true;
     server_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     server_->displayIds_ = {TEST_SCREEN_ID};
     server_->captureState_ = AVScreenCaptureState::STARTED;
@@ -1098,7 +1096,6 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunn
 HWTEST_F(ScreenCaptureServerDisplayDmTest, OnReceiveUserPrivacyAuthority_CapRunning_NoMission_001, TestSize.Level2)
 {
     SetupCreateVirtualScreenFlow(*smFlow_, *dmFlow_);
-    server_->isSurfaceMode_ = true;
     server_->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
     server_->displayIds_ = {TEST_SCREEN_ID};
     server_->captureState_ = AVScreenCaptureState::STARTED;

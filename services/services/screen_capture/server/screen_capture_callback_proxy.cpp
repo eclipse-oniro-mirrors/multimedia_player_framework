@@ -60,20 +60,7 @@ void ScreenCaptureCallbackProxy::OnAudioBufferAvailable(bool isReady, AudioCaptu
     }
 }
 
-void ScreenCaptureCallbackProxy::OnVideoBufferAvailable(bool isReady)
-{
-    std::shared_ptr<ScreenCaptureCallBack> cb;
-    {
-        std::shared_lock<std::shared_mutex> lock(mutex_);
-        if (!bufferActive_) {
-            return;
-        }
-        cb = screenCaptureCb_;
-    }
-    if (cb != nullptr) {
-        cb->OnVideoBufferAvailable(isReady);
-    }
-}
+void ScreenCaptureCallbackProxy::OnVideoBufferAvailable(bool isReady) {}
 
 void ScreenCaptureCallbackProxy::OnStateChange(AVScreenCaptureStateCode stateCode)
 {

@@ -64,20 +64,6 @@ void ScreenCaptureListenerProxy::OnAudioBufferAvailable(bool isReady, AudioCaptu
     CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnAudioBufferAvailable failed, error: %{public}d", error);
 }
 
-void ScreenCaptureListenerProxy::OnVideoBufferAvailable(bool isReady)
-{
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option(MessageOption::TF_ASYNC);
-
-    bool token = data.WriteInterfaceToken(ScreenCaptureListenerProxy::GetDescriptor());
-    CHECK_AND_RETURN_LOG(token, "Failed to write descriptor!");
-
-    data.WriteBool(isReady);
-    int error = Remote()->SendRequest(ScreenCaptureListenerMsg::ON_VIDEO_AVAILABLE, data, reply, option);
-    CHECK_AND_RETURN_LOG(error == MSERR_OK, "OnVideoBufferAvailable failed, error: %{public}d", error);
-}
-
 void ScreenCaptureListenerProxy::OnStateChange(AVScreenCaptureStateCode stateCode)
 {
     MessageParcel data;
