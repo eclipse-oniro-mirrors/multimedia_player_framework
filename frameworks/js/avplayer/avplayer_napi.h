@@ -412,6 +412,7 @@ private:
     std::shared_ptr<TaskHandler<TaskRet>> ResetTask();
     std::shared_ptr<TaskHandler<TaskRet>> ReleaseTask();
     std::shared_ptr<TaskHandler<TaskRet>> SetPlaybackStrategyTask(AVPlayStrategy playStrategy);
+    void UpdateMediaMuteStrategy(const AVPlayStrategy &strategy);
     std::shared_ptr<TaskHandler<TaskRet>> SetMediaMutedTask(MediaType type, bool isMuted);
     std::shared_ptr<TaskHandler<TaskRet>> SetSuperResolutionTask(bool enabled);
     std::shared_ptr<TaskHandler<TaskRet>> SetVideoWindowSizeTask(int32_t width, int32_t height);
@@ -565,6 +566,7 @@ private:
     bool isForceLoadVideo_ = false;
     bool hasSetStateChangeCb_ = false;
     int32_t mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    int32_t disableMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
     int32_t privacyType_ = 0;
 };
 } // namespace Media

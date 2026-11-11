@@ -1647,10 +1647,8 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
 
     bool setSurfaceFirst = lastOpStatus_ == PLAYER_INITIALIZED;
     bool switchSurface = lastOpStatus_ == PLAYER_PREPARED ||
-        lastOpStatus_ == PLAYER_STARTED ||
-        lastOpStatus_ == PLAYER_PAUSED ||
-        lastOpStatus_ == PLAYER_STOPPED ||
-        lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE;
+        lastOpStatus_ == PLAYER_STARTED || lastOpStatus_ == PLAYER_PAUSED ||
+        lastOpStatus_ == PLAYER_STOPPED || lastOpStatus_ == PLAYER_PLAYBACK_COMPLETE;
     
     if (setSurfaceFirst) {
         MEDIA_LOGI("set surface first in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
@@ -1658,7 +1656,8 @@ int32_t PlayerServer::SetVideoSurface(sptr<Surface> surface)
         MEDIA_LOGI("switch surface in %{public}s state", GetStatusDescription(lastOpStatus_).c_str());
         auto innerSurface1 = weakSurface_.promote();
         if (innerSurface1 == nullptr && !isForceLoadVideo_ &&
-            mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
+            mutedMediaType_ != OHOS::Media::MediaType::MEDIA_TYPE_VID &&
+            disableMedia_ != OHOS::Media::MediaType::MEDIA_TYPE_VID) {
             MEDIA_LOGE("old surface is required before switching surface");
             return MSERR_INVALID_OPERATION;
         }
@@ -2365,7 +2364,14 @@ int32_t PlayerServer::SetPlaybackStrategy(AVPlayStrategy playbackStrategy)
     CHECK_AND_RETURN_RET_LOG(playerEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
     MEDIA_LOGD("PlayerServer::SetPlaybackStrategy mutedMediaType is: %{public}d", playbackStrategy.mutedMediaType);
     MEDIA_LOGD("SetPlaybackStrategy keepDecodingOnmute is: %{public}d ", playbackStrategy.keepDecodingOnMute);
-    mutedMediaType_ = playbackStrategy.mutedMediaType;
+    MEDIA_LOGD("PlayerServer::SetPlaybackStrategy disableMedia is: %{public}d", playbackStrategy.disableMedia);
+    disableMedia_ = playbackStrategy.disableMedia;
+    if (disableMedia_ != OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT &&
+        disableMedia_ == playbackStrategy.mutedMediaType) {
+        mutedMediaType_ = OHOS::Media::MediaType::MEDIA_TYPE_MAX_COUNT;
+    } else {
+        mutedMediaType_ = playbackStrategy.mutedMediaType;
+    }
     return playerEngine_->SetPlaybackStrategy(playbackStrategy);
 }
 

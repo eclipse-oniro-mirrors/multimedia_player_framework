@@ -424,6 +424,10 @@ bool CommonNapi::GetPlayStrategy(napi_env env, napi_value value, AVPlayStrategyT
     if (!GetPropertyBool(env, value, "keepDecodingOnMute", playStrategy.keepDecodingOnMute)) {
         playStrategy.keepDecodingOnMute = false; // use default value
     }
+
+    if (!GetPropertyInt32(env, value, "disableMedia", playStrategy.disableMedia)) {
+        playStrategy.disableMedia = MediaType::MEDIA_TYPE_MAX_COUNT; // use default value
+    }
     return true;
 }
 
