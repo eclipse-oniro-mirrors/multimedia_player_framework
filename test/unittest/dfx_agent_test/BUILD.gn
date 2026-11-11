@@ -70,6 +70,7 @@ ohos_unittest("dfx_agent_unit_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_dfx.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_utils.cpp",
     "dfx_agent_test.cpp",
+    "dfx_agent_metrics_test.cpp",
   ]
 
   configs = [
