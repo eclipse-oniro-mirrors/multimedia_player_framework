@@ -119,7 +119,7 @@ private:
     void ConfigureRotation(const RecorderParam &recParam);
     void ConfigureOutFd(const RecorderParam &recParam);
     Status HandleStopOperation();
-    void ClearAllConfiguration();
+    void ClearAllConfiguration(bool isDrainAll);
     int32_t PrepareAudioCapture();
     int32_t PrepareAudioDataSource();
     int32_t PrepareMetaData();

@@ -139,7 +139,7 @@ HiRecorderImpl::~HiRecorderImpl()
     if (capturerInfoChangeCallback_ != nullptr) {
         capturerInfoChangeCallback_->NotifyRelease();
     }
-    Stop(false);
+    Stop(true);
     PipeLineThreadPool::GetInstance().DestroyThread(recorderId_);
 }
 
@@ -724,7 +724,7 @@ Status HiRecorderImpl::HandleStopOperation()
     return ret;
 }
 
-void HiRecorderImpl::ClearAllConfiguration()
+void HiRecorderImpl::ClearAllConfiguration(bool isDrainAll)
 {
     std::lock_guard<std::mutex> lock(configurationMutex_);
     MEDIA_LOG_I("HiRecorderImpl ClearAllConfiguration remove filter enter.");
@@ -768,8 +768,11 @@ void HiRecorderImpl::ClearAllConfiguration()
         }
         RemoveFilterAction(iter.second);
     }
-    metaDataFilters_.clear();
-    metaDataFormats_.clear();
+
+    if (isDrainAll) {
+        metaDataFilters_.clear();
+        metaDataFormats_.clear();
+    }
 
     CloseFd();
 }
@@ -786,7 +789,7 @@ int32_t HiRecorderImpl::Stop(bool isDrainAll)
     // real stop operations
     int32_t ret = TransRecorderStatus(HandleStopOperation());
     // clear all configurations and remove all filters
-    ClearAllConfiguration();
+    ClearAllConfiguration(isDrainAll);
     return ret;
 }
 
@@ -839,7 +842,7 @@ void HiRecorderImpl::OnEvent(const Event &event)
             if (ptr != nullptr) {
                 int32_t errorCode = TransformEventStatusCode(static_cast<Status>(AnyCast<int32_t>(event.param)));
                 if (errorCode == MSERR_AUD_INTERRUPT) {
-                    Stop(true);
+                    Stop(false);
                     ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, errorCode);
                 } else {
                     ptr->OnError(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, errorCode);
@@ -858,7 +861,7 @@ void HiRecorderImpl::OnEvent(const Event &event)
                 MEDIA_LOG_I("EVENT_COMPLETE exit. the reason is already stopped");
                 break;
             }
-            Stop(true);
+            Stop(false);
             auto ptr = obs_.lock();
             if (ptr != nullptr) {
                 MEDIA_LOG_I("EVENT_COMPLETE ptr->OnInfo MAX_DURATION_REACHED BACKGROUND");
