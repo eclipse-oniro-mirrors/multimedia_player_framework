@@ -2113,8 +2113,8 @@ int32_t AVRecorderNapi::GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &a
 
     bool getValue = false;
     int32_t ret = AVRecorderNapi::GetPropertyInt32(env, args, "audioSourceType", audioSource, getValue);
-    int32_t error = ret == MSERR_INVALID_VAL ? MSERR_GET_ROTATION_FAILED_401 :
-                    ret == MSERR_UNKNOWN ? MSERR_GET_ROTATION_FAILED_5400103 : ret;
+    int32_t error = ret == MSERR_INVALID_VAL ? MSERR_GET_AUDIO_SOURCE_TYPE_FAILED_401 :
+                    ret == MSERR_UNKNOWN ? MSERR_GET_AUDIO_SOURCE_TYPE_FAILED_5400103 : ret;
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVRecorderSignError(error, operation), ret));
     if (getValue) {
         config->audioSourceType = static_cast<AudioSourceType>(audioSource);
@@ -2123,8 +2123,8 @@ int32_t AVRecorderNapi::GetSourceType(std::unique_ptr<AVRecorderAsyncContext> &a
     }
 
     ret = AVRecorderNapi::GetPropertyInt32(env, args, "videoSourceType", videoSource, getValue);
-    error = ret == MSERR_INVALID_VAL ? MSERR_GET_ROTATION_FAILED_401 :
-            ret == MSERR_UNKNOWN ? MSERR_GET_ROTATION_FAILED_5400103 : ret;
+    error = ret == MSERR_INVALID_VAL ? MSERR_GET_VIDEO_SOURCE_TYPE_FAILED_401 :
+            ret == MSERR_UNKNOWN ? MSERR_GET_VIDEO_SOURCE_TYPE_FAILED_5400103 : ret;
     CHECK_AND_RETURN_RET(ret == MSERR_OK, (asyncCtx->AVRecorderSignError(error, operation), ret));
     if (getValue) {
         config->videoSourceType = static_cast<VideoSourceType>(videoSource);
