@@ -189,7 +189,7 @@ bool CreateMediaLibrary(int32_t &fd, std::string &uri)
     mediaLibraryCameraManager->InitMediaLibraryCameraManager(object);
     const static int32_t INVALID_UID = -1;
     const static int32_t BASE_USER_RANGE = 200000;
-    int32_t uid = IPCSkeleton::GetCallingUid();
+    int32_t uid = IPCSkeleton::GetCallingAppUid();
     if (uid <= INVALID_UID) {
         MEDIA_LOGD("Get INVALID_UID UID %{public}d", uid);
     }

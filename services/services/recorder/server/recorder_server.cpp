@@ -81,7 +81,7 @@ RecorderServer::RecorderServer()
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
     taskQue_.Start();
     instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
-    CreateMediaInfo(AVRECORDER, IPCSkeleton::GetCallingUid(), instanceId_);
+    CreateMediaInfo(AVRECORDER, IPCSkeleton::GetCallingAppUid(), instanceId_);
 }
 
 RecorderServer::~RecorderServer()
@@ -122,7 +122,7 @@ int32_t RecorderServer::Init()
     MediaTrace trace("RecorderServer::Init");
     uint32_t tokenId = IPCSkeleton::GetCallingTokenID();
     uint64_t fullTokenId = IPCSkeleton::GetCallingFullTokenID();
-    int32_t appUid = IPCSkeleton::GetCallingUid();
+    int32_t appUid = IPCSkeleton::GetCallingAppUid();
     int32_t appPid = IPCSkeleton::GetCallingPid();
     bundleName_ = GetClientBundleName(appUid);
 
