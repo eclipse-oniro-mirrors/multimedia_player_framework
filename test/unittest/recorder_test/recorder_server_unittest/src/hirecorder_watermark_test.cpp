@@ -19,6 +19,7 @@
 #include "media_errors.h"
 #include "media_log.h"
 #include "av_common.h"
+#include "meta/mime_type.h"
 #include "water_mark_filter.h"
 #include "filter/filter_factory.h"
 #include "pipeline/pipeline.h"
@@ -34,6 +35,38 @@ using namespace OHOS::Media;
 using namespace std;
 using namespace testing::ext;
 using namespace OHOS::Media::RecorderTestParam;
+
+/**
+ * Minimal IRecorderEngineObs used by the HiRecorderImpl::OnEvent cases to observe error/info callbacks.
+ */
+class RecorderEngineObsMock : public IRecorderEngineObs {
+public:
+    void OnError(ErrorType errorType, int32_t errorCode) override
+    {
+        errorCalled_ = true;
+        lastErrorType_ = errorType;
+        lastErrorCode_ = errorCode;
+    }
+
+    void OnInfo(InfoType type, int32_t extra) override
+    {
+        infoCalled_ = true;
+        lastInfoType_ = type;
+        lastInfoExtra_ = extra;
+    }
+
+    void OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo) override
+    {
+        (void)audioRecorderChangeInfo;
+    }
+
+    bool errorCalled_ = false;
+    bool infoCalled_ = false;
+    ErrorType lastErrorType_ = ERROR_INTERNAL;
+    int32_t lastErrorCode_ = 0;
+    InfoType lastInfoType_ = MAX_DURATION_APPROACHING;
+    int32_t lastInfoExtra_ = 0;
+};
 
 class HiRecorderWatermarkTest : public testing::Test {
 public:
@@ -1039,4 +1072,321 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_BuildPipeline_YUV_NoWatermark_001,
     int32_t ret = impl_->BuildPipeline();
     // BuildVideoPipeline fails at CreateAndConfigureEncoder in UT env, returns MSERR_UNKNOWN
     EXPECT_EQ(ret, MSERR_UNKNOWN);
+}
+
+/**
+ * @tc.name: hirecorder_ClearAllConfiguration_NotDrainAll_KeepsMetaSource_001
+ * @tc.desc: ClearAllConfiguration(false) keeps the meta source filter so that the next recording can
+ *           still access it, but clears every per-recording state (format content, fd, counters).
+ *           Covers: ClearAllConfiguration -> isDrainAll == false -> metaDataFilters_/metaDataFormats_
+ *           (keys) kept, meta format cleared, filters removed from the pipeline head.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplDirectTest,
+    hirecorder_ClearAllConfiguration_NotDrainAll_KeepsMetaSource_001, TestSize.Level0)
+{
+    int32_t sourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId), MSERR_OK);
+    ASSERT_EQ(sourceId, SourceIdGenerator::GenerateMetaSourceId(
+        static_cast<int32_t>(MetaSourceType::VIDEO_META_MAKER_INFO)));
+    ASSERT_EQ(impl_->metaDataFilters_.size(), 1U);
+    auto metaFilter = impl_->metaDataFilters_.at(sourceId);
+    ASSERT_NE(metaFilter, nullptr);
+    ASSERT_EQ(impl_->pipeline_->filters_.size(), 1U);
+
+    ASSERT_EQ(impl_->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4), MSERR_OK);
+    ASSERT_EQ(impl_->Configure(sourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)), MSERR_OK);
+    ASSERT_EQ(impl_->Configure(sourceId, MetaSourceTrackMime("video/avc")), MSERR_OK);
+    ASSERT_EQ(impl_->metaDataFormats_.count(sourceId), 1U);
+    auto metaFormat = impl_->metaDataFormats_.at(sourceId);
+    ASSERT_NE(metaFormat, nullptr);
+    ASSERT_FALSE(metaFormat->Empty());
+
+    int32_t outFd = open("/dev/null", O_RDWR);
+    ASSERT_GE(outFd, 0);
+    ASSERT_EQ(impl_->Configure(DUMMY_SOURCE_ID, OutFd(outFd)), MSERR_OK);
+    (void)close(outFd);
+    ASSERT_NE(impl_->fd_.Get(), -1);
+
+    impl_->ClearAllConfiguration(false);
+
+    // isDrainAll == false: the meta source is kept, so a later recording can still reach it.
+    EXPECT_EQ(impl_->metaDataFilters_.size(), 1U);
+    EXPECT_EQ(impl_->metaDataFilters_.at(sourceId), metaFilter);
+    // The filter is only removed from the pipeline and released; it must be re-added before reuse.
+    EXPECT_TRUE(impl_->pipeline_->filters_.empty());
+    EXPECT_EQ(metaFilter->curState_, Pipeline::FilterState::RELEASED);
+    // The format entry is kept (same sourceId) but its content is cleared and must be reconfigured.
+    EXPECT_EQ(impl_->metaDataFormats_.count(sourceId), 1U);
+    EXPECT_EQ(impl_->metaDataFormats_.at(sourceId), metaFormat);
+    EXPECT_TRUE(metaFormat->Empty());
+
+    // Per-recording state is reset.
+    EXPECT_EQ(impl_->audioCount_.load(), 0U);
+    EXPECT_EQ(impl_->videoCount_.load(), 0U);
+    EXPECT_EQ(impl_->audioSourceId_.load(), 0);
+    EXPECT_EQ(impl_->videoSourceId_.load(), 0);
+    EXPECT_EQ(impl_->muxerFilter_, nullptr);
+    EXPECT_FALSE(impl_->videoSourceSet_);
+    EXPECT_FALSE(impl_->hasWatermark_);
+    EXPECT_FALSE(impl_->videoSourceIsYuv_);
+    EXPECT_FALSE(impl_->videoSourceIsRGBA_);
+    EXPECT_EQ(impl_->codecMimeType_, "");
+    EXPECT_EQ(impl_->fd_.Get(), -1);
+    EXPECT_EQ(impl_->curState_.load(), StateId::RECORDING_SETTING);
+}
+
+/**
+ * @tc.name: hirecorder_ClearAllConfiguration_NotDrainAll_ReuseMetaSource_002
+ * @tc.desc: After ClearAllConfiguration(false), a second SetMetaSource with the same meta source type
+ *           returns the same sourceId and reuses the very same MetaDataFilter instance instead of
+ *           creating a new one, and re-adds it to the pipeline head.
+ *           Covers: ClearAllConfiguration -> isDrainAll == false -> SetMetaSource reuse branch.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplDirectTest,
+    hirecorder_ClearAllConfiguration_NotDrainAll_ReuseMetaSource_002, TestSize.Level0)
+{
+    int32_t firstSourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, firstSourceId), MSERR_OK);
+    auto firstFilter = impl_->metaDataFilters_.at(firstSourceId);
+    ASSERT_NE(firstFilter, nullptr);
+    ASSERT_EQ(impl_->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4), MSERR_OK);
+    ASSERT_EQ(impl_->Configure(firstSourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)), MSERR_OK);
+
+    impl_->ClearAllConfiguration(false);
+    ASSERT_EQ(impl_->metaDataFilters_.size(), 1U);
+
+    int32_t secondSourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, secondSourceId), MSERR_OK);
+
+    EXPECT_EQ(secondSourceId, firstSourceId);
+    EXPECT_EQ(impl_->metaDataFilters_.size(), 1U);
+    EXPECT_EQ(impl_->metaDataFilters_.at(secondSourceId), firstFilter);
+    ASSERT_EQ(impl_->pipeline_->filters_.size(), 1U);
+    EXPECT_EQ(impl_->pipeline_->filters_.front(), std::static_pointer_cast<Pipeline::Filter>(firstFilter));
+    // The released filter is revived as INITIALIZED before the next Prepare.
+    EXPECT_EQ(firstFilter->curState_, Pipeline::FilterState::INITIALIZED);
+    // The meta format must be sent again by the caller for the second recording.
+    ASSERT_EQ(impl_->metaDataFormats_.count(secondSourceId), 1U);
+    EXPECT_TRUE(impl_->metaDataFormats_.at(secondSourceId)->Empty());
+    ASSERT_EQ(impl_->Configure(secondSourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)), MSERR_OK);
+    auto secondFormat = impl_->metaDataFormats_.at(secondSourceId);
+    EXPECT_TRUE(secondFormat->Find(Tag::MIME_TYPE) != secondFormat->end());
+}
+
+/**
+ * @tc.name: hirecorder_ClearAllConfiguration_DrainAll_ReleasesMetaSource_003
+ * @tc.desc: ClearAllConfiguration(true) (destructor / drain-all path) drops the meta source filter and
+ *           its format, which is the contrast case of the isDrainAll == false branch.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplDirectTest,
+    hirecorder_ClearAllConfiguration_DrainAll_ReleasesMetaSource_003, TestSize.Level0)
+{
+    int32_t sourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId), MSERR_OK);
+    auto metaFilter = impl_->metaDataFilters_.at(sourceId);
+    ASSERT_NE(metaFilter, nullptr);
+    ASSERT_EQ(impl_->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4), MSERR_OK);
+    ASSERT_EQ(impl_->Configure(sourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)), MSERR_OK);
+
+    impl_->ClearAllConfiguration(true);
+
+    EXPECT_TRUE(impl_->metaDataFilters_.empty());
+    EXPECT_TRUE(impl_->metaDataFormats_.empty());
+    EXPECT_TRUE(impl_->pipeline_->filters_.empty());
+    EXPECT_EQ(impl_->muxerFilter_, nullptr);
+}
+
+/**
+ * @tc.name: hirecorder_Stop_NotDrainAll_KeepsMetaSource_004
+ * @tc.desc: The public Stop(false) path reaches ClearAllConfiguration(false): the meta source survives
+ *           the stop, the engine goes back to INIT, and the next recording reuses the same filter after
+ *           re-sending output format and meta configuration.
+ *           Covers: HiRecorderImpl::Stop -> HandleStopOperation -> ClearAllConfiguration(false).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplDirectTest,
+    hirecorder_Stop_NotDrainAll_KeepsMetaSource_004, TestSize.Level1)
+{
+    int32_t sourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId), MSERR_OK);
+    auto metaFilter = impl_->metaDataFilters_.at(sourceId);
+    ASSERT_NE(metaFilter, nullptr);
+    ASSERT_EQ(impl_->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4), MSERR_OK);
+    ASSERT_EQ(impl_->Configure(sourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)), MSERR_OK);
+
+    impl_->OnStateChanged(StateId::RECORDING);
+    ASSERT_EQ(impl_->Stop(false), MSERR_OK);
+
+    EXPECT_EQ(impl_->curState_.load(), StateId::INIT);
+    EXPECT_EQ(impl_->metaDataFilters_.size(), 1U);
+    EXPECT_EQ(impl_->metaDataFilters_.at(sourceId), metaFilter);
+    EXPECT_EQ(impl_->metaDataFormats_.count(sourceId), 1U);
+    EXPECT_TRUE(impl_->metaDataFormats_.at(sourceId)->Empty());
+    EXPECT_EQ(metaFilter->curState_, Pipeline::FilterState::RELEASED);
+    // HandleStopOperation resets the output format, so the next recording has to configure it again.
+    EXPECT_EQ(impl_->outputFormatType_, OutputFormatType::FORMAT_BUTT);
+    EXPECT_EQ(impl_->Configure(sourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)),
+        static_cast<int32_t>(Status::ERROR_INVALID_OPERATION));
+
+    int32_t nextSourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, nextSourceId), MSERR_OK);
+    EXPECT_EQ(nextSourceId, sourceId);
+    EXPECT_EQ(impl_->metaDataFilters_.at(nextSourceId), metaFilter);
+    ASSERT_EQ(impl_->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4), MSERR_OK);
+    EXPECT_EQ(impl_->Configure(nextSourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)), MSERR_OK);
+    EXPECT_FALSE(impl_->metaDataFormats_.at(nextSourceId)->Empty());
+}
+
+/**
+ * @tc.name: hirecorder_OnEvent_ErrorAudioInterrupt_StopNotDrainAll_005
+ * @tc.desc: OnEvent(EVENT_ERROR) with MSERR_AUD_INTERRUPT takes the first Stop(false) in OnEvent, so the
+ *           metasource survives the interruption and stays reachable for the next recording.
+ *           Covers: HiRecorderImpl::OnEvent -> EVENT_ERROR -> errorCode == MSERR_AUD_INTERRUPT ->
+ *                   Stop(false) -> ClearAllConfiguration(false).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplDirectTest,
+    hirecorder_OnEvent_ErrorAudioInterrupt_StopNotDrainAll_005, TestSize.Level1)
+{
+    auto obs = std::make_shared<RecorderEngineObsMock>();
+    ASSERT_NE(obs, nullptr);
+    std::weak_ptr<IRecorderEngineObs> weakObs = obs;
+    impl_->SetObs(weakObs);
+
+    int32_t sourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId), MSERR_OK);
+    auto metaFilter = impl_->metaDataFilters_.at(sourceId);
+    ASSERT_NE(metaFilter, nullptr);
+    ASSERT_EQ(impl_->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4), MSERR_OK);
+    ASSERT_EQ(impl_->Configure(sourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)), MSERR_OK);
+
+    impl_->OnStateChanged(StateId::RECORDING);
+    impl_->OnEvent({"audioInterrupt", EventType::EVENT_ERROR,
+        static_cast<int32_t>(Status::ERROR_AUDIO_INTERRUPT)});
+
+    // The Stop(false) inside OnEvent keeps the metasource for the next recording.
+    EXPECT_EQ(impl_->curState_.load(), StateId::INIT);
+    EXPECT_EQ(impl_->metaDataFilters_.size(), 1U);
+    EXPECT_EQ(impl_->metaDataFilters_.at(sourceId), metaFilter);
+    EXPECT_EQ(impl_->metaDataFormats_.count(sourceId), 1U);
+    EXPECT_TRUE(impl_->metaDataFormats_.at(sourceId)->Empty());
+    EXPECT_EQ(metaFilter->curState_, Pipeline::FilterState::RELEASED);
+    EXPECT_EQ(impl_->outputFormatType_, OutputFormatType::FORMAT_BUTT);
+    // The error is reported to the observer after the internal stop.
+    EXPECT_TRUE(obs->errorCalled_);
+    EXPECT_EQ(obs->lastErrorType_, IRecorderEngineObs::ErrorType::ERROR_INTERNAL);
+    EXPECT_EQ(obs->lastErrorCode_, MSERR_AUD_INTERRUPT);
+}
+
+/**
+ * @tc.name: hirecorder_OnEvent_Complete_StopNotDrainAll_006
+ * @tc.desc: OnEvent(EVENT_COMPLETE) takes the second Stop(false) in OnEvent, so the metasource is kept
+ *           after the max duration background stop.
+ *           Covers: HiRecorderImpl::OnEvent -> EVENT_COMPLETE -> curState_ != INIT -> Stop(false) ->
+ *                   ClearAllConfiguration(false) -> OnInfo(MAX_DURATION_REACHED).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplDirectTest,
+    hirecorder_OnEvent_Complete_StopNotDrainAll_006, TestSize.Level1)
+{
+    auto obs = std::make_shared<RecorderEngineObsMock>();
+    ASSERT_NE(obs, nullptr);
+    std::weak_ptr<IRecorderEngineObs> weakObs = obs;
+    impl_->SetObs(weakObs);
+
+    int32_t sourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId), MSERR_OK);
+    auto metaFilter = impl_->metaDataFilters_.at(sourceId);
+    ASSERT_NE(metaFilter, nullptr);
+    ASSERT_EQ(impl_->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4), MSERR_OK);
+    ASSERT_EQ(impl_->Configure(sourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)), MSERR_OK);
+
+    impl_->OnStateChanged(StateId::RECORDING);
+    impl_->OnEvent({"complete", EventType::EVENT_COMPLETE, 0});
+
+    EXPECT_EQ(impl_->curState_.load(), StateId::INIT);
+    EXPECT_EQ(impl_->metaDataFilters_.size(), 1U);
+    EXPECT_EQ(impl_->metaDataFilters_.at(sourceId), metaFilter);
+    EXPECT_EQ(impl_->metaDataFormats_.count(sourceId), 1U);
+    EXPECT_TRUE(impl_->metaDataFormats_.at(sourceId)->Empty());
+    EXPECT_EQ(metaFilter->curState_, Pipeline::FilterState::RELEASED);
+    EXPECT_EQ(impl_->outputFormatType_, OutputFormatType::FORMAT_BUTT);
+    EXPECT_TRUE(obs->infoCalled_);
+    EXPECT_EQ(obs->lastInfoType_, IRecorderEngineObs::InfoType::MAX_DURATION_REACHED);
+
+    // The next recording still reaches the same metasource instance.
+    int32_t nextSourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, nextSourceId), MSERR_OK);
+    EXPECT_EQ(nextSourceId, sourceId);
+    EXPECT_EQ(impl_->metaDataFilters_.at(nextSourceId), metaFilter);
+}
+
+/**
+ * @tc.name: hirecorder_OnEvent_Complete_AlreadyInit_NoStop_007
+ * @tc.desc: OnEvent(EVENT_COMPLETE) when the engine is already stopped (state INIT) returns early and
+ *           does not report again, which is the guard in front of the second Stop(false).
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplDirectTest,
+    hirecorder_OnEvent_Complete_AlreadyInit_NoStop_007, TestSize.Level1)
+{
+    auto obs = std::make_shared<RecorderEngineObsMock>();
+    ASSERT_NE(obs, nullptr);
+    std::weak_ptr<IRecorderEngineObs> weakObs = obs;
+    impl_->SetObs(weakObs);
+
+    impl_->OnStateChanged(StateId::INIT);
+    impl_->OnEvent({"complete", EventType::EVENT_COMPLETE, 0});
+
+    EXPECT_EQ(impl_->curState_.load(), StateId::INIT);
+    EXPECT_FALSE(obs->infoCalled_);
+    EXPECT_FALSE(obs->errorCalled_);
+}
+
+/**
+ * @tc.name: hirecorder_OnEvent_ErrorNotAudioInterrupt_NotStop_008
+ * @tc.desc: OnEvent(EVENT_ERROR) with a non-interrupt error does not take Stop(false): the engine goes
+ *           to ERROR and the metasource configuration is not cleared, which is the contrast case of the
+ *           interrupt branch.
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplDirectTest,
+    hirecorder_OnEvent_ErrorNotAudioInterrupt_NotStop_008, TestSize.Level1)
+{
+    auto obs = std::make_shared<RecorderEngineObsMock>();
+    ASSERT_NE(obs, nullptr);
+    std::weak_ptr<IRecorderEngineObs> weakObs = obs;
+    impl_->SetObs(weakObs);
+
+    int32_t sourceId = INVALID_SOURCE_ID;
+    ASSERT_EQ(impl_->SetMetaSource(MetaSourceType::VIDEO_META_MAKER_INFO, sourceId), MSERR_OK);
+    auto metaFilter = impl_->metaDataFilters_.at(sourceId);
+    ASSERT_NE(metaFilter, nullptr);
+    ASSERT_EQ(impl_->SetOutputFormat(OutputFormatType::FORMAT_MPEG_4), MSERR_OK);
+    ASSERT_EQ(impl_->Configure(sourceId, MetaMimeType(Plugins::MimeType::TIMED_METADATA)), MSERR_OK);
+
+    impl_->OnStateChanged(StateId::RECORDING);
+    impl_->OnEvent({"videoEncError", EventType::EVENT_ERROR,
+        static_cast<int32_t>(Status::ERROR_VID_ENC_FAILED)});
+
+    EXPECT_EQ(impl_->curState_.load(), StateId::ERROR);
+    EXPECT_TRUE(obs->errorCalled_);
+    EXPECT_EQ(obs->lastErrorCode_, MSERR_VID_ENC_FAILED);
+    // No internal Stop(false): nothing was cleared.
+    EXPECT_EQ(impl_->metaDataFilters_.size(), 1U);
+    EXPECT_EQ(impl_->metaDataFilters_.at(sourceId), metaFilter);
+    EXPECT_EQ(impl_->metaDataFormats_.count(sourceId), 1U);
+    EXPECT_FALSE(impl_->metaDataFormats_.at(sourceId)->Empty());
+    EXPECT_EQ(impl_->outputFormatType_, OutputFormatType::FORMAT_MPEG_4);
 }
