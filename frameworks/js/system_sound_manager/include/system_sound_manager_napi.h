@@ -171,6 +171,10 @@ private:
     static void AsyncGetMockHapticRingtonePlayer(napi_env env, void *data);
     static void GetMockHapticRingtonePlayerAsyncCallbackComp(napi_env env, napi_status status, void *data);
 
+    static napi_value FactoryReset(napi_env env, napi_callback_info info);
+    static void AsyncFactoryReset(napi_env env, void *data);
+    static void FactoryResetAsyncCallbackComp(napi_env env, napi_status status, void *data);
+
     static thread_local napi_ref sConstructor_;
     static thread_local napi_ref ringtoneType_;
     static thread_local napi_ref systemToneType_;

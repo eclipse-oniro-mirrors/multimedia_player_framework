@@ -37,6 +37,7 @@ inline const int32_t NAPI_ERR_UNSUPPORTED = 6800104;
 inline const int32_t NAPI_ERR_SYSTEM = 6800301;
 inline const int32_t NAPI_ERR_PARAM_CHECK_ERROR = 20700002;
 inline const int32_t NAPI_ERR_UNSUPPORTED_OPERATION = 20700003;
+inline const int32_t NAPI_ERROR_IO_ERROR = 20700008;
 
 inline const std::string NAPI_ERR_NO_PERMISSION_INFO = "Permission denied";
 inline const std::string NAPI_ERR_PERMISSION_DENIED_INFO = "Caller is not a system application";
@@ -50,6 +51,7 @@ inline const std::string NAPI_ERR_NO_MEMORY_INFO = "allocate memory failed";
 inline const std::string NAPI_ERR_SYSTEM_INFO = "system error";
 inline const std::string NAPI_ERR_PARAM_CHECK_ERROR_INFO = "Parameter check error";
 inline const std::string NAPI_ERR_UNSUPPORTED_OPERATION_INFO = "Unsupported operation";
+inline const std::string NAPI_ERROR_IO_ERROR_INFO = "I/O error";
 inline const std::string NAPI_ERR_DATA_TOO_LARGE_INFO = "File size over limit. For video, the upper limit is 200M";
 inline const std::string NAPI_ERR_TOO_MANY_FILES_INFO = "File count over limit. For video, the upper limit is 40";
 inline const std::string NAPI_ERR_INSUFFICIENT_ROM_INFO = "Rom is insufficient";

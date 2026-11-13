@@ -39,6 +39,37 @@ using namespace OHOS::DataShare;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_AUDIO_NAPI, "SystemSoundManagerUtils"};
+
+constexpr size_t SHORT_NAME_THRESHOLD = 4;
+constexpr size_t MASK_PREFIX_LEN = 2;
+constexpr size_t MASK_SUFFIX_LEN = 2;
+constexpr size_t SHORT_MASK_PREFIX_LEN = 1;
+constexpr size_t SHORT_MASK_SUFFIX_LEN = 1;
+
+std::string MaskFilename(const std::string &filename)
+{
+    if (filename.empty()) {
+        return "";
+    }
+    size_t dotPos = filename.find_last_of('.');
+    std::string ext;
+    std::string name;
+    if (dotPos != std::string::npos) {
+        ext = filename.substr(dotPos);
+        name = filename.substr(0, dotPos);
+    } else {
+        name = filename;
+    }
+    if (name.empty()) {
+        return ext;
+    }
+    if (name.length() <= SHORT_NAME_THRESHOLD) {
+        return name.substr(0, SHORT_MASK_PREFIX_LEN) + "****" +
+            name.substr(name.length() - SHORT_MASK_SUFFIX_LEN) + ext;
+    }
+    return name.substr(0, MASK_PREFIX_LEN) + "*****" +
+        name.substr(name.length() - MASK_SUFFIX_LEN) + ext;
+}
 }
 
 namespace OHOS {
@@ -248,6 +279,30 @@ std::string SystemSoundManagerUtils::ExtractDisplayName(const std::string &uri)
         }
     }
     return displayName;
+}
+
+std::string SystemSoundManagerUtils::EncryptUri(const std::string &uri)
+{
+    if (uri.empty()) {
+        return "";
+    }
+    size_t firstSlash = uri.find('/');
+    if (firstSlash == std::string::npos) {
+        return MaskFilename(uri);
+    }
+    size_t lastSlash = uri.find_last_of('/');
+    if (lastSlash == firstSlash) {
+        return "/" + MaskFilename(uri.substr(1));
+    }
+    size_t secondSlash = uri.find('/', firstSlash + 1);
+    size_t secondLastSlash = uri.find_last_of('/', lastSlash - 1);
+    if (secondSlash == lastSlash || secondSlash == secondLastSlash) {
+        return uri.substr(0, lastSlash) + "/" + MaskFilename(uri.substr(lastSlash + 1));
+    }
+    std::string firstSegment = uri.substr(0, secondSlash);
+    std::string lastDir = uri.substr(secondLastSlash, lastSlash - secondLastSlash);
+    std::string filename = uri.substr(lastSlash + 1);
+    return firstSegment + "/****" + lastDir + "/" + MaskFilename(filename);
 }
 
 MediaTrace::MediaTrace(const std::string &funcName)

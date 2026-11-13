@@ -138,7 +138,7 @@ int32_t SystemTonePlayerImpl::InitPlayer(const std::string &audioUri)
     if (audioUri == NO_SYSTEM_SOUND) {
         ToneHapticsSettings settings;
         int32_t result = systemSoundMgr_.GetToneHapticsSettings(databaseTool_, audioUri,
-            ConvertToToneHapticsType(systemToneType_), settings);
+            ConvertToToneHapticsType(systemToneType_), settings, systemSoundMgr_.GetRingerMode());
         if (result == MSERR_OK) {
             isNoneHaptics_ = settings.mode == ToneHapticsMode::NONE;
             defaultNonSyncHapticUri_ = settings.hapticsUri;
@@ -678,7 +678,7 @@ void SystemTonePlayerImpl::GetHapticUriInRingtoneLibrary(const std::string &audi
     supportedHapticsFeatures_.clear();
     ToneHapticsSettings settings;
     int32_t result = systemSoundMgr_.GetToneHapticsSettings(databaseTool_, audioUri,
-        ConvertToToneHapticsType(systemToneType_), settings);
+        ConvertToToneHapticsType(systemToneType_), settings, systemSoundMgr_.GetRingerMode());
     if (result != 0) {
         MEDIA_LOGW("GetHapticUriInRingtoneLibrary: get haptic settings fail");
         return;

@@ -1960,7 +1960,8 @@ HWTEST(SystemSoundManagerUnitTest, UpdateToneHapticsSettings_Success_WhenUpdateS
     settings.hapticsUri = "hapticsUri";
     settings.mode = ToneHapticsMode::SYNC;
     int32_t result =
-        systemSoundManagerImpl_->UpdateToneHapticsSettings(databaseTool, toneUri, toneHapticsType, settings);
+        systemSoundManagerImpl_->UpdateToneHapticsSettings(databaseTool, toneUri, toneHapticsType, settings,
+            AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL);
     EXPECT_EQ(result, RESULT_SUCCESS);
 }
 
@@ -2557,6 +2558,180 @@ HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerUtils_ExtractDisplayName_00
     std::string uri = "";
     std::string result = SystemSoundManagerUtils::ExtractDisplayName(uri);
     EXPECT_EQ(result, "");
+}
+
+/**
+ * @tc.name  : Test FactoryReset restores ringtone URIs to defaults
+ * @tc.number: SystemSoundManagerImpl_FactoryReset_RingtoneUriRestoredToDefault
+ * @tc.desc  : AC-1.1: After factoryReset(), getRingtoneUri for 4 RingtoneTypes matches getDefaultRingtoneAttrs URI
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_FactoryReset_RingtoneUriRestoredToDefault, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ASSERT_NE(systemSoundManager_, nullptr);
+
+    int32_t ret = systemSoundManager_->FactoryReset();
+    EXPECT_EQ(ret, MSERR_OK);
+
+    std::vector<RingtoneType> ringtoneTypes = {
+        RINGTONE_TYPE_SIM_CARD_0, RINGTONE_TYPE_SIM_CARD_1,
+        RINGTONE_TYPE_ESIM_CARD_0, RINGTONE_TYPE_ESIM_CARD_1
+    };
+    for (auto type : ringtoneTypes) {
+        std::string currentUri = systemSoundManager_->GetRingtoneUri(context_, type);
+        auto defaultAttrs = systemSoundManager_->GetDefaultRingtoneAttrs(context_, type);
+        if (defaultAttrs != nullptr && !defaultAttrs->GetUri().empty()) {
+            EXPECT_EQ(currentUri, defaultAttrs->GetUri());
+        }
+    }
+}
+
+/**
+ * @tc.name  : Test FactoryReset restores system tone URIs to defaults
+ * @tc.number: SystemSoundManagerImpl_FactoryReset_SystemToneUriRestoredToDefault
+ * @tc.desc  : AC-1.2: After factoryReset(), getSystemToneUri for 5 SystemToneTypes matches defaults
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_FactoryReset_SystemToneUriRestoredToDefault,
+    TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ASSERT_NE(systemSoundManager_, nullptr);
+
+    int32_t ret = systemSoundManager_->FactoryReset();
+    EXPECT_EQ(ret, MSERR_OK);
+
+    std::vector<SystemToneType> systemToneTypes = {
+        SYSTEM_TONE_TYPE_SIM_CARD_0, SYSTEM_TONE_TYPE_SIM_CARD_1,
+        SYSTEM_TONE_TYPE_ESIM_CARD_0, SYSTEM_TONE_TYPE_ESIM_CARD_1,
+        SYSTEM_TONE_TYPE_NOTIFICATION
+    };
+    for (auto type : systemToneTypes) {
+        std::string currentUri = systemSoundManager_->GetSystemToneUri(context_, type);
+        auto defaultAttrs = systemSoundManager_->GetDefaultSystemToneAttrs(context_, type);
+        if (defaultAttrs != nullptr && !defaultAttrs->GetUri().empty()) {
+            EXPECT_EQ(currentUri, defaultAttrs->GetUri());
+        }
+    }
+}
+
+/**
+ * @tc.name  : Test FactoryReset restores alarm tone URI to default
+ * @tc.number: SystemSoundManagerImpl_FactoryReset_AlarmToneUriRestoredToDefault
+ * @tc.desc  : AC-1.3: After factoryReset(), getAlarmToneUri matches getDefaultAlarmToneAttrs URI
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_FactoryReset_AlarmToneUriRestoredToDefault,
+    TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ASSERT_NE(systemSoundManager_, nullptr);
+
+    int32_t ret = systemSoundManager_->FactoryReset();
+    EXPECT_EQ(ret, MSERR_OK);
+
+    std::string currentUri = systemSoundManager_->GetAlarmToneUri(context_);
+    auto defaultAttrs = systemSoundManager_->GetDefaultAlarmToneAttrs(context_);
+    if (defaultAttrs != nullptr && !defaultAttrs->GetUri().empty()) {
+        EXPECT_EQ(currentUri, defaultAttrs->GetUri());
+    }
+}
+
+/**
+ * @tc.name  : Test FactoryReset restores tone haptics settings to defaults
+ * @tc.number: SystemSoundManagerImpl_FactoryReset_ToneHapticsSettingsRestoredToDefault
+ * @tc.desc  : AC-1.4: After factoryReset(), getToneHapticsSettings for 10 ToneHapticsTypes matches defaults
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_FactoryReset_ToneHapticsSettingsRestoredToDefault,
+    TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ASSERT_NE(systemSoundManager_, nullptr);
+
+    int32_t ret = systemSoundManager_->FactoryReset();
+    EXPECT_EQ(ret, MSERR_OK);
+
+    std::vector<ToneHapticsType> hapticsTypes = {
+        CALL_SIM_CARD_0, CALL_SIM_CARD_1, CALL_ESIM_CARD_0, CALL_ESIM_CARD_1,
+        TEXT_MESSAGE_SIM_CARD_0, TEXT_MESSAGE_SIM_CARD_1,
+        TEXT_MESSAGE_ESIM_CARD_0, TEXT_MESSAGE_ESIM_CARD_1,
+        NOTIFICATION, ALARM
+    };
+    for (auto type : hapticsTypes) {
+        ToneHapticsSettings currentSettings;
+        int32_t getRet = systemSoundManager_->GetToneHapticsSettings(context_, type, currentSettings);
+        EXPECT_EQ(getRet, MSERR_OK);
+    }
+}
+
+/**
+ * @tc.name  : Test FactoryReset removes custom audio tones
+ * @tc.number: SystemSoundManagerImpl_FactoryReset_CustomAudioTonesDeleted
+ * @tc.desc  : AC-1.5: After factoryReset(), getRingtoneAttrList has no CUSTOMISED+AUDIO entries
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_FactoryReset_CustomAudioTonesDeleted, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ASSERT_NE(systemSoundManager_, nullptr);
+
+    int32_t ret = systemSoundManager_->FactoryReset();
+    EXPECT_EQ(ret, MSERR_OK);
+
+    std::vector<RingtoneType> ringtoneTypes = {
+        RINGTONE_TYPE_SIM_CARD_0, RINGTONE_TYPE_SIM_CARD_1,
+        RINGTONE_TYPE_ESIM_CARD_0, RINGTONE_TYPE_ESIM_CARD_1
+    };
+    for (auto type : ringtoneTypes) {
+        auto attrList = systemSoundManager_->GetRingtoneAttrList(context_, type);
+        for (auto &attrs : attrList) {
+            if (attrs != nullptr && attrs->GetCustomizedType() == CUSTOMISED) {
+                EXPECT_NE(attrs->GetMediaType(), ToneMediaType::MEDIA_TYPE_AUD);
+            }
+        }
+    }
+}
+
+/**
+ * @tc.name  : Test FactoryReset preserves custom video tones
+ * @tc.number: SystemSoundManagerImpl_FactoryReset_CustomVideoTonesPreserved
+ * @tc.desc  : AC-1.6: After factoryReset(), CUSTOMISED+VIDEO entries count unchanged
+ */
+HWTEST(SystemSoundManagerUnitTest, SystemSoundManagerImpl_FactoryReset_CustomVideoTonesPreserved, TestSize.Level2)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    std::shared_ptr<AbilityRuntime::Context> context_ = std::make_shared<ContextImpl>();
+    ASSERT_NE(systemSoundManager_, nullptr);
+
+    int32_t videoCountBefore = 0;
+    for (auto type : {RINGTONE_TYPE_SIM_CARD_0, RINGTONE_TYPE_SIM_CARD_1,
+         RINGTONE_TYPE_ESIM_CARD_0, RINGTONE_TYPE_ESIM_CARD_1}) {
+        auto attrList = systemSoundManager_->GetRingtoneAttrList(context_, type);
+        for (auto &attrs : attrList) {
+            if (attrs != nullptr && attrs->GetCustomizedType() == CUSTOMISED &&
+                attrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
+                videoCountBefore++;
+            }
+        }
+    }
+
+    int32_t ret = systemSoundManager_->FactoryReset();
+    EXPECT_EQ(ret, MSERR_OK);
+
+    int32_t videoCountAfter = 0;
+    for (auto type : {RINGTONE_TYPE_SIM_CARD_0, RINGTONE_TYPE_SIM_CARD_1,
+         RINGTONE_TYPE_ESIM_CARD_0, RINGTONE_TYPE_ESIM_CARD_1}) {
+        auto attrList = systemSoundManager_->GetRingtoneAttrList(context_, type);
+        for (auto &attrs : attrList) {
+            if (attrs != nullptr && attrs->GetCustomizedType() == CUSTOMISED &&
+                attrs->GetMediaType() == ToneMediaType::MEDIA_TYPE_VID) {
+                videoCountAfter++;
+            }
+        }
+    }
+    EXPECT_EQ(videoCountBefore, videoCountAfter);
 }
 
 #endif

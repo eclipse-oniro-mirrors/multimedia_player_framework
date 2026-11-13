@@ -67,6 +67,22 @@ struct SetToneUriParams {
     int32_t extToneType;
 };
 
+struct FactoryResetSnapshot {
+    std::unordered_map<RingtoneType, std::string> defaultRingtoneUris;
+    std::unordered_map<RingtoneType, std::string> oldRingtoneUris;
+    std::unordered_map<SystemToneType, std::string> defaultSystemToneUris;
+    std::unordered_map<SystemToneType, std::string> oldSystemToneUris;
+    std::string defaultAlarmToneUri;
+    std::string oldAlarmToneUri;
+    std::unordered_map<ToneHapticsType, ToneHapticsSettings> oldHapticsSettingsNormal;
+    std::unordered_map<ToneHapticsType, ToneHapticsSettings> oldHapticsSettingsVibrate;
+    std::unordered_map<ToneHapticsType, ToneHapticsSettings> defaultHapticsSettings;
+    std::vector<RingtoneType> modifiedRingtones;
+    std::vector<SystemToneType> modifiedSystemTones;
+    bool alarmModified = false;
+    std::vector<ToneHapticsType> modifiedHaptics;
+};
+
 class SystemSoundManagerImpl : public SystemSoundManager {
 public:
     SystemSoundManagerImpl();
@@ -147,11 +163,12 @@ public:
             const std::string &standardHapticsUri, std::string &hapticsTitle,
             std::string &hapticsFileName, std::string &hapticsUri);
     int32_t GetToneHapticsSettings(const DatabaseTool &databaseTool, const std::string &toneUri,
-        ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
+        ToneHapticsType toneHapticsType, ToneHapticsSettings &settings, AudioStandard::AudioRingerMode ringerMode);
     int32_t GetHapticsAttrsSyncedWithTone(const std::string &toneUri, const DatabaseTool &databaseTool,
         std::shared_ptr<ToneHapticsAttrs> &toneHapticsAttrs);
     int32_t SetToneHapticsSettings(const DatabaseTool &databaseTool,
-        const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
+        const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings,
+        AudioStandard::AudioRingerMode ringerMode);
     bool CheckVibrateSwitchStatus();
     int32_t OpenToneUri(const std::shared_ptr<AbilityRuntime::Context> &context,
         const std::string &uri, int32_t toneType) override;
@@ -164,6 +181,8 @@ public:
         std::string &ringtoneUri) override;
     std::shared_ptr<RingtonePlayer> GetMockHapticRingtonePlayer(
         const std::shared_ptr<AbilityRuntime::Context> &context, std::string &hapticUri) override;
+
+    int32_t FactoryReset() override;
 
 private:
     void InitDefaultToneHapticsMap();
@@ -218,7 +237,7 @@ private:
         ToneHapticsType toneHapticsType);
     std::string GetCurrentToneUri(const DatabaseTool &databaseTool, ToneHapticsType toneHapticsType);
     std::unique_ptr<SimcardSettingAsset> GetSimcardSettingAssetByToneHapticsType(const DatabaseTool &databaseTool,
-        ToneHapticsType toneHapticsType);
+        ToneHapticsType toneHapticsType, AudioStandard::AudioRingerMode ringerMode);
 
     std::string GetHapticsUriByStyle(const DatabaseTool &databaseTool,
         const std::string &standardHapticsUri, HapticsStyle hapticsStyle, const std::string &vibrateFilesUri);
@@ -231,9 +250,10 @@ private:
         const std::string &currentToneUri, ToneHapticsType toneHapticsType, ToneHapticsSettings &settings);
 
     int32_t UpdateToneHapticsSettings(const DatabaseTool &databaseTool,
-        const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings);
+        const std::string &toneUri, ToneHapticsType toneHapticsType, const ToneHapticsSettings &settings,
+        AudioStandard::AudioRingerMode ringerMode);
     bool GetVibrateTypeByStyle(int standardVibrateType, HapticsStyle hapticsStyle, int &vibrateType);
-    int32_t GetToneSettingType(ToneHapticsType toneHapticsType);
+    int32_t GetToneSettingType(ToneHapticsType toneHapticsType, AudioStandard::AudioRingerMode ringerMode);
     std::unique_ptr<RingtoneAsset> IsPresetRingtone(const DatabaseTool &databaseTool, const std::string &toneUri);
     int GetStandardVibrateType(int toneType);
 
@@ -262,12 +282,26 @@ private:
     DataShare::DataSharePredicates CreateVibrationListQueryPredicates(bool isSynced);
     DataShare::DataSharePredicates CreateVibrateQueryPredicates(const std::string &displayName, int32_t vibrateType);
 
+    int32_t SnapshotDefaults(FactoryResetSnapshot &snapshot);
+    int32_t SnapshotToneDefaults(FactoryResetSnapshot &snapshot);
+    int32_t SnapshotHapticsDefaults(FactoryResetSnapshot &snapshot);
+    int32_t SnapshotOldHapticsForType(const DatabaseTool &dbTool, const std::string &currentToneUri,
+        ToneHapticsType type, FactoryResetSnapshot &snapshot);
+    std::string GetDefaultToneUriFromSnapshot(const FactoryResetSnapshot &snapshot, ToneHapticsType type);
+    int32_t RestoreToneUris(FactoryResetSnapshot &snapshot);
+    int32_t RestoreHapticsSettings(FactoryResetSnapshot &snapshot);
+    void RollbackToneUris(FactoryResetSnapshot &snapshot);
+    void RollbackHapticsSettings(FactoryResetSnapshot &snapshot);
+    void DeleteCustomAudioTones();
+
+
     std::string QueryToneUriByHapticUri(const DatabaseTool &databaseTool, const std::string &hapticUri);
     ToneHapticsMode QueryPlayModeByHapticUri(const DatabaseTool &databaseTool, const std::string &hapticUri);
     
     std::string systemSoundPath_ = "";
     std::mutex uriMutex_;
     std::mutex playerMutex_;
+    std::mutex factoryResetMutex_;
 #ifdef SUPPORT_VIBRATOR
     std::mutex toneHapticsMutex_;
 #endif

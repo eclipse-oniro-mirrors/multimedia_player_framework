@@ -42,6 +42,7 @@ public:
     static std::string GetErrorReason(const int32_t &errorCode);
     static std::string GetTonePlaybackErrorReason(const int32_t &errorCode);
     static std::string ExtractDisplayName(const std::string &uri);
+    static std::string EncryptUri(const std::string &uri);
 private:
     static std::shared_ptr<DataShare::DataShareHelper> CreateDataShareHelperUri(int32_t systemAbilityId);
 };

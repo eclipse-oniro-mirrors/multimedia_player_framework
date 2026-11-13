@@ -98,6 +98,7 @@ enum SystemSoundError {
     ERROR_TOO_MANY_FILES = 20700005,
     ERROR_INSUFFICIENT_ROM = 20700006,
     ERROR_INVALID_PARAM = 20700007,
+    ERROR_IO_ERROR = 20700008,
 };
 
 enum SystemSoundType {
@@ -495,6 +496,16 @@ public:
      */
     virtual std::shared_ptr<RingtonePlayer> GetMockHapticRingtonePlayer(
         const std::shared_ptr<AbilityRuntime::Context> &context, std::string &hapticUri) = 0;
+
+    /**
+     * @brief Restores all ringtone, system tone, alarm tone URIs, tone haptics settings
+     *        to factory defaults, and removes customized audio tones (excluding video ringtones).
+     *
+     * @return Returns {@link MSERR_OK} if successful;
+     *         returns ERROR_UNSUPPORTED_OPERATION(20700003) if default config unavailable;
+     *         returns ERROR_IO_ERROR(20700008) on I/O failure.
+     */
+    virtual int32_t FactoryReset() = 0;
 };
 
 class __attribute__((visibility("default"))) SystemSoundManagerFactory {
