@@ -168,6 +168,10 @@ template("ohos_screen_capture_unittest") {
     if (player_framework_support_screen_capture) {
       sources = invoker.mock_sources + shared_sources
     }
+    
+    if (defined(invoker.extra_defines)) {
+      defines = invoker.extra_defines
+    }
 
     sanitize = {
       cfi = true
