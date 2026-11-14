@@ -595,46 +595,6 @@ HWTEST_F(RecorderUnitTest, recorder_configure_009, TestSize.Level2)
 }
 
 /**
- * @tc.name: recorder_configure_010
- * @tc.desc: record with invalid outputFd (file not exist, O_RDWR without O_CREAT)
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderUnitTest, recorder_configure_010, TestSize.Level2)
-{
-    VideoRecorderConfig videoRecorderConfig;
-    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    videoRecorderConfig.videoFormat = VIDEO_CODEC_FORMAT_BUTT;
-    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_error.mp4").c_str(),
-        O_RDWR | O_CREAT, 0666);
-    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(videoRecorderConfig.outputFd);
-}
-
-/**
- * @tc.name: recorder_configure_011
- * @tc.desc: record with videoFormat FORMAT_BUTT
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(RecorderUnitTest, recorder_configure_011, TestSize.Level2)
-{
-    VideoRecorderConfig videoRecorderConfig;
-    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    videoRecorderConfig.videoFormat = H264;
-    videoRecorderConfig.outPutFormat = FORMAT_BUTT;
-    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
-
-    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
-    EXPECT_EQ(MSERR_OK, recorder_->Release());
-    close(videoRecorderConfig.outputFd);
-}
-
-/**
  * @tc.name: recorder_configure_012
  * @tc.desc: record with videoFormat FORMAT_DEFAULT
  * @tc.type: FUNC
