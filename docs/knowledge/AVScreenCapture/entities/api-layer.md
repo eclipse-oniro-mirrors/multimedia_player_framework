@@ -87,6 +87,17 @@
 | AVScreenCaptureStateCode | SCREEN_CAPTURE_STATE_STARTED/CANCELED/STOPPED_BY_USER/INTERRUPTED_BY_OTHER/STOPPED_BY_CALL/MIC_UNAVAILABLE/MIC_MUTED/UNMUTED/ENTER_PRIVATE_SCENE/EXIT_PRIVATE_SCENE/STOPPED_BY_USER_SWITCHES/PAUSED_BY_USER/RESUMED_BY_USER/PAUSED_BY_APP/RESUMED_BY_APP |
 | AVScreenCaptureBufferType | SCREEN_CAPTURE_BUFFERTYPE_VIDEO/AUDIO_INNER/AUDIO_MIC |
 
+## 源码定位
+
+| 路径 | 职责 |
+|------|------|
+| frameworks/native/screen_capture/（screen_capture_impl.cpp） | Native 实现 ScreenCaptureImpl，持有服务代理，转发调用到服务端 |
+| frameworks/native/capi/screencapture/（native_avscreen_capture.cpp、native_avscreen_capture_impl.h） | C API 封装，OH_AVScreenCapture_* 接口族与新旧回调适配 |
+| frameworks/js/avscreen_capture/（avscreen_capture_napi.cpp） | NAPI 桥接层，TaskQueue 异步调度 |
+| frameworks/cj/avscreen_capture/ | 仓颉 FFI 桥接层（libcj_avscreen_capture_ffi） |
+| interfaces/inner_api/native/（screen_capture.h、screen_capture_controller.h、screen_capture_monitor.h） | InnerAPI 契约头文件，API 稳定性约束 |
+| interfaces/kits/c/（native_avscreen_capture.h、native_avscreen_capture_base.h、native_avscreen_capture_errors.h） | 公共 SDK C 头文件，API 兼容性约束 |
+
 ## 知识关联
 
 | 关联维度 | 关联实体/知识 |

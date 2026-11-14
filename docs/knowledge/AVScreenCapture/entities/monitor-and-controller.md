@@ -46,6 +46,17 @@ ScreenCaptureServer 停止 → 通知 MonitorServer → PID 计数-1（归零才
 | SCREENCAPTURE_STOPPED | 1 — 屏幕录制结束 |
 | SCREENCAPTURE_DIED | 2 — 屏幕录制进程死亡 |
 
+## 源码定位
+
+| 路径 | 职责 |
+|------|------|
+| services/services/screen_capture_monitor/server/screen_capture_monitor_server.cpp | Monitor 服务端，录屏状态单例追踪 |
+| services/services/screen_capture_monitor/client/screen_capture_monitor_client.cpp | Monitor 客户端 |
+| services/services/screen_capture_monitor/ipc/ | Monitor IPC 序列化约束 |
+| services/services/screen_capture/server/screen_capture_controller_server.cpp | Controller 服务端，用户选择（Picker）结果处理 |
+| services/services/screen_capture/server/ui_extension_ability_connection.cpp | Picker UI 扩展能力连接 |
+| frameworks/js/screencapturemonitor/（screen_capture_monitor_napi.cpp、screen_capture_monitor_callback.cpp） | Monitor NAPI 桥接，监听器注册 |
+
 ## 知识关联
 
 | 关联维度 | 关联实体/知识 |

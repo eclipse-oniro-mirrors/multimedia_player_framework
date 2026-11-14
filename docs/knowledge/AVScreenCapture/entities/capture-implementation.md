@@ -70,6 +70,15 @@ Server 初始化 Recorder → AudioDataSource(混音数据源) 提供混音音�
 | SILENT | 3 | 静音数据 |
 | INVALID | 4 | 无效 |
 
+## 源码定位
+
+| 路径 | 职责 |
+|------|------|
+| services/services/screen_capture/client/screen_cap_buffer_consumer_listener.cpp | 视频帧缓冲监听，独立线程获取 SurfaceBuffer 回调应用 |
+| services/services/audio_capture/audio_capturer_wrapper.cpp | 音频采集封装（MIC/ALL_PLAYBACK/APP_PLAYBACK） |
+| services/services/screen_capture/server/audio_data_source.cpp | 混音 + 时间戳同步 + Pause/Resume 补偿 |
+| services/services/screen_capture/server/screen_capture_server.cpp（MakeVirtualScreenMirror/MakeVirtualScreenExtended） | 虚拟屏幕创建/销毁 |
+
 ## 知识关联
 
 | 关联维度 | 关联实体/知识 |

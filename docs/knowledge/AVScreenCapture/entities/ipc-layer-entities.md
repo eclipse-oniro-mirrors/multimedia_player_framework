@@ -41,6 +41,16 @@ MonitorServer → MonitorListenerProxy(序列化) → IPC Binder → MonitorList
 | 业务规则 | 服务端回调代理使用读写锁保护，可控制缓冲回调开关 |
 | 安全与隐私 | 服务端 Stub 检查调用方权限 |
 
+## 源码定位
+
+| 路径 | 职责 |
+|------|------|
+| services/services/screen_capture/ipc/screen_capture_service_stub.cpp | IPC 服务端入口，消息码分发 + 权限校验（共 41 个消息码） |
+| services/services/screen_capture/ipc/screen_capture_service_proxy.cpp | IPC 客户端代理 |
+| services/services/screen_capture/ipc/screen_capture_listener_proxy.cpp | 服务端→客户端回调代理 |
+| services/services/screen_capture/client/screen_capture_client.cpp | 应用进程录屏代理，持有 Proxy + Listener Stub |
+| services/services/screen_capture_monitor/ipc/（screen_capture_monitor_service_stub/proxy.cpp、screen_capture_monitor_listener_stub/proxy.cpp） | Monitor IPC 序列化约束 |
+
 ## 知识关联
 
 | 关联维度 | 关联实体/知识 |

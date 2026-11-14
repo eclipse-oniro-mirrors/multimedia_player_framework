@@ -124,6 +124,17 @@ choice=true 时按优先级解析录制目标字段确定 CaptureMode：
 | 安全与隐私 | 屏幕录制需用户隐私授权弹窗，授权后方可采集 |
 | 线程安全 | 互斥锁/读写锁保护状态/配置/ID |
 
+## 源码定位
+
+| 路径 | 职责 |
+|------|------|
+| services/services/screen_capture/server/screen_capture_server.cpp | 服务端核心：状态机/能力位图、隐私与权限校验（CheckPrivacyWindowSkipPermission/RequestUserPrivacyAuthority/PrivacyProtected）、虚拟屏幕（MakeVirtualScreenMirror/MakeVirtualScreenExtended）、通知栏（NotificationLocalLiveViewContent）、DFX 打点 |
+| services/services/screen_capture/server/screen_capture_server_base.h | 状态机/能力位图定义（7 状态 + 状态-能力映射数组） |
+| services/services/screen_capture/server/screen_capture_server_manager.cpp | 实例数量限制（全局/单 UID 上限） |
+| services/services/screen_capture/server/screen_capture_listener_manager.cpp | 系统监听器统一注册/注销 |
+| services/services/screen_capture/server/screen_capture_server_callback.cpp | 服务端回调与错误/信息上报 |
+| services/etc/screencapture/（screencapture_config.para、screencapture_config.para.dac） | 系统参数配置（弹窗与录屏器包名） |
+
 ## 知识关联
 
 | 关联维度 | 关联实体/知识 |

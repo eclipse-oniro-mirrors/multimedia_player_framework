@@ -48,7 +48,7 @@ AudioCapturer → AudioCaptureFilter → AudioEncoderFilter → MuxerFilter → 
 
 ### 模块职责
 
-| 模块 | 路径 | 类型 | 模块职责 | 其他 |
+| 模块 | 路径 | 类型 | 模块职责 | 其它 |
 | -- | -- | -- | -- | -- |
 | AVRecorderNapi | frameworks/js/avrecorder | NAPI | JS/ArkTS API层，提供AVRecorder对象，管理状态机和异步任务 | 状态：idle/prepared/started/paused/stopped/released/error |
 | RecorderClient | services/services/recorder/client | 客户端 | IPC客户端代理，转发上层调用到服务端 | 通过IStandardRecorderService接口 |
@@ -156,3 +156,46 @@ AudioCapturer → AudioCaptureFilter → AudioEncoderFilter → MuxerFilter → 
   - **what**：SetVideoSource/SetAudioSource/SetMetaSource必须在SetOutputFormat之前调用
   - **why**：Source决定Pipeline拓扑，后续不可更改
   - **how**：Engine层通过curState_校验，INIT状态才接受Source设置
+
+- **依赖方向不可逆**
+  - **what**：NAPI → Service → Engine → MediaEngine Filters，不可逆向依赖
+  - **why**：保证分层解耦与引擎可替换性
+  - **how**：上层仅依赖下层接口（IRecorderService/IRecorderEngine），通过 InnerAPI 头文件解耦
+
+## 需先确认
+
+> 以下变更影响兼容性、系统能力或跨版本行为，修改前须与模块 Owner 确认
+
+- 修改 `frameworks/js/avrecorder/` 中公共 JS API 签名、参数名、错误码或状态机语义
+- 修改 `IRecorderService` 或 `IRecorderEngine` 接口方法签名
+- 修改 `services/services/recorder/ipc/` 中 IPC parcel 字段顺序或回调 ID 分配
+- 修改 `recorder_utils.h` 中 SourceId 掩码常量（`AUDIO_MASK`、`VIDEO_MASK`、`META_MASK`）
+- 修改 WaterMarkFilter OpenGL shader 代码影响水印渲染输出
+- 修改 MuxerFilter 格式表或 track 添加逻辑影响输出文件兼容性
+- 修改 `MAX_WATERMARK_NUMBER`、`MAX_WATERMARK_SIZE` 或水印位置校验
+- 修改录制服务 SA ID 或进程分配
+- 修改持久化录制配置默认值（如 `AVRECORDER_DEFAULT_AUDIO_BIT_RATE`、`AVRECORDER_DEFAULT_FRAME_RATE`）影响输出文件特性
+- 修改 `FileGenerationMode` 行为或 MediaLibraryAdapter 文件创建逻辑影响录制资源在媒体相册中的展示
+
+## 验证
+
+### 最低检查
+
+- 构建：`./build.sh --product-name <product-name> --build-target av_recorder --ccache`
+- 单元测试：`./test.sh av_recorder_unittest`
+- Lint：`./tools/lint_changed.sh <changed-files>`（如可用）
+
+### 任务特定检查
+
+| 变更类型 | 附加检查 |
+|---------|---------|
+| NAPI API 变更 | 运行 JS API 兼容性检查；验证 `stateCtrlList` 与 Server `RecStatus` 和 Engine `StateId` 一致 |
+| IPC parcel 变更 | 验证 Proxy 和 Stub 字段顺序一致；验证回调 ID 不变 |
+| Filter 变更 | 验证 Filter 生命周期（Init→Prepare→Start→Stop→Release）；验证与上游/下游的 AVBufferQueue 契约 |
+| 水印变更 | 验证 GPU 上的软件水印渲染输出；验证硬件水印编码输出；测试最大水印数量和尺寸边界 |
+| 状态机变更 | 验证三层状态转换表一致性 |
+| Config/Profile 变更 | 验证 `AVRecorderConfig` 解析 round-trip（JS→NAPI→Server→Engine） |
+
+### 完成定义
+
+完成意味着：(1) 构建成功，(2) 相关单元测试通过，(3) lint 无新增警告，(4) 任务特定兼容性/安全检查通过，(5) 无资源泄漏（Surface/fd/AudioCapturer 已释放）。
