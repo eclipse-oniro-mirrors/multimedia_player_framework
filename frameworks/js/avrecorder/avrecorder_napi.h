@@ -336,7 +336,7 @@ private:
 
     static AVRecorderNapi* GetJsInstanceAndArgs(napi_env env, napi_callback_info info,
         size_t &argCount, napi_value *args);
-    static std::shared_ptr<TaskHandler<RetInfo>> GetPrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
+    static bool EnqueuePrepareTask(std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetSetOrientationHintTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> GetInputMetaSurface(
@@ -363,6 +363,9 @@ private:
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx);
     static std::shared_ptr<TaskHandler<RetInfo>> SetWillMuteWhenInterruptedTask(
         const std::unique_ptr<AVRecorderAsyncContext> &asyncCtx, bool enable);
+    static std::shared_ptr<TaskHandler<RetInfo>> CreateSetMetadataTask(AVRecorderNapi *jsRecorder,
+        const std::map<std::string, std::string> &recordMeta);
+    static void ExecuteRecorderTask(napi_env env, void *data);
     static int32_t GetAudioCodecFormat(const std::string &mime, AudioCodecFormat &codecFormat);
     static int32_t GetAudioAacProfile(const int32_t &mime, AacProfile &aacProfile);
     static int32_t GetVideoCodecFormat(const std::string &mime, VideoCodecFormat &codecFormat);

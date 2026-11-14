@@ -14,7 +14,7 @@
 import("//build/test.gni")
 import("//foundation/multimedia/player_framework/config.gni")
 
-module_output_path = "player_framework/player_framework/services"
+module_output_path = "player_framework/ScreenCapture/recorder"
 
 config("recorder_profiles_unittest_config") {
   visibility = [ ":*" ]
@@ -57,9 +57,11 @@ ohos_unittest("recorder_profiles_xml_parser_unittest") {
   stack_protector_ret = true
 
   sources = [
+    "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles/recorder_profiles_ability_singleton.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/engine/common/recorder_profiles/recorder_profiles_xml_parser.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_dfx.cpp",
     "$MEDIA_PLAYER_ROOT_DIR/services/utils/media_utils.cpp",
+    "recorder_profiles_ability_singleton_unittest.cpp",
     "recorder_profiles_xml_parser_unittest.cpp",
   ]
 

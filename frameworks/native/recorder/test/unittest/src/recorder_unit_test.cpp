@@ -219,7 +219,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetFileSplitDuration_001, TestSize.Level2)
 
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     EXPECT_EQ(MSERR_OK, recorder_->Pause());
-    EXPECT_NE(MSERR_OK, recorder_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetFileSplitDuration(FileSplitType::FILE_SPLIT_POST, -1, 1000));
     EXPECT_EQ(MSERR_OK, recorder_->Resume());
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
     recorder_->StopBuffer(PURE_VIDEO);
@@ -242,7 +242,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetAudioEncoder_Error_001, TestSize.Level2)
             "recorder_video_SetAudioEncoder_Error_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
 
-    EXPECT_NE(MSERR_OK,
+    EXPECT_EQ(MSERR_INVALID_OPERATION,
               recorder_->SetAudioEncoder(g_videoRecorderConfig.audioSourceId, g_videoRecorderConfig.audioFormat));
     close(g_videoRecorderConfig.outputFd);
 }
@@ -281,7 +281,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetVideoSourceRepeat_001, TestSize.Level2)
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
     int32_t videoSourceIdTwo = 0;
-    EXPECT_NE(MSERR_OK, recorder_->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, videoSourceIdTwo));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetVideoSource(VIDEO_SOURCE_SURFACE_ES, videoSourceIdTwo));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -302,7 +302,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceRepeat_001, TestSize.Level2)
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
     int32_t audioSourceIdTwo = 0;
-    EXPECT_NE(MSERR_OK, recorder_->SetAudioSource(AUDIO_SOURCE_DEFAULT, audioSourceIdTwo));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetAudioSource(AUDIO_SOURCE_DEFAULT, audioSourceIdTwo));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -323,7 +323,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetAudioSourceRepeat_002, TestSize.Level2)
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, g_videoRecorderConfig));
     int32_t audioSourceId = 0;
-    EXPECT_NE(MSERR_OK, recorder_->SetAudioSource(AUDIO_SOURCE_INVALID, audioSourceId));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetAudioSource(AUDIO_SOURCE_INVALID, audioSourceId));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -422,7 +422,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_001, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -443,7 +443,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_002, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -464,7 +464,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_003, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -485,7 +485,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_004, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -506,7 +506,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_005, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -527,7 +527,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_006, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -548,7 +548,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_007, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -569,7 +569,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_008, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -589,7 +589,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_009, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -604,12 +604,11 @@ HWTEST_F(RecorderUnitTest, recorder_configure_010, TestSize.Level2)
 {
     VideoRecorderConfig videoRecorderConfig;
     videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    videoRecorderConfig.videoFormat = H264;
-    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_error.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
-
-    EXPECT_NE(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    videoRecorderConfig.videoFormat = VIDEO_CODEC_FORMAT_BUTT;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_error.mp4").c_str(),
+        O_RDWR | O_CREAT, 0666);
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -629,8 +628,8 @@ HWTEST_F(RecorderUnitTest, recorder_configure_011, TestSize.Level2)
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
-    EXPECT_NE(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -674,13 +673,13 @@ HWTEST_F(RecorderUnitTest, recorder_configure_012, TestSize.Level2)
  */
 HWTEST_F(RecorderUnitTest, recorder_configure_013, TestSize.Level2)
 {
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Prepare());
 
-    EXPECT_NE(MSERR_OK, recorder_->Start());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Start());
     sleep(RECORDER_TIME);
-    EXPECT_NE(MSERR_OK, recorder_->Pause());
-    EXPECT_NE(MSERR_OK, recorder_->Resume());
-    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Pause());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Resume());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Stop(false));
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
 }
@@ -741,7 +740,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_016, TestSize.Level2)
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_016.mp3").c_str(), O_RDWR);
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
-    EXPECT_NE(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -762,7 +761,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_017, TestSize.Level2)
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
-    EXPECT_NE(MSERR_OK, recorder_->Start());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Start());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -783,7 +782,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_018, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -806,7 +805,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_019, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -828,7 +827,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_020, TestSize.Level2)
     videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_configure_020.wav").c_str(), O_RDWR);
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
-    EXPECT_NE(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -851,7 +850,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_021, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -874,7 +873,7 @@ HWTEST_F(RecorderUnitTest, recorder_configure_022, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -907,21 +906,21 @@ HWTEST_F(RecorderUnitTest, recorder_configure_023, TestSize.Level2)
     videoRecorderConfig.channelCount = 1;
     videoRecorderConfig.sampleRate = 8000;
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     
     videoRecorderConfig.audioEncodingBitRate = 4750;
     videoRecorderConfig.channelCount = 2;
     videoRecorderConfig.sampleRate = 8000;
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     
     videoRecorderConfig.audioEncodingBitRate = 4750;
     videoRecorderConfig.channelCount = 1;
     videoRecorderConfig.sampleRate = 16000;
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     
     EXPECT_EQ(MSERR_OK, recorder_->Release());
@@ -957,21 +956,21 @@ HWTEST_F(RecorderUnitTest, recorder_configure_024, TestSize.Level2)
     videoRecorderConfig.channelCount = 1;
     videoRecorderConfig.sampleRate = 16000;
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     
     videoRecorderConfig.audioEncodingBitRate = 6600;
     videoRecorderConfig.channelCount = 2;
     videoRecorderConfig.sampleRate = 16000;
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     
     videoRecorderConfig.audioEncodingBitRate = 6600;
     videoRecorderConfig.channelCount = 1;
     videoRecorderConfig.sampleRate = 26000;
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
+    EXPECT_EQ(MSERR_RECORDER_ENGINE_ERROR_5400103, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     
     EXPECT_EQ(MSERR_OK, recorder_->Release());
@@ -1271,7 +1270,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_stop_start, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->Start());
     sleep(RECORDER_TIME);
     EXPECT_EQ(MSERR_OK, recorder_->Stop(false));
-    EXPECT_NE(MSERR_OK, recorder_->Start());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Start());
     recorder_->StopBuffer(PURE_VIDEO);
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
@@ -1486,7 +1485,7 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetCaptureRate_001, TestSize.Level0)
     g_videoRecorderConfig.videoFormat = H264;
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetCaptureRate_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
-    EXPECT_NE(MSERR_OK, recorder_->SetCaptureRate(0, -0.1));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetCaptureRate(0, -0.1));
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
@@ -1507,9 +1506,9 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetMaxFileSize_001, TestSize.Level0)
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetMaxFileSize_001.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->SetMaxFileSize(-1));
-    EXPECT_NE(MSERR_OK, recorder_->SetMaxFileSize(5000));
-    EXPECT_NE(MSERR_OK, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetMaxFileSize(-1));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetMaxFileSize(5000));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -1526,8 +1525,8 @@ HWTEST_F(RecorderUnitTest, recorder_video_SetMaxFileSize_002, TestSize.Level0)
     g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_SetMaxFileSize_002.mp4").c_str(), O_RDWR);
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->SetMaxFileSize(-1));
-    EXPECT_NE(MSERR_OK, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetMaxFileSize(-1));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->SetNextOutputFile(g_videoRecorderConfig.outputFd));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -2197,7 +2196,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetRecorderCallback_002, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->SetRecorderCallback(nullptr));
+    EXPECT_EQ(MSERR_INVALID_VAL, recorder_->SetRecorderCallback(nullptr));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -2217,9 +2216,9 @@ HWTEST_F(RecorderUnitTest, recorder_state_machine_001, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Pause());
-    EXPECT_NE(MSERR_OK, recorder_->Resume());
-    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Pause());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Resume());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Stop(false));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -2239,7 +2238,7 @@ HWTEST_F(RecorderUnitTest, recorder_state_machine_002, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->Start());
+    EXPECT_EQ(MSERR_INVALID_OPERATION, recorder_->Start());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -2259,7 +2258,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetOutputFile_001, TestSize.Level2)
     ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(AUDIO_VIDEO, videoRecorderConfig));
-    EXPECT_NE(MSERR_OK, recorder_->SetOutputFile(-1));
+    EXPECT_EQ(MSERR_IPC_ERROR_5400102, recorder_->SetOutputFile(-1));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(videoRecorderConfig.outputFd);
 }
@@ -2321,7 +2320,7 @@ HWTEST_F(RecorderUnitTest, recorder_GetMaxAmplitude_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_AUDIO, g_videoRecorderConfig));
     int32_t amplitude = -1;
     int32_t ret = recorder_->GetMaxAmplitude(amplitude);
-    EXPECT_TRUE(ret == MSERR_OK || ret != MSERR_OK);
+    EXPECT_EQ(MSERR_INVALID_STATE, ret);
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -2403,7 +2402,7 @@ HWTEST_F(RecorderUnitTest, recorder_SetWatermark_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
     std::shared_ptr<AVBuffer> nullBuffer = nullptr;
     int32_t ret = recorder_->SetWatermark(nullBuffer);
-    EXPECT_NE(MSERR_OK, ret);
+    EXPECT_EQ(MSERR_INVALID_VAL, ret);
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -2426,7 +2425,7 @@ HWTEST_F(RecorderUnitTest, recorder_AddWatermark_001, TestSize.Level2)
     std::shared_ptr<AVBuffer> nullBuffer = nullptr;
     int32_t watermarkCount = 0;
     int32_t ret = recorder_->AddWatermark(nullBuffer, 0, 0, watermarkCount);
-    EXPECT_NE(MSERR_OK, ret);
+    EXPECT_EQ(MSERR_INVALID_VAL, ret);
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -2446,7 +2445,7 @@ HWTEST_F(RecorderUnitTest, recorder_GetLocation_002, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     Location location;
     int32_t ret = recorder_->GetLocation(location);
-    EXPECT_TRUE(ret == MSERR_OK || ret != MSERR_OK);
+    EXPECT_EQ(MSERR_OK, ret);
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
@@ -2468,7 +2467,7 @@ HWTEST_F(RecorderUnitTest, recorder_GetCurrentCapturerChangeInfo_002, TestSize.L
     EXPECT_EQ(MSERR_OK, recorder_->Prepare());
     AudioRecorderChangeInfo changeInfo;
     int32_t ret = recorder_->GetCurrentCapturerChangeInfo(changeInfo);
-    EXPECT_TRUE(ret == MSERR_OK || ret != MSERR_OK);
+    EXPECT_EQ(MSERR_OK, ret);
     EXPECT_EQ(MSERR_OK, recorder_->Reset());
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
@@ -2490,12 +2489,12 @@ HWTEST_F(RecorderUnitTest, recorder_after_release_001, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     // After Release, recorderService_ is nullptr
-    EXPECT_NE(MSERR_OK, recorder_->Prepare());
-    EXPECT_NE(MSERR_OK, recorder_->Start());
-    EXPECT_NE(MSERR_OK, recorder_->Pause());
-    EXPECT_NE(MSERR_OK, recorder_->Resume());
-    EXPECT_NE(MSERR_OK, recorder_->Stop(false));
-    EXPECT_NE(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->Prepare());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->Start());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->Pause());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->Resume());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->Stop(false));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->Reset());
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -2514,12 +2513,12 @@ HWTEST_F(RecorderUnitTest, recorder_after_release_002, TestSize.Level2)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
-    EXPECT_NE(MSERR_OK, recorder_->SetVideoEncoder(0, H264));
-    EXPECT_NE(MSERR_OK, recorder_->SetVideoSize(0, 1280, 720));
-    EXPECT_NE(MSERR_OK, recorder_->SetMaxDuration(60));
-    EXPECT_NE(MSERR_OK, recorder_->SetMaxFileSize(100000000));
-    EXPECT_NE(MSERR_OK, recorder_->SetOutputFile(g_videoRecorderConfig.outputFd));
-    EXPECT_NE(MSERR_OK, recorder_->SetCaptureRate(0, 30.0));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->SetVideoEncoder(0, H264));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->SetVideoSize(0, 1280, 720));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->SetMaxDuration(60));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->SetMaxFileSize(100000000));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->SetOutputFile(g_videoRecorderConfig.outputFd));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->SetCaptureRate(0, 30.0));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -2539,15 +2538,15 @@ HWTEST_F(RecorderUnitTest, recorder_after_release_003, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
     bool isWatermarkSupported = false;
-    EXPECT_NE(MSERR_OK, recorder_->IsWatermarkSupported(isWatermarkSupported));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->IsWatermarkSupported(isWatermarkSupported));
     ConfigMap configMap;
-    EXPECT_NE(MSERR_OK, recorder_->GetAVRecorderConfig(configMap));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->GetAVRecorderConfig(configMap));
     Location location;
-    EXPECT_NE(MSERR_OK, recorder_->GetLocation(location));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->GetLocation(location));
     std::vector<EncoderCapabilityData> encoderInfo;
-    EXPECT_NE(MSERR_OK, recorder_->GetAvailableEncoder(encoderInfo));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->GetAvailableEncoder(encoderInfo));
     int32_t amplitude = 0;
-    EXPECT_NE(MSERR_OK, recorder_->GetMaxAmplitude(amplitude));
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->GetMaxAmplitude(amplitude));
     close(g_videoRecorderConfig.outputFd);
 }
 
@@ -2566,7 +2565,7 @@ HWTEST_F(RecorderUnitTest, recorder_double_release_001, TestSize.Level2)
     ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
     EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, g_videoRecorderConfig));
     EXPECT_EQ(MSERR_OK, recorder_->Release());
-    EXPECT_NE(MSERR_OK, recorder_->Release());
+    EXPECT_EQ(MSERR_NULL_POINTER_5400102, recorder_->Release());
     close(g_videoRecorderConfig.outputFd);
 }
 

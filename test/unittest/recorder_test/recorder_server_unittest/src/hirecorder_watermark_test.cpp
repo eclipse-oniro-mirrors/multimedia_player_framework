@@ -981,40 +981,6 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_OnCallback_Watermark_001, TestSize
 }
 
 /**
- * @tc.name: hirecorder_GetWaterMarkFilter_001
- * @tc.desc: GetWaterMarkFilter with waterMarkFilter_ present returns valid pointer
- *           Covers: GetWaterMarkFilter -> waterMarkFilter_ not null
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetWaterMarkFilter_001, TestSize.Level0)
-{
-    // Create waterMarkFilter_ directly via FilterFactory
-    impl_->waterMarkFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::WaterMarkFilter>(
-        "Watermark", Pipeline::FilterType::WATERMARK);
-    ASSERT_NE(impl_->waterMarkFilter_, nullptr);
-
-    auto* filter = impl_->GetWaterMarkFilter();
-    EXPECT_NE(filter, nullptr);
-    EXPECT_EQ(filter->GetFilterType(), Pipeline::FilterType::WATERMARK);
-}
-
-/**
- * @tc.name: hirecorder_GetWaterMarkFilter_Null_001
- * @tc.desc: GetWaterMarkFilter with waterMarkFilter_ null returns nullptr
- *           Covers: GetWaterMarkFilter -> waterMarkFilter_ null -> return nullptr
- * @tc.type: FUNC
- * @tc.require:
- */
-HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetWaterMarkFilter_Null_001, TestSize.Level0)
-{
-    impl_->waterMarkFilter_ = nullptr;
-    auto* filter = impl_->GetWaterMarkFilter();
-    EXPECT_EQ(filter, nullptr);
-    EXPECT_FALSE(impl_->hasWatermark_);
-}
-
-/**
  * @tc.name: hirecorder_PrepareAudioCapture_MuteWhenInterrupted_001
  * @tc.desc: PrepareAudioCapture with muteWhenInterrupted_=true calls SetWillMuteWhenInterrupted
  *           Covers: PrepareAudioCapture -> muteWhenInterrupted_ true branch

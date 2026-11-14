@@ -411,6 +411,7 @@ void RecorderClient::SetOrientationHint(int32_t rotation)
 
 int32_t RecorderClient::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NULL_POINTER_5400101, "input param callback is nullptr.");
     CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NULL_POINTER_5400101, "listenerStub_ is nullptr.");
 

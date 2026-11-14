@@ -30,7 +30,8 @@ const std::string RESUME_CALLBACK_NAME = "resume";
 const std::string STOP_CALLBACK_NAME = "stop";
 const std::string RESET_CALLBACK_NAME = "reset";
 const std::string RELEASE_CALLBACK_NAME = "release";
-class RecorderCallbackTaihe : public OHOS::Media::RecorderCallback {
+class RecorderCallbackTaihe : public OHOS::Media::RecorderCallback,
+    public std::enable_shared_from_this<RecorderCallbackTaihe> {
 public:
     explicit RecorderCallbackTaihe(bool isVideo);
     virtual ~RecorderCallbackTaihe();
@@ -53,8 +54,8 @@ private:
         std::string errorMsg = "unknown";
         int32_t errorCode = MSERR_EXT_UNKNOWN;
     };
-    void OnTaiheErrorCallBack(RecordTaiheCallback *taiheCb) const;
-    void OnTaiheStateCallBack(RecordTaiheCallback *taiheCb) const;
+    void OnTaiheErrorCallBack(const std::shared_ptr<RecordTaiheCallback> &taiheCb) const;
+    void OnTaiheStateCallBack(const std::shared_ptr<RecordTaiheCallback> &taiheCb) const;
     std::mutex mutex_;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
     bool isVideo_ = false;

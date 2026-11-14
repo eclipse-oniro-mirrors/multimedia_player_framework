@@ -15,6 +15,8 @@
 #ifndef VIDEO_RECORDER_TAIHE_H_
 #define VIDEO_RECORDER_TAIHE_H_
 
+#include <map>
+#include <mutex>
 #include "recorder.h"
 #include "ohos.multimedia.media.proj.hpp"
 #include "ohos.multimedia.media.impl.hpp"
@@ -94,10 +96,12 @@ public:
         const VideoRecorderProperties &properties);
 private:
     bool isPureVideo = false;
+    std::mutex stateMutex_;
     std::string currentStates_ = VideoRecorderState::STATE_IDLE;
     std::shared_ptr<Recorder> recorder_ = nullptr;
     OHOS::sptr<OHOS::Surface> surface_;
     std::shared_ptr<RecorderCallback> callback_ = nullptr;
+    std::mutex refMapMutex_;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
     int32_t videoSourceID = 0;
     int32_t audioSourceID = 0;

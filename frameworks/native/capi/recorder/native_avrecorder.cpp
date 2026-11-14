@@ -18,6 +18,7 @@
 
 #include <mutex>
 #include <shared_mutex>
+#include <unordered_map>
 
 #include "media_log.h"
 #include "string_ex.h"
@@ -94,6 +95,20 @@ struct RecorderObject : public OH_AVRecorder {
     bool withAudio_ = true;
 };
 
+namespace {
+// Keeps a RecorderObject alive while an in-flight callback is using the OH_AVRecorder handle, so that
+// OH_AVRecorder_Release cannot free the object under the callback.
+std::mutex g_recorderObjMutex;
+std::unordered_map<OH_AVRecorder *, std::shared_ptr<RecorderObject>> g_recorderObjs;
+
+std::shared_ptr<RecorderObject> GetRecorderObject(OH_AVRecorder *recorder)
+{
+    std::lock_guard<std::mutex> lock(g_recorderObjMutex);
+    auto it = g_recorderObjs.find(recorder);
+    return (it != g_recorderObjs.end()) ? it->second : nullptr;
+}
+} // namespace
+
 
 class NativeRecorderStateChangeCallback {
 public:
@@ -157,40 +172,53 @@ private:
 
 class NativeRecorderCallback : public RecorderCallback {
 public:
-    explicit NativeRecorderCallback(struct OH_AVRecorder *recorder) : recorder_(recorder) {}
+    explicit NativeRecorderCallback(const std::shared_ptr<RecorderObject> &recorderObj) : recorderObj_(recorderObj) {}
     virtual ~NativeRecorderCallback() = default;
 
     void OnStateChange(OH_AVRecorder_State state, OH_AVRecorder_StateChangeReason reason)
     {
         MEDIA_LOGI("OnStateChange() is called, state: %{public}d", state);
-        OH_AVRecorder *recorder = nullptr;
+        std::shared_ptr<RecorderObject> recorderObj;
         std::shared_ptr<NativeRecorderStateChangeCallback> callback;
         {
             std::shared_lock<std::shared_mutex> lock(mutex_);
-            recorder = recorder_;
+            recorderObj = recorderObj_.lock();
+            CHECK_AND_RETURN(recorderObj != nullptr && !recorderObj->isReleased_.load());
             callback = stateChangeCallback_;
         }
-        CHECK_AND_RETURN(recorder != nullptr);
-
         if (callback != nullptr) {
-            callback->OnStateChange(recorder, state, reason);
+            callback->OnStateChange(recorderObj.get(), state, reason);
+        }
+    }
+
+    void NotifyReleasedState(OH_AVRecorder_StateChangeReason reason)
+    {
+        std::shared_ptr<RecorderObject> recorderObj;
+        std::shared_ptr<NativeRecorderStateChangeCallback> callback;
+        {
+            std::shared_lock<std::shared_mutex> lock(mutex_);
+            recorderObj = recorderObj_.lock();
+            CHECK_AND_RETURN(recorderObj != nullptr);
+            callback = stateChangeCallback_;
+        }
+        if (callback != nullptr) {
+            callback->OnStateChange(recorderObj.get(), OH_AVRecorder_State::AVRECORDER_RELEASED, reason);
         }
     }
 
     void OnError(RecorderErrorType errorType, int32_t errorCode) override
     {
         MEDIA_LOGE("OnError() is called, errorType: %{public}d, errorCode: %{public}d", errorType, errorCode);
-        OH_AVRecorder *recorder = nullptr;
+        std::shared_ptr<RecorderObject> recorderObj;
         std::shared_ptr<NativeRecorderErrorCallback> callback;
         {
             std::shared_lock<std::shared_mutex> lock(mutex_);
-            recorder = recorder_;
+            recorderObj = recorderObj_.lock();
+            CHECK_AND_RETURN(recorderObj != nullptr && !recorderObj->isReleased_.load());
             callback = errorCallback_;
         }
-        CHECK_AND_RETURN(recorder != nullptr);
-
         if (callback != nullptr) {
-            callback->OnError(recorder, errorCode, "error occurred!");
+            callback->OnError(recorderObj.get(), errorCode, "error occurred!");
         }
     }
 
@@ -198,17 +226,16 @@ public:
     void OnPhotoAssetAvailable(const std::string &uri) override
     {
         MEDIA_LOGI("OnPhotoAssetAvailable() is called, uri: %{public}s", uri.c_str());
-        OH_AVRecorder *recorder = nullptr;
+        std::shared_ptr<RecorderObject> recorderObj;
         std::shared_ptr<NativeRecorderUriCallback> callback;
         {
             std::shared_lock<std::shared_mutex> lock(mutex_);
-            recorder = recorder_;
+            recorderObj = recorderObj_.lock();
+            CHECK_AND_RETURN(recorderObj != nullptr && !recorderObj->isReleased_.load());
             callback = uriCallback_;
         }
-        CHECK_AND_RETURN(recorder != nullptr);
-
         if (callback != nullptr) {
-            callback->OnUri(recorder, uri);
+            callback->OnUri(recorderObj.get(), uri);
         }
     }
 #endif
@@ -241,9 +268,15 @@ public:
     }
 #endif
 
+    void ClearRecorder()
+    {
+        std::unique_lock<std::shared_mutex> lock(mutex_);
+        recorderObj_.reset();
+    }
+
 private:
     std::shared_mutex mutex_;
-    OH_AVRecorder *recorder_ = nullptr;
+    std::weak_ptr<RecorderObject> recorderObj_;
     std::shared_ptr<NativeRecorderStateChangeCallback> stateChangeCallback_ = nullptr;
     std::shared_ptr<NativeRecorderErrorCallback> errorCallback_ = nullptr;
 #ifdef SUPPORT_RECORDER_CREATE_FILE
@@ -504,12 +537,32 @@ OH_AVRecorder *OH_AVRecorder_Create(void)
     
     std::shared_ptr<Recorder> recorder = RecorderFactory::CreateRecorder();
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, nullptr, "failed to create recorder in RecorderFactory.");
-    struct RecorderObject *recorderObj = new (std::nothrow) RecorderObject(recorder);
+    auto recorderObj = std::make_shared<RecorderObject>(recorder);
     CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, nullptr, "failed to new RecorderObject");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVRecorder_Create", FAKE_POINTER(recorderObj));
+
+    // Register the native callback up front so that state reporting and release do not depend on the
+    // app registering its own callbacks. If registration fails, clear callback_ so that the
+    // Set*Callback APIs can retry it later instead of leaving the recorder unusable.
+    recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(recorderObj);
+    if (recorderObj->callback_ == nullptr) {
+        MEDIA_LOGE("OH_AVRecorder_Create: failed to create callback");
+        return nullptr;
+    }
+    int32_t callbackRet = recorderObj->recorder_->SetRecorderCallback(recorderObj->callback_);
+    if (callbackRet != MSERR_OK) {
+        MEDIA_LOGW("OH_AVRecorder_Create: SetRecorderCallback failed, ret: %{public}d", callbackRet);
+        recorderObj->callback_ = nullptr;
+    }
+
+    {
+        std::lock_guard<std::mutex> lock(g_recorderObjMutex);
+        g_recorderObjs[recorderObj.get()] = recorderObj;
+    }
+
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVRecorder_Create", FAKE_POINTER(recorderObj.get()));
 
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Create out.");
-    return recorderObj;
+    return recorderObj.get();
 }
 
 OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
@@ -818,27 +871,36 @@ OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder)
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Release in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
-    struct RecorderObject *recorderObj = reinterpret_cast<RecorderObject *>(recorder);
-    CHECK_AND_RETURN_RET_LOG(recorderObj != nullptr, AV_ERR_INVALID_VAL, "recorderObj is nullptr");
+    std::shared_ptr<RecorderObject> recorderObj;
+    {
+        std::lock_guard<std::mutex> lock(g_recorderObjMutex);
+        auto it = g_recorderObjs.find(recorder);
+        if (it == g_recorderObjs.end()) {
+            MEDIA_LOGI("recorder already released");
+            return AV_ERR_OK;
+        }
+        recorderObj = it->second;
+        g_recorderObjs.erase(it);
+    }
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
-    CHECK_AND_RETURN_RET_LOG(!recorderObj->isReleased_.load(), AV_ERR_OK, "recorder already isReleased");
+    bool expected = false;
+    if (!recorderObj->isReleased_.compare_exchange_strong(expected, true)) {
+        MEDIA_LOGI("recorder already isReleased");
+        return AV_ERR_OK;
+    }
 
     int32_t ret = recorderObj->recorder_->Release();
-    recorderObj->isReleased_.store(true);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "recorder Release failed");
-    MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVRecorder_Release", FAKE_POINTER(recorderObj));
+    MEDIA_LOGI("0x%{public}06" PRIXPTR " OH_AVRecorder_Release", FAKE_POINTER(recorderObj.get()));
 
     CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL,
         "recorderObj->callback_ is nullptr!");
     MEDIA_LOGI("Change state to state code: %{public}d", OH_AVRecorder_State::AVRECORDER_RELEASED);
-    recorderObj->callback_->OnStateChange(OH_AVRecorder_State::AVRECORDER_RELEASED,
-        OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
+    recorderObj->callback_->NotifyReleasedState(OH_AVRecorder_StateChangeReason::AVRECORDER_USER);
     
     recorderObj->hasConfigured_ = false;
-    delete recorderObj;
-    recorderObj = nullptr;
-    recorder = nullptr;
+    recorderObj->callback_->ClearRecorder();
 
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Release out.");
     return AV_ERR_OK;
@@ -900,7 +962,9 @@ OH_AVErrCode OH_AVRecorder_SetStateCallback(OH_AVRecorder *recorder,
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
     if (recorderObj->callback_ == nullptr) {
-        recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(recorder);
+        std::shared_ptr<RecorderObject> callbackObj = GetRecorderObject(recorder);
+        CHECK_AND_RETURN_RET_LOG(callbackObj != nullptr, AV_ERR_INVALID_VAL, "recorderObject is released!");
+        recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(callbackObj);
         CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL, "callback_ is nullptr!");
         int32_t ret = recorderObj->recorder_->SetRecorderCallback(recorderObj->callback_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetRecorderCallback failed!");
@@ -928,7 +992,9 @@ OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecord
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
 
     if (recorderObj->callback_ == nullptr) {
-        recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(recorder);
+        std::shared_ptr<RecorderObject> callbackObj = GetRecorderObject(recorder);
+        CHECK_AND_RETURN_RET_LOG(callbackObj != nullptr, AV_ERR_INVALID_VAL, "recorderObject is released!");
+        recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(callbackObj);
         CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL, "callback_ is nullptr!");
         int32_t ret = recorderObj->recorder_->SetRecorderCallback(recorderObj->callback_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetRecorderCallback failed!");
@@ -957,7 +1023,9 @@ OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder
     CHECK_AND_RETURN_RET_LOG(recorderObj->recorder_ != nullptr, AV_ERR_INVALID_VAL, "recorder_ is null");
  
     if (recorderObj->callback_ == nullptr) {
-        recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(recorder);
+        std::shared_ptr<RecorderObject> callbackObj = GetRecorderObject(recorder);
+        CHECK_AND_RETURN_RET_LOG(callbackObj != nullptr, AV_ERR_INVALID_VAL, "recorderObject is released!");
+        recorderObj->callback_ = std::make_shared<NativeRecorderCallback>(callbackObj);
         CHECK_AND_RETURN_RET_LOG(recorderObj->callback_ != nullptr, AV_ERR_INVALID_VAL, "callback_ is nullptr!");
         int32_t ret = recorderObj->recorder_->SetRecorderCallback(recorderObj->callback_);
         CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, AV_ERR_INVALID_VAL, "SetRecorderCallback failed!");

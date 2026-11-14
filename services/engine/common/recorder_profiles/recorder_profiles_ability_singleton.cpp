@@ -74,6 +74,7 @@ bool RecorderProfilesAbilitySingleton::ParseRecorderProfilesXml()
 
 std::vector<RecorderProfilesData> RecorderProfilesAbilitySingleton::GetCapabilityDataArray() const
 {
+    std::lock_guard<std::mutex> lock(mutex_);
     return capabilityDataArray_;
 }
 }  // namespace Media

@@ -35,6 +35,7 @@ private:
     std::shared_ptr<IRecorderProfilesService> recorderProfilesService_ = nullptr;
     RecorderProfilesImpl();
     int32_t Init();
+    std::shared_ptr<IRecorderProfilesService> GetRecorderProfilesService();
     std::mutex mutex_;
 };
 }  // namespace Media
