@@ -71,8 +71,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_003, T
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
-    std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
+    screenCaptureServer_->checkBoxSelected_ = false;
+    screenCaptureServer_->isInnerAudioBoxSelected_ = true;
+    std::string choice = "{\"choice\": \"true\", \"checkBoxSelected\": true, "
+        "\"isInnerAudioBoxSelected\": false, \"displayId\": -1, \"missionId\": -1}";
     ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
+    // 验证被测函数对隐私保护开关和内录音频开关的副作用
+    EXPECT_TRUE(screenCaptureServer_->checkBoxSelected_);
+    EXPECT_FALSE(screenCaptureServer_->isInnerAudioBoxSelected_);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_004, TestSize.Level2)
@@ -117,9 +123,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_006, T
     config_.audioInfo.innerCapInfo.audioSource = AudioCaptureSourceType::ALL_PLAYBACK;
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    screenCaptureServer_->captureState_ = AVScreenCaptureState::POPUP_WINDOW;
+    // 运行态下带 choice 字段：应走 HandleRunningCase 分支并清除 picker 弹窗标记
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
+    screenCaptureServer_->isPresentPickerPopWindow_ = true;
     std::string choice = "{\"choice\": \"true\", \"displayId\": -1, \"missionId\": -1}";
     ASSERT_EQ(screenCaptureServer_->ReportAVScreenCaptureUserChoice(choice), MSERR_OK);
+    EXPECT_FALSE(screenCaptureServer_->isPresentPickerPopWindow_.load());
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ReportAVScreenCaptureUserChoice_007, TestSize.Level2)
@@ -723,18 +732,21 @@ HWTEST_F(ScreenCaptureServerFunctionTest, RequestUserPrivacyAuthority_004, TestS
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCapture_001, TestSize.Level2)
 {
+    // 失败路径：隐私授权开启时，失败处理会关闭隐私授权并停止采集
     screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->isScreenCaptureAuthority_ = true;
-    screenCaptureServer_->PostStartScreenCapture(true);
-    ASSERT_EQ(screenCaptureServer_->isScreenCaptureAuthority_, true);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
+    screenCaptureServer_->PostStartScreenCapture(1);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STOPPED);
+    ASSERT_EQ(screenCaptureServer_->isPrivacyAuthorityEnabled_, false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PostStartScreenCapture_002, TestSize.Level2)
 {
-    screenCaptureServer_->isPrivacyAuthorityEnabled_ = true;
-    screenCaptureServer_->isScreenCaptureAuthority_ = false;
-    screenCaptureServer_->PostStartScreenCapture(true);
-    ASSERT_EQ(screenCaptureServer_->isScreenCaptureAuthority_, false);
+    // 失败路径：隐私授权未开启时，失败处理仍会停止采集
+    screenCaptureServer_->isPrivacyAuthorityEnabled_ = false;
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTING;
+    screenCaptureServer_->PostStartScreenCapture(1);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::STOPPED);
 }
 #endif
 

@@ -949,40 +949,46 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_01, TestSize.Level2)
     RecorderInfo recorderInfo;
     SetRecorderInfo("screen_capture_check_param_01.mp4", recorderInfo);
     SetConfigFile(config_, recorderInfo);
+    // 预置合法的 innerCapInfo，使 micCapInfo 参数校验路径可达
+    config_.audioInfo.innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK
+    };
     AudioCaptureInfo micCapInfoRateSmall = {
         .audioSampleRate = 0,
         .audioChannels = 2,
         .audioSource = AudioCaptureSourceType::MIC
     };
     config_.audioInfo.micCapInfo = micCapInfoRateSmall;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_01.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.audioInfo.micCapInfo.audioSampleRate = 8000000;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_01.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 0;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_01.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.audioInfo.micCapInfo.audioChannels = 200;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_01.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.audioInfo.micCapInfo.audioChannels = 2;
-    config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::APP_PLAYBACK;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    config_.audioInfo.micCapInfo.audioSource = static_cast<AudioCaptureSourceType>(100);
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_01.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.audioInfo.micCapInfo.audioSource = AudioCaptureSourceType::SOURCE_INVALID;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_01 after");
 }
@@ -1010,18 +1016,18 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_02, TestSize.Level2)
         .audioCodecformat = AudioCodecFormat::AAC_LC
     };
     config_.audioInfo.audioEncInfo = audioEncInfoBitSmall;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_AUD_BITRATE, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_02.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.audioInfo.audioEncInfo.audioBitrate = 4800000;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_AUD_BITRATE, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_02.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.audioInfo.audioEncInfo.audioBitrate = 48000;
     config_.audioInfo.audioEncInfo.audioCodecformat = AudioCodecFormat::AUDIO_CODEC_FORMAT_BUTT;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_02 after");
 }
@@ -1044,25 +1050,31 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_03, TestSize.Level2)
         .audioSource = AudioCaptureSourceType::MIC
     };
     config_.audioInfo.micCapInfo = micCapInfo;
+    // 预置合法的 innerCapInfo，使 videoCapInfo 参数校验路径可达
+    config_.audioInfo.innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK
+    };
     VideoCaptureInfo videoCapInfoWidthSmall = {
         .videoFrameWidth = 0,
         .videoFrameHeight = 1080,
         .videoSource = VideoSourceType::VIDEO_SOURCE_SURFACE_RGBA
     };
     config_.videoInfo.videoCapInfo = videoCapInfoWidthSmall;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VID_FRAME_WIDTH, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.videoInfo.videoCapInfo.videoFrameWidth = 720;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 0;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VID_FRAME_HEIGHT, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_03.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.videoInfo.videoCapInfo.videoFrameHeight = 1080;
     config_.videoInfo.videoCapInfo.videoSource = VideoSourceType::VIDEO_SOURCE_BUTT;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_03 after");
 }
@@ -1085,35 +1097,41 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_04, TestSize.Level2)
         .audioSource = AudioCaptureSourceType::MIC
     };
     config_.audioInfo.micCapInfo = micCapInfo;
+    // 预置合法的 innerCapInfo，使 videoEncInfo 参数校验路径可达
+    config_.audioInfo.innerCapInfo = {
+        .audioSampleRate = 16000,
+        .audioChannels = 2,
+        .audioSource = AudioCaptureSourceType::ALL_PLAYBACK
+    };
     VideoEncInfo videoEncInfoBitSmall = {
         .videoCodec = VideoCodecFormat::MPEG4,
         .videoBitrate = 0,
         .videoFrameRate = 30
     };
     config_.videoInfo.videoEncInfo = videoEncInfoBitSmall;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VID_BITRATE, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_04.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.videoInfo.videoEncInfo.videoBitrate = 30000001;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VID_BITRATE, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_04.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.videoInfo.videoEncInfo.videoBitrate = 2000000;
     config_.videoInfo.videoEncInfo.videoFrameRate = 0;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_04.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.videoInfo.videoEncInfo.videoFrameRate = 300;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_04.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.videoInfo.videoEncInfo.videoFrameRate = 30;
     config_.videoInfo.videoEncInfo.videoCodec = VideoCodecFormat::VIDEO_CODEC_FORMAT_BUTT;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VID_CODEC_FORMAT, screenCapture_->Init(config_));
 
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_04 after");
 }
@@ -1137,18 +1155,18 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_05, TestSize.Level2)
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
     config_.dataType = DataType::ENCODED_STREAM;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_UNSUPPORT, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_05.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.dataType = DataType::INVAILD;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_05.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.dataType = DataType::CAPTURE_FILE;
     config_.captureMode = CaptureMode::CAPTURE_INVAILD;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_05 after");
 }
@@ -1202,19 +1220,19 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_check_param_07, TestSize.Level2)
     };
     config_.audioInfo.innerCapInfo = innerCapInfo;
     config_.audioInfo.micCapInfo = micCapInfo;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_07.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.audioInfo.micCapInfo.audioSampleRate = 16000;
     config_.audioInfo.micCapInfo.audioChannels = 1;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     SetRecorderInfo("screen_capture_check_param_07.mp4", recorderInfo);
     config_.recorderInfo = recorderInfo;
     config_.audioInfo.micCapInfo.audioSampleRate = 48000;
     config_.audioInfo.micCapInfo.audioChannels = 1;
-    EXPECT_NE(MSERR_OK, screenCapture_->Init(config_));
+    EXPECT_EQ(MSERR_INVALID_VAL, screenCapture_->Init(config_));
 
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_check_param_07 after");
 }
@@ -2529,7 +2547,9 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_picker_windows_02, TestSi
     for (int i = 0; i < 1200; i++) {
         windowIDs.push_back(i);
     }
-    EXPECT_NE(MSERR_OK, screenCapture_->ExcludePickerWindows(windowIDs.data(), windowIDs.size()));
+    // 未初始化采集服务时，服务端实例尚未创建，应返回明确的 MSERR_INVALID_STATE
+    EXPECT_EQ(MSERR_INVALID_STATE,
+        screenCapture_->ExcludePickerWindows(windowIDs.data(), windowIDs.size()));
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_picker_windows_02 after");
 }
 

@@ -238,7 +238,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_With_Mic_Audio_001, TestSi
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::PAUSED);
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::RESUMED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_With_Inner_Audio_001, TestSize.Level2)
@@ -250,7 +252,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_With_Inner_Audio_001, Test
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->isTimePaused_, true);
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->isTimePaused_, false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Audio_001, TestSize.Level2)
@@ -278,7 +282,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Mic_Only_00
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::PAUSED);
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->captureState_, AVScreenCaptureState::RESUMED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Inner_Only_001, TestSize.Level2)
@@ -292,7 +298,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Inner_Only_
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->isTimePaused_, true);
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->isTimePaused_, false);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_Multiple_Cycles_001, TestSize.Level2)

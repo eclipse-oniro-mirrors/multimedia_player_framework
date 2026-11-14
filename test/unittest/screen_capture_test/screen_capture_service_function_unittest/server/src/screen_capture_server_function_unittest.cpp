@@ -1098,16 +1098,28 @@ HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_002, TestSize.Lev
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_003, TestSize.Level2)
 {
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     InCallObserver::GetInstance().OnCallStateUpdated(true);
-    auto ret = screenCaptureServer_->StartMicAudioCapture(false);
+    // isVoip=true 覆盖 VoIP 通话场景分支
+    auto ret = screenCaptureServer_->StartMicAudioCapture(true);
     EXPECT_EQ(ret, MSERR_OK);
+    // 验证被测函数创建并启动 mic 采集器这一副作用
+    EXPECT_NE(screenCaptureServer_->micAudioCapture_, nullptr);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, StartMicAudioCapture_004, TestSize.Level2)
 {
+    SetValidConfig();
+    ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     InCallObserver::GetInstance().OnCallStateUpdated(false);
+    ASSERT_EQ(screenCaptureServer_->StartMicAudioCapture(false), MSERR_OK);
+    auto firstCapturer = screenCaptureServer_->micAudioCapture_;
+    ASSERT_NE(firstCapturer, nullptr);
+    // 重复启动时命中 capturer->IsRecording() 保护分支，复用已有采集器
     auto ret = screenCaptureServer_->StartMicAudioCapture(false);
     EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(screenCaptureServer_->micAudioCapture_, firstCapturer);
 }
 
 /**
@@ -2509,19 +2521,22 @@ HWTEST_F(ScreenCaptureServerFunctionTest, Server_IsCaptureScreen_001, TestSize.L
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Server_ChangeMirrorScreen_InvalidScreenId_001, TestSize.Level2)
 {
+    // virtualScreen_ 为空时提前返回：不得用 displayIds_ 覆盖已有 sourceDisplayIds_
     screenCaptureServer_->virtualScreen_.reset();
-    screenCaptureServer_->sourceDisplayIds_ = {};
+    screenCaptureServer_->displayIds_ = {100};
+    screenCaptureServer_->sourceDisplayIds_ = {999};
     screenCaptureServer_->ChangeMirrorScreen();
-    EXPECT_TRUE(screenCaptureServer_->sourceDisplayIds_.empty());
+    EXPECT_EQ(screenCaptureServer_->sourceDisplayIds_, std::vector<Rosen::ScreenId>({999}));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Server_ChangeMirrorScreen_EmptyDisplayIds_001, TestSize.Level2)
 {
+    // displayIds_ 为空时提前返回：不得用空 displayIds_ 覆盖已有 sourceDisplayIds_
     screenCaptureServer_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(100);
     screenCaptureServer_->displayIds_.clear();
-    screenCaptureServer_->sourceDisplayIds_ = {};
+    screenCaptureServer_->sourceDisplayIds_ = {999};
     screenCaptureServer_->ChangeMirrorScreen();
-    EXPECT_TRUE(screenCaptureServer_->sourceDisplayIds_.empty());
+    EXPECT_EQ(screenCaptureServer_->sourceDisplayIds_, std::vector<Rosen::ScreenId>({999}));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Server_NotifyWindowVisible_InvalidMissionId_001, TestSize.Level2)

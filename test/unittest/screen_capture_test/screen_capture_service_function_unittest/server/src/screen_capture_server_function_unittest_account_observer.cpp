@@ -99,10 +99,27 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AccountObserver_OnAccountsSwitch_False
 HWTEST_F(ScreenCaptureServerFunctionTest, AccountObserver_Init_NotDied_001, TestSize.Level2)
 {
     auto &observer = AccountObserver::GetInstance();
-    observer.isAccountListenerDied_.store(false);
-    bool ret = observer.Init();
+    // died=true 分支会重新创建 accountListener_，用于区分 else 分支
     observer.isAccountListenerDied_.store(true);
+    observer.accountListener_ = nullptr;
+    bool ret = observer.Init();
     EXPECT_TRUE(ret);
+    // 验证被测函数在 died=true 分支创建监听器这一副作用
+    EXPECT_NE(observer.accountListener_, nullptr);
+    observer.isAccountListenerDied_.store(true);
+    observer.accountListener_ = nullptr;
+}
+ 
+HWTEST_F(ScreenCaptureServerFunctionTest, AccountObserver_Init_AlreadyAlive_001, TestSize.Level2)
+{
+    auto &observer = AccountObserver::GetInstance();
+    // died=false 的 else 分支不重建监听器，accountListener_ 应保持不变
+    observer.isAccountListenerDied_.store(false);
+    observer.accountListener_ = nullptr;
+    bool ret = observer.Init();
+    EXPECT_TRUE(ret);
+    EXPECT_EQ(observer.accountListener_, nullptr);
+    observer.isAccountListenerDied_.store(true);
 }
 
 } // namespace Media
