@@ -39,9 +39,10 @@ docs/knowledge/
 
 遇到不了解的术语词汇时：
 
-1. 优先在当前模块的 **glossary.md** 中查询
-2. 若 glossary 提供了 entity 链接，按需从当前模块的 **entities/** 目录加载术语的详细介绍
-3. 若当前模块无该术语，查阅对应技术文档
+1. 先确定当前模块：按任务提及的源码路径（查「路径→文档触发规则」）→ 模块标识词（AVPlayer/AVRecorder/AVScreenCapture/AVTranscoder/AVMeta，播放/录制/录屏/转码/元数据）顺序判定；仍无法判定时向用户确认，不得凭跨模块泛化词（IPC/状态机/Pipeline/DFX 等共用语）猜测路由
+2. 在当前模块的 **glossary.md** 中查询该术语
+3. 若 glossary 提供了「详见/完整信息指向」链接，按需从当前模块的 **entities/、technologies/** 目录加载术语的详细介绍
+4. 若当前模块无该术语，查阅对应技术文档或「知识索引」场景表
 
 ### 编辑前声明流程
 
@@ -51,6 +52,7 @@ docs/knowledge/
 2. **任务类别**：API 变更 / 引擎开发 / IPC 修改 / Pipeline 调整 / 内存管理 / DFX 增强 / Bug 修复 / 其它
 3. **已读知识文档**：列出已阅读的对应模块 `docs/knowledge/<module>/` 下的相关文档
 4. **发现的约束**：从已读文档中提取适用于本次修改的约束规则（引用项目宪法编号或编码铁律编号）
+5. **需先确认项**：核对 `docs/knowledge/<module>/architecture.md`「需先确认」清单（AVPlayer 见本文播放模块约束章节；无该清单的模块填"无"），触及清单项时先与模块 Owner 确认再开始编辑
 
 未完成声明前，不得开始编辑代码。
 
@@ -115,6 +117,8 @@ docs/knowledge/AVPlayer/
 
 知识目录：`docs/knowledge/AVScreenCapture/`
 
+> 本模块采用渐进式加载：主文档仅保留本索引与路径/关键词触发规则，边界约束、架构不变量、编码铁律、常见失败模式、验证检查均按下表加载对应文档；高频修改场景的源码文件映射已下沉至各实体/技术文档的「源码定位」小节。
+
 ```
 docs/knowledge/AVScreenCapture/
 ├── glossary.md                              # 术语表
@@ -164,6 +168,8 @@ docs/knowledge/AVScreenCapture/
 
 知识目录：`docs/knowledge/AVRecorder/`
 
+> 本模块采用渐进式加载：主文档仅保留本索引与路径/关键词触发规则，边界约束、架构不变量、需先确认清单、DFX 约束、常见失败模式集中在 `architecture.md` 与 `coding-standards.md`，验证检查集中在 `architecture.md`「验证」节；高频修改场景的源码文件映射已下沉至各实体/技术文档的「代码与符号 / 代码关联」小节。
+
 ```
 docs/knowledge/AVRecorder/
 ├── glossary.md                              # 术语表
@@ -171,35 +177,35 @@ docs/knowledge/AVRecorder/
 ├── architecture.md                          # 架构设计及约束
 ├── coding-standards.md                      # 编码规范
 ├── entities/
-│   ├── AVRecorder.md                        # AVRecorder 实体（JS/ArkTS API 行为、NAPI 绑定）
-│   ├── RecorderServer.md                    # 录制服务层实体（状态机、配置）
-│   ├── HiRecorder.md                        # HiRecorder 引擎实体（Pipeline 构建、Filter 接线）
-│   ├── AVRecorderConfig.md                  # 录制配置实体（AVRecorderConfig/AVRecorderProfile）
-│   ├── RecorderProfiles.md                  # 录制 Profile 实体
-│   ├── SourceId.md                          # Source ID 实体（AUDIO_MASK/VIDEO_MASK/META_MASK）
-│   ├── WaterMark.md                         # 水印实体（硬件/软件水印）
-│   └── RecorderCallback.md                  # 录制回调实体（IRecorderEngineObs）
+│   ├── av-recorder.md                        # AVRecorder 实体（JS/ArkTS API 行为、NAPI 绑定）
+│   ├── recorder-server.md                    # 录制服务层实体（状态机、配置）
+│   ├── hi-recorder.md                        # HiRecorder 引擎实体（Pipeline 构建、Filter 接线）
+│   ├── av-recorder-config.md                  # 录制配置实体（AVRecorderConfig/AVRecorderProfile）
+│   ├── recorder-profiles.md                  # 录制 Profile 实体
+│   ├── source-id.md                          # Source ID 实体（AUDIO_MASK/VIDEO_MASK/META_MASK）
+│   ├── water-mark.md                         # 水印实体（硬件/软件水印）
+│   └── recorder-callback.md                  # 录制回调实体（IRecorderEngineObs）
 └── technologies/
-    ├── IPCLayer.md                          # IPC 层技术（Proxy/Stub、回调路由）
-    ├── Pipeline.md                          # Pipeline 架构技术（Filter 生命周期、AVBufferQueue 契约）
-    ├── AudioVideoCapture.md                 # 音视频采集技术（AudioCaptureFilter/VideoCaptureFilter/Surface）
-    ├── WatermarkFusion.md                   # 水印融合技术（OpenGL shader、硬件/软件水印）
-    └── Muxer.md                             # 封装技术（MuxerFilter、输出格式、容器写入）
+    ├── ipc-layer.md                          # IPC 层技术（Proxy/Stub、回调路由）
+    ├── pipeline.md                          # Pipeline 架构技术（Filter 生命周期、AVBufferQueue 契约）
+    ├── audio-video-capture.md                 # 音视频采集技术（AudioCaptureFilter/VideoCaptureFilter/Surface）
+    ├── watermark-fusion.md                   # 水印融合技术（OpenGL shader、硬件/软件水印）
+    └── muxer.md                             # 封装技术（MuxerFilter、输出格式、容器写入）
 ```
 
 | 场景 | 起始路径 | 辅助阅读 |
 |------|---------|---------|
-| JS/ArkTS API 行为或 NAPI 绑定 | `frameworks/js/avrecorder/` | `docs/knowledge/AVRecorder/entities/AVRecorder.md` |
-| 服务层状态机或配置 | `services/services/recorder/server/` | `docs/knowledge/AVRecorder/entities/RecorderServer.md` |
-| IPC 客户端/服务端或回调 | `services/services/recorder/ipc/` | `docs/knowledge/AVRecorder/technologies/IPCLayer.md` |
-| Pipeline 构建或 Filter 接线 | `services/engine/histreamer/recorder/` | `docs/knowledge/AVRecorder/entities/HiRecorder.md`, `docs/knowledge/AVRecorder/technologies/Pipeline.md` |
-| 音频/视频采集 Filter | `av_codec/services/media_engine/filters/audio_capture_filter.*`, `video_capture_filter.*` | `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md` |
+| JS/ArkTS API 行为或 NAPI 绑定 | `frameworks/js/avrecorder/` | `docs/knowledge/AVRecorder/entities/av-recorder.md` |
+| 服务层状态机或配置 | `services/services/recorder/server/` | `docs/knowledge/AVRecorder/entities/recorder-server.md` |
+| IPC 客户端/服务端或回调 | `services/services/recorder/ipc/` | `docs/knowledge/AVRecorder/technologies/ipc-layer.md` |
+| Pipeline 构建或 Filter 接线 | `services/engine/histreamer/recorder/` | `docs/knowledge/AVRecorder/entities/hi-recorder.md`, `docs/knowledge/AVRecorder/technologies/pipeline.md` |
+| 音频/视频采集 Filter | `av_codec/services/media_engine/filters/audio_capture_filter.*`, `video_capture_filter.*` | `docs/knowledge/AVRecorder/technologies/audio-video-capture.md` |
 | 音频/视频编码 Filter | `av_codec/services/media_engine/filters/audio_encoder_filter.*`, `surface_encoder_filter.*` | — |
-| 水印叠加 | `av_codec/services/media_engine/filters/water_mark_filter.*` | `docs/knowledge/AVRecorder/entities/WaterMark.md`, `docs/knowledge/AVRecorder/technologies/WatermarkFusion.md` |
-| 封装/容器写入 | `av_codec/services/media_engine/filters/muxer_filter.*` | `docs/knowledge/AVRecorder/technologies/Muxer.md` |
-| Source ID 或 source type 逻辑 | `services/engine/histreamer/recorder/recorder_utils.h` | `docs/knowledge/AVRecorder/entities/SourceId.md` |
-| 录制配置或 Profile | `frameworks/js/avrecorder/avrecorder_napi.h`（AVRecorderConfig/AVRecorderProfile） | `docs/knowledge/AVRecorder/entities/AVRecorderConfig.md`, `docs/knowledge/AVRecorder/entities/RecorderProfiles.md` |
-| 错误回调或信息上报 | `services/services/engine_intf/i_recorder_engine.h`（IRecorderEngineObs） | `docs/knowledge/AVRecorder/entities/RecorderCallback.md` |
+| 水印叠加 | `av_codec/services/media_engine/filters/water_mark_filter.*` | `docs/knowledge/AVRecorder/entities/water-mark.md`, `docs/knowledge/AVRecorder/technologies/watermark-fusion.md` |
+| 封装/容器写入 | `av_codec/services/media_engine/filters/muxer_filter.*` | `docs/knowledge/AVRecorder/technologies/muxer.md` |
+| Source ID 或 source type 逻辑 | `services/engine/histreamer/recorder/recorder_utils.h` | `docs/knowledge/AVRecorder/entities/source-id.md` |
+| 录制配置或 Profile | `frameworks/js/avrecorder/avrecorder_napi.h`（AVRecorderConfig/AVRecorderProfile） | `docs/knowledge/AVRecorder/entities/av-recorder-config.md`, `docs/knowledge/AVRecorder/entities/recorder-profiles.md` |
+| 错误回调或信息上报 | `services/services/engine_intf/i_recorder_engine.h`（IRecorderEngineObs） | `docs/knowledge/AVRecorder/entities/recorder-callback.md` |
 | MediaLibrary 适配器（自动创建文件） | `services/services/recorder/server/media_library_adapter.*` | — |
 | 测试 | `test/unittest/` | — |
 
@@ -361,20 +367,20 @@ docs/knowledge/AVMeta/
 
 | 修改路径 | 必读文档 | 原因 |
 |----------|---------|------|
-| `frameworks/js/avrecorder/` | `docs/knowledge/AVRecorder/entities/AVRecorder.md` | JS API 兼容性、NAPI 绑定约束 |
-| `frameworks/js/avrecorder/avrecorder_napi.h` | `docs/knowledge/AVRecorder/entities/AVRecorderConfig.md` + `docs/knowledge/AVRecorder/entities/RecorderProfiles.md` | AVRecorderConfig/AVRecorderProfile 字段定义、IPC 序列化兼容性 |
-| `services/services/recorder/server/` | `docs/knowledge/AVRecorder/entities/RecorderServer.md` | 录制服务状态机（RecStatus）、ConfigInfo 原子性、WatchDog |
-| `services/services/recorder/ipc/` | `docs/knowledge/AVRecorder/technologies/IPCLayer.md` | IPC parcel 字段顺序、回调路由、Proxy/Stub 一致性 |
-| `services/services/engine_intf/` | `docs/knowledge/AVRecorder/entities/RecorderCallback.md` | IRecorderEngineObs 回调接口、错误/信息上报契约 |
-| `services/engine/histreamer/recorder/` | `docs/knowledge/AVRecorder/entities/HiRecorder.md` | 状态机转换（StateId）、Pipeline 构建（BuildPipeline） |
-| `services/engine/histreamer/recorder/recorder_utils.h` | `docs/knowledge/AVRecorder/entities/SourceId.md` | SourceId 掩码常量（AUDIO_MASK/VIDEO_MASK/META_MASK）、source type 逻辑 |
-| `services/services/recorder/server/media_library_adapter.*` | `docs/knowledge/AVRecorder/entities/RecorderServer.md` | FileGenerationMode、MediaLibrary 文件创建逻辑 |
-| `av_codec/services/media_engine/filters/audio_capture_filter.*` | `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md` | 音频采集 Filter 生命周期、Surface 契约 |
-| `av_codec/services/media_engine/filters/video_capture_filter.*` | `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md` | 视频采集 Filter 生命周期、getInputSurface 时序 |
-| `av_codec/services/media_engine/filters/water_mark_filter.*` | `docs/knowledge/AVRecorder/entities/WaterMark.md` + `docs/knowledge/AVRecorder/technologies/WatermarkFusion.md` | 水印渲染、OpenGL shader、硬件/软件水印兼容性 |
-| `av_codec/services/media_engine/filters/muxer_filter.*` | `docs/knowledge/AVRecorder/technologies/Muxer.md` | 封装格式、track 添加逻辑、容器写入、跨版本兼容性 |
-| `av_codec/services/media_engine/filters/audio_encoder_filter.*` | — | 音频编码 Filter（无独立知识文档，参考 Pipeline.md） |
-| `av_codec/services/media_engine/filters/surface_encoder_filter.*` | — | 视频编码 Filter（无独立知识文档，参考 Pipeline.md） |
+| `frameworks/js/avrecorder/` | `docs/knowledge/AVRecorder/entities/av-recorder.md` | JS API 兼容性、NAPI 绑定约束 |
+| `frameworks/js/avrecorder/avrecorder_napi.h` | `docs/knowledge/AVRecorder/entities/av-recorder-config.md` + `docs/knowledge/AVRecorder/entities/recorder-profiles.md` | AVRecorderConfig/AVRecorderProfile 字段定义、IPC 序列化兼容性 |
+| `services/services/recorder/server/` | `docs/knowledge/AVRecorder/entities/recorder-server.md` | 录制服务状态机（RecStatus）、ConfigInfo 原子性、WatchDog |
+| `services/services/recorder/ipc/` | `docs/knowledge/AVRecorder/technologies/ipc-layer.md` | IPC parcel 字段顺序、回调路由、Proxy/Stub 一致性 |
+| `services/services/engine_intf/` | `docs/knowledge/AVRecorder/entities/recorder-callback.md` | IRecorderEngineObs 回调接口、错误/信息上报契约 |
+| `services/engine/histreamer/recorder/` | `docs/knowledge/AVRecorder/entities/hi-recorder.md` | 状态机转换（StateId）、Pipeline 构建（BuildPipeline） |
+| `services/engine/histreamer/recorder/recorder_utils.h` | `docs/knowledge/AVRecorder/entities/source-id.md` | SourceId 掩码常量（AUDIO_MASK/VIDEO_MASK/META_MASK）、source type 逻辑 |
+| `services/services/recorder/server/media_library_adapter.*` | `docs/knowledge/AVRecorder/entities/recorder-server.md` | FileGenerationMode、MediaLibrary 文件创建逻辑 |
+| `av_codec/services/media_engine/filters/audio_capture_filter.*` | `docs/knowledge/AVRecorder/technologies/audio-video-capture.md` | 音频采集 Filter 生命周期、Surface 契约 |
+| `av_codec/services/media_engine/filters/video_capture_filter.*` | `docs/knowledge/AVRecorder/technologies/audio-video-capture.md` | 视频采集 Filter 生命周期、getInputSurface 时序 |
+| `av_codec/services/media_engine/filters/water_mark_filter.*` | `docs/knowledge/AVRecorder/entities/water-mark.md` + `docs/knowledge/AVRecorder/technologies/watermark-fusion.md` | 水印渲染、OpenGL shader、硬件/软件水印兼容性 |
+| `av_codec/services/media_engine/filters/muxer_filter.*` | `docs/knowledge/AVRecorder/technologies/muxer.md` | 封装格式、track 添加逻辑、容器写入、跨版本兼容性 |
+| `av_codec/services/media_engine/filters/audio_encoder_filter.*` | — | 音频编码 Filter（无独立知识文档，参考 pipeline.md） |
+| `av_codec/services/media_engine/filters/surface_encoder_filter.*` | — | 视频编码 Filter（无独立知识文档，参考 pipeline.md） |
 
 **AVPlayer 关键词触发规则**：
 
@@ -391,13 +397,7 @@ docs/knowledge/AVMeta/
 
 **AVRecorder 关键词触发规则**：
 
-- 提及 **AVRecorder, createAVRecorder, AVRecorderConfig, AVRecorderProfile** → 先读 `docs/knowledge/AVRecorder/entities/AVRecorder.md` 和 `docs/knowledge/AVRecorder/entities/AVRecorderConfig.md`
-- 提及 **HiRecorder, HiRecorderImpl, Pipeline, Filter, BuildPipeline** → 先读 `docs/knowledge/AVRecorder/entities/HiRecorder.md` 和 `docs/knowledge/AVRecorder/technologies/Pipeline.md`
-- 提及 **Watermark, WaterMarkFilter, SetWatermark, AddWatermark, OpenGL watermark** → 先读 `docs/knowledge/AVRecorder/entities/WaterMark.md` 和 `docs/knowledge/AVRecorder/technologies/WatermarkFusion.md`
-- 提及 **Muxer, MuxerFilter, MediaMuxer, OutputFormat, container format** → 先读 `docs/knowledge/AVRecorder/technologies/Muxer.md`
-- 提及 **SourceId, AudioSourceType, VideoSourceType, MetaSourceType, DUMMY_SOURCE_ID** → 先读 `docs/knowledge/AVRecorder/entities/SourceId.md`
-- 提及 **IPC, Proxy, Stub, RecorderClient, RecorderServer, IStandardRecorderService** → 先读 `docs/knowledge/AVRecorder/technologies/IPCLayer.md`
-- 提及 **AudioCapturer, AudioCaptureFilter, VideoCaptureFilter, Surface, getInputSurface** → 先读 `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md`
+- 提及 **AVRecorder, createAVRecorder, RecorderServer, RecorderClient, HiRecorder, 录制** 或本模块领域术语（AVRecorderConfig/AVRecorderProfile、Pipeline、Watermark、Muxer、SourceId、IPC 消息码、采集 Filter、getInputSurface 等）→ 先读 `docs/knowledge/AVRecorder/glossary.md`，按术语「详见」链接直达对应实体/技术文档（模块上下文确定时 glossary 已随「加载规范」启动加载）；术语未收录时查「知识索引 → AVRecorder」场景表
 
 #### AVScreenCapture 相关路径
 
@@ -422,17 +422,7 @@ docs/knowledge/AVMeta/
 
 **AVScreenCapture 关键词触发规则**：
 
-- 提及 **VirtualScreen, MakeVirtualScreenMirror, MakeVirtualScreenExtended, SurfaceBuffer** → 先读 `docs/knowledge/AVScreenCapture/entities/capture-implementation.md`
-- 提及 **能力位图, Capability bitmask, IsState, STATE_CAPS_, AVScreenCaptureState** → 先读 `docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md` 和 `docs/knowledge/AVScreenCapture/entities/service-layer.md`
-- 提及 **PrivacyProtected, 隐私窗口, 隐私保护, ENTER_PRIVATE_SCENE** → 先读 `docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
-- 提及 **白名单, 黑名单, AddWhiteListWindows, ExcludeContent, SetVirtualScreenBlackList** → 先读 `docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
-- 提及 **Picker, PresentPicker, PickerMode, UserChoice, Controller** → 先读 `docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md` 和 `docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md`
-- 提及 **Monitor, IsScreenCaptureWorking, 系统录屏器, ScreenCaptureMonitorServer** → 先读 `docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md`
-- 提及 **IPC, Proxy, Stub, ScreenCaptureClient, ScreenCaptureServiceStub, 41 个消息码** → 先读 `docs/knowledge/AVScreenCapture/technologies/ipc-communication.md` 和 `docs/knowledge/AVScreenCapture/entities/ipc-layer-entities.md`
-- 提及 **AudioCapturerWrapper, AudioDataSource, MixAudio, 混音, 音视频同步** → 先读 `docs/knowledge/AVScreenCapture/entities/capture-implementation.md` 和 `docs/knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md`
-- 提及 **ScreenCapBufferConsumerListener, OnBufferAvailable, SurfaceBuffer** → 先读 `docs/knowledge/AVScreenCapture/entities/capture-implementation.md`
-- 提及 **ScreenCaptureServerManager, maxAppLimit, 实例限制, SA 注册** → 先读 `docs/knowledge/AVScreenCapture/entities/service-layer.md`
-- 提及 **NotificationLocalLiveView, 通知栏, 录屏通知** → 先读 `docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md`
+- 提及 **AVScreenCapture, ScreenCapture, 录屏, 屏幕录制** 或本模块领域术语（虚拟屏幕、能力位图、隐私窗口、白名单/黑名单、Picker、Monitor、Controller、混音、消息码、通知栏、统计打点等）→ 先读 `docs/knowledge/AVScreenCapture/glossary.md`，按术语「详见」链接直达对应实体/技术文档（模块上下文确定时 glossary 已随「加载规范」启动加载）；术语未收录时查「知识索引 → AVScreenCapture」场景表
 
 #### 其它模块路径
 
@@ -475,38 +465,13 @@ docs/knowledge/AVMeta/
 
 #### AVRecorder 场景
 
-| 修改场景 | 涉及源码文件 | 必读知识文档 |
-|----------|------------|------------|
-| NAPI/JS API 变更 | `avrecorder_napi.cpp`、`avrecorder_napi.h` | `docs/knowledge/AVRecorder/entities/AVRecorder.md` |
-| 状态机调整 | `recorder_server.cpp`（RecStatus） | `docs/knowledge/AVRecorder/entities/RecorderServer.md` |
-| IPC 接口增删 | `recorder_service_stub.cpp`、`recorder_service_proxy.cpp`、`recorder_client.cpp` | `docs/knowledge/AVRecorder/technologies/IPCLayer.md` |
-| Pipeline 构建/Filter 修改 | `hirecorder_impl.cpp`、对应 `*_filter.cpp` | `docs/knowledge/AVRecorder/entities/HiRecorder.md`、`docs/knowledge/AVRecorder/technologies/Pipeline.md` |
-| 水印功能修改 | `water_mark_filter.cpp` | `docs/knowledge/AVRecorder/entities/WaterMark.md`、`docs/knowledge/AVRecorder/technologies/WatermarkFusion.md` |
-| 封装格式修改 | `muxer_filter.cpp` | `docs/knowledge/AVRecorder/technologies/Muxer.md` |
-| Source ID 逻辑 | `recorder_utils.h` | `docs/knowledge/AVRecorder/entities/SourceId.md` |
-| 音视频采集修改 | `audio_capture_filter.cpp`、`video_capture_filter.cpp` | `docs/knowledge/AVRecorder/technologies/AudioVideoCapture.md` |
-| 编码器修改 | `audio_encoder_filter.cpp`、`surface_encoder_filter.cpp` | — |
-| MediaLibrary 适配 | `media_library_adapter.cpp` | — |
-| 录制配置/Profile 修改 | `avrecorder_napi.h`（AVRecorderConfig/AVRecorderProfile） | `docs/knowledge/AVRecorder/entities/AVRecorderConfig.md`、`docs/knowledge/AVRecorder/entities/RecorderProfiles.md` |
-| 错误回调修改 | `i_recorder_engine.h`（IRecorderEngineObs） | `docs/knowledge/AVRecorder/entities/RecorderCallback.md` |
+> 源码文件映射已下沉至 `docs/knowledge/AVRecorder/` 各实体/技术文档的「代码与符号 / 代码关联」小节，场景→文档路由由上方路径触发规则与关键词触发规则承载；任务特定验证检查与需先确认清单见 `docs/knowledge/AVRecorder/architecture.md`「验证」与「需先确认」节。
+> 最低检查：构建 `./build.sh --product-name <product-name> --build-target av_recorder --ccache`；单元测试 `./test.sh av_recorder_unittest`；Lint `./tools/lint_changed.sh <changed-files>`（如可用）。
 
 #### AVScreenCapture 场景
 
-| 修改场景 | 涉及源码文件 | 必读知识文档 |
-|----------|------------|------------|
-| 状态机/能力位图调整 | `screen_capture_server.cpp`、`screen_capture_server_base.h` | docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md + docs/knowledge/AVScreenCapture/entities/service-layer.md |
-| 隐私保护/权限校验修改 | `screen_capture_server.cpp`（CheckPrivacyWindowSkipPermission/RequestUserPrivacyAuthority/PrivacyProtected） | docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md |
-| IPC 接口增删 | `screen_capture_service_stub.cpp`、`screen_capture_service_proxy.cpp`、`screen_capture_client.cpp`、`screen_capture_listener_proxy.cpp` | docs/knowledge/AVScreenCapture/technologies/ipc-communication.md + docs/knowledge/AVScreenCapture/entities/ipc-layer-entities.md |
-| 虚拟屏幕/视频采集修改 | `screen_capture_server.cpp`（MakeVirtualScreenMirror/MakeVirtualScreenExtended）、`screen_cap_buffer_consumer_listener.cpp` | docs/knowledge/AVScreenCapture/entities/capture-implementation.md + docs/knowledge/AVScreenCapture/technologies/capture-features.md |
-| 音频采集/混音逻辑修改 | `audio_capturer_wrapper.cpp`、`audio_data_source.cpp` | docs/knowledge/AVScreenCapture/entities/capture-implementation.md + docs/knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md |
-| Picker/用户选择修改 | `screen_capture_controller_server.cpp`、`ui_extension_ability_connection.cpp` | docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md + docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md |
-| Monitor 状态追踪修改 | `screen_capture_monitor_server.cpp`、`screen_capture_monitor_client.cpp` | docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md |
-| 系统监听器注册/注销 | `screen_capture_listener_manager.cpp` | docs/knowledge/AVScreenCapture/entities/service-layer.md + docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md |
-| NAPI/JS API 变更 | `avscreen_capture_napi.cpp`、`screen_capture_impl.cpp` | docs/knowledge/AVScreenCapture/entities/api-layer.md |
-| C API 变更 | `native_avscreen_capture.cpp`、`screen_capture_object.cpp` | docs/knowledge/AVScreenCapture/entities/api-layer.md |
-| 实例数量限制调整 | `screen_capture_server_manager.cpp` | docs/knowledge/AVScreenCapture/entities/service-layer.md |
-| 错误码/DFX 打点 | `screen_capture_server.cpp`、`screen_capture_server_callback.cpp` | docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md |
-| 录屏通知栏修改 | `screen_capture_server.cpp`（NotificationLocalLiveViewContent） | docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md |
+> 源码文件映射已下沉至 `docs/knowledge/AVScreenCapture/` 各实体/技术文档的「源码定位」小节，场景→文档路由由上方路径触发规则与关键词触发规则承载；任务特定验证检查见 `docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md` 等对应文档。
+> 最低检查：构建 `./build.sh --product-name <product-name> --build-target media_service_screen_capture --ccache`；单元测试 `test/unittest/screen_capture_test/`（含 `screen_capture_ipc_unit_test`）、`test/unittest/screen_capture_impl_unittest/`；模糊测试 `test/fuzztest/screen_capture_fuzztest/`。
 
 #### 其它模块场景
 
@@ -574,6 +539,7 @@ docs/knowledge/AVMeta/
 6. **内存回收可恢复**：所有播放状态必须保存到 RecoverConfigInfo，确保内存回收后可完整恢复。
 7. **DFX 可观测**：关键路径必须有 HiSysEvent/HiAppEvent 打点，卡顿/错误必须上报。
 8. **第三方许可证合规**：ffmpeg 组件受 LGPL 许可证约束，修改 ffmpeg 封装层（DemuxerPlugin/SourcePlugin）需评估许可证影响；hcodec/fcodec 为厂商闭源库，严禁逆向或绕过 InnerAPI 直接调用厂商接口。
+9. **禁止冗余注释**：代码不加注释，靠命名和结构自解释。文件级版权头除外。
 
 ## 播放模块边界约束（AVPlayer）
 
@@ -657,150 +623,6 @@ docs/knowledge/AVMeta/
 ### 完成定义
 
 完成意味着：(1) 构建成功，(2) 相关单元测试通过，(3) lint 无新增警告，(4) 任务特定兼容性/安全检查通过，(5) 无资源泄漏（Player 实例、Surface、fd 已释放）。
-
-### 最终响应要求
-
-最终响应必须列出：(1) 变更文件，(2) 运行的检查及结果，(3) 未解决的风险或无法验证的内容。
-
-### 验证降级
-
-若构建或测试无法运行，报告：(1) 哪些验证步骤无法运行，(2) 原因，(3) 剩余未验证风险，(4) 评审者应执行的手动验证。
-
-## 录制模块边界约束（AVRecorder）
-
-### 禁止事项
-
-- 禁止绕过 IPC Proxy/Stub 在客户端和服务端进程间共享裸指针或引用。
-- 禁止跳过状态机检查（`CheckStateMachine`、`RecStatus`）强制执行操作。
-- 禁止未在 `FilterFactory` 注册并更新 `HiRecorderImpl::BuildPipeline` 的情况下新增 Filter 类型。
-- 禁止修改 `AVRecorderState` 或 `stateCtrlList` 时未验证 NAPI、Server、Engine 三层状态转换一致性。
-- 禁止绕过权限检查（MICROPHONE、CAMERA）或 IPC token 验证以通过测试。
-- 禁止硬编码编码器名称或 codec MIME 类型；应查询 `CodecCapabilityAdapter`。
-- 禁止调用 `Release` 后继续使用 `RecorderClient` 或 `RecorderServer` 实例。
-- 禁止直接编辑生成或自动注册的 Filter 绑定；应更新源码并重新构建。
-- 禁止未进行跨版本测试就修改输出文件格式兼容性（MP4/M4A/AAC track 结构、udta box 布局）；现有播放客户端可能 break。
-- 禁止移除或重排 `ConfigInfo`（RecorderServer）或 `AVRecorderConfig`（NAPI）中通过 IPC 序列化的字段；这会破坏 wire 兼容性。
-- 禁止未经许可证审查和审批引入第三方依赖；录制服务运行在系统进程中，有严格的许可证要求。
-- 禁止修改 `SaveDocumentSyncCallback` 关闭处理逻辑时未验证强制停止时录制数据完整性。
-
-### 需先确认
-
-- 修改 `frameworks/js/avrecorder/` 中公共 JS API 签名、参数名、错误码或状态机语义前需确认。
-- 修改 `IRecorderService` 或 `IRecorderEngine` 接口方法签名前需确认。
-- 修改 `services/services/recorder/ipc/` 中 IPC parcel 字段顺序或回调 ID 分配前需确认。
-- 修改 `recorder_utils.h` 中 `SourceId` 掩码常量（`AUDIO_MASK`、`VIDEO_MASK`、`META_MASK`）前需确认。
-- 修改 `WaterMarkFilter` OpenGL shader 代码影响水印渲染输出前需确认。
-- 修改 `MuxerFilter` 格式表或 track 添加逻辑影响输出文件兼容性前需确认。
-- 修改 `MAX_WATERMARK_NUMBER`、`MAX_WATERMARK_SIZE` 或水印位置校验前需确认。
-- 修改录制服务 SA ID 或进程分配前需确认。
-- 修改持久化录制配置默认值（如 `AVRECORDER_DEFAULT_AUDIO_BIT_RATE`、`AVRECORDER_DEFAULT_FRAME_RATE`）影响输出文件特性前需确认。
-- 修改 `FileGenerationMode` 行为或 `MediaLibraryAdapter` 文件创建逻辑影响录制资源在媒体相册中的展示前需确认。
-
-### 架构不变量
-
-- **IPC 是模块边界**：`RecorderClient` ↔ `RecorderServer` 通信必须通过 IPC Proxy/Stub。
-- **Pipeline 是引擎核心**：所有录制数据流必须通过 Filter Pipeline；禁止 Pipeline 框架外的直接 Filter-to-Filter 指针调用。
-- **状态机是权威的**：`stateCtrlList`（NAPI）、`RecStatus`（Server）、`StateId`（Engine）必须保持一致。
-- **Source 必须先于 Format**：`SetVideoSource`/`SetAudioSource`/`SetMetaSource` 必须在 `SetOutputFormat` 之前调用。
-- **依赖方向**：NAPI → Service → Engine → MediaEngine Filters；不可逆向。
-
-## 录制模块 DFX 约束
-
-- 所有录制错误路径在返回错误码前必须调用 `HiLog` 并带模块标签。
-- 录制失败（编码失败、文件写入失败、Pipeline 错误）必须上报 `HiSysEvent` fault 事件。
-- `RecorderServer` 中 `StatisticalEventInfo` 必须在录制完成或失败时发送 DFX 事件前填充。
-- 禁止移除或抑制 Filter 中的 `MEDIA_LOG_I/W/E` 日志调用以消除测试输出。
-- `RecorderServer` 中 WatchDog 不可禁用；它防止录制会话挂起。
-
-## 录制模块常见 Agent 失败模式
-
-- Agent 调用 `Start` 前未调用 `Prepare` → MSERR_INVALID_OPERATION。调用生命周期方法前必须检查状态。
-- Agent 在 `Prepare` 前调用 `GetInputSurface` → 返回 null surface。Surface 仅在 Prepare 后可用。
-- Agent 混用 `SetWatermark`（硬件）和 `AddWatermark`（软件）未检查 `IsWatermarkSupported` → 在无硬件水印能力的设备上可能报 unsupported。
-- Agent 在 `Stop` 后忘记调用 `Release` → Surface 和 fd 泄漏。测试 teardown 中必须 Stop 后跟 Release。
-- Agent 添加超过 5 个水印 → MSERR_INVALID_OPERATION。添加前检查 `watermarkCount_`。
-- Agent 在一层修改 `stateCtrlList` 但忘记另外两层 → 状态机不一致。
-
-## 录制模块验证
-
-### 最低检查
-
-- 构建：`./build.sh --product-name <product-name> --build-target av_recorder --ccache`
-- 单元测试：`./test.sh av_recorder_unittest`
-- Lint：`./tools/lint_changed.sh <changed-files>`（如可用）
-
-### 任务特定检查
-
-| 变更类型 | 附加检查 |
-|---------|---------|
-| NAPI API 变更 | 运行 JS API 兼容性检查；验证 `stateCtrlList` 与 Server `RecStatus` 和 Engine `StateId` 一致 |
-| IPC parcel 变更 | 验证 Proxy 和 Stub 字段顺序一致；验证回调 ID 不变 |
-| Filter 变更 | 验证 Filter 生命周期（Init→Prepare→Start→Stop→Release）；验证与上游/下游的 AVBufferQueue 契约 |
-| 水印变更 | 验证 GPU 上的软件水印渲染输出；验证硬件水印编码输出；测试最大水印数量和尺寸边界 |
-| 状态机变更 | 验证三层状态转换表一致性 |
-| Config/Profile 变更 | 验证 `AVRecorderConfig` 解析 round-trip（JS→NAPI→Server→Engine） |
-
-### 完成定义
-
-完成意味着：(1) 构建成功，(2) 相关单元测试通过，(3) lint 无新增警告，(4) 任务特定兼容性/安全检查通过，(5) 无资源泄漏（Surface/fd/AudioCapturer 已释放）。
-
-### 最终响应要求
-
-最终响应必须列出：(1) 变更文件，(2) 运行的检查及结果，(3) 未解决的风险或无法验证的内容。
-
-### 验证降级
-
-若构建或测试无法运行，报告：(1) 哪些验证步骤无法运行，(2) 原因，(3) 剩余未验证风险，(4) 评审者应执行的手动验证。
-
-## 屏幕录制模块边界约束（AVScreenCapture）
-
-### 禁止事项
-
-- 禁止跳过状态机校验直接执行采集操作；非法状态必须返回错误码。
-- 禁止绕过实例数量限制直接创建实例。
-- 禁止修改窗口过滤语义（白名单/黑名单的过滤方向）而不验证采集内容正确性。
-- 禁止未经权限审查修改系统参数配置。
-
-### 架构不变量
-
-- **无独立引擎层**：视频采集直接调用系统虚拟屏幕能力，音频采集直接调用系统音频采集能力，文件录制复用录制引擎。
-- **状态机校验必须执行**：能力位图校验必须覆盖所有操作入口。
-- **隐私保护优先**：所有采集操作必须经过权限校验和隐私窗口保护。
-- **三子系统分离**：主录屏、用户选择、状态监控为独立 SA。
-- **依赖方向**：NAPI → Service → 采集实现；不可逆向。
-
-## 屏幕录制模块 DFX 约束
-
-- 录屏统计信息必须在录屏结束或失败时发送 DFX 事件前填充（详见 docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md）。
-- 录屏通知栏的暂停/停止/麦克风按钮响应不可禁用（详见 docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md）。
-
-## 屏幕录制模块常见 Agent 失败模式
-
-- Agent 调用开始采集前未调用初始化 → 返回错误码。调用生命周期方法前必须检查状态（详见 docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md）。
-- Agent 将白名单理解为"始终可见" → 语义错误。白名单=仅白名单内窗口可见，过滤其余窗口（详见 docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md）。
-- Agent 绕过实例管理器直接创建实例 → 实例数超限。必须通过实例数校验（详见 docs/knowledge/AVScreenCapture/entities/service-layer.md）。
-- Agent 修改状态机但忘记同步能力位图数组 → 状态校验失效（详见 docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md）。
-
-## 屏幕录制模块验证
-
-### 任务特定检查
-
-| 变更类型 | 附加检查 |
-|---------|---------|
-| NAPI/JS API 变更 | 验证 NAPI 桥接层与 Native 实现调用链一致；验证异步调度（详见 docs/knowledge/AVScreenCapture/entities/api-layer.md） |
-| C API 变更 | 验证 C API 回调机制；验证新旧回调适配（详见 docs/knowledge/AVScreenCapture/entities/api-layer.md） |
-| IPC parcel 变更 | 验证 Proxy 和 Stub 字段顺序一致；验证消息码不变（详见 docs/knowledge/AVScreenCapture/technologies/ipc-communication.md） |
-| 状态机/能力位图变更 | 验证状态转换覆盖所有操作入口；验证能力位图数组与状态一致（详见 docs/knowledge/AVScreenCapture/technologies/capture-lifecycle.md） |
-| 隐私保护变更 | 验证隐私窗口保护机制；验证权限校验流程；验证白名单/黑名单语义（详见 docs/knowledge/AVScreenCapture/technologies/privacy-and-permission.md） |
-| 虚拟屏幕变更 | 验证虚拟屏幕创建/销毁生命周期；验证 Surface 释放（详见 docs/knowledge/AVScreenCapture/entities/capture-implementation.md） |
-| 音频采集/混音变更 | 验证音频采集生命周期；验证混音同步算法（详见 docs/knowledge/AVScreenCapture/technologies/av-sync-and-buffer.md） |
-| Monitor 变更 | 验证录屏状态追踪；验证监听器注册/注销（详见 docs/knowledge/AVScreenCapture/entities/monitor-and-controller.md） |
-| 实例数量限制变更 | 验证实例数校验逻辑（详见 docs/knowledge/AVScreenCapture/entities/service-layer.md） |
-| DFX 打点变更 | 验证 DFX 事件字段完整；验证通知栏按钮响应未禁用（详见 docs/knowledge/AVScreenCapture/technologies/error-handling-and-dfx.md） |
-
-### 完成定义
-
-完成意味着：(1) 构建成功，(2) 相关单元测试通过，(3) lint 无新增警告，(4) 任务特定兼容性/安全检查通过，(5) 无资源泄漏（虚拟屏幕、Surface、音频采集已释放）。
 
 ### 最终响应要求
 

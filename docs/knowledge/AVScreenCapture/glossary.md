@@ -11,20 +11,26 @@ ScreenCaptureServer 用 7 状态枚举 + 状态-能力映射数组替代 AVPlaye
 ## 隐私窗口保护（PrivacyProtected）
 虚拟屏幕可设置跳过系统级/应用级隐私窗口保护。设置后含有隐私属性的窗口在录屏时被跳过（黑屏/遮盖），防止敏感信息泄露。隐私窗口出现/消失时通过 ENTER_PRIVATE_SCENE/EXIT_PRIVATE_SCENE 通知应用。详见 [privacy-and-permission](technologies/privacy-and-permission.md)
 
+## 窗口过滤（白名单/黑名单）
+虚拟屏幕支持两种过滤方向：白名单=仅白名单内窗口可见，其余窗口被过滤；黑名单=仅黑名单内窗口被过滤。通过 AddWhiteListWindows/ExcludeContent/SetVirtualScreenBlackList 配置。详见 [privacy-and-permission](technologies/privacy-and-permission.md)
+
 ## 免授权权限（EXEMPT_CAPTURE_SCREEN_AUTHORIZE）
 `ohos.permission.EXEMPT_CAPTURE_SCREEN_AUTHORIZE` 权限，持有该权限的系统应用可跳过隐私授权弹窗直接开始录屏。无此权限的应用需经过 POPUP_WINDOW 状态弹出隐私通知窗口等待用户授权。详见 [privacy-and-permission](technologies/privacy-and-permission.md)
 
 ## 数据模式（DataType）
-录屏数据输出模式：`ORIGINAL_STREAM`（原始流，应用主动获取每帧数据）、`ENCODED_STREAM`（编码流）、`CAPTURE_FILE`（录制到文件，复用 Recorder 引擎）。不同模式决定采集初始化路径。详见 [capture-lifecycle](technologies/capture-lifecycle.md)
+录屏数据输出模式：`ORIGINAL_STREAM`（原始流，应用主动获取每帧数据）、`ENCODED_STREAM`（编码流）、`CAPTURE_FILE`（录制到文件，复用 Recorder 引擎）。不同模式决定采集初始化路径。详见 [capture-features](technologies/capture-features.md) + [capture-lifecycle](technologies/capture-lifecycle.md)
 
 ## 采集模式（CaptureMode）
-录屏目标选择模式：`CAPTURE_HOME_SCREEN`、`CAPTURE_SPECIFIED_SCREEN`、`CAPTURE_SPECIFIED_WINDOW`、`CAPTURE_VIRTUAL_EXTENDED_SCREEN`、`CAPTURE_SPECIFIED_APP`。决定虚拟屏幕创建方式、镜像来源、窗口过滤策略。详见 [capture-lifecycle](technologies/capture-lifecycle.md)
+录屏目标选择模式：`CAPTURE_HOME_SCREEN`、`CAPTURE_SPECIFIED_SCREEN`、`CAPTURE_SPECIFIED_WINDOW`、`CAPTURE_VIRTUAL_EXTENDED_SCREEN`、`CAPTURE_SPECIFIED_APP`。决定虚拟屏幕创建方式、镜像来源、窗口过滤策略。详见 [capture-features](technologies/capture-features.md) + [capture-lifecycle](technologies/capture-lifecycle.md)
 
 ## Picker 选择器
-系统级 UI 扩展能力，让用户在录屏开始前选择录制目标（窗口/屏幕/应用）。用户选择后通过 Controller 服务上报结果。`PickerMode` 控制可选目标类型组合。详见 [ipc-communication](technologies/ipc-communication.md) + [monitor-and-controller](entities/monitor-and-controller.md)
+系统级 UI 扩展能力，让用户在录屏开始前选择录制目标（窗口/屏幕/应用）。用户选择后通过 Controller 服务上报结果。`PickerMode` 控制可选目标类型组合。详见 [monitor-and-controller](entities/monitor-and-controller.md) + [privacy-and-permission](technologies/privacy-and-permission.md)，选择结果上报通道见 [ipc-communication](technologies/ipc-communication.md)
 
-## 音频混音（AudioDataSource MixAudio）
-AudioDataSource 持有内录和麦克风两路音频采集器，将两路 PCM 数据按时间戳对齐混合后输出。视频首帧 pts 与音频首帧 pts 对齐实现音视频同步。Pause/Resume 时记录 pauseDuration 补偿时间戳偏移。详见 [av-sync-and-buffer](technologies/av-sync-and-buffer.md)
+## IPC 通道（Proxy/Stub 41 个消息码）
+ScreenCaptureClient（应用进程代理）与 ScreenCaptureServiceStub（服务端入口）之间共 41 个消息码的 MessageParcel 序列化通道；回调经 ScreenCaptureListenerProxy/Stub 反向通路异步下发，不可阻塞。详见 [ipc-communication](technologies/ipc-communication.md) + [ipc-layer-entities](entities/ipc-layer-entities.md)
+
+## 音频混音（AudioCapturerWrapper AudioDataSource MixAudio）
+AudioDataSource 持有内录和麦克风两路音频采集器（AudioCapturerWrapper 封装），将两路 PCM 数据按时间戳对齐混合后输出。视频首帧 pts 与音频首帧 pts 对齐实现音视频同步。Pause/Resume 时记录 pauseDuration 补偿时间戳偏移。详见 [capture-implementation](entities/capture-implementation.md) + [av-sync-and-buffer](technologies/av-sync-and-buffer.md)
 
 ## 缓冲消费者监听器（ScreenCapBufferConsumerListener）
 注册到虚拟屏幕 Consumer Surface 的缓冲监听器，监听缓冲就绪回调。内部维护独立线程循环获取 SurfaceBuffer 并回调给应用。Start/Stop/Release 控制线程生命周期。详见 [capture-implementation](entities/capture-implementation.md)

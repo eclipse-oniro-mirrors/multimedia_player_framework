@@ -159,6 +159,13 @@ Release 时将统计信息通过 Meta 上报：
 | 用户拒绝授权 | 用户 DENY | MSERR_UNKNOWN | 状态回退 CREATED，回调 CANCELED |
 | Picker 不支持 | 编译宏未开启 | MSERR_UNKNOWN_UNSUPPORT | 条件编译返回 |
 
+## 源码定位
+
+| 路径 | 职责 |
+|------|------|
+| services/services/screen_capture/server/screen_capture_server.cpp | StatisticalEventInfo 填充与 DFX 事件上报、通知栏（NotificationLocalLiveViewContent）发布/更新/移除 |
+| services/services/screen_capture/server/screen_capture_server_callback.cpp | 服务端回调，错误/信息上报 |
+
 ## 知识关联
 
 - [capture-lifecycle](capture-lifecycle.md) - 录屏完整生命周期
