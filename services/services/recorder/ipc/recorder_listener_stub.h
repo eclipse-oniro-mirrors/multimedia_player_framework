@@ -16,6 +16,7 @@
 #ifndef RECORDER_LISTENER_STUB_H
 #define RECORDER_LISTENER_STUB_H
 
+#include <mutex>
 #include "i_standard_recorder_listener.h"
 #include "recorder.h"
 #include "monitor_client_object.h"
@@ -35,6 +36,7 @@ public:
     void SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor);
 
 private:
+    std::mutex callbackMutex_;
     std::shared_ptr<RecorderCallback> callback_ = nullptr;
     std::weak_ptr<MonitorClientObject> monitor_;
 };

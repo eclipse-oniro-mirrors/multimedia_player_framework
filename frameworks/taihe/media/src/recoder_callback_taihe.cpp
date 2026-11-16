@@ -80,7 +80,7 @@ void RecorderCallbackTaihe::SendErrorCallback(int32_t errCode)
         return;
     }
 
-    RecordTaiheCallback *cb = new(std::nothrow) RecordTaiheCallback();
+    auto cb = std::make_shared<RecordTaiheCallback>();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(ERROR_CALLBACK_NAME);
     cb->callbackName = ERROR_CALLBACK_NAME;
@@ -90,13 +90,13 @@ void RecorderCallbackTaihe::SendErrorCallback(int32_t errCode)
         cb->errorMsg = MSExtErrorToString(static_cast<MediaServiceExtErrCode>(errCode));
     }
     cb->errorCode = errCode;
-    auto task = [this, cb]() {
-        this->OnTaiheErrorCallBack(cb);
+    auto self = shared_from_this();
+    auto task = [self, cb]() {
+        self->OnTaiheErrorCallBack(cb);
     };
     bool ret = mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
-        delete cb;
     }
 }
 
@@ -108,22 +108,22 @@ void RecorderCallbackTaihe::SendStateCallback(const std::string &callbackName)
         return;
     }
 
-    RecordTaiheCallback *cb = new(std::nothrow) RecordTaiheCallback();
+    auto cb = std::make_shared<RecordTaiheCallback>();
     CHECK_AND_RETURN_LOG(cb != nullptr, "cb is nullptr");
     cb->autoRef = refMap_.at(callbackName);
     cb->callbackName = callbackName;
 
-    auto task = [this, cb]() {
-        this->OnTaiheStateCallBack(cb);
+    auto self = shared_from_this();
+    auto task = [self, cb]() {
+        self->OnTaiheStateCallBack(cb);
     };
     bool ret = mainHandler_->PostTask(task, "OnStatechange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
-        delete cb;
     }
 }
 
-void RecorderCallbackTaihe::OnTaiheStateCallBack(RecordTaiheCallback *taiheCb) const
+void RecorderCallbackTaihe::OnTaiheStateCallBack(const std::shared_ptr<RecordTaiheCallback> &taiheCb) const
 {
     std::string request = taiheCb->callbackName;
     do {
@@ -136,10 +136,9 @@ void RecorderCallbackTaihe::OnTaiheStateCallBack(RecordTaiheCallback *taiheCb) c
             std::reinterpret_pointer_cast<taihe::callback<void(taihe::string_view)>>(func);
         (*cacheCallback)(taihe::string_view(request));
     } while (0);
-    delete taiheCb;
 }
 
-void RecorderCallbackTaihe::OnTaiheErrorCallBack(RecordTaiheCallback *taiheCb) const
+void RecorderCallbackTaihe::OnTaiheErrorCallBack(const std::shared_ptr<RecordTaiheCallback> &taiheCb) const
 {
     std::string request = taiheCb->callbackName;
     do {
@@ -153,7 +152,6 @@ void RecorderCallbackTaihe::OnTaiheErrorCallBack(RecordTaiheCallback *taiheCb) c
             std::reinterpret_pointer_cast<taihe::callback<void(uintptr_t)>>(func);
         (*cacheCallback)(reinterpret_cast<uintptr_t>(err));
     } while (0);
-    delete taiheCb;
 }
 }
 }

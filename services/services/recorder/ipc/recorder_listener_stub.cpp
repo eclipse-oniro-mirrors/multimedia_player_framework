@@ -75,41 +75,68 @@ int RecorderListenerStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Me
 
 void RecorderListenerStub::OnError(int32_t errorType, int32_t errorCode)
 {
-    if (callback_ != nullptr) {
-        callback_->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
+    std::shared_ptr<RecorderCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    if (cb != nullptr) {
+        cb->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
     }
 
-    std::shared_ptr<MonitorClientObject> monitor = monitor_.lock();
+    std::weak_ptr<MonitorClientObject> monitorCopy;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        monitorCopy = monitor_;
+    }
+    std::shared_ptr<MonitorClientObject> monitor = monitorCopy.lock();
     CHECK_AND_RETURN(monitor != nullptr);
     (void)monitor->DisableMonitor();
 }
 
 void RecorderListenerStub::OnInfo(int32_t type, int32_t extra)
 {
-    CHECK_AND_RETURN(callback_ != nullptr);
-    callback_->OnInfo(type, extra);
+    std::shared_ptr<RecorderCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    CHECK_AND_RETURN(cb != nullptr);
+    cb->OnInfo(type, extra);
 }
 
 void RecorderListenerStub::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
-    CHECK_AND_RETURN(callback_ != nullptr);
-    callback_->OnAudioCaptureChange(audioRecorderChangeInfo);
+    std::shared_ptr<RecorderCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    CHECK_AND_RETURN(cb != nullptr);
+    cb->OnAudioCaptureChange(audioRecorderChangeInfo);
 }
 
 void RecorderListenerStub::OnPhotoAssetAvailable(const std::string &uri)
 {
-    CHECK_AND_RETURN(callback_ != nullptr);
-    callback_->OnPhotoAssetAvailable(uri);
+    std::shared_ptr<RecorderCallback> cb;
+    {
+        std::lock_guard<std::mutex> lock(callbackMutex_);
+        cb = callback_;
+    }
+    CHECK_AND_RETURN(cb != nullptr);
+    cb->OnPhotoAssetAvailable(uri);
 }
 
 void RecorderListenerStub::SetRecorderCallback(const std::shared_ptr<RecorderCallback> &callback)
 {
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     callback_ = callback;
 }
 
 void RecorderListenerStub::SetMonitor(const std::weak_ptr<MonitorClientObject> &monitor)
 {
     MEDIA_LOGI("SetMonitor");
+    std::lock_guard<std::mutex> lock(callbackMutex_);
     monitor_ = monitor;
 }
 } // namespace Media

@@ -15,6 +15,7 @@
 #ifndef AVRECORDER_TAIHE_H
 #define AVRECORDER_TAIHE_H
 
+#include <mutex>
 #include "recorder.h"
 #include "ohos.multimedia.media.proj.hpp"
 #include "ohos.multimedia.media.impl.hpp"
@@ -344,6 +345,7 @@ private:
     int32_t videoSourceID_ = -1;
     std::map<OHOS::Media::MetaSourceType, int32_t> metaSourceIDMap_;
     std::map<std::string, std::shared_ptr<AutoRef>> eventCbMap_;
+    std::mutex eventCbMapMutex_;
     int32_t audioSourceID_ = -1;
     int32_t metaSourceID_ = -1;
     int32_t rotation_ = 0;

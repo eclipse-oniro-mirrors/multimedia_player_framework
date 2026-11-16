@@ -34,7 +34,7 @@ private:
     RecorderProfilesAbilitySingleton();
     bool ParseRecorderProfilesXml();
     std::vector<RecorderProfilesData> capabilityDataArray_;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
 };
 }  // namespace Media
 }  // namespace OHOS

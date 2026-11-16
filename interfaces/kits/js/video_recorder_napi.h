@@ -16,6 +16,8 @@
 #ifndef VIDEO_RECORDER_NAPI_H_
 #define VIDEO_RECORDER_NAPI_H_
 
+#include <atomic>
+#include <mutex>
 #include "recorder.h"
 #include "av_common.h"
 #include "media_errors.h"
@@ -55,6 +57,7 @@ private:
     static void Destructor(napi_env env, void *nativeObject, void *finalize);
     static napi_value CreateVideoRecorder(napi_env env, napi_callback_info info);
     static napi_value Prepare(napi_env env, napi_callback_info info);
+    static void PrepareAsyncTask(napi_env env, void *data);
     static napi_value GetInputSurface(napi_env env, napi_callback_info info);
     static napi_value Start(napi_env env, napi_callback_info info);
     static napi_value Pause(napi_env env, napi_callback_info info);
@@ -106,8 +109,10 @@ private:
     std::shared_ptr<Recorder> recorder_ = nullptr;
     std::shared_ptr<RecorderCallback> callbackNapi_ = nullptr;
     std::map<std::string, std::shared_ptr<AutoRef>> refMap_;
+    std::mutex callbackMutex_;
     sptr<Surface> surface_;
     std::string currentStates_ = VideoRecorderState::STATE_IDLE;
+    std::mutex stateMutex_;
     bool isPureVideo = false;
     int32_t videoSourceID = 0;
     int32_t audioSourceID = 0;

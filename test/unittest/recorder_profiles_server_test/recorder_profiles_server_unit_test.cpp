@@ -252,7 +252,18 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_GetVideoRecorderProfil
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
-    EXPECT_NE(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
+    EXPECT_EQ(videoRecorderProfile->containerFormatType, "");
+    EXPECT_EQ(videoRecorderProfile->audioCodec, "");
+    EXPECT_EQ(videoRecorderProfile->videoCodec, "");
+    EXPECT_EQ(videoRecorderProfile->audioBitrate, 0);
+    EXPECT_EQ(videoRecorderProfile->audioChannels, 0);
+    EXPECT_EQ(videoRecorderProfile->audioSampleRate, 0);
+    EXPECT_EQ(videoRecorderProfile->durationTime, 0);
+    EXPECT_EQ(videoRecorderProfile->videoBitrate, 0);
+    EXPECT_EQ(videoRecorderProfile->videoFrameWidth, 0);
+    EXPECT_EQ(videoRecorderProfile->videoFrameHeight, 0);
+    EXPECT_EQ(videoRecorderProfile->videoFrameRate, 0);
+    EXPECT_EQ(videoRecorderProfile->qualityLevel, RECORDER_QUALITY_LOW);
 }
 
 /**
@@ -286,7 +297,18 @@ HWTEST_F(RecorderProfilesServerUnitTest, recorder_profile_GetVideoRecorderProfil
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     ASSERT_TRUE(videoRecorderProfile != nullptr);
-    EXPECT_NE(ContainerFormatType::CFT_MPEG_4, videoRecorderProfile->containerFormatType);
+    EXPECT_EQ(videoRecorderProfile->containerFormatType, "");
+    EXPECT_EQ(videoRecorderProfile->audioCodec, "");
+    EXPECT_EQ(videoRecorderProfile->videoCodec, "");
+    EXPECT_EQ(videoRecorderProfile->audioBitrate, 0);
+    EXPECT_EQ(videoRecorderProfile->audioChannels, 0);
+    EXPECT_EQ(videoRecorderProfile->audioSampleRate, 0);
+    EXPECT_EQ(videoRecorderProfile->durationTime, 0);
+    EXPECT_EQ(videoRecorderProfile->videoBitrate, 0);
+    EXPECT_EQ(videoRecorderProfile->videoFrameWidth, 0);
+    EXPECT_EQ(videoRecorderProfile->videoFrameHeight, 0);
+    EXPECT_EQ(videoRecorderProfile->videoFrameRate, 0);
+    EXPECT_EQ(videoRecorderProfile->qualityLevel, RECORDER_QUALITY_LOW);
 }
 } // namespace Media
 } // namespace OHOS

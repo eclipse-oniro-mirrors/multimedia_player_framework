@@ -35,6 +35,7 @@
 #include "surface_encoder_filter.h"
 #include "video_capture_filter.h"
 #include "codec_capability_adapter.h"
+#include "water_mark_filter.h"
 
 namespace OHOS {
 namespace Media {
@@ -118,6 +119,8 @@ private:
     bool CheckAudioSourceType(AudioSourceType sourceType);
     void ConfigureRotation(const RecorderParam &recParam);
     void ConfigureOutFd(const RecorderParam &recParam);
+    void ConfigureParam(int32_t sourceId, const RecorderParam &recParam);
+    void UpdateTimedMetaTrack();
     Status HandleStopOperation();
     void ClearAllConfiguration(bool isDrainAll);
     int32_t PrepareAudioCapture();
@@ -134,6 +137,9 @@ private:
     EncoderCapabilityData ConvertVideoEncoderInfo(MediaAVCodec::CapabilityData *capabilityData);
     std::vector<EncoderCapabilityData> ConvertEncoderInfo(std::vector<MediaAVCodec::CapabilityData*> &capData);
     void UpdateVideoFirstFramePts(const Event &event);
+    std::shared_ptr<IRecorderEngineObs> GetRecorderObs();
+    void HandleErrorEvent(const Event &event);
+    void HandleCompleteEvent();
     AudioRecorderChangeInfo ConvertCapturerChangeInfo(const AudioStandard::AudioCapturerChangeInfo &capturerChangeInfo);
     void CloseFd();
 
@@ -141,7 +147,6 @@ private:
     Status SetVideoEncoderSurface();
 
     // Helper methods for watermark fusion
-    Pipeline::WaterMarkFilter* GetWaterMarkFilter();
     int32_t CreateAndConfigureEncoder(bool setWatermarkMode);
     bool CheckHardWatermarkPositionViolation();
 
@@ -167,7 +172,7 @@ private:
     std::shared_ptr<Pipeline::AudioCaptureFilter> audioCaptureFilter_;
     std::shared_ptr<Pipeline::AudioDataSourceFilter> audioDataSourceFilter_;
     std::shared_ptr<Pipeline::AudioEncoderFilter> audioEncoderFilter_;
-    std::shared_ptr<Pipeline::Filter> waterMarkFilter_;
+    std::shared_ptr<Pipeline::WaterMarkFilter> waterMarkFilter_;
     std::shared_ptr<Pipeline::SurfaceEncoderFilter> videoEncoderFilter_;
     std::shared_ptr<Pipeline::VideoCaptureFilter> videoCaptureFilter_;
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter_;
@@ -187,7 +192,8 @@ private:
 
     std::shared_ptr<CapturerInfoChangeCallback> capturerInfoChangeCallback_;
     std::weak_ptr<IRecorderEngineObs> obs_{};
-    OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
+    std::mutex obsMutex_;
+    std::atomic<OutputFormatType> outputFormatType_{OutputFormatType::FORMAT_BUTT};
     FdsanFd fd_;
     int32_t maxDuration_ = 0;
     int64_t maxSize_ = 0;

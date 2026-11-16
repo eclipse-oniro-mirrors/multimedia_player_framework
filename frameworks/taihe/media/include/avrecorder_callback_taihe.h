@@ -62,12 +62,12 @@ private:
     void OnTaihePhotoAssetAvailableCallback(std::shared_ptr<AVRecordTaiheCallback> jsCb) const;
 #endif
     void OnTaiheAudioCaptureChangeCallback(std::shared_ptr<AVRecordTaiheCallback> taiheCb) const;
-    ::ohos::multimedia::audio::AudioDeviceDescriptor GetDeviceInfo(
-        std::shared_ptr<AVRecordTaiheCallback> taiheCb) const;
-    ::ohos::multimedia::audio::AudioCapturerChangeInfo GetAudioCapturerChangeInfo(
-        std::shared_ptr<AVRecordTaiheCallback> taiheCb) const;
+    static ::ohos::multimedia::audio::AudioDeviceDescriptor GetDeviceInfo(
+        std::shared_ptr<AVRecordTaiheCallback> taiheCb);
+    static ::ohos::multimedia::audio::AudioCapturerChangeInfo GetAudioCapturerChangeInfo(
+        std::shared_ptr<AVRecordTaiheCallback> taiheCb);
 
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     std::string currentState_ = AVRecorderState::STATE_IDLE;
     std::map<std::string, std::weak_ptr<AutoRef>> refMap_;
 };

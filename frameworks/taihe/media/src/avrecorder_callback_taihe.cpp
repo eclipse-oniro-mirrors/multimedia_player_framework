@@ -78,7 +78,13 @@ void AVRecorderCallback::OnTaiheErrorCallBack(std::shared_ptr<AVRecordTaiheCallb
             (*cacheCallback)(reinterpret_cast<uintptr_t>(err));
         } while (0);
     };
-    bool ret = mainHandler_->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        handler = mainHandler_;
+    }
+    CHECK_AND_RETURN_LOG(handler != nullptr, "mainHandler_ is nullptr");
+    bool ret = handler->PostTask(task, "OnError", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
     }
@@ -119,7 +125,13 @@ void AVRecorderCallback::OnTaiheStateCallBack(std::shared_ptr<AVRecordTaiheCallb
             (*cacheCallback)(taihe::string_view(event->state), ohos::multimedia::media::StateChangeReason(key));
         } while (0);
     };
-    bool ret = mainHandler_->PostTask(task, "OnStatechange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        handler = mainHandler_;
+    }
+    CHECK_AND_RETURN_LOG(handler != nullptr, "mainHandler_ is nullptr");
+    bool ret = handler->PostTask(task, "OnStatechange", 0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
     }
@@ -144,7 +156,13 @@ void AVRecorderCallback::OnTaihePhotoAssetAvailableCallback(std::shared_ptr<AVRe
             (*cacheCallback)(photoAssetPtr);
         } while (0);
     };
-    bool ret = mainHandler_->PostTask(task, "OnPhotoAssetAvailable",
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        handler = mainHandler_;
+    }
+    CHECK_AND_RETURN_LOG(handler != nullptr, "mainHandler_ is nullptr");
+    bool ret = handler->PostTask(task, "OnPhotoAssetAvailable",
         0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
@@ -155,7 +173,7 @@ void AVRecorderCallback::OnTaihePhotoAssetAvailableCallback(std::shared_ptr<AVRe
 void AVRecorderCallback::OnTaiheAudioCaptureChangeCallback(std::shared_ptr<AVRecordTaiheCallback> taiheCb) const
 {
     MEDIA_LOGI("AVRecorderCallback OnTaiheAudioCaptureChangeCallback is start");
-    auto task = [this, event = taiheCb]() {
+    auto task = [event = taiheCb]() {
         std::string request = event->callbackName;
         do {
             MEDIA_LOGD("OnTaiheAudioCaptureChangeCallback is called");
@@ -167,10 +185,16 @@ void AVRecorderCallback::OnTaiheAudioCaptureChangeCallback(std::shared_ptr<AVRec
                 ::ohos::multimedia::audio::AudioCapturerChangeInfo const&)>> cacheCallback =
                 std::reinterpret_pointer_cast<taihe::callback<void(
                     ::ohos::multimedia::audio::AudioCapturerChangeInfo const&)>>(func);
-            (*cacheCallback)(this->GetAudioCapturerChangeInfo(event));
+            (*cacheCallback)(AVRecorderCallback::GetAudioCapturerChangeInfo(event));
         } while (0);
     };
-    bool ret = mainHandler_->PostTask(task, "OnAudioCapturerChange",
+    std::shared_ptr<OHOS::AppExecFwk::EventHandler> handler;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        handler = mainHandler_;
+    }
+    CHECK_AND_RETURN_LOG(handler != nullptr, "mainHandler_ is nullptr");
+    bool ret = handler->PostTask(task, "OnAudioCapturerChange",
         0, OHOS::AppExecFwk::EventQueue::Priority::IMMEDIATE, {});
     if (!ret) {
         MEDIA_LOGE("Failed to PostTask!");
@@ -295,7 +319,7 @@ void AVRecorderCallback::OnPhotoAssetAvailable(const std::string &uri)
 }
 
 ::ohos::multimedia::audio::AudioCapturerChangeInfo AVRecorderCallback::GetAudioCapturerChangeInfo(
-    std::shared_ptr<AVRecordTaiheCallback> taiheCb) const
+    std::shared_ptr<AVRecordTaiheCallback> taiheCb)
 {
     ohos::multimedia::audio::AudioState::key_t audioStateKey;
     MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::AudioState>(
@@ -322,7 +346,7 @@ void AVRecorderCallback::OnPhotoAssetAvailable(const std::string &uri)
 }
 
 ::ohos::multimedia::audio::AudioDeviceDescriptor AVRecorderCallback::GetDeviceInfo(
-    std::shared_ptr<AVRecordTaiheCallback> taiheCb) const
+    std::shared_ptr<AVRecordTaiheCallback> taiheCb)
 {
     ohos::multimedia::audio::DeviceRole::key_t deviceRoleKey;
     MediaTaiheUtils::GetEnumKeyByValue<ohos::multimedia::audio::DeviceRole>(

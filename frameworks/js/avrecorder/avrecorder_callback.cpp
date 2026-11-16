@@ -270,6 +270,7 @@ void AVRecorderCallback::OnJsPhotoAssetAvailableCallback(std::shared_ptr<AVRecor
             napi_value args[argCount] = { nullptr };
 
             args[0] = Media::MediaLibraryCommNapi::CreatePhotoAssetNapi(ref->env_, event->uri, CAMERA_SHOT_TYPE);
+            CHECK_AND_BREAK_LOG(args[0] != nullptr, "%{public}s failed to create photo asset", request.c_str());
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());
@@ -305,6 +306,8 @@ void AVRecorderCallback::OnJsAudioCaptureChangeCallback(std::shared_ptr<AVRecord
             std::shared_ptr<AudioCaptureChangeInfoJsCallback> ChangeInfoJsCallback =
                 std::make_shared<AudioCaptureChangeInfoJsCallback>(event->audioRecorderChangeInfo);
             nstatus = ChangeInfoJsCallback->GetJsResult(ref->env_, args[0]);
+            CHECK_AND_BREAK_LOG(nstatus == napi_ok && args[0] != nullptr,
+                "%{public}s failed to get audio capture change info", request.c_str());
             napi_value result = nullptr;
             nstatus = napi_call_function(ref->env_, nullptr, jsCallback, argCount, args, &result);
             CHECK_AND_BREAK_LOG(nstatus == napi_ok, "%{public}s failed to napi call function", request.c_str());

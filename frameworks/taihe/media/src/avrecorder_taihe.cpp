@@ -109,7 +109,12 @@ void AVRecorderImpl::PrepareSync(ohos::multimedia::media::AVRecorderConfig const
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         if (asyncCtx->taihe->GetConfig(asyncCtx, config) == MSERR_OK) {
             asyncCtx->task_ = AVRecorderImpl::GetPrepareTask(asyncCtx);
-            (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            if (enqRet != MSERR_OK) {
+                MEDIA_LOGE("Failed to EnqueueTask");
+                asyncCtx->task_ = nullptr;
+                SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+            }
         }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
@@ -121,7 +126,6 @@ void AVRecorderImpl::PrepareSync(ohos::multimedia::media::AVRecorderConfig const
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
@@ -833,7 +837,12 @@ optional<string> AVRecorderImpl::ExecuteByPromiseString(const std::string &opt)
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = GetPromiseTask(asyncCtx->taihe, opt);
-        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        if (enqRet != MSERR_OK) {
+            MEDIA_LOGE("Failed to EnqueueTask");
+            asyncCtx->task_ = nullptr;
+            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -847,7 +856,6 @@ optional<string> AVRecorderImpl::ExecuteByPromiseString(const std::string &opt)
             }
         }
     }
-    asyncCtx.release();
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return res;
 }
@@ -895,8 +903,14 @@ void AVRecorderImpl::ExecuteByPromise(const std::string &opt)
     CHECK_AND_RETURN_LOG(asyncCtx->taihe->taskQue_ != nullptr, "taskQue is nullptr!");
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = GetPromiseTask(asyncCtx->taihe, opt);
-        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
-        asyncCtx->opt_ = opt;
+        int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        if (enqRet != MSERR_OK) {
+            MEDIA_LOGE("Failed to EnqueueTask");
+            asyncCtx->task_ = nullptr;
+            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        } else {
+            asyncCtx->opt_ = opt;
+        }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -906,7 +920,6 @@ void AVRecorderImpl::ExecuteByPromise(const std::string &opt)
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
@@ -938,7 +951,12 @@ optional<::ohos::multimedia::media::AVRecorderConfig> AVRecorderImpl::GetAVRecor
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = GetAVRecorderConfigTask(asyncCtx);
-        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        if (enqRet != MSERR_OK) {
+            MEDIA_LOGE("Failed to EnqueueTask");
+            asyncCtx->task_ = nullptr;
+            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -952,7 +970,6 @@ optional<::ohos::multimedia::media::AVRecorderConfig> AVRecorderImpl::GetAVRecor
             }
         }
     }
-    asyncCtx.release();
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return optional<::ohos::multimedia::media::AVRecorderConfig>(std::in_place, config);
 }
@@ -1170,7 +1187,12 @@ int32_t AVRecorderImpl::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &c
     CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, res, "taskQue is nullptr!");
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = GetEncoderInfoTask(asyncCtx);
-        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        if (enqRet != MSERR_OK) {
+            MEDIA_LOGE("Failed to EnqueueTask");
+            asyncCtx->task_ = nullptr;
+            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -1184,7 +1206,6 @@ int32_t AVRecorderImpl::GetAVRecorderConfig(std::shared_ptr<AVRecorderConfig> &c
             }
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return res;
@@ -1310,7 +1331,12 @@ optional<::taihe::string> AVRecorderImpl::GetInputMetaSurfaceSync(::ohos::multim
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         if (asyncCtx->taihe->GetMetaType(asyncCtx, type) == MSERR_OK) {
             asyncCtx->task_ = GetInputMetaSurface(asyncCtx);
-            (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            if (enqRet != MSERR_OK) {
+                MEDIA_LOGE("Failed to EnqueueTask");
+                asyncCtx->task_ = nullptr;
+                SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+            }
         }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
@@ -1325,7 +1351,6 @@ optional<::taihe::string> AVRecorderImpl::GetInputMetaSurfaceSync(::ohos::multim
             }
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return res;
@@ -1402,7 +1427,12 @@ bool AVRecorderImpl::IsWatermarkSupportedSync()
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = IsWatermarkSupportedTask(asyncCtx);
-        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        if (enqRet != MSERR_OK) {
+            MEDIA_LOGE("Failed to EnqueueTask");
+            asyncCtx->task_ = nullptr;
+            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -1416,7 +1446,6 @@ bool AVRecorderImpl::IsWatermarkSupportedSync()
             }
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return res;
@@ -1468,11 +1497,15 @@ void AVRecorderImpl::SetMetadata(taihe::map_view<taihe::string, taihe::string> m
         CHECK_AND_RETURN_LOG(metadata.size() != 0, "metadata has no data");
         asyncCtx->metadata_ = std::make_shared<Meta>();
         for (const auto &pair : metadata) {
-            MEDIA_LOGI("metadata tag: %{public}s, value: %{public}s", pair.first.c_str(), pair.second.c_str());
             asyncCtx->metadata_->SetData(std::string(pair.first), std::string(pair.second));
         }
         asyncCtx->task_ = GetSetMetadataTask(asyncCtx);
-        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        if (enqRet != MSERR_OK) {
+            MEDIA_LOGE("Failed to EnqueueTask");
+            asyncCtx->task_ = nullptr;
+            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -1483,7 +1516,6 @@ void AVRecorderImpl::SetMetadata(taihe::map_view<taihe::string, taihe::string> m
         }
     }
 
-    asyncCtx.release();
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
 
@@ -1516,7 +1548,12 @@ void AVRecorderImpl::UpdateRotationSync(int32_t rotation)
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         if (asyncCtx->taihe->GetRotation(asyncCtx, rotation) == MSERR_OK) {
             asyncCtx->task_ = GetSetOrientationHintTask(asyncCtx);
-            (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            if (enqRet != MSERR_OK) {
+                MEDIA_LOGE("Failed to EnqueueTask");
+                asyncCtx->task_ = nullptr;
+                SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+            }
         }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
@@ -1527,7 +1564,6 @@ void AVRecorderImpl::UpdateRotationSync(int32_t rotation)
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return;
@@ -1584,7 +1620,12 @@ void AVRecorderImpl::SetWillMuteWhenInterruptedSync(bool muteWhenInterrupted)
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = GetSetWillMuteWhenInterruptedTask(asyncCtx, muteWhenInterrupted);
-        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        if (enqRet != MSERR_OK) {
+            MEDIA_LOGE("Failed to EnqueueTask");
+            asyncCtx->task_ = nullptr;
+            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -1594,7 +1635,6 @@ void AVRecorderImpl::SetWillMuteWhenInterruptedSync(bool muteWhenInterrupted)
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
@@ -1631,14 +1671,19 @@ int32_t AVRecorderImpl::GetAudioCapturerMaxAmplitudeSync()
     const std::string &opt = AVRecordergOpt::GET_MAX_AMPLITUDE;
     MEDIA_LOGD("Taihe %{public}s Start", opt.c_str());
 
-    int32_t ret = -1;
+    int32_t ret = MSERR_INVALID_OPERATION;
     auto asyncCtx = std::make_unique<AVRecorderAsyncContext>();
     asyncCtx->taihe = this;
     CHECK_AND_RETURN_RET_LOG(asyncCtx->taihe->taskQue_ != nullptr, ret, "taskQue is nullptr!");
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = GetMaxAmplitudeTask(asyncCtx);
-        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        if (enqRet != MSERR_OK) {
+            MEDIA_LOGE("Failed to EnqueueTask");
+            asyncCtx->task_ = nullptr;
+            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -1652,7 +1697,6 @@ int32_t AVRecorderImpl::GetAudioCapturerMaxAmplitudeSync()
             }
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGD("Taihe %{public}s End", opt.c_str());
     return ret;
@@ -1703,7 +1747,12 @@ void AVRecorderImpl::SetWatermarkSync(::ohos::multimedia::image::image::weak::Pi
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         if (asyncCtx->taihe->GetWatermarkParameter(asyncCtx, watermark, config) == MSERR_OK) {
             asyncCtx->task_ = SetWatermarkTask(asyncCtx);
-            (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            if (enqRet != MSERR_OK) {
+                MEDIA_LOGE("Failed to EnqueueTask");
+                asyncCtx->task_ = nullptr;
+                SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+            }
         }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
@@ -1714,7 +1763,6 @@ void AVRecorderImpl::SetWatermarkSync(::ohos::multimedia::image::image::weak::Pi
             set_business_error(result.Value().first, result.Value().second);
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
 }
@@ -1894,7 +1942,12 @@ optional<::ohos::multimedia::audio::AudioCapturerChangeInfo> AVRecorderImpl::Get
 
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         asyncCtx->task_ = GetCurrentCapturerChangeInfoTask(asyncCtx);
-        (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+        if (enqRet != MSERR_OK) {
+            MEDIA_LOGE("Failed to EnqueueTask");
+            asyncCtx->task_ = nullptr;
+            SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+        }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
     }
@@ -1908,7 +1961,6 @@ optional<::ohos::multimedia::audio::AudioCapturerChangeInfo> AVRecorderImpl::Get
             }
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return optional<::ohos::multimedia::audio::AudioCapturerChangeInfo>(std::in_place, changeInfo);
@@ -2144,10 +2196,11 @@ void AVRecorderImpl::CancelCallback()
 
 void AVRecorderImpl::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
-    eventCbMap_[callbackName] = ref;
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
     auto taiheCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
     taiheCb->SaveCallbackReference(callbackName, ref);
+    std::lock_guard<std::mutex> lock(eventCbMapMutex_);
+    eventCbMap_[callbackName] = ref;
 }
 
 void AVRecorderImpl::CancelCallbackReference(const std::string &callbackName)
@@ -2155,6 +2208,7 @@ void AVRecorderImpl::CancelCallbackReference(const std::string &callbackName)
     CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "recorderCb_ is nullptr!");
     auto taiheCb = std::static_pointer_cast<AVRecorderCallback>(recorderCb_);
     taiheCb->CancelCallbackReference(callbackName);
+    std::lock_guard<std::mutex> lock(eventCbMapMutex_);
     eventCbMap_[callbackName] = nullptr;
 }
 
@@ -2277,7 +2331,12 @@ int32_t AVRecorderImpl::AddWatermarkSync(::ohos::multimedia::image::image::weak:
     if (asyncCtx->taihe->CheckStateMachine(opt) == MSERR_OK) {
         if (asyncCtx->taihe->GetAddWatermarkParameter(asyncCtx, watermark, config) == MSERR_OK) {
             asyncCtx->task_ = AddWatermarkTask(asyncCtx);
-            (void)asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            int32_t enqRet = asyncCtx->taihe->taskQue_->EnqueueTask(asyncCtx->task_);
+            if (enqRet != MSERR_OK) {
+                MEDIA_LOGE("Failed to EnqueueTask");
+                asyncCtx->task_ = nullptr;
+                SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
+            }
         }
     } else {
         SetRetInfoError(MSERR_INVALID_OPERATION, opt, "");
@@ -2292,7 +2351,6 @@ int32_t AVRecorderImpl::AddWatermarkSync(::ohos::multimedia::image::image::weak:
             }
         }
     }
-    asyncCtx.release();
 
     MEDIA_LOGI("Taihe %{public}s End", opt.c_str());
     return watermarkCount;

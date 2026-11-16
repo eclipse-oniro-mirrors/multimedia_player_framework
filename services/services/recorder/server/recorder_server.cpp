@@ -162,28 +162,38 @@ const std::string& RecorderServer::GetStatusDescription(OHOS::Media::RecorderSer
 
 void RecorderServer::OnError(ErrorType errorType, int32_t errorCode)
 {
-    std::lock_guard<std::mutex> lock(cbMutex_);
-    lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
-    SetErrorInfo(errorCode, lastErrMsg_);
-    CHECK_AND_RETURN(recorderCb_ != nullptr);
-    recorderCb_->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
+    std::shared_ptr<RecorderCallback> callback;
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
+        SetErrorInfo(errorCode, lastErrMsg_);
+        callback = recorderCb_;
+    }
+    CHECK_AND_RETURN(callback != nullptr);
+    callback->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
 }
 
 void RecorderServer::OnInfo(InfoType type, int32_t extra)
 {
-    std::lock_guard<std::mutex> lock(cbMutex_);
-
-    CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "RecorderServer OnInfo recorderCb_ is null");
-    recorderCb_->OnInfo(type, extra);
+    std::shared_ptr<RecorderCallback> callback;
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        callback = recorderCb_;
+    }
+    CHECK_AND_RETURN_LOG(callback != nullptr, "RecorderServer OnInfo recorderCb_ is null");
+    callback->OnInfo(type, extra);
 }
 
 void RecorderServer::OnAudioCaptureChange(const AudioRecorderChangeInfo &audioRecorderChangeInfo)
 {
     MEDIA_LOGI("RecorderServer OnAudioCaptureChange start.");
-    std::lock_guard<std::mutex> lock(cbMutex_);
-
-    CHECK_AND_RETURN_LOG(recorderCb_ != nullptr, "RecorderServer OnAudioCaptureChange recorderCb_ is null");
-    recorderCb_->OnAudioCaptureChange(audioRecorderChangeInfo);
+    std::shared_ptr<RecorderCallback> callback;
+    {
+        std::lock_guard<std::mutex> lock(cbMutex_);
+        callback = recorderCb_;
+    }
+    CHECK_AND_RETURN_LOG(callback != nullptr, "RecorderServer OnAudioCaptureChange recorderCb_ is null");
+    callback->OnAudioCaptureChange(audioRecorderChangeInfo);
 }
 
 int32_t RecorderServer::SetVideoSource(VideoSourceType source, int32_t &sourceId)
@@ -1057,37 +1067,50 @@ int32_t RecorderServer::Resume()
 
 int32_t RecorderServer::Stop(bool block)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    MediaTrace trace("RecorderServer::Stop");
-    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop in", FAKE_POINTER(this));
-    CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION);
-
-    CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
-    auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
-        return recorderEngine_->Stop(block);
-    });
-    int32_t ret = taskQue_.EnqueueTask(task);
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
-
-    auto result = task->GetResult();
-    CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
-    int32_t statusCode = result.Value();
-    MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop out ret: %{public}d", FAKE_POINTER(this), statusCode);
-    status_ = (statusCode == static_cast<int32_t>(Status::OK) ? REC_INITIALIZED : REC_ERROR);
-    if (status_ == REC_INITIALIZED) {
-        int64_t endTime = GetCurrentMillisecond();
-        statisticalEventInfo_.recordDuration = static_cast<int32_t>(endTime - startTime_ -
-            statisticalEventInfo_.startLatency);
 #ifdef SUPPORT_RECORDER_CREATE_FILE
-        if (config_.fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE && config_.uri != "" &&
-            recorderCb_ != nullptr) {
-            recorderCb_->OnPhotoAssetAvailable(config_.uri);
+    std::shared_ptr<RecorderCallback> photoCallback;
+    std::string photoUri;
+#endif
+    int32_t statusCode = 0;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        MediaTrace trace("RecorderServer::Stop");
+        MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop in", FAKE_POINTER(this));
+        CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_RECORDING && status_ != REC_PAUSED, MSERR_INVALID_OPERATION);
+
+        CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
+        auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
+            return recorderEngine_->Stop(block);
+        });
+        int32_t ret = taskQue_.EnqueueTask(task);
+        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, TransformTaskQueueErrCode(ret), "EnqueueTask failed");
+
+        auto result = task->GetResult();
+        CHECK_AND_RETURN_RET_LOG(result.HasResult(), MSERR_INVALID_OPERATION, "task has no result");
+        statusCode = result.Value();
+        MEDIA_LOGI("RecorderServer:0x%{public}06" PRIXPTR " Stop out ret: %{public}d", FAKE_POINTER(this), statusCode);
+        status_ = (statusCode == static_cast<int32_t>(Status::OK) ? REC_INITIALIZED : REC_ERROR);
+        if (status_ == REC_INITIALIZED) {
+            int64_t endTime = GetCurrentMillisecond();
+            statisticalEventInfo_.recordDuration = static_cast<int32_t>(endTime - startTime_ -
+                statisticalEventInfo_.startLatency);
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+            if (config_.fileGenerationMode == FileGenerationMode::AUTO_CREATE_CAMERA_SCENE && config_.uri != "" &&
+                recorderCb_ != nullptr) {
+                photoCallback = recorderCb_;
+                photoUri = config_.uri;
+            }
+#endif
         }
+        SetMediaKitReport(status_);
+#ifdef SUPPORT_POWER_MANAGER
+        UnregisterShutdownCallbackIfNeeded();
 #endif
     }
-    SetMediaKitReport(status_);
-#ifdef SUPPORT_POWER_MANAGER
-    UnregisterShutdownCallbackIfNeeded();
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+    if (photoCallback != nullptr) {
+        photoCallback->OnPhotoAssetAvailable(photoUri);
+    }
 #endif
     return TransformEngineStatusCode(statusCode);
 }
@@ -1157,30 +1180,42 @@ int32_t RecorderServer::DumpInfo(int32_t fd)
 {
     std::string dumpString;
     dumpString += "In RecorderServer::DumpInfo\n";
-    dumpString += "RecorderServer current state is: " + std::to_string(status_) + "\n";
-    if (lastErrMsg_.size() != 0) {
-        dumpString += "RecorderServer last error is: " + lastErrMsg_ + "\n";
+    RecStatus curStatus;
+    ConfigInfo curConfig;
+    std::string curErrMsg;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        curStatus = status_;
+        curConfig = config_;
     }
-    dumpString += "RecorderServer videoSource is: " + std::to_string(config_.videoSource) + "\n";
-    dumpString += "RecorderServer audioSource is: " + std::to_string(config_.audioSource) + "\n";
-    dumpString += "RecorderServer videoCodec is: " + std::to_string(config_.videoCodec) + "\n";
-    dumpString += "RecorderServer audioCodec is: " + std::to_string(config_.audioCodec) + "\n";
-    dumpString += "RecorderServer width is: " + std::to_string(config_.width) + "\n";
-    dumpString += "RecorderServer height is: " + std::to_string(config_.height) + "\n";
-    dumpString += "RecorderServer frameRate is: " + std::to_string(config_.frameRate) + "\n";
-    dumpString += "RecorderServer bitRate is: " + std::to_string(config_.bitRate) + "\n";
-    dumpString += "RecorderServer captureRate is: " + std::to_string(config_.captureRate) + "\n";
-    dumpString += "RecorderServer audioSampleRate is: " + std::to_string(config_.audioSampleRate) + "\n";
-    dumpString += "RecorderServer audioChannel is: " + std::to_string(config_.audioChannel) + "\n";
-    dumpString += "RecorderServer audioBitRate is: " + std::to_string(config_.audioBitRate) + "\n";
-    dumpString += "RecorderServer isHdr is: " + std::to_string(config_.isHdr) + "\n";
-    dumpString += "RecorderServer enableTemporalScale is: " + std::to_string(config_.enableTemporalScale) + "\n";
+    {
+        std::lock_guard<std::mutex> cbLock(cbMutex_);
+        curErrMsg = lastErrMsg_;
+    }
+    dumpString += "RecorderServer current state is: " + std::to_string(curStatus) + "\n";
+    if (curErrMsg.size() != 0) {
+        dumpString += "RecorderServer last error is: " + curErrMsg + "\n";
+    }
+    dumpString += "RecorderServer videoSource is: " + std::to_string(curConfig.videoSource) + "\n";
+    dumpString += "RecorderServer audioSource is: " + std::to_string(curConfig.audioSource) + "\n";
+    dumpString += "RecorderServer videoCodec is: " + std::to_string(curConfig.videoCodec) + "\n";
+    dumpString += "RecorderServer audioCodec is: " + std::to_string(curConfig.audioCodec) + "\n";
+    dumpString += "RecorderServer width is: " + std::to_string(curConfig.width) + "\n";
+    dumpString += "RecorderServer height is: " + std::to_string(curConfig.height) + "\n";
+    dumpString += "RecorderServer frameRate is: " + std::to_string(curConfig.frameRate) + "\n";
+    dumpString += "RecorderServer bitRate is: " + std::to_string(curConfig.bitRate) + "\n";
+    dumpString += "RecorderServer captureRate is: " + std::to_string(curConfig.captureRate) + "\n";
+    dumpString += "RecorderServer audioSampleRate is: " + std::to_string(curConfig.audioSampleRate) + "\n";
+    dumpString += "RecorderServer audioChannel is: " + std::to_string(curConfig.audioChannel) + "\n";
+    dumpString += "RecorderServer audioBitRate is: " + std::to_string(curConfig.audioBitRate) + "\n";
+    dumpString += "RecorderServer isHdr is: " + std::to_string(curConfig.isHdr) + "\n";
+    dumpString += "RecorderServer enableTemporalScale is: " + std::to_string(curConfig.enableTemporalScale) + "\n";
     dumpString += "RecorderServer enableStableQualityMode is: " +
-        std::to_string(config_.enableStableQualityMode) + "\n";
-    dumpString += "RecorderServer sqrFactor is: " + std::to_string(config_.sqrFactor) + "\n";
-    dumpString += "RecorderServer maxDuration is: " + std::to_string(config_.maxDuration) + "\n";
-    dumpString += "RecorderServer format is: " + std::to_string(config_.format) + "\n";
-    dumpString += "RecorderServer maxFileSize is: " + std::to_string(config_.maxFileSize) + "\n";
+        std::to_string(curConfig.enableStableQualityMode) + "\n";
+    dumpString += "RecorderServer sqrFactor is: " + std::to_string(curConfig.sqrFactor) + "\n";
+    dumpString += "RecorderServer maxDuration is: " + std::to_string(curConfig.maxDuration) + "\n";
+    dumpString += "RecorderServer format is: " + std::to_string(curConfig.format) + "\n";
+    dumpString += "RecorderServer maxFileSize is: " + std::to_string(curConfig.maxFileSize) + "\n";
     if (fd != -1) {
         write(fd, dumpString.c_str(), dumpString.size());
     } else {
@@ -1429,25 +1464,47 @@ int32_t RecorderServer::SetStabilizationMode(bool enableStabilization)
 void RecorderServer::SetMetaDataReport()
 {
     std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();
-    meta->SetData(Tag::RECORDER_ERR_CODE, statisticalEventInfo_.errCode);
-    meta->SetData(Tag::RECORDER_ERR_MSG, statisticalEventInfo_.errMsg);
-    meta->SetData(Tag::RECORDER_DURATION, statisticalEventInfo_.recordDuration);
-    statisticalEventInfo_.containerMime = GetVideoMime(config_.videoCodec) + ";" + GetAudioMime(config_.audioCodec);
-    meta->SetData(Tag::RECORDER_CONTAINER_MIME, statisticalEventInfo_.containerMime);
-    meta->SetData(Tag::RECORDER_CONTAINER_FORMAT, GetContainerFormat(config_.format));
-    meta->SetData(Tag::RECORDER_VIDEO_MIME, GetVideoMime(config_.videoCodec));
-    statisticalEventInfo_.videoResolution = std::to_string(config_.width) + "x" + std::to_string(config_.height);
-    meta->SetData(Tag::RECORDER_VIDEO_RESOLUTION, statisticalEventInfo_.videoResolution);
-    meta->SetData(Tag::RECORDER_VIDEO_BITRATE, config_.bitRate);
-    if (config_.isHdr) {
-        statisticalEventInfo_.hdrType = static_cast<int8_t>(HdrType::HDR_TYPE_VIVID);
+    ConfigInfo snapConfig;
+    int32_t snapErrcode = 0;
+    std::string snapErrMsg;
+    int32_t snapRecordDuration = 0;
+    int32_t snapStartLatency = 0;
+    std::string containerMime;
+    std::string videoResolution;
+    int8_t hdrType = HdrType::HDR_TYPE_NONE;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        snapConfig = config_;
+        snapRecordDuration = statisticalEventInfo_.recordDuration;
+        snapStartLatency = statisticalEventInfo_.startLatency;
+        {
+            std::lock_guard<std::mutex> cbLock(cbMutex_);
+            snapErrcode = statisticalEventInfo_.errCode;
+            snapErrMsg = statisticalEventInfo_.errMsg;
+        }
+        containerMime = GetVideoMime(snapConfig.videoCodec) + ";" + GetAudioMime(snapConfig.audioCodec);
+        videoResolution = std::to_string(snapConfig.width) + "x" + std::to_string(snapConfig.height);
+        if (snapConfig.isHdr) {
+            hdrType = static_cast<int8_t>(HdrType::HDR_TYPE_VIVID);
+        }
+        statisticalEventInfo_.containerMime = containerMime;
+        statisticalEventInfo_.videoResolution = videoResolution;
+        statisticalEventInfo_.hdrType = hdrType;
     }
-    meta->SetData(Tag::RECORDER_HDR_TYPE, statisticalEventInfo_.hdrType);
-    meta->SetData(Tag::RECORDER_AUDIO_MIME, GetAudioMime(config_.audioCodec));
-    meta->SetData(Tag::RECORDER_AUDIO_SAMPLE_RATE, config_.audioSampleRate);
-    meta->SetData(Tag::RECORDER_AUDIO_CHANNEL_COUNT, config_.audioChannel);
-    meta->SetData(Tag::RECORDER_AUDIO_BITRATE, config_.audioBitRate);
-    meta->SetData(Tag::RECORDER_START_LATENCY, statisticalEventInfo_.startLatency);
+    meta->SetData(Tag::RECORDER_ERR_CODE, snapErrcode);
+    meta->SetData(Tag::RECORDER_ERR_MSG, snapErrMsg);
+    meta->SetData(Tag::RECORDER_DURATION, snapRecordDuration);
+    meta->SetData(Tag::RECORDER_CONTAINER_MIME, containerMime);
+    meta->SetData(Tag::RECORDER_CONTAINER_FORMAT, GetContainerFormat(snapConfig.format));
+    meta->SetData(Tag::RECORDER_VIDEO_MIME, GetVideoMime(snapConfig.videoCodec));
+    meta->SetData(Tag::RECORDER_VIDEO_RESOLUTION, videoResolution);
+    meta->SetData(Tag::RECORDER_VIDEO_BITRATE, snapConfig.bitRate);
+    meta->SetData(Tag::RECORDER_HDR_TYPE, hdrType);
+    meta->SetData(Tag::RECORDER_AUDIO_MIME, GetAudioMime(snapConfig.audioCodec));
+    meta->SetData(Tag::RECORDER_AUDIO_SAMPLE_RATE, snapConfig.audioSampleRate);
+    meta->SetData(Tag::RECORDER_AUDIO_CHANNEL_COUNT, snapConfig.audioChannel);
+    meta->SetData(Tag::RECORDER_AUDIO_BITRATE, snapConfig.audioBitRate);
+    meta->SetData(Tag::RECORDER_START_LATENCY, snapStartLatency);
     AppendMediaInfo(meta, instanceId_);
     ReportMediaInfo(instanceId_);
 }

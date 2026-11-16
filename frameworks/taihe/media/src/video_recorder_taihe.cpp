@@ -177,7 +177,10 @@ void VideoRecorderImpl::PrepareSync(VideoRecorderConfig const& config)
     if (asyncCtx->taihe->SetUrl(urlPath) != MSERR_OK) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_INVALID_PARAMETER, "urlPath", "", "the url is not valid.");
     }
-    asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_PREPARED;
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->stateMutex_);
+        asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_PREPARED;
+    }
     if (asyncCtx->taihe == nullptr || asyncCtx->taihe->recorder_ == nullptr) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "prepare", "");
         return;
@@ -206,7 +209,10 @@ void VideoRecorderImpl::StartSync()
     if (asyncCtx->taihe->recorder_->Start() != MSERR_OK) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Start", "");
     }
-    asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_PLAYING;
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->stateMutex_);
+        asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_PLAYING;
+    }
     asyncCtx.release();
 }
 
@@ -228,7 +234,10 @@ void VideoRecorderImpl::PauseSync()
     if (asyncCtx->taihe->recorder_->Pause() != MSERR_OK) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Pause", "");
     }
-    asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_PAUSED;
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->stateMutex_);
+        asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_PAUSED;
+    }
     asyncCtx.release();
 }
 
@@ -250,7 +259,10 @@ void VideoRecorderImpl::StopSync()
     if (asyncCtx->taihe->recorder_->Stop(false) != MSERR_OK) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Stop", "");
     }
-    asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_STOPPED;
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->stateMutex_);
+        asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_STOPPED;
+    }
     asyncCtx.release();
 }
 
@@ -279,7 +291,10 @@ void VideoRecorderImpl::ResetSync()
     if (asyncCtx->taihe->recorder_->Reset() != MSERR_OK) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Reset", "");
     }
-    asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_IDLE;
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->stateMutex_);
+        asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_IDLE;
+    }
     asyncCtx.release();
 }
 
@@ -301,7 +316,10 @@ void VideoRecorderImpl::ResumeSync()
     if (asyncCtx->taihe->recorder_->Resume() != MSERR_OK) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Resume", "");
     }
-    asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_PLAYING;
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->stateMutex_);
+        asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_PLAYING;
+    }
     asyncCtx.release();
 }
 
@@ -330,7 +348,10 @@ void VideoRecorderImpl::ReleaseSync()
     if (asyncCtx->taihe->recorder_->Release() != MSERR_OK) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Release", "");
     }
-    asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_IDLE;
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->stateMutex_);
+        asyncCtx->taihe->currentStates_ = VideoRecorderState::STATE_IDLE;
+    }
     asyncCtx->taihe->CancelCallback();
     asyncCtx.release();
 }
@@ -339,7 +360,10 @@ string VideoRecorderImpl::GetState()
 {
     std::string curState = VideoRecorderState::STATE_ERROR;
     if (callback_ != nullptr) {
-        curState = currentStates_;
+        {
+            std::lock_guard<std::mutex> lock(stateMutex_);
+            curState = currentStates_;
+        }
         MEDIA_LOGD("GetState success, State: %{public}s", curState.c_str());
     }
     return MediaTaiheUtils::ToTaiheString(curState);
@@ -488,7 +512,10 @@ void VideoRecorderImpl::OnError(callback_view<void(uintptr_t)> callback)
 
 void VideoRecorderImpl::SetCallbackReference(const std::string &callbackName, std::shared_ptr<AutoRef> ref)
 {
-    refMap_[callbackName] = ref;
+    {
+        std::lock_guard<std::mutex> lock(refMapMutex_);
+        refMap_[callbackName] = ref;
+    }
     if (callback_ != nullptr) {
         auto taiheCb = std::static_pointer_cast<RecorderCallbackTaihe>(callback_);
         taiheCb->SaveCallbackReference(callbackName, ref);

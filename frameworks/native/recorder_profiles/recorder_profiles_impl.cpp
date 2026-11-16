@@ -48,6 +48,12 @@ int32_t RecorderProfilesImpl::Init()
     return MSERR_OK;
 }
 
+std::shared_ptr<IRecorderProfilesService> RecorderProfilesImpl::GetRecorderProfilesService()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return recorderProfilesService_;
+}
+
 RecorderProfilesImpl::RecorderProfilesImpl()
 {
     MEDIA_LOGD("RecorderProfilesImpl:0x%{public}06" PRIXPTR " Instances create", FAKE_POINTER(this));
@@ -55,36 +61,44 @@ RecorderProfilesImpl::RecorderProfilesImpl()
 
 RecorderProfilesImpl::~RecorderProfilesImpl()
 {
-    if (recorderProfilesService_ != nullptr) {
-        (void)MediaServiceFactory::GetInstance().DestroyMediaProfileService(recorderProfilesService_);
+    std::shared_ptr<IRecorderProfilesService> service = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        service = recorderProfilesService_;
         recorderProfilesService_ = nullptr;
+    }
+    if (service != nullptr) {
+        (void)MediaServiceFactory::GetInstance().DestroyMediaProfileService(service);
     }
     MEDIA_LOGD("RecorderProfilesImpl:0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 bool RecorderProfilesImpl::IsAudioRecorderConfigSupported(const AudioRecorderProfile &profile)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr, false, "RecorderProfiles service does not exist.");
+    std::shared_ptr<IRecorderProfilesService> service = GetRecorderProfilesService();
+    CHECK_AND_RETURN_RET_LOG(service != nullptr, false, "RecorderProfiles service does not exist.");
     RecorderProfilesData profileData;
     profileData.recorderProfile.containerFormatType = profile.containerFormatType;
     profileData.recorderProfile.audioCodec = profile.audioCodec;
     profileData.recorderProfile.audioBitrate = profile.audioBitrate;
     profileData.recorderProfile.audioSampleRate = profile.audioSampleRate;
     profileData.recorderProfile.audioChannels = profile.audioChannels;
-    return recorderProfilesService_->IsAudioRecorderConfigSupported(profileData);
+    return service->IsAudioRecorderConfigSupported(profileData);
 }
 
 bool RecorderProfilesImpl::HasVideoRecorderProfile(int32_t sourceId, int32_t qualityLevel)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr, false, "RecorderProfiles service does not exist.");
-    return recorderProfilesService_->HasVideoRecorderProfile(sourceId, qualityLevel);
+    std::shared_ptr<IRecorderProfilesService> service = GetRecorderProfilesService();
+    CHECK_AND_RETURN_RET_LOG(service != nullptr, false, "RecorderProfiles service does not exist.");
+    return service->HasVideoRecorderProfile(sourceId, qualityLevel);
 }
 
 std::vector<std::shared_ptr<AudioRecorderCaps>> RecorderProfilesImpl::GetAudioRecorderCaps()
 {
-    CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr,
+    std::shared_ptr<IRecorderProfilesService> service = GetRecorderProfilesService();
+    CHECK_AND_RETURN_RET_LOG(service != nullptr,
         std::vector<std::shared_ptr<AudioRecorderCaps>>(), "RecorderProfiles service does not exist.");
-    std::vector<RecorderProfilesData> capabilityArray = recorderProfilesService_->GetAudioRecorderCapsInfo();
+    std::vector<RecorderProfilesData> capabilityArray = service->GetAudioRecorderCapsInfo();
     std::vector<std::shared_ptr<AudioRecorderCaps>> audioRecorderCapsArray;
     for (auto iter = capabilityArray.begin(); iter != capabilityArray.end(); iter++) {
         std::shared_ptr<AudioRecorderCaps> audioRecorderCaps = std::make_shared<AudioRecorderCaps>((*iter).audioCaps);
@@ -96,9 +110,10 @@ std::vector<std::shared_ptr<AudioRecorderCaps>> RecorderProfilesImpl::GetAudioRe
 
 std::vector<std::shared_ptr<VideoRecorderCaps>> RecorderProfilesImpl::GetVideoRecorderCaps()
 {
-    CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr,
+    std::shared_ptr<IRecorderProfilesService> service = GetRecorderProfilesService();
+    CHECK_AND_RETURN_RET_LOG(service != nullptr,
         std::vector<std::shared_ptr<VideoRecorderCaps>>(), "RecorderProfiles service does not exist.");
-    std::vector<RecorderProfilesData> capabilityArray = recorderProfilesService_->GetVideoRecorderCapsInfo();
+    std::vector<RecorderProfilesData> capabilityArray = service->GetVideoRecorderCapsInfo();
     std::vector<std::shared_ptr<VideoRecorderCaps>> videoRecorderCapsArray;
     for (auto iter = capabilityArray.begin(); iter != capabilityArray.end(); iter++) {
         std::shared_ptr<VideoRecorderCaps> videoRecorderCaps = std::make_shared<VideoRecorderCaps>((*iter).videoCaps);
@@ -111,9 +126,10 @@ std::vector<std::shared_ptr<VideoRecorderCaps>> RecorderProfilesImpl::GetVideoRe
 std::shared_ptr<VideoRecorderProfile> RecorderProfilesImpl::GetVideoRecorderProfile(int32_t sourceId,
     int32_t qualityLevel)
 {
-    CHECK_AND_RETURN_RET_LOG(recorderProfilesService_ != nullptr,
+    std::shared_ptr<IRecorderProfilesService> service = GetRecorderProfilesService();
+    CHECK_AND_RETURN_RET_LOG(service != nullptr,
         nullptr, "RecorderProfiles service does not exist.");
-    RecorderProfilesData capability = recorderProfilesService_->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
+    RecorderProfilesData capability = service->GetVideoRecorderProfileInfo(sourceId, qualityLevel);
     std::shared_ptr<VideoRecorderProfile> videoRecorderProfile =
         std::make_shared<VideoRecorderProfile>(capability.recorderProfile);
     CHECK_AND_RETURN_RET_LOG(videoRecorderProfile != nullptr, videoRecorderProfile, "Is null mem");

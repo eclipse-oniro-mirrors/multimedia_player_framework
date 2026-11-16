@@ -3386,6 +3386,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_StartWithoutPrepare_001, TestSize.Leve
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_StartWithoutPrepare_001 in.");
     int32_t ret = OH_AVRecorder_Start(recorder_);
     EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+    OH_AVRecorder_Config *configGet = nullptr;
+    ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
+    EXPECT_EQ(configGet->profile.audioBitrate, 0);
+    EXPECT_EQ(configGet->profile.videoBitrate, 0);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_StartWithoutPrepare_001 out.");
 }
 
@@ -3400,6 +3406,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_PauseWithoutPrepare_001, TestSize.Leve
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_PauseWithoutPrepare_001 in.");
     int32_t ret = OH_AVRecorder_Pause(recorder_);
     EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+    OH_AVRecorder_Config *configGet = nullptr;
+    ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
+    EXPECT_EQ(configGet->profile.audioBitrate, 0);
+    EXPECT_EQ(configGet->profile.videoBitrate, 0);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_PauseWithoutPrepare_001 out.");
 }
 
@@ -3414,6 +3426,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_ResumeWithoutPrepare_001, TestSize.Lev
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_ResumeWithoutPrepare_001 in.");
     int32_t ret = OH_AVRecorder_Resume(recorder_);
     EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+    OH_AVRecorder_Config *configGet = nullptr;
+    ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
+    EXPECT_EQ(configGet->profile.audioBitrate, 0);
+    EXPECT_EQ(configGet->profile.videoBitrate, 0);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_ResumeWithoutPrepare_001 out.");
 }
 
@@ -3428,6 +3446,12 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_StopWithoutPrepare_001, TestSize.Level
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_StopWithoutPrepare_001 in.");
     int32_t ret = OH_AVRecorder_Stop(recorder_);
     EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+    OH_AVRecorder_Config *configGet = nullptr;
+    ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
+    EXPECT_EQ(configGet->profile.audioBitrate, 0);
+    EXPECT_EQ(configGet->profile.videoBitrate, 0);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_StopWithoutPrepare_001 out.");
 }
 
@@ -3443,6 +3467,13 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetSurfaceWithoutPrepare_001, TestSize
     OHNativeWindow *window = nullptr;
     int32_t ret = OH_AVRecorder_GetInputSurface(recorder_, &window);
     EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
+    EXPECT_EQ(window, nullptr);
+    OH_AVRecorder_Config *configGet = nullptr;
+    ret = OH_AVRecorder_GetAVRecorderConfig(recorder_, &configGet);
+    EXPECT_EQ(ret, AV_ERR_OK);
+    ASSERT_NE(configGet, nullptr);
+    EXPECT_EQ(configGet->profile.audioBitrate, 0);
+    EXPECT_EQ(configGet->profile.videoBitrate, 0);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetSurfaceWithoutPrepare_001 out.");
 }
 
@@ -3458,6 +3489,7 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_GetAmplitudeWithoutPrepare_001, TestSi
     int32_t amplitude = 0;
     int32_t ret = OH_AVRecorder_GetAudioCapturerMaxAmplitude(recorder_, &amplitude);
     EXPECT_EQ(ret, AV_ERR_INVALID_STATE);
+    EXPECT_EQ(amplitude, 0);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_GetAmplitudeWithoutPrepare_001 out.");
 }
 

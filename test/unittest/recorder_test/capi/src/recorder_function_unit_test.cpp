@@ -762,22 +762,22 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_009, TestSize.Level2)
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     sleep(RECORDING_TIME);
     
     ret = OH_AVRecorder_Pause(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     sleep(RECORDING_TIME/2);
 
     ret = OH_AVRecorder_Resume(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     sleep(RECORDING_TIME);
 
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
@@ -818,22 +818,22 @@ HWTEST_F(RecorderFunctionUnitTest, Recorder_Audio_010, TestSize.Level2)
 
     int32_t ret = AV_ERR_OK;
     ret = OH_AVRecorder_Prepare(recorder_, &config);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     ret = OH_AVRecorder_Start(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     sleep(RECORDING_TIME);
     
     ret = OH_AVRecorder_Pause(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     sleep(RECORDING_TIME/2);
 
     ret = OH_AVRecorder_Resume(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
     sleep(RECORDING_TIME);
 
     ret = OH_AVRecorder_Stop(recorder_);
-    EXPECT_NE(ret, AV_ERR_OK);
+    EXPECT_EQ(ret, AV_ERR_INVALID_VAL);
 
     free(config.url);
     free(config.metadata.genre);
