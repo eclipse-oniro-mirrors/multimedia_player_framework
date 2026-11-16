@@ -189,6 +189,7 @@ template("ohos_screen_capture_unittest") {
 }
 
 ohos_screen_capture_unittest("screen_capture_native_unit_test") {
+  extra_defines = [ "SCREEN_CAPTURE_NATIVE_UNITTEST" ]
   include_dirs = [ "./native/include" ]
   mock_sources = [
     "native/screen_capture_mock_factory.cpp",
@@ -198,6 +199,7 @@ ohos_screen_capture_unittest("screen_capture_native_unit_test") {
 }
 
 ohos_screen_capture_unittest("screen_capture_capi_unit_test") {
+  extra_defines = [ "SCREEN_CAPTURE_CAPI_UNITTEST" ]
   include_dirs = [
     "./capi/include",
     "$MEDIA_PLAYER_ROOT_DIR/interfaces/kits/c",
