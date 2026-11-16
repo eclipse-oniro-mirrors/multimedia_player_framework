@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include "buffer/avsharedmemorybase.h"
 #include "avdatasrcmemory.h"
+#include "common/fdsan_fd.h"
 #include "media_errors.h"
 #include "media_log.h"
 
@@ -50,18 +51,17 @@ std::shared_ptr<AVSharedMemory> ReadAVSharedMemoryFromParcel(MessageParcel &parc
 {
     int32_t fd  = parcel.ReadFileDescriptor();
     CHECK_AND_RETURN_RET_LOG(fd >= 0, nullptr, "read fd is invalid, fd = %{public}d", fd);
+    FdsanFd fdsanFd(fd);
 
     int32_t size = parcel.ReadInt32();
     uint32_t flags = parcel.ReadUint32();
     std::string name = parcel.ReadString();
 
-    std::shared_ptr<AVSharedMemory> memory = AVSharedMemoryBase::CreateFromRemote(fd, size, flags, name);
+    std::shared_ptr<AVSharedMemory> memory = AVSharedMemoryBase::CreateFromRemote(fdsanFd.Get(), size, flags, name);
     if (memory == nullptr || memory->GetBase() == nullptr) {
         MEDIA_LOGE("create remote AVSharedMemoryBase failed");
-        (void)::close(fd);
         return nullptr;
     }
-    (void)::close(fd);
     return memory;
 }
 
@@ -69,16 +69,16 @@ std::shared_ptr<AVSharedMemory> ReadAVDataSrcMemoryFromParcel(MessageParcel &par
 {
     int32_t fd  = parcel.ReadFileDescriptor();
     CHECK_AND_RETURN_RET_LOG(fd >= 0, nullptr, "read fd is invalid, fd = %{public}d", fd);
+    FdsanFd fdsanFd(fd);
 
     int32_t size = parcel.ReadInt32();
     uint32_t flags = parcel.ReadUint32();
     std::string name = parcel.ReadString();
 
-    std::shared_ptr<AVSharedMemory> memory = AVDataSrcMemory::CreateFromRemote(fd, size, flags, name);
+    std::shared_ptr<AVSharedMemory> memory = AVDataSrcMemory::CreateFromRemote(fdsanFd.Get(), size, flags, name);
     CHECK_AND_RETURN_RET_LOG(memory != nullptr && memory->GetBase() != nullptr, nullptr,
         "create remote AVDataSrcMemory failed");
 
-    (void)::close(fd);
     return memory;
 }
 } // namespace Media
