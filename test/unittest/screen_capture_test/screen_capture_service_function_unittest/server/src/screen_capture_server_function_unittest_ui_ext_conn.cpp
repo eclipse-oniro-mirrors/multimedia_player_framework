@@ -32,8 +32,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_StatusNotUnkno
 {
     auto conn = sptr<UIExtensionAbilityConnection>(new UIExtensionAbilityConnection("test"));
     conn->status_ = ConnectStatus::STARTED;
+    auto mockObj = sptr<MockRemoteObject>::MakeSptr();
+    // status 非 UNKNOWN 时应提前返回，不发起 SendRequest
+    EXPECT_CALL(*mockObj, SendRequest(_, _, _, _)).Times(0);
     AppExecFwk::ElementName element;
-    conn->OnAbilityConnectDone(element, nullptr, 0);
+    conn->OnAbilityConnectDone(element, mockObj, 0);
     EXPECT_EQ(conn->status_.load(), ConnectStatus::STARTED);
 }
 
@@ -43,7 +46,13 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_NullRemote_001
     conn->status_ = ConnectStatus::UNKNOWN;
     AppExecFwk::ElementName element;
     conn->OnAbilityConnectDone(element, nullptr, 0);
+    // remote 为空时提前返回，状态不应进入 STARTING
     EXPECT_EQ(conn->status_.load(), ConnectStatus::UNKNOWN);
+    // 随后传入有效 remote，验证状态可正常迁移到 STARTED，证明空 remote 路径确实未启动连接
+    auto mockObj = sptr<MockRemoteObject>::MakeSptr();
+    EXPECT_CALL(*mockObj, SendRequest(_, _, _, _)).WillOnce(Return(0));
+    conn->OnAbilityConnectDone(element, mockObj, 0);
+    EXPECT_EQ(conn->status_.load(), ConnectStatus::STARTED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, UIExtConn_OnConnectDone_Success_001, TestSize.Level2)

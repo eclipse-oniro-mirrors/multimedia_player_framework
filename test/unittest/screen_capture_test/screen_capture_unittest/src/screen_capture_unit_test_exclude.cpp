@@ -1944,10 +1944,11 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_exclude_content_with_surface_cb_0
     EXPECT_EQ(MSERR_OK, screenCapture_->SetDisplayCallback());
 
     EXPECT_EQ(MSERR_OK, screenCapture_->Init(config_));
-    vector<int> windowIds = {1, 3, 5};
+    // 使用与 003 不同的窗口集合，覆盖不同的排除窗口输入
+    vector<int> windowIds = {2, 4, 6, 8};
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeWindowContent(&windowIds[0], static_cast<int32_t>(windowIds.size())));
-    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_CURRENT_APP_AUDIO));
+    EXPECT_EQ(MSERR_OK, screenCapture_->ExcludeAudioContent(SCREEN_CAPTURE_NOTIFICATION_AUDIO));
     EXPECT_EQ(MSERR_OK, screenCapture_->StartScreenCaptureWithSurface(consumer));
     EXPECT_EQ(MSERR_OK, recorder->Start());
     MEDIA_LOGI("ScreenCaptureUnitTest screen_capture_exclude_content_with_surface_cb_007 recorder Start");

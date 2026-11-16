@@ -794,7 +794,10 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_CheckDisplayArea_Success, TestSi
     auto display = MakeMockDisplay(TEST_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(display));
     OHOS::Rect area = {0, 0, 100, 100};
-    EXPECT_TRUE(server_->CheckDisplayArea(TEST_SCREEN_ID, area));
+    EXPECT_EQ(server_->CheckDisplayArea(TEST_SCREEN_ID, area), true);
+    // 边界：超出屏幕范围应返回 false
+    OHOS::Rect outOfRange = {0, 0, TEST_DISPLAY_WIDTH + 100, TEST_DISPLAY_HEIGHT + 100};
+    EXPECT_EQ(server_->CheckDisplayArea(TEST_SCREEN_ID, outOfRange), false);
 }
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, Flow_GetMultiDisplayCaptureCapability_Success, TestSize.Level2)
@@ -1143,7 +1146,9 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, MakeVirtualScreenExtended_ConvertFail
 {
     auto mainDisplay = MakeMockDisplay(TEST_MAIN_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(mainDisplay));
-    ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(_, _)).WillByDefault(Return(false));
+    // 主屏转换成功、虚拟屏转换失败，覆盖第二个 ConvertScreenIdToRsScreenId 失败分支
+    ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(TEST_MAIN_SCREEN_ID, _)).WillByDefault(Return(true));
+    ON_CALL(*dmFlow_, ConvertScreenIdToRsScreenId(TEST_VIRTUAL_SCREEN_ID, _)).WillByDefault(Return(false));
 
     server_->virtualScreen_ = ScreenCaptureTestParam::MakeTestVirtualScreen(TEST_VIRTUAL_SCREEN_ID);
     server_->displayIds_ = {TEST_MAIN_SCREEN_ID};
@@ -1314,7 +1319,10 @@ HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_Success_001, TestSiz
 {
     auto display = MakeMockDisplay(TEST_SCREEN_ID, TEST_DISPLAY_WIDTH, TEST_DISPLAY_HEIGHT);
     ON_CALL(*dmFlow_, GetDisplayById(_)).WillByDefault(Return(display));
-    EXPECT_TRUE(server_->CheckDisplayArea(TEST_SCREEN_ID, {0, 0, 10, 10}));
+    EXPECT_EQ(server_->CheckDisplayArea(TEST_SCREEN_ID, {0, 0, 10, 10}), true);
+    // 边界：负坐标与越界尺寸均应返回 false
+    EXPECT_EQ(server_->CheckDisplayArea(TEST_SCREEN_ID, {-1, 0, 10, 10}), false);
+    EXPECT_EQ(server_->CheckDisplayArea(TEST_SCREEN_ID, {0, 0, TEST_DISPLAY_WIDTH + 1, 10}), false);
 }
 
 HWTEST_F(ScreenCaptureServerDisplayDmTest, CheckDisplayArea_DisplayNull_001, TestSize.Level2)

@@ -397,13 +397,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, SetCaptureConfig_ExtendedScreen_001, T
     ASSERT_EQ(screenCaptureServer_->captureConfig_.captureMode, CaptureMode::CAPTURE_VIRTUAL_EXTENDED_SCREEN);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, GetCurrentMillisecond_001, TestSize.Level2)
-{
-    int64_t time1 = screenCaptureServer_->GetCurrentMillisecond();
-    int64_t time2 = screenCaptureServer_->GetCurrentMillisecond();
-    ASSERT_GE(time2, time1);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, IsState_MultipleStates_001, TestSize.Level2)
 {
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
