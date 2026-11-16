@@ -45,6 +45,7 @@ ohos_unittest("player_server_unittest") {
     sources = [
       "src/player_server_mock.cpp",
       "src/player_server_unittest.cpp",
+      "src/player_server_state_test.cpp",
       "../common/src/scoped_hap_token.cpp",
     ]
   }
