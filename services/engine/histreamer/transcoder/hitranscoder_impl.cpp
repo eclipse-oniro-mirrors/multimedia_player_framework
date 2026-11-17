@@ -550,7 +550,10 @@ int32_t HiTransCoderImpl::SetOutputFormat(OutputFormatType format)
 int32_t HiTransCoderImpl::SetObs(const std::weak_ptr<ITransCoderEngineObs> &obs)
 {
     MEDIA_LOG_I("HiTransCoderImpl::SetObs()");
-    obs_ = obs;
+    {
+        std::lock_guard<std::mutex> lock(obsMutex_);
+        obs_ = obs;
+    }
     callbackLooper_->StartWithTransCoderEngineObs(obs);
     return MSERR_OK;
 }
@@ -1407,7 +1410,11 @@ void HiTransCoderImpl::HandleCompleteEvent()
 {
     FALSE_RETURN_MSG(callbackLooper_ != nullptr, "callbackLooper is nullptr");
     callbackLooper_->StopReportMediaProgress();
-    auto ptr = obs_.lock();
+    std::shared_ptr<ITransCoderEngineObs> ptr;
+    {
+        std::lock_guard<std::mutex> lock(obsMutex_);
+        ptr = obs_.lock();
+    }
     if (ptr != nullptr) {
         ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_PROGRESS_UPDATE, TRANSCODER_COMPLETE_PROGRESS);
         ptr->OnInfo(TransCoderOnInfoType::INFO_TYPE_TRANSCODER_COMPLETED, 0);

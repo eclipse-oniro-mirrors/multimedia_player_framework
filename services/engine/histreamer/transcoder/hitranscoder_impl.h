@@ -186,6 +186,7 @@ private:
     std::shared_ptr<Meta> srcAudioFormat_ = std::make_shared<Meta>();
 
     std::weak_ptr<ITransCoderEngineObs> obs_{};
+    std::mutex obsMutex_;
     std::shared_ptr<HiTransCoderCallbackLooper> callbackLooper_;
     OutputFormatType outputFormatType_{OutputFormatType::FORMAT_BUTT};
     FdsanFd fd_;
