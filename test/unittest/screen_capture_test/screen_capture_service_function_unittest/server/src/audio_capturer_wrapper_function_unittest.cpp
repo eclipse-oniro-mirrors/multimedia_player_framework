@@ -129,11 +129,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnInterrupt_001, T
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Start(screenCaptureServer_->appInfo_,
                   screenCaptureServer_->captureConfig_.dataType, screenCaptureServer_->sessionId_),
         MSERR_OK);
-    AudioStandard::InterruptEvent interruptEvent;
-    AudioCapturerCallbackImpl callback;
-    callback.OnInterrupt(interruptEvent);
-    callback.OnStateChange(CAPTURER_RUNNING);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->GetAudioCapturerState(),
+        AudioCapturerWrapperState::CAPTURER_RECORDING);
     ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->Stop(), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->innerAudioCapture_->GetAudioCapturerState(),
+        AudioCapturerWrapperState::CAPTURER_STOPED);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapturerConfig_001, TestSize.Level2)
@@ -149,7 +149,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
         MSERR_OK);
     ScreenCaptureContentFilter filter;
     filter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_CURRENT_APP_AUDIO);
-    wrapper->UpdateAudioCapturerConfig(filter);
+    ASSERT_EQ(wrapper->UpdateAudioCapturerConfig(filter), MSERR_OK);
     ASSERT_EQ(wrapper->Stop(), MSERR_OK);
 }
 
@@ -166,7 +166,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUpdateAudioCapture
         MSERR_OK);
     ScreenCaptureContentFilter filter;
     filter.filteredAudioContents.insert(AVScreenCaptureFilterableAudioContent::SCREEN_CAPTURE_NOTIFICATION_AUDIO);
-    wrapper->UpdateAudioCapturerConfig(filter);
+    ASSERT_EQ(wrapper->UpdateAudioCapturerConfig(filter), MSERR_OK);
     ASSERT_EQ(wrapper->Stop(), MSERR_OK);
 }
 
@@ -183,12 +183,12 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperUseUpBuffer_001, T
         MSERR_OK);
     sleep(RECORDER_TIME);
     int64_t currentAudioTime = GetCurrentTimeNs();
-    int32_t ret = wrapper->UseUpAllLeftBufferUntil(currentAudioTime);
-    (void)ret;
+    wrapper->UseUpAllLeftBufferUntil(currentAudioTime);
     int64_t currentAudioTime1 = GetCurrentTimeNs();
     wrapper->DropBufferUntil(currentAudioTime1);
-    ret = wrapper->UseUpAllLeftBufferUntil(currentAudioTime);
-    (void)ret;
+    EXPECT_TRUE(wrapper->availBuffers_.empty());
+    // With no left buffers the wait predicate is satisfied immediately.
+    ASSERT_EQ(wrapper->UseUpAllLeftBufferUntil(currentAudioTime), MSERR_OK);
     ASSERT_EQ(wrapper->Stop(), MSERR_OK);
 }
 
@@ -404,6 +404,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperCreateCacheBuffer_
     wrapper->isMute_.store(true);
     auto cacheBuf = wrapper->CreateCacheBuffer(bufDesc, 0, mockCapturer);
     ASSERT_NE(cacheBuf, nullptr);
+    EXPECT_EQ(cacheBuf->length, bufferSize);
+    EXPECT_EQ(cacheBuf->timestamp, 0);
+    EXPECT_EQ(cacheBuf->sourcetype, screenCaptureServer_->captureConfig_.audioInfo.innerCapInfo.audioSource);
 }
 
 // covers CreateCacheBuffer isMute=false success path
@@ -494,6 +497,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_001, Te
     wrapper->audioCapturer_ = mockCapturer;
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     wrapper->OnReadData(0);
+    // GetBufferDesc failure early-returns before enqueue, so no buffer is queued.
+    EXPECT_TRUE(wrapper->availBuffers_.empty());
 }
 
 // covers OnReadData: bufLength==0 -> Enqueue and return
@@ -509,6 +514,8 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_002, Te
     wrapper->audioCapturer_ = mockCapturer;
     wrapper->captureState_ = AudioCapturerWrapperState::CAPTURER_RECORDING;
     wrapper->OnReadData(0);
+    // Empty buffer early-returns after enqueue, so no buffer is queued.
+    EXPECT_TRUE(wrapper->availBuffers_.empty());
 }
 
 // covers OnReadData: deep success path (valid buffer + timestamp, source != MIC/DEFAULT)
@@ -537,12 +544,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_003, Te
     wrapper->screenCaptureCb_ = nullptr;
     wrapper->SetBufferAvailableCallback(nullptr);
     wrapper->OnReadData(0);
-    ASSERT_FALSE(wrapper->availBuffers_.empty());
+    ASSERT_EQ(wrapper->availBuffers_.size(), 1u);
+    EXPECT_EQ(wrapper->availBuffers_.front()->length, bufferSize);
+    EXPECT_EQ(wrapper->availBuffers_.front()->sourcetype, AudioCaptureSourceType::ALL_PLAYBACK);
     // also cover source == MIC branch (skip offset)
     wrapper->availBuffers_.clear();
     wrapper->audioInfo_.audioSource = AudioCaptureSourceType::MIC;
     wrapper->OnReadData(0);
-    ASSERT_FALSE(wrapper->availBuffers_.empty());
+    ASSERT_EQ(wrapper->availBuffers_.size(), 1u);
+    EXPECT_EQ(wrapper->availBuffers_.front()->length, bufferSize);
+    EXPECT_EQ(wrapper->availBuffers_.front()->sourcetype, AudioCaptureSourceType::MIC);
 }
 
 // covers OnReadData: drop when consume slow (availBuffers size > MAX_AUDIO_BUFFER_SIZE)
@@ -708,7 +719,9 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperOnReadData_009, Te
     wrapper->screenCaptureCb_ = screenCaptureServer_->cbProxy_;
     wrapper->SetBufferAvailableCallback(screenCaptureServer_->audioSource_);
     wrapper->OnReadData(0);
-    ASSERT_FALSE(wrapper->availBuffers_.empty());
+    ASSERT_EQ(wrapper->availBuffers_.size(), 1u);
+    EXPECT_EQ(wrapper->availBuffers_.front()->length, bufferSize);
+    EXPECT_EQ(wrapper->availBuffers_.front()->sourcetype, AudioCaptureSourceType::MIC);
 }
 
 // covers UseUpAllLeftBufferUntil: buffer timestamp >= audioTime -> wait_for predicate true -> OK
@@ -832,7 +845,11 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperSetInnerStreamUsag
     wrapper->SetInnerStreamUsage(usages);
     // MUSIC, ALARM, MOVIE, GAME, AUDIOBOOK, NAVIGATION, UNKNOWN, VOICE_ASSISTANT, VOICE_MESSAGE,
     // NOTIFICATION (not filtered), VOICE_COMMUNICATION, VIDEO_COMMUNICATION = 12
-    ASSERT_GE(usages.size(), 12u);
+    ASSERT_EQ(usages.size(), 12u);
+    EXPECT_EQ(usages[0], OHOS::AudioStandard::StreamUsage::STREAM_USAGE_MUSIC);
+    EXPECT_EQ(usages[9], OHOS::AudioStandard::StreamUsage::STREAM_USAGE_NOTIFICATION);
+    EXPECT_EQ(usages[10], OHOS::AudioStandard::StreamUsage::STREAM_USAGE_VOICE_COMMUNICATION);
+    EXPECT_EQ(usages[11], OHOS::AudioStandard::StreamUsage::STREAM_USAGE_VIDEO_COMMUNICATION);
 }
 
 // covers UpdateAudioCapturerConfig: UpdatePlaybackCaptureConfig returns non-OK (L158)
@@ -1108,7 +1125,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, AudioCapturerWrapperBuildCapturerOptio
     wrapper->audioInfo_.audioSource = AudioCaptureSourceType::SOURCE_INVALID;
     OHOS::AudioStandard::AppInfo appInfo = screenCaptureServer_->appInfo_;
     auto opts = wrapper->BuildCapturerOptions(appInfo);
-    ASSERT_NE(opts.capturerInfo.sourceType, OHOS::AudioStandard::SourceType::SOURCE_TYPE_PLAYBACK_CAPTURE);
+    EXPECT_EQ(opts.capturerInfo.sourceType, OHOS::AudioStandard::SourceType::SOURCE_TYPE_INVALID);
 }
 
 // covers NotifyBufferAvailable: not recording -> early return, callback not invoked (L288 branch 1)

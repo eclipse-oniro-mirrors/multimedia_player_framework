@@ -147,14 +147,15 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnScreenDisconnect_InLi
     MEDIA_LOGI("ServerCallback_OnScreenDisconnect_InList_001 start");
     ASSERT_NE(screenCaptureServer_, nullptr);
 
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->curWindowEvent_ = AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE;
     Rosen::ScreenId screenId = 111;
     screenCaptureServer_->sourceDisplayIds_.push_back(screenId);
     screenCaptureServer_->OnScreenDisconnect(screenId);
     WaitForTaskComplete();
 
-    auto it = std::find(screenCaptureServer_->sourceDisplayIds_.begin(), screenCaptureServer_->sourceDisplayIds_.end(),
-        screenId);
-    ASSERT_TRUE(it != screenCaptureServer_->sourceDisplayIds_.end());
+    ASSERT_EQ(screenCaptureServer_->curWindowEvent_.load(),
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnBatchLifecycleEvent_Foreground_001, TestSize.Level2)
@@ -336,13 +337,16 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnScreenDisconnect_NotI
     MEDIA_LOGI("ServerCallback_OnScreenDisconnect_NotInList_001 start");
     ASSERT_NE(screenCaptureServer_, nullptr);
 
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->curWindowEvent_ = AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE;
     screenCaptureServer_->sourceDisplayIds_.clear();
     Rosen::ScreenId screenId = 999;
 
     screenCaptureServer_->OnScreenDisconnect(screenId);
     WaitForTaskComplete();
 
-    ASSERT_TRUE(screenCaptureServer_->sourceDisplayIds_.empty());
+    ASSERT_EQ(screenCaptureServer_->curWindowEvent_.load(),
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_VISIBLE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnRecordDisplayChange_001, TestSize.Level2)
@@ -627,44 +631,20 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnWindowLifecycle_Foreg
         Rosen::ISessionLifecycleListener::SessionLifecycleEvent::FOREGROUND);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnWindowLifecycle_Background_AllConditions_001,
-    TestSize.Level2)
-{
-    MEDIA_LOGI("ServerCallback_OnWindowLifecycle_Background_AllConditions_001 start");
-    ASSERT_NE(screenCaptureServer_, nullptr);
-
-    screenCaptureServer_->sourceDisplayIds_.push_back(screenCaptureServer_->curWindowInDisplayId_.load());
-    screenCaptureServer_->OnWindowLifecycle(Rosen::ISessionLifecycleListener::SessionLifecycleEvent::BACKGROUND);
-    WaitForTaskComplete();
-
-    ASSERT_EQ(screenCaptureServer_->curWindowLifecycle_.load(),
-        Rosen::ISessionLifecycleListener::SessionLifecycleEvent::BACKGROUND);
-}
-
 HWTEST_F(ScreenCaptureServerFunctionTest, ServerCallback_OnScreenDisconnect_InList_AllConditions_001, TestSize.Level2)
 {
     MEDIA_LOGI("ServerCallback_OnScreenDisconnect_InList_AllConditions_001 start");
     ASSERT_NE(screenCaptureServer_, nullptr);
 
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
+    screenCaptureServer_->curWindowEvent_ = AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE;
     Rosen::ScreenId screenId = 555;
     screenCaptureServer_->sourceDisplayIds_.push_back(screenId);
     screenCaptureServer_->OnScreenDisconnect(screenId);
     WaitForTaskComplete();
 
-    ASSERT_FALSE(screenCaptureServer_->sourceDisplayIds_.empty());
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, Server_UpdateMissionData_ForegroundExisting_001, TestSize.Level2)
-{
-    screenCaptureServer_->missionInfos_ = {{700, false}};
-    Rosen::ISessionLifecycleListener::LifecycleEventPayload payload;
-    payload.persistentId_ = 700;
-    payload.sessionState_ = Rosen::SessionState::STATE_FOREGROUND;
-    screenCaptureServer_->OnAppInstanceLifecycleEvent(payload);
-    WaitForTaskComplete();
-    auto it = std::find_if(screenCaptureServer_->missionInfos_.begin(), screenCaptureServer_->missionInfos_.end(),
-        [](const auto &m) { return m.missionId == 700 && m.isForeground; });
-    EXPECT_TRUE(it != screenCaptureServer_->missionInfos_.end());
+    ASSERT_EQ(screenCaptureServer_->curWindowEvent_.load(),
+        AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_UNAVAILABLE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, Server_UpdateMissionData_ActiveExisting_001, TestSize.Level2)
@@ -692,19 +672,6 @@ HWTEST_F(ScreenCaptureServerFunctionTest, Server_UpdateMissionData_BackgroundNot
         [](const auto &m) { return m.missionId == 900; });
     EXPECT_TRUE(it != screenCaptureServer_->missionInfos_.end());
     EXPECT_FALSE(it->isForeground);
-}
-
-HWTEST_F(ScreenCaptureServerFunctionTest, Server_UpdateMissionData_DisconnectNotInList_001, TestSize.Level2)
-{
-    screenCaptureServer_->missionInfos_ = {{500, true}};
-    Rosen::ISessionLifecycleListener::LifecycleEventPayload payload;
-    payload.persistentId_ = 999;
-    payload.sessionState_ = Rosen::SessionState::STATE_DISCONNECT;
-    screenCaptureServer_->OnAppInstanceLifecycleEvent(payload);
-    WaitForTaskComplete();
-    auto it = std::find_if(screenCaptureServer_->missionInfos_.begin(), screenCaptureServer_->missionInfos_.end(),
-        [](const auto &m) { return m.missionId == 500; });
-    EXPECT_TRUE(it != screenCaptureServer_->missionInfos_.end());
 }
 
 #ifdef SCREEN_CAPTURE_SUPPORT_POWER

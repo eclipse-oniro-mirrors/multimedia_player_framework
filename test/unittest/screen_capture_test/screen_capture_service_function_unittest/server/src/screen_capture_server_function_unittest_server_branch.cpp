@@ -30,6 +30,39 @@ namespace OHOS {
 namespace Media {
 
 namespace {
+// Records OnCaptureContentChanged notifications so early-return paths can be verified.
+class ContentChangedRecorder : public ScreenCaptureCallBack {
+public:
+    void OnError(ScreenCaptureErrorType errorType, int32_t errorCode) override
+    {
+        (void)errorType;
+        (void)errorCode;
+    }
+    void OnAudioBufferAvailable(bool isReady, AudioCaptureSourceType type) override
+    {
+        (void)isReady;
+        (void)type;
+    }
+    void OnVideoBufferAvailable(bool isReady) override
+    {
+        (void)isReady;
+    }
+    void OnCaptureContentChanged(AVScreenCaptureContentChangedEvent event, ScreenCaptureRect *area) override
+    {
+        (void)event;
+        (void)area;
+        ++count_;
+    }
+
+    int Count() const
+    {
+        return count_;
+    }
+
+private:
+    int count_ = 0;
+};
+
 // Allocate a HAP token that has the single given permission granted, returning its token id.
 Security::AccessToken::AccessTokenID SetupTokenWithSinglePerm(const std::string &perm)
 {
@@ -121,19 +154,22 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_InnerCapInval
 HWTEST_F(ScreenCaptureServerFunctionTest, ChangeMirrorScreen_NullVirtualScreen_001, TestSize.Level2)
 {
     screenCaptureServer_->virtualScreen_ = nullptr;
-    screenCaptureServer_->sourceDisplayIds_.clear();
+    screenCaptureServer_->displayIds_ = {200};
+    screenCaptureServer_->sourceDisplayIds_ = {42};
     screenCaptureServer_->ChangeMirrorScreen();
-    // Early return: sourceDisplayIds_ must remain empty (no mirror applied)
-    EXPECT_TRUE(screenCaptureServer_->sourceDisplayIds_.empty());
+    // Early return: sourceDisplayIds_ keeps its old value instead of being replaced by displayIds_.
+    EXPECT_EQ(screenCaptureServer_->sourceDisplayIds_, std::vector<uint64_t>({42}));
+    EXPECT_NE(screenCaptureServer_->sourceDisplayIds_, screenCaptureServer_->displayIds_);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ChangeMirrorScreen_EmptyDisplayIds_001, TestSize.Level2)
 {
     screenCaptureServer_->virtualScreen_ = MakeTestVirtualScreen(100);
     screenCaptureServer_->displayIds_.clear();
-    screenCaptureServer_->sourceDisplayIds_.clear();
+    screenCaptureServer_->sourceDisplayIds_ = {42};
     screenCaptureServer_->ChangeMirrorScreen();
-    EXPECT_TRUE(screenCaptureServer_->sourceDisplayIds_.empty());
+    // Early return: sourceDisplayIds_ keeps its old value and is not cleared.
+    EXPECT_EQ(screenCaptureServer_->sourceDisplayIds_, std::vector<uint64_t>({42}));
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, ChangeMirrorScreen_AlreadyCaptureScreen_001, TestSize.Level2)
@@ -150,17 +186,27 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ChangeMirrorScreen_AlreadyCaptureScree
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyWindowVisible_OverflowMissionId_001, TestSize.Level2)
 {
+    auto recorder = std::make_shared<ContentChangedRecorder>();
+    screenCaptureServer_->cbProxy_->SetCallback(recorder);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     screenCaptureServer_->curWindowEvent_ = AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE;
     constexpr uint64_t overflowMissionId = static_cast<uint64_t>(std::numeric_limits<int32_t>::max()) + 1;
     screenCaptureServer_->NotifyWindowVisible(overflowMissionId);
+    // Early return: no VISIBLE notification is emitted and the previous event is kept.
+    EXPECT_EQ(recorder->Count(), 0);
     EXPECT_EQ(screenCaptureServer_->curWindowEvent_,
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE);
 }
 
 HWTEST_F(ScreenCaptureServerFunctionTest, NotifyWindowVisible_ListWindowInfoFail_001, TestSize.Level2)
 {
+    auto recorder = std::make_shared<ContentChangedRecorder>();
+    screenCaptureServer_->cbProxy_->SetCallback(recorder);
+    screenCaptureServer_->captureState_ = AVScreenCaptureState::CREATED;
     screenCaptureServer_->curWindowEvent_ = AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE;
     screenCaptureServer_->NotifyWindowVisible(100); // valid id, but ListWindowInfo fails
+    // ListWindowInfo failure early-returns: no VISIBLE notification is emitted.
+    EXPECT_EQ(recorder->Count(), 0);
     EXPECT_EQ(screenCaptureServer_->curWindowEvent_,
         AVScreenCaptureContentChangedEvent::SCREEN_CAPTURE_CONTENT_HIDE);
 }
@@ -251,8 +297,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_DefaultState_001, Te
     EXPECT_TRUE(screenCaptureServer_->missionInfos_.front().isForeground);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_InnerIgnoreVideoValid_SurfaceMode_001,
-    TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_SurfaceMode_001, TestSize.Level2)
 {
     SetValidConfig();
     config_.audioInfo.innerCapInfo.audioSampleRate = 0;
