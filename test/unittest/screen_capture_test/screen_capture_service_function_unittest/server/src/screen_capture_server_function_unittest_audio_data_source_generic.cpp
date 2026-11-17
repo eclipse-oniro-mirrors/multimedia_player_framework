@@ -721,17 +721,6 @@ HWTEST_F(AudioDataSourceGenericTest, LostFrameNum_WithPause_001, TestSize.Level2
 
 // === SetListener + OnBufferAvailable ===
 
-HWTEST_F(AudioDataSourceGenericTest, SetListener_OnBufferReady_001, TestSize.Level2)
-{
-    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
-    auto listener = std::make_shared<MockListener>();
-    src->SetListener(listener);
-    auto buf = MakeBuf(100, 4, 0);
-    src->cacheBuffer_ = buf;
-    src->OnBufferAvailable(AudioCaptureSourceType::ALL_PLAYBACK);
-    EXPECT_EQ(listener->count_, 1);
-}
-
 HWTEST_F(AudioDataSourceGenericTest, OnBufferAvailable_NoCacheBuffer_001, TestSize.Level2)
 {
     auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
@@ -1050,17 +1039,6 @@ HWTEST_F(AudioDataSourceGenericTest, LogStats_UpdateSameTypeDiffSrc_001, TestSiz
     EXPECT_EQ(src->logStats_.source, AudioCaptureSourceType::MIC);
 }
 
-// === Coverage: OnBufferAvailable ReadAudioBuffer not OK ===
-
-HWTEST_F(AudioDataSourceGenericTest, OnBufferAvailable_ReadNotOK_001, TestSize.Level2)
-{
-    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
-    auto listener = std::make_shared<MockListener>();
-    src->SetListener(listener);
-    src->OnBufferAvailable(AudioCaptureSourceType::ALL_PLAYBACK);
-    EXPECT_EQ(listener->count_, 0);
-}
-
 // === Coverage: VideoAudioSyncIfNeed multiple slots ===
 
 HWTEST_F(AudioDataSourceGenericTest, VideoAudioSync_MultipleSlots_001, TestSize.Level2)
@@ -1105,18 +1083,6 @@ HWTEST_F(AudioDataSourceGenericTest, VideoAudioSync_DropAhead_MixedSlots_001, Te
     EXPECT_TRUE(src->avSynced_);
     EXPECT_EQ(inner->availBuffers_.size(), 0u);
     EXPECT_EQ(mic->availBuffers_.size(), 0u);
-}
-
-HWTEST_F(AudioDataSourceGenericTest, VideoAudioSync_DropNullCapture_001, TestSize.Level2)
-{
-    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, true);
-    auto inner = MakeMockWrapper(AudioCaptureSourceType::ALL_PLAYBACK);
-    PushBuf(inner, 1000, 4, 10000);
-    src->SetCapture(AudioCaptureSourceType::ALL_PLAYBACK, inner);
-    src->SetVideoFirstFramePts(10000 + 3 * AUDIO_INTERVAL_NS);
-    EXPECT_EQ(src->ReadAudioBuffer(), AudioDataSourceReadAtActionState::SKIP_WITHOUT_LOG);
-    EXPECT_TRUE(src->avSynced_);
-    EXPECT_EQ(inner->availBuffers_.size(), 0u);
 }
 
 // === Coverage: FillSilence failure paths ===

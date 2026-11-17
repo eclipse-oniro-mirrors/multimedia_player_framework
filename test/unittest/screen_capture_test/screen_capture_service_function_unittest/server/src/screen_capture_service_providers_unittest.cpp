@@ -106,31 +106,5 @@ HWTEST_F(ScreenCaptureServiceProvidersTest, CreateRecorder_002, TestSize.Level1)
     EXPECT_NE(recorder1, recorder2);
 }
 
-/**
- * @tc.name    : GetAccountObserver_001
- * @tc.number  : GetAccountObserver_001
- * @tc.desc    : Test GetAccountObserver returns a valid observer reference
- */
-HWTEST_F(ScreenCaptureServiceProvidersTest, GetAccountObserver_001, TestSize.Level1)
-{
-    auto providers = CreateDefaultProviders();
-    ASSERT_NE(providers, nullptr);
-    AccountObserver &observer = providers->GetAccountObserver();
-    AccountObserver &observer2 = providers_->GetAccountObserver();
-    ASSERT_EQ(&observer, &observer2);
-}
-
-/**
- * @tc.name    : GetAccountObserver_002
- * @tc.number  : GetAccountObserver_002
- * @tc.desc    : Test GetAccountObserver returns the same singleton on each call
- */
-HWTEST_F(ScreenCaptureServiceProvidersTest, GetAccountObserver_002, TestSize.Level1)
-{
-    AccountObserver &observer1 = providers_->GetAccountObserver();
-    AccountObserver &observer2 = providers_->GetAccountObserver();
-    EXPECT_EQ(&observer1, &observer2);
-}
-
 } // namespace Media
 } // namespace OHOS

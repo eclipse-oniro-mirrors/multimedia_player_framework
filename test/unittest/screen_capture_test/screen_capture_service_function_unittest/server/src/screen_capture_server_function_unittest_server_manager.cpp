@@ -215,8 +215,14 @@ HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureSessionIdLimit_004, 
 HWTEST_F(ScreenCaptureServerFunctionTest, CheckScreenCaptureAppLimit_001, TestSize.Level2)
 {
     ScreenCaptureServerManager::GetInstance().serverMap_.clear();
-    int32_t curAppUid = ROOT_UID + 1;
-    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(curAppUid), true);
+    std::shared_ptr<ScreenCaptureServer> server = MakeScreenCaptureServerShared();
+    int32_t sessionId = ScreenCaptureServerManager::GetInstance().GetNewSessionId();
+    server->sessionId_ = sessionId;
+    server->appInfo_.appUid = ROOT_UID + 1;
+    ScreenCaptureServerManager::GetInstance().RegisterServer(sessionId, server, server->appInfo_.appUid);
+    // A different appUid is still allowed while appNum is below maxAppLimit_.
+    ASSERT_EQ(ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(ROOT_UID + 2), true);
+    ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(sessionId);
 }
 
 /**
