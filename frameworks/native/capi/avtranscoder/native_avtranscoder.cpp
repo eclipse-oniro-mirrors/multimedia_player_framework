@@ -459,9 +459,11 @@ void NativeAVTranscoderCallback::OnStateChangeCallback(OH_AVTranscoder_State sta
     CHECK_AND_RETURN_LOG(nativeState != std::nullopt,
         "OnStateChangeCallback is called, state is invalid!");
     state_ = nativeState.value();
+    auto localStateCb = stateChangeCallback_;
+    auto localTranscoder = transcoder_;
     lock.unlock();
-    if (stateChangeCallback_ != nullptr) {
-        stateChangeCallback_->OnStateChangeCallback(transcoder_, state);
+    if (localStateCb != nullptr) {
+        localStateCb->OnStateChangeCallback(localTranscoder, state);
     }
 }
 
@@ -474,9 +476,11 @@ void NativeAVTranscoderCallback::OnProgressUpdateCallback(int32_t progress)
     CHECK_AND_RETURN_LOG(progress >= MIN_PROGRESS && progress <= MAX_PROGRESS,
         "OnProgressUpdateCallback is called, progress is invalid!");
     progress_ = progress;
+    auto localProgressCb = progressUpdateCallback_;
+    auto localTranscoder = transcoder_;
     lock.unlock();
-    if (progressUpdateCallback_ != nullptr) {
-        progressUpdateCallback_->OnProgressUpdateCallback(transcoder_, progress);
+    if (localProgressCb != nullptr) {
+        localProgressCb->OnProgressUpdateCallback(localTranscoder, progress);
     }
 }
 

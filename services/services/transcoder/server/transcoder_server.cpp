@@ -560,7 +560,8 @@ int32_t TransCoderServer::AddWatermark(std::shared_ptr<AVBuffer> &waterMarkBuffe
 int32_t TransCoderServer::SetTimeRange(int64_t startTime, int64_t endTime)
 {
     MEDIA_LOGI("SetTimeRange in, startTime: %{public}" PRId64 ", endTime: %{public}" PRId64, startTime, endTime);
-    std::lock_guard<std::mutex> lock(mutex_);
+    std::unique_lock<std::mutex> lock(mutex_);
+    MediaTrace trace("TransCoderServer::SetTimeRange");
     CHECK_AND_RETURN_RET_LOG(status_ == REC_CONFIGURED, MSERR_INVALID_OPERATION,
         "invalid status, current status is %{public}s", GetStatusDescription(status_).c_str());
     CHECK_AND_RETURN_RET_LOG(transCoderEngine_ != nullptr, MSERR_NO_MEMORY, "engine is nullptr");
@@ -570,6 +571,7 @@ int32_t TransCoderServer::SetTimeRange(int64_t startTime, int64_t endTime)
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
         return transCoderEngine_->SetTimeRange(startTime, endTime);
     });
+    lock.unlock();
     int32_t ret = taskQue_.EnqueueTask(task);
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "EnqueueTask failed");
     auto result = task->GetResult();

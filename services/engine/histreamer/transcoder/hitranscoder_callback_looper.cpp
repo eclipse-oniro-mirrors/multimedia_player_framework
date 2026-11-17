@@ -77,6 +77,7 @@ void HiTransCoderCallbackLooper::SetTransCoderEngine(ITransCoderEngine* engine, 
 void HiTransCoderCallbackLooper::StartReportMediaProgress(int64_t updateIntervalMs)
 {
     MEDIA_LOG_I("StartReportMediaProgress");
+    OHOS::Media::AutoLock lock(loopMutex_);
     reportProgressIntervalMs_ = updateIntervalMs;
     FALSE_RETURN(!reportMediaProgress_);
     reportMediaProgress_ = true;
