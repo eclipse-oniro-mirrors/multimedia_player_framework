@@ -35,6 +35,7 @@ const int32_t PARAM2 = 2;
 const int32_t ARGS_ONE = 1;
 const int32_t ARGS_TWO = 2;
 const int32_t ARGS_THREE = 3;
+const int32_t ARGS_ZERO = 0;
 const int32_t SIZE = 1024;
 
 const int UNSUPPORTED_ERROR = -5;
@@ -837,6 +838,88 @@ void SystemSoundManagerNapi::AsyncGetCurrentRingtoneAttribute(napi_env env, void
         context->errCode = NAPI_ERR_IO_ERROR;
         context->errMessage = "I/O error. Can not get default ring tone.";
     }
+}
+
+// ---- FactoryReset NAPI implementation ----
+
+napi_value SystemSoundManagerNapi::FactoryReset(napi_env env, napi_callback_info info)
+{
+    MEDIA_LOGI("FactoryReset start");
+    CHECK_AND_RETURN_RET_LOG(VerifySelfSystemPermission(),
+        ThrowErrorAndReturn(env, NAPI_ERR_PERMISSION_DENIED_INFO, NAPI_ERR_PERMISSION_DENIED),
+        "No system permission");
+    CHECK_AND_RETURN_RET_LOG(VerifyRingtonePermission(), ThrowErrorAndReturn(env,
+        NAPI_ERR_NO_PERMISSION_INFO, NAPI_ERR_NO_PERMISSION), "Permission denied");
+
+    napi_value result = nullptr;
+    napi_value resource = nullptr;
+    napi_value thisVar = nullptr;
+    size_t argc = ARGS_ZERO;
+    napi_status status = napi_get_cb_info(env, info, &argc, nullptr, &thisVar, nullptr);
+    napi_get_undefined(env, &result);
+    CHECK_AND_RETURN_RET_LOG((status == napi_ok && thisVar != nullptr), result,
+        "FactoryReset: Failed to retrieve details about the callback");
+
+    std::unique_ptr<SystemSoundManagerAsyncContext> asyncContext =
+        std::make_unique<SystemSoundManagerAsyncContext>();
+    status = napi_unwrap(env, thisVar, reinterpret_cast<void**>(&asyncContext->objectInfo));
+    CHECK_AND_RETURN_RET_LOG(status == napi_ok && asyncContext->objectInfo != nullptr, result,
+        "FactoryReset: Failed to unwrap object");
+
+    napi_create_promise(env, &asyncContext->deferred, &result);
+    napi_create_string_utf8(env, "FactoryReset", NAPI_AUTO_LENGTH, &resource);
+    status = napi_create_async_work(env, nullptr, resource, AsyncFactoryReset,
+        FactoryResetAsyncCallbackComp, static_cast<void*>(asyncContext.get()), &asyncContext->work);
+    if (status != napi_ok) {
+        MEDIA_LOGE("FactoryReset: Failed to create async work");
+        napi_get_undefined(env, &result);
+    } else {
+        napi_queue_async_work(env, asyncContext->work);
+        asyncContext.release();
+    }
+    return result;
+}
+
+void SystemSoundManagerNapi::AsyncFactoryReset(napi_env env, void *data)
+{
+    SystemSoundManagerAsyncContext *context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    if (context->objectInfo->sysSoundMgrClient_ != nullptr) {
+        context->result = context->objectInfo->sysSoundMgrClient_->FactoryReset();
+    }
+    if (context->result != MSERR_OK) {
+        context->status = ERROR;
+        if (context->result == static_cast<int32_t>(SystemSoundError::ERROR_UNSUPPORTED_OPERATION)) {
+            context->errCode = NAPI_ERR_UNSUPPORTED_OPERATION;
+            context->errMessage = NAPI_ERR_UNSUPPORTED_OPERATION_INFO;
+        } else {
+            context->errCode = NAPI_ERROR_IO_ERROR;
+            context->errMessage = NAPI_ERROR_IO_ERROR_INFO;
+        }
+    }
+}
+
+void SystemSoundManagerNapi::FactoryResetAsyncCallbackComp(napi_env env, napi_status status, void* data)
+{
+    auto context = static_cast<SystemSoundManagerAsyncContext *>(data);
+    napi_value result[2] = {};
+    if (!context->status) {
+        napi_get_undefined(env, &result[PARAM0]);
+        napi_get_undefined(env, &result[PARAM1]);
+    } else {
+        result[PARAM0] = AsyncThrowErrorAndReturn(env, context->errMessage, context->errCode);
+        napi_get_undefined(env, &result[PARAM1]);
+    }
+
+    if (context->deferred) {
+        if (!context->status) {
+            napi_resolve_deferred(env, context->deferred, result[PARAM1]);
+        } else {
+            napi_reject_deferred(env, context->deferred, result[PARAM0]);
+        }
+    }
+    napi_delete_async_work(env, context->work);
+    delete context;
+    context = nullptr;
 }
 } // namespace Media
 } // namespace OHOS

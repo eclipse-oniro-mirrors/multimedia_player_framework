@@ -506,4 +506,38 @@ static bool ValidateAndConvertUriList(::taihe::array_view<::taihe::string> uriLi
 {
     return OpenToneListSync(uriList);
 }
+
+// ---- FactoryReset Taihe implementation ----
+
+void SystemSoundManagerImpl::FactoryResetSync()
+{
+    MEDIA_LOGI("FactoryResetSync start");
+    if (!(CommonTaihe::VerifySelfSystemPermission())) {
+        MEDIA_LOGE("No system permission");
+        CommonTaihe::ThrowError(TAIHE_ERR_PERMISSION_DENIED, TAIHE_ERR_PERMISSION_DENIED_INFO);
+        return;
+    }
+    if (!(CommonTaihe::VerifyRingtonePermission())) {
+        MEDIA_LOGE("Permission denied");
+        CommonTaihe::ThrowError(TAIHE_ERR_NO_PERMISSION, TAIHE_ERR_NO_PERMISSION_INFO);
+        return;
+    }
+    if (sysSoundMgrClient_ == nullptr) {
+        CommonTaihe::ThrowError(TAIHE_ERR_SYSTEM, TAIHE_ERR_SYSTEM_INFO);
+        return;
+    }
+    int32_t ret = sysSoundMgrClient_->FactoryReset();
+    if (ret != OHOS::Media::MSERR_OK) {
+        if (ret == static_cast<int32_t>(OHOS::Media::SystemSoundError::ERROR_UNSUPPORTED_OPERATION)) {
+            CommonTaihe::ThrowError(TAIHE_ERR_UNSUPPORTED_OPERATION, TAIHE_ERR_UNSUPPORTED_OPERATION_INFO);
+        } else {
+            CommonTaihe::ThrowError(TAIHE_ERR_FACTORY_RESET_IO_ERROR, TAIHE_ERR_FACTORY_RESET_IO_ERROR_INFO);
+        }
+    }
+}
+
+void SystemSoundManagerImpl::FactoryReset()
+{
+    return FactoryResetSync();
+}
 } // namespace ANI::Media

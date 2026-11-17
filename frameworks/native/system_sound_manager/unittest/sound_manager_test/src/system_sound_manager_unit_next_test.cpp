@@ -18,6 +18,7 @@
 #include "media_core.h"
 #include "ringtone_db_const.h"
 #include "ringtone_type.h"
+#include "system_sound_manager_utils.h"
 #include <string>
 #include <gmock/gmock.h>
 
@@ -837,7 +838,8 @@ HWTEST(SystemSoundManagerUnitNextTest, GetSimcardSettingAssetByToneHapticsType_0
     ASSERT_NE(databaseTool.dataShareHelper, nullptr);
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
     std::unique_ptr<SimcardSettingAsset> result =
-        systemSoundManagerImpl_->GetSimcardSettingAssetByToneHapticsType(databaseTool, toneHapticsType);
+        systemSoundManagerImpl_->GetSimcardSettingAssetByToneHapticsType(databaseTool, toneHapticsType,
+            AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL);
     ASSERT_NE(result, nullptr);
 }
 
@@ -2313,7 +2315,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetToneHapticsSettings_001, TestSize.Leve
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
     ToneHapticsSettings settings;
     int32_t result = systemSoundManagerImpl_->GetToneHapticsSettings(
-        databaseTool, toneUri, toneHapticsType, settings);
+        databaseTool, toneUri, toneHapticsType, settings, AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL);
     EXPECT_EQ(result, SUCCESS);
 }
 
@@ -2337,7 +2339,7 @@ HWTEST(SystemSoundManagerUnitNextTest, GetToneHapticsSettings_002, TestSize.Leve
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
     ToneHapticsSettings settings;
     int32_t result = systemSoundManagerImpl_->GetToneHapticsSettings(
-        databaseTool, toneUri, toneHapticsType, settings);
+        databaseTool, toneUri, toneHapticsType, settings, AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL);
     EXPECT_EQ(result, IO_ERROR);
 }
 
@@ -2360,7 +2362,8 @@ HWTEST(SystemSoundManagerUnitNextTest, GetSimcardSettingAssetByToneHapticsType_0
     ASSERT_NE(databaseTool.dataShareHelper, nullptr);
     ToneHapticsType toneHapticsType = ToneHapticsType::CALL_SIM_CARD_0;
     std::unique_ptr<SimcardSettingAsset> result =
-        systemSoundManagerImpl_->GetSimcardSettingAssetByToneHapticsType(databaseTool, toneHapticsType);
+        systemSoundManagerImpl_->GetSimcardSettingAssetByToneHapticsType(databaseTool, toneHapticsType,
+            AudioStandard::AudioRingerMode::RINGER_MODE_NORMAL);
     EXPECT_NE(result, nullptr);
 }
 
@@ -3364,6 +3367,458 @@ HWTEST(SystemSoundManagerUnitNextTest, QueryToneAttrsByType_Mock_006, TestSize.L
     ToneAttrs result = impl->QueryToneAttrsByType(databaseTool, targetToneType, TONE_TYPE_RINGTONE);
     EXPECT_TRUE(result.GetUri().empty());
     EXPECT_EQ(result.GetCategory(), TONE_CATEGORY_RINGTONE);
+}
+
+// ============ EncryptUri tests ============
+
+/**
+ * @tc.name  : EncryptUri_FullPath
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_001
+ * @tc.desc  : Test EncryptUri with full path: keeps first segment, masks intermediate,
+ *             keeps last dir, masks filename keeping first/last 2 chars + extension
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_001, TestSize.Level0)
+{
+    std::string uri = "/data/storage/el2/base/files/Ringtone/ringtone/FD4C-45FDE-8411.ogg";
+    std::string result = SystemSoundManagerUtils::EncryptUri(uri);
+    EXPECT_EQ(result, "/data/****/ringtone/FD*****11.ogg");
+}
+
+/**
+ * @tc.name  : EncryptUri_Empty
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_002
+ * @tc.desc  : Test EncryptUri with empty string returns empty
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_002, TestSize.Level0)
+{
+    std::string result = SystemSoundManagerUtils::EncryptUri("");
+    EXPECT_TRUE(result.empty());
+}
+
+/**
+ * @tc.name  : EncryptUri_NoSlash
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_003
+ * @tc.desc  : Test EncryptUri with no slash (pure filename): masks filename only
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_003, TestSize.Level0)
+{
+    std::string result = SystemSoundManagerUtils::EncryptUri("abcdef.mp3");
+    EXPECT_EQ(result, "ab*****ef.mp3");
+}
+
+/**
+ * @tc.name  : EncryptUri_SingleSlash
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_004
+ * @tc.desc  : Test EncryptUri with single slash (root + filename)
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_004, TestSize.Level0)
+{
+    std::string result = SystemSoundManagerUtils::EncryptUri("/abcdef.mp3");
+    EXPECT_EQ(result, "/ab*****ef.mp3");
+}
+
+/**
+ * @tc.name  : EncryptUri_TwoSegments
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_005
+ * @tc.desc  : Test EncryptUri with two segments (dir + filename): no intermediate to mask
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_005, TestSize.Level0)
+{
+    std::string result = SystemSoundManagerUtils::EncryptUri("/dir/abcdef.mp3");
+    EXPECT_EQ(result, "/dir/ab*****ef.mp3");
+}
+
+/**
+ * @tc.name  : EncryptUri_NoExtension
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_006
+ * @tc.desc  : Test EncryptUri with filename that has no extension
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_006, TestSize.Level0)
+{
+    std::string result = SystemSoundManagerUtils::EncryptUri("/data/storage/test/dir/ABCDEFGH");
+    EXPECT_EQ(result, "/data/****/dir/AB*****GH");
+}
+
+/**
+ * @tc.name  : EncryptUri_ShortFilename
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_007
+ * @tc.desc  : Test EncryptUri with short filename (<=4 chars): uses first+****+last pattern
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_007, TestSize.Level0)
+{
+    std::string result = SystemSoundManagerUtils::EncryptUri("/data/storage/test/dir/ab.mp3");
+    EXPECT_EQ(result, "/data/****/dir/a****b.mp3");
+}
+
+/**
+ * @tc.name  : EncryptUri_ThreeSegments
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_008
+ * @tc.desc  : Test EncryptUri with three segments: no intermediate dirs to mask
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_008, TestSize.Level0)
+{
+    std::string result = SystemSoundManagerUtils::EncryptUri("/dir/subdir/file.mp3");
+    EXPECT_EQ(result, "/dir/subdir/f****e.mp3");
+}
+
+/**
+ * @tc.name  : EncryptUri_TrailingSlash
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_009
+ * @tc.desc  : Test EncryptUri with trailing slash: filename is empty,
+ *             MaskFilename returns empty string
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_009, TestSize.Level0)
+{
+    std::string result = SystemSoundManagerUtils::EncryptUri("/dir/");
+    EXPECT_EQ(result, "/dir/");
+}
+
+/**
+ * @tc.name  : EncryptUri_ExtensionOnly
+ * @tc.number: SystemSoundManagerUtils_EncryptUri_010
+ * @tc.desc  : Test EncryptUri with filename that is only an extension (e.g. ".mp3"):
+ *             MaskFilename name is empty, returns just the extension
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerUtils_EncryptUri_010, TestSize.Level0)
+{
+    std::string result = SystemSoundManagerUtils::EncryptUri("/dir/sub/.mp3");
+    EXPECT_EQ(result, "/dir/sub/.mp3");
+}
+
+// ============ FactoryReset success path tests ============
+
+/**
+ * @tc.name  : FactoryReset_Success
+ * @tc.number: SystemSoundManagerImpl_FactoryReset_001
+ * @tc.desc  : Test FactoryReset succeeds and restores ringtone URI to default.
+ *             On device with DataShare, FactoryReset returns MSERR_OK and
+ *             GetRingtoneUri matches GetDefaultRingtoneAttrs after reset.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_FactoryReset_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    int32_t ret = impl->FactoryReset();
+    EXPECT_EQ(ret, MSERR_OK);
+
+    auto defaultAttrs = impl->GetDefaultRingtoneAttrs(nullptr, RINGTONE_TYPE_SIM_CARD_0);
+    if (defaultAttrs != nullptr && !defaultAttrs->GetUri().empty()) {
+        std::string currentUri = impl->GetRingtoneUri(nullptr, RINGTONE_TYPE_SIM_CARD_0);
+        EXPECT_EQ(currentUri, defaultAttrs->GetUri());
+    }
+}
+
+/**
+ * @tc.name  : SnapshotToneDefaults_Success
+ * @tc.number: SystemSoundManagerImpl_SnapshotToneDefaults_001
+ * @tc.desc  : Test SnapshotToneDefaults succeeds on device and populates snapshot
+ *             with non-empty default ringtone URIs.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_SnapshotToneDefaults_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    int32_t ret = impl->SnapshotToneDefaults(snapshot);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_FALSE(snapshot.defaultRingtoneUris.empty());
+    for (auto &pair : snapshot.defaultRingtoneUris) {
+        EXPECT_FALSE(pair.second.empty());
+    }
+    EXPECT_FALSE(snapshot.defaultAlarmToneUri.empty());
+}
+
+/**
+ * @tc.name  : RestoreToneUris_Success
+ * @tc.number: SystemSoundManagerImpl_RestoreToneUris_001
+ * @tc.desc  : Test RestoreToneUris succeeds on device after snapshot is populated.
+ *             Calls SnapshotToneDefaults first, then RestoreToneUris with the result.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_RestoreToneUris_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    int32_t ret = impl->SnapshotToneDefaults(snapshot);
+    ASSERT_EQ(ret, MSERR_OK);
+
+    ret = impl->RestoreToneUris(snapshot);
+    EXPECT_EQ(ret, MSERR_OK);
+}
+
+// ============ GetDefaultToneUriFromSnapshot tests ============
+
+/**
+ * @tc.name  : GetDefaultToneUriFromSnapshot_RingtoneWithUri
+ * @tc.number: SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_001
+ * @tc.desc  : Test GetDefaultToneUriFromSnapshot with CALL_SIM_CARD_0 and populated ringtone URI.
+ *             Covers: ConvertToRingtoneType true, map has key, URI not empty.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    snapshot.defaultRingtoneUris[RINGTONE_TYPE_SIM_CARD_0] = "/data/test/default_ringtone.mp3";
+
+    std::string result = impl->GetDefaultToneUriFromSnapshot(snapshot, ToneHapticsType::CALL_SIM_CARD_0);
+    EXPECT_EQ(result, "/data/test/default_ringtone.mp3");
+}
+
+/**
+ * @tc.name  : GetDefaultToneUriFromSnapshot_RingtoneMapEmpty
+ * @tc.number: SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_002
+ * @tc.desc  : Test GetDefaultToneUriFromSnapshot with CALL_SIM_CARD_0 but ringtone map is empty.
+ *             Covers: ConvertToRingtoneType true, map key not found.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    std::string result = impl->GetDefaultToneUriFromSnapshot(snapshot, ToneHapticsType::CALL_SIM_CARD_0);
+    EXPECT_TRUE(result.empty());
+}
+
+/**
+ * @tc.name  : GetDefaultToneUriFromSnapshot_RingtoneUriEmpty
+ * @tc.number: SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_003
+ * @tc.desc  : Test GetDefaultToneUriFromSnapshot with CALL_SIM_CARD_1 and empty URI in map.
+ *             Covers: ConvertToRingtoneType true, map has key, URI is empty string.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    snapshot.defaultRingtoneUris[RINGTONE_TYPE_SIM_CARD_1] = "";
+
+    std::string result = impl->GetDefaultToneUriFromSnapshot(snapshot, ToneHapticsType::CALL_SIM_CARD_1);
+    EXPECT_TRUE(result.empty());
+}
+
+/**
+ * @tc.name  : GetDefaultToneUriFromSnapshot_SystemToneWithUri
+ * @tc.number: SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_004
+ * @tc.desc  : Test GetDefaultToneUriFromSnapshot with TEXT_MESSAGE_SIM_CARD_0 and populated system tone URI.
+ *             Covers: ConvertToRingtoneType false, ConvertToSystemToneType true, map has key, URI not empty.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_004, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    snapshot.defaultSystemToneUris[SYSTEM_TONE_TYPE_SIM_CARD_0] = "/data/test/default_systemtone.mp3";
+
+    std::string result = impl->GetDefaultToneUriFromSnapshot(snapshot, ToneHapticsType::TEXT_MESSAGE_SIM_CARD_0);
+    EXPECT_EQ(result, "/data/test/default_systemtone.mp3");
+}
+
+/**
+ * @tc.name  : GetDefaultToneUriFromSnapshot_AlarmWithUri
+ * @tc.number: SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_005
+ * @tc.desc  : Test GetDefaultToneUriFromSnapshot with ALARM and non-empty alarm URI.
+ *             Covers: ConvertToRingtoneType false, ConvertToSystemToneType false, ALARM true, URI not empty.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_005, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    snapshot.defaultAlarmToneUri = "/data/test/default_alarm.mp3";
+
+    std::string result = impl->GetDefaultToneUriFromSnapshot(snapshot, ToneHapticsType::ALARM);
+    EXPECT_EQ(result, "/data/test/default_alarm.mp3");
+}
+
+/**
+ * @tc.name  : GetDefaultToneUriFromSnapshot_AlarmUriEmpty
+ * @tc.number: SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_006
+ * @tc.desc  : Test GetDefaultToneUriFromSnapshot with ALARM but empty alarm URI.
+ *             Covers: ConvertToRingtoneType false, ConvertToSystemToneType false, ALARM true, URI empty.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_GetDefaultToneUriFromSnapshot_006, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    snapshot.defaultAlarmToneUri = "";
+
+    std::string result = impl->GetDefaultToneUriFromSnapshot(snapshot, ToneHapticsType::ALARM);
+    EXPECT_TRUE(result.empty());
+}
+
+// ============ RollbackToneUris tests ============
+
+/**
+ * @tc.name  : RollbackToneUris_NonEmptyUris
+ * @tc.number: SystemSoundManagerImpl_RollbackToneUris_001
+ * @tc.desc  : Test RollbackToneUris with non-empty old URIs and alarmModified=true.
+ *             Exercises the !oldUri.empty() true branches and alarmModified true branch.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_RollbackToneUris_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    snapshot.modifiedRingtones.push_back(RINGTONE_TYPE_SIM_CARD_0);
+    snapshot.oldRingtoneUris[RINGTONE_TYPE_SIM_CARD_0] = "/data/old/ringtone.mp3";
+    snapshot.modifiedSystemTones.push_back(SYSTEM_TONE_TYPE_SIM_CARD_0);
+    snapshot.oldSystemToneUris[SYSTEM_TONE_TYPE_SIM_CARD_0] = "/data/old/systemtone.mp3";
+    snapshot.alarmModified = true;
+    snapshot.oldAlarmToneUri = "/data/old/alarm.mp3";
+
+    impl->RollbackToneUris(snapshot);
+    SUCCEED();
+}
+
+/**
+ * @tc.name  : RollbackToneUris_EmptyUris
+ * @tc.number: SystemSoundManagerImpl_RollbackToneUris_002
+ * @tc.desc  : Test RollbackToneUris with empty old URIs and alarmModified=false.
+ *             Exercises the !oldUri.empty() false branches and alarmModified false branch.
+ *             No Set*Uri should be called when URIs are empty.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_RollbackToneUris_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    snapshot.modifiedRingtones.push_back(RINGTONE_TYPE_SIM_CARD_0);
+    snapshot.oldRingtoneUris[RINGTONE_TYPE_SIM_CARD_0] = "";
+    snapshot.modifiedSystemTones.push_back(SYSTEM_TONE_TYPE_SIM_CARD_0);
+    snapshot.oldSystemToneUris[SYSTEM_TONE_TYPE_SIM_CARD_0] = "";
+    snapshot.alarmModified = false;
+    snapshot.oldAlarmToneUri = "";
+
+    impl->RollbackToneUris(snapshot);
+    SUCCEED();
+}
+
+/**
+ * @tc.name  : RollbackToneUris_AlarmModifiedButEmptyUri
+ * @tc.number: SystemSoundManagerImpl_RollbackToneUris_003
+ * @tc.desc  : Test RollbackToneUris with alarmModified=true but empty oldAlarmToneUri.
+ *             Exercises alarmModified && !oldAlarmToneUri.empty() false branch
+ *             (short-circuit: alarmModified is true but URI is empty).
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_RollbackToneUris_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    FactoryResetSnapshot snapshot;
+    snapshot.alarmModified = true;
+    snapshot.oldAlarmToneUri = "";
+
+    impl->RollbackToneUris(snapshot);
+    SUCCEED();
+}
+
+// ============ DoRemove tests with mock DataShareHelper ============
+
+/**
+ * @tc.name  : DoRemove_CustomisedAsset
+ * @tc.number: SystemSoundManagerImpl_DoRemove_001
+ * @tc.desc  : Test DoRemove with a customised ringtone asset in the result set.
+ *             Exercises the path: asset found, source type is CUSTOMISED, Delete is called.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_DoRemove_001, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.toneId = 10;
+    config.sourceType = SOURCE_TYPE_CUSTOMISED;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.ringtoneType = static_cast<int32_t>(1) << RINGTONE_TYPE_SIM_CARD_0;
+    config.ringtoneSourceType = SOURCE_TYPE_CUSTOMISED;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Delete(_, _)).WillOnce(Return(1));
+
+    auto helper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+    int32_t ret = impl->DoRemove(helper, "/data/test/ringtone.mp3", 1024);
+    EXPECT_GT(ret, 0);
+}
+
+/**
+ * @tc.name  : DoRemove_NoRows
+ * @tc.number: SystemSoundManagerImpl_DoRemove_002
+ * @tc.desc  : Test DoRemove with empty result set (no rows).
+ *             Exercises the path: GetFirstObject returns nullptr, returns ERROR.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_DoRemove_002, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.hasRows = false;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+
+    auto helper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+    int32_t ret = impl->DoRemove(helper, "/data/test/ringtone.mp3", 0);
+    EXPECT_EQ(ret, ERROR);
+}
+
+/**
+ * @tc.name  : DoRemove_NonCustomisedAsset
+ * @tc.number: SystemSoundManagerImpl_DoRemove_003
+ * @tc.desc  : Test DoRemove with a preset (non-customised) asset.
+ *             Exercises the path: asset found but source type is PRESET,
+ *             loop exits without finding customised, "not customized" path.
+ */
+HWTEST(SystemSoundManagerUnitNextTest, SystemSoundManagerImpl_DoRemove_003, TestSize.Level0)
+{
+    auto systemSoundManager_ = SystemSoundManagerFactory::CreateSystemSoundManager();
+    auto impl = std::static_pointer_cast<SystemSoundManagerImpl>(systemSoundManager_);
+    ASSERT_NE(impl, nullptr);
+
+    MockResultSetConfig config;
+    config.toneId = 5;
+    config.sourceType = SOURCE_TYPE_PRESET;
+    config.toneType = TONE_TYPE_RINGTONE;
+    config.ringtoneType = static_cast<int32_t>(1) << RINGTONE_TYPE_SIM_CARD_0;
+    config.ringtoneSourceType = SOURCE_TYPE_PRESET;
+    auto resultSet = CreateMockResultSet(config);
+    auto mockHelper = CreateMockHelperWithResultSet(resultSet);
+
+    EXPECT_CALL(*mockHelper, Delete(_, _)).Times(0);
+
+    auto helper = std::static_pointer_cast<DataShare::DataShareHelper>(mockHelper);
+    int32_t ret = impl->DoRemove(helper, "/data/test/ringtone.mp3", 0);
+    EXPECT_EQ(ret, TYPEERROR);
 }
 } // namespace Media
 } // namespace OHOS

@@ -423,6 +423,7 @@ napi_status SystemSoundManagerNapi::DefineClassProperties(napi_env env, napi_val
         DECLARE_NAPI_FUNCTION("removeCustomizedToneList", RemoveCustomizedToneList),
         DECLARE_NAPI_FUNCTION("openToneList", OpenToneList),
         DECLARE_NAPI_FUNCTION("getMockHapticRingtonePlayer", GetMockHapticRingtonePlayer),
+        DECLARE_NAPI_FUNCTION("factoryReset", FactoryReset),
     };
 
     return napi_define_class(env, SYSTEM_SND_MNGR_NAPI_CLASS_NAME.c_str(), NAPI_AUTO_LENGTH,

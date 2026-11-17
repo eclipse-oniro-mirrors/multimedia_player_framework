@@ -255,7 +255,7 @@ ToneHapticsSettings RingtonePlayerImpl::GetHapticSettings(std::string &audioUri,
 {
     ToneHapticsSettings settings;
     int32_t result = systemSoundMgr_.GetToneHapticsSettings(databaseTool_, audioUri,
-        ConvertToToneHapticsType(type_), settings);
+        ConvertToToneHapticsType(type_), settings, systemSoundMgr_.GetRingerMode());
     if (result == 0) {
         MEDIA_LOGI("GetHapticSettings: hapticsUri:%{public}s, mode:%{public}d.",
             settings.hapticsUri.c_str(), settings.mode);
