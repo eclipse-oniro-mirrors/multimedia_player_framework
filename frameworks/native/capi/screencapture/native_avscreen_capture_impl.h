@@ -16,8 +16,35 @@
 #ifndef NATIVE_AVSCREEN_CAPTURE_IMPL_H
 #define NATIVE_AVSCREEN_CAPTURE_IMPL_H
 
+#include <atomic>
+#include <memory>
+#include <mutex>
+#include <queue>
+#include <refbase.h>
 #include <surface/window.h>
+
 #include "native_window.h"
+#include "screen_capture.h"
+
+struct OH_AVScreenCapture : public OHOS::RefBase {
+    OH_AVScreenCapture() = default;
+    ~OH_AVScreenCapture() override = default;
+};
+
+struct OH_AVScreenCapture_ContentFilter : public OHOS::RefBase {
+    OH_AVScreenCapture_ContentFilter() = default;
+    ~OH_AVScreenCapture_ContentFilter() override = default;
+};
+
+struct OH_AVScreenCapture_CaptureStrategy : public OHOS::RefBase {
+    OH_AVScreenCapture_CaptureStrategy() = default;
+    ~OH_AVScreenCapture_CaptureStrategy() override = default;
+};
+
+struct OH_AVScreenCapture_UserSelectionInfo : public OHOS::RefBase {
+    OH_AVScreenCapture_UserSelectionInfo() = default;
+    ~OH_AVScreenCapture_UserSelectionInfo() override = default;
+};
 
 struct NativeBufferRef {
     NativeBufferRef() noexcept = default;
@@ -70,5 +97,33 @@ struct NativeBufferRef {
 private:
     OH_NativeBuffer *buf_ = nullptr;
 };
+
+namespace OHOS {
+namespace Media {
+class NativeScreenCaptureCallback;
+
+struct ScreenCaptureObject : public OH_AVScreenCapture, public std::enable_shared_from_this<ScreenCaptureObject> {
+    explicit ScreenCaptureObject(const std::shared_ptr<ScreenCapture> &capture) : screenCapture_(capture) {}
+    ~ScreenCaptureObject() = default;
+
+    const std::shared_ptr<ScreenCapture> screenCapture_ = nullptr;
+    std::mutex callbackMutex;
+    std::shared_ptr<NativeScreenCaptureCallback> callback_ = nullptr;
+    std::atomic<bool> isStart{false};
+
+    std::mutex bufferMutex;
+    std::queue<NativeBufferRef> referencedBuffer_;
+};
+
+struct ScreenCaptureUserSelectionObject : public OH_AVScreenCapture_UserSelectionInfo {
+    explicit ScreenCaptureUserSelectionObject(ScreenCaptureUserSelectionInfo selectionInfo)
+        : userSelectionInfo_(selectionInfo)
+    {
+    }
+    ~ScreenCaptureUserSelectionObject() = default;
+    ScreenCaptureUserSelectionInfo userSelectionInfo_;
+};
+} // namespace Media
+} // namespace OHOS
 
 #endif // NATIVE_AVSCREEN_CAPTURE_IMPL_H

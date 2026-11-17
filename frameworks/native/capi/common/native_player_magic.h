@@ -24,26 +24,6 @@
 #include "lpp_audio_streamer.h"
 #include "lpp_video_streamer.h"
 
-struct OH_AVScreenCapture : public OHOS::RefBase {
-    OH_AVScreenCapture() = default;
-    virtual ~OH_AVScreenCapture() = default;
-};
-
-struct OH_AVScreenCapture_ContentFilter : public OHOS::RefBase {
-    OH_AVScreenCapture_ContentFilter() = default;
-    virtual ~OH_AVScreenCapture_ContentFilter() = default;
-};
-
-struct OH_AVScreenCapture_CaptureStrategy : public OHOS::RefBase {
-    OH_AVScreenCapture_CaptureStrategy() = default;
-    virtual ~OH_AVScreenCapture_CaptureStrategy() = default;
-};
-
-struct OH_AVScreenCapture_UserSelectionInfo : public OHOS::RefBase {
-    OH_AVScreenCapture_UserSelectionInfo() = default;
-    virtual ~OH_AVScreenCapture_UserSelectionInfo() = default;
-};
-
 struct OH_AVPlayer : public OHOS::RefBase {
     OH_AVPlayer() = default;
     virtual ~OH_AVPlayer() = default;
