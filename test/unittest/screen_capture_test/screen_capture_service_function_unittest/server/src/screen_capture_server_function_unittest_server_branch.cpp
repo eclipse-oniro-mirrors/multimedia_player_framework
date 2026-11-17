@@ -297,7 +297,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, UpdateMissionData_DefaultState_001, Te
     EXPECT_TRUE(screenCaptureServer_->missionInfos_.front().isForeground);
 }
 
-HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_InnerIgnoreVideoValid_SurfaceMode_001, TestSize.Level2)
+HWTEST_F(ScreenCaptureServerFunctionTest, CheckCaptureStreamParams_SurfaceMode_001, TestSize.Level2)
 {
     SetValidConfig();
     config_.audioInfo.innerCapInfo.audioSampleRate = 0;
