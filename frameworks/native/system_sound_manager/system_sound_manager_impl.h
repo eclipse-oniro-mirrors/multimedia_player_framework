@@ -294,7 +294,6 @@ private:
     void RollbackHapticsSettings(FactoryResetSnapshot &snapshot);
     void DeleteCustomAudioTones();
 
-
     std::string QueryToneUriByHapticUri(const DatabaseTool &databaseTool, const std::string &hapticUri);
     ToneHapticsMode QueryPlayModeByHapticUri(const DatabaseTool &databaseTool, const std::string &hapticUri);
     
