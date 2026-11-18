@@ -99,6 +99,7 @@ private:
     std::mutex stateMutex_;
     std::string currentStates_ = VideoRecorderState::STATE_IDLE;
     std::shared_ptr<Recorder> recorder_ = nullptr;
+    std::mutex surfaceMutex_;
     OHOS::sptr<OHOS::Surface> surface_;
     std::shared_ptr<RecorderCallback> callback_ = nullptr;
     std::mutex refMapMutex_;

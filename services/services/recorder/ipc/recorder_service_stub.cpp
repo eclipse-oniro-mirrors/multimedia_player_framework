@@ -202,51 +202,73 @@ int RecorderServiceStub::OnRemoteRequest(uint32_t code, MessageParcel &data, Mes
     CHECK_AND_RETURN_RET_LOG(RecorderServiceStub::GetDescriptor() == remoteDescriptor,
         MSERR_INVALID_OPERATION, "Invalid descriptor");
 
-    if (code == SET_AUDIO_SOURCE) {
-        std::lock_guard<std::mutex> lock(stmutex_);
-        int32_t type = data.ReadInt32();
-        CHECK_AND_RETURN_RET_LOG(audioSourceType_ == AUDIO_SOURCE_INVALID,
-            MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport parameter or repeated operation");
-        audioSourceType_ = static_cast<AudioSourceType>(type);
-    }
-
-    int32_t permissionResult = Security::AccessToken::PERMISSION_GRANTED;
-    if (AUDIO_REQUEST.count(code) != 0) {
-        permissionResult = CheckPermission();
-        needAudioPermissionCheck = true;
-    } else if (COMMON_REQUEST.count(code) != 0 && needAudioPermissionCheck) {
-        permissionResult = CheckPermission();
-    } else {
-        // none audio request no need to check permission in recorder server
-    }
-    if (permissionResult == Security::AccessToken::PERMISSION_DENIED) {
-        MEDIA_LOGE("User do not have the required permissions for the current operation.");
-        if (code == SET_AUDIO_SOURCE) {
-            std::lock_guard<std::mutex> lock(stmutex_);
-            audioSourceType_ = AUDIO_SOURCE_INVALID;
-        }
-        return MSERR_NO_PERMISSION_5400102;
+    int32_t ret = CheckRequestPermission(code, data);
+    if (ret != MSERR_OK) {
+        return ret;
     }
 
     auto itFunc = recFuncs_.find(code);
-    if (itFunc != recFuncs_.end()) {
-        auto memberFunc = itFunc->second;
-        if (memberFunc != nullptr) {
-            std::lock_guard<std::mutex> lock(mutex_);
-            (void)IpcRecovery(false);
-            int32_t ret = memberFunc(data, reply);
-            if (ret != MSERR_OK) {
-                MEDIA_LOGE("calling memberFunc is failed.");
-            }
-            if (AUDIO_REQUEST.count(code) != 0 && ret != MSERR_OK) {
-                MEDIA_LOGE("audio memberFunc failed, reset permission check.");
-            }
-            return MSERR_OK;
-        }
+    if (itFunc != recFuncs_.end() && itFunc->second != nullptr) {
+        return ExecuteMemberFunc(code, itFunc->second, data, reply);
     }
     MEDIA_LOGW("RecorderServiceStub: no member func supporting, applying default process");
 
     return IPCObjectStub::OnRemoteRequest(code, data, reply, option);
+}
+
+int32_t RecorderServiceStub::CheckRequestPermission(uint32_t code, MessageParcel &data)
+{
+    AudioSourceType requestAudioSourceType = AUDIO_SOURCE_INVALID;
+    bool requestNeedAudioPermissionCheck = false;
+    if (code == SET_AUDIO_SOURCE) {
+        int32_t type = data.ReadInt32();
+        std::lock_guard<std::mutex> lock(stmutex_);
+        CHECK_AND_RETURN_RET_LOG(audioSourceType_ == AUDIO_SOURCE_INVALID,
+            MSERR_EXT_API9_OPERATE_NOT_PERMIT, "unsupport parameter or repeated operation");
+        audioSourceType_ = static_cast<AudioSourceType>(type);
+        requestAudioSourceType = audioSourceType_;
+    } else {
+        std::lock_guard<std::mutex> lock(stmutex_);
+        requestAudioSourceType = audioSourceType_;
+        requestNeedAudioPermissionCheck = needAudioPermissionCheck;
+    }
+
+    int32_t permissionResult = Security::AccessToken::PERMISSION_GRANTED;
+    if (AUDIO_REQUEST.count(code) != 0) {
+        permissionResult = CheckPermission(requestAudioSourceType);
+        {
+            std::lock_guard<std::mutex> lock(stmutex_);
+            needAudioPermissionCheck = true;
+        }
+    } else if (COMMON_REQUEST.count(code) != 0 && requestNeedAudioPermissionCheck) {
+        permissionResult = CheckPermission(requestAudioSourceType);
+    } else {
+        // none audio request no need to check permission in recorder server
+    }
+    if (permissionResult != Security::AccessToken::PERMISSION_DENIED) {
+        return MSERR_OK;
+    }
+    MEDIA_LOGE("User do not have the required permissions for the current operation.");
+    if (code == SET_AUDIO_SOURCE) {
+        std::lock_guard<std::mutex> lock(stmutex_);
+        audioSourceType_ = AUDIO_SOURCE_INVALID;
+    }
+    return MSERR_NO_PERMISSION_5400102;
+}
+
+int32_t RecorderServiceStub::ExecuteMemberFunc(uint32_t code, const RecorderStubFunc &memberFunc,
+    MessageParcel &data, MessageParcel &reply)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    (void)IpcRecovery(false);
+    int32_t ret = memberFunc(data, reply);
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("calling memberFunc is failed.");
+    }
+    if (AUDIO_REQUEST.count(code) != 0 && ret != MSERR_OK) {
+        MEDIA_LOGE("audio memberFunc failed, reset permission check.");
+    }
+    return MSERR_OK;
 }
 
 int32_t RecorderServiceStub::SetListenerObject(const sptr<IRemoteObject> &object)
@@ -844,7 +866,12 @@ int32_t RecorderServiceStub::GetMetaSurface(MessageParcel &data, MessageParcel &
 int32_t RecorderServiceStub::SetAudioSource(MessageParcel &data, MessageParcel &reply)
 {
     int32_t sourceId = 0;
-    int32_t ret = SetAudioSource(audioSourceType_, sourceId);
+    AudioSourceType audioSourceType = AUDIO_SOURCE_INVALID;
+    {
+        std::lock_guard<std::mutex> lock(stmutex_);
+        audioSourceType = audioSourceType_;
+    }
+    int32_t ret = SetAudioSource(audioSourceType, sourceId);
     reply.WriteInt32(sourceId);
     reply.WriteInt32(ret);
     return MSERR_OK;
@@ -1065,6 +1092,7 @@ int32_t RecorderServiceStub::Stop(MessageParcel &data, MessageParcel &reply)
     }
 
     reply.WriteInt32(Stop(block));
+    std::lock_guard<std::mutex> lock(stmutex_);
     audioSourceType_ = AUDIO_SOURCE_INVALID;
     return MSERR_OK;
 }
@@ -1073,8 +1101,11 @@ int32_t RecorderServiceStub::Reset(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(Reset());
-    needAudioPermissionCheck = false;
-    audioSourceType_ = AUDIO_SOURCE_INVALID;
+    {
+        std::lock_guard<std::mutex> lock(stmutex_);
+        needAudioPermissionCheck = false;
+        audioSourceType_ = AUDIO_SOURCE_INVALID;
+    }
     return MSERR_OK;
 }
 
@@ -1082,8 +1113,11 @@ int32_t RecorderServiceStub::Release(MessageParcel &data, MessageParcel &reply)
 {
     (void)data;
     reply.WriteInt32(Release());
-    needAudioPermissionCheck = false;
-    audioSourceType_ = AUDIO_SOURCE_INVALID;
+    {
+        std::lock_guard<std::mutex> lock(stmutex_);
+        needAudioPermissionCheck = false;
+        audioSourceType_ = AUDIO_SOURCE_INVALID;
+    }
     return MSERR_OK;
 }
 
@@ -1091,8 +1125,11 @@ int32_t RecorderServiceStub::DestroyStub(MessageParcel &data, MessageParcel &rep
 {
     (void)data;
     reply.WriteInt32(DestroyStub());
-    needAudioPermissionCheck = false;
-    audioSourceType_ = AUDIO_SOURCE_INVALID;
+    {
+        std::lock_guard<std::mutex> lock(stmutex_);
+        needAudioPermissionCheck = false;
+        audioSourceType_ = AUDIO_SOURCE_INVALID;
+    }
     return MSERR_OK;
 }
 
@@ -1133,9 +1170,19 @@ int32_t RecorderServiceStub::GetLocation(MessageParcel &data, MessageParcel &rep
 
 int32_t RecorderServiceStub::CheckPermission()
 {
+    AudioSourceType audioSourceType = AUDIO_SOURCE_INVALID;
+    {
+        std::lock_guard<std::mutex> lock(stmutex_);
+        audioSourceType = audioSourceType_;
+    }
+    return CheckPermission(audioSourceType);
+}
+
+int32_t RecorderServiceStub::CheckPermission(AudioSourceType audioSourceType)
+{
     Security::AccessToken::AccessTokenID tokenCaller = IPCSkeleton::GetCallingTokenID();
 
-    switch (audioSourceType_) {
+    switch (audioSourceType) {
         case AUDIO_SOURCE_VOICE_CALL:
             return Security::AccessToken::AccessTokenKit::VerifyAccessToken(tokenCaller,
                 "ohos.permission.RECORD_VOICE_CALL");

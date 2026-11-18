@@ -149,6 +149,10 @@ private:
     int32_t SetWillMuteWhenInterrupted(MessageParcel &data, MessageParcel &reply);
     int32_t TransmitQos(MessageParcel &data, MessageParcel &reply);
     int32_t CheckPermission();
+    int32_t CheckPermission(AudioSourceType audioSourceType);
+    int32_t CheckRequestPermission(uint32_t code, MessageParcel &data);
+    int32_t ExecuteMemberFunc(uint32_t code, const RecorderStubFunc &memberFunc,
+        MessageParcel &data, MessageParcel &reply);
     void FillRecFuncPart1();
     void FillRecFuncPart2();
     void FillRecFuncPart3();
