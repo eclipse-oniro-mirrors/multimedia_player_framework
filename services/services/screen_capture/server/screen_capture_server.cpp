@@ -3008,7 +3008,7 @@ int32_t ScreenCaptureServer::AudioRendererStateUpdate(
     uint32_t headSetCount = 0;
     uint32_t newState = 0;
     for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo : audioRendererChangeInfos) {
-        CHECK_AND_CONTINUE(changeInfo || changeInfo->rendererState != RendererState::RENDERER_RELEASED);
+        CHECK_AND_CONTINUE(changeInfo && changeInfo->rendererState != RendererState::RENDERER_RELEASED);
 #ifdef SUPPORT_CALL
         if (changeInfo->rendererInfo.streamUsage ==
                 AudioStandard::StreamUsage::STREAM_USAGE_VOICE_MODEM_COMMUNICATION &&
