@@ -72,8 +72,58 @@ public:
     MOCK_METHOD(int32_t, SetDecryptConfig, (const sptr<DrmStandard::IMediaKeySessionService> &keySessionProxy, bool svp), (override));
 #ifdef SUPPORT_VIDEO
     MOCK_METHOD(int32_t, SetVideoSurface, (sptr<Surface> surface), (override));
-    MOCK_METHOD(int32_t, CheckSupportPlaybackCommand, (PlaybackCommand command, bool &support), (override));
 #endif
+    MOCK_METHOD(int32_t, CheckSupportPlaybackCommand, (PlaybackCommand command, bool &support), (override));
+    // Optional virtual methods with default implementations (mocked for stub dispatch verification)
+    MOCK_METHOD(int32_t, GetVideoSample, (int32_t &outputResult), (override));
+    MOCK_METHOD(int32_t, SetMediaMuted, (MediaType mediaType, bool isMuted), (override));
+    MOCK_METHOD(int32_t, SetSuperResolution, (bool enabled), (override));
+    MOCK_METHOD(int32_t, SetVideoWindowSize, (int32_t width, int32_t height), (override));
+    MOCK_METHOD(int32_t, GetPlaybackRate, (float &rate), (override));
+    MOCK_METHOD(int32_t, SetMaxAmplitudeCbStatus, (bool status), (override));
+    MOCK_METHOD(int32_t, SetDeviceChangeCbStatus, (bool status), (override));
+    MOCK_METHOD(int32_t, SetSubtitleCbDfxStatus, (bool isRegistered), (override));
+    MOCK_METHOD(int32_t, GetApiVersion, (int32_t &apiVersion), (override));
+    MOCK_METHOD(int32_t, GetPlaybackStatisticMetrics, (Format &playbackStatisticMetrics), (override));
+    MOCK_METHOD(int32_t, SetSeiMessageCbStatus, (bool status, const std::vector<int32_t> &payloadTypes), (override));
+    MOCK_METHOD(int32_t, EnableReportMediaProgress, (bool enable), (override));
+    MOCK_METHOD(int32_t, EnableReportAudioInterrupt, (bool enable), (override));
+    MOCK_METHOD(int32_t, SetCameraPostprocessing, (bool isOpen), (override));
+    MOCK_METHOD(int32_t, ForceLoadVideo, (bool enabled), (override));
+    MOCK_METHOD(int32_t, SetReopenFd, (int32_t fd, int32_t fdCinema), (override));
+    MOCK_METHOD(int32_t, SetFilePath, (int32_t fd, std::string filePath), (override));
+    MOCK_METHOD(int32_t, EnableCameraPostprocessing, (), (override));
+    MOCK_METHOD(int32_t, GetMediaDescription, (Format &format), (override));
+    MOCK_METHOD(int32_t, GetTrackDescription, (Format &format, uint32_t trackIndex), (override));
+    MOCK_METHOD(int32_t, GetCurrentPresentationTimestamp, (int64_t &currentPresentation), (override));
+    MOCK_METHOD(bool, IsLiveSeek, (), (override));
+    MOCK_METHOD(int32_t, SetPCMOutputStatus, (bool isEnable), (override));
+    MOCK_METHOD(int32_t, SetPCMProcessorStatus, (bool isEnable), (override));
+    MOCK_METHOD(int32_t, SetPCMProcessorMaxLen, (int32_t maxProcessedPcmLen), (override));
+    MOCK_METHOD(int32_t, RemoveAdsMediaSource, (const std::string &id), (override));
+    MOCK_METHOD(int32_t, SkipCurrentAdsMediaSource, (), (override));
+    MOCK_METHOD(int32_t, DisableAllAdsMediaSource, (), (override));
+    MOCK_METHOD(int32_t, UnFreeze, (), (override));
+    MOCK_METHOD(int32_t, Freeze, (), (override));
+    MOCK_METHOD(int32_t, GetSeekableRanges, (std::vector<Plugins::SeekRange> &seekableRanges), (override));
+    MOCK_METHOD(int32_t, GetLoadedRanges, (std::vector<Plugins::SeekRange> &loadedRanges), (override));
+    MOCK_METHOD(int32_t, SetPlaybackStrategy, (AVPlayStrategy playbackStrategy), (override));
+    MOCK_METHOD(int32_t, SetRenderFirstFrame, (bool display), (override));
+    MOCK_METHOD(int32_t, SetPlayRange, (int64_t start, int64_t end), (override));
+    MOCK_METHOD(int32_t, SetPlayRangeWithMode, (int64_t start, int64_t end, PlayerSeekMode mode), (override));
+    MOCK_METHOD(int32_t, SetStartFrameRateOptEnabled, (bool enabled), (override));
+    MOCK_METHOD(int32_t, SeekToDefaultPosition, (), (override));
+    MOCK_METHOD(int32_t, SetLoudnessGain, (float loudnessGain), (override));
+    MOCK_METHOD(int32_t, GetGlobalInfo, (std::shared_ptr<Meta> &globalInfo), (override));
+    MOCK_METHOD(int32_t, SetDolbyPassthroughCallback, (std::shared_ptr<IDolbyPassthrough> &dolbyPassthrough),
+        (override));
+    MOCK_METHOD(int32_t, SetPCMCallback, (const std::shared_ptr<IPCMCallback> &callback), (override));
+    MOCK_METHOD(int32_t, SetVideoOutput, (sptr<Surface> surface), (override));
+    MOCK_METHOD(int32_t, AddAdsMediaSource, (const std::shared_ptr<AVMediaSource> &mediaSource,
+        int64_t startMs, std::string &outId), (override));
+    MOCK_METHOD(int32_t, SetTrackSelectionFilter, (AVPlayTrackSelectionFilter trackFilter), (override));
+    MOCK_METHOD(int32_t, GetTrackSelectionFilter, (AVPlayTrackSelectionFilter &trackFilter), (override));
+    MOCK_METHOD(uint32_t, GetMemoryUsage, (), (override));
 };
 
 class PlayerServiceStubTest : public testing::Test {
