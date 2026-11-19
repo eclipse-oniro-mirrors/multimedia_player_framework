@@ -589,9 +589,8 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_024, Tes
     int32_t errorCode = MediaServiceErrCode::MSERR_UNSUPPORT_FILE;
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundNormalImpl->NotifyErrorEvent(errorCode);
-    // MSERR_UNSUPPORT_FILE sets isUnsupportedFile_ to true
+    // MSERR_UNSUPPORT_FILE sets isUnsupportedFile_ to true (source: :327)
     EXPECT_EQ(audioHapticSoundNormalImpl->isUnsupportedFile_, true);
-    EXPECT_EQ(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -666,10 +665,12 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_027, Tes
 
     uint64_t latency = 0;
 
+    // Null-pointer guard: callback reset, NotifyFirstFrameEvent returns early (source: :344-357).
+    // Normal path only forwards cb->OnFirstFrameWriting, no member side effect.
+    // Covers null-cb early-return branch for coverage.
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundNormalImpl->NotifyFirstFrameEvent(latency);
-    // Callback remains null after notification with null callback
-    EXPECT_EQ(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    SUCCEED();
 }
 
 /**
@@ -716,10 +717,12 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_029, Tes
 
     AudioStandard::InterruptEvent interruptEvent;
 
+    // Null-pointer guard: callback reset, NotifyInterruptEvent returns early (source: :359-372).
+    // Normal path only forwards cb->OnInterrupt, no member side effect.
+    // Covers null-cb early-return branch for coverage.
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundNormalImpl->NotifyInterruptEvent(interruptEvent);
-    // Callback remains null after notification with null callback
-    EXPECT_EQ(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    SUCCEED();
 }
 
 /**
@@ -765,9 +768,8 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AudioHapticSoundNormalImpl_031, Tes
 
     audioHapticSoundNormalImpl->audioHapticPlayerCallback_.reset();
     audioHapticSoundNormalImpl->NotifyEndOfStreamEvent(true);
-    // isLoop=true => playerState_ does NOT change to STATE_STOPPED
+    // isLoop=true => playerState_ does NOT change to STATE_STOPPED (source: :374-383)
     EXPECT_EQ(audioHapticSoundNormalImpl->playerState_, AudioHapticPlayerState::STATE_NEW);
-    EXPECT_EQ(audioHapticSoundNormalImpl->audioHapticPlayerCallback_.lock(), nullptr);
 }
 
 /**
@@ -820,11 +822,13 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_033, TestSize
 
     aHSoundNormalCallback->soundNormalImpl_.reset();
 
-    int32_t errorCode = 0;
+    // Use MSERR_UNSUPPORT_FILE so normal path WOULD set isUnsupportedFile_ (source: :327).
+    // Null branch must NOT set it -> assertion can distinguish paths.
+    int32_t errorCode = MediaServiceErrCode::MSERR_UNSUPPORT_FILE;
     std::string errorMsg = "abc";
+    audioHapticSoundNormalImpl->isUnsupportedFile_ = false;
     aHSoundNormalCallback->OnError(errorCode, errorMsg);
-    // With expired impl, OnError returns early without calling NotifyErrorEvent
-    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    EXPECT_FALSE(audioHapticSoundNormalImpl->isUnsupportedFile_);
 }
 
 /**
@@ -878,9 +882,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_035, TestSize
     Media::PlayerOnInfoType type = PlayerOnInfoType::INFO_TYPE_INTERRUPT_EVENT;
     int32_t extra = 0;
     Media::Format infoBody;
+    // Null-pointer guard: lock fails, NotifyInterruptEvent not called (source: :487-507).
+    // Normal path only forwards cb, no member side effect. Covers null branch for coverage.
     aHSoundNormalCallback->OnInfo(type, extra, infoBody);
-    // HandleAudioInterruptEvent with expired impl returns early
-    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    SUCCEED();
 }
 
 /**
@@ -906,9 +911,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_036, TestSize
     Media::PlayerOnInfoType type = PlayerOnInfoType::INFO_TYPE_AUDIO_FIRST_FRAME;
     int32_t extra = 0;
     Media::Format infoBody;
+    // Null-pointer guard: lock fails, NotifyFirstFrameEvent not called (source: :509-521).
+    // Normal path only forwards cb, no member side effect. Covers null branch for coverage.
     aHSoundNormalCallback->OnInfo(type, extra, infoBody);
-    // HandleAudioFirstFrameEvent with expired impl returns early
-    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    SUCCEED();
 }
 
 /**
@@ -934,9 +940,11 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_037, TestSize
     Media::PlayerOnInfoType type = PlayerOnInfoType::INFO_TYPE_AUDIO_DEVICE_CHANGE;
     int32_t extra = 0;
     Media::Format infoBody;
+    // INFO_TYPE_AUDIO_DEVICE_CHANGE is not handled (OnInfo else branch returns directly).
+    // Verify playerState_ unchanged to confirm no side effect.
+    audioHapticSoundNormalImpl->playerState_ = AudioHapticPlayerState::STATE_NEW;
     aHSoundNormalCallback->OnInfo(type, extra, infoBody);
-    // INFO_TYPE_AUDIO_DEVICE_CHANGE is not handled, OnInfo returns early
-    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    EXPECT_EQ(audioHapticSoundNormalImpl->playerState_, AudioHapticPlayerState::STATE_NEW);
 }
 
 /**
@@ -1151,9 +1159,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_045, TestSize
 
     int32_t extra = PlayerStates::PLAYER_INITIALIZED;
     Format infoBody;
+    // Null-pointer guard: lock fails, NotifyInterruptEvent not called (source: :487-507).
+    // Normal path only forwards cb, no member side effect. Covers null branch for coverage.
     aHSoundNormalCallback->HandleAudioInterruptEvent(extra, infoBody);
-    // With expired impl, HandleAudioInterruptEvent returns early
-    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    SUCCEED();
 }
 
 /**
@@ -1240,9 +1249,10 @@ HWTEST_F(AudioHapticSoundNormalImplUnitTest, AHSoundNormalCallback_048, TestSize
 
     int32_t extra = PlayerStates::PLAYER_INITIALIZED;
     Format infoBody;
+    // Null-pointer guard: lock fails, NotifyInterruptEvent not called (source: :487-507).
+    // Normal path only forwards cb, no member side effect. Covers null branch for coverage.
     aHSoundNormalCallback->HandleAudioInterruptEvent(extra, infoBody);
-    // Duplicate case: verify expired impl path returns early
-    EXPECT_EQ(aHSoundNormalCallback->soundNormalImpl_.lock(), nullptr);
+    SUCCEED();
 }
 
 /**

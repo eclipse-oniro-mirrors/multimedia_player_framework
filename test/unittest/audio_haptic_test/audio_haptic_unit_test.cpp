@@ -109,9 +109,8 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_RegisterSource_001, TestSize.Le
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
-
-    g_audioHapticManager->UnregisterSource(sourceId);
+    EXPECT_GE(sourceId, 0);
+    EXPECT_EQ(MSERR_OK, g_audioHapticManager->UnregisterSource(sourceId));
 }
 
 /**
@@ -126,9 +125,8 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_RegisterSourceWithEffectId_001,
     std::string audioUri = AUDIO_TEST_URI;
     std::string effectId = HAPTIC_TEST_EFFECT_ID;
     int32_t sourceId = g_audioHapticManager->RegisterSourceWithEffectId(audioUri, effectId);
-    EXPECT_NE(-1, sourceId);
-
-    g_audioHapticManager->UnregisterSource(sourceId);
+    EXPECT_GE(sourceId, 0);
+    EXPECT_EQ(MSERR_OK, g_audioHapticManager->UnregisterSource(sourceId));
 }
 
 /**
@@ -143,7 +141,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_UnregisterSource_001, TestSize.
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = g_audioHapticManager->UnregisterSource(sourceId);
     EXPECT_EQ(MSERR_OK, result);
@@ -160,7 +158,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_UnregisterSource_002, TestSize.
 
     int32_t sourceId = -1;
     int32_t result = g_audioHapticManager->UnregisterSource(sourceId);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -175,7 +173,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_UnregisterSource_003, TestSize.
     std::string audioUri = AUDIO_TEST_URI;
     std::string effectId = HAPTIC_TEST_EFFECT_ID;
     int32_t sourceId = g_audioHapticManager->RegisterSourceWithEffectId(audioUri, effectId);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = g_audioHapticManager->UnregisterSource(sourceId);
     EXPECT_EQ(MSERR_OK, result);
@@ -193,7 +191,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetAudioLatencyMode_001, TestSi
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_FAST;
     int32_t result = g_audioHapticManager->SetAudioLatencyMode(sourceId, latencyMode);
@@ -214,7 +212,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetAudioLatencyMode_002, TestSi
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
     int32_t result = g_audioHapticManager->SetAudioLatencyMode(sourceId, latencyMode);
@@ -233,7 +231,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetAudioLatencyMode_003, TestSi
     int32_t sourceId = -1;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
     int32_t result = g_audioHapticManager->SetAudioLatencyMode(sourceId, latencyMode);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -248,11 +246,11 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetAudioLatencyMode_004, TestSi
     std::string audioUri = AUDIO_TEST_URI;
     std::string effectId = HAPTIC_TEST_EFFECT_ID;
     int32_t sourceId = g_audioHapticManager->RegisterSourceWithEffectId(audioUri, effectId);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
     int32_t result = g_audioHapticManager->SetAudioLatencyMode(sourceId, latencyMode);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 
     g_audioHapticManager->UnregisterSource(sourceId);
 }
@@ -269,7 +267,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetAudioLatencyMode_005, TestSi
     std::string audioUri = AUDIO_TEST_URI;
     std::string effectId = HAPTIC_TEST_EFFECT_ID;
     int32_t sourceId = g_audioHapticManager->RegisterSourceWithEffectId(audioUri, effectId);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_FAST;
     int32_t result = g_audioHapticManager->SetAudioLatencyMode(sourceId, latencyMode);
@@ -290,7 +288,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetStreamUsage_001, TestSize.Le
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = MSERR_OK;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -316,7 +314,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetStreamUsage_002, TestSize.Le
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = MSERR_OK;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -342,7 +340,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetStreamUsage_003, TestSize.Le
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = MSERR_OK;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -368,7 +366,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetStreamUsage_004, TestSize.Le
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = MSERR_OK;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -377,7 +375,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetStreamUsage_004, TestSize.Le
 
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_UNKNOWN;
     result = g_audioHapticManager->SetStreamUsage(sourceId, streamUsage);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 
     g_audioHapticManager->UnregisterSource(sourceId);
 }
@@ -398,7 +396,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_SetStreamUsage_005, TestSize.Le
 
     AudioStandard::StreamUsage streamUsage = AudioStandard::StreamUsage::STREAM_USAGE_MUSIC;
     result = g_audioHapticManager->SetStreamUsage(sourceId, streamUsage);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -413,7 +411,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_CreatePlayer_001, TestSize.Leve
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = MSERR_OK;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -446,7 +444,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_CreatePlayer_002, TestSize.Leve
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = MSERR_OK;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -479,7 +477,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_CreatePlayer_003, TestSize.Leve
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = MSERR_OK;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -512,7 +510,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_CreatePlayer_004, TestSize.Leve
     std::string audioUri = AUDIO_TEST_URI;
     std::string hapticUri = HAPTIC_TEST_URI;
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, hapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = MSERR_OK;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -566,7 +564,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticManager_CreatePlayer_006, TestSize.Leve
     std::string newHapticUri = "fd://" + to_string(fd);
 
     int32_t sourceId = g_audioHapticManager->RegisterSource(audioUri, newHapticUri);
-    EXPECT_NE(-1, sourceId);
+    EXPECT_GE(sourceId, 0);
 
     int32_t result = MSERR_OK;
     AudioLatencyMode latencyMode = AudioLatencyMode::AUDIO_LATENCY_MODE_NORMAL;
@@ -666,7 +664,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetVolume_004, TestSize.Level1)
 
     float volume = -0.5f;
     int32_t result = g_normalAudioHapticPlayer->SetVolume(volume);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -680,7 +678,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetVolume_005, TestSize.Level1)
 
     float volume = 1.5f;
     int32_t result = g_normalAudioHapticPlayer->SetVolume(volume);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -736,7 +734,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetVolume_009, TestSize.Level1)
 
     float volume = -0.5f;
     int32_t result = g_lowLatencyAudioHapticPlayer->SetVolume(volume);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -750,7 +748,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetVolume_010, TestSize.Level1)
 
     float volume = 1.5f;
     int32_t result = g_lowLatencyAudioHapticPlayer->SetVolume(volume);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -806,7 +804,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetVolume_014, TestSize.Level1)
 
     float volume = -0.5f;
     int32_t result = g_effectAudioHapticPlayer->SetVolume(volume);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -820,7 +818,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetVolume_015, TestSize.Level1)
 
     float volume = 1.5f;
     int32_t result = g_effectAudioHapticPlayer->SetVolume(volume);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -890,7 +888,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetAudioHapticPlayerCallback_001
 
     std::shared_ptr<AudioHapticPlayerCallback> callback = nullptr;
     int32_t result = g_normalAudioHapticPlayer->SetAudioHapticPlayerCallback(callback);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**
@@ -904,7 +902,7 @@ HWTEST_F(AudioHapticUnitTest, AudioHapticPlayer_SetAudioHapticPlayerCallback_002
 
     std::shared_ptr<AudioHapticPlayerCallback> callback = nullptr;
     int32_t result = g_lowLatencyAudioHapticPlayer->SetAudioHapticPlayerCallback(callback);
-    EXPECT_NE(MSERR_OK, result);
+    EXPECT_EQ(MSERR_INVALID_VAL, result);
 }
 
 /**

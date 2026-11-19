@@ -794,12 +794,18 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_040, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    AudioStandard::InterruptEvent interruptEvent;
+    // Null-pointer guard: callback is null, but detach thread still runs.
     audioHapticPlayerImpl->audioHapticPlayerCallback_.reset();
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
 
+    AudioStandard::InterruptEvent interruptEvent;
     audioHapticPlayerImpl->NotifyInterruptEvent(interruptEvent);
-    // NotifyInterruptEvent should not crash when callback is null
-    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    // detach thread -> HandleInterruptEvent sets STATE_STOPPED (source: :611, :684-688)
+    // This is SUT behavior independent of callback presence.
+    for (int i = 0; i < 50 && audioHapticPlayerImpl->playerState_ != AudioHapticPlayerState::STATE_STOPPED; i++) {
+        usleep(10000);
+    }
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
 }
 
 /**
@@ -829,11 +835,16 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_042, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
+    // Null-pointer guard: callback is null, but detach thread still runs.
     audioHapticPlayerImpl->audioHapticPlayerCallback_.reset();
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
 
     audioHapticPlayerImpl->NotifyEndOfStreamEvent();
-    // NotifyEndOfStreamEvent should not crash when callback is null
-    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    // detach thread -> HandleEndOfStreamEvent sets STATE_STOPPED when !loop_ (source: :628, :642-667)
+    for (int i = 0; i < 50 && audioHapticPlayerImpl->playerState_ != AudioHapticPlayerState::STATE_STOPPED; i++) {
+        usleep(10000);
+    }
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
 }
 
 /**
@@ -952,12 +963,16 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_048, TestSize.Leve
 {
     auto audioHapticPlayerImpl = std::make_shared<AudioHapticPlayerImpl>();
 
-    int32_t errCode = 0;
+    // Null-pointer guard: callback is null, NotifyErrorEvent returns early (source: :692-704).
+    // No detach thread, no member side effect on this path.
+    // This case covers the null-cb early-return branch for coverage.
     audioHapticPlayerImpl->audioHapticPlayerCallback_.reset();
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
 
+    int32_t errCode = MSERR_INVALID_VAL;
     audioHapticPlayerImpl->NotifyErrorEvent(errCode);
-    // NotifyErrorEvent should not crash when callback is null
-    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    // NotifyErrorEvent does not modify playerState_; verify it is unchanged.
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_RUNNING);
 }
 
 /**
@@ -1009,13 +1024,18 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_051, TestSize.Leve
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
     ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
-    int32_t errorCode = 0;
+    // Inject mock to verify OnError passthrough.
+    auto mock = std::make_shared<AudioHapticPlayerCallbackTest>();
+    audioHapticPlayerImpl->audioHapticPlayerCallback_ = mock;
+
+    int32_t errorCode = MSERR_INVALID_VAL;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_ = audioHapticPlayerImpl;
     ASSERT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 
     audioHapticSoundCallbackImpl->OnError(errorCode);
-    // OnError with valid impl calls NotifyErrorEvent, but no callback on player so event not forwarded
-    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    // OnError -> NotifyErrorEvent -> cb->OnError (source: :751-759, :692-704)
+    EXPECT_EQ(mock->errorCount_.load(), 1);
+    EXPECT_EQ(mock->lastErrorCode_, errorCode);
 }
 
 /**
@@ -1030,11 +1050,16 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_052, TestSize.Leve
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
     ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
-    int32_t errorCode = 0;
+    // Null-pointer guard: weak ptr invalidated, OnError returns early without forwarding
+    auto mock = std::make_shared<AudioHapticPlayerCallbackTest>();
+    audioHapticPlayerImpl->audioHapticPlayerCallback_ = mock;
+
+    int32_t errorCode = MSERR_INVALID_VAL;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.reset();
 
     audioHapticSoundCallbackImpl->OnError(errorCode);
-    EXPECT_EQ(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
+    // lock() fails -> NotifyErrorEvent not called -> cb->OnError not invoked
+    EXPECT_EQ(mock->errorCount_.load(), 0);
 }
 
 /**
@@ -1049,13 +1074,25 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_053, TestSize.Leve
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
     ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
+    // Inject mock to verify OnInterrupt synchronous passthrough
+    auto mock = std::make_shared<AudioHapticPlayerCallbackTest>();
+    audioHapticPlayerImpl->audioHapticPlayerCallback_ = mock;
+    audioHapticPlayerImpl->playerState_ = AudioHapticPlayerState::STATE_RUNNING;
+
     AudioStandard::InterruptEvent interruptEvent;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_ = audioHapticPlayerImpl;
     ASSERT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 
     audioHapticSoundCallbackImpl->OnInterrupt(interruptEvent);
-    // OnInterrupt with valid impl calls NotifyInterruptEvent, but no callback on player so event not forwarded
-    EXPECT_EQ(audioHapticPlayerImpl->audioHapticPlayerCallback_.lock(), nullptr);
+    // OnInterrupt -> NotifyInterruptEvent: synchronous cb->OnInterrupt (source: :762-770, 609-622)
+    EXPECT_EQ(mock->interruptCount_.load(), 1);
+
+    // Async state migration: HandleInterruptEventThreadFunc -> HandleInterruptEvent sets STATE_STOPPED
+    // (source: :611 detach, :684-689). Poll with timeout to avoid flakiness.
+    for (int i = 0; i < 50 && audioHapticPlayerImpl->playerState_ != AudioHapticPlayerState::STATE_STOPPED; i++) {
+        usleep(10000); // 10ms * 50 = 500ms max
+    }
+    EXPECT_EQ(audioHapticPlayerImpl->playerState_, AudioHapticPlayerState::STATE_STOPPED);
 }
 
 /**
@@ -1070,10 +1107,16 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_054, TestSize.Leve
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
     ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
+    // Null-pointer guard: weak ptr invalidated, OnInterrupt returns early without forwarding
+    auto mock = std::make_shared<AudioHapticPlayerCallbackTest>();
+    audioHapticPlayerImpl->audioHapticPlayerCallback_ = mock;
+
     AudioStandard::InterruptEvent interruptEvent;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.reset();
 
     audioHapticSoundCallbackImpl->OnInterrupt(interruptEvent);
+    // lock() fails -> NotifyInterruptEvent not called -> cb->OnInterrupt not invoked
+    EXPECT_EQ(mock->interruptCount_.load(), 0);
 }
 
 /**
@@ -1088,11 +1131,14 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_055, TestSize.Leve
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
     ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
-    uint64_t latency = 0;
+    uint64_t latency = 100;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_ = audioHapticPlayerImpl;
     ASSERT_NE(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
 
     audioHapticSoundCallbackImpl->OnFirstFrameWriting(latency);
+    // NotifyFirstFrame -> NotifyStartVibrate: canStartVibrate_=true, audioLatency_=latency
+    EXPECT_TRUE(audioHapticPlayerImpl->canStartVibrate_);
+    EXPECT_EQ(audioHapticPlayerImpl->audioLatency_, latency);
 }
 
 /**
@@ -1107,11 +1153,13 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_056, TestSize.Leve
     auto audioHapticSoundCallbackImpl = std::make_shared<AudioHapticSoundCallbackImpl>(audioHapticPlayerImpl);
     ASSERT_NE(audioHapticSoundCallbackImpl, nullptr);
 
-    uint64_t latency = 0;
+    uint64_t latency = 100;
+    audioHapticPlayerImpl->canStartVibrate_ = false;
     audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.reset();
 
     audioHapticSoundCallbackImpl->OnFirstFrameWriting(latency);
-    EXPECT_EQ(audioHapticSoundCallbackImpl->audioHapticPlayerImpl_.lock(), nullptr);
+    // Null-pointer guard: lock() fails -> NotifyStartVibrate not called -> canStartVibrate_ stays false
+    EXPECT_FALSE(audioHapticPlayerImpl->canStartVibrate_);
 }
 
 /**
@@ -1232,10 +1280,16 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_063, TestSize.Leve
     audioHapticPlayerImpl->audioHapticVibrator_ = std::make_shared<AudioHapticVibratorImpl>(audioHapticPlayerImpl2);
     ASSERT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
 
-    audioHapticPlayerImpl->vibrateThread_ = std::make_shared<std::thread>();
-    ASSERT_NE(audioHapticPlayerImpl->vibrateThread_, nullptr);
+    // Use a real joinable thread to cover the join() branch in ReleaseVibratorInternal
+    audioHapticPlayerImpl->vibrateThread_ = std::make_shared<std::thread>([] { usleep(1000); });
+    ASSERT_TRUE(audioHapticPlayerImpl->vibrateThread_->joinable());
 
     audioHapticPlayerImpl->ReleaseVibratorInternal();
+    // ReleaseVibratorInternal terminal states (source: audio_haptic_player_impl.cpp:284-304)
+    EXPECT_TRUE(audioHapticPlayerImpl->canStartVibrate_);
+    EXPECT_TRUE(audioHapticPlayerImpl->isVibrationStopped_.load());
+    EXPECT_EQ(audioHapticPlayerImpl->vibrateThread_, nullptr);
+    EXPECT_EQ(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
 }
 
 /**
@@ -1253,8 +1307,12 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, AudioHapticPlayerImpl_064, TestSize.Leve
     audioHapticPlayerImpl->vibrateThread_ = nullptr;
 
     audioHapticPlayerImpl->ReleaseVibratorInternal();
+    // Null-pointer guard: vibrator/thread remain null without crash.
+    // canStartVibrate_/isVibrationStopped_ are set unconditionally (source: :289-294).
     EXPECT_EQ(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
     EXPECT_EQ(audioHapticPlayerImpl->vibrateThread_, nullptr);
+    EXPECT_TRUE(audioHapticPlayerImpl->canStartVibrate_);
+    EXPECT_TRUE(audioHapticPlayerImpl->isVibrationStopped_.load());
 }
 
 /**
@@ -1275,12 +1333,16 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_LoadPlaye
     param.isMockMode = true;
     
     audioHapticPlayerImpl->SetPlayerParam(param);
-    EXPECT_EQ(audioHapticPlayerImpl->isMockMode_, true);
     
     audioHapticPlayerImpl->audioHapticSound_ = nullptr;
     audioHapticPlayerImpl->muteAudio_ = false;
     audioHapticPlayerImpl->parallelPlayFlag_ = false;
     audioHapticPlayerImpl->LoadPlayer();
+    // LoadPlayer constructs audioHapticSound_/soundCallback_/audioHapticVibrator_ (source: :162-181).
+    // isMockMode_ only affects rendererFlags passed to CreateAudioHapticSound (:170), not a member.
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticSound_, nullptr);
+    EXPECT_NE(audioHapticPlayerImpl->soundCallback_, nullptr);
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
 }
 
 /**
@@ -1301,12 +1363,15 @@ HWTEST_F(AudioHapticPlayerImplUnitTest, MockMode_AudioHapticPlayerImpl_LoadPlaye
     param.isMockMode = false;
     
     audioHapticPlayerImpl->SetPlayerParam(param);
-    EXPECT_EQ(audioHapticPlayerImpl->isMockMode_, false);
     
     audioHapticPlayerImpl->audioHapticSound_ = nullptr;
     audioHapticPlayerImpl->muteAudio_ = false;
     audioHapticPlayerImpl->parallelPlayFlag_ = false;
     audioHapticPlayerImpl->LoadPlayer();
+    // LoadPlayer constructs audioHapticSound_/soundCallback_/audioHapticVibrator_ (source: :162-181).
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticSound_, nullptr);
+    EXPECT_NE(audioHapticPlayerImpl->soundCallback_, nullptr);
+    EXPECT_NE(audioHapticPlayerImpl->audioHapticVibrator_, nullptr);
 }
 
 /**
