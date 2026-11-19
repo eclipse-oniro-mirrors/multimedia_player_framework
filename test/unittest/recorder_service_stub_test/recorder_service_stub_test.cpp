@@ -2198,5 +2198,171 @@ HWTEST_F(RecorderServiceStubTest, OnRemoteRequest_SetAudioSource_GrantedAndDispa
     EXPECT_EQ(ret, MSERR_NO_PERMISSION_5400102);
     EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_SOURCE_INVALID);
 }
+
+/**
+ * @tc.name: CheckPermissionBySource_ParameterOverridesMember_Granted
+ * @tc.desc: CheckPermission(AudioSourceType) must decide by the passed-in source type only;
+ *           a stale AUDIO_INNER left in the member must not leak into the verdict,
+ *           so a default-permission source still returns GRANTED
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, CheckPermissionBySource_ParameterOverridesMember_Granted, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = CreateStub();
+    ASSERT_NE(stub, nullptr);
+    stub->audioSourceType_ = AudioSourceType::AUDIO_INNER;
+
+    int32_t ret = stub->CheckPermission(AudioSourceType::AUDIO_SOURCE_INVALID);
+    EXPECT_EQ(ret, Security::AccessToken::PERMISSION_GRANTED);
+}
+
+/**
+ * @tc.name: CheckPermissionBySource_ParameterOverridesMember_Denied
+ * @tc.desc: CheckPermission(AudioSourceType) with AUDIO_INNER returns DENIED even though
+ *           the member still holds a default-permission source type
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, CheckPermissionBySource_ParameterOverridesMember_Denied, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = CreateStub();
+    ASSERT_NE(stub, nullptr);
+    stub->audioSourceType_ = AudioSourceType::AUDIO_SOURCE_INVALID;
+
+    int32_t ret = stub->CheckPermission(AudioSourceType::AUDIO_INNER);
+    EXPECT_EQ(ret, Security::AccessToken::PERMISSION_DENIED);
+}
+
+/**
+ * @tc.name: CheckPermission_MemberInnerDenied
+ * @tc.desc: CheckPermission() snapshots the member under stmutex_ and denies AUDIO_INNER
+ *           without querying any token permission
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, CheckPermission_MemberInnerDenied, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = CreateStub();
+    ASSERT_NE(stub, nullptr);
+    stub->audioSourceType_ = AudioSourceType::AUDIO_INNER;
+
+    int32_t ret = stub->CheckPermission();
+    EXPECT_EQ(ret, Security::AccessToken::PERMISSION_DENIED);
+}
+
+/**
+ * @tc.name: CheckRequestPermission_SetAudioSourceGranted
+ * @tc.desc: CheckRequestPermission(SET_AUDIO_SOURCE) consumes the parcel source type,
+ *           returns MSERR_OK for a default-permission source and arms needAudioPermissionCheck
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, CheckRequestPermission_SetAudioSourceGranted, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = CreateStub();
+    ASSERT_NE(stub, nullptr);
+    stub->needAudioPermissionCheck = false;
+
+    MessageParcel data;
+    data.WriteInt32(static_cast<int32_t>(AudioSourceType::AUDIO_SOURCE_INVALID));
+
+    int32_t ret = stub->CheckRequestPermission(IStandardRecorderService::SET_AUDIO_SOURCE, data);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_SOURCE_INVALID);
+    EXPECT_TRUE(stub->needAudioPermissionCheck);
+}
+
+/**
+ * @tc.name: CheckRequestPermission_CommonWithAudioCheckGranted
+ * @tc.desc: CheckRequestPermission(PREPARE) with needAudioPermissionCheck armed re-checks the
+ *           snapshot source type and grants a default-permission one, keeping the flag armed
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, CheckRequestPermission_CommonWithAudioCheckGranted, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = CreateStub();
+    ASSERT_NE(stub, nullptr);
+    stub->audioSourceType_ = AudioSourceType::AUDIO_SOURCE_INVALID;
+    stub->needAudioPermissionCheck = true;
+
+    MessageParcel data;
+    int32_t ret = stub->CheckRequestPermission(IStandardRecorderService::PREPARE, data);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_TRUE(stub->needAudioPermissionCheck);
+}
+
+/**
+ * @tc.name: CheckRequestPermission_NonAudioRequestSkipsAudioCheck
+ * @tc.desc: CheckRequestPermission(SET_VIDEO_SOURCE) is neither an audio nor a common request,
+ *           so the audio permission gate is bypassed even with an armed flag and AUDIO_INNER
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, CheckRequestPermission_NonAudioRequestSkipsAudioCheck, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = CreateStub();
+    ASSERT_NE(stub, nullptr);
+    stub->audioSourceType_ = AudioSourceType::AUDIO_INNER;
+    stub->needAudioPermissionCheck = true;
+
+    MessageParcel data;
+    int32_t ret = stub->CheckRequestPermission(IStandardRecorderService::SET_VIDEO_SOURCE, data);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(stub->audioSourceType_, AudioSourceType::AUDIO_INNER);
+}
+
+/**
+ * @tc.name: ExecuteMemberFunc_MemberFailureStillReturnsOk
+ * @tc.desc: ExecuteMemberFunc keeps the reply-carries-the-error contract: the registered
+ *           member function runs exactly once, its error code is not propagated to the
+ *           caller and the method still returns MSERR_OK
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, ExecuteMemberFunc_MemberFailureStillReturnsOk, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = CreateStub();
+    ASSERT_NE(stub, nullptr);
+    stub->recorderServer_ = nullptr;
+
+    int32_t invokeCount = 0;
+    RecorderStubFunc memberFunc = [&invokeCount](MessageParcel &, MessageParcel &) {
+        invokeCount++;
+        return static_cast<int32_t>(MSERR_INVALID_OPERATION);
+    };
+
+    MessageParcel data, reply;
+    int32_t ret = stub->ExecuteMemberFunc(IStandardRecorderService::SET_AUDIO_SOURCE, memberFunc, data, reply);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(invokeCount, 1);
+}
+
+/**
+ * @tc.name: ExecuteMemberFunc_Success
+ * @tc.desc: ExecuteMemberFunc invokes the registered member function once and returns MSERR_OK
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServiceStubTest, ExecuteMemberFunc_Success, TestSize.Level2)
+{
+    sptr<RecorderServiceStub> stub = CreateStub();
+    ASSERT_NE(stub, nullptr);
+    stub->recorderServer_ = nullptr;
+
+    int32_t invokeCount = 0;
+    RecorderStubFunc memberFunc = [&invokeCount](MessageParcel &, MessageParcel &reply) {
+        invokeCount++;
+        (void)reply.WriteInt32(MSERR_OK);
+        return static_cast<int32_t>(MSERR_OK);
+    };
+
+    MessageParcel data, reply;
+    int32_t ret = stub->ExecuteMemberFunc(IStandardRecorderService::SET_VIDEO_SOURCE, memberFunc, data, reply);
+    EXPECT_EQ(ret, MSERR_OK);
+    EXPECT_EQ(invokeCount, 1);
+    EXPECT_EQ(reply.ReadInt32(), MSERR_OK);
+}
 } // namespace Media
 } // namespace OHOS

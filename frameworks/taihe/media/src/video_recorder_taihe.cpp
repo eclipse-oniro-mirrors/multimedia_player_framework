@@ -135,14 +135,17 @@ optional<string> VideoRecorderImpl::GetInputSurfaceSync()
         return res;
     }
 
-    asyncCtx->taihe->surface_ = asyncCtx->taihe->recorder_->GetSurface(asyncCtx->taihe->videoSourceID); // source id
-    if (asyncCtx->taihe->surface_ != nullptr) {
-        OHOS::SurfaceError error = OHOS::SurfaceUtils::GetInstance()->Add(asyncCtx->taihe->surface_->GetUniqueId(),
-            asyncCtx->taihe->surface_);
+    OHOS::sptr<OHOS::Surface> surface = asyncCtx->taihe->recorder_->GetSurface(asyncCtx->taihe->videoSourceID);
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->surfaceMutex_);
+        asyncCtx->taihe->surface_ = surface;
+    }
+    if (surface != nullptr) {
+        OHOS::SurfaceError error = OHOS::SurfaceUtils::GetInstance()->Add(surface->GetUniqueId(), surface);
         if (error != OHOS::SURFACE_ERROR_OK) {
             SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
         }
-        std::string surfaceId = std::to_string(asyncCtx->taihe->surface_->GetUniqueId());
+        std::string surfaceId = std::to_string(surface->GetUniqueId());
         res = optional<string>(std::in_place, surfaceId);
     } else {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "GetInputSurface", "");
@@ -281,12 +284,17 @@ void VideoRecorderImpl::ResetSync()
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Reset", "");
         return;
     }
-    if (asyncCtx->taihe->surface_ != nullptr) {
-        auto id = asyncCtx->taihe->surface_->GetUniqueId();
+    OHOS::sptr<OHOS::Surface> surface = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->surfaceMutex_);
+        surface = asyncCtx->taihe->surface_;
+        asyncCtx->taihe->surface_ = nullptr;
+    }
+    if (surface != nullptr) {
+        auto id = surface->GetUniqueId();
         if (asyncCtx->taihe->IsSurfaceIdValid(id)) {
             (void)OHOS::SurfaceUtils::GetInstance()->Remove(id);
         }
-        asyncCtx->taihe->surface_ = nullptr;
     }
     if (asyncCtx->taihe->recorder_->Reset() != MSERR_OK) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Reset", "");
@@ -338,12 +346,17 @@ void VideoRecorderImpl::ReleaseSync()
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Release", "");
         return;
     }
-    if (asyncCtx->taihe->surface_ != nullptr) {
-        auto id = asyncCtx->taihe->surface_->GetUniqueId();
+    OHOS::sptr<OHOS::Surface> surface = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(asyncCtx->taihe->surfaceMutex_);
+        surface = asyncCtx->taihe->surface_;
+        asyncCtx->taihe->surface_ = nullptr;
+    }
+    if (surface != nullptr) {
+        auto id = surface->GetUniqueId();
         if (asyncCtx->taihe->IsSurfaceIdValid(id)) {
             (void)OHOS::SurfaceUtils::GetInstance()->Remove(id);
         }
-        asyncCtx->taihe->surface_ = nullptr;
     }
     if (asyncCtx->taihe->recorder_->Release() != MSERR_OK) {
         SignError(asyncCtx.get(), MSERR_EXT_API9_OPERATE_NOT_PERMIT, "Release", "");
