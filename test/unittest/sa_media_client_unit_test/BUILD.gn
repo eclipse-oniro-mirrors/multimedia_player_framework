@@ -65,6 +65,7 @@ ohos_unittest("sa_media_client_unit_test") {
     "-Dprivate=public",
     "-Dprotected=public",
   ]
+  defines = player_framework_defines
   sanitize = {
     cfi = true
     cfi_cross_dso = true
