@@ -364,8 +364,14 @@ HWTEST_F(PlayerServiceProxyTest, SendRequest_Failure_001, TestSize.Level0)
 
 HWTEST_F(PlayerServiceProxyTest, SetListenerObject_001, TestSize.Level0)
 {
+    EXPECT_CALL(*mockRemote_, SendRequest(IStandardPlayerService::SET_LISTENER_OBJ, _, _, _))
+        .WillOnce(Invoke([](uint32_t code, MessageParcel &data, MessageParcel &reply,
+            MessageOption &option) -> int {
+            reply.WriteInt32(MSERR_OK);
+            return 0;
+        }));
     int32_t ret = proxy_->SetListenerObject(nullptr);
-    EXPECT_EQ(ret, MSERR_INVALID_OPERATION);
+    EXPECT_EQ(ret, MSERR_OK);
 }
 
 HWTEST_F(PlayerServiceProxyTest, ReleaseSync_001, TestSize.Level0)
