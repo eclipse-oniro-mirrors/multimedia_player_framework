@@ -14,6 +14,7 @@
  */
 
 #include "screen_capture_server.h"
+#include "screen_capture_dfx.h"
 #include "account_observer.h"
 #include "audio_capturer_wrapper.h"
 #include "screen_capture_server_manager.h"
@@ -48,7 +49,6 @@
 #include <iservice_registry.h>
 #include <list>
 #include <locale_config.h>
-#include <meta/meta.h>
 #include <nativetoken_kit.h>
 #include <notification_constant.h>
 #include <notification_content.h>
@@ -59,8 +59,6 @@
 #include <parameter.h>
 #include <pixel_map.h>
 #include <privacy_kit.h>
-#include <res_sched_client.h>
-#include <res_type.h>
 #include <screen_manager.h>
 #include <session_manager_lite.h>
 #include <set>
@@ -296,6 +294,7 @@ int32_t ScreenCaptureServer::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &ap
     appName_ = GetClientBundleName(appInfo_.appUid);
     InitAppUserId();
     isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
+    dfx_->BindAppInfo(appInfo_.appUid, appInfo_.appPid, appName_);
     ScreenCaptureServerManager::GetInstance().UpdateServerAppUid(sessionId_, appInfo_.appUid);
     ScreenCaptureServerManager::GetInstance().AddSaAppInfoMap(saUid, appInfo_.appUid);
     if (!ScreenCaptureServerManager::GetInstance().CanScreenCaptureInstanceBeCreate(appInfo.appUid)) {
@@ -666,80 +665,14 @@ bool ScreenCaptureServer::IsState(uint32_t cap) const
     return (STATE_CAPS_[captureState_.load()] & cap) != 0;
 }
 
-void ScreenCaptureServer::SetMetaDataReport()
-{
-    std::shared_ptr<Media::Meta> meta = std::make_shared<Media::Meta>();
-    meta->SetData(Tag::SCREEN_CAPTURE_ERR_CODE, statisticalEventInfo_.errCode);
-    meta->SetData(Tag::SCREEN_CAPTURE_ERR_MSG, statisticalEventInfo_.errMsg);
-    meta->SetData(Tag::SCREEN_CAPTURE_DURATION, statisticalEventInfo_.captureDuration);
-    meta->SetData(Tag::SCREEN_CAPTURE_AV_TYPE, avType_);
-    meta->SetData(Tag::SCREEN_CAPTURE_DATA_TYPE, dataMode_);
-    meta->SetData(Tag::SCREEN_CAPTURE_USER_AGREE, statisticalEventInfo_.userAgree);
-    meta->SetData(Tag::SCREEN_CAPTURE_REQURE_MIC, statisticalEventInfo_.requireMic);
-    meta->SetData(Tag::SCREEN_CAPTURE_ENABLE_MIC, statisticalEventInfo_.enableMic);
-    meta->SetData(Tag::SCREEN_CAPTURE_VIDEO_RESOLUTION, statisticalEventInfo_.videoResolution);
-    meta->SetData(Tag::SCREEN_CAPTURE_STOP_REASON, statisticalEventInfo_.stopReason);
-    meta->SetData(Tag::SCREEN_CAPTURE_START_LATENCY, statisticalEventInfo_.startLatency);
-    AppendMediaInfo(meta, instanceId_);
-    ReportMediaInfo(instanceId_);
-}
-
-void ScreenCaptureServer::SetMediaKitReport(const std::string &apiCall)
-{
-    nlohmann::json metaInfoJson;
-    metaInfoJson["captureMode"] =  captureConfig_.captureMode;
-    metaInfoJson["dataType"] =  std::to_string(captureConfig_.dataType);
-    metaInfoJson["videoCapDisplayId"] =  captureConfig_.videoInfo.videoCapInfo.displayId;
-    metaInfoJson["videoFrameWidth"] =  captureConfig_.videoInfo.videoCapInfo.videoFrameWidth;
-    metaInfoJson["videoFrameHeight"] =  captureConfig_.videoInfo.videoCapInfo.videoFrameHeight;
-    metaInfoJson["videoSourceType"] =  captureConfig_.videoInfo.videoCapInfo.videoSource;
-    metaInfoJson["videoCapState"] =  captureConfig_.videoInfo.videoCapInfo.state;
-    metaInfoJson["videoCodec"] =  captureConfig_.videoInfo.videoEncInfo.videoCodec;
-    metaInfoJson["videoBitrate"] =  captureConfig_.videoInfo.videoEncInfo.videoBitrate;
-    metaInfoJson["videoFrameRate"] =  captureConfig_.videoInfo.videoEncInfo.videoFrameRate;
-    metaInfoJson["videoEncState"] =  captureConfig_.videoInfo.videoEncInfo.state;
-    metaInfoJson["micAudioSampleRate"] =  captureConfig_.audioInfo.micCapInfo.audioSampleRate;
-    metaInfoJson["micChannels"] =  captureConfig_.audioInfo.micCapInfo.audioChannels;
-    metaInfoJson["micAudioSource"] =  captureConfig_.audioInfo.micCapInfo.audioSource;
-    metaInfoJson["micState"] =  captureConfig_.audioInfo.micCapInfo.state;
-    metaInfoJson["innerAudioSampleRate"] =  captureConfig_.audioInfo.innerCapInfo.audioSampleRate;
-    metaInfoJson["innerChannels"] =  captureConfig_.audioInfo.innerCapInfo.audioChannels;
-    metaInfoJson["innerAudioSource"] =  captureConfig_.audioInfo.innerCapInfo.audioSource;
-    metaInfoJson["innerState"] =  captureConfig_.audioInfo.innerCapInfo.state;
-    metaInfoJson["audioBitrate"] =  captureConfig_.audioInfo.audioEncInfo.audioBitrate;
-    metaInfoJson["audioCodecformat"] =  captureConfig_.audioInfo.audioEncInfo.audioCodecformat;
-    metaInfoJson["audioEncState"] =  captureConfig_.audioInfo.audioEncInfo.state;
-    metaInfoJson["recorderFileFormat"] =  captureConfig_.recorderInfo.fileFormat;
-    metaInfoJson["enableDeviceLevelCapture"] =  captureConfig_.strategy.enableDeviceLevelCapture;
-    metaInfoJson["keepCaptureDuringCall"] =  captureConfig_.strategy.keepCaptureDuringCall;
-    metaInfoJson["strategyForPrivacyMaskMode"] =  captureConfig_.strategy.strategyForPrivacyMaskMode;
-    metaInfoJson["canvasFollowRotation"] =  captureConfig_.strategy.canvasFollowRotation;
-    metaInfoJson["enableBFrame"] =  captureConfig_.strategy.enableBFrame;
-    metaInfoJson["enableAEC"] =  captureConfig_.strategy.enableAEC;
-    metaInfoJson["enableHDRCapture"] =  captureConfig_.strategy.enableHDRCapture;
-    metaInfoJson["enablePause"] =  captureConfig_.strategy.enablePause;
-    metaInfoJson["contentAutoPauseScenes"] =  captureConfig_.strategy.contentAutoPauseScenes;
-    metaInfoJson["setByUser"] =  captureConfig_.strategy.setByUser;
-    metaInfoJson["pickerPopUp"] =  captureConfig_.strategy.pickerPopUp;
-    metaInfoJson["fillMode"] =  captureConfig_.strategy.fillMode;
-    metaInfoJson["highlightLineThickness"] =  captureConfig_.highlightConfig.lineThickness;
-    metaInfoJson["highlightLineColor"] =  captureConfig_.highlightConfig.lineColor;
-    metaInfoJson["highlightMode"] =  captureConfig_.highlightConfig.mode;
-    metaInfoJson["virtualScreenMaxRefreshRate"] = virtualScreenFrameRate_;
-    std::string instanceIdStr =  std::to_string(instanceId_);
-    OHOS::Media::MediaEvent event;
-    std::string events = metaInfoJson.dump();
-    event.MediaKitStatistics("AVScreenCapture", appName_, instanceIdStr, apiCall, events);
-}
-
 ScreenCaptureServer::ScreenCaptureServer(std::unique_ptr<IScreenCaptureServiceProviders> providers)
     : providers_(std::move(providers))
 {
     MEDIA_LOGI("0x%{public}06" PRIXPTR " ScreenCaptureServer Instances create", FAKE_POINTER(this));
     cbProxy_ = std::make_shared<ScreenCaptureCallbackProxy>();
     InitAppInfo();
-    instanceId_ = OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId();
-    CreateMediaInfo(SCREEN_CAPTRUER, IPCSkeleton::GetCallingAppUid(), instanceId_);
+    dfx_ = CreateScreenCaptureDfx({OHOS::HiviewDFX::HiTraceChain::GetId().GetChainId(),
+        appInfo_.appUid, appInfo_.appPid, appName_});
     taskQue_.Start();
 }
 
@@ -806,7 +739,6 @@ int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
     CHECK_AND_RETURN_RET_LOG(IsState(CAP_CONFIG), MSERR_INVALID_OPERATION_CREATE,
         "SetRecorderInfo failed, capture is not CREATED, state:%{public}d", captureState_.load());
     MEDIA_LOGI("ScreenCaptureServer::SetRecorderInfo start");
-    avType_ = AVScreenCaptureAvType::AV_TYPE;
 
     if (MP4.compare(recorderInfo.fileFormat) == 0) {
         fileFormat_ = OutputFormatType::FORMAT_MPEG_4;
@@ -814,9 +746,7 @@ int32_t ScreenCaptureServer::SetRecorderInfo(RecorderInfo recorderInfo)
         fileFormat_ = OutputFormatType::FORMAT_M4A;
     } else {
         MEDIA_LOGE("invalid fileFormat type");
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_,
-            SCREEN_CAPTURE_ERR_INVALID_VAL, "invalid fileFormat type");
-        return MSERR_INVALID_VAL;
+        return dfx_->Fault(ScFault::INVALID_FILE_FORMAT, MSERR_INVALID_VAL);
     }
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetRecorderInfo OK.", FAKE_POINTER(this));
     return MSERR_OK;
@@ -830,23 +760,17 @@ int32_t ScreenCaptureServer::SetOutputFile(int32_t outputFd)
     MEDIA_LOGI("ScreenCaptureServer::SetOutputFile start");
     if (outputFd < 0) {
         MEDIA_LOGI("invalid outputFd");
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_,
-            SCREEN_CAPTURE_ERR_INVALID_VAL, "invalid outputFd");
-        return MSERR_INVALID_FD;
+        return dfx_->Fault(ScFault::INVALID_OUTPUT_FD, MSERR_INVALID_FD);
     }
 
     int flags = fcntl(outputFd, F_GETFL);
     if (flags == -1) {
         MEDIA_LOGE("Fail to get File Status Flags");
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-            "Fail to get File Status Flags");
-        return MSERR_INVALID_FD;
+        return dfx_->Fault(ScFault::GET_FILE_STATUS_FLAGS_FAILED, MSERR_INVALID_FD);
     }
     if ((static_cast<unsigned int>(flags) & (O_RDWR | O_WRONLY)) == 0) {
         MEDIA_LOGE("File descriptor is not in read-write mode or write-only mode");
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-            "File descriptor is not in read-write mode or write-only mode");
-        return MSERR_INVALID_WRITE;
+        return dfx_->Fault(ScFault::OUTPUT_FD_NOT_WRITABLE, MSERR_INVALID_WRITE);
     }
     outputFd_.Reset(dup(outputFd));
     CHECK_AND_RETURN_RET_LOG(outputFd_.Get() >= 0, MSERR_NO_MEMORY, "dup outputFd failed");
@@ -1107,11 +1031,9 @@ int32_t ScreenCaptureServer::CheckAllParams()
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "CheckAllParams CheckCaptureMode failed, ret:%{public}d", ret);
 
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
-        dataMode_ = AVScreenCaptureDataMode::SUFFACE_MODE;
         return CheckCaptureStreamParams();
     }
     if (captureConfig_.dataType == DataType::CAPTURE_FILE) {
-        dataMode_ = AVScreenCaptureDataMode::FILE_MODE;
         return CheckCaptureFileParams();
     }
     return MSERR_INVALID_VAL;
@@ -1135,21 +1057,15 @@ int32_t ScreenCaptureServer::CheckCaptureStreamParams()
     if (captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID ||
         (captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_VALID &&
             surface_ == nullptr)) {
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-            "video Cap state fault, videoCapInfo is invalid");
-        return MSERR_INVALID_VAL;
+        return dfx_->Fault(ScFault::VIDEO_CAP_INVALID, MSERR_INVALID_VAL);
     }
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID ||
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID) {
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-            "audio inner cap or video cap state invalid");
-        return MSERR_INVALID_VAL;
+        return dfx_->Fault(ScFault::INNER_OR_VIDEO_CAP_INVALID, MSERR_INVALID_VAL);
     }
     if (captureConfig_.audioInfo.innerCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE &&
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-            "audio inner cap or video cap state ignore");
-        return MSERR_INVALID_VAL;
+        return dfx_->Fault(ScFault::INNER_OR_VIDEO_CAP_IGNORED, MSERR_INVALID_VAL);
     }
     MEDIA_LOGD("ScreenCaptureServer: 0x%{public}06" PRIXPTR " CheckCaptureStreamParams OK.", FAKE_POINTER(this));
     return MSERR_OK;
@@ -1178,14 +1094,10 @@ int32_t ScreenCaptureServer::CheckCaptureFileParams()
         captureConfig_.videoInfo.videoCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID ||
         captureConfig_.audioInfo.audioEncInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID ||
         captureConfig_.videoInfo.videoEncInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID) {
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-            "innerCap audioEnc videoCap videoEnc state invalid");
-        return MSERR_INVALID_VAL;
+        return dfx_->Fault(ScFault::CAP_PARAMS_INVALID, MSERR_INVALID_VAL);
     }
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_INVALID) {
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-            "audio mic cap state invalid");
-        return MSERR_INVALID_VAL;
+        return dfx_->Fault(ScFault::MIC_CAP_INVALID, MSERR_INVALID_VAL);
     }
     if (captureConfig_.audioInfo.micCapInfo.state == AVScreenCaptureParamValidationState::VALIDATION_IGNORE) {
         return MSERR_OK;
@@ -1197,9 +1109,7 @@ int32_t ScreenCaptureServer::CheckCaptureFileParams()
         return MSERR_OK;
     }
     MEDIA_LOGE("CheckCaptureFileParams failed, inner and mic param not consistent");
-    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_INVALID_VAL,
-        "CheckCaptureFileParams failed, inner and mic param not consistent");
-    return MSERR_INVALID_VAL;
+    return dfx_->Fault(ScFault::INNER_MIC_PARAM_MISMATCH, MSERR_INVALID_VAL);
 }
 
 // Should call in ipc thread
@@ -1213,22 +1123,6 @@ void ScreenCaptureServer::InitAppInfo()
     appName_ = GetClientBundleName(appInfo_.appUid);
     isSystemRecorder_.store(GetScreenCaptureSystemParam()[SYS_SCR_RECR_KEY] == appName_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " InitAppInfo end.", FAKE_POINTER(this));
-}
-
-int64_t ScreenCaptureServer::GetCurrentMillisecond()
-{
-    std::chrono::system_clock::duration duration = std::chrono::system_clock::now().time_since_epoch();
-    int64_t time = std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
-    return time;
-}
-
-void ScreenCaptureServer::SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason,
-    bool userAgree)
-{
-    statisticalEventInfo_.errCode = errCode;
-    statisticalEventInfo_.errMsg = errMsg;
-    statisticalEventInfo_.stopReason = stopReason;
-    statisticalEventInfo_.userAgree = userAgree;
 }
 
 bool ScreenCaptureServer::CheckPrivacyWindowSkipPermission()
@@ -1282,12 +1176,13 @@ int32_t ScreenCaptureServer::OnReceiveUserPrivacyAuthority(bool isAllowed)
         MEDIA_LOGE("OnReceiveUserPrivacyAuthority failed, capture is not POPUP or RUNNING");
         cbProxy_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
             AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
-        SetMediaKitReport("startRecording fail");
+        dfx_->StartResult(MSERR_UNKNOWN, CaptureEndReason::START_INVALID_STATE);
         StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID);
         return MSERR_UNKNOWN;
     }
     if (!isAllowed) {
         if (IsState(CAP_POPUP)) {
+            dfx_->StartResult(MSERR_UNKNOWN, CaptureEndReason::RECEIVE_USER_PRIVACY_AUTHORITY_FAILED);
             captureState_ = AVScreenCaptureState::CREATED;
             cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_CANCELED);
             return MSERR_UNKNOWN;
@@ -1447,12 +1342,9 @@ int32_t ScreenCaptureServer::OnStartScreenCapture(bool isSkipPrivacyWindow)
         ret = StartScreenCaptureFile();
     }
     if (ret == MSERR_OK) {
-        int64_t endTime = GetCurrentMillisecond();
-        statisticalEventInfo_.startLatency = static_cast<int32_t>(endTime - startTime_);
         MEDIA_LOGI("OnStartScreenCapture start success, dataType:%{public}d", captureConfig_.dataType);
     } else {
         MEDIA_LOGE("OnStartScreenCapture start failed, dataType:%{public}d", captureConfig_.dataType);
-        statisticalEventInfo_.startLatency = -1; // latency -1 means invalid
     }
     return ret;
 }
@@ -1538,19 +1430,9 @@ OutlineShape ScreenCaptureServer::ConvertToOutlineShape(ScreenCaptureHighlightMo
     }
 }
 
-void ScreenCaptureServer::ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload)
-{
-    payload["uid"] = std::to_string(appInfo_.appUid);
-    payload["pid"] = std::to_string(appInfo_.appPid);
-    uint32_t type = ResourceSchedule::ResType::RES_TYPE_REPORT_SCREEN_CAPTURE;
-    ResourceSchedule::ResSchedClient::GetInstance().ReportData(type, value, payload);
-}
-
 void ScreenCaptureServer::PostStartScreenCaptureSuccessAction()
 {
-    std::unordered_map<std::string, std::string> payload;
-    int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::START_SCREEN_CAPTURE;
-    ResSchedReportData(value, payload);
+    dfx_->CaptureStarted();
     captureState_ = AVScreenCaptureState::STARTED;
     if (isSystemRecorder_.load()) {
         providers_->GetScreenCaptureMonitor().SetSystemScreenRecorderPid(appInfo_.appPid);
@@ -1617,14 +1499,14 @@ void ScreenCaptureServer::PostStartScreenCapture(int32_t ret)
             captureState_ = AVScreenCaptureState::STARTED;
             cbProxy_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
                 AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
-            SetMediaKitReport("startRecording fail");
+            dfx_->StartResult(ret, CaptureEndReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE);
             StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID);
             return;
         }
         MEDIA_LOGI("PostStartScreenCaptureSuccessAction START.");
         UpdateHighlightOutline(true);
         PostStartScreenCaptureSuccessAction();
-        SetMediaKitReport("startRecording");
+        dfx_->StartResult(MSERR_OK, CaptureEndReason::NORMAL_STOPPED);
     } else {
         PostStartScreenCaptureFail(ret);
         return;
@@ -1656,13 +1538,11 @@ void ScreenCaptureServer::PostStartScreenCaptureFail(int32_t ret)
     MEDIA_LOGE("PostStartScreenCapture handle failure, ret:%{public}d", ret);
     if (isPrivacyAuthorityEnabled_) {
         cbProxy_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL, MSErrorToScreenCaptureError(ret));
-        SetMediaKitReport("startRecording fail");
+        dfx_->StartResult(ret, CaptureEndReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE);
     }
     StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID);
     isPrivacyAuthorityEnabled_ = false;
     captureState_ = AVScreenCaptureState::STOPPED;
-    SetErrorInfo(ret, "PostStartScreenCapture handle failure", StopReason::POST_START_SCREENCAPTURE_HANDLE_FAILURE,
-        IsUserPrivacyAuthorityNeeded());
 }
 
 #ifdef SUPPORT_SCREEN_CAPTURE_WINDOW_NOTIFICATION
@@ -1685,7 +1565,7 @@ int32_t ScreenCaptureServer::TryNotificationOnPostStartScreenCapture()
     captureState_ = AVScreenCaptureState::STARTED;
     cbProxy_->OnError(ScreenCaptureErrorType::SCREEN_CAPTURE_ERROR_INTERNAL,
         AVScreenCaptureErrorCode::SCREEN_CAPTURE_ERR_UNKNOWN);
-    SetMediaKitReport("startRecording fail");
+    dfx_->StartResult(MSERR_UNKNOWN, CaptureEndReason::START_NOTIFICATION_FAILED);
     StopScreenCaptureInner(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_INVALID);
     return MSERR_UNKNOWN;
 }
@@ -1707,12 +1587,9 @@ int32_t ScreenCaptureServer::InitAudioCap(AudioCaptureInfo audioInfo)
     if (audioInfo.audioSource == AudioCaptureSourceType::SOURCE_DEFAULT ||
         audioInfo.audioSource == AudioCaptureSourceType::MIC) {
         captureConfig_.audioInfo.micCapInfo = audioInfo;
-        statisticalEventInfo_.requireMic = true;
     } else if (audioInfo.audioSource == AudioCaptureSourceType::ALL_PLAYBACK ||
         audioInfo.audioSource == AudioCaptureSourceType::APP_PLAYBACK) {
         captureConfig_.audioInfo.innerCapInfo = audioInfo;
-        avType_ = (avType_ == AVScreenCaptureAvType::INVALID_TYPE) ? AVScreenCaptureAvType::AUDIO_TYPE :
-            AVScreenCaptureAvType::AV_TYPE;
     }
     MEDIA_LOGI("InitAudioCap success sampleRate:%{public}d, channels:%{public}d, source:%{public}d, state:%{public}d",
         audioInfo.audioSampleRate, audioInfo.audioChannels, audioInfo.audioSource, audioInfo.state);
@@ -1762,10 +1639,6 @@ int32_t ScreenCaptureServer::InitVideoCap(VideoCaptureInfo videoInfo)
     }
 #endif
 
-    avType_ = (avType_ == AVScreenCaptureAvType::AUDIO_TYPE) ? AVScreenCaptureAvType::AV_TYPE :
-        AVScreenCaptureAvType::VIDEO_TYPE;
-    statisticalEventInfo_.videoResolution = std::to_string(videoInfo.videoFrameWidth) + " * " +
-        std::to_string(videoInfo.videoFrameHeight);
     MEDIA_LOGI("InitVideoCap success width:%{public}d, height:%{public}d, source:%{public}d, state:%{public}d",
         videoInfo.videoFrameWidth, videoInfo.videoFrameHeight, videoInfo.videoSource, videoInfo.state);
     return MSERR_OK;
@@ -1939,9 +1812,7 @@ int32_t ScreenCaptureServer::PrepareStartCapture()
     if (!captureConfig_.strategy.keepCaptureDuringCall && providers_->GetInCallObserver().IsInCall(true)) {
         MEDIA_LOGI("ScreenCaptureServer Start InCall Abort");
         cbProxy_->OnStateChange(AVScreenCaptureStateCode::SCREEN_CAPTURE_STATE_STOPPED_BY_CALL);
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-            "ScreenCaptureServer Start InCall Abort");
-        return MSERR_UNSUPPORT_INCALL;
+        return dfx_->Fault(ScFault::START_IN_CALL, MSERR_UNSUPPORT_INCALL);
     }
     listenerFlags |= LF_CALL;
 #endif
@@ -1973,9 +1844,15 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         captureConfig_.dataType);
     MediaTrace trace("ScreenCaptureServer::StartScreenCaptureInner");
 
-    int32_t ret = PrepareStartCapture();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "PrepareStartCapture failed");
+    dfx_->BindConfig(captureConfig_, virtualScreenFrameRate_,
+        fileFormat_ != OutputFormatType::FORMAT_DEFAULT);
 
+    int32_t ret = PrepareStartCapture();
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("PrepareStartCapture failed");
+        dfx_->StartResult(ret, CaptureEndReason::START_PREPARE_FAILED);
+        return ret;
+    }
     isPrivacyAuthorityEnabled_ = isPrivacyAuthorityEnabled;
     captureState_ = AVScreenCaptureState::POPUP_WINDOW;
     isScreenCaptureAuthority_ = CheckPrivacyWindowSkipPermission();
@@ -1990,8 +1867,7 @@ int32_t ScreenCaptureServer::StartScreenCaptureInner(bool isPrivacyAuthorityEnab
         ret = RequestUserPrivacyAuthority(isSkipPrivacyWindow);
         if (ret != MSERR_OK) {
             captureState_ = AVScreenCaptureState::STOPPED;
-            SetErrorInfo(ret, "StartScreenCaptureInner RequestUserPrivacyAuthority failed",
-                StopReason::REQUEST_USER_PRIVACY_AUTHORITY_FAILED, IsUserPrivacyAuthorityNeeded());
+            dfx_->StartResult(ret, CaptureEndReason::REQUEST_USER_PRIVACY_AUTHORITY_FAILED);
             MEDIA_LOGE("StartScreenCaptureInner RequestUserPrivacyAuthority failed");
             return ret;
         }
@@ -2384,8 +2260,6 @@ int32_t ScreenCaptureServer::StartScreenRecording(bool isPrivacyAuthorityEnabled
 {
     MediaTrace trace("ScreenCaptureServer::StartScreenRecording");
     std::lock_guard<std::mutex> lock(mutex_);
-    startTime_ = GetCurrentMillisecond();
-    statisticalEventInfo_.enableMic = isMicrophoneSwitchTurnOn_;
     CHECK_AND_RETURN_RET_LOG(IsState(CAP_INIT), MSERR_INVALID_OPERATION,
         "StartScreenRecording failed, not in CREATED or STOPPED, state:%{public}d", captureState_.load());
     return StartScreenCaptureInner(isPrivacyAuthorityEnabled);
@@ -2401,7 +2275,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureWithSurface(sptr<Surface> surface
         return MSERR_INVALID_OPERATION;
     }
     surface_ = surface;
-    dataMode_ = AVScreenCaptureDataMode::SUFFACE_MODE;
     return StartScreenCaptureInner(isPrivacyAuthorityEnabled);
 }
 
@@ -2453,9 +2326,7 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
     if (screen == nullptr) {
         MEDIA_LOGE("GetScreenById failed");
         virtualScreen_.reset();
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
-            "GetScreenById failed");
-        return MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN;
+        return dfx_->Fault(ScFault::GET_SCREEN_FAILED, MSERR_UNKNOWN_CREATE_VIRTUAL_SCREEN);
     }
     if (canvasRotation_) {
         SetCanvasRotationInner();
@@ -2577,9 +2448,7 @@ int32_t ScreenCaptureServer::SetupVirtualScreenMirror(std::vector<ScreenId> &mir
     if (displayIds.empty()) {
         std::lock_guard<std::mutex> lock(captureIdsMutex_);
         MEDIA_LOGE("MakeMirror failed to get displayIds, source size:%{public}zu", displayIds_.size());
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
-            "MakeMirror failed to find valid displayId");
-        return MSERR_UNKNOWN;
+        return dfx_->Fault(ScFault::NO_VALID_DISPLAY, MSERR_UNKNOWN);
     }
     DMError ret = CreateMirror(displayIds, mirrorIds);
     CHECK_AND_RETURN_RET_LOG(ret == DMError::DM_OK, MSERR_UNKNOWN,
@@ -2714,9 +2583,7 @@ int32_t ScreenCaptureServer::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &au
             "innerAudioCapture_ AcquireAudioBuffer failed");
     } else {
         MEDIA_LOGE("AcquireAudioBuffer failed, source type not support, type:%{public}d", type);
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
-            "AcquireAudioBuffer failed, source type not support");
-        return MSERR_UNKNOWN;
+        return dfx_->Fault(ScFault::ACQUIRE_AUDIO_SOURCE_UNSUPPORTED, MSERR_UNKNOWN);
     }
     if (cacheBuf == nullptr) {
         return MSERR_UNKNOWN;
@@ -2746,9 +2613,7 @@ int32_t ScreenCaptureServer::ReleaseAudioBuffer(AudioCaptureSourceType type)
         return innerAudioCapture_->ReleaseAudioBuffer();
     }
     MEDIA_LOGE("ReleaseAudioBuffer failed, source type not support, type:%{public}d", type);
-    FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNKNOWN,
-        "ReleaseAudioBuffer failed, source type not support");
-    return MSERR_UNKNOWN;
+    return dfx_->Fault(ScFault::RELEASE_AUDIO_SOURCE_UNSUPPORTED, MSERR_UNKNOWN);
 }
 
 int32_t ScreenCaptureServer::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
@@ -2789,8 +2654,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     // For CAPTURE FILE, should call Recorder interface to make effect when start
     if (ret != MSERR_OK) {
         MEDIA_LOGE("ScreenCaptureServer::ExcludeContent UpdateAudioCapturerConfig failed");
-        FaultScreenCaptureEventWrite(appName_, instanceId_, avType_, dataMode_, SCREEN_CAPTURE_ERR_UNSUPPORT,
-            "ExcludeContent failed, UpdateAudioCapturerConfig failed");
+        return dfx_->Fault(ScFault::EXCLUDE_CONTENT_FAILED, ret);
     }
     return ret;
 }
@@ -2958,9 +2822,6 @@ int32_t ScreenCaptureServer::SetMicrophoneEnabled(bool isMicrophone)
     std::lock_guard<std::mutex> lock(mutex_);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " SetMicrophoneEnabled isMicrophoneSwitchTurnOn_:"
         "%{public}d, new isMicrophone:%{public}d", FAKE_POINTER(this), isMicrophoneSwitchTurnOn_.load(), isMicrophone);
-    if (isMicrophone) {
-        statisticalEventInfo_.enableMic = true;
-    }
     if (!IsState(CAP_RUNNING)) {
         isMicrophoneSwitchTurnOn_ = isMicrophone;
         return MSERR_OK;
@@ -3468,10 +3329,8 @@ int32_t ScreenCaptureServer::StopScreenCaptureInner(AVScreenCaptureStateCode sta
         MEDIA_LOGW("StopScreenCaptureInner unsupport and ignore");
         return MSERR_OK;
     }
-    SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
     PostStopScreenCapture(stateCode);
-    listenerManager_->UnregisterListeners();
-    PublishScreenCaptureEvent("stop");
+    dfx_->CaptureStopped();
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StopScreenCaptureInner end.", FAKE_POINTER(this));
     return ret;
 }
@@ -3490,7 +3349,6 @@ void ScreenCaptureServer::StopNotStartedScreenCapture(AVScreenCaptureStateCode s
     providers_->GetScreenCaptureMonitor().CallOnScreenCaptureFinished(appInfo_.appPid);
     cbProxy_->OnStateChange(stateCode);
     surface_ = nullptr;
-    SetErrorInfo(MSERR_OK, "normal stopped", StopReason::NORMAL_STOPPED, IsUserPrivacyAuthorityNeeded());
 }
 
 bool ScreenCaptureServer::DestroyPrivacySheet()
@@ -3585,19 +3443,11 @@ void ScreenCaptureServer::PostStopScreenCapture(AVScreenCaptureStateCode stateCo
     if (!LastPidUpdatePrivacyUsingPermissionState(appInfo_.appPid)) {
         MEDIA_LOGE("UpdatePrivacyUsingPermissionState STOP failed, dataType:%{public}d", captureConfig_.dataType);
     }
-    std::unordered_map<std::string, std::string> payload;
-    int64_t value = ResourceSchedule::ResType::ScreenCaptureStatus::STOP_SCREEN_CAPTURE;
-    ResSchedReportData(value, payload);
-    if (statisticalEventInfo_.startLatency == -1) {
-        statisticalEventInfo_.captureDuration = -1; // latency -1 means invalid
-    } else {
-        int64_t endTime = GetCurrentMillisecond();
-        statisticalEventInfo_.captureDuration = static_cast<int32_t>(endTime - startTime_ -
-            statisticalEventInfo_.startLatency);
-    }
     isScreenCaptureAuthority_ = false;
     isPresentPickerPopWindow_ = false;
     captureState_ = AVScreenCaptureState::STOPPED;
+    listenerManager_->UnregisterListeners();
+    PublishScreenCaptureEvent("stop");
 }
 
 int32_t ScreenCaptureServer::StopScreenCapture()
@@ -3631,8 +3481,8 @@ void ScreenCaptureServer::ReleaseInner()
         ScreenCaptureServerManager::GetInstance().RemoveSaAppInfoMap(saUid_);
         sessionId_ = SESSION_ID_INVALID;
         outputFd_.Reset();
-        SetMetaDataReport();
     }
+    dfx_->Finish(IsUserPrivacyAuthorityNeeded(), isMicrophoneSwitchTurnOn_.load());
     MEDIA_LOGI("ScreenCaptureServer::ReleaseInner before RemoveScreenCaptureServerMap");
     ScreenCaptureServerManager::GetInstance().RemoveScreenCaptureServerMap(sessionId);
     MEDIA_LOGI("0x%{public}06" PRIXPTR " Instances ReleaseInner E", FAKE_POINTER(this));

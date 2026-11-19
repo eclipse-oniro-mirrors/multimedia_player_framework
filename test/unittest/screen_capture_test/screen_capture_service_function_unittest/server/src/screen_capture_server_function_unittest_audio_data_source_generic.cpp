@@ -856,6 +856,27 @@ HWTEST_F(AudioDataSourceGenericTest, ReadAudioBuffer_TwoSourceMix_001, TestSize.
     EXPECT_EQ(mic->availBuffers_.size(), 0u);
 }
 
+HWTEST_F(AudioDataSourceGenericTest, ReadAudioBuffer_MutedInnerMixSilent_001, TestSize.Level2)
+{
+    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    auto inner = MakeMockWrapper(AudioCaptureSourceType::ALL_PLAYBACK);
+    auto mic = MakeMockWrapper(AudioCaptureSourceType::MIC);
+    inner->availBuffers_.push_back(std::make_shared<CacheBuffer>(std::unique_ptr<uint8_t[]>(nullptr), 8, 5000,
+        AUDIO_INTERVAL_NS, AudioCaptureSourceType::ALL_PLAYBACK));
+    PushBuf(mic, 2000, 4, 5100);
+    src->SetCapture(AudioCaptureSourceType::ALL_PLAYBACK, inner);
+    src->SetCapture(AudioCaptureSourceType::MIC, mic);
+    EXPECT_EQ(src->ReadAudioBuffer(), AudioDataSourceReadAtActionState::OK);
+    ASSERT_NE(src->cacheBuffer_, nullptr);
+    EXPECT_EQ(src->logStats_.emitType, AudioOutputTag::MIXED);
+    EXPECT_NE(src->cacheBuffer_->Data(), nullptr);
+    auto *out = reinterpret_cast<const int16_t *>(src->cacheBuffer_->Data());
+    EXPECT_EQ(out[0], 2000);
+    EXPECT_EQ(out[3], 2000);
+    EXPECT_EQ(inner->availBuffers_.size(), 0u);
+    EXPECT_EQ(mic->availBuffers_.size(), 0u);
+}
+
 HWTEST_F(AudioDataSourceGenericTest, ReadAudioBuffer_MicNotRecording_001, TestSize.Level2)
 {
     auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
@@ -1027,6 +1048,30 @@ HWTEST_F(AudioDataSourceGenericTest, MixAudio_NullSrc_001, TestSize.Level2)
     int16_t out[4] = {0};
     src->MixAudio(srcs, reinterpret_cast<uint8_t *>(out));
     EXPECT_EQ(out[0], 1000);
+}
+
+HWTEST_F(AudioDataSourceGenericTest, MixAudio_NullDataSilent_001, TestSize.Level2)
+{
+    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    auto bufReal = MakeBuf(1000, 4, 0);
+    auto bufSilent = std::make_shared<CacheBuffer>(std::unique_ptr<uint8_t[]>(nullptr), 8, 0, AUDIO_INTERVAL_NS);
+    std::vector<const CacheBuffer *> srcs = {bufReal.get(), bufSilent.get()};
+    int16_t out[4] = {0};
+    src->MixAudio(srcs, reinterpret_cast<uint8_t *>(out));
+    EXPECT_EQ(out[0], 1000);
+    EXPECT_EQ(out[3], 1000);
+}
+
+HWTEST_F(AudioDataSourceGenericTest, MixAudio_AllNullDataSilent_001, TestSize.Level2)
+{
+    auto src = std::make_shared<AudioDataSourceGeneric>(AudioCombinePolicy::MIX_ALL, false);
+    auto bufSilentA = std::make_shared<CacheBuffer>(std::unique_ptr<uint8_t[]>(nullptr), 8, 0, AUDIO_INTERVAL_NS);
+    auto bufSilentB = std::make_shared<CacheBuffer>(std::unique_ptr<uint8_t[]>(nullptr), 8, 0, AUDIO_INTERVAL_NS);
+    std::vector<const CacheBuffer *> srcs = {bufSilentA.get(), bufSilentB.get()};
+    int16_t out[4] = {-1};
+    src->MixAudio(srcs, reinterpret_cast<uint8_t *>(out));
+    EXPECT_EQ(out[0], 0);
+    EXPECT_EQ(out[3], 0);
 }
 
 // === Coverage: LogStats::Update same type different source ===

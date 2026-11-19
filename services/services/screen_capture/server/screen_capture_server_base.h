@@ -48,14 +48,6 @@ enum AVScreenCaptureDataMode : int8_t {
     FILE_MODE = 2
 };
 
-enum StopReason: int8_t {
-    NORMAL_STOPPED = 0,
-    RECEIVE_USER_PRIVACY_AUTHORITY_FAILED = 1,
-    POST_START_SCREENCAPTURE_HANDLE_FAILURE = 2,
-    REQUEST_USER_PRIVACY_AUTHORITY_FAILED = 3,
-    STOP_REASON_INVALID = 4
-};
-
 enum Capability : uint32_t {
     CAP_NONE = 0,
     CAP_INIT = 1 << 0,
@@ -73,17 +65,6 @@ enum AudioStateFlag : uint32_t {
     AUDIO_STATE_TEL = 1 << 2,
 };
 
-struct StatisticalEventInfo {
-    int32_t errCode = 0;
-    std::string errMsg;
-    int32_t captureDuration = -1;
-    bool userAgree = false;
-    bool requireMic = false;
-    bool enableMic = false;
-    std::string videoResolution;
-    StopReason stopReason = StopReason::STOP_REASON_INVALID;
-    int32_t startLatency = -1;
-};
 } // namespace Media
 } // namespace OHOS
 #endif // SCREEN_CAPTURE_SERVICE_SERVER_BASE_H

@@ -202,7 +202,7 @@ HWTEST_F(MediaDfxTest, ParseOneEvent_ShouldParseBool_WhenBoolType, TestSize.Leve
     std::vector<std::string> infoArr = {"test for tdd", "test for tdd"};
     mediaEvent_->StatisicsHiSysEventWrite(CallType::AVPLAYER, OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, infoArr);
     mediaEvent_->StatisicsHiSysEventWrite(CallType::AVRECORDER, OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, infoArr);
-    mediaEvent_->StatisicsHiSysEventWrite(CallType::SCREEN_CAPTRUER,
+    mediaEvent_->StatisicsHiSysEventWrite(CallType::SCREEN_CAPTURER,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, infoArr);
     mediaEvent_->StatisicsHiSysEventWrite(CallType::AVTRANSCODER,
         OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, infoArr);
@@ -280,18 +280,6 @@ HWTEST_F(MediaDfxTest, ParseOneEvent_BehaviorEventWrite, TestSize.Level0) {
     EXPECT_EQ(mediaEvent_->msg_, testvalue);
 }
 
-// Scenario11: Test case for BehaviorEventWriteForScreenCapture
-HWTEST_F(MediaDfxTest, ParseOneEvent_BehaviorEventWriteForScreenCapture, TestSize.Level0) {
-    std::string status = "testMeg2";
-    std::string module = "testmodule";
-    int32_t appUid = 10;
-    int32_t appPid = 11;
-    BehaviorEventWriteForScreenCapture(status, module, appUid, appPid);
-    std::string testvalue = "state change, current state is: testMeg2";
-    bool ret = mediaEvent_->CreateMsg("state change, current state is: testMeg2");
-    EXPECT_NE(ret, false);
-    EXPECT_EQ(mediaEvent_->msg_, testvalue);
-}
 
 // Scenario12: Test case for StatisticEventWriteBundleName
 HWTEST_F(MediaDfxTest, ParseOneEvent_StatisticEventWriteBundleName, TestSize.Level0) {

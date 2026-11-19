@@ -49,6 +49,8 @@ struct MissionInfo {
     bool isForeground;
 };
 
+class ICaptureDfx;
+
 #ifdef SCREEN_CAPTURE_SUPPORT_POWER
 enum class ThermalFpsLevel : int32_t {
     FPS_RESTORE = -1,
@@ -344,11 +346,6 @@ private:
     void UpdateLiveViewPrivacy();
     std::shared_ptr<PixelMap> GetPixelMap(std::string path);
     std::shared_ptr<PixelMap> GetPixelMapSvg(std::string path, int32_t width, int32_t height);
-    void ResSchedReportData(int64_t value, std::unordered_map<std::string, std::string> payload);
-    int64_t GetCurrentMillisecond();
-    void SetMetaDataReport();
-    void SetMediaKitReport(const std::string &errMsg);
-    void SetErrorInfo(int32_t errCode, const std::string &errMsg, StopReason stopReason, bool userAgree);
     void RegisterPrivateWindowListener();
     void RegisterScreenConnectListener();
     uint64_t GetDisplayIdOfWindows();
@@ -375,6 +372,7 @@ private:
     mutable std::shared_mutex captureConfigMutex_;
     TaskQueue taskQue_{"SCServer"};
     std::shared_ptr<ScreenCaptureCallbackProxy> cbProxy_ = nullptr;
+    std::unique_ptr<ICaptureDfx> dfx_;
     bool canvasRotation_ = false;
     bool showCursor_ = true;
     std::atomic<bool> isMicrophoneSwitchTurnOn_{true};
@@ -405,9 +403,6 @@ private:
     std::string appName_ = "";
     std::atomic<bool> isSystemRecorder_ = {false};
     AVScreenCaptureConfig captureConfig_;
-    AVScreenCaptureAvType avType_ = AVScreenCaptureAvType::INVALID_TYPE;
-    AVScreenCaptureDataMode dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
-    StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
     bool isSystemUI2_ = false;
     std::unique_ptr<VirtualScreen> virtualScreen_;
@@ -425,7 +420,6 @@ private:
     ScreenCaptureContentFilter contentFilter_;
     std::atomic<AVScreenCaptureState> captureState_ = AVScreenCaptureState::CREATED;
     std::shared_ptr<Notification::NotificationLocalLiveViewContent> localLiveViewContent_;
-    int64_t startTime_ = 0;
     bool isTimePaused_ = false;
     sptr<UIExtensionAbilityConnection> connection_ = nullptr;
     std::unique_ptr<IScreenCaptureServiceProviders> providers_;
@@ -448,7 +442,6 @@ private:
     int32_t videoSourceId_ = 0;
     std::shared_ptr<AudioDataSourceGeneric> audioSource_ = nullptr;
     /* used for DFX events */
-    uint64_t instanceId_ = 0;
     std::vector<uint64_t> skipPrivacyWindowIDsVec_;
     Global::Resource::ResourceManager *resourceManager_ = nullptr;
     Global::Resource::ResConfig *resConfig_ = nullptr;

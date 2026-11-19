@@ -24,6 +24,7 @@ screen_capture_support_power = player_framework_support_power_manager
 screen_capture_sources = [
   "$_sc/server/audio_capturer_wrapper.cpp",
   "$_sc/server/audio_data_source_generic.cpp",
+  "$_sc/server/screen_capture_dfx.cpp",
   "$_sc/server/limitIdGenerator.cpp",
   "$_sc/server/screen_capture_callback_proxy.cpp",
   "$_sc/server/screen_capture_controller_server.cpp",
@@ -107,6 +108,10 @@ screen_capture_external_deps = [
   "window_manager:scene_session_manager",
   "window_manager:session_manager_lite",
 ]
+
+if (!is_arkui_x) {
+  screen_capture_external_deps += [ "json:nlohmann_json_static" ]
+}
 
 if (player_framework_support_screen_capture_stopbycall) {
   screen_capture_external_deps += [

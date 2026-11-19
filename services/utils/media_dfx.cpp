@@ -456,20 +456,6 @@ void MediaEvent::MediaKitStatistics(const std::string& syscap, const std::string
     MEDIA_LOG_I("MediaEvent::MediaKitStatistics end");
 }
 
-void MediaEvent::ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
-    const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode, int32_t errorCode,
-    const std::string& errorMessage)
-{
-    std::string instanceIdStr = std::to_string(instanceId);
-    HiSysEventWrite(OHOS::HiviewDFX::HiSysEvent::Domain::MULTI_MEDIA, eventName, type,
-                    "APP_NAME", appName,
-                    "INSTANCE_ID", instanceIdStr,
-                    "CAPTURE_MODE", captureMode,
-                    "DATA_MODE", dataMode,
-                    "ERROR_CODE", errorCode,
-                    "ERROR_MESG", errorMessage);
-}
-
 void MediaEvent::CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
     const std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<Meta>>>>& infoMap)
 {
@@ -593,7 +579,7 @@ void MediaEvent::StatisicsHiSysEventWrite(CallType callType, OHOS::HiviewDFX::Hi
         case CallType::AVRECORDER:
             eventName = "RECORDER_STATISTICS";
             break;
-        case CallType::SCREEN_CAPTRUER:
+        case CallType::SCREEN_CAPTURER:
             eventName = "SCREEN_CAPTURE_STATISTICS";
             break;
         case CallType::AVTRANSCODER:
@@ -611,15 +597,6 @@ void BehaviorEventWrite(std::string status, std::string module)
     MediaEvent event;
     if (event.CreateMsg("%s, current state is: %s", "state change", status.c_str())) {
         event.EventWrite("PLAYER_STATE", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR, module);
-    }
-}
-
-void BehaviorEventWriteForScreenCapture(std::string status, std::string module, int32_t appUid, int32_t appPid)
-{
-    MediaEvent event;
-    if (event.CreateMsg("%s, current state is: %s", "state change", status.c_str())) {
-        event.EventWriteWithAppInfo("PLAYER_STATE", OHOS::HiviewDFX::HiSysEvent::EventType::BEHAVIOR,
-            module, status, appUid, appPid);
     }
 }
 
@@ -651,14 +628,6 @@ void FaultSourceEventWrite(const std::string& appName, uint64_t instanceId, cons
     MediaEvent event;
     event.SourceEventWrite("SOURCE_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName, instanceId,
         callerType, sourceType, sourceUrl, errorMessage);
-}
-
-void FaultScreenCaptureEventWrite(const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode,
-    int32_t errorCode, const std::string& errorMessage)
-{
-    MediaEvent event;
-    event.ScreenCaptureEventWrite("SCREEN_CAPTURE_FAILURE", OHOS::HiviewDFX::HiSysEvent::EventType::FAULT, appName,
-        instanceId, captureMode, dataMode, errorCode, errorMessage);
 }
 
 int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId)

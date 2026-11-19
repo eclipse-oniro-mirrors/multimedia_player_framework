@@ -94,7 +94,7 @@ enum CallType {
     AUDIO_DECODER,
     AUDIO_ENCODER,
     SOUNDPOOL,
-    SCREEN_CAPTRUER,
+    SCREEN_CAPTURER,
     AVTRANSCODER
 };
 class __attribute__((visibility("default"))) MediaEvent : public NoCopyable {
@@ -112,9 +112,6 @@ public:
         uint8_t sourceType, int32_t lagDuration, const std::string& msg);
     void SourceEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type, const std::string&
         appName, uint64_t instanceId, const std::string& callerType, int8_t sourceType, const std::string& sourceUrl,
-        const std::string& errMsg);
-    void ScreenCaptureEventWrite(const std::string& eventName, OHOS::HiviewDFX::HiSysEvent::EventType type,
-        const std::string& appName, uint64_t instanceId, int8_t captureMode, int8_t dataMode, int32_t errorCode,
         const std::string& errMsg);
     void CommonStatisicsEventWrite(CallType callType, OHOS::HiviewDFX::HiSysEvent::EventType type,
         const std::map<int32_t, std::list<std::pair<uint64_t, std::shared_ptr<Meta>>>>& infoMap);
@@ -135,15 +132,11 @@ private:
 
 
 __attribute__((visibility("default"))) void BehaviorEventWrite(std::string status, std::string module);
-__attribute__((visibility("default"))) void BehaviorEventWriteForScreenCapture(std::string status,
-    std::string module, int32_t appUid, int32_t appPid);
 __attribute__((visibility("default"))) void StatisticEventWriteBundleName(std::string status,
     std::string module, std::string bundleName = "");
 __attribute__((visibility("default"))) void FaultEventWrite(std::string msg, std::string module);
 __attribute__((visibility("default"))) void FaultSourceEventWrite(const std::string& appName, uint64_t instanceId,
     const std::string& callerType, int8_t sourceType, const std::string& sourceUrl, const std::string& errorMessage);
-__attribute__((visibility("default"))) void FaultScreenCaptureEventWrite(const std::string& appName,
-    uint64_t instanceId, int8_t captureMode, int8_t dataMode, int32_t errorCode, const std::string& errorMessage);
 __attribute__((visibility("default"))) int32_t CreateMediaInfo(CallType callType, int32_t uid, uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t AppendMediaInfo(const std::shared_ptr<Meta>& meta, uint64_t instanceId);
 __attribute__((visibility("default"))) int32_t ReportMediaInfo(uint64_t instanceId);
