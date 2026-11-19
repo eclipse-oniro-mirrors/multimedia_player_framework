@@ -325,7 +325,7 @@ void DisplayManager::DisablePowerOffRenderControl(ScreenId screenId)
 }
 
 DMError DisplayManager::SetVirtualScreenSecurityExemption(ScreenId screenId, uint32_t pid,
-    std::vector<uint64_t> &windowIdList)
+    std::vector<uint64_t> &windowIdList, bool exemptAll)
 {
     if (MockDisplayManagerFlowActions::current) {
         return MockDisplayManagerFlowActions::current->SetVirtualScreenSecurityExemption(screenId, pid, windowIdList);
