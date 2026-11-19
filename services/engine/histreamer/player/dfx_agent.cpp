@@ -589,6 +589,9 @@ void DfxAgent::ReportPlayErrEvent(const DfxEvent &event)
 {
     PlayErrEvent eventType;
     switch (event.type) {
+        case DfxEventType::DFX_EVENT_AVDESYNC:
+            eventType = OHOS::Media::PlayErrEvent::AVDESYNC;
+            break;
         case DfxEventType::DFX_EVENT_MEDIA_CHANGED:
             eventType = OHOS::Media::PlayErrEvent::MEDIA_CHANGED;
             break;
@@ -693,6 +696,7 @@ void DfxAgent::ProcessLoadingErrorEvent(std::weak_ptr<DfxAgent> ptr, const DfxEv
     if (agent->metricsCallback_ != nullptr) {
         agent->metricsCallback_(ptr, eventCopy);
     }
+    agent->ReportPlayErrEvent(event);
 }
 
 void DfxAgent::ProcessMediaChangedEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
@@ -728,6 +732,7 @@ void DfxAgent::ProcessMediaChangedEvent(std::weak_ptr<DfxAgent> ptr, const DfxEv
     if (agent->metricsCallback_ != nullptr) {
         agent->metricsCallback_(ptr, eventCopy);
     }
+    agent->ReportPlayErrEvent(event);
 }
 
 void DfxAgent::ProcessMediaDiscontinueEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
@@ -767,6 +772,7 @@ void DfxAgent::ProcessMediaDiscontinueEvent(std::weak_ptr<DfxAgent> ptr, const D
     if (agent->metricsCallback_ != nullptr) {
         agent->metricsCallback_(ptr, eventCopy);
     }
+    agent->ReportPlayErrEvent(event);
 }
 
 void DfxAgent::ProcessAudioStatusEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent &event)
@@ -851,6 +857,7 @@ void DfxAgent::ProcessLipAsyncEvent(std::weak_ptr<DfxAgent> ptr, const DfxEvent 
     if (agent->metricsCallback_ != nullptr) {
         agent->metricsCallback_(ptr, eventCopy);
     }
+    agent->ReportPlayErrEvent(event);
 }
 
 }  // namespace Media
