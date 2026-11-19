@@ -149,6 +149,7 @@ HWTEST_F(PlayerServerUnitTest, PreparingErrorReturnsToInitialized, TestSize.Leve
     EXPECT_EQ(state->OnMessageReceived(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, body), MSERR_OK);
     EXPECT_EQ(server->currState_, server->initializedState_);
     EXPECT_EQ(server->lastOpStatus_, PLAYER_STATE_ERROR);
+    server->lastOpStatus_ = PLAYER_IDLE;
 }
 
 /**
@@ -167,6 +168,7 @@ HWTEST_F(PlayerServerUnitTest, PreparedErrorReturnsToInitialized, TestSize.Level
     EXPECT_EQ(state->OnMessageReceived(INFO_TYPE_STATE_CHANGE, PLAYER_STATE_ERROR, body), MSERR_OK);
     EXPECT_EQ(server->currState_, server->initializedState_);
     EXPECT_EQ(server->lastOpStatus_, PLAYER_STATE_ERROR);
+    server->lastOpStatus_ = PLAYER_IDLE;
 }
 
 /**
@@ -189,6 +191,7 @@ HWTEST_F(PlayerServerUnitTest, PlaybackCompleteThenStop, TestSize.Level0)
     EXPECT_EQ(state->OnMessageReceived(INFO_TYPE_STATE_CHANGE, PLAYER_STOPPED, body), MSERR_OK);
     EXPECT_EQ(server->currState_, server->stoppedState_);
     EXPECT_EQ(server->lastOpStatus_, PLAYER_STOPPED);
+    server->lastOpStatus_ = PLAYER_IDLE;
 }
 /**
  * @tc.name  : PlaybackRateDelegationFailure
