@@ -609,11 +609,7 @@ void AudioHapticPlayerImpl::ResetVibrateState()
 void AudioHapticPlayerImpl::NotifyInterruptEvent(const AudioStandard::InterruptEvent &interruptEvent)
 {
     std::thread(HandleInterruptEventThreadFunc, shared_from_this()).detach();
-    std::shared_ptr<AudioHapticPlayerCallback> cb;
-    {
-        std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-        cb = audioHapticPlayerCallback_.lock();
-    }
+    std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyInterruptEvent for napi object or caller");
         cb->OnInterrupt(interruptEvent);
@@ -626,11 +622,7 @@ void AudioHapticPlayerImpl::NotifyEndOfStreamEvent()
 {
     MEDIA_LOGI("NotifyEndOfStreamEvent");
     std::thread (HandleEndOfStreamEventThreadFunc, shared_from_this()).detach();
-    std::shared_ptr<AudioHapticPlayerCallback> cb;
-    {
-        std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-        cb = audioHapticPlayerCallback_.lock();
-    }
+    std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyEndOfStreamEvent for napi object or caller");
         cb->OnEndOfStream();
@@ -691,11 +683,7 @@ void AudioHapticPlayerImpl::HandleInterruptEvent()
 
 void AudioHapticPlayerImpl::NotifyErrorEvent(int32_t errCode)
 {
-    std::shared_ptr<AudioHapticPlayerCallback> cb;
-    {
-        std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-        cb = audioHapticPlayerCallback_.lock();
-    }
+    std::shared_ptr<AudioHapticPlayerCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyErrorEvent for napi object or caller. errCode: %{public}d", errCode);
         cb->OnError(errCode);

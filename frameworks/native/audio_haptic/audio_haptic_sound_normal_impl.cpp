@@ -328,11 +328,7 @@ void AudioHapticSoundNormalImpl::NotifyErrorEvent(int32_t errorCode)
         prepareCond_.notify_one();
     }
 
-    std::shared_ptr<AudioHapticSoundCallback> cb;
-    {
-        std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-        cb = audioHapticPlayerCallback_.lock();
-    }
+    std::shared_ptr<AudioHapticSoundCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyErrorEvent for audio haptic player. errCode: %{public}d", errorCode);
         cb->OnError(errorCode);
@@ -343,11 +339,7 @@ void AudioHapticSoundNormalImpl::NotifyErrorEvent(int32_t errorCode)
 
 void AudioHapticSoundNormalImpl::NotifyFirstFrameEvent(uint64_t latency)
 {
-    std::shared_ptr<AudioHapticSoundCallback> cb;
-    {
-        std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-        cb = audioHapticPlayerCallback_.lock();
-    }
+    std::shared_ptr<AudioHapticSoundCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyFirstFrameEvent for audio haptic player. latency: %{public}" PRIu64 "", latency);
         cb->OnFirstFrameWriting(latency);
@@ -358,11 +350,7 @@ void AudioHapticSoundNormalImpl::NotifyFirstFrameEvent(uint64_t latency)
 
 void AudioHapticSoundNormalImpl::NotifyInterruptEvent(AudioStandard::InterruptEvent &interruptEvent)
 {
-    std::shared_ptr<AudioHapticSoundCallback> cb;
-    {
-        std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-        cb = audioHapticPlayerCallback_.lock();
-    }
+    std::shared_ptr<AudioHapticSoundCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyInterruptEvent for audio haptic player");
         cb->OnInterrupt(interruptEvent);
@@ -374,14 +362,10 @@ void AudioHapticSoundNormalImpl::NotifyInterruptEvent(AudioStandard::InterruptEv
 void AudioHapticSoundNormalImpl::NotifyEndOfStreamEvent(const bool &isLoop)
 {
     MEDIA_LOGI("NotifyEndOfStreamEvent");
-    std::shared_ptr<AudioHapticSoundCallback> cb;
-    {
-        std::lock_guard<std::mutex> lock(audioHapticPlayerLock_);
-        if (!isLoop) {
-            playerState_ = AudioHapticPlayerState::STATE_STOPPED;
-        }
-        cb = audioHapticPlayerCallback_.lock();
+    if (!isLoop) {
+        playerState_ = AudioHapticPlayerState::STATE_STOPPED;
     }
+    std::shared_ptr<AudioHapticSoundCallback> cb = audioHapticPlayerCallback_.lock();
     if (cb != nullptr) {
         MEDIA_LOGI("NotifyEndOfStreamEvent for audio haptic player");
         cb->OnEndOfStream();
