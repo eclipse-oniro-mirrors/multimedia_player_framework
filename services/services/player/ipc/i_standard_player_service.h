@@ -220,20 +220,6 @@ public:
         return 0;
     }
 
-    virtual int32_t SetReopenFd(int32_t fd, int32_t fdCinima)
-    {
-        (void)fd;
-        (void)fdCinima;
-        return 0;
-    }
-
-    virtual int32_t SetFilePath(int32_t fd, std::string filePath)
-    {
-        (void)fd;
-        (void)filePath;
-        return 0;
-    }
- 
     virtual int32_t EnableCameraPostprocessing()
     {
         return 0;
@@ -450,7 +436,6 @@ public:
         FORCE_LOAD_VIDEO,
         SET_LOUDNESSGAIN,
         SET_CAMERA_POST_POSTPROCESSING,
-        SET_FILE_PATH,
         GET_MEDIA_DESCRIPTION,
         GET_TRACK_DESCRIPTION,
         GET_PLAYBACK_STATISTIC_METRICS,

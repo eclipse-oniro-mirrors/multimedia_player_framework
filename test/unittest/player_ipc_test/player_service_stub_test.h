@@ -90,8 +90,6 @@ public:
     MOCK_METHOD(int32_t, EnableReportAudioInterrupt, (bool enable), (override));
     MOCK_METHOD(int32_t, SetCameraPostprocessing, (bool isOpen), (override));
     MOCK_METHOD(int32_t, ForceLoadVideo, (bool enabled), (override));
-    MOCK_METHOD(int32_t, SetReopenFd, (int32_t fd, int32_t fdCinema), (override));
-    MOCK_METHOD(int32_t, SetFilePath, (int32_t fd, std::string filePath), (override));
     MOCK_METHOD(int32_t, EnableCameraPostprocessing, (), (override));
     MOCK_METHOD(int32_t, GetMediaDescription, (Format &format), (override));
     MOCK_METHOD(int32_t, GetTrackDescription, (Format &format, uint32_t trackIndex), (override));

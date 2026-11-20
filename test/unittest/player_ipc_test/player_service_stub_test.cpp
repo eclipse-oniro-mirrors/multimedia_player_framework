@@ -1641,43 +1641,6 @@ HWTEST_F(PlayerServiceStubTest, SetSeiMessageCbStatus_001, TestSize.Level0)
 }
 
 /*
-前置条件: 构造带MockIPlayerService的PlayerServiceStub，准备重开fd消息
-测试步骤: 通过OnRemoteRequest下发SET_REOPEN_FD消息
-预期结果: Stub解析两个fd并调度playerServer_->SetReopenFd
-*/
-/**
- * @tc.name: SetReopenFd_001
- * @tc.number: PlayerServiceStub_050
- * @tc.desc: OnRemoteRequest SET_REOPEN_FD parses fds and dispatches to player server test.
- * @tc.Co-authored-by Agent
- */
-HWTEST_F(PlayerServiceStubTest, SetReopenFd_001, TestSize.Level0)
-{
-    // Given: 构造Stub与Mock，准备重开fd消息
-    auto mockService = std::make_shared<NiceMock<MockIPlayerService>>();
-    sptr<PlayerServiceStub> stub = CreateStub(mockService);
-    ASSERT_NE(stub, nullptr);
-    int32_t fd = open("/dev/null", O_RDONLY);
-    int32_t fdCinema = open("/dev/null", O_RDONLY);
-    ASSERT_GE(fd, 0);
-    ASSERT_GE(fdCinema, 0);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    PrepareParcel(data);
-    (void)data.WriteFileDescriptor(fd);
-    (void)data.WriteFileDescriptor(fdCinema);
-    EXPECT_CALL(*mockService, SetReopenFd(_, _)).WillOnce(Return(0));
-
-    // When: 通过IPC消息调度SetReopenFd
-    int32_t ret = stub->OnRemoteRequest(IStandardPlayerService::SET_REOPEN_FD, data, reply, option);
-
-    // Then: 调度成功且reply携带返回值
-    EXPECT_EQ(ret, MSERR_OK);
-    EXPECT_EQ(reply.ReadInt32(), 0);
-}
-
-/*
 前置条件: 构造带MockIPlayerService的PlayerServiceStub
 测试步骤: 通过OnRemoteRequest下发ENABLE_CAMERA_POSTPROCESSING消息
 预期结果: Stub调度playerServer_->EnableCameraPostprocessing
@@ -2152,41 +2115,6 @@ HWTEST_F(PlayerServiceStubTest, CheckSupportPlaybackCommand_001, TestSize.Level0
     // Then: 调度成功且reply携带支持标志与返回码
     EXPECT_EQ(ret, MSERR_OK);
     EXPECT_TRUE(reply.ReadBool());
-    EXPECT_EQ(reply.ReadInt32(), 0);
-}
-
-/*
-前置条件: 构造带MockIPlayerService的PlayerServiceStub，准备文件路径消息
-测试步骤: 通过OnRemoteRequest下发SET_FILE_PATH消息
-预期结果: Stub解析fd与路径并调度playerServer_->SetFilePath
-*/
-/**
- * @tc.name: SetFilePath_001
- * @tc.number: PlayerServiceStub_066
- * @tc.desc: OnRemoteRequest SET_FILE_PATH parses fd and path and dispatches to player server test.
- * @tc.Co-authored-by Agent
- */
-HWTEST_F(PlayerServiceStubTest, SetFilePath_001, TestSize.Level0)
-{
-    // Given: 构造Stub与Mock，准备文件路径消息
-    auto mockService = std::make_shared<NiceMock<MockIPlayerService>>();
-    sptr<PlayerServiceStub> stub = CreateStub(mockService);
-    ASSERT_NE(stub, nullptr);
-    int32_t fd = open("/dev/null", O_RDONLY);
-    ASSERT_GE(fd, 0);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    PrepareParcel(data);
-    (void)data.WriteFileDescriptor(fd);
-    (void)data.WriteString("test.mp4");
-    EXPECT_CALL(*mockService, SetFilePath(_, std::string("test.mp4"))).WillOnce(Return(0));
-
-    // When: 通过IPC消息调度SetFilePath
-    int32_t ret = stub->OnRemoteRequest(IStandardPlayerService::SET_FILE_PATH, data, reply, option);
-
-    // Then: 调度成功且reply携带返回值
-    EXPECT_EQ(ret, MSERR_OK);
     EXPECT_EQ(reply.ReadInt32(), 0);
 }
 
@@ -3022,48 +2950,6 @@ HWTEST_F(PlayerServiceStubTest, SetSeiMessageCbStatus_ParamCheck_001, TestSize.L
     // Then: 调度成功且reply携带返回值
     EXPECT_EQ(ret, MSERR_OK);
     EXPECT_EQ(reply.ReadInt32(), 0);
-}
-
-/*
-前置条件: 构造带MockIPlayerService的PlayerServiceStub，准备重开fd消息
-测试步骤: 通过OnRemoteRequest下发SET_REOPEN_FD消息并捕获两个fd
-预期结果: Stub解析出合法fd并调度playerServer_->SetReopenFd
-*/
-/**
- * @tc.name: SetReopenFd_ParamCheck_001
- * @tc.number: PlayerServiceStub_092
- * @tc.desc: OnRemoteRequest SET_REOPEN_FD parses both fds test.
- * @tc.Co-authored-by Agent
- */
-HWTEST_F(PlayerServiceStubTest, SetReopenFd_ParamCheck_001, TestSize.Level0)
-{
-    // Given: 构造Stub与Mock，准备重开fd消息
-    auto mockService = std::make_shared<NiceMock<MockIPlayerService>>();
-    sptr<PlayerServiceStub> stub = CreateStub(mockService);
-    ASSERT_NE(stub, nullptr);
-    int32_t fd = open("/dev/null", O_RDONLY);
-    int32_t fdCinema = open("/dev/null", O_RDONLY);
-    ASSERT_GE(fd, 0);
-    ASSERT_GE(fdCinema, 0);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    PrepareParcel(data);
-    (void)data.WriteFileDescriptor(fd);
-    (void)data.WriteFileDescriptor(fdCinema);
-    int32_t capturedFd = -1;
-    int32_t capturedFdCinema = -1;
-    EXPECT_CALL(*mockService, SetReopenFd(_, _))
-        .WillOnce(DoAll(SaveArg<0>(&capturedFd), SaveArg<1>(&capturedFdCinema), Return(0)));
-
-    // When: 通过IPC消息调度SetReopenFd
-    int32_t ret = stub->OnRemoteRequest(IStandardPlayerService::SET_REOPEN_FD, data, reply, option);
-
-    // Then: 调度成功且两个fd均被解析
-    EXPECT_EQ(ret, MSERR_OK);
-    EXPECT_EQ(reply.ReadInt32(), 0);
-    EXPECT_GE(capturedFd, 0);
-    EXPECT_GE(capturedFdCinema, 0);
 }
 
 /*
@@ -4972,46 +4858,6 @@ HWTEST_F(PlayerServiceStubTest, SetPlaybackStrategy_FieldCheck_001, TestSize.Lev
     EXPECT_TRUE(captured.showFirstFrameOnPrepare);
     EXPECT_EQ(captured.preferredAudioLanguage, "en");
     EXPECT_EQ(captured.preferredSubtitleLanguage, "zh");
-}
-
-/*
-前置条件: 构造带MockIPlayerService的PlayerServiceStub，SET_FILE_PATH消息含fd与路径
-测试步骤: 通过OnRemoteRequest下发SET_FILE_PATH
-预期结果: Stub解析fd与路径并原样传给playerServer_
-*/
-/**
- * @tc.name: SetFilePath_FdCheck_001
- * @tc.number: PlayerServiceStub_147
- * @tc.desc: OnRemoteRequest SET_FILE_PATH parses fd and path test.
- * @tc.Co-authored-by Agent
- */
-HWTEST_F(PlayerServiceStubTest, SetFilePath_FdCheck_001, TestSize.Level0)
-{
-    // Given: 构造Stub与Mock，写入fd与路径
-    auto mockService = std::make_shared<NiceMock<MockIPlayerService>>();
-    sptr<PlayerServiceStub> stub = CreateStub(mockService);
-    ASSERT_NE(stub, nullptr);
-    int32_t fd = open("/dev/null", O_RDONLY);
-    ASSERT_GE(fd, 0);
-    MessageParcel data;
-    MessageParcel reply;
-    MessageOption option;
-    PrepareParcel(data);
-    (void)data.WriteFileDescriptor(fd);
-    (void)data.WriteString("/data/test/file.mp4");
-    int32_t capturedFd = -1;
-    std::string capturedPath;
-    EXPECT_CALL(*mockService, SetFilePath(_, _))
-        .WillOnce(DoAll(SaveArg<0>(&capturedFd), SaveArg<1>(&capturedPath), Return(0)));
-
-    // When: 通过IPC消息调度SetFilePath
-    int32_t ret = stub->OnRemoteRequest(IStandardPlayerService::SET_FILE_PATH, data, reply, option);
-
-    // Then: fd与路径被正确解析
-    EXPECT_EQ(ret, MSERR_OK);
-    EXPECT_EQ(reply.ReadInt32(), 0);
-    EXPECT_GE(capturedFd, 0);
-    EXPECT_EQ(capturedPath, "/data/test/file.mp4");
 }
 
 /*
