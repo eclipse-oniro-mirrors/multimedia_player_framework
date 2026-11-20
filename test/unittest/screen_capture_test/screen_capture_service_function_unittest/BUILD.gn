@@ -112,6 +112,7 @@ ohos_unittest("screen_capture_server_function_unit_test") {
     "hitrace:hitrace_meter",
     "i18n:intl_util",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "jsoncpp:jsoncpp",
     "media_foundation:media_foundation",
     "os_account:os_account_innerkits",

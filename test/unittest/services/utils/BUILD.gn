@@ -51,12 +51,7 @@ ohos_unittest("utils_unit_test") {
     "watchdog_unit_test.cpp",
   ]
 
-  external_deps = []
-  if (!is_arkui_x) {
-    external_deps += [ "json:nlohmann_json_static" ]
-  }
-
-  external_deps += [
+  external_deps = [
     "audio_framework:audio_capturer",
     "audio_framework:audio_client",
     "c_utils:utils",
@@ -70,6 +65,7 @@ ohos_unittest("utils_unit_test") {
     "hitrace:libhitracechain",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "media_foundation:media_foundation",
     "media_foundation:native_media_core",
     "safwk:system_ability_fwk",

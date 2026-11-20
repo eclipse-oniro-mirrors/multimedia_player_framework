@@ -341,6 +341,7 @@ ohos_unittest("screen_capture_ipc_unit_test") {
     "hitrace:hitrace_meter",
     "i18n:intl_util",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "media_foundation:media_foundation",
     "os_account:os_account_innerkits",
     "qos_manager:qos",

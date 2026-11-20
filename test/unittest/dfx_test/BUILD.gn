@@ -39,12 +39,7 @@ ohos_unittest("player_framework_dfx_test") {
 
   deps = [ "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils" ]
 
-  external_deps = []
-  if (!is_arkui_x) {
-    external_deps += [ "json:nlohmann_json_static" ]
-  }
-
-  external_deps += [
+  external_deps = [
     "access_token:libaccesstoken_sdk",
     "access_token:libprivacy_sdk",
     "av_codec:av_codec_client",
@@ -59,6 +54,7 @@ ohos_unittest("player_framework_dfx_test") {
     "hitrace:libhitracechain",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "libxml2:libxml2",
     "media_foundation:media_foundation",
     "os_account:os_account_innerkits",
