@@ -3209,15 +3209,10 @@ int32_t ScreenCaptureServer::ShowCursorInner()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ShowCursorInner start.", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(virtualScreen_ != nullptr, MSERR_INVALID_VAL,
         "ShowCursorInner failed, virtual screen not init");
-    if (showCursor_) {
-        MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner show cursor", FAKE_POINTER(this));
-        Rosen::ScreenManager::GetInstance().SetVirtualScreenCursorMode(virtualScreen_->GetScreenId(),
-            Rosen::RSVirtualScreenCursorMode::FORCE_RENDER);
-    } else {
-        MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner not show cursor", FAKE_POINTER(this));
-        Rosen::ScreenManager::GetInstance().SetVirtualScreenCursorMode(virtualScreen_->GetScreenId(),
-            Rosen::RSVirtualScreenCursorMode::HIDE);
-    }
+    MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner showCursor_:%{public}d",
+        FAKE_POINTER(this), showCursor_);
+    Rosen::ScreenManager::GetInstance().SetVirtualScreenCursorMode(virtualScreen_->GetScreenId(),
+        showCursor_ ? Rosen::RSVirtualScreenCursorMode::FORCE_RENDER : Rosen::RSVirtualScreenCursorMode::HIDE);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ShowCursorInner OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }
