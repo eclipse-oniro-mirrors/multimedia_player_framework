@@ -219,7 +219,7 @@ public:
         (void)fd;
         return 0;
     }
-
+ 
     virtual int32_t EnableCameraPostprocessing()
     {
         return 0;
