@@ -119,13 +119,6 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
-#ifdef EMULATOR_ENABLED
-    // 模拟器不支持录屏，直接抛出804错误码
-    constexpr int32_t EMULATOR_UNSUPPORT_ERR_CODE = 804;
-    ThrowCustomError(env, EMULATOR_UNSUPPORT_ERR_CODE, "The current device does not support screen capture.");
-    return result;
-#endif
-
     AVScreenCaptureNapi *jsScreenCapture = new (std::nothrow) AVScreenCaptureNapi();
     CHECK_AND_RETURN_RET_LOG(jsScreenCapture != nullptr, result, "failed to new AVScreenCaptureNapi");
     ON_SCOPE_EXIT(0) {
@@ -199,6 +192,11 @@ napi_value AVScreenCaptureNapi::JsCreateAVScreenRecorder(napi_env env, napi_call
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
     asyncCtx->ctorFlag = true;
+#ifdef EMULATOR_ENABLED
+    // 模拟器不支持录屏，通过异步完成路径返回804错误码（Promise reject / callback 首参）
+    constexpr int32_t EMULATOR_UNSUPPORT_ERR_CODE = 804;
+    asyncCtx->SignError(EMULATOR_UNSUPPORT_ERR_CODE, "The current device does not support screen capture.");
+#endif
     auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncCtx.get(), napi_eprio_immediate);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);
