@@ -927,7 +927,7 @@ optional<AVRecorder> CreateAVRecorderSync()
 {
     MediaTrace trace("AVRecorder::CreateAVRecorderSync");
 #ifdef EMULATOR_ENABLED
-    set_business_error(MSERR_EXT_API9_EMULATOR_UNSUPPORT, "The current device does not support recording.");
+    set_business_error(MSERR_EXT_API9_EMULATOR_UNSUPPORT, "The current emulator does not support recorder.");
     return optional<AVRecorder>(std::nullopt);
 #endif
     MEDIA_LOGI("Taihe CreateAVRecorder Start");

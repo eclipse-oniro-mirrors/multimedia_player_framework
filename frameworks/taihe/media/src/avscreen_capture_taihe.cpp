@@ -59,7 +59,7 @@ optional<AVScreenCaptureRecorder> CreateAVScreenCaptureRecorderSync()
 {
     MediaTrace trace("AVScreenCapture::CreateAVScreenRecorder");
 #ifdef EMULATOR_ENABLED
-    set_business_error(MSERR_EXT_API9_EMULATOR_UNSUPPORT, "The current device does not support screen capture.");
+    set_business_error(MSERR_EXT_API9_EMULATOR_UNSUPPORT, "The current emulator does not support screen capture.");
     return optional<AVScreenCaptureRecorder>(std::nullopt);
 #endif
     auto res = make_holder<AVScreenCaptureRecorderImpl, AVScreenCaptureRecorder>();
