@@ -502,9 +502,6 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_AcquireAudioBuffer(struct OH_AVSc
 OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture *capture,
     int32_t *fence, int64_t *timestamp, struct OH_Rect *region)
 {
-#ifdef EMULATOR_ENABLED
-    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
-#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, nullptr, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(fence != nullptr, nullptr, "input fence is nullptr!");
     CHECK_AND_RETURN_RET_LOG(timestamp != nullptr, nullptr, "input timestamp is nullptr!");
@@ -619,6 +616,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCallback(struct OH_AVScreenCap
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture *capture)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGI("OH_AVScreenCapture_Release In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
