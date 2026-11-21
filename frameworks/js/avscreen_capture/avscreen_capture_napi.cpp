@@ -119,6 +119,13 @@ napi_value AVScreenCaptureNapi::Constructor(napi_env env, napi_callback_info inf
     napi_status status = napi_get_cb_info(env, info, &argCount, nullptr, &jsThis, nullptr);
     CHECK_AND_RETURN_RET_LOG(status == napi_ok, result, "failed to napi_get_cb_info");
 
+#ifdef EMULATOR_ENABLED
+    // 模拟器不支持录屏，直接抛出804错误码
+    constexpr int32_t EMULATOR_UNSUPPORT_ERR_CODE = 804;
+    ThrowCustomError(env, EMULATOR_UNSUPPORT_ERR_CODE, "The current device does not support screen capture.");
+    return result;
+#endif
+
     AVScreenCaptureNapi *jsScreenCapture = new (std::nothrow) AVScreenCaptureNapi();
     CHECK_AND_RETURN_RET_LOG(jsScreenCapture != nullptr, result, "failed to new AVScreenCaptureNapi");
     ON_SCOPE_EXIT(0) {
