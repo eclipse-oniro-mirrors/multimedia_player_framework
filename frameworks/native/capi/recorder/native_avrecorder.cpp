@@ -606,47 +606,30 @@ OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config
 }
 
 namespace {
-void FillAudioConfig(OH_AVRecorder_Config *config, struct RecorderObject *recorderObj,
-    ConfigMap &configMap)
+OH_AVErrCode FillAudioVideoProfile(RecorderObject *recorderObj, ConfigMap &configMap)
 {
     if (recorderObj->withAudio_) {
-        config->profile.audioBitrate = configMap["audioBitrate"];
-        config->profile.audioChannels = configMap["audioChannels"];
-        config->profile.audioCodec = static_cast<OH_AVRecorder_CodecMimeType>(configMap["audioCodec"]);
-        config->profile.audioSampleRate = configMap["audioSampleRate"];
-        config->audioSourceType = static_cast<OH_AVRecorder_AudioSourceType>(configMap["audioSourceType"]);
+        recorderObj->config_->profile.audioBitrate = configMap["audioBitrate"];
+        recorderObj->config_->profile.audioChannels = configMap["audioChannels"];
+        recorderObj->config_->profile.audioCodec = static_cast<OH_AVRecorder_CodecMimeType>(configMap["audioCodec"]);
+        recorderObj->config_->profile.audioSampleRate = configMap["audioSampleRate"];
+        recorderObj->config_->audioSourceType =
+            static_cast<OH_AVRecorder_AudioSourceType>(configMap["audioSourceType"]);
     }
-}
 
-OH_AVErrCode FillVideoConfig(OH_AVRecorder_Config *config, struct RecorderObject *recorderObj,
-    ConfigMap &configMap)
-{
     if (recorderObj->withVideo_) {
-        config->profile.videoBitrate = configMap["videoBitrate"];
-        config->profile.videoCodec = static_cast<OH_AVRecorder_CodecMimeType>(configMap["videoCodec"]);
-        config->profile.videoFrameHeight = configMap["videoFrameHeight"];
-        config->profile.videoFrameWidth = configMap["videoFrameWidth"];
-        config->profile.videoFrameRate = configMap["videoFrameRate"];
-        config->videoSourceType = static_cast<OH_AVRecorder_VideoSourceType>(configMap["videoSourceType"]);
+        recorderObj->config_->profile.videoBitrate = configMap["videoBitrate"];
+        recorderObj->config_->profile.videoCodec = static_cast<OH_AVRecorder_CodecMimeType>(configMap["videoCodec"]);
+        recorderObj->config_->profile.videoFrameHeight = configMap["videoFrameHeight"];
+        recorderObj->config_->profile.videoFrameWidth = configMap["videoFrameWidth"];
+        recorderObj->config_->profile.videoFrameRate = configMap["videoFrameRate"];
+        recorderObj->config_->videoSourceType =
+            static_cast<OH_AVRecorder_VideoSourceType>(configMap["videoSourceType"]);
         std::string videoOrientation = std::to_string(configMap["rotation"]);
-        config->metadata.videoOrientation = strdup(videoOrientation.c_str());
-        CHECK_AND_RETURN_RET_LOG(config->metadata.videoOrientation != nullptr, AV_ERR_NO_MEMORY,
+        recorderObj->config_->metadata.videoOrientation = strdup(videoOrientation.c_str());
+        CHECK_AND_RETURN_RET_LOG(recorderObj->config_->metadata.videoOrientation != nullptr, AV_ERR_NO_MEMORY,
             "Failed to allocate memory for videoOrientation string!");
     }
-    return AV_ERR_OK;
-}
-
-OH_AVErrCode FillCommonConfig(OH_AVRecorder_Config *config, ConfigMap &configMap, Location &location)
-{
-    config->profile.fileFormat = static_cast<OH_AVRecorder_ContainerFormatType>(configMap["fileFormat"]);
-    const std::string fdHead = "fd://";
-    config->url = strdup((fdHead + std::to_string(configMap["url"])).c_str());
-    CHECK_AND_RETURN_RET_LOG(config->url != nullptr, AV_ERR_NO_MEMORY,
-        "Failed to allocate memory for url string!");
-
-    config->maxDuration = configMap["maxDuration"];
-    config->metadata.location.latitude = location.latitude;
-    config->metadata.location.longitude = location.longitude;
     return AV_ERR_OK;
 }
 } // namespace
@@ -678,22 +661,25 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
     Location location = ConvertToLocation(ohlocation);
     recorderObj->recorder_->GetLocation(location);
 
-    FillAudioConfig(recorderObj->config_, recorderObj, configMap);
+    OH_AVErrCode err = FillAudioVideoProfile(recorderObj, configMap);
+    CHECK_AND_RETURN_RET_LOG(err == AV_ERR_OK, err, "Failed to fill audio and video profile!");
 
-    OH_AVErrCode ret = FillVideoConfig(recorderObj->config_, recorderObj, configMap);
-    CHECK_AND_RETURN_RET_LOG(ret == AV_ERR_OK, ret, "Failed to fill video config!");
-    if (recorderObj->withVideo_) {
-        // 保持原有失败语义：videoOrientation 分配失败时返回 AV_ERR_NO_MEMORY
-    }
+    recorderObj->config_->profile.fileFormat = static_cast<OH_AVRecorder_ContainerFormatType>(configMap["fileFormat"]);
+    const std::string fdHead = "fd://";
+    recorderObj->config_->url = strdup((fdHead + std::to_string(configMap["url"])).c_str());
+    CHECK_AND_RETURN_RET_LOG(recorderObj->config_->url != nullptr, AV_ERR_NO_MEMORY,
+        "Failed to allocate memory for url string!");
 
-    ret = FillCommonConfig(recorderObj->config_, configMap, location);
-    CHECK_AND_RETURN_RET_LOG(ret == AV_ERR_OK, ret, "Failed to fill common config!");
+    recorderObj->config_->maxDuration = configMap["maxDuration"];
+    recorderObj->config_->metadata.location.latitude = location.latitude;
+    recorderObj->config_->metadata.location.longitude = location.longitude;
 
     *config = recorderObj->config_;
 
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAVRecorderConfig out.");
     return AV_ERR_OK;
 }
+
 
 OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder, int32_t *amplitude)
 {
