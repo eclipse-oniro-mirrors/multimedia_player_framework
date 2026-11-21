@@ -193,9 +193,7 @@ napi_value AVScreenCaptureNapi::JsCreateAVScreenRecorder(napi_env env, napi_call
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
     asyncCtx->ctorFlag = true;
 #ifdef EMULATOR_ENABLED
-    // 模拟器不支持录屏，通过异步完成路径返回804错误码（Promise reject / callback 首参）
-    constexpr int32_t EMULATOR_UNSUPPORT_ERR_CODE = 804;
-    asyncCtx->SignError(EMULATOR_UNSUPPORT_ERR_CODE, "The current device does not support screen capture.");
+    asyncCtx->SignError(MSERR_EXT_API9_EMULATOR_UNSUPPORT, "The current device does not support screen capture.");
 #endif
     auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncCtx.get(), napi_eprio_immediate);
     if (ret != napi_status::napi_ok) {

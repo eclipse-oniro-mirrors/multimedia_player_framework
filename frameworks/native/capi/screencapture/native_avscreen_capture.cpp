@@ -205,6 +205,9 @@ struct OH_AVScreenCapture_ContentFilter *OH_AVScreenCapture_CreateContentFilter(
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseContentFilter(struct OH_AVScreenCapture_ContentFilter *filter)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
     struct ScreenCaptureContentFilterObject *contentFilterObj =
         reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
@@ -215,6 +218,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseContentFilter(struct OH_AV
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddAudioContent(
     struct OH_AVScreenCapture_ContentFilter *filter, OH_AVScreenCaptureFilterableAudioContent content)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
     struct ScreenCaptureContentFilterObject *contentFilterObj =
         reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
@@ -231,6 +237,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddAudioContent(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludeContent(struct OH_AVScreenCapture *capture,
     struct OH_AVScreenCapture_ContentFilter *filter)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
@@ -261,6 +270,9 @@ struct OH_AVScreenCapture *OH_AVScreenCapture_Create(void)
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludePickerWindows(
     struct OH_AVScreenCapture *capture, const int32_t *excludedWindowIDs, uint32_t windowCount)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
 #ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -289,6 +301,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ExcludePickerWindows(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPickerMode(
     struct OH_AVScreenCapture *capture, OH_CapturePickerMode pickerMode)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
 #ifdef SUPPORT_SCREEN_CAPTURE_PICKER
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -309,6 +324,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPickerMode(
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Init(struct OH_AVScreenCapture *capture, OH_AVScreenCaptureConfig config)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -324,6 +342,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Init(struct OH_AVScreenCapture *c
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCapture(struct OH_AVScreenCapture *capture)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -343,6 +364,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCapture(struct OH_AVSc
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(struct OH_AVScreenCapture *capture,
     OHNativeWindow* window)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(window != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input window is nullptr!");
     CHECK_AND_RETURN_RET_LOG(window->surface != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
@@ -364,6 +388,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenCaptureWithSurface(str
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenCapture(struct OH_AVScreenCapture *capture)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGI("OH_AVScreenCapture_StopScreenCapture In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
@@ -379,6 +406,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenCapture(struct OH_AVScr
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenRecording(struct OH_AVScreenCapture *capture)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -397,6 +427,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StartScreenRecording(struct OH_AV
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenRecording(struct OH_AVScreenCapture *capture)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGI("OH_AVScreenCapture_StopScreenRecording In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
@@ -412,6 +445,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StopScreenRecording(struct OH_AVS
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PresentPicker(struct OH_AVScreenCapture *capture)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGI("OH_AVScreenCapture_PresentPicker In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
@@ -431,6 +467,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PresentPicker(struct OH_AVScreenC
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_AcquireAudioBuffer(struct OH_AVScreenCapture *capture,
     OH_AudioBuffer **audiobuffer, OH_AudioCaptureSourceType type)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(audiobuffer != nullptr && (*audiobuffer != nullptr), AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
         "input OH_AudioBuffer **audiobuffer is nullptr!");
@@ -463,6 +502,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_AcquireAudioBuffer(struct OH_AVSc
 OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture *capture,
     int32_t *fence, int64_t *timestamp, struct OH_Rect *region)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, nullptr, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(fence != nullptr, nullptr, "input fence is nullptr!");
     CHECK_AND_RETURN_RET_LOG(timestamp != nullptr, nullptr, "input timestamp is nullptr!");
@@ -498,6 +540,9 @@ OH_NativeBuffer* OH_AVScreenCapture_AcquireVideoBuffer(struct OH_AVScreenCapture
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVScreenCapture *capture)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -526,6 +571,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseVideoBuffer(struct OH_AVSc
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseAudioBuffer(struct OH_AVScreenCapture *capture,
     OH_AudioCaptureSourceType type)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -545,6 +593,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseAudioBuffer(struct OH_AVSc
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCallback(struct OH_AVScreenCapture *capture,
     struct OH_AVScreenCaptureCallback callback)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -608,6 +659,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_Release(struct OH_AVScreenCapture
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMicrophoneEnabled(struct OH_AVScreenCapture *capture,
     bool isMicrophone)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -623,6 +677,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMicrophoneEnabled(struct OH_AV
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetStateCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnStateChange callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_SetStateCallback S");
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input stateCallback is nullptr!");
@@ -641,6 +698,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetStateCallback(struct OH_AVScre
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnCaptureContentChanged callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_SetCaptureContentChangedCallback S");
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
@@ -659,6 +719,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureContentChangedCallback(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetErrorCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnError callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_SetErrorCallback S");
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input errorCallback is nullptr!");
@@ -676,6 +739,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetErrorCallback(struct OH_AVScre
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDataCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnBufferAvailable callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_SetDataCallback E");
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input dataCallback is nullptr!");
@@ -693,6 +759,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDataCallback(struct OH_AVScree
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCanvasRotation(struct OH_AVScreenCapture *capture,
     bool canvasRotation)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -711,6 +780,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCanvasRotation(struct OH_AVScr
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ShowCursor(struct OH_AVScreenCapture *capture,
     bool showCursor)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -728,6 +800,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ShowCursor(struct OH_AVScreenCapt
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
     struct OH_AVScreenCapture_ContentFilter *filter, int32_t *windowIDs, int32_t windowCount)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(filter != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input filter is nullptr!");
     struct ScreenCaptureContentFilterObject *contentFilterObj =
             reinterpret_cast<ScreenCaptureContentFilterObject *>(filter);
@@ -748,6 +823,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ContentFilter_AddWindowContent(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResizeCanvas(struct OH_AVScreenCapture *capture,
     int32_t width, int32_t height)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -769,6 +847,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResizeCanvas(struct OH_AVScreenCa
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScreenCapture *capture,
     int32_t *windowIDs, int32_t windowCount)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
     CHECK_AND_RETURN_RET_LOG(screenCaptureObj->screenCapture_ != nullptr,
@@ -795,6 +876,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SkipPrivacyMode(struct OH_AVScree
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AVScreenCapture *capture,
     int32_t frameRate)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -815,6 +899,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetMaxVideoFrameRate(struct OH_AV
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetDisplayCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnDisplaySelected callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_SetDisplayCallback S");
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr,
@@ -841,6 +928,9 @@ OH_AVScreenCapture_CaptureStrategy* OH_AVScreenCapture_CreateCaptureStrategy(voi
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseCaptureStrategy(OH_AVScreenCapture_CaptureStrategy* strategy)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr!");
     struct ScreenCaptureStrategyObject *strategyObj = reinterpret_cast<ScreenCaptureStrategyObject *>(strategy);
     delete strategyObj;
@@ -850,6 +940,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ReleaseCaptureStrategy(OH_AVScree
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureAreaHighlight(struct OH_AVScreenCapture *capture,
     OH_AVScreenCaptureHighlightConfig config)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
 
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -874,6 +967,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureAreaHighlight(struct OH
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureStrategy(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_CaptureStrategy *strategy)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
     CHECK_AND_RETURN_RET_LOG(strategy != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input strategy is nullptr");
 
@@ -892,12 +988,18 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureStrategy(struct OH_AVSc
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForKeepCaptureDuringCall(
     OH_AVScreenCapture_CaptureStrategy *strategy, bool value)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     return SetStrategyValue(strategy, &ScreenCaptureStrategy::keepCaptureDuringCall, value);
 }
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreenCapture *capture,
     uint64_t displayId, OH_Rect* area)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_SetCaptureArea S");
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
     struct ScreenCaptureObject *screenCaptureObj = reinterpret_cast<ScreenCaptureObject *>(capture);
@@ -925,6 +1027,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetCaptureArea(struct OH_AVScreen
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPrivacyMaskMode(
     OH_AVScreenCapture_CaptureStrategy *strategy, int32_t value)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(value == 0 || value == 1, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input value is invalid");
     return SetStrategyValue(strategy, &ScreenCaptureStrategy::strategyForPrivacyMaskMode, value);
 }
@@ -932,12 +1037,18 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPrivacyMaskMode(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForCanvasFollowRotation(
     OH_AVScreenCapture_CaptureStrategy *strategy, bool value)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     return SetStrategyValue(strategy, &ScreenCaptureStrategy::canvasFollowRotation, value);
 }
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetSelectionCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnUserSelected callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_SetSelectionCallback S");
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input callback is nullptr");
@@ -958,6 +1069,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetSelectionCallback(struct OH_AV
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetCaptureTypeSelected(OH_AVScreenCapture_UserSelectionInfo *selection,
     int32_t* type)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_GetCaptureTypeSelected S");
     CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
     CHECK_AND_RETURN_RET_LOG(type != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input type is nullptr");
@@ -973,6 +1087,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetCaptureTypeSelected(OH_AVScree
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenCapture_UserSelectionInfo *selection,
     uint64_t* displayId)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_GetDisplayIdSelected S");
     CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
     CHECK_AND_RETURN_RET_LOG(displayId != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayId is nullptr");
@@ -988,6 +1105,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetDisplayIdSelected(OH_AVScreenC
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayIdsSelected(
     OH_AVScreenCapture_UserSelectionInfo *selection, uint64_t** displayIds, size_t *count)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_GetMultiDisplayIdsSelected S");
     CHECK_AND_RETURN_RET_LOG(selection != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input selection is nullptr");
     CHECK_AND_RETURN_RET_LOG(displayIds != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input displayIds is nullptr");
@@ -1002,12 +1122,18 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayIdsSelected(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForBFramesEncoding(OH_AVScreenCapture_CaptureStrategy *strategy,
     bool value)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     return SetStrategyValue(strategy, &ScreenCaptureStrategy::enableBFrame, value);
 }
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPickerPopUp(OH_AVScreenCapture_CaptureStrategy *strategy,
     bool value)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     AVScreenCapturePickerPopUp popUp = value ? AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE
                                              : AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_DISABLE;
     OH_AVSCREEN_CAPTURE_ErrCode ret = SetStrategyValue(strategy, &ScreenCaptureStrategy::pickerPopUp, popUp);
@@ -1017,6 +1143,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPickerPopUp(OH_AVScree
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForFillMode(OH_AVScreenCapture_CaptureStrategy *strategy,
     OH_AVScreenCapture_FillMode mode)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(mode == OH_AVScreenCapture_FillMode::OH_SCREENCAPTURE_FILLMODE_ASPECT_SCALE_FIT ||
             mode == OH_AVScreenCapture_FillMode::OH_SCREENCAPTURE_FILLMODE_SCALE_TO_FILL,
         AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input mode is invalid");
@@ -1026,30 +1155,45 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForFillMode(OH_AVScreenCa
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForPause(OH_AVScreenCapture_CaptureStrategy *strategy,
     bool value)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     return SetStrategyValue(strategy, &ScreenCaptureStrategy::enablePause, value);
 }
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForMicAEC(OH_AVScreenCapture_CaptureStrategy *strategy,
     bool value)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     return SetStrategyValue(strategy, &ScreenCaptureStrategy::enableAEC, value);
 }
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForContentAutoPauseScenes(
     OH_AVScreenCapture_CaptureStrategy *strategy, OH_AVScreenCapture_AutoPauseSceneSet scenes)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     return SetStrategyValue(strategy, &ScreenCaptureStrategy::contentAutoPauseScenes, scenes);
 }
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_StrategyForHDRCapture(OH_AVScreenCapture_CaptureStrategy *strategy,
     bool enable)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     return SetStrategyValue(strategy, &ScreenCaptureStrategy::enableHDRCapture, enable);
 }
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(struct OH_AVScreenCapture *capture,
     uint64_t *displayIds, size_t count, OH_MultiDisplayCapability *capability)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
     CHECK_AND_RETURN_RET_LOG(count < MAX_DISPLAYS_LEN && count > 1, AV_SCREEN_CAPTURE_ERR_INVALID_VAL,
         "input count invalid!");
@@ -1075,6 +1219,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_GetMultiDisplayCaptureCapability(
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPrivacyProtectCallback(struct OH_AVScreenCapture *capture,
     OH_AVScreenCapture_OnPrivacyProtect callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGD("OH_AVScreenCapture_SetPrivacyProtectCallback S");
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr");
     CHECK_AND_RETURN_RET_LOG(callback != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input callback is nullptr");
@@ -1094,6 +1241,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_SetPrivacyProtectCallback(struct 
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PauseScreenCapture(struct OH_AVScreenCapture *capture)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGI("OH_AVScreenCapture_PauseScreenCapture In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 
@@ -1108,6 +1258,9 @@ OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_PauseScreenCapture(struct OH_AVSc
 
 OH_AVSCREEN_CAPTURE_ErrCode OH_AVScreenCapture_ResumeScreenCapture(struct OH_AVScreenCapture *capture)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_SCREEN_CAPTURE_ERR_EMULATOR;
+#endif
     MEDIA_LOGI("OH_AVScreenCapture_ResumeScreenCapture In: 0x%{public}06" PRIXPTR, FAKE_POINTER(capture));
     CHECK_AND_RETURN_RET_LOG(capture != nullptr, AV_SCREEN_CAPTURE_ERR_INVALID_VAL, "input capture is nullptr!");
 

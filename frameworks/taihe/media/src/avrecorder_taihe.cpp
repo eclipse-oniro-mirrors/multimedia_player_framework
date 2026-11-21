@@ -926,6 +926,10 @@ void AVRecorderImpl::ExecuteByPromise(const std::string &opt)
 optional<AVRecorder> CreateAVRecorderSync()
 {
     MediaTrace trace("AVRecorder::CreateAVRecorderSync");
+#ifdef EMULATOR_ENABLED
+    set_business_error(MSERR_EXT_API9_EMULATOR_UNSUPPORT, "The current device does not support recording.");
+    return optional<AVRecorder>(std::nullopt);
+#endif
     MEDIA_LOGI("Taihe CreateAVRecorder Start");
     auto res = make_holder<AVRecorderImpl, AVRecorder>();
     if (taihe::has_error()) {

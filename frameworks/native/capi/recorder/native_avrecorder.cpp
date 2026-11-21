@@ -567,6 +567,9 @@ OH_AVRecorder *OH_AVRecorder_Create(void)
 
 OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config *config)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Prepare in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -604,6 +607,9 @@ OH_AVErrCode OH_AVRecorder_Prepare(OH_AVRecorder *recorder, OH_AVRecorder_Config
 
 OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRecorder_Config **config)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAVRecorderConfig in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -667,6 +673,9 @@ OH_AVErrCode OH_AVRecorder_GetAVRecorderConfig(OH_AVRecorder *recorder, OH_AVRec
 
 OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder, int32_t *amplitude)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAudioCapturerMaxAmplitude in.");
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(amplitude != nullptr, AV_ERR_INVALID_VAL, "output amplitude is nullptr!");
@@ -688,6 +697,9 @@ OH_AVErrCode OH_AVRecorder_GetAudioCapturerMaxAmplitude(OH_AVRecorder *recorder,
 
 OH_AVErrCode OH_AVRecorder_SetMetadata(OH_AVRecorder *recorder, OH_AVFormat *metadata)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetMetadata in.");
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(metadata != nullptr, AV_ERR_INVALID_VAL, "input metadata is nullptr!");
@@ -710,6 +722,9 @@ OH_AVErrCode OH_AVRecorder_SetMetadata(OH_AVRecorder *recorder, OH_AVFormat *met
 
 OH_AVErrCode OH_AVRecorder_GetInputSurface(OH_AVRecorder *recorder, OHNativeWindow **window)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetInputSurface in.");
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "recorder is nullptr!");
     CHECK_AND_RETURN_RET_LOG(window != nullptr, AV_ERR_INVALID_VAL, "window pointer is nullptr!");
@@ -733,6 +748,9 @@ OH_AVErrCode OH_AVRecorder_GetInputSurface(OH_AVRecorder *recorder, OHNativeWind
 
 OH_AVErrCode OH_AVRecorder_UpdateRotation(OH_AVRecorder *recorder, int32_t rotation)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_UpdateRotation in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -749,6 +767,9 @@ OH_AVErrCode OH_AVRecorder_UpdateRotation(OH_AVRecorder *recorder, int32_t rotat
 
 OH_AVErrCode OH_AVRecorder_Start(OH_AVRecorder *recorder)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Start in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -777,6 +798,9 @@ OH_AVErrCode OH_AVRecorder_Start(OH_AVRecorder *recorder)
 
 OH_AVErrCode OH_AVRecorder_Pause(OH_AVRecorder *recorder)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Pause in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -799,6 +823,9 @@ OH_AVErrCode OH_AVRecorder_Pause(OH_AVRecorder *recorder)
 
 OH_AVErrCode OH_AVRecorder_Resume(OH_AVRecorder *recorder)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Resume in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -821,6 +848,9 @@ OH_AVErrCode OH_AVRecorder_Resume(OH_AVRecorder *recorder)
 
 OH_AVErrCode OH_AVRecorder_Stop(OH_AVRecorder *recorder)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Stop in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -845,6 +875,9 @@ OH_AVErrCode OH_AVRecorder_Stop(OH_AVRecorder *recorder)
 
 OH_AVErrCode OH_AVRecorder_Reset(OH_AVRecorder *recorder)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Reset in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -868,6 +901,9 @@ OH_AVErrCode OH_AVRecorder_Reset(OH_AVRecorder *recorder)
 
 OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_Release in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -909,6 +945,9 @@ OH_AVErrCode OH_AVRecorder_Release(OH_AVRecorder *recorder)
 OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
     OH_AVRecorder_EncoderInfo **info, int32_t *length)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_GetAvailableEncoder in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -952,6 +991,9 @@ OH_AVErrCode OH_AVRecorder_GetAvailableEncoder(OH_AVRecorder *recorder,
 OH_AVErrCode OH_AVRecorder_SetStateCallback(OH_AVRecorder *recorder,
     OH_AVRecorder_OnStateChange callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetStateCallback in.");
     
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -982,6 +1024,9 @@ OH_AVErrCode OH_AVRecorder_SetStateCallback(OH_AVRecorder *recorder,
 
 OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecorder_OnError callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetErrorCallback in.");
     
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -1013,6 +1058,9 @@ OH_AVErrCode OH_AVRecorder_SetErrorCallback(OH_AVRecorder *recorder, OH_AVRecord
 #ifdef SUPPORT_RECORDER_CREATE_FILE
 OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder_OnUri callback, void *userData)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetUriCallback in.");
  
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_VAL, "input recorder is nullptr!");
@@ -1044,6 +1092,9 @@ OH_AVErrCode OH_AVRecorder_SetUriCallback(OH_AVRecorder *recorder, OH_AVRecorder
 
 OH_AVErrCode OH_AVRecorder_SetWillMuteWhenInterrupted(OH_AVRecorder *recorder, bool muteWhenInterrupted)
 {
+#ifdef EMULATOR_ENABLED
+    return AV_ERR_EMULATOR_UNSUPPORT;
+#endif
     MEDIA_LOGD("Native AVRecorder: OH_AVRecorder_SetWillMuteWhenInterrupted in.");
 
     CHECK_AND_RETURN_RET_LOG(recorder != nullptr, AV_ERR_INVALID_STATE, "input recorder is nullptr!");
