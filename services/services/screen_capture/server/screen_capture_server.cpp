@@ -2442,7 +2442,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen()
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         PrivacyProtected();
     }
-    ShowCursorInner();
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreen_->GetScreenId());
     return PrepareVirtualScreenMirror();
 }
@@ -2457,6 +2456,7 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
     std::vector<uint8_t> surfaceTypes;
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreen_->GetScreenId(),
         contentFilter_.windowIDsVec, emptySurfaceIds, surfaceTypes);
+    ShowCursorInner();
     MEDIA_LOGI("PrepareVirtualScreenMirror screenId: %{public}" PRIu64, virtualScreen_->GetScreenId());
     auto screen = Rosen::ScreenManager::GetInstance().GetScreenById(virtualScreen_->GetScreenId());
     if (screen == nullptr) {
@@ -2783,6 +2783,7 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
         std::vector<uint8_t> surfaceTypes;
         Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreen_->GetScreenId(),
             contentFilter_.windowIDsVec, emptySurfaceIds, surfaceTypes);
+        ShowCursorInner();
     }
     int32_t ret = MSERR_OK;
     {
