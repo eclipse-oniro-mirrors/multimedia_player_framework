@@ -1477,7 +1477,7 @@ HWTEST_F(ScreenCaptureUnitTest, screen_capture_captureMode_0001, TestSize.Level2
 HWTEST_F(ScreenCaptureUnitTest, screen_capture_captureMode_0002, TestSize.Level2)
 {
     SetConfig(config_);
-    config_.captureMode = static_cast<CaptureMode>(5);
+    config_.captureMode = static_cast<CaptureMode>(6);
     config_.videoInfo.videoCapInfo.videoSource = VIDEO_SOURCE_SURFACE_RGBA;
 
     bool isMicrophone = true;
