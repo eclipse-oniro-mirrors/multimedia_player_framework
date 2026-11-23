@@ -14,6 +14,7 @@
  */
 #include <iomanip>
 #include <ctime>
+#include <unistd.h>
 #include "media_library_adapter.h"
 #include "media_library_camera_manager.h"
 #include "media_log.h"
@@ -29,7 +30,7 @@ namespace {
 
 namespace OHOS {
 namespace Media {
-namespace MeidaLibraryAdapter {
+namespace MediaLibraryAdapter {
 constexpr std::string_view prefix = "VID_";
 constexpr std::string_view connector = "_";
 class RecorderPhotoProxy : public PhotoProxy {
@@ -175,7 +176,7 @@ std::string CreateDisplayName()
     return formattedTime;
 }
 
-bool CreateMediaLibrary(int32_t &fd, std::string &uri)
+bool CreateMediaLibrary(int32_t &fd, std::string &uri, std::shared_ptr<PhotoAssetProxy> &photoAssetProxy)
 {
     MediaTrace trace("RecorderServer::CreateMediaLibrary");
     MEDIA_LOGI("RecorderServer::CreateMediaLibrary");
@@ -207,7 +208,8 @@ bool CreateMediaLibrary(int32_t &fd, std::string &uri)
         .saveImageType = SaveImageType::UNDEFINED,
         .saveVideoType = SaveVideoType::ONE_VIDEO
     };
-    auto photoAssetProxy = mediaLibraryCameraManager->CreatePhotoAssetProxy(callerInfo, presetPara);
+    photoAssetProxy = mediaLibraryCameraManager->CreatePhotoAssetProxy(callerInfo, presetPara);
+    CHECK_AND_RETURN_RET_LOG(photoAssetProxy != nullptr, false, "CreatePhotoAssetProxy returned null");
     sptr<RecorderPhotoProxy> recorderPhotoProxy = new(std::nothrow) RecorderPhotoProxy();
     CHECK_AND_RETURN_RET_LOG(recorderPhotoProxy != nullptr, false,
         "Error to create recorderPhotoProxy");
@@ -215,9 +217,22 @@ bool CreateMediaLibrary(int32_t &fd, std::string &uri)
     photoAssetProxy->AddPhotoProxy((sptr<PhotoProxy>&)recorderPhotoProxy, nullptr, "");
     uri = photoAssetProxy->GetPhotoAssetUri();
     MEDIA_LOGD("video uri:%{public}s", uri.c_str());
-    fd = mediaLibraryCameraManager->OpenAsset(uri, "rw");
+    fd = photoAssetProxy->GetVideoFd(VideoType::ORIGIN_VIDEO);
+    if (fd < 0) {
+        MEDIA_LOGE("GetVideoFd failed, fd: %{public}d, pending asset uri: %{public}s", fd, uri.c_str());
+        photoAssetProxy.reset();
+        uri.clear();
+        return false;
+    }
     return true;
 }
-} // namespace MeidaLibraryAdapter
+ 
+void ReleaseVideoFd(std::shared_ptr<PhotoAssetProxy> &photoAssetProxy, int32_t fd)
+{
+    CHECK_AND_RETURN(fd >= 0);
+    CHECK_AND_RETURN(photoAssetProxy != nullptr);
+    CHECK_AND_RETURN_LOG(photoAssetProxy->ReleaseVideoFd(fd) == 0, "ReleaseVideoFd failed for fd %{public}d", fd);
+}
+} // namespace MediaLibraryAdapter
 } // namespace Media
 } // namespace OHOS
