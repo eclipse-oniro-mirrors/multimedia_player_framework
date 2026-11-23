@@ -192,6 +192,9 @@ napi_value AVScreenCaptureNapi::JsCreateAVScreenRecorder(napi_env env, napi_call
     asyncCtx->deferred = CommonNapi::CreatePromise(env, asyncCtx->callbackRef, result);
     asyncCtx->JsResult = std::make_unique<MediaJsResultInstance>(constructor_);
     asyncCtx->ctorFlag = true;
+#ifdef EMULATOR_ENABLED
+    asyncCtx->SignError(MSERR_EXT_API9_EMULATOR_UNSUPPORT, "The current emulator does not support screen capture.");
+#endif
     auto ret = MediaAsyncContext::SendCompleteEvent(env, asyncCtx.get(), napi_eprio_immediate);
     if (ret != napi_status::napi_ok) {
         MEDIA_LOGE("failed to SendEvent, ret = %{public}d", ret);

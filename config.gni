@@ -266,6 +266,10 @@ if (player_framework_support_media_madvise) {
   player_framework_defines += [ "SUPPORT_MEDIA_MADVISE" ]
 }
 
+if (is_emulator) {
+  player_framework_defines += [ "EMULATOR_ENABLED" ]
+}
+
 if (player_framework_support_avdownloader) {
   player_framework_defines += [ "SUPPORT_AVDOWNLOADER" ]
 }

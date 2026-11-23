@@ -76,6 +76,7 @@ typedef enum OH_AVSCREEN_CAPTURE_ErrCode {
      * extend err start.
      */
     AV_SCREEN_CAPTURE_ERR_EXTEND_START = AV_SCREEN_CAPTURE_ERR_BASE + 100,
+    AV_SCREEN_CAPTURE_ERR_EMULATOR = AV_SCREEN_CAPTURE_ERR_BASE + 804,
 } OH_AVSCREEN_CAPTURE_ErrCode;
 
 #ifdef __cplusplus
