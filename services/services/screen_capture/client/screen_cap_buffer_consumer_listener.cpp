@@ -16,6 +16,7 @@
 #include "screen_cap_buffer_consumer_listener.h"
 #include "media_errors.h"
 #include "media_log.h"
+#include <pthread.h>
 #include <sync_fence.h>
 
 namespace {
@@ -23,42 +24,52 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 }
 
 namespace OHOS::Media {
+ScreenCapBufferConsumerListener::ScreenCapBufferConsumerListener(sptr<Surface> consumer,
+    const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
+    : consumer_(consumer)
+{
+    std::lock_guard<std::mutex> lock(ctx_->mtx);
+    ctx_->callback = screenCaptureCb;
+}
+
 void ScreenCapBufferConsumerListener::OnBufferAvailable()
 {
+    std::shared_ptr<NotifyContext> ctx = ctx_;
     {
-        std::lock_guard<std::mutex> lock(notifyMtx_);
-        if (messageQueue_.size() > MAX_MESSAGE_QUEUE_SIZE) {
+        std::lock_guard<std::mutex> lock(ctx->mtx);
+        if (!ctx->IsRunning()) {
+            return;
+        }
+        if (ctx->pendingCount > MAX_MESSAGE_QUEUE_SIZE) {
             MEDIA_LOGE("0x%{public}06" PRIXPTR " notify queue full, skip", FAKE_POINTER(this));
             return;
         }
-        messageQueue_.push({SCBufferMessageType::NOTIFY});
+        ++ctx->pendingCount;
     }
-    notifyCv_.notify_one();
+    ctx->cv.notify_one();
 }
 
-void ScreenCapBufferConsumerListener::NotifyThreadRun()
+void ScreenCapBufferConsumerListener::NotifyThreadRun(std::shared_ptr<NotifyContext> ctx)
 {
-    pthread_setname_np(pthread_self(), "OS_SCBufferNotify");
-    SCBufferMessage msg;
+    pthread_setname_np(pthread_self(), "OS_SCBufNotify");
     while (true) {
+        std::shared_ptr<ScreenCaptureCallBack> cb;
         {
-            std::unique_lock<std::mutex> lock(notifyMtx_);
-            notifyCv_.wait(lock, [this] { return !messageQueue_.empty(); });
-            msg = messageQueue_.front();
-            messageQueue_.pop();
-        }
-        if (msg.type == SCBufferMessageType::EXIT) {
-            break;
-        }
-        if (msg.type == SCBufferMessageType::NOTIFY) {
-            std::shared_ptr<ScreenCaptureCallBack> cb;
-            {
-                std::lock_guard<std::mutex> lock(mutex_);
-                cb = screenCaptureCb_;
+            std::unique_lock<std::mutex> lock(ctx->mtx);
+            ctx->cv.wait(lock, [&ctx] {
+                return ctx->state == NotifyContext::State::EXITING || (ctx->IsRunning() && ctx->pendingCount > 0);
+            });
+            if (ctx->state == NotifyContext::State::EXITING) {
+                break;
             }
-            if (cb != nullptr) {
-                cb->OnVideoBufferAvailable(true);
+            if (!ctx->IsRunning() || ctx->pendingCount == 0) {
+                continue;
             }
+            --ctx->pendingCount;
+            cb = ctx->callback;
+        }
+        if (cb != nullptr) {
+            cb->OnVideoBufferAvailable(true);
         }
     }
     MEDIA_LOGD("ScreenCapBufferConsumerListener::NotifyThreadRun End.");
@@ -66,54 +77,67 @@ void ScreenCapBufferConsumerListener::NotifyThreadRun()
 
 int32_t ScreenCapBufferConsumerListener::StartBufferThread()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (notifyThread_ != nullptr && notifyThread_->joinable()) {
+    std::shared_ptr<NotifyContext> ctx = ctx_;
+    std::lock_guard<std::mutex> lock(ctx->mtx);
+    if (ctx->state == NotifyContext::State::EXITING) {
+        return MSERR_INVALID_OPERATION;
+    }
+    if (ctx->thread != nullptr && ctx->IsRunning()) {
         return MSERR_OK;
     }
-    notifyThread_ = std::make_unique<std::thread>([this]() { this->NotifyThreadRun(); });
+    if (ctx->thread == nullptr) {
+        ctx->thread = std::make_unique<std::thread>([ctx]() { ScreenCapBufferConsumerListener::NotifyThreadRun(ctx); });
+        MEDIA_LOGI("StartBufferThread: 0x%{public}06" PRIXPTR " started.", FAKE_POINTER(this));
+    }
+    ctx->state = NotifyContext::State::RUNNING;
+    ctx->pendingCount = 0;
+    ctx->cv.notify_all();
     return MSERR_OK;
 }
 
 void ScreenCapBufferConsumerListener::StopBufferThread()
 {
-    std::lock_guard<std::mutex> lock(notifyMtx_);
-    messageQueue_.push({SCBufferMessageType::EXIT});
-    MEDIA_LOGI("StopBufferThread: 0x%{public}06" PRIXPTR " EXIT.", FAKE_POINTER(this));
-    notifyCv_.notify_one();
+    std::shared_ptr<NotifyContext> ctx = ctx_;
+    {
+        std::lock_guard<std::mutex> lock(ctx->mtx);
+        ctx->state = NotifyContext::State::STOPPED;
+        ctx->pendingCount = 0;
+    }
+    ctx->cv.notify_all();
+    MEDIA_LOGI("StopBufferThread: 0x%{public}06" PRIXPTR " stopped.", FAKE_POINTER(this));
+}
+
+void ScreenCapBufferConsumerListener::Stop()
+{
+    StopBufferThread();
+    consumer_->UnregisterConsumerListener();
 }
 
 void ScreenCapBufferConsumerListener::SetCallback(const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    screenCaptureCb_ = screenCaptureCb;
+    std::lock_guard<std::mutex> lock(ctx_->mtx);
+    ctx_->callback = screenCaptureCb;
 }
 
 ScreenCapBufferConsumerListener::~ScreenCapBufferConsumerListener()
 {
-    MEDIA_LOGD("ScreenCapBufferConsumerListener: 0x%{public}06" PRIXPTR " Destroy.", FAKE_POINTER(this));
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        screenCaptureCb_ = nullptr;
-    }
-    StopBufferThread();
+    MEDIA_LOGD("0x%{public}06" PRIXPTR " Destroy.", FAKE_POINTER(this));
     std::unique_ptr<std::thread> thread;
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-        thread = std::move(notifyThread_);
+        std::lock_guard<std::mutex> lock(ctx_->mtx);
+        ctx_->callback = nullptr;
+        ctx_->state = NotifyContext::State::EXITING;
+        ctx_->pendingCount = 0;
+        thread = std::move(ctx_->thread);
     }
+    ctx_->cv.notify_all();
     if (thread != nullptr && thread->joinable()) {
-        thread->join();
-    }
-    sptr<OHOS::SurfaceBuffer> buf;
-    sptr<OHOS::Surface> consumer;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        buf = currentBuffer_;
-        currentBuffer_ = nullptr;
-        consumer = consumer_;
-    }
-    if (buf != nullptr && consumer != nullptr) {
-        consumer->ReleaseBuffer(buf, -1);
+        if (thread->get_id() == std::this_thread::get_id()) {
+            MEDIA_LOGW("0x%{public}06" PRIXPTR " stop buffer thread from itself, detach", FAKE_POINTER(this));
+            thread->detach();
+        } else {
+            thread->join();
+        }
     }
 }
 
@@ -121,6 +145,10 @@ int32_t ScreenCapBufferConsumerListener::AcquireVideoBuffer(sptr<OHOS::SurfaceBu
     int64_t &timestamp, OHOS::Rect &damage)
 {
     CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_INVALID_OPERATION, "consumer is nullptr");
+    {
+        std::lock_guard<std::mutex> lock(ctx_->mtx);
+        CHECK_AND_RETURN_RET_LOG(ctx_->IsRunning(), MSERR_INVALID_OPERATION, "buffer notify thread is stopped");
+    }
     sptr<SyncFence> acquireFence = SyncFence::INVALID_FENCE;
     int32_t ret = consumer_->AcquireBuffer(surfaceBuffer, acquireFence, timestamp, damage);
     CHECK_AND_RETURN_RET_LOG(ret == GSERROR_OK, MSERR_UNKNOWN, "AcquireBuffer failed, ret:%{public}d", ret);
@@ -137,9 +165,9 @@ int32_t ScreenCapBufferConsumerListener::AcquireVideoBuffer(sptr<OHOS::SurfaceBu
     fence = flushFence;
     sptr<OHOS::SurfaceBuffer> buf;
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-        buf = currentBuffer_;
-        currentBuffer_ = surfaceBuffer;
+        std::lock_guard<std::mutex> lock(ctx_->mtx);
+        buf = ctx_->currentBuffer;
+        ctx_->currentBuffer = surfaceBuffer;
     }
     if (buf != nullptr && consumer_ != nullptr) {
         consumer_->ReleaseBuffer(buf, -1);
@@ -152,9 +180,9 @@ int32_t ScreenCapBufferConsumerListener::ReleaseVideoBuffer()
 {
     sptr<OHOS::SurfaceBuffer> buf;
     {
-        std::lock_guard<std::mutex> lock(mutex_);
-        buf = currentBuffer_;
-        currentBuffer_ = nullptr;
+        std::lock_guard<std::mutex> lock(ctx_->mtx);
+        buf = ctx_->currentBuffer;
+        ctx_->currentBuffer = nullptr;
     }
     CHECK_AND_RETURN_RET_LOG(buf != nullptr, MSERR_INVALID_OPERATION, "no video frame to release");
     CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_INVALID_OPERATION, "consumer is nullptr");

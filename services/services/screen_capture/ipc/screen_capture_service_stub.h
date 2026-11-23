@@ -50,7 +50,7 @@ public:
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override;
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override;
-    int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled) override;
+    int32_t StartScreenRecording(bool isPrivacyAuthorityEnabled) override;
     int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled) override;
     int32_t StopScreenCapture() override;
     int32_t PresentPicker() override;
@@ -95,7 +95,7 @@ private:
     int32_t InitAudioCap(MessageParcel &data, MessageParcel &reply);
     int32_t InitVideoEncInfo(MessageParcel &data, MessageParcel &reply);
     int32_t InitVideoCap(MessageParcel &data, MessageParcel &reply);
-    int32_t StartScreenCapture(MessageParcel &data, MessageParcel &reply);
+    int32_t StartScreenRecording(MessageParcel &data, MessageParcel &reply);
     int32_t StartScreenCaptureWithSurface(MessageParcel &data, MessageParcel &reply);
     int32_t StopScreenCapture(MessageParcel &data, MessageParcel &reply);
     int32_t PresentPicker(MessageParcel &data, MessageParcel &reply);

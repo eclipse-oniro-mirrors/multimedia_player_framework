@@ -41,6 +41,7 @@ public:
     virtual int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) = 0;
     virtual int32_t InitVideoCap(VideoCaptureInfo videoInfo) = 0;
     virtual int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled = false) = 0;
+    virtual int32_t StartScreenRecording(bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t PresentPicker() = 0;

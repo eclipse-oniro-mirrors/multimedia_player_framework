@@ -444,7 +444,7 @@ bool AvScreenCaptureServiceStubFuzzer::FuzzStartScreenCapture(
     msg.RewindRead(0);
     MessageParcel reply;
     MessageOption option;
-    screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::START_SCREEN_CAPTURE,
+    screen_capture_Stub->OnRemoteRequest(IStandardScreenCaptureService::ScreenCaptureServiceMsg::START_SCREEN_RECORDING,
         msg, reply, option);
     return true;
 }

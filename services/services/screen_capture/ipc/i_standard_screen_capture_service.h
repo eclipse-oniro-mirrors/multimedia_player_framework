@@ -42,7 +42,7 @@ public:
     virtual int32_t InitAudioCap(AudioCaptureInfo audioInfo) = 0;
     virtual int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) = 0;
     virtual int32_t InitVideoCap(VideoCaptureInfo videoInfo) = 0;
-    virtual int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled = false) = 0;
+    virtual int32_t StartScreenRecording(bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled = false) = 0;
     virtual int32_t StopScreenCapture() = 0;
     virtual int32_t PresentPicker() = 0;
@@ -89,7 +89,7 @@ public:
         ACQUIRE_AUDIO_BUF = 11,
         RELEASE_AUDIO_BUF = 13,
         SET_MIC_ENABLE = 15,
-        START_SCREEN_CAPTURE = 16,
+        START_SCREEN_RECORDING = 16,
         START_SCREEN_CAPTURE_WITH_SURFACE = 17,
         STOP_SCREEN_CAPTURE = 18,
         SET_SCREEN_ROTATION = 19,

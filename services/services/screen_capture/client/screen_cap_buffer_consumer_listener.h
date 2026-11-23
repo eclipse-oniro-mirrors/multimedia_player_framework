@@ -17,24 +17,17 @@
 #define SCREEN_CAP_BUFFER_CONSUMER_LISTENER_H
 
 #include "screen_capture.h"
+#include <condition_variable>
 #include <memory>
-#include <queue>
+#include <mutex>
 #include <surface.h>
+#include <thread>
 
 namespace OHOS::Media {
-enum class SCBufferMessageType { EXIT, NOTIFY };
-
-struct SCBufferMessage {
-    SCBufferMessageType type;
-};
-
 class ScreenCapBufferConsumerListener : public IBufferConsumerListener {
 public:
     ScreenCapBufferConsumerListener(sptr<Surface> consumer,
-        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb)
-        : consumer_(consumer), screenCaptureCb_(screenCaptureCb)
-    {
-    }
+        const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb);
     ~ScreenCapBufferConsumerListener();
 
     void OnBufferAvailable() override;
@@ -43,21 +36,34 @@ public:
     int32_t ReleaseVideoBuffer();
     int32_t StartBufferThread();
     void StopBufferThread();
+    void Stop();
     void SetCallback(const std::shared_ptr<ScreenCaptureCallBack> &screenCaptureCb);
 
 private:
-    void NotifyThreadRun();
+    struct NotifyContext {
+        std::mutex mtx;
+        std::condition_variable cv;
+        uint64_t pendingCount = 0;
+        std::shared_ptr<ScreenCaptureCallBack> callback = nullptr;
+        sptr<OHOS::SurfaceBuffer> currentBuffer = nullptr;
+        std::unique_ptr<std::thread> thread = nullptr;
+        enum class State {
+            STOPPED,
+            RUNNING,
+            EXITING,
+        };
+        State state = State::RUNNING;
 
-    std::mutex notifyMtx_;
-    std::condition_variable notifyCv_;
-    std::queue<SCBufferMessage> messageQueue_;
+        bool IsRunning() const
+        {
+            return state == State::RUNNING;
+        }
+    };
 
-    std::mutex mutex_;
-    sptr<OHOS::Surface> consumer_ = nullptr;
-    std::shared_ptr<ScreenCaptureCallBack> screenCaptureCb_ = nullptr;
-    sptr<OHOS::SurfaceBuffer> currentBuffer_ = nullptr;
+    static void NotifyThreadRun(std::shared_ptr<NotifyContext> ctx);
 
-    std::unique_ptr<std::thread> notifyThread_;
+    const sptr<OHOS::Surface> consumer_ = nullptr;
+    std::shared_ptr<NotifyContext> ctx_ = std::make_shared<NotifyContext>();
 
     static constexpr uint64_t MAX_MESSAGE_QUEUE_SIZE = 5;
     static constexpr int32_t FENCE_WAIT_MS = 1000;

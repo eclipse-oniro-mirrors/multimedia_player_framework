@@ -42,10 +42,28 @@ public:
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override { return MSERR_OK; }
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override { return MSERR_OK; }
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override { return MSERR_OK; }
-    int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled = false) override { return MSERR_OK; }
+    int32_t StartScreenRecording(bool isPrivacyAuthorityEnabled = false) override
+    {
+        if (started_) {
+            return MSERR_INVALID_OPERATION;
+        }
+        started_ = true;
+        return MSERR_OK;
+    }
     int32_t StartScreenCaptureWithSurface(sptr<Surface> surface,
-        bool isPrivacyAuthorityEnabled = false) override { return MSERR_OK; }
-    int32_t StopScreenCapture() override { return MSERR_OK; }
+        bool isPrivacyAuthorityEnabled = false) override
+    {
+        if (started_) {
+            return MSERR_INVALID_OPERATION;
+        }
+        started_ = true;
+        return MSERR_OK;
+    }
+    int32_t StopScreenCapture() override
+    {
+        started_ = false;
+        return MSERR_OK;
+    }
     int32_t PresentPicker() override { return MSERR_OK; }
     int32_t SetMicrophoneEnabled(bool isMicrophone) override { return MSERR_OK; }
     int32_t SetCanvasRotation(bool canvasRotation) override { return MSERR_OK; }
@@ -75,6 +93,9 @@ public:
     int32_t AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer,
         int32_t width,
         int32_t height, int32_t &watermarkCount) override { return MSERR_OK; }
+
+private:
+    bool started_ = false;
 };
 
 class TestScreenCaptureCallBack : public ScreenCaptureCallBack {
@@ -128,7 +149,7 @@ HWTEST_F(ScreenCaptureClientUnitTest, MockProxy_CaptureMethods_001, TestSize.Lev
     auto client = ScreenCaptureClient::Create(svc);
     ASSERT_NE(client, nullptr);
     EXPECT_EQ(MSERR_OK, client->StartScreenCapture(false));
-    EXPECT_EQ(MSERR_OK, client->StartScreenCaptureWithSurface(nullptr, false));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, client->StartScreenCaptureWithSurface(nullptr, false));
     EXPECT_EQ(MSERR_OK, client->StopScreenCapture());
     EXPECT_EQ(MSERR_OK, client->PresentPicker());
     std::shared_ptr<AudioBuffer> ab;
@@ -140,6 +161,48 @@ HWTEST_F(ScreenCaptureClientUnitTest, MockProxy_CaptureMethods_001, TestSize.Lev
     EXPECT_EQ(MSERR_INVALID_OPERATION, client->AcquireVideoBuffer(sb, fence, ts, damage));
     EXPECT_EQ(MSERR_OK, client->ReleaseAudioBuffer(AudioCaptureSourceType::MIC));
     EXPECT_EQ(MSERR_INVALID_OPERATION, client->ReleaseVideoBuffer());
+    client->Release();
+}
+
+HWTEST_F(ScreenCaptureClientUnitTest, MockProxy_RepeatedStart_001, TestSize.Level2)
+{
+    auto svc = sptr<TestScreenCaptureService>::MakeSptr();
+    auto client = ScreenCaptureClient::Create(svc);
+    ASSERT_NE(client, nullptr);
+    auto cb = std::make_shared<TestScreenCaptureCallBack>();
+    EXPECT_EQ(MSERR_OK, client->SetScreenCaptureCallback(cb));
+    EXPECT_EQ(MSERR_OK, client->StartScreenCapture(false));
+    EXPECT_EQ(MSERR_INVALID_OPERATION, client->StartScreenCapture(false));
+    EXPECT_EQ(MSERR_OK, client->StopScreenCapture());
+    client->Release();
+}
+
+HWTEST_F(ScreenCaptureClientUnitTest, MockProxy_StartRecording_001, TestSize.Level2)
+{
+    auto svc = sptr<TestScreenCaptureService>::MakeSptr();
+    auto client = ScreenCaptureClient::Create(svc);
+    ASSERT_NE(client, nullptr);
+    EXPECT_EQ(MSERR_OK, client->StartScreenRecording(false));
+    EXPECT_EQ(MSERR_OK, client->StopScreenCapture());
+    client->Release();
+}
+
+HWTEST_F(ScreenCaptureClientUnitTest, MockProxy_StopStartReuse_001, TestSize.Level2)
+{
+    auto svc = sptr<TestScreenCaptureService>::MakeSptr();
+    auto client = ScreenCaptureClient::Create(svc);
+    ASSERT_NE(client, nullptr);
+    auto cb = std::make_shared<TestScreenCaptureCallBack>();
+    EXPECT_EQ(MSERR_OK, client->SetScreenCaptureCallback(cb));
+    EXPECT_EQ(MSERR_OK, client->StartScreenCapture(false));
+    EXPECT_EQ(MSERR_OK, client->StopScreenCapture());
+    sptr<OHOS::SurfaceBuffer> sb;
+    int32_t fence = 0;
+    int64_t ts = 0;
+    OHOS::Rect damage;
+    EXPECT_EQ(MSERR_INVALID_OPERATION, client->AcquireVideoBuffer(sb, fence, ts, damage));
+    EXPECT_EQ(MSERR_OK, client->StartScreenCapture(false));
+    EXPECT_EQ(MSERR_OK, client->StopScreenCapture());
     client->Release();
 }
 
@@ -193,7 +256,7 @@ HWTEST_F(ScreenCaptureClientUnitTest, MockProxy_MediaServerDied_001, TestSize.Le
     auto cb = std::make_shared<TestScreenCaptureCallBack>();
     EXPECT_EQ(MSERR_OK, client->SetScreenCaptureCallback(cb));
     client->MediaServerDied();
-    EXPECT_EQ(MSERR_UNKNOWN, client->SetMicrophoneEnabled(true));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client->SetMicrophoneEnabled(true));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, MockProxy_AddWatermark_001, TestSize.Level2)

@@ -286,7 +286,7 @@ int32_t ScreenCaptureServiceProxy::InitVideoCap(VideoCaptureInfo videoInfo)
     return reply.ReadInt32();
 }
 
-int32_t ScreenCaptureServiceProxy::StartScreenCapture(bool isPrivacyAuthorityEnabled)
+int32_t ScreenCaptureServiceProxy::StartScreenRecording(bool isPrivacyAuthorityEnabled)
 {
     MessageParcel data;
     MessageParcel reply;
@@ -298,9 +298,9 @@ int32_t ScreenCaptureServiceProxy::StartScreenCapture(bool isPrivacyAuthorityEna
     token = data.WriteBool(isPrivacyAuthorityEnabled);
     CHECK_AND_RETURN_RET_LOG(token, MSERR_INVALID_OPERATION, "Failed to write isPrivacyAuthorityEnabled!");
 
-    int error = Remote()->SendRequest(START_SCREEN_CAPTURE, data, reply, option);
+    int error = Remote()->SendRequest(START_SCREEN_RECORDING, data, reply, option);
     CHECK_AND_RETURN_RET_LOG(error == MSERR_OK, MSERR_INVALID_OPERATION,
-        "StartScreenCapture failed, error: %{public}d", error);
+        "StartScreenRecording failed, error: %{public}d", error);
 
     return reply.ReadInt32();
 }

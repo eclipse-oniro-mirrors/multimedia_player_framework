@@ -42,7 +42,7 @@ public:
     int32_t InitAudioCap(AudioCaptureInfo audioInfo) override { return MSERR_OK; }
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override { return MSERR_OK; }
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override { return MSERR_OK; }
-    int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled = false) override { return MSERR_OK; }
+    int32_t StartScreenRecording(bool isPrivacyAuthorityEnabled = false) override { return MSERR_OK; }
     int32_t StartScreenCaptureWithSurface(sptr<Surface> surface,
         bool isPrivacyAuthorityEnabled = false) override { return MSERR_OK; }
     int32_t StopScreenCapture() override { return MSERR_OK; }
@@ -102,85 +102,85 @@ public:
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetCaptureMode_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetCaptureMode(CaptureMode::CAPTURE_HOME_SCREEN));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetCaptureMode(CaptureMode::CAPTURE_HOME_SCREEN));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetDataType_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetDataType(DataType::ORIGINAL_STREAM));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetDataType(DataType::ORIGINAL_STREAM));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetRecorderInfo_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     RecorderInfo info;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetRecorderInfo(info));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetRecorderInfo(info));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetOutputFile_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetOutputFile(1));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetOutputFile(1));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetAndCheckLimit_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetAndCheckLimit());
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetAndCheckLimit());
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_InitAudioEncInfo_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     AudioEncInfo info;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.InitAudioEncInfo(info));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.InitAudioEncInfo(info));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_InitAudioCap_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     AudioCaptureInfo info;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.InitAudioCap(info));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.InitAudioCap(info));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_InitVideoEncInfo_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     VideoEncInfo info;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.InitVideoEncInfo(info));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.InitVideoEncInfo(info));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_InitVideoCap_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     VideoCaptureInfo info;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.InitVideoCap(info));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.InitVideoCap(info));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_StartScreenCapture_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.StartScreenCapture(false));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.StartScreenCapture(false));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_StopScreenCapture_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.StopScreenCapture());
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.StopScreenCapture());
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_PresentPicker_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.PresentPicker());
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.PresentPicker());
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_AcquireAudioBuffer_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     std::shared_ptr<AudioBuffer> audioBuffer;
-    EXPECT_EQ(MSERR_NO_MEMORY,
+    EXPECT_EQ(MSERR_SERVICE_DIED,
         client.AcquireAudioBuffer(audioBuffer, AudioCaptureSourceType::MIC));
 }
 
@@ -197,7 +197,7 @@ HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_AcquireVideoBuffer_001, TestSize
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_ReleaseAudioBuffer_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.ReleaseAudioBuffer(AudioCaptureSourceType::MIC));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.ReleaseAudioBuffer(AudioCaptureSourceType::MIC));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_ReleaseVideoBuffer_001, TestSize.Level2)
@@ -209,37 +209,37 @@ HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_ReleaseVideoBuffer_001, TestSize
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetMicrophoneEnabled_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_UNKNOWN, client.SetMicrophoneEnabled(true));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetMicrophoneEnabled(true));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetCanvasRotation_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetCanvasRotation(true));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetCanvasRotation(true));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_ShowCursor_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.ShowCursor(true));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.ShowCursor(true));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_ResizeCanvas_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.ResizeCanvas(720, 1280));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.ResizeCanvas(720, 1280));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SkipPrivacyMode_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_UNKNOWN, client.SkipPrivacyMode({1, 2, 3}));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SkipPrivacyMode({1, 2, 3}));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetMaxVideoFrameRate_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetMaxVideoFrameRate(30));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetMaxVideoFrameRate(30));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetScreenCaptureCallback_001, TestSize.Level2)
@@ -252,59 +252,59 @@ HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_ExcludeContent_001, TestSize.Lev
 {
     ScreenCaptureClient client(nullptr);
     ScreenCaptureContentFilter filter;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.ExcludeContent(filter));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.ExcludeContent(filter));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_AddWhiteListWindows_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.AddWhiteListWindows({1, 2, 3}));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.AddWhiteListWindows({1, 2, 3}));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_RemoveWhiteListWindows_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.RemoveWhiteListWindows({1, 2, 3}));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.RemoveWhiteListWindows({1, 2, 3}));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_ExcludePickerWindows_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_UNKNOWN, client.ExcludePickerWindows({1, 2, 3}));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.ExcludePickerWindows({1, 2, 3}));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetPickerMode_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_UNKNOWN, client.SetPickerMode(PickerMode::MIN_VAL));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetPickerMode(PickerMode::MIN_VAL));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetScreenCaptureStrategy_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     ScreenCaptureStrategy strategy;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetScreenCaptureStrategy(strategy));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetScreenCaptureStrategy(strategy));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetCaptureAreaHighlight_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     AVScreenCaptureHighlightConfig config;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetCaptureAreaHighlight(config));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetCaptureAreaHighlight(config));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetCaptureArea_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     OHOS::Rect area = {0, 0, 100, 100};
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetCaptureArea(0, area));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetCaptureArea(0, area));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_GetMultiDisplayCap_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
     MultiDisplayCapability capability;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.GetMultiDisplayCaptureCapability({0, 1}, capability));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.GetMultiDisplayCaptureCapability({0, 1}, capability));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_PauseScreenCapture_001, TestSize.Level2)
@@ -322,7 +322,7 @@ HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_ResumeScreenCapture_001, TestSiz
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_CreateListenerObject_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.CreateListenerObject());
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.CreateListenerObject());
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetContentAutoRotation_001, TestSize.Level2)
@@ -334,7 +334,7 @@ HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetContentAutoRotation_001, Test
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_UpdateSurface_001, TestSize.Level2)
 {
     ScreenCaptureClient client(nullptr);
-    EXPECT_EQ(MSERR_NO_MEMORY, client.UpdateSurface(nullptr));
+    EXPECT_EQ(MSERR_INVALID_VAL, client.UpdateSurface(nullptr));
 }
 
 HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_AddWatermark_001, TestSize.Level2)
@@ -349,7 +349,7 @@ HWTEST_F(ScreenCaptureClientUnitTest, NullProxy_SetAndCheckSaLimit_001, TestSize
 {
     ScreenCaptureClient client(nullptr);
     OHOS::AudioStandard::AppInfo appInfo;
-    EXPECT_EQ(MSERR_NO_MEMORY, client.SetAndCheckSaLimit(appInfo));
+    EXPECT_EQ(MSERR_SERVICE_DIED, client.SetAndCheckSaLimit(appInfo));
 }
 
 } // namespace ScreenCaptureIpcUT
