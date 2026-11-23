@@ -2999,6 +2999,7 @@ int32_t ScreenCaptureServer::AudioRendererStateUpdate(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     uint32_t headSetCount = 0;
+    uint32_t changeInfoIndex = 0;
     uint32_t newState = 0;
     for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo : audioRendererChangeInfos) {
         CHECK_AND_CONTINUE(changeInfo && changeInfo->rendererState != RendererState::RENDERER_RELEASED);
@@ -3023,9 +3024,10 @@ int32_t ScreenCaptureServer::AudioRendererStateUpdate(
             changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_NEARLINK) {
             headSetCount++;
         }
+        changeInfoIndex++;
     }
 
-    if (headSetCount > 0 && headSetCount == audioRendererChangeInfos.size()) {
+    if (headSetCount > 0 && headSetCount == changeInfoIndex) {
         newState |= AUDIO_STATE_HEADSET;
     }
 

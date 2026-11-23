@@ -337,7 +337,7 @@ void AudioDataSourceGeneric::MixAudio(const std::vector<const CacheBuffer *> &sr
     for (int32_t i = 0; i < totalLen; i++) {
         int32_t temp = 0;
         for (const auto *src : srcs) {
-            if (src && src->length >= (i + 1) * static_cast<int32_t>(sizeof(int16_t))) {
+            if (src && src->Data() != nullptr && src->length >= (i + 1) * static_cast<int32_t>(sizeof(int16_t))) {
                 temp += reinterpret_cast<const int16_t *>(src->Data())[i];
             }
         }
