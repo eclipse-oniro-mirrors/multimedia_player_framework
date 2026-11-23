@@ -24,10 +24,14 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/stat.h>
+#include <cerrno>
+#include <limits>
 #include "net_downloader_test_common.h"
 #include "downloader.h"
 #include "download_network_client.h"
 #include "http_server_demo.h"
+#include "storage_usage_util.h"
+#include "fstatvfs_mock.h"
 
 using namespace testing;
 using namespace testing::ext;
@@ -677,6 +681,124 @@ HWTEST_F(NetworkClientExtTest, SetOutputPath_EmptyPath_001, TestSize.Level0)
         int32_t ret = client->SetOutputPathSimple(filePath, 100);
         EXPECT_EQ(ret, DOWNLOAD_RET_OK);
         EXPECT_GE(client->GetOutputFd(), 0);
+    }
+
+    constexpr int64_t STORAGE_TEST_GB = 1000LL * 1000 * 1000;
+
+    HWTEST_F(NetworkClientExtTest, ComputeStorageFreeSize_Normal_001, TestSize.Level0)
+    {
+        struct statvfs diskInfo = {};
+        diskInfo.f_bsize = 4096;
+        diskInfo.f_bfree = 1000;
+        EXPECT_EQ(ComputeStorageFreeSize(diskInfo), 4096000);
+    }
+
+    HWTEST_F(NetworkClientExtTest, ComputeStorageFreeSize_Overflow_001, TestSize.Level0)
+    {
+        struct statvfs diskInfo = {};
+        diskInfo.f_bsize = 1;
+        diskInfo.f_bfree = UINT64_MAX;
+        EXPECT_EQ(ComputeStorageFreeSize(diskInfo), std::numeric_limits<int64_t>::max());
+    }
+
+    HWTEST_F(NetworkClientExtTest, ComputeStorageTotalSize_Normal_001, TestSize.Level0)
+    {
+        struct statvfs diskInfo = {};
+        diskInfo.f_bsize = 4096;
+        diskInfo.f_blocks = 1000;
+        EXPECT_EQ(ComputeStorageTotalSize(diskInfo), 4096000);
+    }
+
+    HWTEST_F(NetworkClientExtTest, ComputeStorageTotalSize_Overflow_001, TestSize.Level0)
+    {
+        struct statvfs diskInfo = {};
+        diskInfo.f_bsize = 1;
+        diskInfo.f_blocks = UINT64_MAX;
+        EXPECT_EQ(ComputeStorageTotalSize(diskInfo), std::numeric_limits<int64_t>::max());
+    }
+
+    HWTEST_F(NetworkClientExtTest, HasEnoughStorageImpl_SmallDisk_Enough_001, TestSize.Level0)
+    {
+        EXPECT_TRUE(HasEnoughStorageImpl(20 * STORAGE_TEST_GB, 100 * STORAGE_TEST_GB));
+    }
+
+    HWTEST_F(NetworkClientExtTest, HasEnoughStorageImpl_SmallDisk_Insufficient_001, TestSize.Level0)
+    {
+        EXPECT_FALSE(HasEnoughStorageImpl(11 * STORAGE_TEST_GB, 100 * STORAGE_TEST_GB));
+    }
+
+    HWTEST_F(NetworkClientExtTest, HasEnoughStorageImpl_SmallDisk_Boundary_001, TestSize.Level0)
+    {
+        EXPECT_FALSE(HasEnoughStorageImpl(12 * STORAGE_TEST_GB, 100 * STORAGE_TEST_GB));
+    }
+
+    HWTEST_F(NetworkClientExtTest, HasEnoughStorageImpl_LargeDisk_Enough_001, TestSize.Level0)
+    {
+        EXPECT_TRUE(HasEnoughStorageImpl(35 * STORAGE_TEST_GB, 600 * STORAGE_TEST_GB));
+    }
+
+    HWTEST_F(NetworkClientExtTest, HasEnoughStorageImpl_LargeDisk_Insufficient_001, TestSize.Level0)
+    {
+        EXPECT_FALSE(HasEnoughStorageImpl(31 * STORAGE_TEST_GB, 600 * STORAGE_TEST_GB));
+    }
+
+    HWTEST_F(NetworkClientExtTest, HasEnoughStorageImpl_OverflowTotal_001, TestSize.Level0)
+    {
+        EXPECT_FALSE(HasEnoughStorageImpl(std::numeric_limits<int64_t>::max(),
+            std::numeric_limits<int64_t>::max()));
+    }
+
+    HWTEST_F(NetworkClientExtTest, HasEnoughStorageImpl_LargeDisk_OverflowTotal_001, TestSize.Level0)
+    {
+        int64_t overflowTotal = 200000000000000000LL;
+        EXPECT_FALSE(HasEnoughStorageImpl(std::numeric_limits<int64_t>::max(), overflowTotal));
+    }
+
+    HWTEST_F(NetworkClientExtTest, HasEnoughStorageForWrite_Insufficient_001, TestSize.Level0)
+    {
+        struct statvfs mockInfo = {};
+        mockInfo.f_bsize = 1;
+        mockInfo.f_blocks = 100UL * 1000UL * 1000UL * 1000UL;
+        mockInfo.f_bfree = 0;
+        MockUtil::FstatvfsMockGuard guard(mockInfo, 0);
+        EXPECT_FALSE(HasEnoughStorageForWrite(1));
+    }
+
+    HWTEST_F(NetworkClientExtTest, HasEnoughStorageForWrite_FstatvfsFail_001, TestSize.Level0)
+    {
+        struct statvfs mockInfo = {};
+        MockUtil::FstatvfsMockGuard guard(mockInfo, -1);
+        EXPECT_TRUE(HasEnoughStorageForWrite(1));
+    }
+
+    HWTEST_F(NetworkClientExtTest, WriteData_InsufficientStorage_ErrorCallback_001, TestSize.Level0)
+    {
+        struct statvfs mockInfo = {};
+        mockInfo.f_bsize = 1;
+        mockInfo.f_blocks = 100UL * 1000UL * 1000UL * 1000UL;
+        mockInfo.f_bfree = 0;
+        MockUtil::FstatvfsMockGuard guard(mockInfo, 0);
+
+        std::string url = "http://example.com/test.mp4";
+        std::map<std::string, std::string> header;
+        auto client = std::make_unique<TestableNetworkClient>(url, header, 30000, 3);
+        (void)client->SetOutputPathSimple(testDir_ + "/insufficient_storage_test.mp4");
+
+        bool callbackInvoked = false;
+        DownloadErrorType capturedType = DOWNLOAD_ERROR_NONE;
+        int32_t capturedCode = 0;
+        client->SetErrorCallback([&](DownloadErrorType errorType, int32_t errorCode) {
+            callbackInvoked = true;
+            capturedType = errorType;
+            capturedCode = errorCode;
+        });
+
+        char buffer[100] = "test data";
+        size_t result = client->WriteData(client->GetContext().get(), client.get(), buffer, 100);
+        EXPECT_EQ(result, 0u);
+        EXPECT_TRUE(callbackInvoked);
+        EXPECT_EQ(capturedType, DOWNLOAD_ERROR_DISK_SPACE);
+        EXPECT_EQ(capturedCode, ENOSPC);
     }
 
 } // namespace MediaDownload
