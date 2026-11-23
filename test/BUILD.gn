@@ -83,6 +83,7 @@ group("media_unit_test") {
       "unittest/player_ipc_test:player_service_stub_test",
       "unittest/player_ipc_test:player_listener_test",
       "unittest/player_service_stub_test:player_service_stub_test",
+      "unittest/player_service_stub_mem_test:player_service_stub_mem_test",
       "unittest/player_xcollie_unittest:player_xcollie_unittest",
       "unittest/recorder_profiles_unittest:recorder_profiles_xml_parser_unittest",
       "unittest/recorder_profiles_server_test:recorder_profiles_server_mock_unit_test",
@@ -92,6 +93,7 @@ group("media_unit_test") {
       "unittest/recorder_test:recorder_server_unit_test",
       "unittest/recorder_service_stub_test:recorder_service_stub_test",
       "unittest/sa_media_client_unit_test:sa_media_client_unit_test",
+      "unittest/sa_media_parcel_unit_test:sa_media_parcel_unit_test",
       "unittest/screen_capture_impl_unittest:screen_capture_impl_unittest",
       "unittest/service_dump_manager_unittest:service_dump_manager_unittest",
       "unittest/services/utils:utils_unit_test",
@@ -116,6 +118,11 @@ group("media_unit_test") {
       deps += [
         "unittest/observer_test:observer_unit_tests",
         "unittest/screen_capture_test:screen_capture_unit_tests",
+      ]
+    }
+    if (player_framework_support_avsession_background) {
+      deps += [
+        "unittest/avsession_background_test:avsession_background_unit_test",
       ]
     }
     if (player_framework_support_lowpower_av_sink) {
