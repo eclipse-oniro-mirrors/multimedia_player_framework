@@ -60,6 +60,7 @@ private:
     std::atomic<AudioHapticPlayerState> playerState_ = AudioHapticPlayerState::STATE_NEW;
 
     std::weak_ptr<AudioHapticSoundCallback> audioHapticPlayerCallback_;
+    std::mutex audioHapticPlayerCallbackMutex_;
 
     std::mutex audioHapticPlayerLock_;
 
