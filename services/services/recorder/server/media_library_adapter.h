@@ -17,13 +17,16 @@
 #define RECORDER_MEDIA_LIBRARY_ADAPTER_H
  
 #include <cstdint>
+#include <memory>
 #include <string>
+namespace OHOS { namespace Media { class PhotoAssetProxy; } }
 namespace OHOS {
 namespace Media {
-namespace MeidaLibraryAdapter {
+namespace MediaLibraryAdapter {
 using namespace std;
 std::string CreateDisplayName();
-bool CreateMediaLibrary(int32_t &fd, std::string &uri);
+bool CreateMediaLibrary(int32_t &fd, std::string &uri, std::shared_ptr<PhotoAssetProxy> &photoAssetProxy);
+void ReleaseVideoFd(std::shared_ptr<PhotoAssetProxy> &photoAssetProxy, int32_t fd);
 }
 } // namespace Media
 } // namespace OHOS

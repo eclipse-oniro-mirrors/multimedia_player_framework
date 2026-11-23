@@ -15,6 +15,7 @@
 
 #include "recorder_server_unit_test.h"
 #include <fcntl.h>
+#include <unistd.h>
 #include "media_errors.h"
 #include "media_log.h"
 #include "recorder_utils.h"
@@ -660,6 +661,277 @@ HWTEST_F(RecorderServerUnitTest, Coverage3_SetVideoEnableBFrame_False_001, TestS
     RS()->taskQue_.Start();
     EXPECT_EQ(MSERR_TASK_QUEUE_ERROR_5400102, result);
 }
+
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+/**
+ * @tc.name: FdLifecycle_Reset_ReleasesSelfBuiltFd_001
+ * @tc.desc: FdLifecycle Reset ReleasesSelfBuiltFd 001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, FdLifecycle_Reset_ReleasesSelfBuiltFd_001, TestSize.Level2)
+{
+    std::string path = RECORDER_ROOT + "fdlifecycle_reset_001.mp4";
+    int32_t fd = open(path.c_str(), O_RDWR | O_CREAT, 0666);
+    ASSERT_TRUE(fd >= 0);
+    RS()->status_ = RecorderServer::REC_RECORDING;
+    RS()->config_.fileGenerationMode = FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    RS()->config_.url = fd;
+    RS()->config_.uri = "file://media/Photo/12345";
+    RS()->config_.photoAssetProxy = nullptr;
+    RS()->config_.withVideo = true;
+ 
+    auto mock = std::make_unique<MockRecorderEngine>();
+    ASSERT_NE(nullptr, mock);
+    mock->retInt_ = MSERR_OK;
+    auto saved = std::move(RS()->recorderEngine_);
+    RS()->recorderEngine_ = std::move(mock);
+ 
+    EXPECT_EQ(MSERR_OK, RS()->Reset());
+    EXPECT_EQ(-1, RS()->config_.url);
+    EXPECT_TRUE(RS()->config_.uri.empty());
+    EXPECT_TRUE(RS()->config_.photoAssetProxy == nullptr);
+ 
+    RS()->recorderEngine_ = std::move(saved);
+}
+ 
+/**
+ * @tc.name: FdLifecycle_Stop_Success_ClearsFd_001
+ * @tc.desc: FdLifecycle Stop Success ClearsFd 001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, FdLifecycle_Stop_Success_ClearsFd_001, TestSize.Level2)
+{
+    std::string path = RECORDER_ROOT + "fdlifecycle_stop_success_001.mp4";
+    int32_t fd = open(path.c_str(), O_RDWR | O_CREAT, 0666);
+    ASSERT_TRUE(fd >= 0);
+    RS()->status_ = RecorderServer::REC_RECORDING;
+    RS()->config_.fileGenerationMode = FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    RS()->config_.url = fd;
+    RS()->config_.uri = "file://media/Photo/23456";
+    RS()->config_.photoAssetProxy = nullptr;
+    RS()->config_.withVideo = true;
+    auto savedCb = RS()->recorderCb_;
+    RS()->recorderCb_ = std::make_shared<RecorderCallbackTest>();
+ 
+    auto mock = std::make_unique<MockRecorderEngine>();
+    ASSERT_NE(nullptr, mock);
+    mock->retInt_ = MSERR_OK;
+    auto saved = std::move(RS()->recorderEngine_);
+    RS()->recorderEngine_ = std::move(mock);
+ 
+    EXPECT_EQ(MSERR_OK, RS()->Stop(false));
+    EXPECT_EQ(-1, RS()->config_.url);
+    EXPECT_TRUE(RS()->config_.uri.empty());
+    RS()->recorderCb_ = savedCb;
+ 
+    RS()->recorderEngine_ = std::move(saved);
+}
+ 
+/**
+ * @tc.name: FdLifecycle_Stop_Failure_ClearsFd_001
+ * @tc.desc: FdLifecycle Stop Failure ClearsFd 001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, FdLifecycle_Stop_Failure_ClearsFd_001, TestSize.Level2)
+{
+    std::string path = RECORDER_ROOT + "fdlifecycle_stop_failure_001.mp4";
+    int32_t fd = open(path.c_str(), O_RDWR | O_CREAT, 0666);
+    ASSERT_TRUE(fd >= 0);
+    RS()->status_ = RecorderServer::REC_RECORDING;
+    RS()->config_.fileGenerationMode = FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    RS()->config_.url = fd;
+    RS()->config_.uri = "file://media/Photo/34567";
+    RS()->config_.photoAssetProxy = nullptr;
+    RS()->config_.withVideo = true;
+ 
+    auto mock = std::make_unique<MockRecorderEngine>();
+    ASSERT_NE(nullptr, mock);
+    mock->retInt_ = MSERR_UNKNOWN;
+    auto saved = std::move(RS()->recorderEngine_);
+    RS()->recorderEngine_ = std::move(mock);
+ 
+    int32_t ret = RS()->Stop(false);
+    EXPECT_NE(MSERR_OK, ret);
+    EXPECT_EQ(-1, RS()->config_.url);
+    EXPECT_TRUE(RS()->config_.uri.empty());
+ 
+    RS()->recorderEngine_ = std::move(saved);
+}
+ 
+/**
+ * @tc.name: FdLifecycle_SetOutputFile_Switch_ReleasesOldFd_001
+ * @tc.desc: FdLifecycle SetOutputFile Switch ReleasesOldFd 001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, FdLifecycle_SetOutputFile_Switch_ReleasesOldFd_001, TestSize.Level2)
+{
+    std::string path = RECORDER_ROOT + "fdlifecycle_switch_001.mp4";
+    int32_t oldFd = open(path.c_str(), O_RDWR | O_CREAT, 0666);
+    ASSERT_TRUE(oldFd >= 0);
+    int32_t appFd = open((RECORDER_ROOT + "fdlifecycle_switch_app_001.mp4").c_str(), O_RDWR | O_CREAT, 0666);
+    ASSERT_TRUE(appFd >= 0);
+    RS()->status_ = RecorderServer::REC_CONFIGURED;
+    RS()->config_.fileGenerationMode = FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    RS()->config_.url = oldFd;
+    RS()->config_.uri = "file://media/Photo/45678";
+    RS()->config_.photoAssetProxy = nullptr;
+    RS()->config_.withVideo = true;
+ 
+    auto mock = std::make_unique<MockRecorderEngine>();
+    ASSERT_NE(nullptr, mock);
+    mock->retInt_ = MSERR_OK;
+    auto saved = std::move(RS()->recorderEngine_);
+    RS()->recorderEngine_ = std::move(mock);
+ 
+    EXPECT_EQ(MSERR_OK, RS()->SetOutputFile(appFd));
+    EXPECT_EQ(appFd, RS()->config_.url);
+    EXPECT_EQ(FileGenerationMode::APP_CREATE, RS()->config_.fileGenerationMode);
+    EXPECT_TRUE(RS()->config_.uri.empty());
+    close(appFd);
+ 
+    RS()->recorderEngine_ = std::move(saved);
+}
+ 
+/**
+ * @tc.name: FdLifecycle_AppCreate_Reset_DoesNotCloseAppFd_001
+ * @tc.desc: FdLifecycle AppCreate Reset DoesNotCloseAppFd 001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, FdLifecycle_AppCreate_Reset_DoesNotCloseAppFd_001, TestSize.Level2)
+{
+    std::string path = RECORDER_ROOT + "fdlifecycle_appcreate_001.mp4";
+    int32_t appFd = open(path.c_str(), O_RDWR | O_CREAT, 0666);
+    ASSERT_TRUE(appFd >= 0);
+    RS()->status_ = RecorderServer::REC_RECORDING;
+    RS()->config_.fileGenerationMode = FileGenerationMode::APP_CREATE;
+    RS()->config_.url = appFd;
+    RS()->config_.uri = "";
+    RS()->config_.photoAssetProxy = nullptr;
+    RS()->config_.withVideo = true;
+ 
+    auto mock = std::make_unique<MockRecorderEngine>();
+    ASSERT_NE(nullptr, mock);
+    mock->retInt_ = MSERR_OK;
+    auto saved = std::move(RS()->recorderEngine_);
+    RS()->recorderEngine_ = std::move(mock);
+ 
+    EXPECT_EQ(MSERR_OK, RS()->Reset());
+    EXPECT_EQ(appFd, RS()->config_.url);
+    EXPECT_NE(-1, lseek(appFd, 0, SEEK_CUR));
+    close(appFd);
+    RS()->config_.url = -1;
+ 
+    RS()->recorderEngine_ = std::move(saved);
+}
+ 
+/**
+ * @tc.name: FdLifecycle_Release_ReleasesSelfBuiltFd_001
+ * @tc.desc: FdLifecycle Release ReleasesSelfBuiltFd 001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, FdLifecycle_Release_ReleasesSelfBuiltFd_001, TestSize.Level2)
+{
+    std::string path = RECORDER_ROOT + "fdlifecycle_release_001.mp4";
+    int32_t fd = open(path.c_str(), O_RDWR | O_CREAT, 0666);
+    ASSERT_TRUE(fd >= 0);
+    RS()->status_ = RecorderServer::REC_CONFIGURED;
+    RS()->config_.fileGenerationMode = FileGenerationMode::AUTO_CREATE_CAMERA_SCENE;
+    RS()->config_.url = fd;
+    RS()->config_.uri = "file://media/Photo/56789";
+    RS()->config_.photoAssetProxy = nullptr;
+    RS()->config_.withVideo = true;
+ 
+    auto mock = std::make_unique<MockRecorderEngine>();
+    ASSERT_NE(nullptr, mock);
+    mock->retInt_ = MSERR_OK;
+    auto saved = std::move(RS()->recorderEngine_);
+    RS()->recorderEngine_ = std::move(mock);
+ 
+    EXPECT_EQ(MSERR_OK, RS()->Release());
+    EXPECT_EQ(-1, RS()->config_.url);
+    EXPECT_TRUE(RS()->config_.uri.empty());
+ 
+    RS()->recorderEngine_ = std::move(saved);
+}
+ 
+/**
+ * @tc.name: FdLifecycle_SetFileGenerationMode_Success_001
+ * @tc.desc: FdLifecycle SetFileGenerationMode Success 001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, FdLifecycle_SetFileGenerationMode_Success_001, TestSize.Level2)
+{
+    RS()->status_ = RecorderServer::REC_CONFIGURED;
+    RS()->config_.withVideo = true;
+ 
+    auto mock = std::make_unique<MockRecorderEngine>();
+    ASSERT_NE(nullptr, mock);
+    mock->retInt_ = MSERR_OK;
+    auto saved = std::move(RS()->recorderEngine_);
+    RS()->recorderEngine_ = std::move(mock);
+ 
+    int32_t ret = RS()->SetFileGenerationMode(FileGenerationMode::AUTO_CREATE_CAMERA_SCENE);
+    EXPECT_EQ(MSERR_OK, ret);
+    EXPECT_TRUE(RS()->config_.url >= 0);
+    EXPECT_FALSE(RS()->config_.uri.empty());
+    EXPECT_TRUE(RS()->config_.photoAssetProxy != nullptr);
+    EXPECT_EQ(FileGenerationMode::AUTO_CREATE_CAMERA_SCENE, RS()->config_.fileGenerationMode);
+ 
+    int32_t resetRet = RS()->Reset();
+    EXPECT_EQ(MSERR_OK, resetRet);
+    EXPECT_EQ(-1, RS()->config_.url);
+    EXPECT_TRUE(RS()->config_.uri.empty());
+    EXPECT_TRUE(RS()->config_.photoAssetProxy == nullptr);
+ 
+    RS()->recorderEngine_ = std::move(saved);
+}
+ 
+/**
+ * @tc.name: FdLifecycle_SetFileGenerationMode_RepeatClosesPriorFd_001
+ * @tc.desc: FdLifecycle SetFileGenerationMode RepeatClosesPriorFd 001
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(RecorderServerUnitTest, FdLifecycle_SetFileGenerationMode_RepeatClosesPriorFd_001, TestSize.Level2)
+{
+    RS()->status_ = RecorderServer::REC_CONFIGURED;
+    RS()->config_.withVideo = true;
+ 
+    auto mock = std::make_unique<MockRecorderEngine>();
+    ASSERT_NE(nullptr, mock);
+    mock->retInt_ = MSERR_OK;
+    auto saved = std::move(RS()->recorderEngine_);
+    RS()->recorderEngine_ = std::move(mock);
+ 
+    int32_t ret1 = RS()->SetFileGenerationMode(FileGenerationMode::AUTO_CREATE_CAMERA_SCENE);
+    EXPECT_EQ(MSERR_OK, ret1);
+    EXPECT_TRUE(RS()->config_.url >= 0);
+    EXPECT_TRUE(RS()->config_.photoAssetProxy != nullptr);
+    EXPECT_EQ(MSERR_OK, RS()->Reset());
+ 
+    RS()->status_ = RecorderServer::REC_CONFIGURED;
+    RS()->config_.withVideo = true;
+    auto mock2 = std::make_unique<MockRecorderEngine>();
+    ASSERT_NE(nullptr, mock2);
+    mock2->retInt_ = MSERR_OK;
+    RS()->recorderEngine_ = std::move(mock2);
+ 
+    int32_t ret2 = RS()->SetFileGenerationMode(FileGenerationMode::AUTO_CREATE_CAMERA_SCENE);
+    EXPECT_EQ(MSERR_OK, ret2);
+    EXPECT_TRUE(RS()->config_.url >= 0);
+    EXPECT_TRUE(RS()->config_.photoAssetProxy != nullptr);
+    EXPECT_EQ(MSERR_OK, RS()->Reset());
+ 
+    RS()->recorderEngine_ = std::move(saved);
+}
+#endif // SUPPORT_RECORDER_CREATE_FILE
 
 } // namespace Media
 } // namespace OHOS

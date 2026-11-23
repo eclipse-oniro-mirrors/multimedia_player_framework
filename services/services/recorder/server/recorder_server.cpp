@@ -90,6 +90,9 @@ RecorderServer::~RecorderServer()
     {
         std::lock_guard<std::mutex> lock(mutex_);
         recorderEngine_ = nullptr;
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+        CloseAutoCreateFd();
+#endif
 #ifdef SUPPORT_POWER_MANAGER
         UnregisterShutdownCallbackIfNeeded();
         syncCallback_ = nullptr;
@@ -808,6 +811,11 @@ int32_t RecorderServer::SetOutputFile(int32_t fd)
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+    CloseAutoCreateFd();
+    config_.fileGenerationMode = APP_CREATE;
+    config_.uri.clear();
+#endif
     config_.url = fd;
     OutFd outFileFd(fd);
     auto task = std::make_shared<TaskHandler<int32_t>>([&, this] {
@@ -829,7 +837,9 @@ int32_t RecorderServer::SetFileGenerationMode(FileGenerationMode mode)
     CHECK_STATUS_FAILED_AND_LOGE_RET(status_ != REC_CONFIGURED, MSERR_INVALID_OPERATION);
     CHECK_AND_RETURN_RET_LOG(recorderEngine_ != nullptr, MSERR_NULL_POINTER_5400101, "engine is nullptr");
     CHECK_AND_RETURN_RET_LOG(config_.withVideo, MSERR_INVALID_OPERATION, "Audio-only scenarios are not supported");
-    CHECK_AND_RETURN_RET_LOG(MeidaLibraryAdapter::CreateMediaLibrary(config_.url, config_.uri),
+    CloseAutoCreateFd();
+    CHECK_AND_RETURN_RET_LOG(
+        MediaLibraryAdapter::CreateMediaLibrary(config_.url, config_.uri, config_.photoAssetProxy),
         MSERR_CREATE_MEDIA_FILE_FAILED_5400103, "get fd failed");
     MEDIA_LOGD("video Fd:%{public}d", config_.url);
     config_.fileGenerationMode = mode;
@@ -846,6 +856,22 @@ int32_t RecorderServer::SetFileGenerationMode(FileGenerationMode mode)
 #endif
     return MSERR_INVALID_OPERATION;
 }
+
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+void RecorderServer::CloseAutoCreateFd()
+{
+    if (config_.fileGenerationMode != FileGenerationMode::AUTO_CREATE_CAMERA_SCENE) {
+        return;
+    }
+    if (config_.url >= 0) {
+        MEDIA_LOGI("CloseAutoCreateFd: release self-built fd %{public}d", config_.url);
+        MediaLibraryAdapter::ReleaseVideoFd(config_.photoAssetProxy, config_.url);
+        config_.url = -1;
+    }
+    config_.photoAssetProxy.reset();
+    config_.uri.clear();
+}
+#endif
 
 int32_t RecorderServer::SetNextOutputFile(int32_t fd)
 {
@@ -1111,6 +1137,7 @@ int32_t RecorderServer::Stop(bool block)
     if (photoCallback != nullptr) {
         photoCallback->OnPhotoAssetAvailable(photoUri);
     }
+    CloseAutoCreateFd();
 #endif
     return TransformEngineStatusCode(statusCode);
 }
@@ -1134,6 +1161,9 @@ int32_t RecorderServer::Reset()
     if (status_ == REC_INITIALIZED) {
         watermarkCount_ = 0;
     }
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+    CloseAutoCreateFd();
+#endif
     SetMediaKitReport(status_);
     return TransformEngineStatusCode(statusCode);
 }
@@ -1149,6 +1179,9 @@ int32_t RecorderServer::Release()
         });
         (void)taskQue_.EnqueueTask(task);
         (void)task->GetResult();
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+        CloseAutoCreateFd();
+#endif
 #ifdef SUPPORT_POWER_MANAGER
         UnregisterShutdownCallbackIfNeeded();
 #endif

@@ -17,6 +17,7 @@
 #define RECORDER_SERVICE_SERVER_H
 
 #include <chrono>
+#include <memory>
 
 #include "i_recorder_service.h"
 #include "i_recorder_engine.h"
@@ -24,6 +25,9 @@
 #include "task_queue.h"
 #include "watchdog.h"
 #include "meta/meta.h"
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+namespace  OHOS { namespace Media { class PhotoAssetProxy; } }
+#endif
 #ifdef SUPPORT_POWER_MANAGER
 #include "shutdown/sync_shutdown_callback_stub.h"
 #include "shutdown/shutdown_client.h"
@@ -152,6 +156,9 @@ private:
     const std::string &GetStatusDescription(OHOS::Media::RecorderServer::RecStatus status);
     bool CheckCameraOutputState();
     void SetMediaKitReport(RecStatus status);
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+    void CloseAutoCreateFd();
+#endif
 
     std::unique_ptr<IRecorderEngine> recorderEngine_ = nullptr;
     std::shared_ptr<RecorderCallback> recorderCb_ = nullptr;
@@ -188,6 +195,9 @@ private:
         int32_t url = -1;
         std::string uri = "";
         FileGenerationMode fileGenerationMode = APP_CREATE;
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+        std::shared_ptr<PhotoAssetProxy> photoAssetProxy = nullptr;
+#endif
         std::string metaSrcTrackMime;
         Meta customInfo;
         std::string genre;
