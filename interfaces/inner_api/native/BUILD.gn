@@ -270,6 +270,10 @@ ohos_shared_library("media_client") {
     external_deps += [ "histreamer_ext:http_curl_client" ]
   }
 
+  if (player_framework_support_screen_capture) {
+    external_deps += [ "graphic_surface:sync_fence" ]
+  }
+
   if (player_framework_support_lowpower_av_sink &&
       drivers_interface_lpplayer_flag) {
     external_deps +=

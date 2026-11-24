@@ -336,6 +336,7 @@ ohos_unittest("screen_capture_ipc_unit_test") {
     "googletest:gmock",
     "graphic_2d:librender_service_base",
     "graphic_surface:surface",
+    "graphic_surface:sync_fence",
     "hilog:libhilog",
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
