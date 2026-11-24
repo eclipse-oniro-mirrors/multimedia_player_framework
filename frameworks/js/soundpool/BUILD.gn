@@ -94,6 +94,7 @@ ohos_shared_library("media_soundpool") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "media_foundation:media_foundation",
     "napi:ace_napi",
     "node:node_header_notice",

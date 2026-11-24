@@ -293,6 +293,7 @@ ohos_shared_library("media_service") {
     "image_framework:image_native",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "jsoncpp:jsoncpp",
     "libxml2:libxml2",
     "media_foundation:media_foundation",

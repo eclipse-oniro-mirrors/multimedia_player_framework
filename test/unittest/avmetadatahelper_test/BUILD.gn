@@ -174,6 +174,7 @@ ohos_unittest("avmetadatahelper_unit_test") {
     "image_framework:image_utils",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "libxml2:libxml2",
     "media_foundation:media_foundation",
     "memmgr:memmgrclient",
