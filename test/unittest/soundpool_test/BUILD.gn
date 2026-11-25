@@ -69,7 +69,6 @@ ohos_unittest("soundpool_unit_test") {
     "c_utils:utils",
     "ffrt:libffrt",
     "ffrt:libffrt",
-    "googletest:gmock",
     "graphic_surface:surface",
     "hicollie:libhicollie",
     "hilog:libhilog",

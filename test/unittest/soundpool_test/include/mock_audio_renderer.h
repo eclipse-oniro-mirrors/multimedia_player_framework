@@ -16,7 +16,7 @@
 #ifndef AUDIO_RENDERER_MANAGER_MOCK_H
 #define AUDIO_RENDERER_MANAGER_MOCK_H
 
-#include <gmock/gmock.h>
+#include "gtest/gtest.h"
 
 namespace OHOS {
 namespace Media {
