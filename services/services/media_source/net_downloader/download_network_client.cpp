@@ -18,6 +18,7 @@
 #include <chrono>
 #include <thread>
 #include <charconv>
+#include <cerrno>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
@@ -26,6 +27,7 @@
 #include "download_network_client.h"
 #include "network_client_agent.h"
 #include "status.h"
+#include "storage_usage_util.h"
 
 #include "common/log.h"
 #include "fd_san.h"
@@ -290,6 +292,14 @@ size_t NetworkClient::WriteData(DownloadContext* ctx, NetworkClient* client, voi
 {
     if (ctx->outputFd < 0) {
         return dataLen;
+    }
+
+    if (!HasEnoughStorageForWrite(ctx->outputFd)) {
+        MEDIA_LOGE("WriteData aborted: insufficient storage");
+        if (client->errorCallback_) {
+            client->errorCallback_(DOWNLOAD_ERROR_DISK_SPACE, ENOSPC);
+        }
+        return 0;
     }
 
     // 必须用裸 write()，不可改用 stdio(FILE*/fwrite)：av_downloader_manager 的协议嗅探会在下载过程中
