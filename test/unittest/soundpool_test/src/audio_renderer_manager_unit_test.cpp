@@ -25,7 +25,6 @@
 
 using namespace OHOS;
 using namespace OHOS::Media;
-using namespace testing;
 using namespace testing::ext;
 using namespace std;
 
@@ -48,6 +47,7 @@ void AudioRendererManagerUnitTest::TearDownTestCase(void)
 void AudioRendererManagerUnitTest::SetUp(void)
 {
     manager_ = &AudioRendererManager::GetInstance();
+    MockAudioRenderer::ResetReleaseCount();
     std::lock_guard<std::mutex> lock(manager_->renderMgrMutex_);
     manager_->audioRendererVector_.clear();
     manager_->parallelManagerList_.clear();
@@ -91,7 +91,7 @@ HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_002, TestSi
     MEDIA_LOGI("audioRendererManager_function_002 before");
     EXPECT_EQ(nullptr, manager_->GetAudioRendererInstance(1));
 
-    manager_->SetAudioRendererInstance(2, std::make_unique<NiceMock<MockAudioRenderer>>());
+    manager_->SetAudioRendererInstance(2, std::make_unique<MockAudioRenderer>());
     EXPECT_EQ(1, manager_->audioRendererVector_.size());
     EXPECT_EQ(nullptr, manager_->GetAudioRendererInstance(1));
     EXPECT_EQ(1, manager_->audioRendererVector_.size());
@@ -107,7 +107,7 @@ HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_002, TestSi
 HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_003, TestSize.Level2)
 {
     MEDIA_LOGI("audioRendererManager_function_003 before");
-    auto audioRenderer = std::make_unique<NiceMock<MockAudioRenderer>>();
+    auto audioRenderer = std::make_unique<MockAudioRenderer>();
     MockAudioRenderer *audioRendererPtr = audioRenderer.get();
     manager_->SetAudioRendererInstance(5, std::move(audioRenderer));
     EXPECT_EQ(1, manager_->audioRendererVector_.size());
@@ -128,9 +128,10 @@ HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_004, TestSi
 {
     MEDIA_LOGI("audioRendererManager_function_004 before");
     for (int32_t i = 1; i <= AUDIO_RENDERER_MAX_NUM; ++i) {
-        manager_->SetAudioRendererInstance(i, std::make_unique<StrictMock<MockAudioRenderer>>());
+        manager_->SetAudioRendererInstance(i, std::make_unique<MockAudioRenderer>());
     }
     EXPECT_EQ(AUDIO_RENDERER_MAX_NUM, manager_->audioRendererVector_.size());
+    EXPECT_EQ(0, MockAudioRenderer::GetReleaseCount());
     MEDIA_LOGI("audioRendererManager_function_004 after");
 }
 
@@ -143,17 +144,16 @@ HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_004, TestSi
 HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_005, TestSize.Level2)
 {
     MEDIA_LOGI("audioRendererManager_function_005 before");
-    auto oldestRenderer = std::make_unique<NiceMock<MockAudioRenderer>>();
-    MockAudioRenderer *oldestRendererPtr = oldestRenderer.get();
-    EXPECT_CALL(*oldestRendererPtr, Release()).WillOnce(Return(true));
+    auto oldestRenderer = std::make_unique<MockAudioRenderer>();
     manager_->SetAudioRendererInstance(1, std::move(oldestRenderer));
     for (int32_t i = 2; i <= AUDIO_RENDERER_MAX_NUM; ++i) {
-        manager_->SetAudioRendererInstance(i, std::make_unique<NiceMock<MockAudioRenderer>>());
+        manager_->SetAudioRendererInstance(i, std::make_unique<MockAudioRenderer>());
     }
     manager_->SetAudioRendererInstance(AUDIO_RENDERER_MAX_NUM + 1,
-        std::make_unique<NiceMock<MockAudioRenderer>>());
+        std::make_unique<MockAudioRenderer>());
     EXPECT_EQ(AUDIO_RENDERER_MAX_NUM, manager_->audioRendererVector_.size());
     EXPECT_EQ(2, manager_->audioRendererVector_.front().first);
+    EXPECT_EQ(1, MockAudioRenderer::GetReleaseCount());
     MEDIA_LOGI("audioRendererManager_function_005 after");
 }
 
@@ -168,6 +168,7 @@ HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_006, TestSi
     MEDIA_LOGI("audioRendererManager_function_006 before");
     manager_->RemoveOldAudioRenderer();
     EXPECT_TRUE(manager_->audioRendererVector_.empty());
+    EXPECT_EQ(0, MockAudioRenderer::GetReleaseCount());
     MEDIA_LOGI("audioRendererManager_function_006 after");
 }
 
@@ -180,12 +181,11 @@ HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_006, TestSi
 HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_007, TestSize.Level2)
 {
     MEDIA_LOGI("audioRendererManager_function_007 before");
-    auto audioRenderer = std::make_unique<NiceMock<MockAudioRenderer>>();
-    MockAudioRenderer *audioRendererPtr = audioRenderer.get();
-    EXPECT_CALL(*audioRendererPtr, Release()).WillOnce(Return(true));
+    auto audioRenderer = std::make_unique<MockAudioRenderer>();
     manager_->SetAudioRendererInstance(3, std::move(audioRenderer));
     manager_->RemoveOldAudioRenderer();
     EXPECT_TRUE(manager_->audioRendererVector_.empty());
+    EXPECT_EQ(1, MockAudioRenderer::GetReleaseCount());
     MEDIA_LOGI("audioRendererManager_function_007 after");
 }
 
@@ -198,15 +198,14 @@ HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_007, TestSi
 HWTEST_F(AudioRendererManagerUnitTest, audioRendererManager_function_008, TestSize.Level2)
 {
     MEDIA_LOGI("audioRendererManager_function_008 before");
-    auto audioRenderer = std::make_unique<NiceMock<MockAudioRenderer>>();
-    MockAudioRenderer *audioRendererPtr = audioRenderer.get();
-    EXPECT_CALL(*audioRendererPtr, Release()).WillOnce(Return(true));
+    auto audioRenderer = std::make_unique<MockAudioRenderer>();
     manager_->SetAudioRendererInstance(4, std::move(audioRenderer));
 
     manager_->DelAudioRenderer(99);
     EXPECT_EQ(1, manager_->audioRendererVector_.size());
     manager_->DelAudioRenderer(4);
     EXPECT_TRUE(manager_->audioRendererVector_.empty());
+    EXPECT_EQ(1, MockAudioRenderer::GetReleaseCount());
     MEDIA_LOGI("audioRendererManager_function_008 after");
 }
 
