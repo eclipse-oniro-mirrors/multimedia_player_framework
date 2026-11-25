@@ -159,6 +159,8 @@ private:
     Status HandleRawAudioCallback(std::shared_ptr<Pipeline::Filter> filter, Pipeline::StreamType outType);
     Status HandleEncodedAudioOrVideoCallback(std::shared_ptr<Pipeline::Filter> filter, Pipeline::StreamType outType);
     Status HandleWatermarkCallback(std::shared_ptr<Pipeline::Filter> filter, Pipeline::StreamType outType);
+    Status GetOrCreateMuxerFilter(std::shared_ptr<Pipeline::MuxerFilter> &muxerFilter, bool &needConfigure);
+    Status ConfigureMuxerFilter(const std::shared_ptr<Pipeline::MuxerFilter> &muxerFilter);
     std::atomic<uint32_t> audioCount_{0};
     std::atomic<uint32_t> videoCount_{0};
     std::atomic<int32_t> audioSourceId_{0};
@@ -195,6 +197,7 @@ private:
     std::mutex obsMutex_;
     std::atomic<OutputFormatType> outputFormatType_{OutputFormatType::FORMAT_BUTT};
     FdsanFd fd_;
+    std::mutex fdMutex_;
     int32_t maxDuration_ = 0;
     int64_t maxSize_ = 0;
 

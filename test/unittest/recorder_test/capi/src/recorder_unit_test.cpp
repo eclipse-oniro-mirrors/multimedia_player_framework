@@ -3785,3 +3785,154 @@ HWTEST_F(NativeRecorderUnitTest, Recorder_Prepare_EmptyConfigInvalidOrientation_
     close(outputFd);
     MEDIA_LOGI("NativeRecorderUnitTest Recorder_Prepare_EmptyConfigInvalidOrientation_001 out.");
 }
+
+/**
+ * @tc.name: Recorder_Release_DoubleRelease_001
+ * @tc.desc: A second OH_AVRecorder_Release on the same handle is an idempotent success
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_Release_DoubleRelease_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Release_DoubleRelease_001 in.");
+
+    int32_t ret = OH_AVRecorder_Release(recorder_);
+    EXPECT_EQ(AV_ERR_OK, ret);
+
+    ret = OH_AVRecorder_Release(recorder_);
+    EXPECT_EQ(AV_ERR_OK, ret);
+    recorder_ = nullptr;
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_Release_DoubleRelease_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_ReleasedHandle_Lifecycle_001
+ * @tc.desc: Lifecycle calls on a released handle return AV_ERR_INVALID_VAL instead of crashing
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_ReleasedHandle_Lifecycle_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_Lifecycle_001 in.");
+
+    OH_AVRecorder *released = recorder_;
+    EXPECT_EQ(AV_ERR_OK, OH_AVRecorder_Release(recorder_));
+    recorder_ = nullptr;
+
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_Start(released));
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_Pause(released));
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_Resume(released));
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_Stop(released));
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_Reset(released));
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_Lifecycle_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_ReleasedHandle_Prepare_001
+ * @tc.desc: Prepare on a released handle returns AV_ERR_INVALID_VAL and ignores the config
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_ReleasedHandle_Prepare_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_Prepare_001 in.");
+
+    OH_AVRecorder_Config config = config_;
+    config.metadata.genre = strdup("");
+    config.metadata.videoOrientation = strdup("0");
+    config.metadata.customInfo.key = strdup("");
+    config.metadata.customInfo.value = strdup("");
+    int32_t outputFd = open((RECORDER_ROOT + "Recorder_ReleasedHandle_Prepare_001.mp4").c_str(), O_RDWR);
+    const std::string fdHead = "fd://";
+    config.url = strdup((fdHead + std::to_string(outputFd)).c_str());
+
+    OH_AVRecorder *released = recorder_;
+    EXPECT_EQ(AV_ERR_OK, OH_AVRecorder_Release(recorder_));
+    recorder_ = nullptr;
+
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_Prepare(released, &config));
+
+    free(config.url);
+    free(config.metadata.genre);
+    free(config.metadata.videoOrientation);
+    free(config.metadata.customInfo.key);
+    free(config.metadata.customInfo.value);
+    close(outputFd);
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_Prepare_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_ReleasedHandle_Query_001
+ * @tc.desc: Query/property calls on a released handle return AV_ERR_INVALID_VAL instead of crashing
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_ReleasedHandle_Query_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_Query_001 in.");
+
+    OH_AVRecorder *released = recorder_;
+    EXPECT_EQ(AV_ERR_OK, OH_AVRecorder_Release(recorder_));
+    recorder_ = nullptr;
+
+    OH_AVRecorder_Config *config = nullptr;
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_GetAVRecorderConfig(released, &config));
+
+    int32_t amplitude = -1;
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_GetAudioCapturerMaxAmplitude(released, &amplitude));
+
+    OHNativeWindow *window = nullptr;
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_GetInputSurface(released, &window));
+
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_UpdateRotation(released, 0));
+
+    OH_AVRecorder_EncoderInfo *info = nullptr;
+    int32_t length = 0;
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_GetAvailableEncoder(released, &info, &length));
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_Query_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_ReleasedHandle_SetMetadata_001
+ * @tc.desc: SetMetadata and SetWillMuteWhenInterrupted on a released handle return AV_ERR_INVALID_VAL
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_ReleasedHandle_SetMetadata_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_SetMetadata_001 in.");
+
+    OH_AVRecorder *released = recorder_;
+    EXPECT_EQ(AV_ERR_OK, OH_AVRecorder_Release(recorder_));
+    recorder_ = nullptr;
+
+    OH_AVFormat *metadata = OH_AVFormat_Create();
+    ASSERT_NE(metadata, nullptr);
+    OH_AVFormat_SetStringValue(metadata, "com.openharmony.test", "Recorder_ReleasedHandle_SetMetadata_001");
+
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_SetMetadata(released, metadata));
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_SetWillMuteWhenInterrupted(released, true));
+
+    OH_AVFormat_Destroy(metadata);
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_SetMetadata_001 out.");
+}
+
+/**
+ * @tc.name: Recorder_ReleasedHandle_SetCallbacks_001
+ * @tc.desc: Callback registration on a released handle returns AV_ERR_INVALID_VAL
+ * @tc.type: FUNC
+ */
+HWTEST_F(NativeRecorderUnitTest, Recorder_ReleasedHandle_SetCallbacks_001, TestSize.Level2)
+{
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_SetCallbacks_001 in.");
+
+    OH_AVRecorder *released = recorder_;
+    EXPECT_EQ(AV_ERR_OK, OH_AVRecorder_Release(recorder_));
+    recorder_ = nullptr;
+
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_SetStateCallback(released, OnStateChange, nullptr));
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_SetErrorCallback(released, OnError, nullptr));
+#ifdef SUPPORT_RECORDER_CREATE_FILE
+    EXPECT_EQ(AV_ERR_INVALID_VAL, OH_AVRecorder_SetUriCallback(released, OnUri, nullptr));
+#endif
+
+    MEDIA_LOGI("NativeRecorderUnitTest Recorder_ReleasedHandle_SetCallbacks_001 out.");
+}

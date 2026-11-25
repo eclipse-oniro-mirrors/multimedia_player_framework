@@ -1204,7 +1204,7 @@ int32_t RecorderServiceStub::CheckPermission(AudioSourceType audioSourceType)
 
 int32_t RecorderServiceStub::GetCurrentCapturerChangeInfo(MessageParcel &data, MessageParcel &reply)
 {
-    AudioRecorderChangeInfo changeInfo;
+    AudioRecorderChangeInfo changeInfo {};
     int32_t ret = GetCurrentCapturerChangeInfo(changeInfo);
     changeInfo.Marshalling(reply);
 

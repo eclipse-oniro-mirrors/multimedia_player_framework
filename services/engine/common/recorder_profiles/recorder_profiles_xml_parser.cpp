@@ -197,8 +197,11 @@ bool RecorderProfilesXmlParser::ParseRecorderContainerFormatData(xmlNode *node)
     for (auto it = capabilityKeys_.begin(); it != capabilityKeys_.end(); it++) {
         std::string capabilityValue;
         if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str())))) {
-            capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(node,
-                reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str())))));
+            std::unique_ptr<xmlChar, decltype(xmlFree)> propValue(
+                xmlGetProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str()))), xmlFree);
+            if (propValue.get() != nullptr) {
+                capabilityValue = std::string(reinterpret_cast<char*>(propValue.get()));
+            }
             bool ret = SetContainerFormat(containerFormatInfo, (*it), capabilityValue);
             CHECK_AND_RETURN_RET_LOG(ret != false, false, "SetContainerFormat failed");
         }
@@ -215,8 +218,11 @@ bool RecorderProfilesXmlParser::ParseRecorderEncodeCapsData(xmlNode *node, bool 
     for (auto it = capabilityKeys_.begin(); it != capabilityKeys_.end(); it++) {
         std::string capabilityValue;
         if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str())))) {
-            capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(node,
-                reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str())))));
+            std::unique_ptr<xmlChar, decltype(xmlFree)> propValue(
+                xmlGetProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>((*it).c_str()))), xmlFree);
+            if (propValue.get() != nullptr) {
+                capabilityValue = std::string(reinterpret_cast<char*>(propValue.get()));
+            }
             bool ret = false;
             if (isVideo) {
                 ret = SetVideoRecorderCaps(capabilityData, (*it), capabilityValue);
@@ -441,8 +447,12 @@ bool RecorderProfilesXmlParser::ParseVideoRecorderProfiles(
     xmlNode *node, RecorderProfilesData &capabilityData, const std::string &capabilityKey)
 {
     if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str())))) {
-        std::string capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(node,
-            reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str())))));
+        std::unique_ptr<xmlChar, decltype(xmlFree)> propValue(
+            xmlGetProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str()))), xmlFree);
+        std::string capabilityValue;
+        if (propValue.get() != nullptr) {
+            capabilityValue = std::string(reinterpret_cast<char*>(propValue.get()));
+        }
         bool ret = SetVideoRecorderProfiles(capabilityData, capabilityKey, capabilityValue);
         CHECK_AND_RETURN_RET_LOG(ret != false, false, "SetVideoRecorderProfiles failed");
     }
@@ -477,8 +487,12 @@ bool RecorderProfilesXmlParser::ParseVideoRecorderProfilesForVideoAudioData(
     xmlNode *node, RecorderProfilesData &capabilityData, const std::string &capabilityKey)
 {
     if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str())))) {
-        std::string capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(node,
-            reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str())))));
+        std::unique_ptr<xmlChar, decltype(xmlFree)> propValue(
+            xmlGetProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str()))), xmlFree);
+        std::string capabilityValue;
+        if (propValue.get() != nullptr) {
+            capabilityValue = std::string(reinterpret_cast<char*>(propValue.get()));
+        }
         capabilityData.mediaProfileType = RECORDER_TYPE_PROFILE;
         bool ret = SetVideoRecorderProfiles(capabilityData, capabilityKey, capabilityValue);
         CHECK_AND_RETURN_RET_LOG(ret != false, false, "SetVideoRecorderProfiles failed");
@@ -490,8 +504,12 @@ bool RecorderProfilesXmlParser::ParseAudioRecorderProfiles(
     xmlNode *node, RecorderProfilesData &capabilityData, const std::string &capabilityKey)
 {
     if (xmlHasProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str())))) {
-        std::string capabilityValue = std::string(reinterpret_cast<char*>(xmlGetProp(node,
-            reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str())))));
+        std::unique_ptr<xmlChar, decltype(xmlFree)> propValue(
+            xmlGetProp(node, reinterpret_cast<xmlChar*>(const_cast<char*>(capabilityKey.c_str()))), xmlFree);
+        std::string capabilityValue;
+        if (propValue.get() != nullptr) {
+            capabilityValue = std::string(reinterpret_cast<char*>(propValue.get()));
+        }
         bool ret = SetAudioRecorderProfiles(capabilityData, capabilityKey, capabilityValue);
         CHECK_AND_RETURN_RET_LOG(ret != false, false, "SetAudioRecorderProfiles failed");
     }

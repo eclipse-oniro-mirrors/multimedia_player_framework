@@ -166,12 +166,14 @@ const std::string& RecorderServer::GetStatusDescription(OHOS::Media::RecorderSer
 void RecorderServer::OnError(ErrorType errorType, int32_t errorCode)
 {
     std::shared_ptr<RecorderCallback> callback;
+    std::string errMsg;
     {
         std::lock_guard<std::mutex> lock(cbMutex_);
         lastErrMsg_ = MSErrorToExtErrorString(static_cast<MediaServiceErrCode>(errorCode));
-        SetErrorInfo(errorCode, lastErrMsg_);
+        errMsg = lastErrMsg_;
         callback = recorderCb_;
     }
+    SetErrorInfo(errorCode, errMsg);
     CHECK_AND_RETURN(callback != nullptr);
     callback->OnError(static_cast<RecorderErrorType>(errorType), errorCode);
 }
@@ -1506,15 +1508,15 @@ void RecorderServer::SetMetaDataReport()
     std::string videoResolution;
     int8_t hdrType = HdrType::HDR_TYPE_NONE;
     {
+        std::lock_guard<std::mutex> cbLock(cbMutex_);
+        snapErrcode = statisticalEventInfo_.errCode;
+        snapErrMsg = statisticalEventInfo_.errMsg;
+    }
+    {
         std::lock_guard<std::mutex> lock(mutex_);
         snapConfig = config_;
         snapRecordDuration = statisticalEventInfo_.recordDuration;
         snapStartLatency = statisticalEventInfo_.startLatency;
-        {
-            std::lock_guard<std::mutex> cbLock(cbMutex_);
-            snapErrcode = statisticalEventInfo_.errCode;
-            snapErrMsg = statisticalEventInfo_.errMsg;
-        }
         containerMime = GetVideoMime(snapConfig.videoCodec) + ";" + GetAudioMime(snapConfig.audioCodec);
         videoResolution = std::to_string(snapConfig.width) + "x" + std::to_string(snapConfig.height);
         if (snapConfig.isHdr) {
@@ -1552,6 +1554,7 @@ int64_t RecorderServer::GetCurrentMillisecond()
 void RecorderServer::SetErrorInfo(int32_t errCode, std::string &errMsg)
 {
     MEDIA_LOGE("SetErrorInfo: errCode=%{public}d, errMsg=%{public}s", errCode, errMsg.c_str());
+    std::lock_guard<std::mutex> lock(cbMutex_);
     statisticalEventInfo_.errCode = errCode;
     statisticalEventInfo_.errMsg = errMsg;
 }
