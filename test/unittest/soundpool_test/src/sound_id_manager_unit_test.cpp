@@ -249,5 +249,6 @@ HWTEST_F(SoundIDManagerUnitTest, soundId_function_012, TestSize.Level2)
     EXPECT_EQ(MSERR_OK, soundIDManager_->DoLoad(200));
     MEDIA_LOGI("soundId_function_012 after");
 }
+
 }  // namespace Media
 }  // namespace OHOS
