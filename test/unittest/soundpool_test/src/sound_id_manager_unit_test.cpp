@@ -13,6 +13,7 @@
  * limitations under the License.
  */
 
+#include <climits>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -31,6 +32,22 @@ const int32_t STREAM_ID_BEGIN = 1;
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SOUNDPOOL, "SoundIdManagerUnitTest"};
+
+class SoundIDManagerTestCallback : public ISoundPoolCallback {
+public:
+    void OnLoadCompleted(int32_t soundId) override
+    {
+        (void)soundId;
+    }
+    void OnPlayFinished(int32_t streamID) override
+    {
+        (void)streamID;
+    }
+    void OnError(int32_t errorCode) override
+    {
+        (void)errorCode;
+    }
+};
 }
 
 namespace OHOS {
@@ -71,6 +88,8 @@ HWTEST_F(SoundIDManagerUnitTest, soundId_function_002, TestSize.Level2)
     MEDIA_LOGI("soundId_function_002 before");
     soundIDManager_->isParsingThreadPoolStarted_.store(false);
     EXPECT_EQ(MSERR_OK, soundIDManager_->DoLoad(0));
+    EXPECT_TRUE(soundIDManager_->isParsingThreadPoolStarted_.load());
+    EXPECT_NE(nullptr, soundIDManager_->soundParserThreadPool_);
     soundIDManager_->soundParsers_.emplace(0, nullptr);
     EXPECT_EQ(MSERR_INVALID_VAL, soundIDManager_->Unload(1));
     EXPECT_EQ(MSERR_OK, soundIDManager_->Unload(0));
@@ -248,6 +267,120 @@ HWTEST_F(SoundIDManagerUnitTest, soundId_function_012, TestSize.Level2)
     soundIDManager_->isQuitQueue_ = true;
     EXPECT_EQ(MSERR_OK, soundIDManager_->DoLoad(200));
     MEDIA_LOGI("soundId_function_012 after");
+}
+
+/**
+ * @tc.name: soundId_function_013
+ * @tc.desc: function test Load by fd with valid fd and Unload the created parser
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundIDManagerUnitTest, soundId_function_013, TestSize.Level2)
+{
+    MEDIA_LOGI("soundId_function_013 before");
+    int fd = open("/data/test/test_01.mp3", O_RDONLY);
+    ASSERT_GT(fd, 0);
+    int32_t soundID = soundIDManager_->Load(fd, 0, 100);
+    EXPECT_GT(soundID, 0);
+    std::shared_ptr<SoundParser> parser = soundIDManager_->GetSoundParserBySoundID(soundID);
+    ASSERT_NE(nullptr, parser);
+    EXPECT_EQ(MSERR_OK, soundIDManager_->Unload(soundID));
+    EXPECT_EQ(nullptr, soundIDManager_->GetSoundParserBySoundID(soundID));
+    close(fd);
+    MEDIA_LOGI("soundId_function_013 after");
+}
+
+/**
+ * @tc.name: soundId_function_014
+ * @tc.desc: function test nextSoundID_ wrap around when it reaches INT32_MAX
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundIDManagerUnitTest, soundId_function_014, TestSize.Level2)
+{
+    MEDIA_LOGI("soundId_function_014 before");
+    int fd = open("/data/test/test_01.mp3", O_RDONLY);
+    ASSERT_GT(fd, 0);
+    soundIDManager_->nextSoundID_ = INT32_MAX;
+    int32_t soundID = soundIDManager_->Load(fd, 0, 100);
+    EXPECT_EQ(1, soundID);
+    EXPECT_NE(nullptr, soundIDManager_->GetSoundParserBySoundID(soundID));
+    EXPECT_EQ(MSERR_OK, soundIDManager_->Unload(soundID));
+    close(fd);
+    MEDIA_LOGI("soundId_function_014 after");
+}
+
+/**
+ * @tc.name: soundId_function_015
+ * @tc.desc: function test default apiVersion has no load count limit
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundIDManagerUnitTest, soundId_function_015, TestSize.Level2)
+{
+    MEDIA_LOGI("soundId_function_015 before");
+    // apiVersion_ keeps default value 0, so neither isolation limit applies.
+    for (int32_t i = 0; i < 128; ++i) {
+        soundIDManager_->soundParsers_.emplace(i + 1, nullptr);
+    }
+    // Start from the last occupied ID so the new ID does not collide with the placeholder entries.
+    soundIDManager_->nextSoundID_ = 128;
+    int fd = open("/data/test/test_01.mp3", O_RDONLY);
+    ASSERT_GT(fd, 0);
+    int32_t soundID = soundIDManager_->Load(fd, 0, 100);
+    EXPECT_GT(soundID, 128);
+    EXPECT_NE(nullptr, soundIDManager_->GetSoundParserBySoundID(soundID));
+    EXPECT_EQ(MSERR_OK, soundIDManager_->Unload(soundID));
+    close(fd);
+    MEDIA_LOGI("soundId_function_015 after");
+}
+
+/**
+ * @tc.name: soundId_function_016
+ * @tc.desc: function test fault apiVersion(-1) uses the above api18 load count limit
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundIDManagerUnitTest, soundId_function_016, TestSize.Level2)
+{
+    MEDIA_LOGI("soundId_function_016 before");
+    soundIDManager_->SetApiVersion(-1);
+    for (int32_t i = 0; i < 128; ++i) {
+        soundIDManager_->soundParsers_.emplace(i + 1, nullptr);
+    }
+    EXPECT_EQ(-1, soundIDManager_->Load("fd://123"));
+    EXPECT_EQ(-1, soundIDManager_->Load(123, 0, 100));
+    MEDIA_LOGI("soundId_function_016 after");
+}
+
+/**
+ * @tc.name: soundId_function_017
+ * @tc.desc: function test SetCallback with a valid callback
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundIDManagerUnitTest, soundId_function_017, TestSize.Level2)
+{
+    MEDIA_LOGI("soundId_function_017 before");
+    std::shared_ptr<ISoundPoolCallback> callback = std::make_shared<SoundIDManagerTestCallback>();
+    EXPECT_EQ(MSERR_OK, soundIDManager_->SetCallback(callback));
+    EXPECT_EQ(callback, soundIDManager_->callback_);
+    MEDIA_LOGI("soundId_function_017 after");
+}
+
+/**
+ * @tc.name: soundId_function_018
+ * @tc.desc: function test DoParser skips a queued soundID whose parser does not exist
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(SoundIDManagerUnitTest, soundId_function_018, TestSize.Level2)
+{
+    MEDIA_LOGI("soundId_function_018 before");
+    soundIDManager_->soundIDs_.push_back(999);
+    EXPECT_EQ(MSERR_OK, soundIDManager_->DoParser());
+    EXPECT_TRUE(soundIDManager_->soundIDs_.empty());
+    MEDIA_LOGI("soundId_function_018 after");
 }
 
 }  // namespace Media
