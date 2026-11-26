@@ -237,12 +237,14 @@ public:
         return {};
     }
 
-    int32_t SetRendererWriteCallback(const std::shared_ptr<AudioStandard::AudioRendererWriteCallback> &callback) override
+    int32_t SetRendererWriteCallback(
+        const std::shared_ptr<AudioStandard::AudioRendererWriteCallback> &callback) override
     {
         return 0;
     }
 
-    int32_t SetRendererFirstFrameWritingCallback(const std::shared_ptr<AudioStandard::AudioRendererFirstFrameWritingCallback> &callback) override
+    int32_t SetRendererFirstFrameWritingCallback(
+        const std::shared_ptr<AudioStandard::AudioRendererFirstFrameWritingCallback> &callback) override
     {
         return 0;
     }
@@ -341,16 +343,19 @@ public:
         return 0;
     }
 
-    void SetAudioRendererErrorCallback(std::shared_ptr<AudioStandard::AudioRendererErrorCallback> errorCallback) override
+    void SetAudioRendererErrorCallback(
+        std::shared_ptr<AudioStandard::AudioRendererErrorCallback> errorCallback) override
     {
     }
 
-    int32_t RegisterOutputDeviceChangeWithInfoCallback(const std::shared_ptr<AudioStandard::AudioRendererOutputDeviceChangeCallback> &callback) override
+    int32_t RegisterOutputDeviceChangeWithInfoCallback(
+        const std::shared_ptr<AudioStandard::AudioRendererOutputDeviceChangeCallback> &callback) override
     {
         return 0;
     }
 
-    int32_t UnregisterOutputDeviceChangeWithInfoCallback(const std::shared_ptr<AudioStandard::AudioRendererOutputDeviceChangeCallback> &callback) override
+    int32_t UnregisterOutputDeviceChangeWithInfoCallback(
+        const std::shared_ptr<AudioStandard::AudioRendererOutputDeviceChangeCallback> &callback) override
     {
         return 0;
     }
@@ -429,7 +434,9 @@ public:
         return false;
     }
 
-    int32_t GetAudioTimestampInfo(AudioStandard::Timestamp &timestamp, AudioStandard::Timestamp::Timestampbase base) const override
+    int32_t GetAudioTimestampInfo(
+        AudioStandard::Timestamp &timestamp, 
+        AudioStandard::Timestamp::Timestampbase base) const override
     {
         return 0;
     }
@@ -440,7 +447,8 @@ public:
         return releaseResult_;
     }
 
-    void SetFastStatusChangeCallback(const std::shared_ptr<AudioStandard::AudioRendererFastStatusChangeCallback>& callback) override
+    void SetFastStatusChangeCallback(
+        const std::shared_ptr<AudioStandard::AudioRendererFastStatusChangeCallback>& callback) override
     {
     }
 
@@ -451,7 +459,6 @@ public:
     void ResetFirstFrameState() override
     {
     }
-
 };
 } // namespace Media
 } // namespace OHOS
