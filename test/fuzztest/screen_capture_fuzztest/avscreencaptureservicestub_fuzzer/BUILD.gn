@@ -72,6 +72,7 @@ ohos_fuzztest("AvScreenCaptureServiceStubFuzzTest") {
     "graphic_surface:surface",
     "hilog:libhilog",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "media_foundation:media_foundation",
     "safwk:system_ability_fwk",
     "samgr:samgr_proxy",

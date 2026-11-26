@@ -91,6 +91,7 @@ private:
 
     // var for callback
     std::weak_ptr<AudioHapticPlayerCallback> audioHapticPlayerCallback_;
+    std::mutex audioHapticPlayerCallbackMutex_;
     uint64_t audioLatency_ = 0;
     std::shared_ptr<AudioHapticSoundCallback> soundCallback_ = nullptr;
 

@@ -32,4 +32,5 @@ net_downloader_sources = [
   "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/downloader_impl.cpp",
   "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/message_queue.cpp",
   "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/network_client_agent.cpp",
+  "$MEDIA_PLAYER_ROOT_DIR/services/services/media_source/net_downloader/storage_usage_util.cpp",
 ]

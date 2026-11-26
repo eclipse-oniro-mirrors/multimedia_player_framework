@@ -256,6 +256,7 @@ ohos_shared_library("media_client") {
     "image_framework:image_utils",
     "init:libbegetutil",
     "ipc:ipc_single",
+    "json:nlohmann_json_static",
     "netmanager_base:net_conn_manager_if",
     "netmanager_base:net_security_config_if",
     "openssl:libcrypto_shared",
@@ -268,6 +269,10 @@ ohos_shared_library("media_client") {
     external_deps += [ "av_codec:http_curl_client" ]
   } else {
     external_deps += [ "histreamer_ext:http_curl_client" ]
+  }
+
+  if (player_framework_support_screen_capture) {
+    external_deps += [ "graphic_surface:sync_fence" ]
   }
 
   if (player_framework_support_lowpower_av_sink &&

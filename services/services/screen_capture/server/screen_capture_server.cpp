@@ -2442,9 +2442,6 @@ int32_t ScreenCaptureServer::CreateVirtualScreen()
     if (captureConfig_.dataType == DataType::ORIGINAL_STREAM) {
         PrivacyProtected();
     }
-    if (!showCursor_) {
-        ShowCursorInner();
-    }
     MEDIA_LOGI("CreateVirtualScreen success, screenId: %{public}" PRIu64, virtualScreen_->GetScreenId());
     return PrepareVirtualScreenMirror();
 }
@@ -2457,11 +2454,9 @@ int32_t ScreenCaptureServer::PrepareVirtualScreenMirror()
     SetScreenScaleMode();
     std::vector<uint64_t> emptySurfaceIds;
     std::vector<uint8_t> surfaceTypes;
-    if (!showCursor_) {
-        surfaceTypes.push_back(static_cast<uint8_t>(Rosen::RSSurfaceNodeType::CURSOR_NODE));
-    }
     Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreen_->GetScreenId(),
         contentFilter_.windowIDsVec, emptySurfaceIds, surfaceTypes);
+    ShowCursorInner();
     MEDIA_LOGI("PrepareVirtualScreenMirror screenId: %{public}" PRIu64, virtualScreen_->GetScreenId());
     auto screen = Rosen::ScreenManager::GetInstance().GetScreenById(virtualScreen_->GetScreenId());
     if (screen == nullptr) {
@@ -2786,11 +2781,9 @@ int32_t ScreenCaptureServer::ExcludeContent(ScreenCaptureContentFilter &contentF
     if (IsState(CAP_ACTIVE)) {
         std::vector<uint64_t> emptySurfaceIds;
         std::vector<uint8_t> surfaceTypes;
-        if (!showCursor_) {
-            surfaceTypes.push_back(static_cast<uint8_t>(Rosen::RSSurfaceNodeType::CURSOR_NODE));
-        }
         Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreen_->GetScreenId(),
             contentFilter_.windowIDsVec, emptySurfaceIds, surfaceTypes);
+        ShowCursorInner();
     }
     int32_t ret = MSERR_OK;
     {
@@ -3006,9 +2999,10 @@ int32_t ScreenCaptureServer::AudioRendererStateUpdate(
     const std::vector<std::shared_ptr<AudioRendererChangeInfo>> &audioRendererChangeInfos)
 {
     uint32_t headSetCount = 0;
+    uint32_t changeInfoIndex = 0;
     uint32_t newState = 0;
     for (const std::shared_ptr<AudioRendererChangeInfo> &changeInfo : audioRendererChangeInfos) {
-        CHECK_AND_CONTINUE(changeInfo);
+        CHECK_AND_CONTINUE(changeInfo && changeInfo->rendererState != RendererState::RENDERER_RELEASED);
 #ifdef SUPPORT_CALL
         if (changeInfo->rendererInfo.streamUsage ==
                 AudioStandard::StreamUsage::STREAM_USAGE_VOICE_MODEM_COMMUNICATION &&
@@ -3030,9 +3024,10 @@ int32_t ScreenCaptureServer::AudioRendererStateUpdate(
             changeInfo->outputDeviceInfo.deviceType_ == DEVICE_TYPE_NEARLINK) {
             headSetCount++;
         }
+        changeInfoIndex++;
     }
 
-    if (headSetCount > 0 && headSetCount == audioRendererChangeInfos.size()) {
+    if (headSetCount > 0 && headSetCount == changeInfoIndex) {
         newState |= AUDIO_STATE_HEADSET;
     }
 
@@ -3217,16 +3212,10 @@ int32_t ScreenCaptureServer::ShowCursorInner()
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ShowCursorInner start.", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(virtualScreen_ != nullptr, MSERR_INVALID_VAL,
         "ShowCursorInner failed, virtual screen not init");
-    std::vector<uint64_t> emptySurfaceIds;
-    std::vector<uint8_t> surfaceTypes;
-    if (!showCursor_) {
-        MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner not show cursor", FAKE_POINTER(this));
-        surfaceTypes.push_back(static_cast<uint8_t>(Rosen::RSSurfaceNodeType::CURSOR_NODE));
-    } else {
-        MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner, show cursor", FAKE_POINTER(this));
-    }
-    Rosen::DisplayManager::GetInstance().SetVirtualScreenBlackList(virtualScreen_->GetScreenId(),
-        contentFilter_.windowIDsVec, emptySurfaceIds, surfaceTypes);
+    MEDIA_LOGI("ScreenCaptureServer 0x%{public}06" PRIXPTR " ShowCursorInner showCursor_:%{public}d",
+        FAKE_POINTER(this), showCursor_);
+    Rosen::ScreenManager::GetInstance().SetVirtualScreenCursorMode(virtualScreen_->GetScreenId(),
+        showCursor_ ? Rosen::RSVirtualScreenCursorMode::FORCE_RENDER : Rosen::RSVirtualScreenCursorMode::HIDE);
     MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " ShowCursorInner OK.", FAKE_POINTER(this));
     return MSERR_OK;
 }

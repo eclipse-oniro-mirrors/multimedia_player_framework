@@ -90,6 +90,7 @@ ohos_shared_library("media_avplayer") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "libuv:uv",
     "napi:ace_napi",
     "node:node_header_notice",

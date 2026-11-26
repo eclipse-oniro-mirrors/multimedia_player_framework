@@ -61,11 +61,15 @@ ohos_unittest("net_downloader_test") {
     "$MEDIA_PLAYER_ROOT_DIR/services/utils:media_service_utils",
   ]
 
+  ldflags = [ "-Wl,--wrap=fstatvfs" ]
+
   sources = [
     "common/http_server_demo.cpp",
     "common/net_downloader_test_common.h",
     "common/network_utils_fake.cpp",
     "common/network_utils_fake.h",
+    "common/fstatvfs_mock.cpp",
+    "common/fstatvfs_mock.h",
     "download_task_test.cpp",
     "downloader_descriptor_tst.cpp",
     "downloader_test.cpp",

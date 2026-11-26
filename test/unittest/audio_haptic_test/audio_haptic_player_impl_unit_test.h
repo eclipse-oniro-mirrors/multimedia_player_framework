@@ -17,6 +17,7 @@
 #define AUDIO_HAPTIC_PLAYER_IMPL_UNIT_TEST_H
 
 #include "gtest/gtest.h"
+#include <atomic>
 #include "audio_haptic_player_impl.h"
 #include "audio_haptic_sound_normal_impl.h"
 #include "audio_haptic_vibrator_impl.h"
@@ -37,9 +38,23 @@ public:
 
 class AudioHapticPlayerCallbackTest : public AudioHapticPlayerCallback {
 public:
-    void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override {}
-    void OnEndOfStream(void) override {}
-    void OnError(int32_t errorCode) override {}
+    void OnInterrupt(const AudioStandard::InterruptEvent &interruptEvent) override
+    {
+        interruptCount_++;
+        lastInterrupt_ = interruptEvent;
+    }
+    void OnEndOfStream(void) override { eosCount_++; }
+    void OnError(int32_t errorCode) override
+    {
+        errorCount_++;
+        lastErrorCode_ = errorCode;
+    }
+
+    std::atomic<int> interruptCount_ {0};
+    std::atomic<int> eosCount_ {0};
+    std::atomic<int> errorCount_ {0};
+    int32_t lastErrorCode_ {0};
+    AudioStandard::InterruptEvent lastInterrupt_ {};
 };
 } // namespace Media
 } // namespace OHOS

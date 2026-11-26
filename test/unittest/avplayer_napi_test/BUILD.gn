@@ -78,6 +78,7 @@ ohos_unittest("avplayer_napi_test") {
     "hisysevent:libhisysevent",
     "hitrace:hitrace_meter",
     "ipc:ipc_core",
+    "json:nlohmann_json_static",
     "libuv:uv",
     "media_foundation:media_foundation",
     "napi:ace_napi",
