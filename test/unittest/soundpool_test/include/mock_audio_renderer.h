@@ -435,7 +435,7 @@ public:
     }
 
     int32_t GetAudioTimestampInfo(
-        AudioStandard::Timestamp &timestamp, 
+        AudioStandard::Timestamp &timestamp,
         AudioStandard::Timestamp::Timestampbase base) const override
     {
         return 0;
