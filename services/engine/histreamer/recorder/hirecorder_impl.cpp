@@ -186,27 +186,30 @@ int32_t HiRecorderImpl::SetMetaSource(MetaSourceType source, int32_t &sourceId)
     sourceId = INVALID_SOURCE_ID;
     FALSE_RETURN_V(
         source > MetaSourceType::VIDEO_META_SOURCE_INVALID && source < MetaSourceType::VIDEO_META_SOURCE_BUTT,
-        (int32_t)Status::ERROR_INVALID_PARAMETER
+        static_cast<int32_t>(Status::ERROR_INVALID_PARAMETER)
     );
     auto tempSourceId = SourceIdGenerator::GenerateMetaSourceId(static_cast<int32_t>(source));
     Status ret;
     if (metaDataFilters_.find(tempSourceId) == metaDataFilters_.end()) {
         auto filter = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MetaDataFilter>
             ("MetaDataFilter", Pipeline::FilterType::TIMED_METADATA);
+        FALSE_RETURN_V_MSG_E(filter != nullptr, static_cast<int32_t>(Status::ERROR_NULL_POINTER),
+            "CreateFilter MetaDataFilter failed");
         ret = pipeline_->AddHeadFilters({filter});
-        FALSE_RETURN_V_MSG_E(ret == Status::OK, (int32_t)ret, "AddFilters MetaDataFilter to pipeline fail");
-        if (filter && ret == Status::OK) {
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, static_cast<int32_t>(ret),
+            "AddFilters MetaDataFilter to pipeline fail");
+        if (ret == Status::OK) {
             metaDataFilters_.emplace(std::make_pair(tempSourceId, filter));
         }
     } else {
         ret = pipeline_->AddHeadFilters({metaDataFilters_.at(tempSourceId)});
     }
-    FALSE_RETURN_V(ret == Status::OK, (int32_t)ret);
+    FALSE_RETURN_V(ret == Status::OK, static_cast<int32_t>(ret));
     
     MEDIA_LOG_I("SetMetaSource success.");
     sourceId = tempSourceId;
     OnStateChanged(StateId::RECORDING_SETTING);
-    return (int32_t)ret;
+    return static_cast<int32_t>(ret);
 }
 
 int32_t HiRecorderImpl::SetAudioSource(AudioSourceType source, int32_t &sourceId)
@@ -393,14 +396,18 @@ sptr<Surface> HiRecorderImpl::GetMetaSurface(int32_t sourceId)
 {
     MEDIA_LOG_I("HiRecorderImpl GetMetaSurface enter.");
 
-    if (SourceIdGenerator::IsMeta(sourceId) &&
-        (GetMetaSourceType(sourceId) > VIDEO_META_SOURCE_INVALID &&
-        GetMetaSourceType(sourceId) < VIDEO_META_SOURCE_BUTT)) {
-        auto it = metaDataFilters_.find(sourceId);
-        if (it != metaDataFilters_.end() && it->second != nullptr) {
-            producerMetaSurface_ = it->second->GetInputMetaSurface();
-        }
+    if (!SourceIdGenerator::IsMeta(sourceId) ||
+        (GetMetaSourceType(sourceId) <= VIDEO_META_SOURCE_INVALID ||
+        GetMetaSourceType(sourceId) >= VIDEO_META_SOURCE_BUTT)) {
+        MEDIA_LOG_E("GetMetaSurface: invalid meta sourceId %{public}d", sourceId);
+        return nullptr;
     }
+    auto it = metaDataFilters_.find(sourceId);
+    if (it == metaDataFilters_.end() || it->second == nullptr) {
+        MEDIA_LOG_E("GetMetaSurface: meta filter not found, sourceId %{public}d", sourceId);
+        return nullptr;
+    }
+    producerMetaSurface_ = it->second->GetInputMetaSurface();
     return producerMetaSurface_;
 }
 
@@ -426,8 +433,13 @@ int32_t HiRecorderImpl::Prepare()
 {
     MediaTrace trace("HiRecorderImpl::Prepare");
     MEDIA_LOG_I("Prepare enter.");
-    FALSE_RETURN_V_MSG_E(lseek(fd_.Get(), 0, SEEK_CUR) != -1, MSERR_OPEN_FILE_FAILED,
-        "The fd is invalid, fd: %{public}d, errno: %{public}d.", fd_.Get(), errno);
+    int32_t currentFd;
+    {
+        std::lock_guard<std::mutex> lock(fdMutex_);
+        currentFd = fd_.Get();
+    }
+    FALSE_RETURN_V_MSG_E(lseek(currentFd, 0, SEEK_CUR) != -1, MSERR_OPEN_FILE_FAILED,
+        "The fd is invalid, fd: %{public}d, errno: %{public}d.", currentFd, errno);
 
     int32_t result = MSERR_OK;
     result = BuildPipeline();
@@ -938,6 +950,7 @@ void HiRecorderImpl::OnEvent(const Event &event)
 
 void HiRecorderImpl::CloseFd()
 {
+    std::lock_guard<std::mutex> lock(fdMutex_);
     MEDIA_LOG_I("HiRecorderImpl: 0x%{public}06" PRIXPTR " CloseFd, fd is %{public}d", FAKE_POINTER(this), fd_.Get());
     fd_.Reset();
 }
@@ -998,7 +1011,43 @@ Status HiRecorderImpl::HandleEncodedAudioOrVideoCallback(std::shared_ptr<Pipelin
 {
     MEDIA_LOG_I("HandleEncodedAudioOrVideoCallback enter.");
     std::shared_ptr<Pipeline::MuxerFilter> muxerFilter;
+    bool needConfigureMuxer = false;
+    Status ret = GetOrCreateMuxerFilter(muxerFilter, needConfigureMuxer);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "GetOrCreateMuxerFilter failed, ret: %{public}d",
+        static_cast<int32_t>(ret));
+    if (needConfigureMuxer) {
+        ret = ConfigureMuxerFilter(muxerFilter);
+        FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "ConfigureMuxerFilter failed, ret: %{public}d",
+            static_cast<int32_t>(ret));
+    }
     std::shared_ptr<Pipeline::Pipeline> pipeline;
+    {
+        std::lock_guard<std::mutex> lock(configurationMutex_);
+        pipeline = pipeline_;
+    }
+    if (pipeline) {
+        pipeline->LinkFilters(filter, {muxerFilter}, outType);
+    }
+    return Status::OK;
+}
+
+Status HiRecorderImpl::GetOrCreateMuxerFilter(std::shared_ptr<Pipeline::MuxerFilter> &muxerFilter,
+    bool &needConfigure)
+{
+    std::lock_guard<std::mutex> lock(configurationMutex_);
+    if (muxerFilter_ == nullptr) {
+        muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
+            ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
+        FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr,
+            Status::ERROR_NULL_POINTER, "muxerFilter_ is null");
+        needConfigure = true;
+    }
+    muxerFilter = muxerFilter_;
+    return Status::OK;
+}
+
+Status HiRecorderImpl::ConfigureMuxerFilter(const std::shared_ptr<Pipeline::MuxerFilter> &muxerFilter)
+{
     std::shared_ptr<Meta> muxerFormat;
     std::shared_ptr<Meta> userMeta;
     std::shared_ptr<Pipeline::EventReceiver> eventReceiver;
@@ -1006,41 +1055,28 @@ Status HiRecorderImpl::HandleEncodedAudioOrVideoCallback(std::shared_ptr<Pipelin
     int32_t outputFd = -1;
     OutputFormatType outputFormat = OutputFormatType::FORMAT_BUTT;
     int32_t maxDuration = 0;
-    bool needConfigureMuxer = false;
     {
         std::lock_guard<std::mutex> lock(configurationMutex_);
-        muxerFilter = muxerFilter_;
-        pipeline = pipeline_;
-        if (muxerFilter == nullptr) {
-            muxerFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::MuxerFilter>
-                ("muxerFilter", Pipeline::FilterType::FILTERTYPE_MUXER);
-            FALSE_RETURN_V_MSG_E(muxerFilter_ != nullptr,
-                Status::ERROR_NULL_POINTER, "muxerFilter_ is null");
-            muxerFilter = muxerFilter_;
-            muxerFormat = muxerFormat_;
-            userMeta = userMeta_;
-            eventReceiver = recorderEventReceiver_;
-            recorderCallback = recorderCallback_;
+        muxerFormat = muxerFormat_;
+        userMeta = userMeta_;
+        eventReceiver = recorderEventReceiver_;
+        recorderCallback = recorderCallback_;
+        {
+            std::lock_guard<std::mutex> lock(fdMutex_);
             outputFd = fd_.Get();
-            outputFormat = outputFormatType_.load();
-            maxDuration = maxDuration_;
-            needConfigureMuxer = true;
         }
+        outputFormat = outputFormatType_.load();
+        maxDuration = maxDuration_;
     }
-    if (needConfigureMuxer) {
-        muxerFilter->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
-        muxerFilter->Init(eventReceiver, recorderCallback);
-        Status ret = muxerFilter->SetOutputParameter(appUid_, appPid_, outputFd, outputFormat);
-        FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "SetOutputParameter failed, ret: %{public}d",
-            static_cast<int32_t>(ret));
-        muxerFilter->SetParameter(muxerFormat);
-        muxerFilter->SetUserMeta(userMeta);
-        muxerFilter->SetMaxDuration(maxDuration);
-        CloseFd();
-    }
-    if (pipeline) {
-        pipeline->LinkFilters(filter, {muxerFilter}, outType);
-    }
+    muxerFilter->SetCallingInfo(appUid_, appPid_, bundleName_, instanceId_);
+    muxerFilter->Init(eventReceiver, recorderCallback);
+    Status ret = muxerFilter->SetOutputParameter(appUid_, appPid_, outputFd, outputFormat);
+    FALSE_RETURN_V_MSG_E(ret == Status::OK, ret, "SetOutputParameter failed, ret: %{public}d",
+        static_cast<int32_t>(ret));
+    muxerFilter->SetParameter(muxerFormat);
+    muxerFilter->SetUserMeta(userMeta);
+    muxerFilter->SetMaxDuration(maxDuration);
+    CloseFd();
     return Status::OK;
 }
 
@@ -1092,13 +1128,17 @@ void HiRecorderImpl::OnAudioCaptureChange(const AudioStandard::AudioCapturerChan
 int32_t HiRecorderImpl::GetCurrentCapturerChangeInfo(AudioRecorderChangeInfo &changeInfo)
 {
     FALSE_RETURN_V_MSG_E(audioCaptureFilter_ != nullptr,
-        (int32_t)Status::ERROR_INVALID_OPERATION,
+        static_cast<int32_t>(Status::ERROR_INVALID_OPERATION),
         "audioCaptureFilter_ is nullptr, cannot get audio capturer change info");
 
     AudioStandard::AudioCapturerChangeInfo audioChangeInfo;
     Status ret = audioCaptureFilter_->GetCurrentCapturerChangeInfo(audioChangeInfo);
+    if (ret != Status::OK) {
+        MEDIA_LOG_E("GetCurrentCapturerChangeInfo failed, ret: %{public}d", static_cast<int32_t>(ret));
+        return static_cast<int32_t>(ret);
+    }
     changeInfo = ConvertCapturerChangeInfo(audioChangeInfo);
-    return (int32_t)ret;
+    return static_cast<int32_t>(ret);
 }
 
 int32_t HiRecorderImpl::GetAvailableEncoder(std::vector<EncoderCapabilityData> &encoderInfo)
@@ -1497,11 +1537,16 @@ void HiRecorderImpl::ConfigureMuxer(const RecorderParam &recParam)
 
 void HiRecorderImpl::ConfigureOutFd(const RecorderParam &recParam)
 {
-    CloseFd();
     OutFd outFd = static_cast<const OutFd&>(recParam);
-    fd_.Reset(dup(outFd.fd));
+    CloseFd();
+    {
+        std::lock_guard<std::mutex> lock(fdMutex_);
+        if (outFd.fd >= 0) {
+            fd_.Reset(dup(outFd.fd));
+        }
+        MEDIA_LOG_I("ConfigureOutFd enter " PUBLIC_LOG_D32, fd_.Get());
+    }
     muxerFormat_->Set<Tag::MEDIA_CREATION_TIME>("now");
-    MEDIA_LOG_I("ConfigureOutFd enter " PUBLIC_LOG_D32, fd_.Get());
 }
 
 bool HiRecorderImpl::CheckParamType(int32_t sourceId, const RecorderParam &recParam)

@@ -721,3 +721,157 @@ HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_SetAudioDataSource_LockScope_
     EXPECT_NE(nullptr, impl_->audioDataSourceFilter_);
     EXPECT_NE(-1, sourceId);
 }
+
+/**
+ * @tc.name: hirecorder_GetMetaSurface_InvalidSourceId_001
+ * @tc.desc: GetMetaSurface returns nullptr for non-meta or out-of-range meta source ids
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_GetMetaSurface_InvalidSourceId_001, TestSize.Level2)
+{
+    impl_->metaDataFilters_.clear();
+
+    // 0 is not a meta source id (IsMeta fails)
+    EXPECT_EQ(nullptr, impl_->GetMetaSurface(0));
+    // 0x100 is a video source id (IsMeta fails)
+    EXPECT_EQ(nullptr, impl_->GetMetaSurface(SourceIdGenerator::GenerateVideoSourceId(0)));
+    // 0x301 maps to VIDEO_META_SOURCE_BUTT, outside the valid meta type range
+    EXPECT_EQ(nullptr, impl_->GetMetaSurface(SourceIdGenerator::META_MASK + 1));
+}
+
+/**
+ * @tc.name: hirecorder_GetMetaSurface_FilterNotFound_001
+ * @tc.desc: GetMetaSurface returns nullptr for a valid meta id whose filter was never created
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_GetMetaSurface_FilterNotFound_001, TestSize.Level2)
+{
+    impl_->metaDataFilters_.clear();
+    // 0x300 maps to VIDEO_META_MAKER_INFO (valid type) but no filter was registered
+    EXPECT_EQ(nullptr, impl_->GetMetaSurface(SourceIdGenerator::META_MASK));
+}
+
+/**
+ * @tc.name: hirecorder_ConfigureVidBitRate_Invalid_001
+ * @tc.desc: VidBitRate <= 0 reports an error event; the engine rejects the config at Prepare
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_ConfigureVidBitRate_Invalid_001, TestSize.Level2)
+{
+    auto obs = std::make_shared<MockRecorderEngineObs>();
+    EXPECT_EQ(0, impl_->SetObs(obs));
+
+    impl_->ConfigureVidBitRate(VidBitRate(0));
+
+    EXPECT_EQ(1, obs->errorCount_);
+    EXPECT_EQ(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, obs->lastErrorType_);
+    EXPECT_EQ(StateId::ERROR, impl_->curState_.load());
+}
+
+/**
+ * @tc.name: hirecorder_ConfigureVidBitRate_Valid_001
+ * @tc.desc: A positive VidBitRate is still written into the video encode format after the guard fix
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_ConfigureVidBitRate_Valid_001, TestSize.Level2)
+{
+    auto obs = std::make_shared<MockRecorderEngineObs>();
+    EXPECT_EQ(0, impl_->SetObs(obs));
+
+    impl_->ConfigureVidBitRate(VidBitRate(2048000));
+
+    EXPECT_EQ(0, obs->errorCount_);
+    int64_t bitRate = 0;
+    EXPECT_TRUE(impl_->videoEncFormat_->GetData(Tag::MEDIA_BITRATE, bitRate));
+    EXPECT_EQ(2048000, bitRate);
+}
+
+/**
+ * @tc.name: hirecorder_ConfigureAudioBitRate_Invalid_001
+ * @tc.desc: AudBitRate <= 0 reports an error event; the engine rejects the config at Prepare
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_ConfigureAudioBitRate_Invalid_001, TestSize.Level2)
+{
+    auto obs = std::make_shared<MockRecorderEngineObs>();
+    EXPECT_EQ(0, impl_->SetObs(obs));
+
+    impl_->ConfigureAudio(AudBitRate(0));
+
+    EXPECT_EQ(1, obs->errorCount_);
+    EXPECT_EQ(IRecorderEngineObs::ErrorType::ERROR_INTERNAL, obs->lastErrorType_);
+    EXPECT_EQ(StateId::ERROR, impl_->curState_.load());
+}
+
+/**
+ * @tc.name: hirecorder_ConfigureAudioBitRate_Valid_001
+ * @tc.desc: A positive AudBitRate is still written into the audio encode format after the guard fix
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_ConfigureAudioBitRate_Valid_001, TestSize.Level2)
+{
+    auto obs = std::make_shared<MockRecorderEngineObs>();
+    EXPECT_EQ(0, impl_->SetObs(obs));
+
+    impl_->ConfigureAudio(AudBitRate(64000));
+
+    EXPECT_EQ(0, obs->errorCount_);
+    int64_t bitRate = 0;
+    EXPECT_TRUE(impl_->audioEncFormat_->GetData(Tag::MEDIA_BITRATE, bitRate));
+    EXPECT_EQ(64000, bitRate);
+}
+
+/**
+ * @tc.name: hirecorder_ConfigureOutFd_InvalidFd_001
+ * @tc.desc: ConfigureOutFd with a negative fd keeps fd_ invalid instead of dup()ing it
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_ConfigureOutFd_InvalidFd_001, TestSize.Level2)
+{
+    impl_->ConfigureOutFd(OutFd(-1));
+
+    EXPECT_EQ(-1, impl_->fd_.Get());
+}
+
+/**
+ * @tc.name: hirecorder_ConfigureOutFd_ValidFd_001
+ * @tc.desc: ConfigureOutFd dups a valid fd and CloseFd releases the duplicated fd
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_ConfigureOutFd_ValidFd_001, TestSize.Level2)
+{
+    int32_t rawFd = open("/dev/null", O_RDWR);
+    ASSERT_GE(rawFd, 0);
+
+    impl_->ConfigureOutFd(OutFd(rawFd));
+    int32_t dupFd = impl_->fd_.Get();
+    EXPECT_GE(dupFd, 0);
+    EXPECT_NE(dupFd, rawFd);
+
+    impl_->CloseFd();
+    EXPECT_EQ(-1, impl_->fd_.Get());
+    close(rawFd);
+}
+
+/**
+ * @tc.name: hirecorder_GetCurrentCapturerChangeInfo_NullFilter_001
+ * @tc.desc: GetCurrentCapturerChangeInfo fails with ERROR_INVALID_OPERATION when the capture filter is missing
+ * @tc.type: FUNC
+ * @tc.require:
+ */
+HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_GetCurrentCapturerChangeInfo_NullFilter_001, TestSize.Level2)
+{
+    impl_->audioCaptureFilter_ = nullptr;
+
+    AudioRecorderChangeInfo changeInfo;
+    EXPECT_EQ(static_cast<int32_t>(Status::ERROR_INVALID_OPERATION),
+        impl_->GetCurrentCapturerChangeInfo(changeInfo));
+}
