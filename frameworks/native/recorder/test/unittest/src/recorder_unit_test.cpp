@@ -255,14 +255,23 @@ HWTEST_F(RecorderUnitTest, recorder_SetAudioEncoder_Error_001, TestSize.Level2)
  */
 HWTEST_F(RecorderUnitTest, recorder_GetSurface_Error_001, TestSize.Level2)
 {
-    g_videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
-    g_videoRecorderConfig.videoFormat = H264;
-    g_videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_GetSurface_Error_001.mp4").c_str(), O_RDWR);
-    ASSERT_TRUE(g_videoRecorderConfig.outputFd >= 0);
+    VideoRecorderConfig videoRecorderConfig;
+    videoRecorderConfig.vSource = VIDEO_SOURCE_SURFACE_YUV;
+    videoRecorderConfig.videoFormat = H264;
+    videoRecorderConfig.outputFd = open((RECORDER_ROOT + "recorder_video_GetSurface_Error_001.mp4").c_str(), O_RDWR);
+    ASSERT_TRUE(videoRecorderConfig.outputFd >= 0);
 
-    OHOS::sptr<OHOS::Surface> surface = recorder_->GetSurface(2);
-    EXPECT_EQ(surface, nullptr);
-    close(g_videoRecorderConfig.outputFd);
+    // 反向对照：未Prepare时返回空surface，与sourceId无关
+    EXPECT_EQ(nullptr, recorder_->GetSurface(videoRecorderConfig.videoSourceId));
+
+    // 正向对照：SetFormat + Prepare 建立有效录制器状态
+    EXPECT_EQ(MSERR_OK, recorder_->SetFormat(PURE_VIDEO, videoRecorderConfig));
+    EXPECT_EQ(MSERR_OK, recorder_->Prepare());
+    OHOS::sptr<OHOS::Surface> surface = recorder_->GetSurface(videoRecorderConfig.videoSourceId);
+    EXPECT_NE(surface, nullptr);
+    EXPECT_EQ(MSERR_OK, recorder_->Reset());
+    EXPECT_EQ(MSERR_OK, recorder_->Release());
+    close(videoRecorderConfig.outputFd);
 }
 
 /**
