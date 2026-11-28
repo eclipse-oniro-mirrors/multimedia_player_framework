@@ -26,43 +26,57 @@ namespace Media {
 
 ScreenCaptureLocalSurface::~ScreenCaptureLocalSurface()
 {
-    sptr<OHOS::Surface> consumer;
     sptr<OHOS::Surface> producerSurface;
     sptr<ScreenCapBufferConsumerListener> surfaceCb;
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        consumer = std::move(consumer_);
         producerSurface = std::move(producerSurface_);
         surfaceCb = std::move(surfaceCb_);
     }
-    if (consumer != nullptr) {
-        consumer->UnregisterConsumerListener();
+    if (surfaceCb != nullptr) {
+        surfaceCb->Stop();
     }
 }
 
 int32_t ScreenCaptureLocalSurface::Init(const std::shared_ptr<ScreenCaptureCallBack> &callback)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(consumer_ == nullptr, MSERR_INVALID_OPERATION,
-        "ScreenCaptureLocalSurface already initialized");
+    sptr<ScreenCapBufferConsumerListener> cb;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (surfaceCb_ == nullptr) {
+            sptr<OHOS::Surface> consumer = OHOS::Surface::CreateSurfaceAsConsumer();
+            CHECK_AND_RETURN_RET_LOG(consumer != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsConsumer failed");
+            consumer->SetDefaultUsage(BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE | BUFFER_USAGE_VENDOR_PRI8);
 
-    consumer_ = OHOS::Surface::CreateSurfaceAsConsumer();
-    CHECK_AND_RETURN_RET_LOG(consumer_ != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsConsumer failed");
-    consumer_->SetDefaultUsage(BUFFER_USAGE_CPU_READ | BUFFER_USAGE_MEM_MMZ_CACHE | BUFFER_USAGE_VENDOR_PRI8);
+            auto producer = consumer->GetProducer();
+            CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_UNKNOWN, "GetProducer failed");
+            producerSurface_ = OHOS::Surface::CreateSurfaceAsProducer(producer);
+            CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
 
-    auto producer = consumer_->GetProducer();
-    CHECK_AND_RETURN_RET_LOG(producer != nullptr, MSERR_UNKNOWN, "GetProducer failed");
-    producerSurface_ = OHOS::Surface::CreateSurfaceAsProducer(producer);
-    CHECK_AND_RETURN_RET_LOG(producerSurface_ != nullptr, MSERR_UNKNOWN, "CreateSurfaceAsProducer failed");
+            surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer, callback);
+            sptr<IBufferConsumerListener> listener = surfaceCb_;
+            GSError error = consumer->RegisterConsumerListener(listener);
+            CHECK_AND_RETURN_RET_LOG(error == GSERROR_OK, MSERR_UNKNOWN,
+                "RegisterConsumerListener failed, ret:%{public}d", error);
+        }
+        cb = surfaceCb_;
+    }
+    cb->SetCallback(callback);
+    return cb->StartBufferThread();
+}
 
-    surfaceCb_ = OHOS::sptr<ScreenCapBufferConsumerListener>::MakeSptr(consumer_, callback);
-    CHECK_AND_RETURN_RET_LOG(surfaceCb_ != nullptr, MSERR_UNKNOWN, "MakeSptr surfaceCb_ failed");
-    sptr<IBufferConsumerListener> listener = surfaceCb_;
-    consumer_->RegisterConsumerListener(listener);
-
-    int32_t ret = surfaceCb_->StartBufferThread();
-    CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "start buffer thread failed");
-    return MSERR_OK;
+void ScreenCaptureLocalSurface::Stop()
+{
+    sptr<ScreenCapBufferConsumerListener> cb;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        cb = std::move(surfaceCb_);
+        surfaceCb_ = nullptr;
+        producerSurface_ = nullptr;
+    }
+    if (cb != nullptr) {
+        cb->Stop();
+    }
 }
 
 void ScreenCaptureLocalSurface::SetCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback)

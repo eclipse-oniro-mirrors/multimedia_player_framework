@@ -481,7 +481,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleRunningCase_Picker_005, TestSize
     SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
     screenCaptureServer_->captureConfig_.dataType = DataType::CAPTURE_FILE;
     screenCaptureServer_->captureConfig_.captureMode = CaptureMode::CAPTURE_SPECIFIED_WINDOW;
@@ -508,7 +508,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleRunningCase_Picker_001, TestSize
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy
         .pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -524,7 +524,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleRunningCase_Picker_002, TestSize
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy
         .pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -542,7 +542,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleRunningCase_Picker_003, TestSize
     SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy
         .pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -557,7 +557,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleRunningCase_Picker_004, TestSize
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy
         .pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -577,7 +577,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleRunningCase_Picker_007, TestSize
     SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy
         .pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;
@@ -594,7 +594,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, HandleRunningCase_Picker_BoolChoice, T
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy
         .pickerPopUp = AVScreenCapturePickerPopUp::SCREEN_CAPTURE_PICKER_POPUP_ENABLE;
     screenCaptureServer_->captureState_ = AVScreenCaptureState::STARTED;

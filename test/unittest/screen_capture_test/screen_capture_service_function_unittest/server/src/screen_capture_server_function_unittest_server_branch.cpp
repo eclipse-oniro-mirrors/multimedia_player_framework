@@ -466,7 +466,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCapture_PauseRecorderFail_0
     SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
     auto mock = std::make_shared<MockRecorderService>();
     EXPECT_CALL(*mock, Pause()).WillOnce(Return(MSERR_UNKNOWN));
@@ -483,7 +483,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_ResumeRecorderFail
     SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK); // state -> PAUSED
     auto mock = std::make_shared<MockRecorderService>();

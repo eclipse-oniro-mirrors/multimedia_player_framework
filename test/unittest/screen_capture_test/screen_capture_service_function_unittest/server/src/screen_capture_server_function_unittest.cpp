@@ -948,7 +948,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_002, TestSize.L
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
+    int32_t ret = screenCaptureServerInner->StartScreenRecording(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
 
@@ -977,7 +977,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_003, TestSize.L
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
+    int32_t ret = screenCaptureServerInner->StartScreenRecording(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
 
@@ -1008,7 +1008,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, NotificationSubscriber_004, TestSize.L
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
+    int32_t ret = screenCaptureServerInner->StartScreenRecording(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
 
@@ -1258,7 +1258,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ShowCursor_003, TestSize.Level2)
     SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     int ret = screenCaptureServer_->ShowCursor(false);
     ASSERT_EQ(ret, MSERR_OK);
     ret = screenCaptureServer_->ShowCursor(true);
@@ -1285,7 +1285,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, Highlight_001, TestSize.Level2)
     screenCaptureServer_->missionInfos_.push_back({70, true});
     screenCaptureServer_->SetCaptureMode(CaptureMode::CAPTURE_SPECIFIED_WINDOW);
     screenCaptureServer_->SetCaptureAreaHighlight(HighlightConfig);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     sleep(RECORDER_TIME);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
 }

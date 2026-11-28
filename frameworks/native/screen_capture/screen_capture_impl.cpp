@@ -437,7 +437,7 @@ int32_t ScreenCaptureImpl::StartScreenRecording()
     MEDIA_LOGD("ScreenCaptureImpl:0x%{public}06" PRIXPTR " StartScreenCapture in", FAKE_POINTER(this));
     CHECK_AND_RETURN_RET_LOG(screenCaptureService_ != nullptr, MSERR_UNKNOWN, "screen capture service does not exist.");
     if (dataType_ == CAPTURE_FILE) {
-        return screenCaptureService_->StartScreenCapture(isPrivacyAuthorityEnabled_);
+        return screenCaptureService_->StartScreenRecording(isPrivacyAuthorityEnabled_);
     } else {
         MEDIA_LOGE("ScreenCaptureImpl::StartScreenRecording error , dataType_ : %{public}d", dataType_);
         return MSERR_INVALID_VAL;

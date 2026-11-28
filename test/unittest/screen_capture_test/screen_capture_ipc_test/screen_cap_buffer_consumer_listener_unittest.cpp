@@ -16,11 +16,13 @@
 #include "screen_cap_buffer_consumer_listener.h"
 #include "screen_capture.h"
 #include "gtest/gtest.h"
+#include <atomic>
 #include <future>
 #include <gmock/gmock.h>
 #include <memory>
 #include <surface.h>
 #include <surface_type.h>
+#include <thread>
 
 using namespace testing;
 using namespace testing::ext;
@@ -158,7 +160,7 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, SetCallback_SwitchCallback_001, Te
     listener_->StartBufferThread();
     auto newCb = std::make_shared<NiceMock<MockScreenCaptureCallBack>>();
     listener_->SetCallback(newCb);
-    ASSERT_EQ(listener_->screenCaptureCb_.get(), newCb.get());
+    ASSERT_EQ(listener_->ctx_->callback.get(), newCb.get());
     std::promise<void> promise;
     auto future = promise.get_future();
     EXPECT_CALL(*newCb, OnVideoBufferAvailable(true)).WillOnce(::testing::InvokeWithoutArgs([&promise]() {
@@ -188,6 +190,82 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, StopBufferThread_001, TestSize.Lev
 }
 
 /**
+ * @tc.name    : StopBufferThread_ThenStart_001
+ * @tc.desc    : StartBufferThread after StopBufferThread resets stopped flag and notify resumes
+ */
+HWTEST_F(ScreenCapBufferConsumerListenerTest, StopBufferThread_ThenStart_001, TestSize.Level2)
+{
+    ASSERT_EQ(listener_->StartBufferThread(), MSERR_OK);
+    listener_->StopBufferThread();
+    ASSERT_FALSE(listener_->ctx_->IsRunning());
+    ASSERT_EQ(listener_->StartBufferThread(), MSERR_OK);
+    ASSERT_TRUE(listener_->ctx_->IsRunning());
+    std::promise<void> promise;
+    auto future = promise.get_future();
+    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(true)).WillOnce(::testing::InvokeWithoutArgs([&promise]() {
+        promise.set_value();
+    }));
+    listener_->OnBufferAvailable();
+    ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
+}
+
+/**
+ * @tc.name    : StopBufferThread_ThenRelease_001
+ * @tc.desc    : StopBufferThread keeps the acquired buffer released by the app, not by stop
+ */
+HWTEST_F(ScreenCapBufferConsumerListenerTest, StopBufferThread_ThenRelease_001, TestSize.Level2)
+{
+    auto env = CreateRealSurfaceEnv();
+    ASSERT_NE(env.listener, nullptr);
+    ASSERT_NE(env.producerSurface, nullptr);
+    FlushOneBuffer(env.producerSurface);
+    sptr<SurfaceBuffer> buf;
+    int32_t fence = 0;
+    int64_t timestamp = 0;
+    OHOS::Rect damage;
+    ASSERT_EQ(env.listener->AcquireVideoBuffer(buf, fence, timestamp, damage), MSERR_OK);
+    env.listener->StopBufferThread();
+    ASSERT_EQ(env.listener->ReleaseVideoBuffer(), MSERR_OK);
+}
+
+/**
+ * @tc.name    : StartBufferThread_FromNotifyThread_001
+ * @tc.desc    : Stop then Start from the notify thread reuses the current thread without duplicate callbacks
+ */
+HWTEST_F(ScreenCapBufferConsumerListenerTest, StartBufferThread_FromNotifyThread_001, TestSize.Level2)
+{
+    auto env = CreateRealSurfaceEnv();
+    ASSERT_NE(env.listener, nullptr);
+    ASSERT_NE(env.producerSurface, nullptr);
+    ASSERT_EQ(env.listener->StartBufferThread(), MSERR_OK);
+
+    std::promise<void> firstCallback;
+    auto firstFuture = firstCallback.get_future();
+    std::promise<void> secondCallback;
+    auto secondFuture = secondCallback.get_future();
+    std::atomic<int32_t> callCount{0};
+    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(true))
+        .Times(2)
+        .WillRepeatedly(::testing::InvokeWithoutArgs([&]() {
+            int32_t count = ++callCount;
+            if (count == 1) {
+                env.listener->StopBufferThread();
+                env.listener->StartBufferThread();
+                firstCallback.set_value();
+            } else if (count == 2) {
+                secondCallback.set_value();
+            }
+        }));
+
+    FlushOneBuffer(env.producerSurface);
+    ASSERT_EQ(firstFuture.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+    FlushOneBuffer(env.producerSurface);
+    ASSERT_EQ(secondFuture.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+    ASSERT_EQ(callCount.load(), 2);
+}
+
+/**
  * @tc.name    : OnBufferAvailable_QueueFull_001
  * @tc.desc    : OnBufferAvailable skips push when message queue exceeds MAX_MESSAGE_QUEUE_SIZE
  */
@@ -196,17 +274,17 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, OnBufferAvailable_QueueFull_001, T
     for (int i = 0; i < 10; i++) {
         listener_->OnBufferAvailable();
     }
-    ASSERT_EQ(listener_->messageQueue_.size(), static_cast<size_t>(6));
+    ASSERT_EQ(listener_->ctx_->pendingCount, static_cast<uint64_t>(6));
 }
 
 /**
  * @tc.name    : NotifyThreadRun_NullCallback_001
- * @tc.desc    : Notify thread does not invoke callback when screenCaptureCb_ is null
+ * @tc.desc    : Notify thread does not invoke callback when callback is null
  */
 HWTEST_F(ScreenCapBufferConsumerListenerTest, NotifyThreadRun_NullCallback_001, TestSize.Level2)
 {
     listener_->SetCallback(nullptr);
-    ASSERT_EQ(listener_->screenCaptureCb_, nullptr);
+    ASSERT_EQ(listener_->ctx_->callback, nullptr);
     listener_->StartBufferThread();
     std::promise<void> promise;
     auto future = promise.get_future();
@@ -282,7 +360,7 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, AcquireVideoBuffer_AutoReleaseOld_
     ret = env.listener->AcquireVideoBuffer(buf2, fence2, ts2, damage2);
     ASSERT_EQ(ret, MSERR_OK);
     ASSERT_NE(buf2, nullptr);
-    ASSERT_EQ(env.listener->currentBuffer_, buf2);
+    ASSERT_EQ(env.listener->ctx_->currentBuffer, buf2);
 }
 
 /**
@@ -333,6 +411,31 @@ HWTEST_F(ScreenCapBufferConsumerListenerTest, Destructor_WithCurrentBuffer_001, 
     sptr<SurfaceBuffer> buf2;
     ASSERT_EQ(listener2->AcquireVideoBuffer(buf2, fence, timestamp, damage), MSERR_OK);
     ASSERT_NE(buf2, nullptr);
+}
+
+/**
+ * @tc.name    : Destructor_SelfJoin_Detach_001
+ * @tc.desc    : Destructor detaches the notify thread instead of joining it when destruction
+ *               happens on the notify thread itself (callback calls Stop/Release scenario)
+ */
+HWTEST_F(ScreenCapBufferConsumerListenerTest, Destructor_SelfJoin_Detach_001, TestSize.Level2)
+{
+    auto env = CreateRealSurfaceEnv();
+    ASSERT_NE(env.listener, nullptr);
+    ASSERT_NE(env.producerSurface, nullptr);
+    ASSERT_EQ(env.listener->StartBufferThread(), MSERR_OK);
+    std::promise<void> promise;
+    auto future = promise.get_future();
+    EXPECT_CALL(*mockCb_, OnVideoBufferAvailable(true))
+        .WillOnce(::testing::InvokeWithoutArgs([&env, &promise]() {
+            env.consumer->UnregisterConsumerListener();
+            env.listener = nullptr;
+            promise.set_value();
+        }));
+    FlushOneBuffer(env.producerSurface);
+    ASSERT_EQ(future.wait_for(std::chrono::seconds(2)), std::future_status::ready);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    ASSERT_TRUE(Mock::VerifyAndClearExpectations(mockCb_.get()));
 }
 
 /**

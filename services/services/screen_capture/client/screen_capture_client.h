@@ -20,6 +20,7 @@
 #include "i_standard_screen_capture_service.h"
 #include "screen_capture_listener_stub.h"
 #include "screen_capture_local_surface.h"
+#include <atomic>
 
 namespace OHOS {
 namespace Media {
@@ -43,12 +44,13 @@ public:
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override;
     int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled) override;
+    int32_t StartScreenRecording(bool isPrivacyAuthorityEnabled) override;
     int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled) override;
     int32_t StopScreenCapture() override;
     int32_t PresentPicker() override;
     int32_t AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type) override;
-    int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                               int64_t &timestamp, OHOS::Rect &damage) override;
+    int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence, int64_t &timestamp,
+        OHOS::Rect &damage) override;
     int32_t ReleaseAudioBuffer(AudioCaptureSourceType type) override;
     int32_t ReleaseVideoBuffer() override;
     int32_t SetMicrophoneEnabled(bool isMicrophone) override;
@@ -77,11 +79,18 @@ public:
         int32_t &watermarkCount) override;
 
 private:
+    template <typename Method, typename... Args>
+    auto CallProxy(Method method, Args &&...args);
+
+    std::shared_ptr<ScreenCaptureLocalSurface> GetLocalSurface();
+    std::shared_ptr<ScreenCaptureLocalSurface> GetOrCreateLocalSurface();
+    void ResetLocalSurface();
+
     sptr<IStandardScreenCaptureService> screenCaptureProxy_ = nullptr;
     sptr<ScreenCaptureListenerStub> listenerStub_ = nullptr;
     std::shared_ptr<ScreenCaptureCallBack> callback_ = nullptr;
-    std::unique_ptr<ScreenCaptureLocalSurface> localSurface_;
-    DataType dataType_ = DataType::ORIGINAL_STREAM;
+    std::shared_ptr<ScreenCaptureLocalSurface> localSurface_;
+    std::atomic<bool> starting_{false};
     std::mutex mutex_;
 };
 } // namespace Media

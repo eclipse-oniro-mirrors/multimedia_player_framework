@@ -79,7 +79,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_001, TestSize.Le
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
     screenCaptureServerInner->InitVideoEncInfo(config_.videoInfo.videoEncInfo);
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
+    int32_t ret = screenCaptureServerInner->StartScreenRecording(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
     screenCaptureServerInner->StopScreenCapture();
@@ -103,7 +103,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_002, TestSize.Le
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
     screenCaptureServerInner->InitVideoEncInfo(config_.videoInfo.videoEncInfo);
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
+    int32_t ret = screenCaptureServerInner->StartScreenRecording(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
     screenCaptureServerInner->StopScreenCapture();
@@ -127,7 +127,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureRecorder_003, TestSize.Le
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.innerCapInfo);
     screenCaptureServerInner->InitVideoEncInfo(config_.videoInfo.videoEncInfo);
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(true);
+    int32_t ret = screenCaptureServerInner->StartScreenRecording(true);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
     screenCaptureServerInner->StopScreenCapture();
@@ -165,7 +165,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ScreenCaptureStream_001, TestSize.Leve
     screenCaptureServerInner->InitVideoCap(config_.videoInfo.videoCapInfo);
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
+    int32_t ret = screenCaptureServerInner->StartScreenRecording(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
     screenCaptureServerInner->StopScreenCapture();

@@ -63,7 +63,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCapture_Stream_Mode_001, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -75,7 +75,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCapture_File_Mode_001, Test
     SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -93,7 +93,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_AutoPause_001, Tes
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
@@ -103,7 +103,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_AutoPause_NoEnable
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = false;
 
     ASSERT_EQ(screenCaptureServer_->ResumeScreenCapture(), MSERR_OK);
@@ -113,7 +113,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_AutoPause_002, Tes
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -135,7 +135,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCapture_InCall_KeepCapture
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.keepCaptureDuringCall = true;
@@ -149,7 +149,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_State_Transition_001, Test
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -160,7 +160,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_State_Transition_002, Test
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -175,7 +175,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_001, TestSize.Le
     SetRecorderInfo(recorderInfo);
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -187,7 +187,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_With_Audio_001, TestSize.L
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -198,7 +198,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_Stop_After_Pause_001, Test
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -209,7 +209,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_Stop_After_Resume_001, Tes
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -221,7 +221,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_Invalid_After_Stop_001, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->StopScreenCapture(), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
@@ -234,7 +234,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_With_Mic_Audio_001, TestSi
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -248,7 +248,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_With_Inner_Audio_001, Test
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartStreamAudioCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -264,7 +264,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Audio_001, 
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -278,7 +278,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Mic_Only_00
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -294,7 +294,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_File_Mode_With_Inner_Only_
     SetValidConfigFile(recorderInfo);
     ASSERT_EQ(InitFileScreenCaptureServer(), MSERR_OK);
     ASSERT_EQ(StartFileAudioCapture(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(screenCaptureServer_->PauseScreenCapture(), MSERR_OK);
@@ -307,7 +307,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_Multiple_Cycles_001, TestS
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     for (int i = 0; i < 5; i++) {
@@ -321,7 +321,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseResume_State_Verification_001, Te
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::STARTED);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
@@ -336,7 +336,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, PauseScreenCaptureByUser_001, TestSize
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
     ASSERT_EQ(
@@ -349,7 +349,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, ResumeScreenCaptureByUser_001, TestSiz
 {
     SetValidConfig();
     ASSERT_EQ(InitStreamScreenCaptureServer(), MSERR_OK);
-    ASSERT_EQ(screenCaptureServer_->StartScreenCapture(false), MSERR_OK);
+    ASSERT_EQ(screenCaptureServer_->StartScreenRecording(false), MSERR_OK);
     ASSERT_EQ(screenCaptureServer_->captureState_.load(), AVScreenCaptureState::STARTED);
     screenCaptureServer_->captureConfig_.strategy.enablePause = true;
 
@@ -397,7 +397,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_PauseButton_001, TestSize.L
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->captureConfig_.strategy.enablePause = true;
     screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
+    int32_t ret = screenCaptureServerInner->StartScreenRecording(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
 
@@ -428,7 +428,7 @@ HWTEST_F(ScreenCaptureServerFunctionTest, OnResponse_ResumeButton_001, TestSize.
     screenCaptureServerInner->InitAudioCap(config_.audioInfo.micCapInfo);
     screenCaptureServerInner->captureConfig_.strategy.enablePause = true;
     screenCaptureServerInner->surface_ = OHOS::Surface::CreateSurfaceAsConsumer();
-    int32_t ret = screenCaptureServerInner->StartScreenCapture(false);
+    int32_t ret = screenCaptureServerInner->StartScreenRecording(false);
     ASSERT_EQ(ret, MSERR_OK);
     sleep(RECORDER_TIME);
 

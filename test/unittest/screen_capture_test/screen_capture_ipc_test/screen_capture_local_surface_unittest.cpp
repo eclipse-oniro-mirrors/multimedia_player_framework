@@ -88,8 +88,11 @@ HWTEST_F(ScreenCaptureLocalSurfaceTest, Init_Duplicate_001, TestSize.Level2)
 {
     int32_t ret = localSurface_->Init(mockCb_);
     ASSERT_EQ(ret, MSERR_OK);
+    sptr<Surface> producerSurface = localSurface_->GetProducerSurface();
+    ASSERT_NE(producerSurface, nullptr);
     ret = localSurface_->Init(mockCb_);
-    ASSERT_EQ(ret, MSERR_INVALID_OPERATION);
+    ASSERT_EQ(ret, MSERR_OK);
+    ASSERT_EQ(localSurface_->GetProducerSurface(), producerSurface);
 }
 
 HWTEST_F(ScreenCaptureLocalSurfaceTest, Reinit_AfterDestruct_001, TestSize.Level2)
@@ -106,9 +109,32 @@ HWTEST_F(ScreenCaptureLocalSurfaceTest, SetCallback_ForwardsToListener_001, Test
 {
     int32_t ret = localSurface_->Init(nullptr);
     ASSERT_EQ(ret, MSERR_OK);
-    ASSERT_EQ(localSurface_->surfaceCb_->screenCaptureCb_.get(), nullptr);
+    ASSERT_EQ(localSurface_->surfaceCb_->ctx_->callback.get(), nullptr);
     localSurface_->SetCallback(mockCb_);
-    ASSERT_EQ(localSurface_->surfaceCb_->screenCaptureCb_.get(), mockCb_.get());
+    ASSERT_EQ(localSurface_->surfaceCb_->ctx_->callback.get(), mockCb_.get());
+}
+
+HWTEST_F(ScreenCaptureLocalSurfaceTest, Init_RestartAfterStop_001, TestSize.Level2)
+{
+    ASSERT_EQ(localSurface_->Init(mockCb_), MSERR_OK);
+    ASSERT_NE(localSurface_->GetProducerSurface(), nullptr);
+    localSurface_->Stop();
+    ASSERT_EQ(localSurface_->GetProducerSurface(), nullptr);
+    ASSERT_EQ(localSurface_->Init(mockCb_), MSERR_OK);
+    ASSERT_TRUE(localSurface_->surfaceCb_->ctx_->IsRunning());
+}
+
+HWTEST_F(ScreenCaptureLocalSurfaceTest, Stop_ThenInit_001, TestSize.Level2)
+{
+    ASSERT_EQ(localSurface_->Init(mockCb_), MSERR_OK);
+    localSurface_->Stop();
+    sptr<SurfaceBuffer> buf;
+    int32_t fence = 0;
+    int64_t timestamp = 0;
+    OHOS::Rect damage;
+    ASSERT_EQ(localSurface_->AcquireVideoBuffer(buf, fence, timestamp, damage), MSERR_INVALID_OPERATION);
+    ASSERT_EQ(localSurface_->ReleaseVideoBuffer(), MSERR_INVALID_OPERATION);
+    ASSERT_EQ(localSurface_->Init(mockCb_), MSERR_OK);
 }
 
 } // namespace Media

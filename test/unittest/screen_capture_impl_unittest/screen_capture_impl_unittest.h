@@ -46,6 +46,7 @@ public:
     MOCK_METHOD(int32_t, InitVideoEncInfo, (VideoEncInfo videoEncInfo), (override));
     MOCK_METHOD(int32_t, InitVideoCap, (VideoCaptureInfo videoInfo), (override));
     MOCK_METHOD(int32_t, StartScreenCapture, (bool isPrivacyAuthorityEnabled), (override));
+    MOCK_METHOD(int32_t, StartScreenRecording, (bool isPrivacyAuthorityEnabled), (override));
     MOCK_METHOD(int32_t, StartScreenCaptureWithSurface, (sptr<Surface> surface,
         bool isPrivacyAuthorityEnabled), (override));
     MOCK_METHOD(int32_t, StopScreenCapture, (), (override));

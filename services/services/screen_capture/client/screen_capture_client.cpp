@@ -14,9 +14,11 @@
  */
 
 #include "screen_capture_client.h"
-#include <surface.h>
-#include "media_log.h"
 #include "media_errors.h"
+#include "media_log.h"
+#include <surface.h>
+#include <type_traits>
+#include <utility>
 
 namespace {
 constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTURE, "ScreenCaptureClient"};
@@ -24,8 +26,7 @@ constexpr OHOS::HiviewDFX::HiLogLabel LABEL = {LOG_CORE, LOG_DOMAIN_SCREENCAPTUR
 
 namespace OHOS {
 namespace Media {
-std::shared_ptr<ScreenCaptureClient> ScreenCaptureClient::Create(
-    const sptr<IStandardScreenCaptureService> &ipcProxy)
+std::shared_ptr<ScreenCaptureClient> ScreenCaptureClient::Create(const sptr<IStandardScreenCaptureService> &ipcProxy)
 {
     std::shared_ptr<ScreenCaptureClient> screenCapture = std::make_shared<ScreenCaptureClient>(ipcProxy);
 
@@ -33,6 +34,53 @@ std::shared_ptr<ScreenCaptureClient> ScreenCaptureClient::Create(
     CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, nullptr, "failed to create listener object");
 
     return screenCapture;
+}
+
+std::shared_ptr<ScreenCaptureLocalSurface> ScreenCaptureClient::GetLocalSurface()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    return localSurface_;
+}
+
+template <typename Method, typename... Args>
+auto ScreenCaptureClient::CallProxy(Method method, Args &&...args)
+{
+    using Result = std::invoke_result_t<Method, IStandardScreenCaptureService *, Args...>;
+    sptr<IStandardScreenCaptureService> proxy;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        proxy = screenCaptureProxy_;
+    }
+    if (proxy == nullptr) {
+        MEDIA_LOGE("screenCapture service does not exist.");
+        if constexpr (!std::is_void_v<Result>) {
+            return static_cast<Result>(MSERR_SERVICE_DIED);
+        } else {
+            return;
+        }
+    }
+    return (proxy.GetRefPtr()->*method)(std::forward<Args>(args)...);
+}
+
+std::shared_ptr<ScreenCaptureLocalSurface> ScreenCaptureClient::GetOrCreateLocalSurface()
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (localSurface_ == nullptr) {
+        localSurface_ = std::make_shared<ScreenCaptureLocalSurface>();
+    }
+    return localSurface_;
+}
+
+void ScreenCaptureClient::ResetLocalSurface()
+{
+    std::shared_ptr<ScreenCaptureLocalSurface> localSurface;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        localSurface = std::move(localSurface_);
+    }
+    if (localSurface != nullptr) {
+        localSurface->Stop();
+    }
 }
 
 ScreenCaptureClient::ScreenCaptureClient(const sptr<IStandardScreenCaptureService> &ipcProxy)
@@ -43,54 +91,51 @@ ScreenCaptureClient::ScreenCaptureClient(const sptr<IStandardScreenCaptureServic
 
 int32_t ScreenCaptureClient::CreateListenerObject()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    listenerStub_ = new(std::nothrow) ScreenCaptureListenerStub();
-    CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY,
-        "failed to new ScreenCaptureListenerStub object");
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY,
-        "Screen Capture service does not exist.");
-
-    sptr<IRemoteObject> object = listenerStub_->AsObject();
-    CHECK_AND_RETURN_RET_LOG(object != nullptr, MSERR_NO_MEMORY, "listener object is nullptr");
-
-    MEDIA_LOGD("SetListenerObject");
-    return screenCaptureProxy_->SetListenerObject(object);
+    sptr<ScreenCaptureListenerStub> listenerStub = sptr<ScreenCaptureListenerStub>::MakeSptr();
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        listenerStub_ = listenerStub;
+    }
+    sptr<IRemoteObject> object = listenerStub->AsObject();
+    return CallProxy(&IStandardScreenCaptureService::SetListenerObject, object);
 }
 
 ScreenCaptureClient::~ScreenCaptureClient()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (screenCaptureProxy_ != nullptr) {
-        (void)screenCaptureProxy_->DestroyStub();
-    }
+    (void)CallProxy(&IStandardScreenCaptureService::DestroyStub);
     MEDIA_LOGD("0x%{public}06" PRIXPTR " Instances destroy", FAKE_POINTER(this));
 }
 
 int32_t ScreenCaptureClient::SetScreenCaptureCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "input param callback is nullptr.");
-    CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "listenerStub_ is nullptr.");
-    callback_ = callback;
+    sptr<ScreenCaptureListenerStub> listenerStub;
+    std::shared_ptr<ScreenCaptureLocalSurface> localSurface;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        CHECK_AND_RETURN_RET_LOG(callback != nullptr, MSERR_NO_MEMORY, "input param callback is nullptr.");
+        CHECK_AND_RETURN_RET_LOG(listenerStub_ != nullptr, MSERR_NO_MEMORY, "listenerStub_ is nullptr.");
+        callback_ = callback;
+        listenerStub = listenerStub_;
+        localSurface = localSurface_;
+    }
     MEDIA_LOGD("SetScreenCaptureCallback");
-    listenerStub_->SetScreenCaptureCallback(callback);
-    if (localSurface_ != nullptr) {
-        localSurface_->SetCallback(callback);
+    listenerStub->SetScreenCaptureCallback(callback);
+    if (localSurface != nullptr) {
+        localSurface->SetCallback(callback);
     }
     return MSERR_OK;
 }
 
 void ScreenCaptureClient::MediaServerDied()
 {
-    std::unique_ptr<ScreenCaptureLocalSurface> localSurface;
     std::shared_ptr<ScreenCaptureCallBack> callback;
     {
         std::lock_guard<std::mutex> lock(mutex_);
-        localSurface = std::move(localSurface_);
         screenCaptureProxy_ = nullptr;
         listenerStub_ = nullptr;
         callback = callback_;
     }
+    ResetLocalSurface();
     if (callback != nullptr) {
         callback->OnError(SCREEN_CAPTURE_ERROR_INTERNAL, MSERR_SERVICE_DIED);
     }
@@ -98,304 +143,245 @@ void ScreenCaptureClient::MediaServerDied()
 
 void ScreenCaptureClient::Release()
 {
-    std::unique_ptr<ScreenCaptureLocalSurface> localSurface;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        CHECK_AND_RETURN_LOG(screenCaptureProxy_ != nullptr, "screenCapture service does not exist.");
-        localSurface = std::move(localSurface_);
-        screenCaptureProxy_->Release();
-    }
-}
-
-int32_t ScreenCaptureClient::SetCaptureMode(CaptureMode captureMode)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetCaptureMode(captureMode);
-}
-
-int32_t ScreenCaptureClient::SetDataType(DataType dataType)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    dataType_ = dataType;
-    return screenCaptureProxy_->SetDataType(dataType);
-}
-
-int32_t ScreenCaptureClient::SetRecorderInfo(RecorderInfo recorderInfo)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetRecorderInfo(recorderInfo);
-}
-
-int32_t ScreenCaptureClient::SetOutputFile(int32_t fd)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetOutputFile(fd);
-}
-
-int32_t ScreenCaptureClient::SetAndCheckLimit()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetAndCheckLimit();
-}
-
-int32_t ScreenCaptureClient::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetAndCheckSaLimit(appInfo);
-}
-
-int32_t ScreenCaptureClient::InitAudioEncInfo(AudioEncInfo audioEncInfo)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->InitAudioEncInfo(audioEncInfo);
-}
-
-int32_t ScreenCaptureClient::InitAudioCap(AudioCaptureInfo audioInfo)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->InitAudioCap(audioInfo);
-}
-
-int32_t ScreenCaptureClient::InitVideoEncInfo(VideoEncInfo videoEncInfo)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->InitVideoEncInfo(videoEncInfo);
-}
-
-int32_t ScreenCaptureClient::InitVideoCap(VideoCaptureInfo videoInfo)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->InitVideoCap(videoInfo);
-}
-
-int32_t ScreenCaptureClient::ExcludeContent(ScreenCaptureContentFilter &contentFilter)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->ExcludeContent(contentFilter);
-}
-
-int32_t ScreenCaptureClient::AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->AddWhiteListWindows(windowIDsVec);
-}
-
-int32_t ScreenCaptureClient::RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->RemoveWhiteListWindows(windowIDsVec);
-}
-
-int32_t ScreenCaptureClient::ExcludePickerWindows(const std::vector<int32_t> &windowIDsVec)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_UNKNOWN, "screenCapture service does not exist.");
-    return screenCaptureProxy_->ExcludePickerWindows(windowIDsVec);
-}
-
-int32_t ScreenCaptureClient::SetPickerMode(PickerMode pickerMode)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_UNKNOWN, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetPickerMode(pickerMode);
-}
-
-int32_t ScreenCaptureClient::SetMicrophoneEnabled(bool isMicrophone)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_UNKNOWN, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetMicrophoneEnabled(isMicrophone);
-}
-
-int32_t ScreenCaptureClient::SetCanvasRotation(bool canvasRotation)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetCanvasRotation(canvasRotation);
-}
-
-int32_t ScreenCaptureClient::ShowCursor(bool showCursor)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->ShowCursor(showCursor);
-}
-
-int32_t ScreenCaptureClient::ResizeCanvas(int32_t width, int32_t height)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->ResizeCanvas(width, height);
-}
-
-int32_t ScreenCaptureClient::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_UNKNOWN, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SkipPrivacyMode(windowIDsVec);
-}
-
-int32_t ScreenCaptureClient::SetMaxVideoFrameRate(int32_t frameRate)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetMaxVideoFrameRate(frameRate);
+    ResetLocalSurface();
+    CallProxy(&IStandardScreenCaptureService::Release);
 }
 
 int32_t ScreenCaptureClient::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    if (dataType_ == DataType::ORIGINAL_STREAM) {
-        localSurface_ = std::make_unique<ScreenCaptureLocalSurface>();
-        int32_t ret = localSurface_->Init(callback_);
-        CHECK_AND_RETURN_RET_LOG(ret == MSERR_OK, ret, "Init local surface failed");
-        return screenCaptureProxy_->StartScreenCaptureWithSurface(localSurface_->GetProducerSurface(),
-            isPrivacyAuthorityEnabled);
+    bool expected = false;
+    if (!starting_.compare_exchange_strong(expected, true)) {
+        MEDIA_LOGE("start is already in progress");
+        return MSERR_INVALID_OPERATION;
     }
-    return screenCaptureProxy_->StartScreenCapture(isPrivacyAuthorityEnabled);
-}
+    std::shared_ptr<ScreenCaptureCallBack> callback;
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        callback = callback_;
+    }
+    auto localSurface = GetOrCreateLocalSurface();
 
-int32_t ScreenCaptureClient::StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->StartScreenCaptureWithSurface(surface, isPrivacyAuthorityEnabled);
+    int32_t ret = localSurface->Init(callback);
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("start local surface failed, ret:%{public}d", ret);
+        starting_.store(false);
+        return ret;
+    }
+    ret = CallProxy(&IStandardScreenCaptureService::StartScreenCaptureWithSurface, localSurface->GetProducerSurface(),
+        isPrivacyAuthorityEnabled);
+    if (ret != MSERR_OK) {
+        MEDIA_LOGE("StartScreenCaptureWithSurface failed, ret:%{public}d", ret);
+        starting_.store(false);
+        return ret;
+    }
+    starting_.store(false);
+    return MSERR_OK;
 }
 
 int32_t ScreenCaptureClient::StopScreenCapture()
 {
-    std::unique_ptr<ScreenCaptureLocalSurface> surf;
-    int32_t ret;
-    {
-        std::lock_guard<std::mutex> lock(mutex_);
-        CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY,
-            "screenCapture service does not exist.");
-        ret = screenCaptureProxy_->StopScreenCapture();
-        surf = std::move(localSurface_);
+    auto localSurface = GetLocalSurface();
+    int32_t ret = CallProxy(&IStandardScreenCaptureService::StopScreenCapture);
+    if (localSurface != nullptr) {
+        localSurface->Stop();
     }
     return ret;
 }
 
-int32_t ScreenCaptureClient::PresentPicker()
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->PresentPicker();
-}
-
-int32_t ScreenCaptureClient::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->AcquireAudioBuffer(audioBuffer, type);
-}
-
 int32_t ScreenCaptureClient::AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence,
-                                                int64_t &timestamp, OHOS::Rect &damage)
+    int64_t &timestamp, OHOS::Rect &damage)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(localSurface_ != nullptr, MSERR_INVALID_OPERATION,
+    auto localSurface = GetLocalSurface();
+    CHECK_AND_RETURN_RET_LOG(localSurface != nullptr, MSERR_INVALID_OPERATION,
         "AcquireVideoBuffer failed, localSurface_ is nullptr (not in BUFFER_MODE or not started)");
-    return localSurface_->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
-}
-
-int32_t ScreenCaptureClient::ReleaseAudioBuffer(AudioCaptureSourceType type)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->ReleaseAudioBuffer(type);
+    return localSurface->AcquireVideoBuffer(surfaceBuffer, fence, timestamp, damage);
 }
 
 int32_t ScreenCaptureClient::ReleaseVideoBuffer()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(localSurface_ != nullptr, MSERR_INVALID_OPERATION,
+    auto localSurface = GetLocalSurface();
+    CHECK_AND_RETURN_RET_LOG(localSurface != nullptr, MSERR_INVALID_OPERATION,
         "ReleaseVideoBuffer failed, localSurface_ is nullptr (not in BUFFER_MODE or not started)");
-    return localSurface_->ReleaseVideoBuffer();
-}
-
-int32_t ScreenCaptureClient::SetScreenCaptureStrategy(const ScreenCaptureStrategy &strategy)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetScreenCaptureStrategy(strategy);
-}
-
-int32_t ScreenCaptureClient::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
-{
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetCaptureAreaHighlight(config);
+    return localSurface->ReleaseVideoBuffer();
 }
 
 int32_t ScreenCaptureClient::UpdateSurface(sptr<Surface> surface)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
     CHECK_AND_RETURN_RET_LOG(surface != nullptr, MSERR_INVALID_VAL, "UpdateSurface fail, invalid param");
-    return screenCaptureProxy_->UpdateSurface(surface);
+    return CallProxy(&IStandardScreenCaptureService::UpdateSurface, surface);
+}
+
+int32_t ScreenCaptureClient::SetCaptureMode(CaptureMode captureMode)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetCaptureMode, captureMode);
+}
+
+int32_t ScreenCaptureClient::SetDataType(DataType dataType)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetDataType, dataType);
+}
+
+int32_t ScreenCaptureClient::SetRecorderInfo(RecorderInfo recorderInfo)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetRecorderInfo, recorderInfo);
+}
+
+int32_t ScreenCaptureClient::SetOutputFile(int32_t fd)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetOutputFile, fd);
+}
+
+int32_t ScreenCaptureClient::SetAndCheckLimit()
+{
+    return CallProxy(&IStandardScreenCaptureService::SetAndCheckLimit);
+}
+
+int32_t ScreenCaptureClient::SetAndCheckSaLimit(OHOS::AudioStandard::AppInfo &appInfo)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetAndCheckSaLimit, appInfo);
+}
+
+int32_t ScreenCaptureClient::InitAudioEncInfo(AudioEncInfo audioEncInfo)
+{
+    return CallProxy(&IStandardScreenCaptureService::InitAudioEncInfo, audioEncInfo);
+}
+
+int32_t ScreenCaptureClient::InitAudioCap(AudioCaptureInfo audioInfo)
+{
+    return CallProxy(&IStandardScreenCaptureService::InitAudioCap, audioInfo);
+}
+
+int32_t ScreenCaptureClient::InitVideoEncInfo(VideoEncInfo videoEncInfo)
+{
+    return CallProxy(&IStandardScreenCaptureService::InitVideoEncInfo, videoEncInfo);
+}
+
+int32_t ScreenCaptureClient::InitVideoCap(VideoCaptureInfo videoInfo)
+{
+    return CallProxy(&IStandardScreenCaptureService::InitVideoCap, videoInfo);
+}
+
+int32_t ScreenCaptureClient::ExcludeContent(ScreenCaptureContentFilter &contentFilter)
+{
+    return CallProxy(&IStandardScreenCaptureService::ExcludeContent, contentFilter);
+}
+
+int32_t ScreenCaptureClient::AddWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
+{
+    return CallProxy(&IStandardScreenCaptureService::AddWhiteListWindows, windowIDsVec);
+}
+
+int32_t ScreenCaptureClient::RemoveWhiteListWindows(const std::vector<uint64_t> &windowIDsVec)
+{
+    return CallProxy(&IStandardScreenCaptureService::RemoveWhiteListWindows, windowIDsVec);
+}
+
+int32_t ScreenCaptureClient::ExcludePickerWindows(const std::vector<int32_t> &windowIDsVec)
+{
+    return CallProxy(&IStandardScreenCaptureService::ExcludePickerWindows, windowIDsVec);
+}
+
+int32_t ScreenCaptureClient::SetPickerMode(PickerMode pickerMode)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetPickerMode, pickerMode);
+}
+
+int32_t ScreenCaptureClient::SetMicrophoneEnabled(bool isMicrophone)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetMicrophoneEnabled, isMicrophone);
+}
+
+int32_t ScreenCaptureClient::SetCanvasRotation(bool canvasRotation)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetCanvasRotation, canvasRotation);
+}
+
+int32_t ScreenCaptureClient::ShowCursor(bool showCursor)
+{
+    return CallProxy(&IStandardScreenCaptureService::ShowCursor, showCursor);
+}
+
+int32_t ScreenCaptureClient::ResizeCanvas(int32_t width, int32_t height)
+{
+    return CallProxy(&IStandardScreenCaptureService::ResizeCanvas, width, height);
+}
+
+int32_t ScreenCaptureClient::SkipPrivacyMode(const std::vector<uint64_t> &windowIDsVec)
+{
+    return CallProxy(&IStandardScreenCaptureService::SkipPrivacyMode, windowIDsVec);
+}
+
+int32_t ScreenCaptureClient::SetMaxVideoFrameRate(int32_t frameRate)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetMaxVideoFrameRate, frameRate);
+}
+
+int32_t ScreenCaptureClient::StartScreenRecording(bool isPrivacyAuthorityEnabled)
+{
+    return CallProxy(&IStandardScreenCaptureService::StartScreenRecording, isPrivacyAuthorityEnabled);
+}
+
+int32_t ScreenCaptureClient::StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled)
+{
+    return CallProxy(&IStandardScreenCaptureService::StartScreenCaptureWithSurface, surface, isPrivacyAuthorityEnabled);
+}
+
+int32_t ScreenCaptureClient::PresentPicker()
+{
+    return CallProxy(&IStandardScreenCaptureService::PresentPicker);
+}
+
+int32_t ScreenCaptureClient::AcquireAudioBuffer(std::shared_ptr<AudioBuffer> &audioBuffer, AudioCaptureSourceType type)
+{
+    return CallProxy(&IStandardScreenCaptureService::AcquireAudioBuffer, audioBuffer, type);
+}
+
+int32_t ScreenCaptureClient::ReleaseAudioBuffer(AudioCaptureSourceType type)
+{
+    return CallProxy(&IStandardScreenCaptureService::ReleaseAudioBuffer, type);
+}
+
+int32_t ScreenCaptureClient::SetScreenCaptureStrategy(const ScreenCaptureStrategy &strategy)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetScreenCaptureStrategy, strategy);
+}
+
+int32_t ScreenCaptureClient::SetCaptureAreaHighlight(AVScreenCaptureHighlightConfig config)
+{
+    return CallProxy(&IStandardScreenCaptureService::SetCaptureAreaHighlight, config);
 }
 
 int32_t ScreenCaptureClient::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetCaptureArea(displayId, area);
+    return CallProxy(&IStandardScreenCaptureService::SetCaptureArea, displayId, area);
 }
 
 int32_t ScreenCaptureClient::GetMultiDisplayCaptureCapability(const std::vector<uint64_t> &displayIds,
     MultiDisplayCapability &capability)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_NO_MEMORY, "screenCapture service does not exist.");
-    return screenCaptureProxy_->GetMultiDisplayCaptureCapability(displayIds, capability);
+    return CallProxy(&IStandardScreenCaptureService::GetMultiDisplayCaptureCapability, displayIds, capability);
 }
 
 int32_t ScreenCaptureClient::PauseScreenCapture()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED,
-        "screenCapture service does not exist.");
-    return screenCaptureProxy_->PauseScreenCapture();
+    return CallProxy(&IStandardScreenCaptureService::PauseScreenCapture);
 }
 
 int32_t ScreenCaptureClient::ResumeScreenCapture()
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED,
-        "screenCapture service does not exist.");
-    return screenCaptureProxy_->ResumeScreenCapture();
+    return CallProxy(&IStandardScreenCaptureService::ResumeScreenCapture);
 }
 
-int32_t ScreenCaptureClient::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width,
-    int32_t height, int32_t &watermarkCount)
+int32_t ScreenCaptureClient::AddWatermark(std::shared_ptr<AVBuffer> &watermarkBuffer, int32_t width, int32_t height,
+    int32_t &watermarkCount)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED,
-        "screenCapture service does not exist.");
-    return screenCaptureProxy_->AddWatermark(watermarkBuffer, width, height, watermarkCount);
+    return CallProxy(&IStandardScreenCaptureService::AddWatermark, watermarkBuffer, width, height, watermarkCount);
 }
 
 int32_t ScreenCaptureClient::SetContentAutoRotation(bool contentAutoRotation)
 {
-    std::lock_guard<std::mutex> lock(mutex_);
-    CHECK_AND_RETURN_RET_LOG(screenCaptureProxy_ != nullptr, MSERR_SERVICE_DIED,
-        "screenCapture service does not exist.");
-    return screenCaptureProxy_->SetContentAutoRotation(contentAutoRotation);
+    return CallProxy(&IStandardScreenCaptureService::SetContentAutoRotation, contentAutoRotation);
 }
+
 } // namespace Media
 } // namespace OHOS

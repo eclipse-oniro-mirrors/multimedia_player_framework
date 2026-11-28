@@ -147,6 +147,7 @@ public:
     int32_t InitVideoEncInfo(VideoEncInfo videoEncInfo) override;
     int32_t InitVideoCap(VideoCaptureInfo videoInfo) override;
     int32_t StartScreenCapture(bool isPrivacyAuthorityEnabled) override;
+    int32_t StartScreenRecording(bool isPrivacyAuthorityEnabled) override;
     int32_t StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled) override;
     int32_t StopScreenCapture() override;
     int32_t StopAndRelease(AVScreenCaptureStateCode state);
@@ -280,7 +281,6 @@ private:
     void SetupCaptureListeners();
     bool StopMicAudio();
     void ReleaseInner();
-    void GetDumpFlag();
 
     Rosen::VirtualScreenOption InitVirtualScreenOption(sptr<OHOS::Surface> consumer);
     std::string GetVirtualScreenName() const;
@@ -409,7 +409,6 @@ private:
     AVScreenCaptureDataMode dataMode_ = AVScreenCaptureDataMode::BUFFER_MODE;
     StatisticalEventInfo statisticalEventInfo_;
     sptr<OHOS::Surface> consumer_ = nullptr;
-    bool isDump_ = false;
     bool isSystemUI2_ = false;
     std::unique_ptr<VirtualScreen> virtualScreen_;
     std::vector<Rosen::ScreenId> sourceDisplayIds_;

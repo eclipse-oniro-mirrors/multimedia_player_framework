@@ -2374,28 +2374,20 @@ void ScreenCaptureServer::UpdateMicrophoneEnabled()
         AV_SCREEN_CAPTURE_SESSION_UID, result);
 }
 
-void ScreenCaptureServer::GetDumpFlag()
-{
-    const std::string dumpTag = "sys.media.screenCapture.dump.enable";
-    std::string dumpEnable;
-    int32_t dumpRes = OHOS::system::GetStringParameter(dumpTag, dumpEnable, "false");
-    isDump_ = (dumpEnable == "true");
-    MEDIA_LOGI("get dump flag, dumpRes: %{public}d, isDump_: %{public}d", dumpRes, isDump_);
-}
-
 int32_t ScreenCaptureServer::StartScreenCapture(bool isPrivacyAuthorityEnabled)
 {
-    MediaTrace trace("ScreenCaptureServer::StartScreenCapture");
+    (void)isPrivacyAuthorityEnabled;
+    return MSERR_INVALID_OPERATION;
+}
+
+int32_t ScreenCaptureServer::StartScreenRecording(bool isPrivacyAuthorityEnabled)
+{
+    MediaTrace trace("ScreenCaptureServer::StartScreenRecording");
     std::lock_guard<std::mutex> lock(mutex_);
     startTime_ = GetCurrentMillisecond();
     statisticalEventInfo_.enableMic = isMicrophoneSwitchTurnOn_;
-    GetDumpFlag();
-    MEDIA_LOGI("ScreenCaptureServer: 0x%{public}06" PRIXPTR " StartScreenCapture start, "
-        "isPrivacyAuthorityEnabled:%{public}s, captureState:%{public}d.",
-        FAKE_POINTER(this), isPrivacyAuthorityEnabled ? "true" : "false", captureState_.load());
     CHECK_AND_RETURN_RET_LOG(IsState(CAP_INIT), MSERR_INVALID_OPERATION,
-        "StartScreenCapture failed, not in CREATED or STOPPED, state:%{public}d", captureState_.load());
-    MEDIA_LOGI("StartScreenCapture isPrivacyAuthorityEnabled:%{public}d", isPrivacyAuthorityEnabled);
+        "StartScreenRecording failed, not in CREATED or STOPPED, state:%{public}d", captureState_.load());
     return StartScreenCaptureInner(isPrivacyAuthorityEnabled);
 }
 
@@ -2404,7 +2396,6 @@ int32_t ScreenCaptureServer::StartScreenCaptureWithSurface(sptr<Surface> surface
     std::lock_guard<std::mutex> lock(mutex_);
     CHECK_AND_RETURN_RET_LOG(IsState(CAP_INIT), MSERR_INVALID_OPERATION,
         "StartScreenCaptureWithSurface failed, not in CREATED or STOPPED, state:%{public}d", captureState_.load());
-    MEDIA_LOGI("StartScreenCaptureWithSurface isPrivacyAuthorityEnabled:%{public}d", isPrivacyAuthorityEnabled);
     if (surface == nullptr) {
         MEDIA_LOGE("surface is nullptr");
         return MSERR_INVALID_OPERATION;
@@ -2875,7 +2866,7 @@ int32_t ScreenCaptureServer::SetCaptureArea(uint64_t displayId, OHOS::Rect area)
         "SetCaptureArea failed, screen capture already released");
     CHECK_AND_RETURN_RET_LOG(CheckDisplayArea(displayId, area), MSERR_INVALID_VAL,
         "Check region area failed, invalid input area.");
-    
+
     isRegionCapture_ = true;
     regionDisplayId_ = displayId;
     regionArea_ = area;

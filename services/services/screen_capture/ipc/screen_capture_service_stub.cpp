@@ -96,7 +96,7 @@ void ScreenCaptureServiceStub::RegisterStubFuncs()
     screenCaptureStubFuncs_[INIT_AUDIO_CAP] = &ScreenCaptureServiceStub::InitAudioCap;
     screenCaptureStubFuncs_[INIT_VIDEO_ENC_INFO] = &ScreenCaptureServiceStub::InitVideoEncInfo;
     screenCaptureStubFuncs_[INIT_VIDEO_CAP] = &ScreenCaptureServiceStub::InitVideoCap;
-    screenCaptureStubFuncs_[START_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::StartScreenCapture;
+    screenCaptureStubFuncs_[START_SCREEN_RECORDING] = &ScreenCaptureServiceStub::StartScreenRecording;
     screenCaptureStubFuncs_[START_SCREEN_CAPTURE_WITH_SURFACE] =
         &ScreenCaptureServiceStub::StartScreenCaptureWithSurface;
     screenCaptureStubFuncs_[STOP_SCREEN_CAPTURE] = &ScreenCaptureServiceStub::StopScreenCapture;
@@ -218,10 +218,10 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(VideoCaptureInfo videoInfo)
     return screenCaptureServer_->InitVideoCap(videoInfo);
 }
 
-int32_t ScreenCaptureServiceStub::StartScreenCapture(bool isPrivacyAuthorityEnabled)
+int32_t ScreenCaptureServiceStub::StartScreenRecording(bool isPrivacyAuthorityEnabled)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
-    return screenCaptureServer_->StartScreenCapture(isPrivacyAuthorityEnabled);
+    return screenCaptureServer_->StartScreenRecording(isPrivacyAuthorityEnabled);
 }
 
 int32_t ScreenCaptureServiceStub::StartScreenCaptureWithSurface(sptr<Surface> surface, bool isPrivacyAuthorityEnabled)
@@ -641,11 +641,11 @@ int32_t ScreenCaptureServiceStub::InitVideoCap(MessageParcel &data, MessageParce
     return MSERR_OK;
 }
 
-int32_t ScreenCaptureServiceStub::StartScreenCapture(MessageParcel &data, MessageParcel &reply)
+int32_t ScreenCaptureServiceStub::StartScreenRecording(MessageParcel &data, MessageParcel &reply)
 {
     CHECK_AND_RETURN_RET_LOG(screenCaptureServer_ != nullptr, MSERR_INVALID_STATE, "screen capture server is nullptr");
     bool isPrivacyAuthorityEnabled = data.ReadBool();
-    int32_t ret = StartScreenCapture(isPrivacyAuthorityEnabled);
+    int32_t ret = StartScreenRecording(isPrivacyAuthorityEnabled);
     reply.WriteInt32(ret);
     return MSERR_OK;
 }

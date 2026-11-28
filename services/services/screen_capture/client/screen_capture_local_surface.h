@@ -32,6 +32,7 @@ public:
     ScreenCaptureLocalSurface &operator=(const ScreenCaptureLocalSurface &) = delete;
 
     int32_t Init(const std::shared_ptr<ScreenCaptureCallBack> &callback);
+    void Stop();
     void SetCallback(const std::shared_ptr<ScreenCaptureCallBack> &callback);
     sptr<Surface> GetProducerSurface() const;
     int32_t AcquireVideoBuffer(sptr<OHOS::SurfaceBuffer> &surfaceBuffer, int32_t &fence, int64_t &timestamp,
@@ -40,7 +41,6 @@ public:
 
 private:
     mutable std::mutex mutex_;
-    sptr<OHOS::Surface> consumer_ = nullptr;
     sptr<OHOS::Surface> producerSurface_ = nullptr;
     sptr<ScreenCapBufferConsumerListener> surfaceCb_ = nullptr;
 };
