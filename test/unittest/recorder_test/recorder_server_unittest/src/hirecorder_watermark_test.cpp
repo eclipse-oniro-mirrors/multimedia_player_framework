@@ -503,9 +503,18 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetSurface_WatermarkSoft_001, Test
     impl_->waterMarkFilter_ = Pipeline::FilterFactory::Instance().CreateFilter<Pipeline::WaterMarkFilter>(
         "Watermark", Pipeline::FilterType::WATERMARK);
 
+    // 预置非空surface
+    sptr<Surface> sentinelSurface = Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(sentinelSurface, nullptr);
+    impl_->producerSurface_ = sentinelSurface;
+
     sptr<Surface> surface = impl_->GetSurface(0);
+    // 未Init的水印filter其GetInputSurface返回空
     EXPECT_EQ(surface, nullptr);
-    EXPECT_TRUE(impl_->hasWatermark_);
+    // 返回值应来自水印filter的输入surface
+    EXPECT_EQ(surface.GetRefPtr(), impl_->waterMarkFilter_->GetInputSurface().GetRefPtr());
+    // 水印分支用filter返回值覆写producerSurface_
+    EXPECT_EQ(impl_->producerSurface_, nullptr);
 }
 
 /**
@@ -519,10 +528,19 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetSurface_WatermarkHard_001, Test
 {
     impl_->hasWatermark_ = true;
     impl_->isHardWatermarkSupported_ = true;
+    impl_->videoEncoderFilter_ = nullptr;
+    impl_->videoCaptureFilter_ = nullptr;
+
+    // 预置非空surface
+    sptr<Surface> sentinelSurface = Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(sentinelSurface, nullptr);
+    impl_->producerSurface_ = sentinelSurface;
 
     sptr<Surface> surface = impl_->GetSurface(0);
-    EXPECT_EQ(surface, nullptr);
-    EXPECT_TRUE(impl_->isHardWatermarkSupported_);
+    // 硬水印场景不应路由到软水印分支（否则返回空并清空producerSurface_），
+    // 无编码/采集filter时应原样返回默认producerSurface_
+    EXPECT_EQ(surface, sentinelSurface);
+    EXPECT_EQ(impl_->producerSurface_, sentinelSurface);
 }
 
 /**
@@ -541,9 +559,20 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_GetSurface_VideoEncoder_001, TestS
         .CreateFilter<Pipeline::SurfaceEncoderFilter>(
             "videoEncoderFilter", Pipeline::FilterType::FILTERTYPE_VENC);
 
+    ASSERT_NE(impl_->videoEncoderFilter_, nullptr);
+
+    // 预置非空surface
+    sptr<Surface> sentinelSurface = Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(sentinelSurface, nullptr);
+    impl_->producerSurface_ = sentinelSurface;
+
     sptr<Surface> surface = impl_->GetSurface(0);
+    // 未Configure的编码filter其GetInputSurface返回空
     EXPECT_EQ(surface, nullptr);
-    EXPECT_FALSE(impl_->hasWatermark_);
+    // 返回值应来自编码filter的输入surface
+    EXPECT_EQ(surface.GetRefPtr(), impl_->videoEncoderFilter_->GetInputSurface().GetRefPtr());
+    // 编码分支用filter返回值覆写producerSurface_
+    EXPECT_EQ(impl_->producerSurface_, nullptr);
 }
 
 /**
@@ -586,8 +615,13 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_PrepareAudioCapture_WithWatermark_
             "audioCaptureFilter", Pipeline::FilterType::AUDIO_CAPTURE);
     ASSERT_NE(impl_->audioCaptureFilter_, nullptr);
 
+    // 预置withVideo_=false以观测SetWithVideo(true)副作用
+    impl_->audioCaptureFilter_->withVideo_ = false;
+
     int32_t ret = impl_->PrepareAudioCapture();
     EXPECT_EQ(ret, MSERR_OK);
+    // hasWatermark_为真时应调用SetWithVideo(true)
+    EXPECT_TRUE(impl_->audioCaptureFilter_->withVideo_);
 }
 
 /**
@@ -607,8 +641,13 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_PrepareAudioCapture_NoWatermarkNoE
             "audioCaptureFilter", Pipeline::FilterType::AUDIO_CAPTURE);
     ASSERT_NE(impl_->audioCaptureFilter_, nullptr);
 
+    // 预置withVideo_=true以观测SetWithVideo(false)副作用
+    impl_->audioCaptureFilter_->withVideo_ = true;
+
     int32_t ret = impl_->PrepareAudioCapture();
     EXPECT_EQ(ret, MSERR_OK);
+    // 无水印且无编码filter时应调用SetWithVideo(false)
+    EXPECT_FALSE(impl_->audioCaptureFilter_->withVideo_);
 }
 
 /**
@@ -997,9 +1036,13 @@ HWTEST_F(HiRecorderImplDirectTest, hirecorder_PrepareAudioCapture_MuteWhenInterr
         .CreateFilter<Pipeline::AudioCaptureFilter>(
             "audioCaptureFilter", Pipeline::FilterType::AUDIO_CAPTURE);
     ASSERT_NE(impl_->audioCaptureFilter_, nullptr);
+    // 预置withVideo_=true以观测SetWithVideo(false)副作用
+    impl_->audioCaptureFilter_->withVideo_ = true;
 
     int32_t ret = impl_->PrepareAudioCapture();
     EXPECT_EQ(ret, MSERR_OK);
+    // 无水印且无编码filter时应调用SetWithVideo(false)
+    EXPECT_FALSE(impl_->audioCaptureFilter_->withVideo_);
 }
 
 /**

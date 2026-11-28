@@ -594,7 +594,13 @@ HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_SetUserMeta_WithMuxer_001, Te
 HWTEST_F(HiRecorderImplEngineGuardTest, hirecorder_GetSurfaceFromWaterMarkFilter_Null_001, TestSize.Level2)
 {
     impl_->waterMarkFilter_ = nullptr;
-    EXPECT_TRUE(impl_->GetSurfaceFromWaterMarkFilter() == nullptr);
+    // 预置非空surface：分支不应触碰producerSurface_
+    sptr<Surface> sentinelSurface = Surface::CreateSurfaceAsConsumer();
+    ASSERT_NE(sentinelSurface, nullptr);
+    impl_->producerSurface_ = sentinelSurface;
+
+    EXPECT_EQ(nullptr, impl_->GetSurfaceFromWaterMarkFilter());
+    EXPECT_EQ(impl_->producerSurface_, sentinelSurface);
 }
 
 /**
